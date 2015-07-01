@@ -174,17 +174,17 @@ m_canonicalObjectTextures()
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     m_resultPageWidth = max_texture_edge_length;
-    
+
     for (size_t i = 0; i < object_texture_count; i++)
     {
         addObjectTexture(object_textures[i]);
     }
-    
+
     for (size_t i = 0; i < sprite_texture_count; i++)
     {
         addSpriteTexture(Spriteextures[i]);
     }
-    
+
     layOutTextures();
 }
 
@@ -318,7 +318,7 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                          bool reverse,
-                                         Polygon* poly,
+                                         struct Polygon *poly,
                                          int shift,
                                          bool split)  const
 {

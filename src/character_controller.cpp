@@ -1,9 +1,9 @@
 
 #include "world.h"
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
 #include "character_controller.h"
 #include "obb.h"
@@ -242,7 +242,8 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(pos, r);
-    r = r->checkFlip();
+    if(r)
+        r = r->checkFlip();
     if(r)
     {
         rs = r->getSectorXYZ(pos);                                         // if r != NULL then rs can not been NULL!!!
@@ -2411,6 +2412,7 @@ Substance Character::getSubstanceState() const {
 
 void Character::updateGhostRigidBody() {
     if(!m_bt.ghostObjects.empty()) {
+        assert( m_bf.bone_tags.size() == m_bt.ghostObjects.size() );
         for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
             tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->m_center);

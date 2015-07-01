@@ -7,8 +7,8 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
 
 #include "audio.h"
 #include "vmath.h"
@@ -518,49 +518,10 @@ void World::empty()
 
 uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
-    if(!entity_tree.empty())
+    if(SkeletalModel* model = getModelByID(model_id))
     {
-        SkeletalModel* model = getModelByID(model_id);
-        if(model != NULL)
+        if(std::shared_ptr<Entity> ent = getEntityByID(id))
         {
-            std::shared_ptr<Entity> ent = getEntityByID(id);
-
-            if(ent != NULL)
-            {
-                if(pos != NULL)
-                {
-                    ent->m_transform.getOrigin() = *pos;
-                }
-                if(ang != NULL)
-                {
-                    ent->m_angles = *ang;
-                    ent->updateTransform();
-                }
-                if(room_id < rooms.size())
-                {
-                    ent->m_self->room = rooms[ room_id ].get();
-                    ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
-                }
-                else
-                {
-                    ent->m_self->room = NULL;
-                }
-
-                return ent->m_id;
-            }
-
-            ent = std::make_shared<Entity>();
-
-            if(id < 0)
-            {
-                ent->m_id = entity_tree.size();
-                entity_tree[id] = ent;
-            }
-            else
-            {
-                ent->m_id = id;
-            }
-
             if(pos != NULL)
             {
                 ent->m_transform.getOrigin() = *pos;
@@ -580,33 +541,66 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 ent->m_self->room = NULL;
             }
 
-            ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
-            ent->m_active = ent->m_enabled = ent->m_visible = true;
-            ent->m_triggerLayout = 0x00;
-            ent->m_OCB            = 0x00;
-            ent->m_timer          = 0.0;
-
-            ent->m_self->collision_type = COLLISION_NONE;
-            ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
-            ent->m_moveType          = 0x0000;
-            ent->m_inertiaLinear     = 0.0;
-            ent->m_inertiaAngular[0] = 0.0;
-            ent->m_inertiaAngular[1] = 0.0;
-            ent->m_moveType          = 0;
-
-            ent->m_bf.fromModel(model);
-            ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
-            ent->genEntityRigidBody();
-
-            ent->rebuildBV();
-            if(ent->m_self->room != NULL)
-            {
-                ent->m_self->room->addEntity(ent.get());
-            }
-            addEntity(ent);
-
             return ent->m_id;
         }
+
+        std::shared_ptr<Entity> ent = std::make_shared<Entity>();
+
+        if(id < 0)
+        {
+            ent->m_id = entity_tree.size();
+            entity_tree[id] = ent;
+        }
+        else
+        {
+            ent->m_id = id;
+        }
+
+        if(pos != NULL)
+        {
+            ent->m_transform.getOrigin() = *pos;
+        }
+        if(ang != NULL)
+        {
+            ent->m_angles = *ang;
+            ent->updateTransform();
+        }
+        if(room_id < rooms.size())
+        {
+            ent->m_self->room = rooms[ room_id ].get();
+            ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
+        }
+        else
+        {
+            ent->m_self->room = NULL;
+        }
+
+        ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
+        ent->m_active = ent->m_enabled = ent->m_visible = true;
+        ent->m_triggerLayout = 0x00;
+        ent->m_OCB            = 0x00;
+        ent->m_timer          = 0.0;
+
+        ent->m_self->collision_type = COLLISION_NONE;
+        ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        ent->m_moveType          = 0x0000;
+        ent->m_inertiaLinear     = 0.0;
+        ent->m_inertiaAngular[0] = 0.0;
+        ent->m_inertiaAngular[1] = 0.0;
+        ent->m_moveType          = 0;
+
+        ent->m_bf.fromModel(model);
+        ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
+        ent->genEntityRigidBody();
+
+        ent->rebuildBV();
+        if(ent->m_self->room != NULL)
+        {
+            ent->m_self->room->addEntity(ent.get());
+        }
+        addEntity(ent);
+
+        return ent->m_id;
     }
 
     return 0xFFFFFFFF;

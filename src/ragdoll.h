@@ -7,8 +7,8 @@
 
 #include <lua.hpp>
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
+#include "bullet/LinearMath/btScalar.h"
+#include "bullet/LinearMath/btVector3.h"
 
 #define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 

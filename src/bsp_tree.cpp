@@ -3,15 +3,18 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"
 #include "mesh.h"
 #include "frustum.h"
 
-void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const Polygon& transformed)
+void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
 {
+    if(!root)
+        root.reset(new BSPNode());
+
     if(root->polygons_front.empty())
     {
         // we though root->front == NULL and root->back == NULL
@@ -58,7 +61,7 @@ void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference
     for(const TransparentPolygonReference& pp : p) {
         bool visible = f.empty();
 
-        Polygon transformed;
+        struct Polygon transformed;
         transformed.vertices.resize( pp.polygon->vertices.size() );
         transformed.transform(*pp.polygon, transform);
         transformed.double_side = pp.polygon->double_side;

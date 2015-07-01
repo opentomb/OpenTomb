@@ -4,8 +4,8 @@
 
 #include <SDL2/SDL.h>
 #include <cstdint>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "world.h"
 #include "script.h"
 #include "controls.h"
@@ -61,8 +61,8 @@ struct lua_State;
 struct EngineContainer
 {
     uint16_t object_type = 0;
-    uint16_t                     collision_type;
-    uint16_t                     collision_shape;
+    uint16_t collision_type = COLLISION_TYPE_NONE;
+    uint16_t collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
 };
@@ -125,12 +125,12 @@ struct EngineControlState
 };
 
 
-extern EngineControlState            control_states;
-extern ControlSettings                control_mapper;
+extern EngineControlState              control_states;
+extern ControlSettings                 control_mapper;
 
-extern AudioSettings                  audio_settings;
+extern AudioSettings                   audio_settings;
 
-extern btScalar                                 engine_frame_time;
+extern btScalar                        engine_frame_time;
 extern Camera                          engine_camera;
 extern World                           engine_world;
 
@@ -252,7 +252,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
-void lua_print();
+int lua_print(lua_State * lua);
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

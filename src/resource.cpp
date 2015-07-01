@@ -9,8 +9,8 @@
 
 #include <lua.hpp>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
 
 #include "vt/vt_level.h"
 #include "audio.h"
@@ -73,7 +73,7 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->m_bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
@@ -1650,66 +1650,131 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
-void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 floor, float z0, float z1, float z2, float z3)
+int lua_SetSectorFloorConfig(lua_State * lua)
 {
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 10)
+    {
+        ConsoleInfo::instance().addLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return;
+        return 0;
     }
 
-    if(pen)   rs->floor_penetration_config = *pen;
-    if(diag)  rs->floor_diagonal_type = *diag;
-    if(floor) rs->floor = *floor;
-    rs->floor_corners[0] = {z0,z1,z2};
-    rs->floor_corners[0][3] = z3;
+    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
+    rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
+    rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
+    rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
+    rs->floor_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+
+    return 0;
 }
 
-void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 ceil, float z0, float z1, float z2, float z3)
+int lua_SetSectorCeilingConfig(lua_State * lua)
 {
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 10)
+    {
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return;
+        return 0;
     }
 
-    if(pen)   rs->ceiling_penetration_config = *pen;
-    if(diag)  rs->ceiling_diagonal_type = *diag;
-    if(floor) rs->ceiling = *ceil;
-    rs->ceiling_corners[0] = {z0,z1,z2};
-    rs->ceiling_corners[0][3] = z3;
+    if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
+    rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
+    rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
+    rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
+    rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+
+    return 0;
 }
 
-void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
+int lua_SetSectorPortal(lua_State * lua)
 {
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 4)
+    {
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return;
+        return 0;
     }
 
+    uint32_t p = lua_tointeger(lua, 4);
     if(p < engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
+
+    return 0;
 }
 
-void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ftflag, lua::UInt8 cpflag, lua::UInt8 ctflag)
+int lua_SetSectorFlags(lua_State * lua)
 {
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 7)
+    {
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return;
+        return 0;
     }
 
-    if(fpflag)  rs->floor_penetration_config = *fpflag;
-    if(ftflag)  rs->floor_diagonal_type = *ftflag;
-    if(cpflag)  rs->ceiling_penetration_config = *cpflag;
-    if(ctflag)  rs->ceiling_diagonal_type = *ctflag;
+    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
+    if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
+
+    return 0;
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -1721,11 +1786,11 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
-        lua_register(level_script, "print", WRAP_FOR_LUA(lua_print));
-        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
-        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
-        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
-        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
+        lua_register(level_script, "print", lua_print);
+        lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
+        lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+        lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
+        lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
@@ -2450,7 +2515,7 @@ void Res_GenRoomFlipMap(World *world)
 void TR_GenBoxes(World *world, class VT_Level *tr)
 {
     world->room_boxes.clear();
-    
+
     for(uint32_t i=0;i<tr->boxes_count;i++)
     {
         world->room_boxes.emplace_back();
@@ -2467,7 +2532,7 @@ void TR_GenBoxes(World *world, class VT_Level *tr)
 void TR_GenCameras(World *world, class VT_Level *tr)
 {
     world->cameras_sinks.clear();
-    
+
     for(uint32_t i=0; i<tr->cameras_count; i++) {
         world->cameras_sinks.emplace_back();
         world->cameras_sinks[i].x                   =  tr->cameras[i].x;
@@ -2598,7 +2663,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
     int32_t   uvrotate_script = 0;
-    Polygon p0, p;
+    struct Polygon p0, p;
 
     p0.vertices.resize(3);
     p.vertices.resize(3);
@@ -2736,7 +2801,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, World *world)
+bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, World *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
@@ -2769,7 +2834,7 @@ void TR_GenMeshes(World *world, class VT_Level *tr)
     }
 }
 
-static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
+static void tr_copyNormals(struct Polygon *polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
     for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
@@ -2777,7 +2842,7 @@ static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& me
     }
 }
 
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, Polygon* p)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh *mesh, int numCorners, const uint16_t *vertex_indices, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -2793,7 +2858,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, Polygon* p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh *mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2814,7 +2879,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
     mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, Polygon* p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh *mesh, const uint16_t *vertex_indices, struct Polygon *p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2879,7 +2944,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face3 = &tr_mesh->textured_triangles[i];
         auto tex = &tr->object_textures[face3->texture & tex_mask];
@@ -2909,7 +2974,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face3 = &tr_mesh->coloured_triangles[i];
         auto col = face3->texture & 0xff;
@@ -2927,7 +2992,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face4 = &tr_mesh->textured_rectangles[i];
         auto tex = &tr->object_textures[face4->texture & tex_mask];
@@ -2957,7 +3022,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face4 = &tr_mesh->coloured_rectangles[i];
         auto col = face4->texture & 0xff;
@@ -3009,7 +3074,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
+void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -3262,7 +3327,7 @@ void Res_GenBaseItems(World* world)
     }
 }
 
-void Res_FixRooms(World *world)
+void Res_FixRooms(struct World *world)
 {
     for(uint32_t i=0;i<world->rooms.size();i++)
     {
@@ -4012,11 +4077,18 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
 
+            world->addEntity(lara);
+
             continue;
         }
 
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
         entity->genEntityRigidBody();
+
+        entity->rebuildBV();
+        entity->m_self->room->addEntity(entity.get());
+        world->addEntity(entity);
+        Res_SetEntityModelProperties(entity);
 
         if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();

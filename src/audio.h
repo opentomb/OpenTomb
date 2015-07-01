@@ -2,9 +2,9 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include <AL/al.h>
-#include <AL/efx-presets.h>
-#include <AL/efx-creative.h>
+#include "al/AL/al.h"
+#include "al/AL/efx-presets.h"
+#include "al/AL/efx-creative.h"
 
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>

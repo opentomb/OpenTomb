@@ -4,7 +4,7 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 #include "frustum.h"
 #include "vmath.h"
@@ -144,6 +144,9 @@ void Frustum::genClipPlanes(Camera *cam)
  */
 std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, Render *render)
 {
+    if(!portal->dest_room)
+        return nullptr;
+
     if(planeDist(portal->norm, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;
@@ -319,7 +322,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
-    Polygon poly;
+    struct Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
 
@@ -501,7 +504,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
-    Polygon* p = obb->polygons;
+    struct Polygon* p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
         auto t = planeDist(p->plane, *cam_pos);

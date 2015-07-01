@@ -8,10 +8,10 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 #include "vmath.h"
-
+ 
 struct Polygon;
 struct Frustum;
 struct TransparentPolygonReference;
@@ -46,7 +46,7 @@ class DynamicBSP
 private:
     std::unique_ptr<BSPNode> m_root{ new BSPNode() };
 
-    void addPolygon(const std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const Polygon &transformed);
+    void addPolygon(const std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct Polygon &transformed);
     
 public:
     void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);

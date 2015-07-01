@@ -11,7 +11,7 @@
 #include <cstdint>
 
 #include "polygon.h"
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 #include <memory>
 
@@ -23,9 +23,9 @@ struct Entity;
 
 struct OBB
 {
-    Polygon base_polygons[6];               // bv base surface
-    Polygon polygons[6];                       // bv world coordinate surface
-    const btTransform* transform = nullptr;                      // Object transform matrix
+    struct Polygon base_polygons[6];               // bv base surface
+    struct Polygon polygons[6];                    // bv world coordinate surface
+    const btTransform* transform = nullptr;        // Object transform matrix
     btScalar r;
 
     btVector3 base_centre;

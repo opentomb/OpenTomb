@@ -97,7 +97,7 @@ public:
 
     void addLog(const std::string& text);
 
-    void addLine(const std::string& text, font_Style style);
+    void addLine(const std::string& text, font_Style style = FONTSTYLE_CONSOLE_EVENT);
 
     void addText(const std::string& text, font_Style style);
 

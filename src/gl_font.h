@@ -15,8 +15,8 @@ extern "C" {
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <freetype2/ft2build.h>
-#include <freetype2/freetype.h>
+#include "ft2build.h"
+#include "freetype.h"
 
 
 typedef struct char_info_s

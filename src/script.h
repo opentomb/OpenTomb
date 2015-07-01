@@ -13,7 +13,7 @@ struct RenderSettings;
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
 
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 extern lua_State *engine_lua;
 

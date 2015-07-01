@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cmath>
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 #include "hair.h"
 #include "mesh.h"
 #include "render.h"
@@ -281,6 +281,8 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
         // And create vertex data (including matrix indices)
         for (size_t j = 0; j < original->m_vertices.size(); j++) {
+            m_mesh->m_matrixIndices.emplace_back();
+            assert( m_mesh->m_matrixIndices.size() > verticesStart+j );
             if (original->m_vertices[j].position[1] <= 0)
             {
                 m_mesh->m_matrixIndices[verticesStart+j].i = i;
