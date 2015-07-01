@@ -7,8 +7,8 @@
 #include <cctype>
 #include <lua.hpp>
 
-#include <AL/al.h>
-#include <AL/alc.h>
+#include "al/AL/al.h"
+#include "al/AL/alc.h"
 
 #include "console.h"
 #include "engine.h"

@@ -2,10 +2,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 
-#include <AL/al.h>
-#include <AL/alext.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
+#include "al/AL/al.h"
+#include "al/AL/alext.h"
+#include "al/AL/efx.h"
+#include "al/AL/efx-presets.h"
 
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
@@ -1478,9 +1478,9 @@ void Audio_Init(uint32_t num_Sources)
     engine_world.audio_sources.resize(num_Sources);
 
     // Generate stream tracks array.
-    
+
     engine_world.stream_tracks.resize( TR_AUDIO_STREAM_NUMSOURCES );
-    
+
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;

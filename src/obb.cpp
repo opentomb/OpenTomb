@@ -7,7 +7,7 @@
 #include "polygon.h"
 #include "entity.h"
 
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 #include "engine.h"
 
 void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
@@ -16,9 +16,9 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     base_centre = (bb_min + bb_max)/2;
     r = extent.length();
 
-    Polygon* p = base_polygons;
+    struct Polygon *p = base_polygons;
     // UP
-    Polygon* p_up = p;
+    struct Polygon *p_up = p;
     auto v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -55,7 +55,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     p++;
 
     // DOWN
-    Polygon* p_down = p;
+    struct Polygon *p_down = p;
     v = &p->vertices.front();
     // 0 1
     // 0 0

@@ -15,6 +15,7 @@
 CMakeLists.txt.user
 .dep.inc
 Makefile
+lib/
 obj/
 bin/
 build/

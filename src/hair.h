@@ -5,9 +5,9 @@
 
 #include <lua.hpp>
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
+#include "bullet/LinearMath/btScalar.h"
+#include "bullet/LinearMath/btVector3.h"
+#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
 
 #include "character_controller.h"
 #include "engine.h"

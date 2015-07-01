@@ -19,10 +19,10 @@
 #include "ragdoll.h"
 #include "hair.h"
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 
 
 void Entity::createGhosts()

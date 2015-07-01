@@ -3,7 +3,7 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
 #include "portal.h"
 #include "vmath.h"

@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
 #include <lua.hpp>
 
 #include "vmath.h"
@@ -39,100 +39,83 @@ extern lua_State *engine_lua;
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
-void lua_mlook2(lua::Int8 mlook)
+int lua_mlook(lua_State * lua)
 {
-    if(!mlook)
+    if(lua_gettop(lua) == 0)
     {
         control_states.mouse_look = !control_states.mouse_look;
         ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
-        return;
+        return 0;
     }
 
-    control_states.mouse_look = *mlook;
+    control_states.mouse_look = lua_tointeger(lua, 1);
     ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
+    return 0;
 }
 
-void lua_mlook1()
-{
-    lua_mlook2(lua::None);
-}
 
-void lua_freelook2(lua::Int8 free)
+int lua_freelook(lua_State * lua)
 {
-    if(!free)
+    if(lua_gettop(lua) == 0)
     {
         control_states.free_look = !control_states.free_look;
         ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
-        return;
+        return 0;
     }
 
-    control_states.free_look = *free;
+    control_states.free_look = lua_tointeger(lua, 1);
     ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
+    return 0;
 }
 
-void lua_freelook1()
-{
-    lua_freelook2(lua::None);
-}
 
-void lua_cam_distance2(lua::Float distance)
+int lua_cam_distance(lua_State * lua)
 {
-    if(!distance)
+    if(lua_gettop(lua) == 0)
     {
         ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
-        return;
+        return 0;
     }
 
-    control_states.cam_distance = *distance;
+    control_states.cam_distance = lua_tonumber(lua, 1);
     ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
+    return 0;
 }
 
-void lua_cam_distance1()
-{
-    lua_cam_distance2(lua::None);
-}
 
-void lua_noclip2(lua::Int8 noclip)
+int lua_noclip(lua_State * lua)
 {
-    if(!noclip)
+    if(lua_gettop(lua) == 0)
     {
         control_states.noclip = !control_states.noclip;
     }
     else
     {
-        control_states.noclip = *noclip;
+        control_states.noclip = lua_tointeger(lua, 1);
     }
 
     ConsoleInfo::instance().printf("noclip = %d", control_states.noclip);
+    return 0;
 }
 
-void lua_noclip1()
+int lua_debuginfo(lua_State * lua)
 {
-    lua_noclip2(lua::None);
-}
-
-void lua_debuginfo2(lua::Bool show)
-{
-    if(!show == 0)
+    if(lua_gettop(lua) == 0)
     {
         screen_info.show_debuginfo = !screen_info.show_debuginfo;
     }
     else
     {
-        screen_info.show_debuginfo = *show;
+        screen_info.show_debuginfo = lua_tointeger(lua, 1);
     }
 
     ConsoleInfo::instance().printf("debug info = %d", screen_info.show_debuginfo);
+    return 0;
 }
 
-void lua_debuginfo1()
+int lua_timescale(lua_State * lua)
 {
-    lua_debuginfo2(lua::None);
-}
-
-void lua_timescale2(lua::Float scale)
-{
-    if(!scale)
+    if(lua_gettop(lua) == 0)
     {
         if(time_scale == 1.0)
         {
@@ -145,15 +128,11 @@ void lua_timescale2(lua::Float scale)
     }
     else
     {
-        time_scale = *scale;
+        time_scale = lua_tonumber(lua, 1);
     }
 
     ConsoleInfo::instance().printf("time_scale = %.3f", time_scale);
-}
-
-void lua_timescale1()
-{
-    lua_timescale2(lua::None);
+    return 0;
 }
 
 void Game_InitGlobals()
@@ -169,12 +148,12 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "debuginfo", WRAP_FOR_LUA(lua_debuginfo2,lua_debuginfo1));
-        lua_register(lua, "mlook", WRAP_FOR_LUA(lua_mlook2,lua_mlook1));
-        lua_register(lua, "freelook", WRAP_FOR_LUA(lua_freelook2,lua_freelook1));
-        lua_register(lua, "noclip", WRAP_FOR_LUA(lua_noclip2,lua_noclip1));
-        lua_register(lua, "cam_distance", WRAP_FOR_LUA(lua_cam_distance2,lua_cam_distance1));
-        lua_register(lua, "timescale", WRAP_FOR_LUA(lua_timescale2,lua_timescale1));
+        lua_register(lua, "debuginfo", lua_debuginfo);
+        lua_register(lua, "mlook", lua_mlook);
+        lua_register(lua, "freelook", lua_freelook);
+        lua_register(lua, "noclip", lua_noclip);
+        lua_register(lua, "cam_distance", lua_cam_distance);
+        lua_register(lua, "timescale", lua_timescale);
     }
 }
 

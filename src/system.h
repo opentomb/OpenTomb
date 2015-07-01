@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include "gl_util.h"
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 #define LOG_FILENAME "d_log.txt"
 

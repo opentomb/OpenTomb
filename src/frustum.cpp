@@ -4,7 +4,7 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include <bullet/LinearMath/btScalar.h>
+#include "bullet/LinearMath/btScalar.h"
 
 #include "frustum.h"
 #include "vmath.h"
@@ -319,7 +319,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
-    Polygon poly;
+    struct Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
 
@@ -501,7 +501,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
-    Polygon* p = obb->polygons;
+    struct Polygon* p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
         auto t = planeDist(p->plane, *cam_pos);

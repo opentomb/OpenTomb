@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/LinearMath/btIDebugDraw.h>
+#include "bullet/LinearMath/btScalar.h"
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/LinearMath/btIDebugDraw.h"
 
 #include <memory>
 #include <vector>
