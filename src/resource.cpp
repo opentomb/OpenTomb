@@ -2598,7 +2598,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
     int32_t   uvrotate_script = 0;
-    Polygon p0, p;
+    struct Polygon p0, p;
 
     p0.vertices.resize(3);
     p.vertices.resize(3);
@@ -2736,7 +2736,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, World *world)
+bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
@@ -2769,7 +2769,7 @@ void TR_GenMeshes(World *world, class VT_Level *tr)
     }
 }
 
-static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
+static void tr_copyNormals(struct Polygon *polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
     for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
@@ -2777,7 +2777,7 @@ static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& me
     }
 }
 
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, Polygon* p)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -2793,7 +2793,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, Polygon* p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2814,7 +2814,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
     mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, Polygon* p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, struct Polygon *p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2879,7 +2879,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face3 = &tr_mesh->textured_triangles[i];
         auto tex = &tr->object_textures[face3->texture & tex_mask];
@@ -2909,7 +2909,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face3 = &tr_mesh->coloured_triangles[i];
         auto col = face3->texture & 0xff;
@@ -2927,7 +2927,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face4 = &tr_mesh->textured_rectangles[i];
         auto tex = &tr->object_textures[face4->texture & tex_mask];
@@ -2957,7 +2957,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++)
     {
         mesh->m_polygons.emplace_back();
-        Polygon& p = mesh->m_polygons.back();
+        struct Polygon &p = mesh->m_polygons.back();
 
         auto face4 = &tr_mesh->coloured_rectangles[i];
         auto col = face4->texture & 0xff;
@@ -3009,7 +3009,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
+void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 

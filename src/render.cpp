@@ -130,7 +130,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         size_t offset = 0;
-        for(const Polygon& p : mesh->m_polygons)
+        for(const struct Polygon& p : mesh->m_polygons)
         {
             if (p.anim_id == 0 || p.isBroken())
             {
@@ -196,7 +196,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
     const TransparentPolygonReference* ref = bsp_ref.polygon;
-    const Polygon *p = ref->polygon;
+    const struct Polygon *p = ref->polygon;
     if (currentTransparency != p->transparency)
     {
         currentTransparency = p->transparency;
@@ -1344,7 +1344,7 @@ void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_ma
 
 void RenderDebugDrawer::drawOBB(OBB *obb)
 {
-    Polygon* p = obb->polygons;
+    struct Polygon *p = obb->polygons;
     addLine(p->vertices[0].position, (p+1)->vertices[0].position);
     addLine(p->vertices[1].position, (p+1)->vertices[3].position);
     addLine(p->vertices[2].position, (p+1)->vertices[2].position);

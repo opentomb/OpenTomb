@@ -2939,7 +2939,7 @@ void lua_genUVRotateAnimation(int id)
 
     if(model->mesh_tree.front().mesh_base->m_transparencyPolygons.empty())
         return;
-    const Polygon& firstPolygon = model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
+    const struct Polygon& firstPolygon = model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
     if(firstPolygon.anim_id != 0)
         return;
 
@@ -2985,7 +2985,7 @@ void lua_genUVRotateAnimation(int id)
         seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
     }
 
-    for(Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons) {
+    for(struct Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons) {
         p.anim_id = engine_world.anim_sequences.size();
         for(Vertex& v : p.vertices) {
             v.tex_coord[1] = v_min + 0.5 * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
