@@ -318,7 +318,7 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                          bool reverse,
-                                         struct Polygon *poly,
+                                         struct Polygon* poly,
                                          int shift,
                                          bool split)  const
 {

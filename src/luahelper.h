@@ -1,5 +1,5 @@
 #pragma once
-#if 0
+
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -442,4 +442,3 @@ inline detail::MultiDispatcher<F0, Fn...> makeDispatcher(F0* fun0, Fn*... funN) 
     [](lua_State* state)->int{ return ::lua::makeDispatcher(funcs)(state); }
 
 }
-#endif

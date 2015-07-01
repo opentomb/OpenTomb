@@ -141,7 +141,7 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-                        struct Polygon *poly,
+                        struct Polygon* poly,
                         int shift = 0,
                         bool split = false) const;
     

@@ -94,9 +94,9 @@ void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
 int      Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
 
-bool     Res_Poly_SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *world);
+bool     Res_Poly_SetAnimTexture(Polygon *polygon, uint32_t tex_index, World *world);
 
-void     Res_FixRooms(struct World *world);   // Fix start-up room states.
+void     Res_FixRooms(World *world);   // Fix start-up room states.
 
 struct SkeletalModel;
 SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version);

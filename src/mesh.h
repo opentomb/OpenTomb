@@ -33,7 +33,7 @@ struct Render;
 struct Entity;
 
 struct TransparentPolygonReference {
-    const struct Polygon* polygon;
+    const Polygon* polygon;
     std::shared_ptr<VertexArray> used_vertex_array;
     size_t firstIndex;
     size_t count;
@@ -57,9 +57,9 @@ struct BaseMesh
     uint32_t m_id;                                                   // mesh's ID
     bool m_usesVertexColors;                                   // does this mesh have prebaked vertex lighting
 
-    std::vector<struct Polygon> m_polygons;                                             // polygons data
+    std::vector<Polygon> m_polygons;                                             // polygons data
 
-    std::vector<struct Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
+    std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
     std::vector<uint32_t> m_elementsPerTexture;                            //

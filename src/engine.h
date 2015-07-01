@@ -125,12 +125,12 @@ struct EngineControlState
 };
 
 
-extern EngineControlState              control_states;
-extern ControlSettings                 control_mapper;
+extern EngineControlState            control_states;
+extern ControlSettings                control_mapper;
 
-extern AudioSettings                   audio_settings;
+extern AudioSettings                  audio_settings;
 
-extern btScalar                        engine_frame_time;
+extern btScalar                                 engine_frame_time;
 extern Camera                          engine_camera;
 extern World                           engine_world;
 
@@ -252,7 +252,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
-int lua_print(lua_State * lua);
+int lua_print(lua_State*);
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

@@ -322,7 +322,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
-    struct Polygon poly;
+    Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
 
@@ -504,7 +504,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
-    struct Polygon* p = obb->polygons;
+    Polygon* p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
         auto t = planeDist(p->plane, *cam_pos);

@@ -547,7 +547,7 @@ void BaseMesh::genFaces()
     m_transparentPolygons.resize(transparent);
     uint32_t transparentPolygonStart = 0;
 
-    for(const struct Polygon &p : m_polygons)
+    for(const Polygon& p : m_polygons)
     {
         if (p.isBroken())
             continue;
@@ -663,7 +663,7 @@ btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max
     int cnt = 0;
 
     OBB obb;
-    struct Polygon *p = obb.base_polygons;
+    Polygon* p = obb.base_polygons;
     obb.rebuild(bb_min, bb_max);
     for(uint16_t i=0;i<6;i++,p++)
     {
@@ -700,7 +700,7 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
 
-    for(const struct Polygon &p : mesh->m_polygons)
+    for(const Polygon& p : mesh->m_polygons)
     {
         if(p.isBroken())
         {
@@ -950,7 +950,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, S
 
 void BaseMesh::polySortInMesh()
 {
-    for(struct Polygon &p : m_polygons) {
+    for(Polygon& p : m_polygons) {
         if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences.size()) {
             AnimSeq* seq = &engine_world.anim_sequences[p.anim_id - 1];
             // set tex coordinates to the first frame for correct texture transform in renderer

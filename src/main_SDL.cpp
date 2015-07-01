@@ -51,11 +51,9 @@
 #include "FindConfigFile.h"
 #endif
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-}
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 
 #define NO_AUDIO        0
 

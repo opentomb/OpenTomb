@@ -355,11 +355,11 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
-        if((i == 0) && (move_len > 1024.0))                                     ///@FIXME: magick const 1024.0!
+        if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
         {
             break;
         }
-        int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;  ///@FIXME (not a critical): magick const 4.0!
+        int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;     ///@FIXME (not a critical): magick const 4.0!
         move /= (btScalar)iter;
 
         for(int j=0; j<=iter; j++) {

@@ -55,7 +55,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     p++;
 
     // DOWN
-    struct Polygon *p_down = p;
+    Polygon* p_down = p;
     v = &p->vertices.front();
     // 0 1
     // 0 0
