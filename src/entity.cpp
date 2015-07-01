@@ -236,6 +236,8 @@ void Entity::ghostUpdate()
     if(m_bt.ghostObjects.empty())
         return;
 
+    assert( m_bt.ghostObjects.size() == m_bf.bone_tags.size() );
+
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC) {
         for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
             auto tr = m_transform * m_bf.bone_tags[i].full_transform;
@@ -260,6 +262,8 @@ void Entity::updateCurrentCollisions()
 {
     if(m_bt.ghostObjects.empty())
         return;
+
+    assert( m_bt.ghostObjects.size() == m_bf.bone_tags.size() );
 
     for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
         const std::unique_ptr<btPairCachingGhostObject>& ghost = m_bt.ghostObjects[i];
@@ -320,9 +324,11 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
     if(m_bt.ghostObjects.empty() || m_bt.no_fix_all)
         return 0;
 
+    assert( m_bt.ghostObjects.size() == m_bf.bone_tags.size() );
+
     auto orig_pos = m_transform.getOrigin();
     int ret = 0;
-    for(uint16_t i=0; i<m_bf.animations.model->collision_map.size(); i++) {
+    for(size_t i=0; i<m_bf.animations.model->collision_map.size(); i++) {
         uint16_t m = m_bf.animations.model->collision_map[i];
         SSBoneTag* btag = &m_bf.bone_tags[m];
 
@@ -1562,7 +1568,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->activate();
         m_bt.bt_body[i]->setLinearVelocity(m_speed);
-        if(m_bt.ghostObjects[i]) {
+        if(i<m_bt.ghostObjects.size() && m_bt.ghostObjects[i]) {
             bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
             bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_NONE, COLLISION_NONE);
         }
@@ -1651,7 +1657,7 @@ bool Entity::deleteRagdoll()
         bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-        if(m_bt.ghostObjects[i])
+        if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
         {
             bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
             bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);

@@ -2412,6 +2412,7 @@ Substance Character::getSubstanceState() const {
 
 void Character::updateGhostRigidBody() {
     if(!m_bt.ghostObjects.empty()) {
+        assert( m_bf.bone_tags.size() == m_bt.ghostObjects.size() );
         for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
             tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->m_center);
