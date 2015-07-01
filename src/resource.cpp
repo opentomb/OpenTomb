@@ -1721,7 +1721,7 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
-        lua_register(level_script, "print", WRAP_FOR_LUA(lua_print));
+        lua_register(level_script, "print", lua_print);
         lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
         lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
         lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
@@ -4012,11 +4012,18 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
 
+            world->addEntity(lara);
+
             continue;
         }
 
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
         entity->genEntityRigidBody();
+
+        entity->rebuildBV();
+        entity->m_self->room->addEntity(entity.get());
+        world->addEntity(entity);
+        Res_SetEntityModelProperties(entity);
 
         if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();

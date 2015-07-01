@@ -233,19 +233,22 @@ void lua_CheckStack()
     ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(lua::state()));
 }
 
-void lua_print()
+int lua_print(lua_State* lua)
 {
-     int top = lua_gettop(lua::state());
+     const int top = lua_gettop(lua);
 
      if(top == 0)
      {
         ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
+        return 0;
      }
 
-     for(int i=1;i<=top;i++)
+     for(int i=1; i<=top; i++)
      {
-         ConsoleInfo::instance().addLine(lua_tostring(lua::state(), i), FONTSTYLE_CONSOLE_EVENT);
+         const char* str = lua_tostring(lua, i);
+         ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
      }
+     return 0;
 }
 
 void lua_DumpModel(int id)
@@ -255,6 +258,7 @@ void lua_DumpModel(int id)
     if(sm == NULL)
     {
         ConsoleInfo::instance().printf("wrong model id = %d", id);
+        return;
     }
 
     for(int i=0;i<sm->mesh_count;i++)
@@ -701,11 +705,12 @@ void lua_AddCharacterHair(int ent_id, int setup_index)
         }
         else
         {
-            ent->m_hairs.emplace_back();
+            ent->m_hairs.emplace_back(std::make_shared<Hair>());
 
             if(!ent->m_hairs.back()->create(&hair_setup, ent))
             {
                 ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                ent->m_hairs.pop_back();
             }
         }
     }
@@ -3058,7 +3063,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     // Register script functions
 
-    lua_registerc(lua, "print", WRAP_FOR_LUA(lua_print));
+    lua_registerc(lua, "print", lua_print);
     lua_registerc(lua, "checkStack", WRAP_FOR_LUA(lua_CheckStack));
     lua_registerc(lua, "dumpModel", WRAP_FOR_LUA(lua_DumpModel));
     lua_registerc(lua, "dumpRoom", WRAP_FOR_LUA(lua_dumpRoom1, lua_dumpRoom2));

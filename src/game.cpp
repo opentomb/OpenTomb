@@ -350,10 +350,8 @@ int Game_Save(const char* name)
 
     Save_Entity(&f, engine_world.character);    // Save Lara.
 
-    if(!engine_world.entity_tree.empty())
-    {
-        Save_EntityTree(&f, engine_world.entity_tree);
-    }
+    Save_EntityTree(&f, engine_world.entity_tree);
+
     fclose(f);
 
     return 1;
@@ -760,10 +758,7 @@ void Game_UpdateCharacters()
         ent->updateHair();
     }
 
-    if(!engine_world.entity_tree.empty())
-    {
-        Game_UpdateCharactersTree(engine_world.entity_tree);
-    }
+    Game_UpdateCharactersTree(engine_world.entity_tree);
 }
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
@@ -780,7 +775,6 @@ void Game_Frame(btScalar time)
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
 
-    const bool is_entitytree = !engine_world.entity_tree.empty();
     const bool is_character  = (engine_world.character != NULL);
 
     // GUI and controls should be updated at all times!
@@ -833,8 +827,7 @@ void Game_Frame(btScalar time)
             engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
         }
 
-        if(is_entitytree)
-            Game_LoopEntities(engine_world.entity_tree);
+        Game_LoopEntities(engine_world.entity_tree);
     }
 
 
@@ -859,8 +852,7 @@ void Game_Frame(btScalar time)
 
     Game_UpdateCharacters();
 
-    if(is_entitytree)
-        Game_UpdateAllEntities(engine_world.entity_tree);
+    Game_UpdateAllEntities(engine_world.entity_tree);
 
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
