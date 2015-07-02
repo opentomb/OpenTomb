@@ -3777,7 +3777,7 @@ int Engine_ExecCmd(const char *ch)
             else
             {
                 const auto val = atoi(token);
-                if((val >=2 ) && (val <= static_cast<int>(ConsoleInfo::instance().visibleLines())))
+                if((val >=2 ) && (val <= screen_info.h/ConsoleInfo::instance().lineHeight()))
                 {
                     ConsoleInfo::instance().setVisibleLines( val );
                     ConsoleInfo::instance().setCursorY( screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines() );
