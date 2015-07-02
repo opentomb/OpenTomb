@@ -1,10 +1,10 @@
 
 #include <SDL2/SDL.h>
 
-#include "al/AL/al.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
