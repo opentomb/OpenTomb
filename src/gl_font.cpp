@@ -198,7 +198,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         GLubyte *buffer;
         GLint chars_in_row, chars_in_column;
         size_t buffer_size;
-        int x, y, xx, yy;
+        int x, y;
         int i, ii, i0 = 0;
 
         // clear old atlas, if exists
@@ -266,7 +266,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 continue;
             }
 
-            if(x + g->bitmap.width > glf->gl_tex_width)
+            if(static_cast<GLint>(x + g->bitmap.width) > glf->gl_tex_width)
             {
                 x = 0;
                 y += glf->font_size + padding;
@@ -299,9 +299,9 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             glf->glyphs[i].tex_y1 = (GLfloat)(y + g->bitmap.rows);
 
             glf->glyphs[i].tex_index = glf->gl_tex_indexes[glf->gl_real_tex_indexes_count];
-            for(xx=0;xx<g->bitmap.width;xx++)
+            for(size_t xx=0; xx<g->bitmap.width; xx++)
             {
-                for(yy=0;yy<g->bitmap.rows;yy++)
+                for(size_t yy=0; yy<g->bitmap.rows; yy++)
                 {
                     buffer[(y+yy)*glf->gl_tex_width + (x+xx)] = g->bitmap.buffer[yy * g->bitmap.width + xx];
                 }
@@ -457,7 +457,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
     if(glf->gl_real_tex_indexes_count == 1)
     {
-        GLfloat *p = FontBuffer_ResizeAndMap(48 * utf8_strlen(text) * sizeof(GLfloat));
+        GLfloat *p = static_cast<GLfloat*>( FontBuffer_ResizeAndMap(48 * utf8_strlen(text) * sizeof(GLfloat)) );
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
@@ -540,7 +540,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
         for(;*ch;)
         {
-            GLfloat *p = FontBuffer_ResizeAndMap(sizeof(GLfloat [32]));
+            GLfloat *p = static_cast<GLfloat*>( FontBuffer_ResizeAndMap(sizeof(GLfloat [32])) );
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 
