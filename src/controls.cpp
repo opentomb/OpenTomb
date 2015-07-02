@@ -17,8 +17,6 @@
 #include "script.h"
 #include "vmath.h"
 
-#include <iostream>
-
 extern int done;
 
 extern SDL_Joystick         *sdl_joystick;
@@ -39,7 +37,6 @@ void Controls_Key(int32_t button, int state)
     
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
-        std::cerr << "i=" << i << "; primary=" << control_mapper.action_map[i].primary << "\n";
         if((button == control_mapper.action_map[i].primary) ||
            (button == control_mapper.action_map[i].secondary))  // If button = mapped action...
         {

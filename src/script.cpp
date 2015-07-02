@@ -476,8 +476,6 @@ void lua_AddKey(lua_State *lua, int keycode, int state)
 {
     int top = lua_gettop(lua);
 
-    std::cerr << "KEYCODE=" << keycode << "; STATE=" << state << "\n";
-    
     lua_getglobal(lua, "addKey");
     
     if(!lua_isfunction(lua, -1))
