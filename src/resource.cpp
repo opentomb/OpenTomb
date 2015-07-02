@@ -3236,7 +3236,7 @@ void Res_GenVBOs(World *world)
 {
     for(uint32_t i=0; i<world->meshes.size(); i++)
     {
-        if(!world->meshes[i]->m_vertices.empty() || world->meshes[i]->m_animatedVertices.size())
+        if(!world->meshes[i]->m_vertices.empty() || !world->meshes[i]->m_animatedVertices.empty())
         {
             world->meshes[i]->genVBO(&renderer);
         }
@@ -3244,7 +3244,7 @@ void Res_GenVBOs(World *world)
 
     for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || world->rooms[i]->mesh->m_animatedVertices.size()))
+        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || !world->rooms[i]->mesh->m_animatedVertices.empty()))
         {
             world->rooms[i]->mesh->genVBO(&renderer);
         }

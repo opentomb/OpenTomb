@@ -168,9 +168,9 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
     {
         mesh->m_mainVertexArray->bind();
 
-        const uint32_t *elementsbase = NULL;
+        const uint32_t* const elementsbase = nullptr;
 
-        unsigned long offset = 0;
+        size_t offset = 0;
         for(uint32_t texture = 0; texture < mesh->m_texturePageCount; texture++)
         {
             if(mesh->m_elementsPerTexture[texture] == 0)
@@ -695,7 +695,7 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
 
             for(const auto& f : room->frustum) {
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
-                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat [3]), NULL, GL_STREAM_DRAW_ARB);
+                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW_ARB);
 
                 GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 
@@ -1277,7 +1277,7 @@ void RenderDebugDrawer::render()
         }
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size(), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size(), nullptr, GL_STREAM_DRAW);
 
         std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY) );
         std::copy(m_buffer.begin(), m_buffer.end(), data);

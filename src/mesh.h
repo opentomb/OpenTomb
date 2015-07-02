@@ -63,14 +63,14 @@ struct BaseMesh
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
     std::vector<uint32_t> m_elementsPerTexture;                            //
-    std::vector<uint32_t> m_elements;                                             //
+    std::vector<GLuint> m_elements;                                             //
     uint32_t m_alphaElements;
 
     std::vector<Vertex> m_vertices;
     
     size_t m_animatedElementCount;
     size_t m_alphaAnimatedElementCount;
-    std::vector<uint32_t> m_allAnimatedElements;
+    std::vector<GLuint> m_allAnimatedElements;
     std::vector<AnimatedVertex> m_animatedVertices;
     
     std::vector<TransparentPolygonReference> m_transparentPolygons;
@@ -79,14 +79,16 @@ struct BaseMesh
     btVector3 m_bbMin;                                            // AABB bounding volume
     btVector3 m_bbMax;                                            // AABB bounding volume
     btScalar m_radius;                                                    // radius of the bounding sphere
+#pragma pack(push,1)
     struct MatrixIndex {
         int8_t i=0, j=0;
     };
+#pragma pack(pop)
     std::vector<MatrixIndex> m_matrixIndices;                                       // vertices map for skin mesh
 
-    GLuint                m_vboVertexArray;
-    GLuint                m_vboIndexArray;
-    GLuint                m_vboSkinArray;
+    GLuint                m_vboVertexArray = 0;
+    GLuint                m_vboIndexArray = 0;
+    GLuint                m_vboSkinArray = 0;
     std::shared_ptr<VertexArray> m_mainVertexArray;
     
     // Buffers for animated polygons
