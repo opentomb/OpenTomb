@@ -549,7 +549,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         if(id < 0)
         {
             ent->m_id = entity_tree.size();
-            entity_tree[id] = ent;
+            entity_tree[ent->m_id] = ent;
         }
         else
         {
@@ -982,12 +982,11 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
     std::swap(containers, dest_room->containers);
 }
 
-int World::addEntity(std::shared_ptr<Entity> entity)
+void World::addEntity(std::shared_ptr<Entity> entity)
 {
     if(entity_tree.find(entity->m_id) != entity_tree.end())
-        return 1;
+        return;
     entity_tree[entity->m_id] = entity;
-    return 1;
 }
 
 
