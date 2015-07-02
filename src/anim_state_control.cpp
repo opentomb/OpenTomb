@@ -79,10 +79,10 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int state)
+void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
 {
     AnimationFrame* af = &ss_anim->model->animations[ ss_anim->current_animation ];
-    if(ss_anim->current_frame >= af->frames.size() - 1)
+    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
     {
         auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
         ent->setAnimation(af->next_anim->id, af->next_frame);
@@ -235,7 +235,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
     character->updateCurrentHeight();
 
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point[2] - curr_fc->floor_point[2] < character->m_height - LARA_HANG_VERTICAL_EPSILON));
-    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() <= ss_anim->current_frame + 1;
+    int8_t last_frame = static_cast<int>( ss_anim->model->animations[ss_anim->current_animation].frames.size() ) <= ss_anim->current_frame + 1;
 
     if(resp->kill == 1)   // Stop any music, if Lara is dead.
     {

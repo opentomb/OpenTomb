@@ -45,7 +45,7 @@ void Com_TakeScreenShot()
     uint32_t str_size;
     
     glGetIntegerv(GL_VIEWPORT, ViewPort);
-    snprintf(fname, 128, "screen_%0.5d.png", screenshot_cnt);
+    snprintf(fname, 128, "screen_%05d.png", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     glReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);

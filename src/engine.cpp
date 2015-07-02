@@ -57,9 +57,9 @@ extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
 extern ALCcontext             *al_context;
 
-EngineControlState           control_states = {0};
-ControlSettings               control_mapper = {0};
-AudioSettings                 audio_settings = {0};
+EngineControlState           control_states{};
+ControlSettings               control_mapper{};
+AudioSettings                 audio_settings{};
 btScalar                                engine_frame_time = 0.0;
 
 Camera                         engine_camera;
@@ -127,7 +127,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 /**
  * update current room of bullet object
  */
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
+void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 {
     for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
     {
@@ -310,7 +310,7 @@ void lua_dumpRoom2(uint32_t id)
 
 void lua_SetRoomEnabled(int id, bool value)
 {
-    if(id >= engine_world.rooms.size()) {
+    if(id < 0 || id >= static_cast<int>(engine_world.rooms.size())) {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, id);
     }
 
@@ -484,21 +484,21 @@ lua::Tuple<float,float,float> lua_GetGravity()
     };
 }
 
-int lua_SetGravity3(float x, float y, float z)                                             // function to be exported to Lua
+void lua_SetGravity3(float x, float y, float z)                                             // function to be exported to Lua
 {
     btVector3 g = {x,y,z};
     bt_engine_dynamicsWorld->setGravity(g);
     ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
-int lua_SetGravity2(float x, float y)                                             // function to be exported to Lua
+void lua_SetGravity2(float x, float y)                                             // function to be exported to Lua
 {
     btVector3 g = {x,y,0};
     bt_engine_dynamicsWorld->setGravity(g);
     ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
-int lua_SetGravity1(float x)                                             // function to be exported to Lua
+void lua_SetGravity1(float x)                                             // function to be exported to Lua
 {
     btVector3 g = {x,0,0};
     bt_engine_dynamicsWorld->setGravity(g);
@@ -576,7 +576,7 @@ lua::OptionalTuple<float,float,float,float> lua_GetEntityActivationOffset(int id
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == NULL) return lua::None;
 
-    lua::Tuple<float,float,float,float>(
+    return lua::Tuple<float,float,float,float>(
                 ent->m_activationOffset[0],
                 ent->m_activationOffset[1],
                 ent->m_activationOffset[2],
@@ -996,7 +996,7 @@ void lua_SetStateChangeRange2(int id, int anim, int state, int dispatch, int fra
         return;
     }
 
-    if((anim < 0) || (anim + 1 > model->animations.size()))
+    if((anim < 0) || (anim + 1 > static_cast<int>(model->animations.size())))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
@@ -1007,7 +1007,7 @@ void lua_SetStateChangeRange2(int id, int anim, int state, int dispatch, int fra
     {
         if(af->state_change[i].id == (uint32_t)state)
         {
-            if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch.size()))
+            if(dispatch >= 0 && dispatch < static_cast<int>(af->state_change[i].anim_dispatch.size()))
             {
                 af->state_change[i].anim_dispatch[dispatch].frame_low = frame_low;
                 af->state_change[i].anim_dispatch[dispatch].frame_high = frame_high;
@@ -1040,7 +1040,7 @@ lua::OptionalTuple<int,float,float,float> lua_GetAnimCommandTransform(int id, in
         return lua::None;
     }
 
-    if((anim < 0) || (anim + 1 > model->animations.size()))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return lua::None;
@@ -1051,7 +1051,7 @@ lua::OptionalTuple<int,float,float,float> lua_GetAnimCommandTransform(int id, in
         frame = (int)model->animations[anim].frames.size() + frame;
     }
 
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames.size()))
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return lua::None;
@@ -1075,7 +1075,7 @@ void lua_SetAnimCommandTransform1(int id, int anim, int frame, uint8_t flag, flo
         return;
     }
 
-    if((anim < 0) || (anim + 1 > model->animations.size()))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
@@ -1086,7 +1086,7 @@ void lua_SetAnimCommandTransform1(int id, int anim, int frame, uint8_t flag, flo
         frame = (int)model->animations[anim].frames.size() + frame;
     }
 
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames.size()))
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return;
@@ -1106,7 +1106,7 @@ void lua_SetAnimCommandTransform2(int id, int anim, int frame, uint8_t flag)
         return;
     }
 
-    if((anim < 0) || (anim + 1 > model->animations.size()))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
@@ -1117,7 +1117,7 @@ void lua_SetAnimCommandTransform2(int id, int anim, int frame, uint8_t flag)
         frame = (int)model->animations[anim].frames.size() + frame;
     }
 
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames.size()))
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return;
@@ -1325,7 +1325,7 @@ lua::Float lua_GetSectorHeight2(int id, lua::Bool ceiling)
     return lua_GetSectorHeight3(id, ceiling, lua::None,lua::None,lua::None);
 }
 
-lua::Float lua_GetSectorHeight1(int id, lua::Bool ceiling)
+lua::Float lua_GetSectorHeight1(int id)
 {
     return lua_GetSectorHeight3(id, lua::None, lua::None,lua::None,lua::None);
 }
@@ -1439,7 +1439,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if(sink_index > engine_world.cameras_sinks.size())
+    if(sink_index < 0 || sink_index > static_cast<int>(engine_world.cameras_sinks.size()))
         return;
     StatCameraSink* sink = &engine_world.cameras_sinks[sink_index];
 
@@ -1606,7 +1606,7 @@ void lua_SetEntityAnim2(int id, int anim, lua::Int frame)
     lua_SetEntityAnim3(id, anim, frame, lua::None);
 }
 
-void lua_SetEntityAnim1(int id, int anim, lua::Int frame)
+void lua_SetEntityAnim1(int id, int anim)
 {
     lua_SetEntityAnim3(id, anim, lua::None, lua::None);
 }
@@ -1634,7 +1634,7 @@ void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
         return;
     }
 
-    if((bone_id < 0) || (bone_id >= ent->m_bf.bone_tags.size()))
+    if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_bf.bone_tags.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
@@ -2055,9 +2055,9 @@ lua::Bool lua_GetEntityStateFlag(int id, const std::string& which)
     if(which == "active")
         return ent->m_active;
     else if(which == "enabled")
-        ent->m_enabled;
+        return ent->m_enabled;
     else if(which == "visible")
-        ent->m_visible;
+        return ent->m_visible;
     else
         return lua::None;
 }
@@ -2290,7 +2290,7 @@ void lua_SetEntityState1(int id, int16_t value)
     lua_SetEntityState2(id, value, lua::None);
 }
 
-void lua_SetEntityRoomMove(int id, lua::Int room, lua::UInt16 moveType, lua::UInt8 dirFlag)
+void lua_SetEntityRoomMove(int id, lua::UInt room, lua::UInt16 moveType, lua::UInt8 dirFlag)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == NULL)
@@ -2423,11 +2423,11 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     }
 }
 
-void lua_PushEntityBody(int id, int body_number, float h_force, float v_force, bool resetFlag)
+void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_force, bool resetFlag)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if((ent != NULL) && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(!ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t = ent->m_angles[0] * M_PI / 180.0;
 
@@ -2458,10 +2458,10 @@ int lua_SetEntityBodyMass(lua_State *lua)
         return 0;
     }
 
-    int id = lua_tointeger(lua, 1);
+    const auto id = lua_tounsigned(lua, 1);
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    int body_number = lua_tointeger(lua, 2);
+    int body_number = lua_tounsigned(lua, 2);
     body_number = (body_number < 1)?(1):(body_number);
 
     uint16_t argn  = 3;
@@ -2469,7 +2469,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     btScalar mass;
 
-    if((ent != NULL) && (ent->m_bf.bone_tags.size() >= body_number))
+    if(ent && (static_cast<int>(ent->m_bf.bone_tags.size()) >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
@@ -2534,11 +2534,11 @@ int lua_SetEntityBodyMass(lua_State *lua)
     return 0;
 }
 
-void lua_LockEntityBodyLinearFactor2(int id, int body_number, lua::Float vfactor)
+void lua_LockEntityBodyLinearFactor2(int id, uint32_t body_number, lua::Float vfactor)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if((ent != NULL) && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->m_angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -2559,7 +2559,7 @@ void lua_LockEntityBodyLinearFactor2(int id, int body_number, lua::Float vfactor
     }
 }
 
-void lua_LockEntityBodyLinearFactor1(int id, int body_number)
+void lua_LockEntityBodyLinearFactor1(int id, uint32_t body_number)
 {
     lua_LockEntityBodyLinearFactor2(id, body_number, lua::None);
 }
@@ -2629,7 +2629,7 @@ void lua_CamShake2(float power, float time, lua::Int id)
         renderer.camera()->shake(power, time);
 }
 
-void lua_CamShake1(float power, float time, lua::Int id)
+void lua_CamShake1(float power, float time)
 {
     lua_CamShake2(power, time, lua::None);
 }
@@ -3322,7 +3322,7 @@ void Engine_Shutdown(int val)
 }
 
 
-int engine_lua_fputs(const char *str, FILE *f)
+int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
     ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
     return strlen(str);
@@ -3390,7 +3390,7 @@ bool Engine_FileFound(const char *name, bool Write)
     }
 }
 
-int Engine_GetLevelFormat(const char *name)
+int Engine_GetLevelFormat(const char* /*name*/)
 {
     // PLACEHOLDER: Currently, only PC levels are supported.
 
@@ -3693,7 +3693,6 @@ int Engine_ExecCmd(const char *ch)
     char token[ConsoleInfo::instance().lineSize()];
     char buf[ConsoleInfo::instance().lineSize() + 32];
     const char *pch;
-    int val;
     RoomSector* sect;
     FILE *f;
 
@@ -3777,8 +3776,8 @@ int Engine_ExecCmd(const char *ch)
             }
             else
             {
-                val = atoi(token);
-                if((val >=2 ) && (val <= ConsoleInfo::instance().visibleLines()))
+                const auto val = atoi(token);
+                if((val >=2 ) && (val <= static_cast<int>(ConsoleInfo::instance().visibleLines())))
                 {
                     ConsoleInfo::instance().setVisibleLines( val );
                     ConsoleInfo::instance().setCursorY( screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines() );

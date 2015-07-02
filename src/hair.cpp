@@ -227,7 +227,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
         m_mesh->m_texturePageCount = std::max(m_mesh->m_texturePageCount, original->m_texturePageCount);
 
-        for (int j = 0; j < original->m_texturePageCount; j++) {
+        for (size_t j = 0; j < original->m_texturePageCount; j++) {
             m_mesh->m_elementsPerTexture[j] += original->m_elementsPerTexture[j];
             totalElements += original->m_elementsPerTexture[j];
         }
@@ -252,12 +252,12 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
         // Copy elements
         uint32_t originalElementsStart = 0;
-        for (int page = 0; page < original->m_texturePageCount; page++)
+        for (size_t page = 0; page < original->m_texturePageCount; page++)
         {
             memcpy(&m_mesh->m_elements[elementsStartPerTexture[page]],
                    &original->m_elements[originalElementsStart],
                    sizeof(uint32_t) * original->m_elementsPerTexture[page]);
-            for (int j = 0; j < original->m_elementsPerTexture[page]; j++) {
+            for (size_t j = 0; j < original->m_elementsPerTexture[page]; j++) {
                 m_mesh->m_elements[elementsStartPerTexture[page]] = verticesStart + original->m_elements[originalElementsStart];
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;

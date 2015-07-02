@@ -439,12 +439,12 @@ bool StreamTrack::Load_Ogg(const char *path)
     return true;    // Success!
 }
 
-bool StreamTrack::Load_Wad(const char *path)
+bool StreamTrack::Load_Wad(const char* /*path*/)
 {
     return false;   ///@FIXME: PLACEHOLDER!!!
 }
 
-bool StreamTrack::Load_Wav(const char *path)
+bool StreamTrack::Load_Wav(const char* /*path*/)
 {
     return false;   ///@FIXME: PLACEHOLDER!!!
 }
@@ -755,14 +755,14 @@ bool StreamTrack::Stream_Ogg(ALuint buffer)
     return true;
 }
 
-bool StreamTrack::Stream_Wad(ALuint buffer)
+bool StreamTrack::Stream_Wad(ALuint /*buffer*/)
 {
     ///@FIXME: PLACEHOLDER!!!
 
     return false;
 }
 
-bool StreamTrack::Stream_Wav(ALuint buffer)
+bool StreamTrack::Stream_Wav(ALuint /*buffer*/)
 {
     ///@FIXME: PLACEHOLDER!!!
 
@@ -1776,7 +1776,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(struct Entity *ent)
+void Audio_UpdateListenerByEntity(struct Entity* /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }

@@ -340,7 +340,7 @@ void Engine_InitAL()
 #endif
 }
 
-int main(int argc, char **argv)
+int main(int /*argc*/, char** /*argv*/)
 {
     btScalar time, newtime;
     static btScalar oldtime = 0.0;

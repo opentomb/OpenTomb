@@ -261,24 +261,25 @@ struct Character;
 
 struct SSAnimation
 {
-    int16_t                     last_state;
-    int16_t                     next_state;
-    int16_t                     last_animation;
-    int16_t                     current_animation;                              //
-    int16_t                     next_animation;                                 //
-    int16_t                     current_frame;                                  //
-    int16_t                     next_frame;                                     //
+    int16_t                     last_state = 0;
+    int16_t                     next_state = 0;
+    int16_t                     last_animation = 0;
+    int16_t                     current_animation = 0;                              //
+    int16_t                     next_animation = 0;                                 //
+    //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+    int16_t                     current_frame = 0;                                  //
+    int16_t                     next_frame = 0;                                     //
 
-    uint16_t                    anim_flags;                                     // additional animation control param
+    uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period;                                         // one frame change period
-    btScalar                    frame_time;                                     // current time
-    btScalar                    lerp;
+    btScalar                    period = 1.0 / 30;                                         // one frame change period
+    btScalar                    frame_time = 0;                                     // current time
+    btScalar                    lerp = 0;
 
     void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
-    SkeletalModel    *model;                                          // pointer to the base model
-    SSAnimation      *next;
+    SkeletalModel    *model = nullptr;                                          // pointer to the base model
+    SSAnimation      *next = nullptr;
 };
 
 /*

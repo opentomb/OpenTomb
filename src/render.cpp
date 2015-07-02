@@ -410,7 +410,7 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
         // Calculate parent transform
         SSBoneTag &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
-        for (int j = 0; j < ent->m_bf.bone_tags.size(); j++) {
+        for (size_t j = 0; j < ent->m_bf.bone_tags.size(); j++) {
             if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
                 tr1 = ent->m_bt.bt_body[j]->getWorldTransform();
                 foundParentTransform = true;
@@ -1247,7 +1247,7 @@ void RenderDebugDrawer::setDebugMode(int debugMode)
    m_debugMode = debugMode;
 }
 
-void RenderDebugDrawer::draw3dText(const btVector3& location, const char* textString)
+void RenderDebugDrawer::draw3dText(const btVector3& /*location*/, const char* /*textString*/)
 {
    //glRasterPos3f(location.x(),  location.y(),  location.z());
    //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
@@ -1258,7 +1258,7 @@ void RenderDebugDrawer::reportErrorWarning(const char* warningString)
    ConsoleInfo::instance().addLine(warningString, FONTSTYLE_CONSOLE_WARNING);
 }
 
-void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
+void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB, const btVector3& normalOnB, btScalar distance, int /*lifeTime*/, const btVector3& color)
 {
     drawLine(pointOnB, pointOnB + normalOnB * distance, color);
 }

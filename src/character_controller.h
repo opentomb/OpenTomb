@@ -362,7 +362,7 @@ struct Character : public Entity
         pos[1] = m_transform.getOrigin()[1];
         return pos;
     }
-    void transferToRoom(Room* room) override {
+    void transferToRoom(Room* /*room*/) override {
     }
     void updateHair() override;
     void frameImpl(btScalar time, int16_t frame, int state) override;

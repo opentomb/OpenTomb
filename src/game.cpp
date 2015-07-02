@@ -342,7 +342,7 @@ int Game_Save(const char* name)
 
     // Save flipmap and flipped room states.
 
-    for(int i=0; i < engine_world.flip_data.size(); i++)
+    for(uint32_t i=0; i < engine_world.flip_data.size(); i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
         fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_data[i].state);
@@ -571,7 +571,10 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
-                    Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->m_targetDir = cam->m_targetDir = TR_CAM_TARG_BACK : cam->m_targetDir = TR_CAM_TARG_RIGHT;
+                    if(Cam_HasHit(cb, cameraFrom, cameraTo))
+                        cam->m_targetDir = TR_CAM_TARG_BACK;
+                    else
+                        cam->m_targetDir = TR_CAM_TARG_RIGHT;
                 }
                 else
                 {

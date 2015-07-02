@@ -67,60 +67,61 @@ struct EngineContainer
     Room* room = nullptr;
 };
 
+//! @todo Use bools where appropriate.
 struct EngineControlState
 {
-    int8_t   free_look;
-    btScalar free_look_speed;
+    int8_t   free_look = 0;
+    btScalar free_look_speed = 0;
 
-    int8_t   mouse_look;
-    btScalar cam_distance;
-    int8_t   noclip;
+    int8_t   mouse_look = 0;
+    btScalar cam_distance = 0;
+    int8_t   noclip = 0;
 
-    btScalar look_axis_x;                       // Unified look axis data.
-    btScalar look_axis_y;
+    btScalar look_axis_x = 0;                       // Unified look axis data.
+    btScalar look_axis_y = 0;
 
-    int8_t   move_forward;                      // Directional movement keys.
-    int8_t   move_backward;
-    int8_t   move_left;
-    int8_t   move_right;
-    int8_t   move_up;                           // These are not typically used.
-    int8_t   move_down;
+    int8_t   move_forward = 0;                      // Directional movement keys.
+    int8_t   move_backward = 0;
+    int8_t   move_left = 0;
+    int8_t   move_right = 0;
+    int8_t   move_up = 0;                           // These are not typically used.
+    int8_t   move_down = 0;
 
-    int8_t   look_up;                           // Look (camera) keys.
-    int8_t   look_down;
-    int8_t   look_left;
-    int8_t   look_right;
-    int8_t   look_roll_left;
-    int8_t   look_roll_right;
+    int8_t   look_up = 0;                           // Look (camera) keys.
+    int8_t   look_down = 0;
+    int8_t   look_left = 0;
+    int8_t   look_right = 0;
+    int8_t   look_roll_left = 0;
+    int8_t   look_roll_right = 0;
 
-    int8_t   do_jump;                              // Eventual actions.
-    int8_t   do_draw_weapon;
-    int8_t   do_roll;
+    int8_t   do_jump = 0;                              // Eventual actions.
+    int8_t   do_draw_weapon = 0;
+    int8_t   do_roll = 0;
 
-    int8_t   state_action;                         // Conditional actions.
-    int8_t   state_walk;
-    int8_t   state_sprint;
-    int8_t   state_crouch;
-    int8_t   state_look;
+    int8_t   state_action = 0;                         // Conditional actions.
+    int8_t   state_walk = 0;
+    int8_t   state_sprint = 0;
+    int8_t   state_crouch = 0;
+    int8_t   state_look = 0;
 
-    int8_t   use_flare;                            // Use item hotkeys.
-    int8_t   use_big_medi;
-    int8_t   use_small_medi;
+    int8_t   use_flare = 0;                            // Use item hotkeys.
+    int8_t   use_big_medi = 0;
+    int8_t   use_small_medi = 0;
 
-    int8_t   use_prev_weapon;                      // Weapon hotkeys.
-    int8_t   use_next_weapon;
-    int8_t   use_weapon1;
-    int8_t   use_weapon2;
-    int8_t   use_weapon3;
-    int8_t   use_weapon4;
-    int8_t   use_weapon5;
-    int8_t   use_weapon6;
-    int8_t   use_weapon7;
-    int8_t   use_weapon8;
+    int8_t   use_prev_weapon = 0;                      // Weapon hotkeys.
+    int8_t   use_next_weapon = 0;
+    int8_t   use_weapon1 = 0;
+    int8_t   use_weapon2 = 0;
+    int8_t   use_weapon3 = 0;
+    int8_t   use_weapon4 = 0;
+    int8_t   use_weapon5 = 0;
+    int8_t   use_weapon6 = 0;
+    int8_t   use_weapon7 = 0;
+    int8_t   use_weapon8 = 0;
 
 
-    int8_t   gui_pause;                         // GUI keys - not sure if it must be here.
-    int8_t   gui_inventory;
+    int8_t   gui_pause = 0;                         // GUI keys - not sure if it must be here.
+    int8_t   gui_inventory = 0;
 
 };
 

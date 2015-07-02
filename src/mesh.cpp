@@ -63,7 +63,7 @@ void BaseMesh::findBB()
 }
 
 
-void BaseMesh::genVBO(const Render *renderer)
+void BaseMesh::genVBO(const Render* /*renderer*/)
 {
     m_vboVertexArray = 0;
     m_vboIndexArray = 0;
@@ -162,15 +162,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     bb_max.setZero();
     centre.setZero();
     pos.setZero();
-    animations.anim_flags = 0x0000;
-    animations.frame_time = 0.0;
-    animations.period = 1.0 / 30.0;
-    animations.next_state = 0;
-    animations.lerp = 0.0;
-    animations.current_animation = 0;
-    animations.current_frame = 0;
-    animations.next_animation = 0;
-    animations.next_frame = 0;
+    animations = SSAnimation();
 
     animations.next = NULL;
     animations.onFrame = NULL;
@@ -656,7 +648,7 @@ void BaseMesh::genFaces()
 }
 
 
-btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool /*useCompression*/, bool /*buildBvh*/)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;

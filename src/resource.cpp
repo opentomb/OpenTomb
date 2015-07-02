@@ -720,7 +720,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
         //TR_III+, but works with TR_I - TR_II
         uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
-        uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
+        // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
         uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
@@ -732,7 +732,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if((*entry >= 0) && (*entry < engine_world.rooms.size()))
+                    if(*entry < engine_world.rooms.size())
                     {
                         sector->portal_to_room = *entry;
                         sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
@@ -981,7 +981,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands);
                                                 }
                                             }
                                             else
@@ -1278,7 +1278,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
                     int16_t  slope_t01  = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
                     int16_t  slope_t00  = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                    uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
+                    // uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
 
                     // t01/t02 are 5-bit values, where sign is specified by 0x10 mask.
 
@@ -1568,13 +1568,13 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
 
         uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
+        if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_below = world->rooms[rp]->getSectorRaw(sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
+        if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_above = world->rooms[rp]->getSectorRaw(sector->pos);
         }
@@ -1677,7 +1677,7 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UIn
 
     if(pen)   rs->ceiling_penetration_config = *pen;
     if(diag)  rs->ceiling_diagonal_type = *diag;
-    if(floor) rs->ceiling = *ceil;
+    if(ceil)  rs->ceiling = *ceil;
     rs->ceiling_corners[0] = {z0,z1,z2};
     rs->ceiling_corners[0][3] = z3;
 }
@@ -1933,7 +1933,6 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 {
     room = std::make_shared<Room>();
 
-    Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
     tr_room_portal_t *tr_portal;
@@ -2795,7 +2794,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
 
 void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
-    for (int i = 0; i < p->vertices.size(); i++)
+    for (size_t i = 0; i < p->vertices.size(); i++)
     {
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
@@ -2816,7 +2815,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
 
 void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, struct Polygon *p)
 {
-    for (int i = 0; i < p->vertices.size(); i++)
+    for (size_t i = 0; i < p->vertices.size(); i++)
     {
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
@@ -2876,7 +2875,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured triangles
      */
-    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
+    for(int i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2906,7 +2905,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured triangles
      */
-    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
+    for(int i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2924,7 +2923,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured rectangles
      */
-    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
+    for(int i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -3396,7 +3395,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
      * =================    now, animation loading    ========================
      */
 
-    if(tr_moveable->animation_index < 0 || tr_moveable->animation_index >= tr->animations_count)
+    if(tr_moveable->animation_index >= tr->animations_count)
     {
         /*
          * model has no start offset and any animation
@@ -3642,8 +3641,9 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
-        j &= 0x7fff;
-        if((j >= 0) && (j < model->animations.size()))
+        j &= 0x7fff; // this masks out the sign bit
+        assert( j >= 0 );
+        if(static_cast<size_t>(j) < model->animations.size())
         {
             anim->next_anim = &model->animations[j];
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
@@ -3684,7 +3684,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animations.size()))
+                    if(next_anim_ind < model->animations.size())
                     {
                         sch_p->anim_dispatch.emplace_back();
 

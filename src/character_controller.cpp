@@ -135,7 +135,7 @@ int32_t Character::removeAllItems()
 }
 
 
-int32_t Character::getItemsCount(uint32_t item_id)         // returns items count
+int32_t Character::getItemsCount(uint32_t /*item_id*/)         // returns items count
 {
     return m_inventory.size();
 }
@@ -311,7 +311,6 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     /*
      * GET HEIGHTS
      */
-    auto base_pos = pos;
     from = pos;
     to = from;
     to[2] -= 4096.0;

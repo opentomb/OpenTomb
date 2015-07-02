@@ -302,8 +302,8 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
         }
     }
 
-    if((s1p->checkPortalPointer() == s1->checkBaseRoom()) && (s2p->checkPortalPointer() == s2->checkBaseRoom()) ||
-       (s1p->checkPortalPointer() == s1->checkAlternateRoom()) && (s2p->checkPortalPointer() == s2->checkAlternateRoom()))
+    if(( (s1p->checkPortalPointer() == s1->checkBaseRoom())      && (s2p->checkPortalPointer() == s2->checkBaseRoom())      ) ||
+       ( (s1p->checkPortalPointer() == s1->checkAlternateRoom()) && (s2p->checkPortalPointer() == s2->checkAlternateRoom()) ) )
     {
         return true;
     }

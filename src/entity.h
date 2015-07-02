@@ -182,12 +182,12 @@ struct Entity : public Object
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar time, int16_t frame, int state) {
+    virtual void frameImpl(btScalar /*time*/, int16_t /*frame*/, int /*state*/) {
     }
 
     virtual void processSectorImpl() {
     }
-    virtual void jump(btScalar vert, btScalar hor) {
+    virtual void jump(btScalar /*vert*/, btScalar /*hor*/) {
     }
     virtual void kill() {
     }
