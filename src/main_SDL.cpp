@@ -394,11 +394,9 @@ void Engine_Start()
     engine_world.prepare();
 
     // Setting up mouse.
-#ifdef NDEBUG
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-#endif
 
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
