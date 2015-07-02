@@ -12,11 +12,11 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
+#include <cstdint>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "ft2build.h"
-#include "freetype.h"
+#include <ft2build.h>
+#include <freetype.h>
 
 
 typedef struct char_info_s

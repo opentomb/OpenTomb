@@ -2,9 +2,10 @@
 #define _L_MAIN_H_
 
 #include <SDL2/SDL_rwops.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+#include <vector>
 #include "tr_types.h"
 #include "tr_versions.h"
 
@@ -83,9 +84,8 @@ class TR_Level {
             this->sound_details = NULL;         // destroyed
             this->sample_indices_count = 0;     // destroyed
             this->sample_indices = NULL;        // destroyed
-            this->samples_data_size = 0;
             this->samples_count = 0;            // destroyed
-            this->samples_data = NULL;               // destroyed
+            this->samples_data.clear();               // destroyed
 
             this->frame_data_size = 0;          // destroyed
             this->frame_data = NULL;            // destroyed
@@ -292,12 +292,10 @@ class TR_Level {
                 this->sound_details = NULL; 
             }
             
-            if(this->samples_data)
+            if(!this->samples_data.empty())
             {
-                this->samples_data_size = 0;
                 this->samples_count = 0; 
-                free(this->samples_data); 
-                this->samples_data = NULL; 
+                this->samples_data.clear();
             }
             
             if(this->sample_indices_count)
@@ -515,8 +513,7 @@ class TR_Level {
     uint32_t sound_details_count;
     tr_sound_details_t *sound_details;      ///< \brief sound details.
     uint32_t samples_count;
-    uint32_t samples_data_size;
-    uint8_t *samples_data;                  ///< \brief samples.
+    std::vector<uint8_t> samples_data;                  ///< \brief samples.
     uint32_t sample_indices_count;
     uint32_t *sample_indices;               ///< \brief sample indices.
 

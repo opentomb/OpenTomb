@@ -5,7 +5,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
-#include <SDL2/SDL_audio.h>
 
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
@@ -51,9 +50,9 @@
 #include "FindConfigFile.h"
 #endif
 
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 
 #define NO_AUDIO        0
 
@@ -139,7 +138,7 @@ void Engine_InitGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;                    // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                    // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {

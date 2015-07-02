@@ -1,8 +1,7 @@
 # Usage (Linux):
-#  MKDIR build folder next to opentomb folder (e.g., opentomb-build)
-#  CD into build folder
-#  cmake ../opentomb
-#  make
+#   $ cd OpenTombSrc
+#   $ mkdir build && cd build
+#   $ cmake .. && make
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
@@ -10,17 +9,28 @@ PROJECT(OpenTomb)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
-find_package(Bullet REQUIRED)
-INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
+find_package(Bullet)
+if(NOT BULLET_FOUND)
+    message(WARNING "Bullet not found, using internal library")
+    add_subdirectory(3rdparty/libbullet)
+    INCLUDE_DIRECTORIES(3rdparty/libbullet/bullet)
+else()
+    INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
+endif()
 
-find_package(Freetype REQUIRED)
-INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+find_package(Freetype)
+if(NOT FREETYPE_FOUND)
+    message(WARNING "Freetype not found, using internal library")
+    add_subdirectory(3rdparty/freetype2)
+    INCLUDE_DIRECTORIES(3rdparty/freetype2/include)
+else()
+    INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+endif()
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
 
 find_package(OpenAL REQUIRED)
-add_definitions(-DAL_ALEXT_PROTOTYPES)
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
 find_package(Boost REQUIRED)
@@ -49,6 +59,7 @@ endfunction(trylinklib)
 trylinklib("ogg" SHARED)
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisfile" SHARED)
+trylinklib("sndfile" SHARED)
 
 find_package(ZLIB REQUIRED)
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
@@ -128,6 +139,7 @@ TARGET_LINK_LIBRARIES(
     ${ogg_LIB}
     ${vorbis_LIB}
     ${vorbisfile_LIB}
+    ${sndfile_LIB}
 )
 
 IF(APPLE)

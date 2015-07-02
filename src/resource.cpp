@@ -4033,11 +4033,6 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
 void TR_GenSamples(World *world, class VT_Level *tr)
 {
-    uint8_t      *pointer = tr->samples_data;
-    int8_t        flag;
-    uint32_t      ind1, ind2;
-    uint32_t      comp_size, uncomp_size;
-
     // Generate new buffer array.
     world->audio_buffers.resize(tr->samples_count, 0);
     alGenBuffers(world->audio_buffers.size(), world->audio_buffers.data());
@@ -4068,8 +4063,9 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     //
     // Hence, we specify certain parse method for each game version.
 
-    if(pointer)
+    if(!tr->samples_data.empty())
     {
+        auto pointer = tr->samples_data.data();
         switch(tr->game_version)
         {
             case TR_I:
@@ -4079,7 +4075,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
 
                 for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
                 {
-                    pointer = tr->samples_data + tr->sample_indices[i];
+                    pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
                 }
@@ -4091,21 +4087,22 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_III:
             {
                 world->audio_map.resize( (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
-                ind1 = 0;
-                ind2 = 0;
-                flag = 0;
+                size_t ind1 = 0;
+                size_t ind2 = 0;
+                bool flag = false;
                 size_t i = 0;
-                while(pointer < tr->samples_data + tr->samples_data_size - 4) {
-                    pointer = tr->samples_data + ind2;
+                while(pointer < tr->samples_data.data() + tr->samples_data.size() - 4) {
+                    pointer = tr->samples_data.data() + ind2;
                     if(0x46464952 == *((int32_t*)pointer)) {
                         // RIFF
-                        if(flag == 0x00) {
+                        if(!flag) {
                             ind1 = ind2;
-                            flag = 0x01;
+                            flag = true;
                         }
                         else {
-                            uncomp_size = ind2 - ind1;
-                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            size_t uncomp_size = ind2 - ind1;
+                            auto* srcData = tr->samples_data.data() + ind1;
+                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], srcData, uncomp_size);
                             i++;
                             if(i >= world->audio_buffers.size())
                             {
@@ -4116,8 +4113,8 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                     }
                     ind2++;
                 }
-                uncomp_size = tr->samples_data_size - ind1;
-                pointer = tr->samples_data + ind1;
+                size_t uncomp_size = tr->samples_data.size() - ind1;
+                pointer = tr->samples_data.data() + ind1;
                 if(i < world->audio_buffers.size()) {
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size);
                 }
@@ -4133,9 +4130,9 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 {
                     // Parse sample sizes.
                     // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
-                    uncomp_size = *((uint32_t*)pointer);
+                    size_t uncomp_size = *((uint32_t*)pointer);
                     pointer += 4;
-                    comp_size   = *((uint32_t*)pointer);
+                    size_t comp_size   = *((uint32_t*)pointer);
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
@@ -4148,15 +4145,11 @@ void TR_GenSamples(World *world, class VT_Level *tr)
 
             default:
                 world->audio_map.resize( TR_AUDIO_MAP_SIZE_NONE );
-                free(tr->samples_data);
-                tr->samples_data = NULL;
-                tr->samples_data_size = 0;
+                tr->samples_data.clear();
                 return;
         }
 
-        free(tr->samples_data);
-        tr->samples_data = NULL;
-        tr->samples_data_size = 0;
+        tr->samples_data.clear();
     }
 
     // Cycle through SoundDetails and parse them into native OpenTomb

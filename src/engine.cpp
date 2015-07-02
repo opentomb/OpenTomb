@@ -16,8 +16,8 @@
 
 #include <lua.hpp>
 
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include "vt/vt_level.h"
 
@@ -131,6 +131,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 {
     for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
     {
+        assert( i>=0 && i<bt_engine_dynamicsWorld->getCollisionObjectArray().size() );
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
         if (body && !body->isStaticObject() && body->getMotionState())

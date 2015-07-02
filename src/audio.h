@@ -2,19 +2,19 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "al/AL/al.h"
-#include "al/AL/efx-presets.h"
-#include "al/AL/efx-creative.h"
+#include <AL/al.h>
+#include <AL/efx-presets.h>
+#include <AL/efx-creative.h>
 
 #include <ogg/ogg.h>
 #include <vorbis/vorbisfile.h>
+#include <sndfile.h>
 
 #include "vt/vt_level.h"
 #include "game.h"
 #include "script.h"
 #include "system.h"
 
-#include <SDL2/SDL_audio.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -249,8 +249,6 @@ enum TR_AUDIO_STREAM_TYPE
 #define TR_AUDIO_STREAMPLAY_IGNORED        0
 #define TR_AUDIO_STREAMPLAY_PROCESSED      1
 
-
-
 struct Camera;
 struct Entity;
 
@@ -456,7 +454,7 @@ void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(Camera *cam);
 void Audio_UpdateListenerByEntity(Entity *ent);
 
-bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples(World *world);

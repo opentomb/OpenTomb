@@ -806,9 +806,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->samples_count = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        this->samples_data_size = SDL_RWsize(src) - SDL_RWtell(src);
-        this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
-        for(i = 0; i < this->samples_data_size; i++)
+        this->samples_data.resize( SDL_RWsize(src) - SDL_RWtell(src) );
+        for(i = 0; i < this->samples_data.size(); i++)
             this->samples_data[i] = read_bitu8(src);
     }
 }
