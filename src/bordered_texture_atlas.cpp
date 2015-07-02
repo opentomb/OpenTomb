@@ -171,37 +171,37 @@ bordered_texture_atlas::bordered_texture_atlas(int border,
 : border_width(border),
 number_result_pages(0),
 result_page_width(0),
-result_page_height(nullptr),
+result_page_height(NULL),
 number_original_pages(page_count),
 original_pages(pages),
 number_file_object_textures(0),
-file_object_textures(nullptr),
+file_object_textures(NULL),
 number_sprite_textures(0),
-canonical_textures_for_sprite_textures(nullptr),
+canonical_textures_for_sprite_textures(NULL),
 number_canonical_object_textures(0),
-canonical_object_textures(nullptr)
+canonical_object_textures(NULL)
 {
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     result_page_width = max_texture_edge_length;
-    
+
     size_t maxNumberCanonicalTextures = object_texture_count + sprite_texture_count;
     canonical_object_textures = new canonical_object_texture[maxNumberCanonicalTextures];
-    
+
     file_object_textures = new file_object_texture[object_texture_count];
     for (size_t i = 0; i < object_texture_count; i++)
     {
         addObjectTexture(object_textures[i]);
     }
-    
+
     canonical_textures_for_sprite_textures = new unsigned long[sprite_texture_count];
     for (size_t i = 0; i < sprite_texture_count; i++)
     {
         addSpriteTexture(sprite_textures[i]);
     }
-    
+
     layOutTextures();
 }
 

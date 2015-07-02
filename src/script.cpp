@@ -17,7 +17,7 @@
 #include "vmath.h"
 #include "render.h"
 #include "audio.h"
-#include "string.h"
+#include "engine_string.h"
 
 extern "C" {
 #include "lua/lua.h"

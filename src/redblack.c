@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "redblack.h"
-#include "system.h"
+//#include "system.h"
 
 void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
 
@@ -264,7 +264,8 @@ RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        Sys_extError("insufficient memory (insertNode)\n");
+        //Sys_extError("insufficient memory (insertNode)\n");
+        exit(1);
     }
     x->data = data;
     x->key = key;
@@ -327,7 +328,8 @@ RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        Sys_extError("insufficient memory (insertNode)\n");
+        //Sys_extError("insufficient memory (insertNode)\n");
+        exit(1);
     }
     x->data = data;
     x->key = key;

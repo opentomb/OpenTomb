@@ -24,6 +24,10 @@
 #ifndef GL_UTIL_H
 #define GL_UTIL_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
 
@@ -144,5 +148,9 @@ int checkOpenGLError();
 void printInfoLog (GLhandleARB object);
 int loadShaderFromBuff(GLhandleARB ShaderObj, char * source);
 int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

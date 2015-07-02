@@ -18,7 +18,7 @@
 #include "console.h"
 #include "vmath.h"
 #include "camera.h"
-#include "string.h"
+#include "engine_string.h"
 #include "shader_description.h"
 #include "shader_manager.h"
 
@@ -1573,74 +1573,6 @@ void gui_Fader::SetAspect()
 
 bool gui_Fader::SetTexture(const char *texture_path)
 {
-#ifdef __APPLE_CC__
-    // Load the texture file using ImageIO
-    CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path);
-    CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, nullptr, nullptr, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CGImageSourceRef source = CGImageSourceCreateWithDataProvider(provider, empty);
-    CGDataProviderRelease(provider);
-    CFRelease(empty);
-
-    // Check whether loading succeeded
-    CGImageSourceStatus status = CGImageSourceGetStatus(source);
-    if (status != kCGImageStatusComplete)
-    {
-        CFRelease(source);
-        Con_Printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
-        return false;
-    }
-
-    // Get the image
-    CGImageRef image = CGImageSourceCreateImageAtIndex(source, 0, nullptr);
-    CFRelease(source);
-    size_t width = CGImageGetWidth(image);
-    size_t height = CGImageGetHeight(image);
-
-    // Prepare the data to write to
-    uint8_t *data = new uint8_t[width * height * 4];
-
-    // Write image to bytes. This is done by drawing it into an off-screen image context using our data as the backing store
-    CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width*4, deviceRgb, kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(deviceRgb);
-    assert(context);
-
-    CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
-
-    CGContextRelease(context);
-    CGImageRelease(image);
-
-    // Drop previously assigned texture, if it exists.
-    DropTexture();
-
-    // Have OpenGL generate a texture object handle for us
-    glGenTextures(1, &mTexture);
-
-    // Bind the texture object
-    glBindTexture(GL_TEXTURE_2D, mTexture);
-
-    // Set the texture's stretching properties
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load texture. The weird format works out to ARGB8 in the end
-    // (on little-endian systems), which is what we specified above and what
-    // OpenGL prefers internally.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLuint) width, (GLuint) height, 0,
-                 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
-
-    // Cleanup
-    delete [] data;
-
-    // Setup the additional required information
-    mTextureWidth  = width;
-    mTextureHeight = height;
-
-    SetAspect();
-
-    Con_Printf("Loaded fader picture: %s", texture_path);
-    return true;
-#else
     SDL_Surface *surface = IMG_Load(texture_path);
     GLenum       texture_format;
     GLint        color_depth;
@@ -1720,7 +1652,6 @@ bool gui_Fader::SetTexture(const char *texture_path)
         mTexture = 0;
         return false;
     }
-#endif
 }
 
 bool gui_Fader::DropTexture()
@@ -2164,8 +2095,8 @@ void gui_ProgressBar::SetValues(float maxValue, float warnValue)
 // Set warning state blinking interval.
 void gui_ProgressBar::SetBlink(int interval)
 {
-    mBlinkInterval = (float)interval / 1000;
-    mBlinkCnt      = (float)interval / 1000;  // Also reset blink counter.
+    mBlinkInterval = (float)interval / 1000.0f;
+    mBlinkCnt      = (float)interval / 1000.0f;  // Also reset blink counter.
 }
 
 // Set extrude overlay effect parameters.
@@ -2173,7 +2104,7 @@ void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
-    mExtrudeDepth[3] = (float)depth / 255.0;        // We need only alpha transparency.
+    mExtrudeDepth[3] = (float)depth / 255.0f;       // We need only alpha transparency.
     mExtrudeDepth[4] = mExtrudeDepth[3];
 }
 
@@ -2183,8 +2114,8 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 {
     mAutoShow = enabled;
 
-    mAutoShowDelay = (float)delay / 1000;
-    mAutoShowCnt   = (float)delay / 1000;     // Also reset autoshow counter.
+    mAutoShowDelay = (float)delay / 1000.0f;
+    mAutoShowCnt   = (float)delay / 1000.0f;     // Also reset autoshow counter.
 
     mAutoShowFade = fade;
     mAutoShowFadeDelay = 1000 / (float)fadeDelay;
@@ -2197,7 +2128,7 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 void gui_ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value  = (value >= 0)?(value):(0);
+    value  = (value >= 0.0f)?(value):(0.0f);
     value  = (value > mMaxValue)?(mMaxValue):(value);
 
     // Enable blink mode, if value is gone below warning value.
@@ -2234,14 +2165,14 @@ void gui_ProgressBar::Show(float value)
 
         // 3. If autoshow time is up, then we hide bar,
         //    otherwise decrease delay counter.
-        if(mAutoShowCnt > 0)
+        if(mAutoShowCnt > 0.0f)
         {
             Visible = true;
             mAutoShowCnt -= engine_frame_time;
 
-            if(mAutoShowCnt <= 0)
+            if(mAutoShowCnt <= 0.0f)
             {
-                mAutoShowCnt = 0;
+                mAutoShowCnt = 0.0f;
                 Visible = false;
             }
         }
@@ -2315,7 +2246,7 @@ void gui_ProgressBar::Show(float value)
         }
         else if(mBlinkCnt <= 0)
         {
-            mBlinkCnt = mBlinkInterval * 2;
+            mBlinkCnt = mBlinkInterval * 2.0f;
         }
     }
 

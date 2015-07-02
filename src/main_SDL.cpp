@@ -34,7 +34,6 @@ extern "C" {
 #include "script.h"
 #include "console.h"
 #include "system.h"
-#include "common.h"
 #include "camera.h"
 #include "polygon.h"
 #include "portal.h"
@@ -50,7 +49,7 @@ extern "C" {
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
-//#include "string.h"
+#include "engine_string.h"
 
 #if defined(__MACOSX__)
 #include "FindConfigFile.h"
@@ -493,13 +492,14 @@ void Engine_Frame(btScalar time)
 {
     static int cycles = 0;
     static btScalar time_cycl = 0.0;
-    extern gui_text_line_t system_fps;
+    static char fps_str[32] = "0.0";
+
     if(time > 0.1)
     {
         time = 0.1;
     }
 
-    ResetTempbtScalar();
+    Sys_ResetTempMem();
     engine_frame_time = time;
     if(cycles < 20)
     {
@@ -509,10 +509,17 @@ void Engine_Frame(btScalar time)
     else
     {
         screen_info.fps = (20.0 / time_cycl);
-        snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
+        snprintf(fps_str, 32, "%.1f", screen_info.fps);
         cycles = 0;
         time_cycl = 0.0;
     }
+
+    gui_text_line_p fps = Gui_OutTextXY(10.0, 10.0, fps_str);
+    fps->Xanchor = GUI_ANCHOR_HOR_RIGHT;
+    fps->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+    fps->font_id  = FONT_PRIMARY;
+    fps->style_id = FONTSTYLE_MENU_TITLE;
+    fps->show  = 1;
 
     Game_Frame(time);
     Gameflow_Do();

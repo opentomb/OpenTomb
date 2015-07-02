@@ -146,15 +146,4 @@
 
 #define STR_CONV_PRELOAD_SIZE       16
 
-// Makes UTF-32 string out of UTF-8 string and returns pointer to
-// new created UTF-32 string. Also passes absolute string length
-// into string_length argument.
-
-uint32_t* String_MakeUTF32(const char* utf8_string, uint32_t* string_length);
-
-// Converts UTF-8 character in sequence to UTF32 character, also returning
-// a pointer to the next UTF-8 character in sequence.
-
-char*     String_UTF8char_to_UTF32char(char* utf8, uint32_t* utf32);
-
 #endif

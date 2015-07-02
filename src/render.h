@@ -26,7 +26,6 @@
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
-#define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
     #define GL_BT_SCALAR GL_DOUBLE

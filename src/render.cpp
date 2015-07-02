@@ -429,9 +429,10 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
     btScalar *p_vertex, *src_v, *dst_v, t;
     GLfloat *p_normale, *src_n, *dst_n;
     int8_t *ch = mesh->skin_map;
+    size_t buf_size = mesh->vertex_count * 3 * sizeof(GLfloat);
 
-    p_vertex  = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
-    p_normale = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
+    p_vertex  = (GLfloat*)Sys_GetTempMem(buf_size);
+    p_normale = (GLfloat*)Sys_GetTempMem(buf_size);
     dst_v = p_vertex;
     dst_n = p_normale;
     v = mesh->vertices;
@@ -480,7 +481,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
     }
 
     Render_Mesh(mesh, p_vertex, p_normale);
-    ReturnTempbtScalar(6 * mesh->vertex_count);
+    Sys_ReturnTempMem(buf_size);
 }
 
 /**
@@ -715,8 +716,10 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
         if(need_stencil)
         {
-            const int elem = (3 + 3 + 4 + 2);
+            const int elem_size = (3 + 3 + 4 + 2) * sizeof(GLfloat);
             const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(false, false);
+            size_t buf_size;
+
             glUseProgramObjectARB(shader->program);
             glUniform1iARB(shader->sampler, 0);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
@@ -726,7 +729,8 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
             for(frustum_p f=room->frustum;f!=NULL;f=f->next)
             {
-                GLfloat *v, *buf = (GLfloat*)GetTempbtScalar(f->vertex_count * elem);
+                buf_size = f->vertex_count * elem_size;
+                GLfloat *v, *buf = (GLfloat*)Sys_GetTempMem(buf_size);
                 v=buf;
                 for(int16_t i=f->vertex_count-1;i>=0;i--)
                 {
@@ -738,13 +742,13 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
                 glBindTexture(GL_TEXTURE_2D, renderer.world->textures[renderer.world->tex_count-1]);
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-                glVertexPointer(3, GL_BT_SCALAR, elem * sizeof(GLfloat), buf+0);
-                glNormalPointer(GL_BT_SCALAR, elem * sizeof(GLfloat), buf+3);
-                glColorPointer(4, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3);
-                glTexCoordPointer(2, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3+4);
+                glVertexPointer(3, GL_FLOAT, elem_size, buf+0);
+                glNormalPointer(GL_FLOAT, elem_size, buf+3);
+                glColorPointer(4, GL_FLOAT, elem_size, buf+3+3);
+                glTexCoordPointer(2, GL_FLOAT, elem_size, buf+3+3+4);
                 glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
 
-                ReturnTempbtScalar(f->vertex_count * elem);
+                Sys_ReturnTempMem(buf_size);
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
         }

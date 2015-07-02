@@ -247,10 +247,6 @@ int engine_lua_printf(const char *fmt, ...);
 
 engine_container_p Container_Create();
 
-btScalar *GetTempbtScalar(size_t size);
-void ReturnTempbtScalar(size_t size);
-void ResetTempbtScalar();
-
 void Engine_Init_Pre();     // Initial init
 void Engine_Init_Post();    // Finalizing init
 

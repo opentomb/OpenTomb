@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#if defined(__MACOSX__)
-#include <OpenGL/glext.h>
-#endif
 #include <SDL2/SDL_keycode.h>
 
 #include "gl_font.h"

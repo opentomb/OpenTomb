@@ -23,7 +23,7 @@ extern "C" {
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
-#include "string.h"
+#include "engine_string.h"
 #include <math.h>
 
 ALfloat                     listener_position[3];

@@ -4,9 +4,7 @@
 #include <SDL2/SDL_opengl.h>
 #include "polygon.h"
 #include "vmath.h"
-#include "camera.h"
-#include "portal.h"
-#include "engine.h"
+#include "system.h"
 
 /*
  * POLYGONS
@@ -115,9 +113,7 @@ void Polygon_MoveSelf(polygon_p p, btScalar move[3])
     v = p->vertices;
     for(uint16_t i=0;i<p->vertex_count;i++,v++)
     {
-        v->position[0] += move[0];
-        v->position[1] += move[1];
-        v->position[2] += move[2];
+        vec3_add_to(v->position, move);
     }
 
     p->plane[3] = -vec3_dot(p->plane, p->vertices[0].position);
@@ -237,6 +233,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
 {
     btScalar dist[3], dir[3], t, *result_buf, *result_v;
     vertex_p prev_v, curr_v;
+    size_t buf_size;
     char cnt = 0;
 
     if(SPLIT_IN_BOTH != Polygon_SplitClassify(p1, p2->plane) || (SPLIT_IN_BOTH != Polygon_SplitClassify(p2, p1->plane)))
@@ -244,7 +241,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         return 0;                                                               // quick check
     }
 
-    result_buf = GetTempbtScalar(3 * (p1->vertex_count + p2->vertex_count));
+    buf_size = (p1->vertex_count + p2->vertex_count) * 3 * sizeof(btScalar);
+    result_buf = (btScalar*)Sys_GetTempMem(buf_size);
     result_v = result_buf;
 
     /*
@@ -373,7 +371,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
             break;
     };
 
-    ReturnTempbtScalar(3 * (p1->vertex_count + p2->vertex_count));
+    Sys_ReturnTempMem(buf_size);
 
     if(dist[0] > 0)
     {

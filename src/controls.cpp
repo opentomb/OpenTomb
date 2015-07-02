@@ -11,7 +11,7 @@
 #include "engine.h"
 #include "controls.h"
 #include "console.h"
-#include "common.h"
+#include "system.h"
 #include "game.h"
 #include "main_SDL.h"
 #include "script.h"
@@ -143,7 +143,7 @@ void Controls_Key(int32_t button, int state)
                 case ACT_SCREENSHOT:
                     if(!state)
                     {
-                        Com_TakeScreenShot();
+                        Sys_TakeScreenShot();
                     }
                     break;
 

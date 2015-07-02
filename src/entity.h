@@ -115,7 +115,7 @@ typedef struct entity_s
     
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     struct bt_entity_data_s             bt;
-    btVector3                           scaling;            // entity scaling (horizontal/vertical)
+    btScalar                            scaling[3];         // entity scaling
     btScalar                            angles[3];
     btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 

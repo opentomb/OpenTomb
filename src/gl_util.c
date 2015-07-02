@@ -29,7 +29,6 @@
 
 #include "gl_util.h"
 #include "system.h"
-#include "console.h"
 
 #define GL_LOG_FILENAME "gl_log.txt"
 
@@ -78,7 +77,7 @@ PFNGLBINDATTRIBLOCATIONARBPROC          glBindAttribLocationARB =               
 PFNGLGETACTIVEATTRIBARBPROC             glGetActiveAttribARB =                  NULL;
 PFNGLGETATTRIBLOCATIONARBPROC           glGetAttribLocationARB =                NULL;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glEnableVertexAttribArrayARB =          NULL;
-PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glDisableVertexAttribArrayARB =          NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glDisableVertexAttribArrayARB =         NULL;
 PFNGLVERTEXATTRIBPOINTERARBPROC         glVertexAttribPointerARB =              NULL;
 
 PFNGLACTIVETEXTUREARBPROC               glActiveTextureARB =                    NULL;
@@ -266,8 +265,7 @@ void InitGLExtFuncs()
     }
     else
     {
-        fprintf(stderr, "Shaders not supported");
-        abort();
+        Sys_Error("Shaders not supported");
     }
 #endif
 }

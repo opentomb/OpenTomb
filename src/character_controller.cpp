@@ -17,7 +17,7 @@
 #include "polygon.h"
 #include "resource.h"
 #include "console.h"
-#include "string.h"
+#include "engine_string.h"
 
 void Character_Create(struct entity_s *ent)
 {

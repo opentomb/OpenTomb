@@ -13,7 +13,7 @@
 #include "portal.h"
 #include "render.h"
 #include "world.h"
-#include "engine.h"
+#include "system.h"
 #include "obb.h"
 
 
@@ -309,8 +309,8 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
             return NULL;
         }
 
-        int bz = 4 * (current_gen->vertex_count + emitter->vertex_count + 4);
-        btScalar *tmp = GetTempbtScalar(bz);
+        int buf_size = (current_gen->vertex_count + emitter->vertex_count + 4) * 3 * sizeof(btScalar);
+        btScalar *tmp = (btScalar*)Sys_GetTempMem(buf_size);
         if(this->split_by_plane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
         {
             n = emitter->planes;
@@ -326,7 +326,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
                     {
                         portal->dest_room->frustum = NULL;
                     }
-                    ReturnTempbtScalar(bz);
+                    Sys_ReturnTempMem(buf_size);
                     m_allocated = original_allocated;
                     return NULL;
                 }
@@ -343,7 +343,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
                 {
                     portal->dest_room->frustum = NULL;
                 }
-                ReturnTempbtScalar(bz);
+                Sys_ReturnTempMem(buf_size);
                 m_allocated = original_allocated;
                 return NULL;
             }
@@ -355,7 +355,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
             {
                 portal->dest_room->max_path = current_gen->parents_count;       // maximum path to the room
             }
-            ReturnTempbtScalar(bz);
+            Sys_ReturnTempMem(buf_size);
             return current_gen;
         }
 
@@ -368,7 +368,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
             portal->dest_room->frustum = NULL;
         }
         m_allocated = original_allocated;
-        ReturnTempbtScalar(bz);
+        Sys_ReturnTempMem(buf_size);
     }
 
     return NULL;
@@ -708,10 +708,11 @@ int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 
 int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
 {
-    int ins;
-    polygon_p p;
-    frustum_p frustum;
-    btScalar t;
+    int                         ins;
+    polygon_p                   p;
+    frustum_p                   frustum;
+    btScalar                    t;
+    extern struct camera_s      engine_camera;
 
     frustum = room->frustum;
     if(frustum == NULL)                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры

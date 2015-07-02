@@ -1,11 +1,15 @@
 #ifndef _RedBlack_H
 #define _RedBlack_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 
-#define RBC_RED 1
-#define RBC_BLACK 2
+#define RBC_RED     (1)
+#define RBC_BLACK   (2)
 
 typedef struct RedBlackNode_s
 {
@@ -41,6 +45,10 @@ void RB_Delete(RedBlackHeader_p p, RedBlackNode_p z);
 void RB_MakeEmpty(RedBlackHeader_p header);
 void RB_Free(RedBlackHeader_p p);
 RedBlackHeader_p RB_Init();
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif  /* _RedBlack_H */
 
