@@ -177,6 +177,8 @@ void ConsoleInfo::edit(int key) {
     switch(key)
     {
     case SDLK_UP:
+        if( m_historyLines.empty() )
+            break;
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
         currentLine() = m_historyLines[m_historyPos];
         m_historyPos++;
@@ -188,6 +190,8 @@ void ConsoleInfo::edit(int key) {
         break;
 
     case SDLK_DOWN:
+        if( m_historyLines.empty() )
+            break;
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
         currentLine() = m_historyLines[m_historyPos];
         if(m_historyPos == 0)
@@ -225,14 +229,14 @@ void ConsoleInfo::edit(int key) {
 
     case SDLK_BACKSPACE:
         if(m_cursorPos > 0) {
-            currentLine().erase(m_cursorPos-1);
+            currentLine().erase(m_cursorPos-1, 1);
             m_cursorPos--;
         }
         break;
 
     case SDLK_DELETE:
         if(m_cursorPos < oldLength) {
-            currentLine().erase(m_cursorPos);
+            currentLine().erase(m_cursorPos, 1);
         }
         break;
 

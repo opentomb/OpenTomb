@@ -113,7 +113,7 @@ void lua_noclip1()
 
 void lua_debuginfo2(lua::Bool show)
 {
-    if(!show == 0)
+    if(!show)
     {
         screen_info.show_debuginfo = !screen_info.show_debuginfo;
     }

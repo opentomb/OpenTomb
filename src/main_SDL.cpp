@@ -214,11 +214,7 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
-#ifdef NDEBUG
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
-#else
-    Uint32 video_flags = SDL_WINDOW_OPENGL;
-#endif
 
     if(screen_info.FS_flag)
     {
