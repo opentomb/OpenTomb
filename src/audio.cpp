@@ -22,6 +22,102 @@
 
 #include <cmath>
 
+#ifndef AL_ALEXT_PROTOTYPES
+namespace
+{
+extern "C"
+{
+// Effect objects
+LPALGENEFFECTS alGenEffects = nullptr;
+LPALDELETEEFFECTS alDeleteEffects = nullptr;
+LPALISEFFECT alIsEffect = nullptr;
+LPALEFFECTI alEffecti = nullptr;
+LPALEFFECTIV alEffectiv = nullptr;
+LPALEFFECTF alEffectf = nullptr;
+LPALEFFECTFV alEffectfv = nullptr;
+LPALGETEFFECTI alGetEffecti = nullptr;
+LPALGETEFFECTIV alGetEffectiv = nullptr;
+LPALGETEFFECTF alGetEffectf = nullptr;
+LPALGETEFFECTFV alGetEffectfv = nullptr;
+
+//Filter objects
+LPALGENFILTERS alGenFilters = nullptr;
+LPALDELETEFILTERS alDeleteFilters = nullptr;
+LPALISFILTER alIsFilter = nullptr;
+LPALFILTERI alFilteri = nullptr;
+LPALFILTERIV alFilteriv = nullptr;
+LPALFILTERF alFilterf = nullptr;
+LPALFILTERFV alFilterfv = nullptr;
+LPALGETFILTERI alGetFilteri = nullptr;
+LPALGETFILTERIV alGetFilteriv = nullptr;
+LPALGETFILTERF alGetFilterf = nullptr;
+LPALGETFILTERFV alGetFilterfv = nullptr;
+
+// Auxiliary slot object
+LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots = nullptr;
+LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots = nullptr;
+LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot = nullptr;
+LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti = nullptr;
+LPALAUXILIARYEFFECTSLOTIV alAuxiliaryEffectSlotiv = nullptr;
+LPALAUXILIARYEFFECTSLOTF alAuxiliaryEffectSlotf = nullptr;
+LPALAUXILIARYEFFECTSLOTFV alAuxiliaryEffectSlotfv = nullptr;
+LPALGETAUXILIARYEFFECTSLOTI alGetAuxiliaryEffectSloti = nullptr;
+LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv = nullptr;
+LPALGETAUXILIARYEFFECTSLOTF alGetAuxiliaryEffectSlotf = nullptr;
+LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv = nullptr;
+
+}
+
+void loadAlExtFunctions()
+{
+    static bool isLoaded = false;
+    if(isLoaded)
+        return;
+
+    alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects");
+    alDeleteEffects = (LPALDELETEEFFECTS )alGetProcAddress("alDeleteEffects");
+    alIsEffect = (LPALISEFFECT )alGetProcAddress("alIsEffect");
+    alEffecti = (LPALEFFECTI)alGetProcAddress("alEffecti");
+    alEffectiv = (LPALEFFECTIV)alGetProcAddress("alEffectiv");
+    alEffectf = (LPALEFFECTF)alGetProcAddress("alEffectf");
+    alEffectfv = (LPALEFFECTFV)alGetProcAddress("alEffectfv");
+    alGetEffecti = (LPALGETEFFECTI)alGetProcAddress("alGetEffecti");
+    alGetEffectiv = (LPALGETEFFECTIV)alGetProcAddress("alGetEffectiv");
+    alGetEffectf = (LPALGETEFFECTF)alGetProcAddress("alGetEffectf");
+    alGetEffectfv = (LPALGETEFFECTFV)alGetProcAddress("alGetEffectfv");
+    alGenFilters = (LPALGENFILTERS)alGetProcAddress("alGenFilters");
+    alDeleteFilters = (LPALDELETEFILTERS)alGetProcAddress("alDeleteFilters");
+    alIsFilter = (LPALISFILTER)alGetProcAddress("alIsFilter");
+    alFilteri = (LPALFILTERI)alGetProcAddress("alFilteri");
+    alFilteriv = (LPALFILTERIV)alGetProcAddress("alFilteriv");
+    alFilterf = (LPALFILTERF)alGetProcAddress("alFilterf");
+    alFilterfv = (LPALFILTERFV)alGetProcAddress("alFilterfv");
+    alGetFilteri = (LPALGETFILTERI )alGetProcAddress("alGetFilteri");
+    alGetFilteriv = (LPALGETFILTERIV )alGetProcAddress("alGetFilteriv");
+    alGetFilterf = (LPALGETFILTERF )alGetProcAddress("alGetFilterf");
+    alGetFilterfv = (LPALGETFILTERFV )alGetProcAddress("alGetFilterfv");
+    alGenAuxiliaryEffectSlots = (LPALGENAUXILIARYEFFECTSLOTS)alGetProcAddress("alGenAuxiliaryEffectSlots");
+    alDeleteAuxiliaryEffectSlots = (LPALDELETEAUXILIARYEFFECTSLOTS)alGetProcAddress("alDeleteAuxiliaryEffectSlots");
+    alIsAuxiliaryEffectSlot = (LPALISAUXILIARYEFFECTSLOT)alGetProcAddress("alIsAuxiliaryEffectSlot");
+    alAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alGetProcAddress("alAuxiliaryEffectSloti");
+    alAuxiliaryEffectSlotiv = (LPALAUXILIARYEFFECTSLOTIV)alGetProcAddress("alAuxiliaryEffectSlotiv");
+    alAuxiliaryEffectSlotf = (LPALAUXILIARYEFFECTSLOTF)alGetProcAddress("alAuxiliaryEffectSlotf");
+    alAuxiliaryEffectSlotfv = (LPALAUXILIARYEFFECTSLOTFV)alGetProcAddress("alAuxiliaryEffectSlotfv");
+    alGetAuxiliaryEffectSloti = (LPALGETAUXILIARYEFFECTSLOTI)alGetProcAddress("alGetAuxiliaryEffectSloti");
+    alGetAuxiliaryEffectSlotiv = (LPALGETAUXILIARYEFFECTSLOTIV)alGetProcAddress("alGetAuxiliaryEffectSlotiv");
+    alGetAuxiliaryEffectSlotf = (LPALGETAUXILIARYEFFECTSLOTF)alGetProcAddress("alGetAuxiliaryEffectSlotf");
+    alGetAuxiliaryEffectSlotfv = (LPALGETAUXILIARYEFFECTSLOTFV)alGetProcAddress("alGetAuxiliaryEffectSlotfv");
+
+    isLoaded = true;
+}
+}
+#else
+void loadAlExtFunctions()
+{
+    // we have the functions already provided by native extensions
+}
+#endif
+
 
 struct MemBufferFileIo : public SF_VIRTUAL_IO
 {
@@ -81,7 +177,7 @@ struct MemBufferFileIo : public SF_VIRTUAL_IO
         return count;
     }
 
-    static sf_count_t doWrite(const void *ptr, sf_count_t count, void *user_data)
+    static sf_count_t doWrite(const void* /*ptr*/, sf_count_t /*count*/, void* /*user_data*/)
     {
         return 0; // read-only
     }
@@ -1466,7 +1562,6 @@ void Audio_LoadOverridedSamples(struct World *world)
     }
 }
 
-
 void Audio_InitGlobals()
 {
     audio_settings.music_volume = 0.7;
@@ -1474,6 +1569,8 @@ void Audio_InitGlobals()
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
     audio_settings.stream_buffer_size = 32;
+
+    loadAlExtFunctions();
 }
 
 void Audio_InitFX()
