@@ -29,8 +29,6 @@
 
 void Room::empty()
 {
-    btRigidBody* body;
-
     containers.clear();
 
     near_room_list.clear();
@@ -45,20 +43,15 @@ void Room::empty()
     {
         for(uint32_t i=0;i<static_mesh.size();i++)
         {
-            body = static_mesh[i]->bt_body;
-            if(body)
+            if(btRigidBody* body = static_mesh[i]->bt_body)
             {
                 body->setUserPointer(NULL);
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
-                    body->setMotionState(NULL);
+                    body->setMotionState(nullptr);
                 }
-                if(body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                    body->setCollisionShape(NULL);
-                }
+                body->setCollisionShape(nullptr);
 
                 bt_engine_dynamicsWorld->removeRigidBody(body);
                 delete body;
@@ -78,25 +71,20 @@ void Room::empty()
 
     if(bt_body)
     {
-        body = bt_body;
-        if(body)
+        bt_body->setUserPointer(nullptr);
+        if(bt_body->getMotionState())
         {
-            body->setUserPointer(NULL);
-            if(body->getMotionState())
-            {
-                delete body->getMotionState();
-                body->setMotionState(NULL);
-            }
-            if(body->getCollisionShape())
-            {
-                delete body->getCollisionShape();
-                body->setCollisionShape(NULL);
-            }
-
-            bt_engine_dynamicsWorld->removeRigidBody(body);
-            delete body;
-            bt_body = NULL;
+            delete bt_body->getMotionState();
+            bt_body->setMotionState(nullptr);
         }
+        if(bt_body->getCollisionShape())
+        {
+            delete bt_body->getCollisionShape();
+            bt_body->setCollisionShape(nullptr);
+        }
+
+        bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        bt_body.reset();
     }
 
     sectors.clear();
@@ -463,14 +451,10 @@ void World::empty()
                     if(body->getMotionState())
                     {
                         delete body->getMotionState();
-                        body->setMotionState(NULL);
+                        body->setMotionState(nullptr);
                     }
 
-                    if(body->getCollisionShape())
-                    {
-                        delete body->getCollisionShape();
-                        body->setCollisionShape(NULL);
-                    }
+                    body->setCollisionShape(nullptr);
 
                     bt_engine_dynamicsWorld->removeRigidBody(body);
                     cont->room = NULL;
@@ -847,9 +831,9 @@ void Room::enable()
         return;
     }
 
-    if(bt_body != NULL)
+    if(bt_body)
     {
-        bt_engine_dynamicsWorld->addRigidBody(bt_body);
+        bt_engine_dynamicsWorld->addRigidBody(bt_body.get());
     }
 
     for(auto sm : static_mesh)
@@ -881,9 +865,9 @@ void Room::disable()
         return;
     }
 
-    if(bt_body != NULL)
+    if(bt_body)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(bt_body);
+        bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
     }
 
     for(auto sm : static_mesh)

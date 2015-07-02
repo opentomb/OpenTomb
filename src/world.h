@@ -317,7 +317,7 @@ struct Room : public Object
 
     std::vector<std::shared_ptr<Room>> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
-    btRigidBody                *bt_body;
+    std::unique_ptr<btRigidBody> bt_body;
 
     std::unique_ptr<EngineContainer> self;
 

@@ -1471,13 +1471,9 @@ Entity::~Entity() {
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
-                    body->setMotionState(NULL);
+                    body->setMotionState(nullptr);
                 }
-                if(body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                    body->setCollisionShape(NULL);
-                }
+                body->setCollisionShape(nullptr);
 
                 bt_engine_dynamicsWorld->removeRigidBody(body.get());
             }
