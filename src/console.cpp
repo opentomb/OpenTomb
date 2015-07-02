@@ -273,6 +273,8 @@ void ConsoleInfo::addText(const std::string &text, font_Style style) {
         size_t end = text.find_first_of("\r\n", pos);
         if( end != pos+1 )
             addLine(text.substr(pos, end-pos-1), style);
+        if( end == std::string::npos )
+            break;
         pos = end+1;
     }
 }
