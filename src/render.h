@@ -7,6 +7,7 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/LinearMath/btIDebugDraw.h"
 
+#include <array>
 #include <memory>
 #include <vector>
 
