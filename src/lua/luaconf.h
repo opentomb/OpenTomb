@@ -211,15 +211,16 @@
 */
 #if defined(LUA_LIB) || defined(lua_c)
 #include <stdio.h>
-//#define luai_writestring(s,l)	fwrite((s), sizeof(char), (l), stdout)
-//#define luai_writeline()	(luai_writestring("\n", 1), fflush(stdout))
+#define luai_writestring(s,l)	fwrite((s), sizeof(char), (l), stdout)
+#define luai_writeline()	(luai_writestring("\n", 1), fflush(stdout))
 #endif
 
 /*
 @@ luai_writestringerror defines how to print error messages.
 ** (A format string with one argument is enough for Lua...)
 */
-//#define luai_writestringerror(s,p)    (fprintf(stderr, (s), (p)), fflush(stderr))
+#define luai_writestringerror(s,p) \
+	(fprintf(stderr, (s), (p)), fflush(stderr))
 
 
 /*

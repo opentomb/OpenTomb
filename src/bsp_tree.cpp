@@ -10,11 +10,14 @@
 #include "frustum.h"
 #include "mesh.h"
 
+#define NEED_REALLOC_TREE_BUFF        (1)
+#define NEED_REALLOC_VERTEX_BUFF      (2)
+#define NEED_REALLOC_TEMP_BUFF        (3)
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
 {
-    bsp_node_p ret = (bsp_node_p)(m_buffer + m_allocated);
-    m_allocated += sizeof(bsp_node_t);
+    bsp_node_p ret = (bsp_node_p)(m_tree_buffer + m_tree_allocated);
+    m_tree_allocated += sizeof(bsp_node_t);
     ret->front = NULL;
     ret->back = NULL;
     ret->polygons_front = NULL;
@@ -25,25 +28,70 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 
 struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
 {
-    polygon_p ret = (polygon_p)(m_buffer + m_allocated);
-    m_allocated += sizeof(polygon_t);
+    polygon_p ret = (polygon_p)(m_temp_buffer + m_temp_allocated);
+    m_temp_allocated += sizeof(polygon_t);
     ret->next = NULL;
     ret->vertex_count = vertex_count;
-    ret->vertices = (vertex_p)(m_buffer + m_allocated);
-    m_allocated += vertex_count * sizeof(vertex_t);
+    ret->vertices = (vertex_p)(m_temp_buffer + m_temp_allocated);
+    m_temp_allocated += vertex_count * sizeof(vertex_t);
     return ret;
+}
+
+
+void dynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
+{
+    if(m_realloc_state || (m_vertex_allocated + p->vertex_count >= m_vertex_buffer_size))
+    {
+        m_realloc_state = NEED_REALLOC_VERTEX_BUFF;
+        return;
+    }
+
+    bsp_polygon_p bp = (bsp_polygon_p)(m_tree_buffer + m_tree_allocated);
+    m_tree_allocated  += sizeof(bsp_polygon_t);
+    bp->tex_index      = p->tex_index;
+    bp->transparency   = p->transparency;
+    bp->vertex_count   = p->vertex_count;
+
+    bp->indexes        = (GLuint*)(m_tree_buffer + m_tree_allocated);
+    m_tree_allocated  += p->vertex_count * sizeof(GLint);
+    GLuint *vi = bp->indexes;
+    vertex_p v = m_vertex_buffer + m_vertex_allocated;
+    vertex_p pv = p->vertices;
+    for(uint16_t i=0;i<p->vertex_count;i++,vi++,v++,pv++)
+    {
+        *vi = m_vertex_allocated++;
+        *v  = *pv;
+    }
+
+    if(vec3_dot(p->plane, leaf->plane) > 0.9)
+    {
+        bp->next = leaf->polygons_front;
+        leaf->polygons_front = bp;
+    }
+    else
+    {
+        bp->next = leaf->polygons_back;
+        leaf->polygons_back = bp;
+    }
 }
 
 
 void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 {
-    if(m_allocated + 1024 > m_buffer_size)
+    if(m_realloc_state)
     {
-        m_need_realloc = true;
+        return;
     }
 
-    if(m_need_realloc)
+    if(m_tree_allocated + 1024 > m_tree_buffer_size)
     {
+        m_realloc_state = NEED_REALLOC_TREE_BUFF;
+        return;
+    }
+
+    if(m_temp_allocated + 1024 > m_temp_buffer_size)
+    {
+        m_realloc_state = NEED_REALLOC_TEMP_BUFF;
         return;
     }
 
@@ -52,7 +100,7 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
         // we though root->front == NULL and root->back == NULL
         vec4_copy(root->plane, p->plane);
         p->next = NULL;
-        root->polygons_front = p;
+        this->addBSPPolygon(root, p);
         return;
     }
 
@@ -96,16 +144,7 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
     }
     else if((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
     {
-        if(vec3_dot(p->plane, root->plane) > 0.9)
-        {
-            p->next = root->polygons_front;
-            root->polygons_front = p;
-        }
-        else
-        {
-            p->next = root->polygons_back;
-            root->polygons_back = p;
-        }
+        this->addBSPPolygon(root, p);
     }
     else                                                    // SPLIT_IN_BOTH
     {
@@ -132,41 +171,68 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 
 dynamicBSP::dynamicBSP(uint32_t size)
 {
-    m_buffer = (uint8_t*)malloc(size);
-    m_buffer_size = size;
-    m_allocated = 0;
+    size = (size < 8192)?(8192):(size);
+
+    m_temp_buffer = (uint8_t*)malloc(size);
+    m_temp_buffer_size = size;
+    m_temp_allocated = 0;
+
+    m_tree_buffer = (uint8_t*)malloc(size);
+    m_tree_buffer_size = size;
+    m_tree_allocated = 0;
+
+    size /= 64;
+    m_vertex_buffer = (vertex_p)malloc(size * sizeof(vertex_t));
+    m_vertex_buffer_size = size;
+    m_vertex_allocated = 0;
+
     m_vbo = 0;
     m_anim_seq = NULL;
-    m_need_realloc = false;
+    m_realloc_state = 0;
     m_root = this->createBSPNode();
 }
 
 
 dynamicBSP::~dynamicBSP()
 {
-    if(m_buffer != NULL)
-    {
-        free(m_buffer);
-        m_buffer = NULL;
-    }
     if(m_vbo != 0)
     {
         glDeleteBuffersARB(1, &m_vbo);
         m_vbo = 0;
     }
-    m_need_realloc = false;
+
+    if(m_tree_buffer)
+    {
+        free(m_tree_buffer);
+        m_tree_buffer = NULL;
+    }
+    m_tree_buffer_size = 0;
+
+    if(m_temp_buffer)
+    {
+        free(m_temp_buffer);
+        m_temp_buffer = NULL;
+    }
+    m_temp_buffer_size = 0;
+
+    if(m_vertex_buffer)
+    {
+        free(m_vertex_buffer);
+        m_vertex_buffer = NULL;
+    }
+    m_vertex_buffer_size = 0;
+
+    m_realloc_state = 0;
     m_anim_seq = NULL;
     m_root = NULL;
-    m_allocated = 0;
-    m_buffer_size = 0;
 }
 
 
 void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
 {
-    for(;(p!=NULL)&&(!m_need_realloc);p=p->next)
+    for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
     {
-        uint32_t orig_allocated = m_allocated;
+        m_temp_allocated = 0;
         polygon_p np = this->createPolygon(p->vertex_count);
         bool visible = (f == NULL);
         vertex_p src_v, dst_v;
@@ -229,12 +295,9 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, str
             }
             this->addPolygon(m_root, np);
         }
-        else
-        {
-            m_allocated = orig_allocated;
-        }
     }
 }
+
 
 void dynamicBSP::reset(struct anim_seq_s *seq)
 {
@@ -242,18 +305,53 @@ void dynamicBSP::reset(struct anim_seq_s *seq)
     {
         glGenBuffersARB(1, &m_vbo);
     }
-    if(m_need_realloc)
+
+    switch(m_realloc_state)
     {
-        uint32_t new_buffer_size = m_buffer_size * 1.5;
-        uint8_t *new_buffer = (uint8_t*)realloc(m_buffer, new_buffer_size * sizeof(uint8_t));
-        if(new_buffer != NULL)
-        {
-            m_buffer = new_buffer;
-            m_buffer_size = new_buffer_size;
-        }
-        m_need_realloc = false;
-    }
+        case NEED_REALLOC_TREE_BUFF:
+            {
+                uint32_t new_buffer_size = m_tree_buffer_size * 1.5;
+                uint8_t *new_buffer = (uint8_t*)malloc(new_buffer_size * sizeof(uint8_t));
+                if(new_buffer != NULL)
+                {
+                    free(m_tree_buffer);
+                    m_tree_buffer = new_buffer;
+                    m_tree_buffer_size = new_buffer_size;
+                }
+            }
+            break;
+
+        case NEED_REALLOC_TEMP_BUFF:
+            {
+                uint32_t new_buffer_size = m_temp_buffer_size * 1.5;
+                uint8_t *new_buffer = (uint8_t*)malloc(new_buffer_size * sizeof(uint8_t));
+                if(new_buffer != NULL)
+                {
+                    free(m_temp_buffer);
+                    m_temp_buffer = new_buffer;
+                    m_temp_buffer_size = new_buffer_size;
+                }
+            }
+            break;
+
+        case NEED_REALLOC_VERTEX_BUFF:
+            {
+                uint32_t new_buffer_size = m_vertex_buffer_size * 1.5;
+                vertex_p new_buffer = (vertex_p)malloc(new_buffer_size * sizeof(vertex_t));
+                if(new_buffer != NULL)
+                {
+                    free(m_vertex_buffer);
+                    m_vertex_buffer = new_buffer;
+                    m_vertex_buffer_size = new_buffer_size;
+                }
+            }
+            break;
+    };
+
     m_anim_seq = seq;
-    m_allocated = 0;
+    m_temp_allocated = 0;
+    m_tree_allocated = 0;
+    m_vertex_allocated = 0;
+    m_realloc_state = 0;
     m_root = this->createBSPNode();
 }

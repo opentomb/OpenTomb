@@ -232,19 +232,57 @@ void Engine_BTInit()
 
 int lua_print(lua_State * lua)
 {
-     int top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
-     if(top == 0)
-     {
-        Con_AddLine("nil");
-     }
+    if(top == 0)
+    {
+       Con_AddLine("nil", FONTSTYLE_CONSOLE_EVENT);
+    }
 
-     for(int i=1;i<=top;i++)
-     {
-         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
-     }
+    for(int i=1;i<=top;i++)
+    {
+        switch(lua_type(lua, i))
+        {
+            case LUA_TNUMBER:
+            case LUA_TSTRING:
+               Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
+               break;
 
-     return 0;
+            case LUA_TBOOLEAN:
+               Con_AddLine(lua_toboolean(lua, i)?("true"):("false"), FONTSTYLE_CONSOLE_EVENT);
+               break;
+
+            case LUA_TFUNCTION:
+                Con_AddLine("function", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            case LUA_TTABLE:
+                Con_AddLine("table", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            case LUA_TTHREAD:
+                Con_AddLine("thread", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            case LUA_TLIGHTUSERDATA:
+                Con_AddLine("light user data", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            case LUA_TNIL:
+                Con_AddLine("nil", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            case LUA_TNONE:
+                Con_AddLine("none", FONTSTYLE_CONSOLE_EVENT);
+                break;
+
+            default:
+                Con_AddLine("none or nil", FONTSTYLE_CONSOLE_EVENT);
+                break;
+        };
+    }
+
+    return 0;
 }
 
  int lua_DumpModel(lua_State * lua)
@@ -4424,57 +4462,10 @@ void Engine_Shutdown(int val)
     }
 
     Sys_Destroy();
-
-#if !defined(__MACOSX__)
     IMG_Quit();
-#endif
     SDL_Quit();
 
     exit(val);
-}
-
-
-int engine_lua_fputs(const char *str, FILE *f)
-{
-    Con_AddText(str, FONTSTYLE_CONSOLE_NOTIFY);
-    return strlen(str);
-}
-
-
-int engine_lua_fprintf(FILE *f, const char *fmt, ...)
-{
-    va_list argptr;
-    char buf[4096];
-    int ret;
-
-    // Create string
-    va_start(argptr, fmt);
-    ret = vsnprintf(buf, 4096, fmt, argptr);
-    va_end(argptr);
-
-    // Write it to target file
-    fwrite(buf, 1, ret, f);
-
-    // Write it to console, too (if it helps) und
-    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
-
-    return ret;
-}
-
-
-int engine_lua_printf(const char *fmt, ...)
-{
-    va_list argptr;
-    char buf[4096];
-    int ret;
-
-    va_start(argptr, fmt);
-    ret = vsnprintf(buf, 4096, fmt, argptr);
-    va_end(argptr);
-
-    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
-
-    return ret;
 }
 
 

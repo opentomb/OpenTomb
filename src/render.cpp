@@ -228,7 +228,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
 /**
  * draw transparency polygons
  */
-void Render_PolygonTransparency(struct polygon_s *p)
+void Render_BSPPolygon(struct bsp_polygon_s *p)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -261,11 +261,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
     };
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-    glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-    glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-    glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
+    glDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
 }
 
 
@@ -280,13 +276,13 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
             Render_BSPFrontToBack(root->front);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
 
         if(root->back != NULL)
@@ -301,13 +297,13 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
             Render_BSPFrontToBack(root->back);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
 
         if(root->front != NULL)
@@ -328,13 +324,13 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
             Render_BSPBackToFront(root->back);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
 
         if(root->front != NULL)
@@ -349,13 +345,13 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
             Render_BSPBackToFront(root->front);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_BSPPolygon(p);
         }
 
         if(root->back != NULL)
@@ -1098,13 +1094,15 @@ void Render_DrawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0/*render_dBSP.m_vbo*/);
-        /*glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, render_dBSP.m_vbo);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, render_dBSP.getActiveVertexCount() * sizeof(vertex_t), render_dBSP.getVertexArray(), GL_DYNAMIC_DRAW);
+        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
         glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
         glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));*/
+        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
         Render_BSPBackToFront(render_dBSP.m_root);
-        //glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }

@@ -239,12 +239,6 @@ protected:
     engine_container_p m_cont;
 };
 
-extern "C" {
-int engine_lua_fputs(const char *str, FILE *f);
-int engine_lua_fprintf(FILE *f, const char *fmt, ...);
-int engine_lua_printf(const char *fmt, ...);
-}
-
 engine_container_p Container_Create();
 
 void Engine_Init_Pre();     // Initial init

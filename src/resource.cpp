@@ -3127,9 +3127,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      * let us normalise normales %)
      */
     p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
+    vertex_p v = mesh->vertices;
+    for(uint32_t i=0;i<mesh->vertex_count;i++,v++)
     {
-        vec3_norm(mesh->vertices[i].normal, n);
+        vec3_norm(v->normal, n);
     }
 
     /*
@@ -3249,9 +3250,10 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     /*
      * let us normalise normales %)
      */
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
+    vertex_p v = mesh->vertices;
+    for(uint32_t i=0;i<mesh->vertex_count;i++,v++)
     {
-        vec3_norm(mesh->vertices[i].normal, n);
+        vec3_norm(v->normal, n);
     }
 
     /*

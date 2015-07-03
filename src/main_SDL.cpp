@@ -6,10 +6,7 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
-
-#if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
-#endif
 
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
@@ -20,6 +17,9 @@ extern "C" {
 #include "lua/lualib.h"
 #include "lua/lauxlib.h"
 #include "lua/lstate.h"
+#include "al/AL/al.h"
+#include "al/AL/alc.h"
+#include "al/AL/alext.h"
 }
 
 #include "bullet/btBulletCollisionCommon.h"
@@ -51,15 +51,6 @@ extern "C" {
 #include "gameflow.h"
 #include "engine_string.h"
 
-#if defined(__MACOSX__)
-#include "FindConfigFile.h"
-#endif
-
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-}
 
 #define NO_AUDIO        0
 
@@ -439,16 +430,6 @@ void Engine_Display()
 
         Render_GenWorldList();
         Render_DrawList();
-
-        //glDisable(GL_CULL_FACE);
-        //Render_DrawAxis(10000.0);
-        /*if(engine_world.Character)
-        {
-            glPushMatrix();
-            glTranslatef(engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
-            Render_DrawAxis(1000.0);
-            glPopMatrix();
-        }*/
 
         Gui_SwitchGLMode(1);
         {

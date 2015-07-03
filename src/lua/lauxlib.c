@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int engine_lua_printf(const char *fmt, ...);
 
 /* This file uses only the official API of Lua.
 ** Any function declared here could be written as an application function.
@@ -928,9 +927,8 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
 
 
 static int panic (lua_State *L) {
-  engine_lua_printf("PANIC: unprotected error in call to Lua API (%s)\n",
+  luai_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
                    lua_tostring(L, -1));
-
   return 0;  /* return to Lua to abort */
 }
 

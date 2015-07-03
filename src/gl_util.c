@@ -31,6 +31,7 @@
 #include "system.h"
 
 #define GL_LOG_FILENAME "gl_log.txt"
+#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 #ifndef GL_GLEXT_PROTOTYPES
 PFNGLDELETEOBJECTARBPROC                glDeleteObjectARB =                     NULL;

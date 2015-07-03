@@ -172,7 +172,7 @@ void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
-void Render_PolygonTransparency(struct polygon_s *p);
+void Render_BSPPolygon(struct bsp_polygon_s *p);
 void Render_BSPFrontToBack(struct bsp_node_s *root);
 void Render_BSPBackToFront(struct bsp_node_s *root);
 void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);

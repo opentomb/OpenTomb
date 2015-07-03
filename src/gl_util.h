@@ -31,8 +31,6 @@ extern "C" {
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
 
-#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
-
 //extern char *engine_gl_ext_str;
 #ifndef GL_GLEXT_PROTOTYPES
 /*GLSL functions EXT*/

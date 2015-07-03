@@ -424,13 +424,13 @@ void Con_AddLine(const char *text, font_Style style)
             for(uint16_t i=con_base.line_count-1;i>1;i--)                       // shift log
             {
                 con_base.line_style_id[i] = con_base.line_style_id[i-1];
-                con_base.line_text[i]  = con_base.line_text[i-1];            // shift is round
+                con_base.line_text[i]  = con_base.line_text[i-1];               // shift is round
             }
 
-            con_base.line_text[1] = last;                                     // cycle the shift
+            con_base.line_text[1] = last;                                       // cycle the shift
             con_base.line_style_id[1] = style;
             strncpy(con_base.line_text[1], text, con_base.line_size);
-            con_base.line_text[1][con_base.line_size-1] = 0;                  // paranoid end of string
+            con_base.line_text[1][con_base.line_size-1] = 0;                    // paranoid end of string
             text += con_base.line_size-1;
         }
         while(len >= con_base.line_size);
