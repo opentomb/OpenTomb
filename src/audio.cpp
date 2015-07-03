@@ -22,6 +22,7 @@
 
 #include <cmath>
 
+#define AL_ALEXT_PROTOTYPES
 #ifndef AL_ALEXT_PROTOTYPES
 namespace
 {

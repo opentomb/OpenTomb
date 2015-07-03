@@ -58,7 +58,7 @@ using UInt64 = Optional<uint64_t>;
 
 using String = Optional<std::string>;
 
-constexpr auto None = boost::none;
+static auto None = boost::none;
 
 inline lua_State*& state()
 {
