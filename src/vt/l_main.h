@@ -1,5 +1,4 @@
-#ifndef _L_MAIN_H_
-#define _L_MAIN_H_
+#pragma once
 
 #include <SDL2/SDL_rwops.h>
 #include <cstdlib>
@@ -618,5 +617,3 @@ class TR_Level {
     void read_tr5_moveable(SDL_RWops * const src, tr_moveable_t & moveable);
     void read_tr5_level(SDL_RWops * const src);
 };
-
-#endif // _L_MAIN_H_

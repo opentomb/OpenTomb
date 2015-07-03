@@ -1,6 +1,4 @@
-
-#ifndef VMATH_H
-#define VMATH_H
+#pragma once
 
 #include <cmath>
 #include <array>
@@ -46,5 +44,3 @@ void Mat4_Scale(btTransform &mat, btScalar x, btScalar y, btScalar z);
 void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
-
-#endif  // VMATH_H

@@ -1,6 +1,6 @@
 
 #include <SDL2/SDL.h>
-#ifndef __APPLE_CC__
+#ifndef OS_APPLE
 #include <SDL2/SDL_image.h>
 #else
 #include <ApplicationServices/ApplicationServices.h>
@@ -26,7 +26,7 @@ void Com_Destroy()
 	
 }
 
-#ifdef __APPLE_CC__
+#ifdef OS_APPLE
 static void ReleaseScreenshotData(void *info, const void *data,
 								  size_t size)
 {
@@ -39,7 +39,7 @@ void Com_TakeScreenShot()
     GLint ViewPort[4];
     char fname[128];
     GLubyte *pixels;
-#ifndef __APPLE_CC__
+#ifndef OS_APPLE
     SDL_Surface *surface;
 #endif
     uint32_t str_size;
@@ -49,7 +49,7 @@ void Com_TakeScreenShot()
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     glReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-#ifdef __APPLE_CC__
+#ifdef OS_APPLE
     CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(pixels, pixels, str_size * ViewPort[3], ReleaseScreenshotData);
     CGImageRef image = CGImageCreate(ViewPort[2], ViewPort[3], 32, 8, str_size * ViewPort[3], deviceRgb, kCGImageAlphaLast, dataProvider, nullptr, false, kCGRenderingIntentDefault);

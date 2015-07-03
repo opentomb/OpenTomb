@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <cstring>
 #include "vmath.h"

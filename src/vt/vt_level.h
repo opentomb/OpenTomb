@@ -1,5 +1,4 @@
-#ifndef _VT_LEVEL_H_
-#define _VT_LEVEL_H_
+#pragma once
 
 #include "l_main.h"
 
@@ -22,5 +21,3 @@ class VT_Level : public TR_Level {
     void convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t & pal, tr4_textile32_t & dst);
     void convert_textile16_to_textile32(tr2_textile16_t & tex, tr4_textile32_t & dst);
 };
-
-#endif // _VT_LEVEL_H_

@@ -1,6 +1,4 @@
-
-#ifndef ANIM_STATE_CONTROL_H
-#define ANIM_STATE_CONTROL_H
+#pragma once
 
 #include <memory>
 
@@ -755,6 +753,3 @@ struct CharacterCommand;
 
 struct Character;
 int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
-
-#endif
-

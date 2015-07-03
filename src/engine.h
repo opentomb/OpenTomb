@@ -1,6 +1,4 @@
-
-#ifndef ENGINE_H
-#define ENGINE_H
+#pragma once
 
 #include <SDL2/SDL.h>
 #include <cstdint>
@@ -282,6 +280,3 @@ void Engine_SaveConfig();
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-
-
-#endif

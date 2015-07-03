@@ -1,6 +1,6 @@
 
 #include <cstdint>
-#ifdef __APPLE_CC__
+#ifdef OS_APPLE
 #include <ImageIO/ImageIO.h>
 #include <OpenGL/OpenGL.h>
 #else
@@ -1576,7 +1576,7 @@ void gui_Fader::SetAspect()
 
 bool gui_Fader::SetTexture(const char *texture_path)
 {
-#ifdef __APPLE_CC__
+#ifdef OS_APPLE
     // Load the texture file using ImageIO
     CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path);
     CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, nullptr, nullptr, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
