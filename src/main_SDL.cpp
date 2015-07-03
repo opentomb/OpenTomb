@@ -47,7 +47,7 @@
 //#include "string.h"
 
 #if defined(__MACOSX__)
-#include "FindConfigFile.h"
+#include "mac/FindConfigFile.h"
 #endif
 
 #include <AL/al.h>
