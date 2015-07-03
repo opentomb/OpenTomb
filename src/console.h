@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#include <string>
 
 #include "gui.h"
 #include "gl_font.h"

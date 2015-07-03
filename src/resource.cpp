@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <numeric>
 #include <SDL2/SDL.h>
 #include "gl_util.h"
 
