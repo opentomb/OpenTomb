@@ -1,0 +1,3 @@
+[submodule "3rdparty/LuaState"]
+	path = 3rdparty/LuaState
+	url = https://github.com/AdUki/LuaState.git
