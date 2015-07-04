@@ -30,6 +30,9 @@ render_t renderer;
 class dynamicBSP render_dBSP(512 * 1024);
 extern render_DebugDrawer debugDrawer;
 
+static uint16_t active_transparency = 0;
+static GLuint   active_texture = 0;
+
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
 */
@@ -178,7 +181,11 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
 
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+        if(active_texture != renderer.world->textures[0])
+        {
+            active_texture = renderer.world->textures[0];
+            glBindTexture(GL_TEXTURE_2D, active_texture);
+        }
         glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
     }
 
@@ -218,7 +225,11 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
             continue;
         }
 
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
+        if(active_texture != renderer.world->textures[texture])
+        {
+            active_texture = renderer.world->textures[texture];
+            glBindTexture(GL_TEXTURE_2D, active_texture);
+        }
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
     }
@@ -234,33 +245,41 @@ void Render_BSPPolygon(struct bsp_polygon_s *p)
     // Note that modes above 2 aren't explicitly used in TR textures, only for
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
-    switch(p->transparency)
+    if(active_transparency != p->transparency)
     {
-        case BM_MULTIPLY:                                    // Classic PC alpha
-            glBlendFunc(GL_ONE, GL_ONE);
-            break;
+        active_transparency = p->transparency;
+        switch(active_transparency)
+        {
+            case BM_MULTIPLY:                                    // Classic PC alpha
+                glBlendFunc(GL_ONE, GL_ONE);
+                break;
 
-        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-            break;
+            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                break;
 
-        case BM_INVERT_DEST:                                 // Inversion by dest
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-            break;
+            case BM_INVERT_DEST:                                 // Inversion by dest
+                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+                break;
 
-        case BM_SCREEN:                                      // Screen (smoke, etc.)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            break;
+            case BM_SCREEN:                                      // Screen (smoke, etc.)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                break;
 
-        case BM_ANIMATED_TEX:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            break;
+            case BM_ANIMATED_TEX:
+                glBlendFunc(GL_ONE, GL_ZERO);
+                break;
 
-        default:                                             // opaque animated textures case
-            break;
-    };
+            default:                                             // opaque animated textures case
+                break;
+        };
+    }
 
-    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+    if(active_texture != renderer.world->textures[p->tex_index])
+    {
+        active_texture = renderer.world->textures[p->tex_index];
+        glBindTexture(GL_TEXTURE_2D, active_texture);
+    }
     glDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
 }
 
@@ -736,7 +755,11 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                     v[0] = v[1] = 0.0;                              v+=2;
                 }
 
-                glBindTexture(GL_TEXTURE_2D, renderer.world->textures[renderer.world->tex_count-1]);
+                if(active_texture != renderer.world->textures[renderer.world->tex_count-1])
+                {
+                    active_texture = renderer.world->textures[renderer.world->tex_count-1];
+                    glBindTexture(GL_TEXTURE_2D, active_texture);
+                }
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
                 glVertexPointer(3, GL_FLOAT, elem_size, buf+0);
                 glNormalPointer(GL_FLOAT, elem_size, buf+3);
@@ -873,7 +896,11 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
                 continue;
             }
 
-            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
+            if(active_texture != renderer.world->textures[texture])
+            {
+                active_texture = renderer.world->textures[texture];
+                glBindTexture(GL_TEXTURE_2D, active_texture);
+            }
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
@@ -1000,6 +1027,7 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
+    active_texture = 0;
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
@@ -1094,6 +1122,7 @@ void Render_DrawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
+        active_transparency = 0;
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, render_dBSP.m_vbo);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glBufferDataARB(GL_ARRAY_BUFFER_ARB, render_dBSP.getActiveVertexCount() * sizeof(vertex_t), render_dBSP.getVertexArray(), GL_DYNAMIC_DRAW);
@@ -1154,7 +1183,11 @@ void Render_DrawList_DebugLines()
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
+        if(active_texture != renderer.world->textures[renderer.world->tex_count-1])
+        {
+            active_texture = renderer.world->textures[renderer.world->tex_count-1];
+            glBindTexture(GL_TEXTURE_2D, active_texture);
+        }
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );

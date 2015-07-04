@@ -8,10 +8,9 @@ extern "C" {
     
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
+#include <SDL2/SDL_opengl.h>
 
-#define LOG_FILENAME                "d_log.txt"
-#define INIT_TEMP_MEM_SIZE          (4096 * 1024)
+#define SYS_LOG_FILENAME            "d_log.txt"
     
 typedef struct screen_info_s
 {
@@ -51,7 +50,7 @@ void Sys_DebugLog(const char *file, const char *fmt, ...);
 
 void Sys_TakeScreenShot();
 
-#define Sys_LogCurrPlace Sys_DebugLog(LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
+#define Sys_LogCurrPlace Sys_DebugLog(SYS_LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
 #define Sys_extError(...) {Sys_LogCurrPlace Sys_Error(__VA_ARGS__);}
 #define Sys_extWarn(...) {Sys_LogCurrPlace Sys_Warn(__VA_ARGS__);}
 

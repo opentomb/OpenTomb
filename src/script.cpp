@@ -17,6 +17,7 @@
 #include "vmath.h"
 #include "render.h"
 #include "audio.h"
+#include "gui.h"
 #include "engine_string.h"
 
 extern "C" {

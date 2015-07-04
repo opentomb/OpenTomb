@@ -7,10 +7,20 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
 
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lstate.h"
+
 #include "system.h"
+#include "console.h"
 #include "gl_util.h"
 
+#define INIT_TEMP_MEM_SIZE          (4096 * 1024)
+
 screen_info_t           screen_info;
+
+extern lua_State       *engine_lua;
 
 static uint8_t         *engine_mem_buffer             = NULL;
 static size_t           engine_mem_buffer_size        = 0;
@@ -165,7 +175,7 @@ void Sys_Error(const char *error, ...)
     vsnprintf (string, 4096, error, argptr);
     va_end (argptr);
 
-    Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
+    Sys_DebugLog(SYS_LOG_FILENAME, "System error: %s", string);
     //Engine_Shutdown(1);
     exit(1);
 }
@@ -179,7 +189,8 @@ void Sys_Warn(const char *warning, ...)
     va_start (argptr, warning);
     vsnprintf (string, 4096, warning, argptr);
     va_end (argptr);
-    Sys_DebugLog(LOG_FILENAME, "Warning: %s", string);
+    Sys_DebugLog(SYS_LOG_FILENAME, "Warning: %s", string);
+    Con_Warning("Warning: %s", string);
 }
 
 

@@ -21,6 +21,7 @@
 #include "engine.h"
 #include "script.h"
 #include "obb.h"
+#include "gui.h"
 #include "redblack.h"
 #include "console.h"
 #include "resource.h"

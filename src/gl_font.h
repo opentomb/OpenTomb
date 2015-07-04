@@ -54,6 +54,60 @@ typedef struct gl_tex_font_s
 }gl_tex_font_t, *gl_tex_font_p;
 
 
+// Font struct contains additional field for font type which is
+// used to dynamically create or delete fonts.
+typedef struct gl_font_node_s
+{
+    uint16_t                    index;
+    uint16_t                    font_size;
+    struct gl_tex_font_s       *gl_font;
+    struct gl_font_node_s      *next;
+}gl_font_node_t, *gl_font_node_p;
+
+
+// Font style is different to font itself - whereas engine can have
+// only three fonts, there could be unlimited amount of font styles.
+// Font style management is done via font manager.
+typedef struct gl_fontstyle_s
+{
+    uint16_t                    index;                      // Unique index which is used to identify style.
+
+    GLfloat                     color[4];
+    GLfloat                     real_color[4];
+    GLfloat                     rect_color[4];
+    GLfloat                     rect_border;
+
+    uint8_t                     shadowed;
+    uint8_t                     rect;
+    uint8_t                     fading;
+    uint8_t                     hidden;
+
+    struct gl_fontstyle_s      *next;
+} gl_fontstyle_t, *gl_fontstyle_p;
+
+#define GUI_FONT_FADE_SPEED             1.0                 // Global fading style speed.
+#define GUI_FONT_FADE_MIN               0.3                 // Minimum fade multiplier.
+
+#define GUI_FONT_SHADOW_TRANSPARENCY     0.7
+#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
+#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
+
+
+typedef struct gl_font_manager_s
+{
+    GLfloat                 fade_value;            // Multiplier used with font RGB values to animate fade.
+    uint8_t                 fade_direction;
+
+    uint32_t                style_count;
+    struct gl_fontstyle_s  *styles;
+
+    uint32_t                font_count;
+    struct gl_font_node_s  *fonts;
+    
+    FT_Library              font_library;  // GLF font library unit.
+}gl_font_manager_t, *gl_font_manager_p;
+
+
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);
 void glf_free_font(gl_tex_font_p glf);
@@ -69,6 +123,29 @@ void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *tex
 
 uint32_t utf8_strlen(const char *str);
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
+
+
+// Font manager is a singleton structure which is used to manage all fonts
+// and font styles. Every time you want to change font or style, font manager
+// functions should be used.
+
+gl_font_manager_p glf_create_manager();
+void glf_free_manager(gl_font_manager_p p);
+
+gl_tex_font_p glf_manager_get_font(gl_font_manager_p manager, uint16_t index);
+gl_fontstyle_p glf_manager_get_style(gl_font_manager_p manager, uint16_t index);
+int glf_manager_add_font(gl_font_manager_p manager, uint16_t index, uint16_t size, const char* path);
+int glf_manager_add_fontstyle(gl_font_manager_p manager, uint16_t index,
+                              GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                              uint8_t shadow, uint8_t fading,
+                              uint8_t rect, uint8_t rect_border,
+                              GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A,
+                              uint8_t hide);
+int glf_manager_remove_font(gl_font_manager_p manager, uint16_t index);
+int glf_manager_remove_fontstyle(gl_font_manager_p manager, uint16_t index);
+void glf_manager_update(gl_font_manager_p manager, float time);
+void glf_manager_resize(gl_font_manager_p manager, float scale);
+
 
 #ifdef	__cplusplus
 }

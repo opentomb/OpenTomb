@@ -5,6 +5,7 @@
 #include "gl_font.h"
 #include "entity.h"
 #include "render.h"
+#include "console.h"
 #include "character_controller.h"
 
 
@@ -46,123 +47,8 @@ enum font_Type
 #define GUI_MIN_FONT_SIZE 1
 #define GUI_MAX_FONT_SIZE 72
 
-// This is predefined enumeration of font styles, which can be extended
-// with user-defined script functions.
-///@TODO: add system message console style
-enum font_Style
-{
-        FONTSTYLE_CONSOLE_INFO,
-        FONTSTYLE_CONSOLE_WARNING,
-        FONTSTYLE_CONSOLE_EVENT,
-        FONTSTYLE_CONSOLE_NOTIFY,
-        FONTSTYLE_MENU_TITLE,
-        FONTSTYLE_MENU_HEADING1,
-        FONTSTYLE_MENU_HEADING2,
-        FONTSTYLE_MENU_ITEM_ACTIVE,
-        FONTSTYLE_MENU_ITEM_INACTIVE,
-        FONTSTYLE_MENU_CONTENT,
-        FONTSTYLE_STATS_TITLE,
-        FONTSTYLE_STATS_CONTENT,
-        FONTSTYLE_NOTIFIER,
-        FONTSTYLE_SAVEGAMELIST,
-        FONTSTYLE_GENERIC
-};
-
-#define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 
 struct inventory_node_s;
-
-// Font struct contains additional field for font type which is
-// used to dynamically create or delete fonts.
-
-typedef struct gui_font_s
-{
-    font_Type                   index;
-    uint16_t                    size;
-    struct gl_tex_font_s       *gl_font;
-    struct gui_font_s          *next;
-}gui_font_t, *gui_font_p;
-
-// Font style is different to font itself - whereas engine can have
-// only three fonts, there could be unlimited amount of font styles.
-// Font style management is done via font manager.
-
-typedef struct gui_fontstyle_s
-{
-    font_Style                  index;          // Unique index which is used to identify style.
-
-    GLfloat                     color[4];
-    GLfloat                     real_color[4];
-    GLfloat                     rect_color[4];
-    GLfloat                     rect_border;
-
-    bool                        shadowed;
-    bool                        rect;
-    bool                        fading;         // TR4-like looped fading font effect.
-    bool                        hidden;         // Used to bypass certain GUI lines easily.
-
-    struct gui_fontstyle_s     *next;
-} gui_fontstyle_t, *gui_fontstyle_p;
-
-#define GUI_FONT_FADE_SPEED 1.0                 // Global fading style speed.
-#define GUI_FONT_FADE_MIN   0.3                 // Minimum fade multiplier.
-
-#define GUI_FONT_SHADOW_TRANSPARENCY     0.7
-#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
-#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
-
-
-// Font manager is a singleton class which is used to manage all in-game fonts
-// and font styles. Every time you want to change font or style, font manager
-// functions should be used.
-
-class gui_FontManager
-{
-public:
-    gui_FontManager();
-   ~gui_FontManager();
-
-    bool             AddFont(const font_Type index,
-                             const uint32_t size,
-                             const char* path);
-    bool             RemoveFont(const font_Type index);
-    gl_tex_font_p    GetFont(const font_Type index);
-
-    bool             AddFontStyle(const font_Style index,
-                                  const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
-                                  const bool shadow, const bool fading,
-                                  const bool rect, const GLfloat rect_border,
-                                  const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
-                                  const bool hide);
-    bool             RemoveFontStyle(const font_Style index);
-    gui_fontstyle_p GetFontStyle(const font_Style index);
-
-    uint32_t         GetFontCount()
-    {
-        return font_count;
-    }
-    uint32_t         GetFontStyleCount()
-    {
-        return style_count;
-    }
-
-    void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
-    void             Resize(); // Resize fonts on window resize event.
-
-private:
-    gui_font_p       GetFontAddress(const font_Type index);
-
-    GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
-    bool             mFadeDirection;
-
-    uint32_t         style_count;
-    gui_fontstyle_p  styles;
-
-    uint32_t         font_count;
-    gui_font_p       fonts;
-
-    FT_Library       font_library;  // GLF font library unit.
-};
 
 // Horizontal alignment is simple side alignment, like in original TRs.
 // It means that X coordinate will be either used for left, right or
@@ -498,8 +384,6 @@ private:
     float   mRotateTime;
 };
 
-void Gui_InitFontManager();
-
 void Gui_Init();
 void Gui_Destroy();
 
@@ -706,7 +590,7 @@ public:
 
 extern gui_InventoryManager  *main_inventory_manager;
 //extern gui_InventoryMenu     *main_inventory_menu;
-extern gui_FontManager       *FontManager;
+//extern gui_FontManager       *FontManager;
 
 /**
  * Draws text using a FONT_SECONDARY.
@@ -789,5 +673,9 @@ void Gui_DrawNotifier();
  */
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
+
+void Con_Draw();
+void Con_DrawBackground();
+void Con_DrawCursor();
 
 #endif

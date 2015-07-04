@@ -11,6 +11,7 @@
 #include "engine.h"
 #include "controls.h"
 #include "console.h"
+#include "gui.h"
 #include "system.h"
 #include "game.h"
 #include "main_SDL.h"

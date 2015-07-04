@@ -1,11 +1,6 @@
 
 #include <stdint.h>
-#ifdef __APPLE_CC__
-#include <ImageIO/ImageIO.h>
-#include <OpenGL/OpenGL.h>
-#else
 #include <SDL2/SDL_image.h>
-#endif
 
 #include "gl_util.h"
 #include "gl_font.h"
@@ -32,7 +27,6 @@ gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 
-gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
@@ -51,11 +45,6 @@ void Gui_Init()
 
     //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
-}
-
-void Gui_InitFontManager()
-{
-    FontManager = new gui_FontManager();
 }
 
 void Gui_InitTempLines()
@@ -253,22 +242,10 @@ void Gui_Destroy()
 
     temp_lines_used = GUI_MAX_TEMP_LINES;
 
-    /*if(main_inventory_menu)
-    {
-        delete main_inventory_menu;
-        main_inventory_menu = NULL;
-    }*/
-
     if(main_inventory_manager)
     {
         delete main_inventory_manager;
         main_inventory_manager = NULL;
-    }
-
-    if(FontManager)
-    {
-        delete FontManager;
-        FontManager = NULL;
     }
 }
 
@@ -320,7 +297,7 @@ void Gui_MoveLine(gui_text_line_p line)
  */
 gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(FontManager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
+    if(con_font_manager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
@@ -354,9 +331,9 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
 void Gui_Update()
 {
-    if(FontManager != NULL)
+    if(con_font_manager)
     {
-        FontManager->Update();
+        glf_manager_update(con_font_manager, engine_frame_time);
     }
 }
 
@@ -384,9 +361,9 @@ void Gui_Resize()
         Bar[i].Resize();
     }
 
-    if(FontManager)
+    if(con_font_manager)
     {
-        FontManager->Resize();
+        glf_manager_resize(con_font_manager, screen_info.scale_factor);
     }
 
     /* let us update console too */
@@ -425,13 +402,13 @@ void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
-    if(FontManager == NULL)
+    if(con_font_manager == NULL)
     {
         return;
     }
 
-    gl_tex_font_p gl_font = FontManager->GetFont((font_Type)l->font_id);
-    gui_fontstyle_p style = FontManager->GetFontStyle((font_Style)l->style_id);
+    gl_tex_font_p gl_font = glf_manager_get_font(con_font_manager, l->font_id);
+    gl_fontstyle_p style = glf_manager_get_style(con_font_manager, l->style_id);
 
     if((gl_font == NULL) || (style == NULL) || (!l->show) || (style->hidden))
     {
@@ -503,7 +480,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
 
 void Gui_RenderStrings()
 {
-    if(FontManager != NULL)
+    if(con_font_manager)
     {
         gui_text_line_p l = gui_base_lines;
 
@@ -1055,7 +1032,7 @@ void gui_InventoryManager::frame(float time)
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && (FontManager != NULL))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && con_font_manager)
     {
         int num = 0;
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
@@ -1598,7 +1575,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            Con_Warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
+            Con_Warning("image \"%s\" is not truecolor", texture_path);
             SDL_FreeSurface(surface);
             return false;
         }
@@ -1622,7 +1599,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        Con_Warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
+        Con_Warning("image \"%s\" loading error: \"%s\"", SDL_GetError(), texture_path);
         return false;
     }
 
@@ -1638,7 +1615,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        Con_Notify(SYSNOTE_LOADED_FADER, texture_path);
+        Con_Warning("fail to load fader image \"%s\"", texture_path);
         SDL_FreeSurface(surface);
         return true;
     }
@@ -2507,287 +2484,98 @@ void gui_ItemNotifier::SetRotateTime(float time)
     mRotateTime = (1000.0 / time) * 360.0;
 }
 
-// ===================================================================================
-// ======================== FONT MANAGER  CLASS IMPLEMENTATION =======================
-// ===================================================================================
-
-gui_FontManager::gui_FontManager()
+/*
+ * CONSOLE DRAW FUNCTIONS
+ */
+void Con_Draw()
 {
-    this->font_library   = NULL;
-    FT_Init_FreeType(&this->font_library);
-
-    this->style_count     = 0;
-    this->styles          = NULL;
-    this->font_count      = 0;
-    this->fonts           = NULL;
-
-    this->mFadeValue      = 0.0;
-    this->mFadeDirection  = true;
-}
-
-gui_FontManager::~gui_FontManager()
-{
-    this->font_count = 0;
-    this->style_count = 0;
-
-    for(gui_font_p next_font;this->fonts!=NULL;)
+    if(con_font_manager && con_base.inited && con_base.show)
     {
-        next_font=this->fonts->next;
-        glf_free_font(this->fonts->gl_font);
-        this->fonts->gl_font = NULL;
-        free(this->fonts);
-        this->fonts = next_font;
-    }
-    this->fonts = NULL;
+        int x, y;
+        glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        Con_DrawBackground();
+        Con_DrawCursor();
 
-    for(gui_fontstyle_p next_style;this->styles!=NULL;)
-    {
-        next_style=this->styles->next;
-        free(this->styles);
-        this->styles = next_style;
-    }
-    this->styles = NULL;
+        x = 8;
+        y = con_base.cursor_y;
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    FT_Done_FreeType(this->font_library);
-    this->font_library = NULL;
-}
+        const text_shader_description *shader = renderer.shader_manager->getTextShader();
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        GLfloat screenSize[2] = {
+            static_cast<GLfloat>(screen_info.w),
+            static_cast<GLfloat>(screen_info.h)
+        };
+        glUniform2fvARB(shader->screenSize, 2, screenSize);
 
-gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
-{
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
-    {
-        if(current_font->index == index)
+        for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
-            return current_font->gl_font;
+            GLfloat *col = glf_manager_get_style(con_font_manager, con_base.line_style_id[i])->real_color;
+            y += con_base.line_height;
+            vec4_copy(con_base.font->gl_font_color, col);
+            glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
-    }
-
-    return NULL;
-}
-
-gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
-{
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
-    {
-        if(current_font->index == index)
-        {
-            return current_font;
-        }
-    }
-
-    return NULL;
-}
-
-gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
-{
-    for(gui_fontstyle_p current_style=this->styles;current_style!=NULL;current_style=current_style->next)
-    {
-        if(current_style->index == index)
-        {
-            return current_style;
-        }
-    }
-
-    return NULL;
-}
-
-bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const char* path)
-{
-    if((size < GUI_MIN_FONT_SIZE) || (size > GUI_MAX_FONT_SIZE))
-    {
-        return false;
-    }
-
-    gui_font_s* desired_font = GetFontAddress(index);
-
-    if(desired_font == NULL)
-    {
-        if(this->font_count >= GUI_MAX_FONTS)
-        {
-            return false;
-        }
-
-        this->font_count++;
-        desired_font = (gui_font_p)malloc(sizeof(gui_font_t));
-        desired_font->size = (uint16_t)size;
-        desired_font->index = index;
-        desired_font->next = this->fonts;
-        this->fonts = desired_font;
-    }
-    else
-    {
-        glf_free_font(desired_font->gl_font);
-    }
-
-    desired_font->gl_font = glf_create_font(this->font_library, path, size);
-
-    return true;
-}
-
-bool gui_FontManager::AddFontStyle(const font_Style index,
-                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
-                                   const bool shadow, const bool fading,
-                                   const bool rect, const GLfloat rect_border,
-                                   const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
-                                   const bool hide)
-{
-    gui_fontstyle_p desired_style = GetFontStyle(index);
-
-    if(desired_style == NULL)
-    {
-        if(this->style_count >= GUI_MAX_FONTSTYLES)
-        {
-            return false;
-        }
-
-        this->style_count++;
-        desired_style = (gui_fontstyle_p)malloc(sizeof(gui_fontstyle_t));
-        desired_style->index = index;
-        desired_style->next = this->styles;
-        this->styles = desired_style;
-    }
-
-    desired_style->rect_border   = rect_border;
-    desired_style->rect_color[0] = rect_R;
-    desired_style->rect_color[1] = rect_G;
-    desired_style->rect_color[2] = rect_B;
-    desired_style->rect_color[3] = rect_A;
-
-    desired_style->color[0]  = R;
-    desired_style->color[1]  = G;
-    desired_style->color[2]  = B;
-    desired_style->color[3]  = A;
-
-    memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
-
-    desired_style->fading    = fading;
-    desired_style->shadowed  = shadow;
-    desired_style->rect      = rect;
-    desired_style->hidden    = hide;
-
-    return true;
-}
-
-bool gui_FontManager::RemoveFont(const font_Type index)
-{
-    gui_font_p previous_font, current_font;
-
-    if(this->fonts == NULL)
-    {
-        return false;
-    }
-
-    if(this->fonts->index == index)
-    {
-        previous_font = this->fonts;
-        this->fonts = this->fonts->next;
-        glf_free_font(previous_font->gl_font);
-        previous_font->gl_font = NULL;                                          ///@PARANOID
-        free(previous_font);
-        this->font_count--;
-        return true;
-    }
-
-    previous_font = this->fonts;
-    current_font = this->fonts->next;
-    for(;current_font!=NULL;)
-    {
-        if(current_font->index == index)
-        {
-            previous_font->next = current_font->next;
-            glf_free_font(current_font->gl_font);
-            current_font->gl_font = NULL;                                       ///@PARANOID
-            free(current_font);
-            this->font_count--;
-            return true;
-        }
-
-        previous_font = current_font;
-        current_font = current_font->next;
-    }
-
-    return false;
-}
-
-bool gui_FontManager::RemoveFontStyle(const font_Style index)
-{
-    gui_fontstyle_p previous_style, current_style;
-
-    if(this->styles == NULL)
-    {
-        return false;
-    }
-
-    if(this->styles->index == index)
-    {
-        previous_style = this->styles;
-        this->styles = this->styles->next;
-        free(previous_style);
-        this->style_count--;
-        return true;
-    }
-
-    previous_style = styles;
-    current_style = styles->next;
-    for(;current_style!=NULL;)
-    {
-        if(current_style->index == index)
-        {
-            previous_style->next = current_style->next;
-            free(current_style);
-            this->style_count--;
-            return true;
-        }
-
-        previous_style = current_style;
-        current_style = current_style->next;
-    }
-
-    return false;
-}
-
-void gui_FontManager::Update()
-{
-    if(this->mFadeDirection)
-    {
-        this->mFadeValue += engine_frame_time * GUI_FONT_FADE_SPEED;
-
-        if(this->mFadeValue >= 1.0)
-        {
-            this->mFadeValue = 1.0;
-            this->mFadeDirection = false;
-        }
-    }
-    else
-    {
-        this->mFadeValue -= engine_frame_time * GUI_FONT_FADE_SPEED;
-
-        if(this->mFadeValue <= GUI_FONT_FADE_MIN)
-        {
-            this->mFadeValue = GUI_FONT_FADE_MIN;
-            this->mFadeDirection = true;
-        }
-    }
-
-    for(gui_fontstyle_p current_style=this->styles;current_style!=NULL;current_style=current_style->next)
-    {
-        if(current_style->fading)
-        {
-            current_style->real_color[0] = current_style->color[0] * this->mFadeValue;
-            current_style->real_color[1] = current_style->color[1] * this->mFadeValue;
-            current_style->real_color[2] = current_style->color[2] * this->mFadeValue;
-        }
-        else
-        {
-            memcpy(current_style->real_color, current_style->color, sizeof(GLfloat) * 3);
-        }
+        glPopClientAttrib();
     }
 }
 
-void gui_FontManager::Resize()
+void Con_DrawBackground()
 {
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
+    /*
+     * Draw console background to see the text
+     */
+    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, screen_info.h, con_base.background_color, con_base.background_color, con_base.background_color, con_base.background_color, BM_SCREEN);
+
+    /*
+     * Draw finalise line
+     */
+    GLfloat lineCoords[4] = {
+        0.0f, 0.0,
+        1.0, 0.0
+    };
+    GLfloat lineColors[8] = {
+        1.0f, 1.0f, 1.0f, 0.7,
+        1.0f, 1.0f, 1.0f, 0.7
+    };
+    glVertexPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), lineCoords);
+    glColorPointer(4, GL_FLOAT, 4 * sizeof(GLfloat), lineColors);
+    glDrawArrays(GL_LINES, 0, 2);
+}
+
+void Con_DrawCursor()
+{
+    GLint y = con_base.cursor_y;
+
+    if(con_base.show_cursor_period)
     {
-        glf_resize(current_font->gl_font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor));
+        con_base.cursor_time += engine_frame_time;
+        if(con_base.cursor_time > con_base.show_cursor_period)
+        {
+            con_base.cursor_time = 0.0;
+            con_base.show_cursor = !con_base.show_cursor;
+        }
+    }
+
+    if(con_base.show_cursor)
+    {
+        GLfloat *v, cursor_array[12];
+        v = cursor_array;
+        *v = (GLfloat)con_base.cursor_x;
+        *v /= (GLfloat)screen_info.w;                               v++;
+        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
+        *v /= (GLfloat)screen_info.h;                               v++;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
+        *v = (GLfloat)con_base.cursor_x;
+        *v /= (GLfloat)screen_info.w;                               v++;
+        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
+        *v /= (GLfloat)screen_info.h;                               v++;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;
+        glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array);
+        glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array + 2);
+        glDrawArrays(GL_LINES, 0, 2);
     }
 }

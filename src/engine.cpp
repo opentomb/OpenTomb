@@ -164,7 +164,6 @@ void Engine_Init_Pre()
      * Rendering activation may be done later. */
 
     Sys_Init();
-    Gui_InitFontManager();
     Con_Init();
     Engine_LuaInit();
 
@@ -185,7 +184,7 @@ void Engine_Init_Post()
 {
     lua_CallVoidFunc(engine_lua, "loadscript_post", true);
 
-    Con_InitFonts();
+    Con_InitFont(glf_manager_get_font(con_font_manager, FONT_CONSOLE));
 
     Gui_Init();
 
@@ -321,7 +320,7 @@ int lua_DumpRoom(lua_State * lua)
         uint32_t id = lua_tointeger(lua, 1);
         if(id >= engine_world.room_count)
         {
-            Con_Warning(SYSWARN_WRONG_ROOM, id);
+            Con_Warning("wrong room id = %d", id);
             return 0;
         }
         r = engine_world.rooms + id;
@@ -358,14 +357,14 @@ int lua_SetRoomEnabled(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
+        Con_Warning("wrong arguments number, shoul be (room_id, state)");
         return 0;
     }
 
     uint32_t id = lua_tointeger(lua, 1);
     if(id >= engine_world.room_count)
     {
-        Con_Warning(SYSWARN_WRONG_ROOM, id);
+        Con_Warning("wrong room id = %d", id);
         return 0;
     }
 
@@ -389,7 +388,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
+        Con_Warning("wrong arguments number, shoul be (model_id, value)");
         return 0;
     }
 
@@ -397,7 +396,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        //Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -415,7 +414,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "(id, map_index, value)");
+        Con_Warning("wrong arguments number, shoul be (model_id, map_index, value)");
         return 0;
     }
 
@@ -423,7 +422,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        //Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -443,7 +442,7 @@ int lua_EnableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -461,7 +460,7 @@ int lua_DisableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -481,7 +480,7 @@ int lua_SetEntityCollision(lua_State * lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -507,7 +506,7 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -579,7 +578,7 @@ int lua_SameRoom(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id1, ent_id2]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id1, ent_id2]");
         return 0;
     }
 
@@ -648,7 +647,7 @@ int lua_SetGravity(lua_State * lua)                                             
             break;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
+            //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
             break;
     };
 
@@ -662,7 +661,7 @@ int lua_DropEntity(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time], (only_room)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time], (only_room)");
         return 0;
     }
 
@@ -670,7 +669,7 @@ int lua_DropEntity(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -757,7 +756,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("not set entity id");
+        Con_AddLine("not set entity id", FONTSTYLE_GENERIC);
         return 0;
     }
 
@@ -765,7 +764,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -787,7 +786,7 @@ int lua_GetCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
         return 0;
     }
 
@@ -797,7 +796,7 @@ int lua_GetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
 
@@ -808,7 +807,7 @@ int lua_GetCharacterParam(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        //Con_Warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
 }
@@ -820,7 +819,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
         return 0;
     }
 
@@ -830,13 +829,13 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
 
     if(!IsCharacter(ent))
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        //Con_Warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
     else if(top == 3)
@@ -870,7 +869,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
         return 0;
     }
 
@@ -881,7 +880,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
 
@@ -891,7 +890,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        //Con_Warning(SYSWARN_NO_CHARACTER, id);
     }
 
     return 0;
@@ -901,7 +900,7 @@ int lua_AddCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
     }
     else
     {
@@ -917,7 +916,7 @@ int lua_AddCharacterHair(lua_State *lua)
 
             if(!Hair_GetSetup(setup_index, &hair_setup))
             {
-                Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
+                //Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
             }
             else
             {
@@ -926,13 +925,13 @@ int lua_AddCharacterHair(lua_State *lua)
 
                 if(!Hair_Create((ent->character->hairs + (ent->character->hair_count-1)), &hair_setup, ent))
                 {
-                    Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                    //Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            //Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
         }
     }
     return 0;
@@ -942,7 +941,7 @@ int lua_ResetCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
     else
@@ -964,12 +963,12 @@ int lua_ResetCharacterHair(lua_State *lua)
             }
             else
             {
-                Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+                //Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            //Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
         }
     }
     return 0;
@@ -979,7 +978,7 @@ int lua_AddEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
     }
     else
     {
@@ -995,19 +994,19 @@ int lua_AddEntityRagdoll(lua_State *lua)
 
             if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
             {
-                Con_Warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+                //Con_Warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
             }
             else
             {
                 if(!Ragdoll_Create(ent, &ragdoll_setup))
                 {
-                    Con_Warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                    //Con_Warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
                 }
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            //Con_Warning(SYSWARN_NO_ENTITY, ent_id);
         }
     }
     return 0;
@@ -1017,7 +1016,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
     else
@@ -1033,12 +1032,12 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
             }
             else
             {
-                Con_Warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+                //Con_Warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            //Con_Warning(SYSWARN_NO_ENTITY, ent_id);
         }
     }
     return 0;
@@ -1074,7 +1073,7 @@ int lua_GetActionState(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -1083,7 +1082,7 @@ int lua_GetActionState(lua_State *lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -1095,7 +1094,7 @@ int lua_GetActionChange(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -1104,7 +1103,7 @@ int lua_GetActionChange(lua_State *lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -1123,7 +1122,7 @@ int lua_BindKey(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
     }
 
     else if(top == 2)
@@ -1137,7 +1136,7 @@ int lua_BindKey(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
+        //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
     }
 
     return 0;
@@ -1147,16 +1146,13 @@ int lua_AddFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
         return 0;
     }
 
-    if(!FontManager->AddFont((font_Type)lua_tointeger(lua, 1),
-                            (uint32_t) lua_tointeger(lua, 3),
-                                       lua_tostring(lua, 2)))
+    if(!glf_manager_add_font(con_font_manager, lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
     {
-        Con_Warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
-
+        //Con_Warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
     }
 
     return 0;
@@ -1166,7 +1162,7 @@ int lua_AddFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 14)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
         return 0;
     }
 
@@ -1175,25 +1171,25 @@ int lua_AddFontStyle(lua_State *lua)
     GLfloat     color_G     = (GLfloat)lua_tonumber(lua, 3);
     GLfloat     color_B     = (GLfloat)lua_tonumber(lua, 4);
     GLfloat     color_A     = (GLfloat)lua_tonumber(lua, 5);
-    bool        shadowed    = lua_toboolean(lua, 6);
-    bool        fading      = lua_toboolean(lua, 7);
-    bool        rect        = lua_toboolean(lua, 8);
+    int         shadowed    = lua_toboolean(lua, 6);
+    int         fading      = lua_toboolean(lua, 7);
+    int         rect        = lua_toboolean(lua, 8);
     GLfloat     rect_border = (GLfloat)lua_tonumber(lua, 9);
     GLfloat     rect_R      = (GLfloat)lua_tonumber(lua, 10);
     GLfloat     rect_G      = (GLfloat)lua_tonumber(lua, 11);
     GLfloat     rect_B      = (GLfloat)lua_tonumber(lua, 12);
     GLfloat     rect_A      = (GLfloat)lua_tonumber(lua, 13);
-    bool        hide        = lua_toboolean(lua, 14);
+    int         hide        = lua_toboolean(lua, 14);
 
 
-    if(!FontManager->AddFontStyle(style_index,
+    if(!glf_manager_add_fontstyle(con_font_manager, style_index,
                                   color_R, color_G, color_B, color_A,
                                   shadowed, fading,
                                   rect, rect_border, rect_R, rect_G, rect_B, rect_A,
                                   hide))
     {
 
-        Con_Warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        //Con_Warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
     }
 
     return 0;
@@ -1203,13 +1199,13 @@ int lua_DeleteFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[font index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[font index]");
         return 0;
     }
 
-    if(!FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
+    if(!glf_manager_remove_font(con_font_manager, lua_tointeger(lua, 1)))
     {
-        Con_Warning(SYSWARN_CANT_REMOVE_FONT);
+        //Con_Warning(SYSWARN_CANT_REMOVE_FONT);
     }
 
     return 0;
@@ -1219,13 +1215,13 @@ int lua_DeleteFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[style index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[style index]");
         return 0;
     }
 
-    if(!FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
+    if(!glf_manager_remove_fontstyle(con_font_manager, lua_tointeger(lua, 1)))
     {
-        Con_Warning(SYSWARN_CANT_REMOVE_STYLE);
+        //Con_Warning(SYSWARN_CANT_REMOVE_STYLE);
     }
 
     return 0;
@@ -1238,7 +1234,7 @@ int lua_AddItem(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -1262,7 +1258,7 @@ int lua_AddItem(lua_State * lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
     return 0;
 }
 
@@ -1271,7 +1267,7 @@ int lua_RemoveItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -1287,7 +1283,7 @@ int lua_RemoveItem(lua_State * lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
     return 0;
 }
 
@@ -1296,7 +1292,7 @@ int lua_RemoveAllItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1309,7 +1305,7 @@ int lua_RemoveAllItems(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
     }
 
     return 0;
@@ -1320,7 +1316,7 @@ int lua_GetItemsCount(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
         return 0;
     }
     int entity_id = lua_tointeger(lua, 1);
@@ -1335,7 +1331,7 @@ int lua_GetItemsCount(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1346,7 +1342,7 @@ int lua_CreateBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
         return 0;
     }
 
@@ -1366,7 +1362,7 @@ int lua_DeleteBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[item_id]");
     }
     else
     {
@@ -1380,7 +1376,7 @@ int lua_PrintItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1388,7 +1384,7 @@ int lua_PrintItems(lua_State * lua)
     entity_p  ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1410,7 +1406,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(top < 6)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
         return 0;
     }
 
@@ -1419,7 +1415,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
@@ -1431,7 +1427,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1452,7 +1448,7 @@ int lua_SetStateChangeRange(lua_State * lua)
             }
             else
             {
-                Con_Warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
+                //Con_Warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
             }
             break;
         }
@@ -1466,7 +1462,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
         return 0;
     }
 
@@ -1476,13 +1472,13 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1493,7 +1489,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        //Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1512,7 +1508,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
         return 0;
     }
 
@@ -1522,13 +1518,13 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1539,7 +1535,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        //Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1560,7 +1556,7 @@ int lua_SpawnEntity(lua_State * lua)
     if(lua_gettop(lua) < 5)
     {
         ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
         return 0;
     }
 
@@ -1601,7 +1597,7 @@ int lua_GetEntityVector(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1609,14 +1605,14 @@ int lua_GetEntityVector(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1630,7 +1626,7 @@ int lua_GetEntityDistance(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1638,14 +1634,14 @@ int lua_GetEntityDistance(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1658,7 +1654,7 @@ int lua_GetEntityDirDot(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1666,14 +1662,14 @@ int lua_GetEntityDirDot(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1686,7 +1682,7 @@ int lua_GetEntityPosition(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1694,7 +1690,7 @@ int lua_GetEntityPosition(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1712,7 +1708,7 @@ int lua_GetEntityAngles(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1721,7 +1717,7 @@ int lua_GetEntityAngles(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1736,7 +1732,7 @@ int lua_GetEntityScaling(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1745,7 +1741,7 @@ int lua_GetEntityScaling(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1762,7 +1758,7 @@ int lua_SetEntityScaling(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, x_scaling, y_scaling, z_scaling]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, x_scaling, y_scaling, z_scaling]");
         return 0;
     }
 
@@ -1771,7 +1767,7 @@ int lua_SetEntityScaling(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1806,7 +1802,7 @@ int lua_SimilarSector(lua_State * lua)
 
     if(top < 5)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz, ignore_doors, (ceiling)]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz, ignore_doors, (ceiling)]");
         return 0;
     }
 
@@ -1815,7 +1811,7 @@ int lua_SimilarSector(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1855,7 +1851,7 @@ int lua_GetSectorHeight(lua_State * lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, (ceiling), (dx, dy, dz)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, (ceiling), (dx, dy, dz)");
         return 0;
     }
 
@@ -1864,7 +1860,7 @@ int lua_GetSectorHeight(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1903,7 +1899,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Warning(SYSWARN_NO_ENTITY, id);
+                    //Con_Warning(SYSWARN_NO_ENTITY, id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1922,7 +1918,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Warning(SYSWARN_NO_ENTITY, id);
+                    //Con_Warning(SYSWARN_NO_ENTITY, id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1940,7 +1936,7 @@ int lua_SetEntityPosition(lua_State * lua)
             return 0;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
+            //Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
             return 0;
     }
 
@@ -1953,7 +1949,7 @@ int lua_SetEntityAngles(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, fi_x], (fi_y, fi_z)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, fi_x], (fi_y, fi_z)");
         return 0;
     }
 
@@ -1962,7 +1958,7 @@ int lua_SetEntityAngles(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1999,7 +1995,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
             return 0;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
+            //Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
             return 0;
     }
 
@@ -2011,7 +2007,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
         return 0;
     }
 
@@ -2020,7 +2016,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2041,7 +2037,7 @@ int lua_MoveEntityToSink(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
         return 0;
     }
 
@@ -2088,7 +2084,7 @@ int lua_MoveEntityToEntity(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed], (ignore_z)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed], (ignore_z)");
         return 0;
     }
 
@@ -2127,7 +2123,7 @@ int lua_RotateEntity(lua_State *lua)
 
     if((top > 4) || (top < 2))
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id, rot_x], (rot_y, rot_z)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id, rot_x], (rot_y, rot_z)");
         return 0;
     }
 
@@ -2136,7 +2132,7 @@ int lua_RotateEntity(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -2159,7 +2155,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -2168,7 +2164,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2182,7 +2178,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -2191,7 +2187,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2205,7 +2201,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id, speed_x], (speed_y, speed_z)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id, speed_x], (speed_y, speed_z)");
         return 0;
     }
 
@@ -2214,7 +2210,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -2239,7 +2235,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
         return 0;
     }
 
@@ -2248,7 +2244,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2275,7 +2271,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(top != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_flag]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_flag]");
         return 0;
     }
 
@@ -2284,7 +2280,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2299,7 +2295,7 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
         return 0;
     }
 
@@ -2308,14 +2304,14 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
     }
 
@@ -2331,7 +2327,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
         return 0;
     }
 
@@ -2340,14 +2336,14 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= model->mesh_count))
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
     }
 
@@ -2361,7 +2357,7 @@ int lua_GetEntityAnim(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2370,7 +2366,7 @@ int lua_GetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2441,7 +2437,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2450,7 +2446,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2463,7 +2459,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -2472,7 +2468,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2493,7 +2489,7 @@ int lua_GetEntityEnability(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2502,7 +2498,7 @@ int lua_GetEntityEnability(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2516,7 +2512,7 @@ int lua_GetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2525,7 +2521,7 @@ int lua_GetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2539,7 +2535,7 @@ int lua_SetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -2548,7 +2544,7 @@ int lua_SetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2585,7 +2581,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
         return 0;
     }
 
@@ -2594,7 +2590,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2750,7 +2746,7 @@ int lua_GetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2759,7 +2755,7 @@ int lua_GetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2774,7 +2770,7 @@ int lua_SetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
         return 0;
     }
 
@@ -2783,7 +2779,7 @@ int lua_SetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2810,7 +2806,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
         return 0;
     }
 
@@ -2819,7 +2815,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2841,7 +2837,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
         return 0;
     }
 
@@ -2850,7 +2846,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2880,7 +2876,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
         return 0;
     }
 
@@ -2889,7 +2885,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2911,7 +2907,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
         return 0;
     }
 
@@ -2920,7 +2916,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2950,7 +2946,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
         return 0;
     }
 
@@ -2959,7 +2955,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2981,7 +2977,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
         return 0;
     }
 
@@ -2990,7 +2986,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3045,7 +3041,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3054,7 +3050,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3067,7 +3063,7 @@ int lua_SetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
         return 0;
     }
 
@@ -3087,7 +3083,7 @@ int lua_GetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
         return 0;
     }
 
@@ -3118,7 +3114,7 @@ int lua_GetEntityResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 }
@@ -3128,7 +3124,7 @@ int lua_SetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
         return 0;
     }
 
@@ -3159,7 +3155,7 @@ int lua_SetEntityResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
     }
 
     return 0;
@@ -3169,7 +3165,7 @@ int lua_GetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3178,7 +3174,7 @@ int lua_GetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3191,7 +3187,7 @@ int lua_GetEntityModel(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3200,7 +3196,7 @@ int lua_GetEntityModel(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3213,7 +3209,7 @@ int lua_SetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -3222,7 +3218,7 @@ int lua_SetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3239,7 +3235,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
         return 0;
     }
 
@@ -3247,7 +3243,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3287,7 +3283,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3296,7 +3292,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -3308,7 +3304,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
         return 0;
     }
 
@@ -3425,7 +3421,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
     else
     {
-        Con_AddLine("wrong bone number = %d");
+        Con_AddLine("wrong bone number = %d", FONTSTYLE_GENERIC);
     }
 
     return 0;
@@ -3619,7 +3615,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3633,7 +3629,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        //Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 }
@@ -3722,7 +3718,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
         return 0;
     }
 
@@ -3732,7 +3728,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(id < 0)
     {
-        Con_Warning(SYSWARN_WRONG_STREAM_ID);
+        //Con_Warning(SYSWARN_WRONG_STREAM_ID);
         return 0;
     }
 
@@ -3754,14 +3750,14 @@ int lua_PlaySound(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
     if(id >= engine_world.audio_map_count)
     {
-        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
+        //Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
 
@@ -3789,11 +3785,11 @@ int lua_PlaySound(lua_State *lua)
         switch(result)
         {
             case TR_AUDIO_SEND_NOCHANNEL:
-                Con_Warning(SYSWARN_AS_NOCHANNEL);
+                //Con_Warning(SYSWARN_AS_NOCHANNEL);
                 break;
 
             case TR_AUDIO_SEND_NOSAMPLE:
-                Con_Warning(SYSWARN_AS_NOSAMPLE);
+                //Con_Warning(SYSWARN_AS_NOSAMPLE);
                 break;
         }
     }
@@ -3808,14 +3804,14 @@ int lua_StopSound(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map_count)
     {
-        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
+        //Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
 
@@ -3838,7 +3834,7 @@ int lua_StopSound(lua_State *lua)
         result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
     }
 
-    if(result < 0) Con_Warning(SYSWARN_AK_NOTPLAYED, id);
+    if(result < 0) //Con_Warning(SYSWARN_AK_NOTPLAYED, id);
 
     return 0;
 }
@@ -3853,12 +3849,12 @@ int lua_SetLevel(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[level_id]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[level_id]");
         return 0;
     }
 
     int id  = lua_tointeger(lua, 1);
-    Con_Notify(SYSNOTE_CHANGING_LEVEL, id);
+    Con_Notify("level was changed to %d", id);
 
     Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
@@ -3871,7 +3867,7 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
         return 0;
     }
 
@@ -3894,7 +3890,7 @@ int lua_SetGame(lua_State *lua)
     }
     lua_settop(lua, top);
 
-    Con_Notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
+    Con_Notify("level was changed to %d", gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
 
@@ -3905,7 +3901,7 @@ int lua_LoadMap(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
         return 0;
     }
 
@@ -3942,7 +3938,7 @@ int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
         return 0;
     }
 
@@ -3952,7 +3948,7 @@ int lua_SetFlipState(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -4004,7 +4000,7 @@ int lua_SetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
         return 0;
     }
 
@@ -4015,7 +4011,7 @@ int lua_SetFlipMap(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -4039,7 +4035,7 @@ int lua_GetFlipMap(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
             return 0;
         }
 
@@ -4048,7 +4044,7 @@ int lua_GetFlipMap(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
         return 0;
     }
 }
@@ -4061,7 +4057,7 @@ int lua_GetFlipState(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
             return 0;
         }
 
@@ -4070,7 +4066,7 @@ int lua_GetFlipState(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
         return 0;
     }
 }
@@ -4083,7 +4079,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
+        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -4729,9 +4725,9 @@ bool Engine_LoadPCLevel(const char *name)
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     Engine_GetLevelName(buf, name);
 
-    Con_Notify(SYSNOTE_LOADED_PC_LEVEL);
-    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
-    Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.room_count);
+    Con_Notify("loaded PC level");
+    Con_Notify("version = %d, map = \"%s\"", trv, buf);
+    Con_Notify("rooms count = %d", engine_world.room_count);
 
     delete tr_level;
 
@@ -4742,7 +4738,7 @@ int Engine_LoadMap(const char *name)
 {
     if(!Engine_FileFound(name))
     {
-        Con_Warning(SYSWARN_FILE_NOT_FOUND, name);
+        //Con_Warning(SYSWARN_FILE_NOT_FOUND, name);
         return 0;
     }
 
@@ -4877,7 +4873,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify(SYSNOTE_CONSOLE_SPACING, con_base.spacing);
+                Con_Notify("spacing = %d", con_base.spacing);
                 return 1;
             }
             Con_SetLineInterval(atof(token));
@@ -4888,7 +4884,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify(SYSNOTE_CONSOLE_LINECOUNT, con_base.showing_lines);
+                Con_Notify("showing lines = %d", con_base.showing_lines);
                 return 1;
             }
             else
@@ -4901,7 +4897,7 @@ int Engine_ExecCmd(char *ch)
                 }
                 else
                 {
-                    Con_Warning(SYSWARN_INVALID_LINECOUNT);
+                    Con_Warning("wrong lines count, must be in interval: (%d, %d)", 2, con_base.line_count);
                 }
             }
             return 1;
@@ -5022,7 +5018,7 @@ int Engine_ExecCmd(char *ch)
         {
             if(engine_lua)
             {
-                Con_AddLine(pch);
+                Con_AddLine(pch, FONTSTYLE_GENERIC);
                 if (luaL_dostring(engine_lua, pch) != LUA_OK)
                 {
                     Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);

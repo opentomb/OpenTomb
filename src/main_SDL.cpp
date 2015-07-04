@@ -157,7 +157,7 @@ void Engine_InitSDLControls()
         NumJoysticks = SDL_NumJoysticks();
         if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
         {
-            Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
+            Sys_DebugLog(SYS_LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
             return;
         }
 
@@ -168,7 +168,7 @@ void Engine_InitSDLControls()
 
             if(!sdl_controller)
             {
-                Sys_DebugLog(LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
                 control_mapper.use_joy = 0;
             }
@@ -177,7 +177,7 @@ void Engine_InitSDLControls()
                     sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
                     if(!sdl_haptic)
                     {
-                        Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                        Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
                     }
             }
         }
@@ -188,7 +188,7 @@ void Engine_InitSDLControls()
 
             if(!sdl_joystick)
             {
-                Sys_DebugLog(LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
                 control_mapper.use_joy = 0;
             }
@@ -197,7 +197,7 @@ void Engine_InitSDLControls()
                 sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
                 if(!sdl_haptic)
                 {
-                    Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
                 }
             }
         }
@@ -251,12 +251,12 @@ void Engine_InitSDLVideo()
             {
                 renderer.settings.antialias = 0;
                 renderer.settings.antialias_samples = 0;
-                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
+                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
             }
             else
             {
                 renderer.settings.antialias_samples = maxSamples;   // Limit to max.
-                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
             }
         }
 
@@ -303,7 +303,7 @@ void Engine_InitSDLImage()
 
     if((init & flags) != flags)
     {
-        Sys_DebugLog(LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
+        Sys_DebugLog(SYS_LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
     }
 }
 #endif
@@ -321,14 +321,14 @@ void Engine_InitAL()
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
-        Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
     }
 
     al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
-        Sys_DebugLog(LOG_FILENAME, "InitAL: AL context is not current!");
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: AL context is not current!");
         return;
     }
 

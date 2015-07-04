@@ -2,11 +2,14 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "gui.h"
 #include "gl_font.h"
 
 #define CON_MIN_LOG 16
@@ -20,6 +23,30 @@
 
 #define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
+
+// This is predefined enumeration of font styles, which can be extended
+// with user-defined script functions.
+///@TODO: add system message console style
+enum font_Style
+{
+        FONTSTYLE_CONSOLE_INFO,
+        FONTSTYLE_CONSOLE_WARNING,
+        FONTSTYLE_CONSOLE_EVENT,
+        FONTSTYLE_CONSOLE_NOTIFY,
+        FONTSTYLE_MENU_TITLE,
+        FONTSTYLE_MENU_HEADING1,
+        FONTSTYLE_MENU_HEADING2,
+        FONTSTYLE_MENU_ITEM_ACTIVE,
+        FONTSTYLE_MENU_ITEM_INACTIVE,
+        FONTSTYLE_MENU_CONTENT,
+        FONTSTYLE_STATS_TITLE,
+        FONTSTYLE_STATS_CONTENT,
+        FONTSTYLE_NOTIFIER,
+        FONTSTYLE_SAVEGAMELIST,
+        FONTSTYLE_GENERIC
+};
+
+#define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 
 typedef struct console_info_s
 {
@@ -52,29 +79,29 @@ typedef struct console_info_s
     int8_t                      show;                       // Visibility flag
 }console_info_t, *console_info_p;
 
-extern console_info_t con_base;
+extern console_info_t           con_base;
+extern gl_font_manager_p        con_font_manager;
 
 void Con_Init();
-void Con_InitFonts();
+void Con_InitFont(struct gl_tex_font_s *font);
 void Con_InitGlobals();
 void Con_Destroy();
 
 void Con_SetLineInterval(float interval);
 
-void Con_Draw();
-void Con_DrawBackground();
-void Con_DrawCursor();
-
 void Con_Filter(char *text);
 void Con_Edit(int key);
 void Con_CalcCursorPosition();
 void Con_AddLog(const char *text);
-void Con_AddLine(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
-void Con_AddText(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
+void Con_AddLine(const char *text, uint16_t font_style);
+void Con_AddText(const char *text, uint16_t font_style);
 void Con_Printf(const char *fmt, ...);
-void Con_Warning(int warn_string_index, ...);
-void Con_Notify(int notify_string_index, ...);
+void Con_Warning(const char *fmt, ...);
+void Con_Notify(const char *fmt, ...);
 
 void Con_Clean();
 
+#ifdef	__cplusplus
+}
+#endif
 #endif

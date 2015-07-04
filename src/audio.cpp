@@ -16,6 +16,7 @@ extern "C" {
 
 #include "audio.h"
 #include "console.h"
+#include "gui.h"
 #include "camera.h"
 #include "engine.h"
 #include "vmath.h"
@@ -437,8 +438,7 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
 
-    Con_Notify(SYSNOTE_OGG_OPENED, path,
-               vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
+    Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
 
     if(vorbis_Info->channels == 1)
         format = AL_FORMAT_MONO16;
@@ -1663,13 +1663,13 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     if(!file)
     {
-        Con_Warning(SYSWARN_CANT_OPEN_FILE);
+        Con_Warning("file \"%s\" not exists", fname);
         return -1;
     }
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Con_Warning(SYSWARN_BAD_FILE_FORMAT);
+        Con_Warning("file \"%s\" has wrog format", fname);
         return -2;
     }
 
