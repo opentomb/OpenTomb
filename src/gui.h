@@ -1,6 +1,4 @@
-
-#ifndef ENGINE_GUI_H
-#define ENGINE_GUI_H
+#pragma once
 
 #include "gl_font.h"
 #include "entity.h"
@@ -789,5 +787,3 @@ void Gui_DrawNotifier();
  */
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
-
-#endif

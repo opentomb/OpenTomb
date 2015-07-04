@@ -1,6 +1,4 @@
-
-#ifndef PARSE_H
-#define PARSE_H
+#pragma once
 
 struct ScreenInfo;
 struct ConsoleInfo;
@@ -54,5 +52,3 @@ int  lua_DoTasks(lua_State *lua, btScalar time);
 bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);
 
 void lua_AddKey(lua_State *lua, int keycode, int state);
-
-#endif

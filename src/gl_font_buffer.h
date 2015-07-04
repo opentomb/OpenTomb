@@ -1,3 +1,4 @@
+#pragma once
 //
 //  font_buffer.h
 //  OpenTomb
@@ -6,9 +7,6 @@
 //  Contains code to manage VBO and VAO for the font renderer, presenting
 //  a standard C interface.
 //
-
-#ifndef __OpenTomb__font_buffer__
-#define __OpenTomb__font_buffer__
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,5 +46,3 @@ void FontBuffer_Bind();
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* defined(__OpenTomb__font_buffer__) */

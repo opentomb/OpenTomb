@@ -1,6 +1,4 @@
-
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 struct Room;
 struct Polygon;
@@ -98,5 +96,3 @@ struct StatCameraSink
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
 };
-
-#endif

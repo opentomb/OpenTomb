@@ -1,6 +1,4 @@
-
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
 
 #include <AL/al.h>
 #include <AL/efx-presets.h>
@@ -481,5 +479,3 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 
 bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
 void Audio_LogOGGError(int code);               // Ogg-specific error handler.
-
-#endif // AUDIO_H

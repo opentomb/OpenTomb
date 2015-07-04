@@ -1,6 +1,4 @@
-
-#ifndef SYS_DEF_H
-#define SYS_DEF_H
+#pragma once
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
@@ -35,5 +33,3 @@ void Engine_SecondaryMouseDown();
 
 void ShowDebugInfo();
 void SkeletalModelTestDraw();
-
-#endif

@@ -1,6 +1,4 @@
-
-#ifndef WORLD_H
-#define WORLD_H
+#pragma once
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -423,5 +421,3 @@ struct World
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
-
-#endif

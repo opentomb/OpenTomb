@@ -1,12 +1,10 @@
+#pragma once
 /*
  * File:   gl_font.h
  * Author: TeslaRus
  *
  * Created on January 16, 2015, 10:46 PM
  */
-
-#ifndef GL_FONT_H
-#define	GL_FONT_H
 
 #ifdef	__cplusplus
 extern "C" {
@@ -73,6 +71,3 @@ uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* GL_FONT_H */
-

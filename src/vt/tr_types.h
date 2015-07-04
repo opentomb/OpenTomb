@@ -1,7 +1,6 @@
-#ifndef _TR_TYPES_H_
-#define _TR_TYPES_H_
+#pragma once
 
-#include <stdint.h>
+#include <cstdint>
 #include "glmath.h"
 
 /// \brief RGBA colour using bitu8. For palette etc.
@@ -654,5 +653,3 @@ typedef struct {
 typedef struct {
     tr2_colour_t colour[256];
 } tr2_palette_t;
-
-#endif // _TR_TYPES_H_

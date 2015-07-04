@@ -1,6 +1,4 @@
-
-#ifndef POLYGON_H
-#define POLYGON_H
+#pragma once
 
 #include <cstdint>
 #include <SDL2/SDL_platform.h>
@@ -88,5 +86,3 @@ struct Polygon
 /*
  * polygons functions
  */
-
-#endif

@@ -21,7 +21,7 @@
 #include "polygon.h"
 #include "vt/vt_level.h"
 
-#ifndef __APPLE__
+#ifndef OS_APPLE
 /*!
  * Fills an area of memory with a four-byte pattern pointed to.
  * This is a standard library function on Mac OS X, but sadly not anywhere else, so I'm redefining it here. Because I know where it will be called, I can add additional requirements: len must be a multiple of four, and pattern and b both must be four-byte aligned.

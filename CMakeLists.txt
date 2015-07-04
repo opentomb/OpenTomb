@@ -120,6 +120,17 @@ FILE(GLOB PRJ_SRC
     src/vt/*.cpp
 )
 
+if(APPLE)
+    add_definitions(-DOS_APPLE)
+elseif(MINGW)
+    add_definitions(-DOS_WINDOWS -DOS_MINGW)
+elseif(WIN32)
+    add_definitions(-DOS_WINDOWS)
+elseif(LINUX)
+    add_definitions(-DOS_LINUX)
+else()
+    message(WARNING "You are using a not yet fully supported platform.")
+endif()
 
 ADD_EXECUTABLE(
     ${PROJECT_NAME}

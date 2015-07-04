@@ -1,6 +1,4 @@
-
-#ifndef PORTAL_H
-#define PORTAL_H
+#pragma once
 
 #define PORTAL_NORMAL 0x00
 #define PORTAL_FICTIVE 0x01
@@ -66,5 +64,3 @@ struct Portal
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-
-#endif   // PORTAL_H

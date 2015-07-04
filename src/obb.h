@@ -1,12 +1,10 @@
+#pragma once
 /*
  * File:   obb.h
  * Author: nTesla
  *
  * Created on January 21, 2013, 7:11 PM
  */
-
-#ifndef OBB_H
-#define OBB_H
 
 #include <cstdint>
 
@@ -37,6 +35,3 @@ struct OBB
 };
 
 int OBB_OBB_Test(const Entity &e1, const Entity &e2);
-
-#endif /* OBB_H */
-

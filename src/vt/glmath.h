@@ -1,5 +1,4 @@
-#ifndef _GLMATH_H_
-#define _GLMATH_H_
+#pragma once
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -104,5 +103,3 @@ class vec3_t {
         return x * v.x + y * v.y + z * v.z;
     }
 };
-
-#endif // _GLMATH_H_

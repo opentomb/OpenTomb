@@ -1,5 +1,4 @@
-#ifndef _TR_VERSIONS_H_
-#define _TR_VERSIONS_H_
+#pragma once
 
 #define TR_I            (0)
 #define TR_I_DEMO       (1)
@@ -11,5 +10,3 @@
 #define TR_IV_DEMO      (7)
 #define TR_V            (8)
 #define TR_UNKNOWN      (127)
-
-#endif // _TR_VERSIONS_H_
