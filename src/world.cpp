@@ -941,7 +941,7 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     {
         for(Portal& p : r->portals) //For every portal in this room
         {
-            if(p.dest_room->id == id)//If a portal is linked to the input room
+            if(p.dest_room && p.dest_room->id == id)//If a portal is linked to the input room
             {
                 p.dest_room = dest_room;//The portal destination room is the destination room!
                 //Con_Printf("The current room %d! has room %d joined to it!", id, i);
