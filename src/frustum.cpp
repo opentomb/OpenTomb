@@ -174,7 +174,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
     /*
      * Search for the first free room's frustum
      */
-    portal->dest_room->frustum.emplace_back();
+    portal->dest_room->frustum.emplace_back(std::make_shared<Frustum>());
     auto current_gen = portal->dest_room->frustum.back();
 
     current_gen->splitPrepare(portal);                       // prepare to the clipping
