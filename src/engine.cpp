@@ -188,8 +188,7 @@ void Engine_Init_Pre()
 
 void Engine_Init_Post()
 {
-    if(engine_lua["loadscript_post"].is<lua::Callable>())
-        engine_lua["loadscript_post"]();
+    engine_lua["loadscript_post"]();
 
     ConsoleInfo::instance().initFonts();
 
@@ -798,9 +797,9 @@ void lua_BindKey(int act, int primary, lua::Value secondary)
         control_mapper.action_map[act].secondary = secondary;
 }
 
-void lua_AddFont(int index, const std::string& path, uint32_t size)
+void lua_AddFont(int index, const char* path, uint32_t size)
 {
-    if(!FontManager->AddFont((font_Type)index, size, path.c_str()))
+    if(!FontManager->AddFont((font_Type)index, size, path))
     {
         ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
 
@@ -899,7 +898,7 @@ int lua_GetItemsCount(int entity_id, int item_id)
 
 }
 
-void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const std::string& name)
+void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
 
     engine_world.createItem(item_id, model_id, world_model_id, type, count, name);
@@ -1668,7 +1667,7 @@ void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua:
         ent->m_triggerLayout = trigger_layout;
     }
     else {
-        ent->m_triggerLayout = eventOrLayout;
+        ent->m_triggerLayout = static_cast<int>(eventOrLayout);
     }
 }
 
@@ -1855,7 +1854,7 @@ void lua_SetEntityTypeFlag(int id, uint16_t type_flag, lua::Value value)
     }
 }
 
-bool lua_GetEntityStateFlag(int id, const std::string& which)
+bool lua_GetEntityStateFlag(int id, const char* whichCstr)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
@@ -1865,6 +1864,7 @@ bool lua_GetEntityStateFlag(int id, const std::string& which)
         return false;
     }
 
+    std::string which = whichCstr;
     if(which == "active")
         return ent->m_active;
     else if(which == "enabled")
@@ -1875,7 +1875,7 @@ bool lua_GetEntityStateFlag(int id, const std::string& which)
         return false;
 }
 
-void lua_SetEntityStateFlag(int id, const std::string& which, lua::Value value)
+void lua_SetEntityStateFlag(int id, const char* whichCstr, lua::Value value)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
@@ -1886,6 +1886,7 @@ void lua_SetEntityStateFlag(int id, const std::string& which, lua::Value value)
     }
 
     bool* flag = nullptr;
+    std::string which = whichCstr;
     if(which == "active") flag = &ent->m_active;
     else if(which == "enabled") flag = &ent->m_enabled;
     else if(which == "visible") flag = &ent->m_visible;
@@ -2442,7 +2443,7 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        Audio_StreamPlay(id, mask);
+        Audio_StreamPlay(id, static_cast<int>(mask));
     }
     else
     {
@@ -2538,7 +2539,7 @@ void lua_SetGame(int gameId, lua::Value levelId)
     if(!levelId.is<lua::Nil>() && levelId>=0)
         gameflow_manager.CurrentLevelID = levelId;
 
-    std::string str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
+    const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
     Gui_FadeAssignPic(FADER_LOADSCREEN, str);
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
@@ -2547,16 +2548,16 @@ void lua_SetGame(int gameId, lua::Value levelId)
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
 }
 
-void lua_LoadMap(const std::string& mapName, lua::Value gameId, lua::Value mapId)
+void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
-    ConsoleInfo::instance().printf("Loading map %s", mapName.c_str());
-    if(!mapName.empty() && mapName != gameflow_manager.CurrentLevelPath)
+    ConsoleInfo::instance().printf("Loading map %s", mapName);
+    if(mapName && mapName != gameflow_manager.CurrentLevelPath)
     {
-        if(!gameId.is<lua::Nil>() && gameId>=0)
+        if(gameId.is<lua::Integer>() && gameId>=0)
         {
-            gameflow_manager.CurrentGameID = gameId;
+            gameflow_manager.CurrentGameID = static_cast<int>(gameId);
         }
-        if(!mapId.is<lua::Nil>() && mapId>=0)
+        if(mapId.is<lua::Integer>() && mapId>=0)
         {
             gameflow_manager.CurrentLevelID = mapId;
         }
@@ -2564,7 +2565,7 @@ void lua_LoadMap(const std::string& mapName, lua::Value gameId, lua::Value mapId
         lua_GetLoadingScreen(engine_lua, gameflow_manager.CurrentLevelID, file_path);
         Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
-        Engine_LoadMap(mapName.c_str());
+        Engine_LoadMap(mapName);
     }
 }
 
@@ -3401,7 +3402,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "goto"))
         {
-            control_states.free_look = 1;
+            control_states.free_look = true;
             renderer.camera()->m_pos[0] = SC_ParseFloat(&ch);
             renderer.camera()->m_pos[1] = SC_ParseFloat(&ch);
             renderer.camera()->m_pos[2] = SC_ParseFloat(&ch);
@@ -3599,12 +3600,12 @@ int Engine_ExecCmd(const char *ch)
 
 void Engine_InitConfig(const char *filename)
 {
-    lua::State state;
 
     Engine_InitDefaultGlobals();
 
     if((filename != NULL) && Engine_FileFound(filename))
     {
+        lua::State state;
         lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
         state.doFile(filename);
 

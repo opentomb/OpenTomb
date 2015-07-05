@@ -477,7 +477,7 @@ void Controls_PollSDLInput()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look != 0 &&
+                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look &&
                     ((event.motion.x != (screen_info.w/2)) ||
                      (event.motion.y != (screen_info.h/2))))
                 {

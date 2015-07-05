@@ -315,24 +315,20 @@ void Hair::createHairMesh(const SkeletalModel *model)
 void HairSetup::getSetup(uint32_t hair_entry_index)
 {
     lua::Value res = engine_lua["getHairSetup"](hair_entry_index);
-    res["model"].get(m_model);
-    res["link_body"].get(m_linkBody);
-    res["props"]["root_weight"].get(m_rootWeight);
-    res["props"]["tail_weight"].get(m_tailWeight);
-    res["props"]["hair_inertia"].get(m_hairInertia);
-    res["props"]["hair_friction"].get(m_hairFriction);
-    res["props"]["hair_bouncing"].get(m_hairRestitution);
-    res["props"]["joint_overlap"].get(m_jointOverlap);
-    res["props"]["joint_cfm"].get(m_jointCfm);
-    res["props"]["joint_erp"].get(m_jointErp);
-    res["props"]["hair_damping"][1].get(m_hairDamping[0]);
-    res["props"]["hair_damping"][2].get(m_hairDamping[1]);
-    res["offset"][1].get(m_headOffset[0]);
-    res["offset"][2].get(m_headOffset[1]);
-    res["offset"][3].get(m_headOffset[2]);
-    res["root_angle"][1].get(m_rootAngle[0]);
-    res["root_angle"][2].get(m_rootAngle[1]);
-    res["root_angle"][3].get(m_rootAngle[2]);
+    m_model = res["model"];
+    m_linkBody = res["link_body"];
+    m_rootWeight = res["props"]["root_weight"];
+    m_tailWeight = res["props"]["tail_weight"];
+    m_hairInertia = res["props"]["hair_inertia"];
+    m_hairFriction = res["props"]["hair_friction"];
+    m_hairRestitution = res["props"]["hair_bouncing"];
+    m_jointOverlap = res["props"]["joint_overlap"];
+    m_jointCfm = res["props"]["joint_cfm"];
+    m_jointErp = res["props"]["joint_erp"];
+    m_hairDamping[0] = res["props"]["hair_damping"][1];
+    m_hairDamping[1] = res["props"]["hair_damping"][2];
+    m_headOffset = {res["offset"][1], res["offset"][2], res["offset"][3]};
+    m_rootAngle = {res["root_angle"][1], res["root_angle"][2], res["root_angle"][3]};
 }
 
 

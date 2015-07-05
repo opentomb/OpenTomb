@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include "vmath.h"
+#include "LuaState.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -388,7 +389,7 @@ struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    bool hide;                                           // do not render
+    lua::Boolean hide;                                           // do not render
     btVector3 bbox_min;                                    // bbox info
     btVector3 bbox_max;
     btVector3 centre;                                      // the centre of model

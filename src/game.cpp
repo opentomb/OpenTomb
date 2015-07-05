@@ -130,9 +130,9 @@ void lua_timescale(lua::Value scale)
 void Game_InitGlobals()
 {
     control_states.free_look_speed = 3000.0;
-    control_states.mouse_look = 1;
-    control_states.free_look = 0;
-    control_states.noclip = 0;
+    control_states.mouse_look = true;
+    control_states.free_look = false;
+    control_states.noclip = false;
     control_states.cam_distance = 800.0;
 }
 
@@ -363,7 +363,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             }
         }
 
-        if(control_states.mouse_look != 0)
+        if(control_states.mouse_look)
         {
             cam_angles[0] -= 0.015 * control_states.look_axis_x;
             cam_angles[1] -= 0.015 * control_states.look_axis_y;
@@ -392,7 +392,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         }
     }
 
-    if(control_states.mouse_look != 0)
+    if(control_states.mouse_look)
     {
         cam_angles[0] -= 0.015 * control_states.look_axis_x;
         cam_angles[1] -= 0.015 * control_states.look_axis_y;
@@ -400,7 +400,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if((control_states.free_look != 0) || !std::dynamic_pointer_cast<Character>(ent))
+    if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
@@ -409,7 +409,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveVertical(dist * move_logic[2]);
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
     }
-    else if(control_states.noclip != 0)
+    else if(control_states.noclip)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
@@ -511,7 +511,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     btVector3 cam_pos = cam->m_pos;
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(control_states.mouse_look == 0)//If mouse look is off
+    if(!control_states.mouse_look)//If mouse look is off
     {
         float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
         float targetAngle  = ent->m_angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself

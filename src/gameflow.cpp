@@ -48,7 +48,11 @@ void Gameflow_Do()
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
                 if(Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
                 {
-                    lua::tie(gameflow_manager.CurrentLevelID, gameflow_manager.CurrentLevelName, gameflow_manager.CurrentLevelPath) = engine_lua["getNextLevel"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), int(gameflow_manager.Actions[i].operand));
+                    const char* levelName;
+                    const char* levelPath;
+                    lua::tie(levelPath, levelName, gameflow_manager.CurrentLevelID) = engine_lua["getNextLevel"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), int(gameflow_manager.Actions[i].operand));
+                    gameflow_manager.CurrentLevelName = levelName;
+                    gameflow_manager.CurrentLevelPath = levelPath;
                     Engine_LoadMap(gameflow_manager.CurrentLevelPath);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 }

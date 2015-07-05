@@ -66,8 +66,8 @@ struct lua_State;
 struct EngineContainer
 {
     uint16_t object_type = 0;
-    uint16_t collision_type = COLLISION_TYPE_NONE;
-    uint16_t collision_shape = 0;
+    lua::Integer collision_type = COLLISION_TYPE_NONE;
+    lua::Integer collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
 };
@@ -75,12 +75,12 @@ struct EngineContainer
 //! @todo Use bools where appropriate.
 struct EngineControlState
 {
-    int8_t   free_look = 0;
+    bool     free_look = false;
     btScalar free_look_speed = 0;
 
-    int8_t   mouse_look = 0;
+    bool     mouse_look = false;
     btScalar cam_distance = 0;
-    int8_t   noclip = 0;
+    bool     noclip = false;
 
     btScalar look_axis_x = 0;                       // Unified look axis data.
     btScalar look_axis_y = 0;

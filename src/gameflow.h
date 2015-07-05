@@ -19,7 +19,7 @@ typedef struct gameflow_manager_s
     std::string CurrentLevelName;
     std::string CurrentLevelPath;
     uint8_t             CurrentGameID;
-    uint8_t             CurrentLevelID;
+    int CurrentLevelID;
 
     bool                NextAction;
     gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];

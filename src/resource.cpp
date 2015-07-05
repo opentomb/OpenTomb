@@ -67,15 +67,14 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        Res_CreateEntityFunc(engine_lua, objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id), ent->m_id);
+        const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
+        Res_CreateEntityFunc(engine_lua, funcName, ent->m_id);
     }
 }
 
 
 void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int entity_id)
 {
-    static const char* func_template = "%s_init";
-
     char bufC[64] = "";
     snprintf(bufC, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
     state.doString(bufC);
@@ -1560,9 +1559,9 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value
         return;
     }
 
-    if(pen.is<lua::Integer>())   pen.get(rs->floor_penetration_config);
-    if(diag.is<lua::Integer>())  diag.get(rs->floor_diagonal_type);
-    if(floor.is<lua::Integer>()) floor.get(rs->floor);
+    if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<int>(pen);
+    if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(diag);
+    if(floor.is<lua::Integer>()) rs->floor = floor;
     rs->floor_corners[0] = {z0,z1,z2};
     rs->floor_corners[0][3] = z3;
 }
@@ -1576,9 +1575,9 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Val
         return;
     }
 
-    if(pen.is<lua::Integer>())  pen.get(rs->ceiling_penetration_config);
-    if(diag.is<lua::Integer>()) diag.get(rs->ceiling_diagonal_type);
-    if(ceil.is<lua::Integer>()) ceil.get(rs->ceiling);
+    if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(pen);
+    if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<int>(diag);
+    if(ceil.is<lua::Integer>()) rs->ceiling = ceil;
 
     rs->ceiling_corners[0] = {z0,z1,z2};
     rs->ceiling_corners[0][3] = z3;
@@ -1608,10 +1607,10 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
         return;
     }
 
-    if(fpflag.is<lua::Integer>())  fpflag.get(rs->floor_penetration_config);
-    if(ftflag.is<lua::Integer>())  fpflag.get(rs->floor_diagonal_type);
-    if(cpflag.is<lua::Integer>())  fpflag.get(rs->ceiling_penetration_config);
-    if(ctflag.is<lua::Integer>())  fpflag.get(rs->ceiling_diagonal_type);
+    if(fpflag.is<lua::Integer>())  rs->floor_penetration_config = static_cast<int>(fpflag);
+    if(ftflag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(ftflag);
+    if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(cpflag);
+    if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -3694,13 +3693,9 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 
 void TR_GenEntities(World *world, class VT_Level *tr)
 {
-    int top;
-
-    tr2_item_t *tr_item;
-
     for(uint32_t i=0;i<tr->items_count;i++)
     {
-        tr_item = &tr->items[i];
+        tr2_item_t *tr_item = &tr->items[i];
         std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>() : std::make_shared<Entity>();
         entity->m_id = i;
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
