@@ -88,7 +88,7 @@ void Con_Init()
         con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
     }
     
-    con_font_manager = glf_create_manager();
+    con_font_manager = glf_create_manager(GUI_MAX_FONTS, GUI_MAX_FONTSTYLES);
     
     con_base.inited = 1;
 }

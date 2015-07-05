@@ -201,7 +201,7 @@ void AudioSource::SetBuffer(ALint buffer)
             alGetBufferi(buffer_index, AL_BITS,      &bits);
             alGetBufferi(buffer_index, AL_FREQUENCY, &freq);
 
-            Sys_DebugLog(LOG_FILENAME, "Erroneous buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
+            Sys_DebugLog(SYS_LOG_FILENAME, "Erroneous buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
         }
         */
     }
@@ -423,7 +423,7 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     if(!(audio_file = fopen(path, "rb")))
     {
-        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
+        Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
         method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
         return false;
     }
@@ -431,7 +431,7 @@ bool StreamTrack::Load_Ogg(const char *path)
     if((result = ov_open(audio_file, &vorbis_Stream, NULL, 0)) < 0)
     {
         fclose(audio_file);
-        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
+        Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
         method = -1;
         return false;
     }
@@ -477,7 +477,7 @@ bool StreamTrack::Play(bool fade_in)
         {
             if(!i)
             {
-                Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
+                Sys_DebugLog(SYS_LOG_FILENAME, "StreamTrack: error preparing buffers.");
                 return false;
             }
             else
@@ -1472,7 +1472,7 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
     }
     else
     {
-        Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
+        Sys_DebugLog(SYS_LOG_FILENAME, "OpenAL error: no effect %d", effect);
         return 0;
     }
 
@@ -1576,7 +1576,7 @@ bool Audio_LogALError(int error_marker)
     ALenum err = alGetError();
     if(err != AL_NO_ERROR)
     {
-        Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
+        Sys_DebugLog(SYS_LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
         return true;
     }
     return false;
@@ -1588,22 +1588,22 @@ void Audio_LogOGGError(int code)
     switch(code)
     {
         case OV_EREAD:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Read from media.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Read from media.");
             break;
         case OV_ENOTVORBIS:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Not Vorbis data.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Not Vorbis data.");
             break;
         case OV_EVERSION:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Vorbis version mismatch.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Vorbis version mismatch.");
             break;
         case OV_EBADHEADER:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Invalid Vorbis header.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Invalid Vorbis header.");
             break;
         case OV_EFAULT:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
             break;
         default:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
+            Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Unknown Ogg error.");
             break;
     }
 }
@@ -1623,7 +1623,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
 
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
         return -1;
     }
 
@@ -1684,7 +1684,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
 {
     if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
+        Sys_DebugLog(SYS_LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
         return false;
     }
 
@@ -1695,7 +1695,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
     // We rarely encounter samples with exotic bitsizes, but just in case...
     if((sample_bitsize != 32) && (sample_bitsize != 16) && (sample_bitsize != 8))
     {
-        Sys_DebugLog(LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
+        Sys_DebugLog(SYS_LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
         return false;
     }
 

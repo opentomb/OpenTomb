@@ -47,6 +47,7 @@ enum font_Style
 };
 
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
+#define GUI_MAX_FONTS      8    // 8 fonts is PLENTY.
 
 typedef struct console_info_s
 {

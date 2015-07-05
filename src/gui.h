@@ -42,8 +42,6 @@ enum font_Type
     FONT_CONSOLE
 };
 
-#define GUI_MAX_FONTS 8     // 8 fonts is PLENTY.
-
 #define GUI_MIN_FONT_SIZE 1
 #define GUI_MAX_FONT_SIZE 72
 

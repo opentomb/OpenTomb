@@ -681,17 +681,46 @@ uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
 // ===================================================================================
 // ======================= FONT MANAGER  STRUCTURE IMPLEMENTATION ====================
 // ===================================================================================
-gl_font_manager_p glf_create_manager()
+gl_font_manager_p glf_create_manager(uint16_t max_fonts, uint16_t max_styles)
 {
+    uint16_t i;
+    
     gl_font_manager_p ret = (gl_font_manager_p)malloc(sizeof(gl_font_manager_t));
     ret->font_library   = NULL;
     FT_Init_FreeType(&ret->font_library);
 
-    ret->style_count     = 0;
-    ret->styles          = NULL;
-    ret->font_count      = 0;
-    ret->fonts           = NULL;
-
+    ret->max_styles      = max_styles;
+    ret->styles          = (gl_fontstyle_p)malloc(max_styles * sizeof(gl_fontstyle_t));
+    for(i=0;i<max_styles;i++)
+    {
+        ret->styles[i].rect_color[0] = 1.0;
+        ret->styles[i].rect_color[1] = 1.0;
+        ret->styles[i].rect_color[2] = 1.0;
+        ret->styles[i].rect_color[3] = 0.0;
+        
+        ret->styles[i].color[0] = 0.0;
+        ret->styles[i].color[1] = 0.0;
+        ret->styles[i].color[2] = 0.0;
+        ret->styles[i].color[3] = 1.0;
+        
+        ret->styles[i].real_color[0] = 0.0;
+        ret->styles[i].real_color[1] = 0.0;
+        ret->styles[i].real_color[2] = 0.0;
+        ret->styles[i].real_color[3] = 1.0;
+        
+        ret->styles[i].fading   = 0x00;
+        ret->styles[i].shadowed = 0x00;
+        ret->styles[i].hidden   = 0x00;
+    }
+    
+    ret->max_fonts       = max_fonts;
+    ret->fonts           = (gl_font_cont_p)malloc(max_fonts * sizeof(gl_font_cont_t));;
+    for(i=0;i<max_fonts;i++)
+    {
+        ret->fonts[i].font_size = 0;
+        ret->fonts[i].gl_font   = NULL;
+    }
+    
     ret->fade_value      = 0.0;
     ret->fade_direction  = 1;
     
@@ -701,26 +730,22 @@ gl_font_manager_p glf_create_manager()
 
 void glf_free_manager(gl_font_manager_p p)
 {
-    p->font_count = 0;
-    p->style_count = 0;
+    uint16_t i;
     
-    for(;p->fonts!=NULL;)
+    for(i=0;i<p->max_fonts;i++)
     {
-        gl_font_node_p next_font=p->fonts->next;
-        glf_free_font(p->fonts->gl_font);
-        p->fonts->gl_font = NULL;
-        free(p->fonts);
-        p->fonts = next_font;
+        glf_free_font(p->fonts[i].gl_font);
+        p->fonts[i].font_size = 0;
+        p->fonts[i].gl_font   = NULL;
     }
+    free(p->fonts);
     p->fonts = NULL;
 
-    for(;p->styles!=NULL;)
-    {
-        gl_fontstyle_p next_style = p->styles->next;
-        free(p->styles);
-        p->styles = next_style;
-    }
+    free(p->styles);
     p->styles = NULL;
+    
+    p->max_fonts = 0;
+    p->max_styles = 0;
 
     FT_Done_FreeType(p->font_library);
     p->font_library = NULL;
@@ -730,13 +755,9 @@ void glf_free_manager(gl_font_manager_p p)
 
 gl_tex_font_p glf_manager_get_font(gl_font_manager_p manager, uint16_t index)
 {
-    gl_font_node_p current_font;
-    for(current_font=manager->fonts;current_font!=NULL;current_font=current_font->next)
+    if(index < manager->max_fonts)
     {
-        if(current_font->index == index)
-        {
-            return current_font->gl_font;
-        }
+        return manager->fonts[index].gl_font;
     }
 
     return NULL;
@@ -745,13 +766,9 @@ gl_tex_font_p glf_manager_get_font(gl_font_manager_p manager, uint16_t index)
 
 gl_fontstyle_p glf_manager_get_style(gl_font_manager_p manager, uint16_t index)
 {
-    gl_fontstyle_p current_style;
-    for(current_style=manager->styles;current_style!=NULL;current_style=current_style->next)
+    if(index < manager->max_styles)
     {
-        if(current_style->index == index)
-        {
-            return current_style;
-        }
+        return manager->styles + index;
     }
 
     return NULL;
@@ -760,34 +777,22 @@ gl_fontstyle_p glf_manager_get_style(gl_font_manager_p manager, uint16_t index)
 
 int glf_manager_add_font(gl_font_manager_p manager, uint16_t index, uint16_t size, const char* path)
 {
-    gl_font_node_p current_font, desired_font = NULL;
-    
-    for(current_font=manager->fonts;current_font!=NULL;current_font=current_font->next)
+    if(index < manager->max_fonts)
     {
-        if(current_font->index == index)
+        gl_tex_font_p new_font = glf_create_font(manager->font_library, path, size);
+        if(new_font)
         {
-            desired_font = current_font;
-            break;
+            if(manager->fonts[index].gl_font)
+            {
+                glf_free_font(manager->fonts[index].gl_font);
+            }
+            manager->fonts[index].font_size = size;
+            manager->fonts[index].gl_font = new_font;
+            return 1;
         }
     }
-
-    if(desired_font == NULL)
-    {
-        manager->font_count++;
-        desired_font = (gl_font_node_p)malloc(sizeof(gl_font_node_t));
-        desired_font->font_size = size;
-        desired_font->index = index;
-        desired_font->next = manager->fonts;
-        manager->fonts = desired_font;
-    }
-    else
-    {
-        glf_free_font(desired_font->gl_font);
-    }
-
-    desired_font->gl_font = glf_create_font(manager->font_library, path, size);
-
-    return 1;
+    
+    return 0;
 }
 
 
@@ -800,113 +805,70 @@ int glf_manager_add_fontstyle(gl_font_manager_p manager, uint16_t index,
 {
     gl_fontstyle_p desired_style = glf_manager_get_style(manager, index);
 
-    if(desired_style == NULL)
+    if(desired_style)
     {
-        manager->style_count++;
-        desired_style = (gl_fontstyle_p)malloc(sizeof(gl_fontstyle_t));
-        desired_style->index = index;
-        desired_style->next = manager->styles;
-        manager->styles = desired_style;
+        desired_style->rect_border   = rect_border;
+        desired_style->rect_color[0] = rect_R;
+        desired_style->rect_color[1] = rect_G;
+        desired_style->rect_color[2] = rect_B;
+        desired_style->rect_color[3] = rect_A;
+
+        desired_style->color[0]  = R;
+        desired_style->color[1]  = G;
+        desired_style->color[2]  = B;
+        desired_style->color[3]  = A;
+
+        memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
+
+        desired_style->fading    = fading;
+        desired_style->shadowed  = shadow;
+        desired_style->rect      = rect;
+        desired_style->hidden    = hide;
+        return 1;
     }
-
-    desired_style->rect_border   = rect_border;
-    desired_style->rect_color[0] = rect_R;
-    desired_style->rect_color[1] = rect_G;
-    desired_style->rect_color[2] = rect_B;
-    desired_style->rect_color[3] = rect_A;
-
-    desired_style->color[0]  = R;
-    desired_style->color[1]  = G;
-    desired_style->color[2]  = B;
-    desired_style->color[3]  = A;
-
-    memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
-
-    desired_style->fading    = fading;
-    desired_style->shadowed  = shadow;
-    desired_style->rect      = rect;
-    desired_style->hidden    = hide;
-
-    return 1;
+    
+    return 0;
 }
 
 
 int glf_manager_remove_font(gl_font_manager_p manager, uint16_t index)
 {
-    gl_font_node_p previous_font, current_font;
-
-    if(manager->fonts == NULL)
+    if((index < manager->max_fonts) && (manager->fonts[index].gl_font))
     {
-        return 0;
-    }
-
-    if(manager->fonts->index == index)
-    {
-        previous_font = manager->fonts;
-        manager->fonts = manager->fonts->next;
-        glf_free_font(previous_font->gl_font);
-        previous_font->gl_font = NULL;                                          ///@PARANOID
-        free(previous_font);
-        manager->font_count--;
+        glf_free_font(manager->fonts[index].gl_font);
+        manager->fonts[index].gl_font = NULL;                                   ///@PARANOID
         return 1;
     }
-
-    previous_font = manager->fonts;
-    current_font = manager->fonts->next;
-    for(;current_font!=NULL;)
-    {
-        if(current_font->index == index)
-        {
-            previous_font->next = current_font->next;
-            glf_free_font(current_font->gl_font);
-            current_font->gl_font = NULL;                                       ///@PARANOID
-            free(current_font);
-            manager->font_count--;
-            return 1;
-        }
-
-        previous_font = current_font;
-        current_font = current_font->next;
-    }
-
+    
     return 0;
 }
 
 
 int glf_manager_remove_fontstyle(gl_font_manager_p manager, uint16_t index)
 {
-    gl_fontstyle_p previous_style, current_style;
-
-    if(manager->styles == NULL)
+    if(index < manager->max_styles)
     {
-        return 0;
-    }
-
-    if(manager->styles->index == index)
-    {
-        previous_style = manager->styles;
-        manager->styles = manager->styles->next;
-        free(previous_style);
-        manager->style_count--;
+        manager->styles[index].rect_color[0] = 1.0;
+        manager->styles[index].rect_color[1] = 1.0;
+        manager->styles[index].rect_color[2] = 1.0;
+        manager->styles[index].rect_color[3] = 0.0;
+        
+        manager->styles[index].color[0] = 0.0;
+        manager->styles[index].color[1] = 0.0;
+        manager->styles[index].color[2] = 0.0;
+        manager->styles[index].color[3] = 1.0;
+        
+        manager->styles[index].real_color[0] = 0.0;
+        manager->styles[index].real_color[1] = 0.0;
+        manager->styles[index].real_color[2] = 0.0;
+        manager->styles[index].real_color[3] = 1.0;
+        
+        manager->styles[index].fading   = 0x00;
+        manager->styles[index].shadowed = 0x00;
+        manager->styles[index].hidden   = 0x00;
         return 1;
     }
-
-    previous_style = manager->styles;
-    current_style = manager->styles->next;
-    for(;current_style!=NULL;)
-    {
-        if(current_style->index == index)
-        {
-            previous_style->next = current_style->next;
-            free(current_style);
-            manager->style_count--;
-            return 1;
-        }
-
-        previous_style = current_style;
-        current_style = current_style->next;
-    }
-
+    
     return 0;
 }
 
@@ -914,6 +876,7 @@ int glf_manager_remove_fontstyle(gl_font_manager_p manager, uint16_t index)
 void glf_manager_update(gl_font_manager_p manager, float time)
 {
     gl_fontstyle_p current_style;
+    uint16_t i;
     
     if(manager->fade_direction)
     {
@@ -936,7 +899,8 @@ void glf_manager_update(gl_font_manager_p manager, float time)
         }
     }
 
-    for(current_style=manager->styles;current_style!=NULL;current_style=current_style->next)
+    current_style = manager->styles;
+    for(i=0;i<manager->max_styles;i++,current_style++)
     {
         if(current_style->fading)
         {
@@ -954,9 +918,12 @@ void glf_manager_update(gl_font_manager_p manager, float time)
 
 void glf_manager_resize(gl_font_manager_p manager, float scale)
 {
-    gl_font_node_p current_font;
-    for(current_font=manager->fonts;current_font!=NULL;current_font=current_font->next)
+    uint16_t i;
+    for(i=0;i<manager->max_fonts;i++)
     {
-        glf_resize(current_font->gl_font, (uint16_t)(((float)current_font->font_size) * scale));
+        if(manager->fonts[i].gl_font)
+        {
+            glf_resize(manager->fonts[i].gl_font, (uint16_t)(((float)manager->fonts[i].font_size) * scale));
+        }
     }
 }

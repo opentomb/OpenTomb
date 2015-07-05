@@ -1,9 +1,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
-#if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
-#endif
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -396,7 +394,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        Con_Warning("wrong model id = %d", lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -422,7 +420,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        Con_Warning("wrong model id = %d", lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -442,7 +440,7 @@ int lua_EnableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        Con_Warning("missed argument entity_id");
         return 0;
     }
 
@@ -460,7 +458,7 @@ int lua_DisableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        Con_Warning("missed argument entity_id");
         return 0;
     }
 
@@ -480,7 +478,7 @@ int lua_SetEntityCollision(lua_State * lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        Con_Warning("missed argument entity_id");
         return 0;
     }
 
@@ -506,7 +504,7 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        Con_Warning("missed argument entity_id");
         return 0;
     }
 
@@ -578,7 +576,7 @@ int lua_SameRoom(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id1, ent_id2]");
+        Con_Warning("expecting arguments (ent_id1, ent_id2)");
         return 0;
     }
 
@@ -647,7 +645,7 @@ int lua_SetGravity(lua_State * lua)                                             
             break;
 
         default:
-            //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
+            Con_Warning("expecting arguments none or (oz), or (ox, oy, oz)");
             break;
     };
 
@@ -661,7 +659,7 @@ int lua_DropEntity(lua_State * lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time], (only_room)");
+        Con_Warning("expecting arguments (entity_id, time, (only_room))");
         return 0;
     }
 
@@ -669,7 +667,7 @@ int lua_DropEntity(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -764,7 +762,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -786,7 +784,7 @@ int lua_GetCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
+        Con_Warning("expecting arguments (entity_id, param)");
         return 0;
     }
 
@@ -796,7 +794,7 @@ int lua_GetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
         return 0;
     }
 
@@ -807,7 +805,7 @@ int lua_GetCharacterParam(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_CHARACTER, id);
+        Con_Warning("no character with id = %d", id);
         return 0;
     }
 }
@@ -819,7 +817,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(top < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
+        Con_Warning("expecting arguments (entity_id, param, value, (max_value))");
         return 0;
     }
 
@@ -829,13 +827,13 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
         return 0;
     }
 
     if(!IsCharacter(ent))
     {
-        //Con_Warning(SYSWARN_NO_CHARACTER, id);
+        Con_Warning("no character with id = %d", id);
         return 0;
     }
     else if(top == 3)
@@ -869,7 +867,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
+        Con_Warning("expecting arguments (entity_id, param, value)");
         return 0;
     }
 
@@ -880,7 +878,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
         return 0;
     }
 
@@ -890,7 +888,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_CHARACTER, id);
+        Con_Warning("no character with id = %d", id);
     }
 
     return 0;
@@ -900,7 +898,7 @@ int lua_AddCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
+        Con_Warning("expecting arguments (entity_id, hair_setup_index)");
     }
     else
     {
@@ -916,7 +914,7 @@ int lua_AddCharacterHair(lua_State *lua)
 
             if(!Hair_GetSetup(setup_index, &hair_setup))
             {
-                //Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
+                Con_Warning("wrong hair setup index = %d", setup_index);
             }
             else
             {
@@ -925,13 +923,13 @@ int lua_AddCharacterHair(lua_State *lua)
 
                 if(!Hair_Create((ent->character->hairs + (ent->character->hair_count-1)), &hair_setup, ent))
                 {
-                    //Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                    Con_Warning("can not create hair for entity_id = %d", ent_id);
                 }
             }
         }
         else
         {
-            //Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            Con_Warning("no character with id = %d", ent_id);
         }
     }
     return 0;
@@ -941,7 +939,7 @@ int lua_ResetCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
     else
@@ -963,12 +961,12 @@ int lua_ResetCharacterHair(lua_State *lua)
             }
             else
             {
-                //Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+                Con_Warning("can not create hair for entity_id = %d", ent_id);
             }
         }
         else
         {
-            //Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            Con_Warning("no character with id = %d", ent_id);
         }
     }
     return 0;
@@ -978,7 +976,7 @@ int lua_AddEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
+        Con_Warning("expecting arguments (entity_id, ragdoll_setup_index)");
     }
     else
     {
@@ -994,19 +992,19 @@ int lua_AddEntityRagdoll(lua_State *lua)
 
             if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
             {
-                //Con_Warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+                Con_Warning("no ragdoll setup with id = %d", setup_index);
             }
             else
             {
                 if(!Ragdoll_Create(ent, &ragdoll_setup))
                 {
-                    //Con_Warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                    Con_Warning("can not create ragdoll for entity_id = %d", ent_id);
                 }
             }
         }
         else
         {
-            //Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            Con_Warning("no entity with id = %d", ent_id);
         }
     }
     return 0;
@@ -1016,7 +1014,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
     else
@@ -1032,12 +1030,12 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
             }
             else
             {
-                //Con_Warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+                Con_Warning("can not remove ragdoll for entity_id = %d", ent_id);
             }
         }
         else
         {
-            //Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            Con_Warning("no entity with id = %d", ent_id);
         }
     }
     return 0;
@@ -1068,42 +1066,42 @@ int lua_SetSecretStatus(lua_State *lua)
 
 int lua_GetActionState(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-    int act = lua_tointeger(lua, 1);
-
-    if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
+    if(lua_gettop(lua) >= 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        int act = lua_tointeger(lua, 1);
+
+        if((act >= 0) && (act < ACT_LASTINDEX))
+        {
+            lua_pushinteger(lua, (int)(control_mapper.action_map[act].state));
+            return 1;
+        }
+
+        Con_Warning("wrong action number");
         return 0;
     }
-    else if(top == 1)
-    {
-        lua_pushinteger(lua, (int)(control_mapper.action_map[act].state));
-        return 1;
-    }
 
-    //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    Con_Warning("expecting arguments (action_id)");
     return 0;
 }
 
 
 int lua_GetActionChange(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-    int act = lua_tointeger(lua, 1);
-
-    if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
+    if(lua_gettop(lua) >= 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        int act = lua_tointeger(lua, 1);
+
+        if((act >= 0) && (act < ACT_LASTINDEX))
+        {
+            lua_pushinteger(lua, (int)(control_mapper.action_map[act].already_pressed));
+            return 1;
+        }
+
+        Con_Warning("wrong action number");
         return 0;
     }
-    else if(top == 1)
-    {
-        lua_pushinteger(lua, (int)(control_mapper.action_map[act].already_pressed));
-        return 1;
-    }
 
-    //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    Con_Warning("expecting arguments (action_id)");
     return 0;
 }
 
@@ -1122,7 +1120,7 @@ int lua_BindKey(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        //Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        Con_Warning("wrong action number");
     }
 
     else if(top == 2)
@@ -1136,7 +1134,7 @@ int lua_BindKey(lua_State *lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
+        Con_Warning("expecting arguments (action_id, key_id1, (key_id2))");
     }
 
     return 0;
@@ -1146,13 +1144,13 @@ int lua_AddFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
+        Con_Warning("expecting arguments (font index, font path, font size)");
         return 0;
     }
 
     if(!glf_manager_add_font(con_font_manager, lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
     {
-        //Con_Warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
+        Con_Warning("can't create font with id = %d", lua_tointeger(lua, 1));
     }
 
     return 0;
@@ -1162,7 +1160,7 @@ int lua_AddFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 14)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
+        Con_Warning("expecting arguments (index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide)");
         return 0;
     }
 
@@ -1188,8 +1186,7 @@ int lua_AddFontStyle(lua_State *lua)
                                   rect, rect_border, rect_R, rect_G, rect_B, rect_A,
                                   hide))
     {
-
-        //Con_Warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        Con_Warning("can't create fontstyle with id = %d", style_index);
     }
 
     return 0;
@@ -1199,13 +1196,13 @@ int lua_DeleteFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[font index]");
+        Con_Warning("expecting arguments (font index)");
         return 0;
     }
 
     if(!glf_manager_remove_font(con_font_manager, lua_tointeger(lua, 1)))
     {
-        //Con_Warning(SYSWARN_CANT_REMOVE_FONT);
+        Con_Warning("can't remove font");
     }
 
     return 0;
@@ -1215,13 +1212,13 @@ int lua_DeleteFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[style index]");
+        Con_Warning("expecting arguments (style index)");
         return 0;
     }
 
     if(!glf_manager_remove_fontstyle(con_font_manager, lua_tointeger(lua, 1)))
     {
-        //Con_Warning(SYSWARN_CANT_REMOVE_STYLE);
+        Con_Warning("can't remove font style");
     }
 
     return 0;
@@ -1234,7 +1231,7 @@ int lua_AddItem(lua_State * lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        Con_Warning("expecting arguments (entity_id, item_id, items_count)");
         return 0;
     }
 
@@ -1258,7 +1255,7 @@ int lua_AddItem(lua_State * lua)
         return 1;
     }
 
-    //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    Con_Warning("no entity with id = %d", entity_id);
     return 0;
 }
 
@@ -1267,7 +1264,7 @@ int lua_RemoveItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        Con_Warning("expecting arguments (entity_id, item_id, items_count)");
         return 0;
     }
 
@@ -1283,7 +1280,7 @@ int lua_RemoveItem(lua_State * lua)
         return 1;
     }
 
-    //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    Con_Warning("no entity with id = %d", entity_id);
     return 0;
 }
 
@@ -1292,7 +1289,7 @@ int lua_RemoveAllItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1305,7 +1302,7 @@ int lua_RemoveAllItems(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        Con_Warning("no entity with id = %d", entity_id);
     }
 
     return 0;
@@ -1316,7 +1313,7 @@ int lua_GetItemsCount(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
+        Con_Warning("expecting arguments (entity_id, item_id)");
         return 0;
     }
     int entity_id = lua_tointeger(lua, 1);
@@ -1331,7 +1328,7 @@ int lua_GetItemsCount(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        Con_Warning("no entity with id = %d", entity_id);
         return 0;
     }
 
@@ -1342,7 +1339,7 @@ int lua_CreateBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
+        Con_Warning("expecting arguments (item_id, model_id, world_model_id, type, count, (name))");
         return 0;
     }
 
@@ -1362,7 +1359,7 @@ int lua_DeleteBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[item_id]");
+        Con_Warning("expecting arguments (item_id)");
     }
     else
     {
@@ -1376,7 +1373,7 @@ int lua_PrintItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1384,7 +1381,7 @@ int lua_PrintItems(lua_State * lua)
     entity_p  ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        Con_Warning("no entity with id = %d", entity_id);
         return 0;
     }
 
@@ -1393,7 +1390,7 @@ int lua_PrintItems(lua_State * lua)
         inventory_node_p i = ent->character->inventory;
         for(;i;i=i->next)
         {
-            Con_Printf("item[id = %d]: count = %d, type = %d", i->id, i->count);
+            Con_Printf("item[id = %d]: count = %d", i->id, i->count);
         }
     }
     return 0;
@@ -1406,7 +1403,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(top < 6)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
+        Con_Warning("expecting arguments (model_id, anim_num, state_id, dispatch_num, start_frame, end_frame, (next_anim), (next_frame))");
         return 0;
     }
 
@@ -1415,7 +1412,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Con_Warning("no skeletal model with id = %d", id);
         return 0;
     }
 
@@ -1427,7 +1424,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Con_Warning("wrong anim number = %d", anim);
         return 0;
     }
 
@@ -1448,7 +1445,7 @@ int lua_SetStateChangeRange(lua_State * lua)
             }
             else
             {
-                //Con_Warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
+                Con_Warning("wrong anim dispatch number = %d", dispatch);
             }
             break;
         }
@@ -1462,7 +1459,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
+        Con_Warning("expecting arguments (model_id, anim_num, frame_num)");
         return 0;
     }
 
@@ -1472,13 +1469,13 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Con_Warning("no skeletal model with id = %d", id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Con_Warning("wrong anim number = %d", anim);
         return 0;
     }
 
@@ -1489,7 +1486,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        //Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        Con_Warning("wrong anim frame number = %d", frame);
         return 0;
     }
 
@@ -1508,7 +1505,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if(top < 4)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
+        Con_Warning("expecting arguments (model_id, anim_num, frame_num, flag, (dx, dy, dz))");
         return 0;
     }
 
@@ -1518,13 +1515,13 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Con_Warning("no skeletal model with id = %d", id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        //Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Con_Warning("wrong anim number = %d", anim);
         return 0;
     }
 
@@ -1535,7 +1532,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        //Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        Con_Warning("wrong frame number = %d", frame);
         return 0;
     }
 
@@ -1555,8 +1552,7 @@ int lua_SpawnEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
+        Con_Warning("expecting arguments (model_id1, room_id, x, y, z, (ax, ay, az))");
         return 0;
     }
 
@@ -1597,7 +1593,7 @@ int lua_GetEntityVector(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        Con_Warning("expecting arguments (entity_id1, entity_id2)");
         return 0;
     }
 
@@ -1605,14 +1601,14 @@ int lua_GetEntityVector(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1626,7 +1622,7 @@ int lua_GetEntityDistance(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        Con_Warning("expecting arguments (entity_id1, entity_id2)");
         return 0;
     }
 
@@ -1634,14 +1630,14 @@ int lua_GetEntityDistance(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1654,7 +1650,7 @@ int lua_GetEntityDirDot(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        Con_Warning("expecting arguments (id1, id2)");
         return 0;
     }
 
@@ -1662,14 +1658,14 @@ int lua_GetEntityDirDot(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1682,7 +1678,7 @@ int lua_GetEntityPosition(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1690,7 +1686,7 @@ int lua_GetEntityPosition(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1708,7 +1704,7 @@ int lua_GetEntityAngles(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1717,7 +1713,7 @@ int lua_GetEntityAngles(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1732,7 +1728,7 @@ int lua_GetEntityScaling(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1741,7 +1737,7 @@ int lua_GetEntityScaling(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1758,7 +1754,7 @@ int lua_SetEntityScaling(lua_State * lua)
 
     if(top < 4)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, x_scaling, y_scaling, z_scaling]");
+        Con_Warning("expecting arguments (entity_id, x_scaling, y_scaling, z_scaling)");
         return 0;
     }
 
@@ -1767,7 +1763,7 @@ int lua_SetEntityScaling(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
     }
     else
     {
@@ -1802,7 +1798,7 @@ int lua_SimilarSector(lua_State * lua)
 
     if(top < 5)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz, ignore_doors, (ceiling)]");
+        Con_Warning("expecting arguments (entity_id, dx, dy, dz, ignore_doors, (ceiling))");
         return 0;
     }
 
@@ -1811,7 +1807,7 @@ int lua_SimilarSector(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1851,7 +1847,7 @@ int lua_GetSectorHeight(lua_State * lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, (ceiling), (dx, dy, dz)");
+        Con_Warning("expecting arguments (entity_id, (ceiling), (dx, dy, dz))");
         return 0;
     }
 
@@ -1860,7 +1856,7 @@ int lua_GetSectorHeight(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -1899,7 +1895,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    //Con_Warning(SYSWARN_NO_ENTITY, id);
+                    Con_Warning("no entity with id = %d", id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1918,7 +1914,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    //Con_Warning(SYSWARN_NO_ENTITY, id);
+                    Con_Warning("no entity with id = %d", id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1936,7 +1932,7 @@ int lua_SetEntityPosition(lua_State * lua)
             return 0;
 
         default:
-            //Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
+            Con_Warning("expecting arguments (entity_id, x, y, z, (fi_x, fi_y, fi_z))");
             return 0;
     }
 
@@ -1949,7 +1945,7 @@ int lua_SetEntityAngles(lua_State * lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, fi_x], (fi_y, fi_z)");
+        Con_Warning("expecting arguments (entity_id, fi_x, (fi_y, fi_z))");
         return 0;
     }
 
@@ -1958,7 +1954,7 @@ int lua_SetEntityAngles(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
     }
     else
     {
@@ -1995,7 +1991,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
             return 0;
 
         default:
-            //Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
+            Con_Warning("expecting arguments (entity_id, x, y, z)");
             return 0;
     }
 
@@ -2007,7 +2003,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
+        Con_Warning("expecting arguments (entity_id, dx, dy, dz)");
         return 0;
     }
 
@@ -2016,7 +2012,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2037,7 +2033,7 @@ int lua_MoveEntityToSink(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
+        Con_Warning("expecting arguments (entity_id, sink_id)");
         return 0;
     }
 
@@ -2084,7 +2080,7 @@ int lua_MoveEntityToEntity(lua_State * lua)
 
     if(top < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed], (ignore_z)");
+        Con_Warning("expecting arguments (entity_to_move_id, entity_id, speed, (ignore_z))");
         return 0;
     }
 
@@ -2123,7 +2119,7 @@ int lua_RotateEntity(lua_State *lua)
 
     if((top > 4) || (top < 2))
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id, rot_x], (rot_y, rot_z)");
+        Con_Warning("expecting arguments (ent_id, rot_x, (rot_y, rot_z))");
         return 0;
     }
 
@@ -2132,7 +2128,7 @@ int lua_RotateEntity(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
     }
     else
     {
@@ -2155,7 +2151,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2164,7 +2160,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2178,7 +2174,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2187,7 +2183,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2201,7 +2197,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id, speed_x], (speed_y, speed_z)");
+        Con_Warning("expecting arguments (id, speed_x, (speed_y, speed_z))");
         return 0;
     }
 
@@ -2210,7 +2206,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
     }
     else
     {
@@ -2235,7 +2231,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
+        Con_Warning("expecting arguments (entity_id, anim_id, (frame_number, another_model))");
         return 0;
     }
 
@@ -2244,7 +2240,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2271,7 +2267,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(top != 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_flag]");
+        Con_Warning("expecting arguments (entity_id, anim_flag)");
         return 0;
     }
 
@@ -2280,7 +2276,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2295,7 +2291,7 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
+        Con_Warning("expecting arguments (entity_id, bone_id, body_part_flag)");
         return 0;
     }
 
@@ -2304,14 +2300,14 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
     {
-        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        Con_Warning("wrong bone index = %d", bone_id);
         return 0;
     }
 
@@ -2327,7 +2323,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
+        Con_Warning("expecting arguments (model_id, bone_id, body_part_flag)");
         return 0;
     }
 
@@ -2336,14 +2332,14 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(model == NULL)
     {
-        //Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Con_Warning("no skeletal model with id = %d", id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= model->mesh_count))
     {
-        //Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        Con_Warning("wrong bone index = %d", bone_id);
         return 0;
     }
 
@@ -2357,7 +2353,7 @@ int lua_GetEntityAnim(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2366,7 +2362,7 @@ int lua_GetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2437,7 +2433,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2446,7 +2442,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2459,7 +2455,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        Con_Warning("expecting arguments (entity_id, value)");
         return 0;
     }
 
@@ -2468,7 +2464,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2489,7 +2485,7 @@ int lua_GetEntityEnability(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2498,7 +2494,7 @@ int lua_GetEntityEnability(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2512,7 +2508,7 @@ int lua_GetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2521,7 +2517,7 @@ int lua_GetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2535,7 +2531,7 @@ int lua_SetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        Con_Warning("expecting arguments (entity_id, value)");
         return 0;
     }
 
@@ -2544,7 +2540,7 @@ int lua_SetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2581,7 +2577,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
+        Con_Warning("expecting arguments (entity_id, layout) or (entity_id, mask, event, once)");
         return 0;
     }
 
@@ -2590,7 +2586,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2746,7 +2742,7 @@ int lua_GetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -2755,7 +2751,7 @@ int lua_GetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2770,7 +2766,7 @@ int lua_SetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        Con_Warning("expecting arguments (entity_id, state_flags, type_flags, (callback_flags))");
         return 0;
     }
 
@@ -2779,7 +2775,7 @@ int lua_SetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2806,7 +2802,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
+        Con_Warning("expecting arguments (entity_id, (type_flag))");
         return 0;
     }
 
@@ -2815,7 +2811,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2837,7 +2833,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
+        Con_Warning("expecting arguments (entity_id, type_flag, (value))");
         return 0;
     }
 
@@ -2846,7 +2842,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2876,7 +2872,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
+        Con_Warning("expecting arguments (entity_id, (state_flag))");
         return 0;
     }
 
@@ -2885,7 +2881,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2907,7 +2903,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
+        Con_Warning("expecting arguments (entity_id, state_flag, (value))");
         return 0;
     }
 
@@ -2916,7 +2912,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2946,7 +2942,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
+        Con_Warning("expecting arguments (entity_id, (callback_flag))");
         return 0;
     }
 
@@ -2955,7 +2951,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -2977,7 +2973,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(top < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
+        Con_Warning("expecting arguments (entity_id, callback_flag, (value))");
         return 0;
     }
 
@@ -2986,7 +2982,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3041,7 +3037,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -3050,7 +3046,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3063,7 +3059,7 @@ int lua_SetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
+        Con_Warning("expecting arguments (entity_id, move_type)");
         return 0;
     }
 
@@ -3083,7 +3079,7 @@ int lua_GetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
+        Con_Warning("expecting arguments (entity_id, response_id)");
         return 0;
     }
 
@@ -3114,7 +3110,7 @@ int lua_GetEntityResponse(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 }
@@ -3124,7 +3120,7 @@ int lua_SetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
+        Con_Warning("expecting arguments (entity_id, response_id, value)");
         return 0;
     }
 
@@ -3155,7 +3151,7 @@ int lua_SetEntityResponse(lua_State * lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
     }
 
     return 0;
@@ -3165,7 +3161,7 @@ int lua_GetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -3174,7 +3170,7 @@ int lua_GetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3187,7 +3183,7 @@ int lua_GetEntityModel(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -3196,7 +3192,7 @@ int lua_GetEntityModel(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3209,7 +3205,7 @@ int lua_SetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        Con_Warning("expecting arguments (entity_id, value)");
         return 0;
     }
 
@@ -3218,7 +3214,7 @@ int lua_SetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3235,7 +3231,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
+        Con_Warning("expecting arguments (id, room_id, move_type, dir_flag)");
         return 0;
     }
 
@@ -3243,7 +3239,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3283,7 +3279,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -3292,7 +3288,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 
     if(ent == NULL)
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
@@ -3304,7 +3300,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
+        Con_Warning("expecting arguments (id_dest, id_src)");
         return 0;
     }
 
@@ -3615,7 +3611,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning("expecting arguments (entity_id)");
         return 0;
     }
 
@@ -3629,7 +3625,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_NO_ENTITY, id);
+        Con_Warning("no entity with id = %d", id);
         return 0;
     }
 }
@@ -3718,7 +3714,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
+        Con_Warning("expecting arguments (stream_id, (mask))");
         return 0;
     }
 
@@ -3728,7 +3724,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(id < 0)
     {
-        //Con_Warning(SYSWARN_WRONG_STREAM_ID);
+        Con_Warning("wrong stream id");
         return 0;
     }
 
@@ -3750,14 +3746,14 @@ int lua_PlaySound(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        Con_Warning("expecting arguments (sound_id, (entity_id))");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
     if(id >= engine_world.audio_map_count)
     {
-        //Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
+        Con_Warning("wrong sound id, count = %d", engine_world.audio_map_count);
         return 0;
     }
 
@@ -3785,11 +3781,11 @@ int lua_PlaySound(lua_State *lua)
         switch(result)
         {
             case TR_AUDIO_SEND_NOCHANNEL:
-                //Con_Warning(SYSWARN_AS_NOCHANNEL);
+                Con_Warning("send ignored: no free channels");
                 break;
 
             case TR_AUDIO_SEND_NOSAMPLE:
-                //Con_Warning(SYSWARN_AS_NOSAMPLE);
+                Con_Warning("send ignored: no sample");
                 break;
         }
     }
@@ -3804,14 +3800,14 @@ int lua_StopSound(lua_State *lua)
 
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        Con_Warning("expecting arguments (sound_id, (entity_id))");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map_count)
     {
-        //Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
+        Con_Warning("wrong sound id, count = %d", engine_world.audio_map_count);
         return 0;
     }
 
@@ -3834,7 +3830,7 @@ int lua_StopSound(lua_State *lua)
         result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
     }
 
-    if(result < 0) //Con_Warning(SYSWARN_AK_NOTPLAYED, id);
+    if(result < 0) Con_Warning("audio with id = %d not played", id);
 
     return 0;
 }
@@ -3849,7 +3845,7 @@ int lua_SetLevel(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[level_id]");
+        Con_Warning("expecting arguments (level_id)");
         return 0;
     }
 
@@ -3867,7 +3863,7 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
+        Con_Warning("expecting arguments (gameversion, (level_id))");
         return 0;
     }
 
@@ -3901,7 +3897,7 @@ int lua_LoadMap(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
+        Con_Warning("expecting arguments (map_name, (game_id, map_id))");
         return 0;
     }
 
@@ -3938,7 +3934,7 @@ int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
+        Con_Warning("expecting arguments (flip_index, flip_state)");
         return 0;
     }
 
@@ -3948,7 +3944,7 @@ int lua_SetFlipState(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Con_Warning("wrong flipmap index");
         return 0;
     }
 
@@ -4000,7 +3996,7 @@ int lua_SetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
+        Con_Warning("expecting arguments (flip_index, flip_mask, flip_operation)");
         return 0;
     }
 
@@ -4011,7 +4007,7 @@ int lua_SetFlipMap(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Con_Warning("wrong flipmap index");
         return 0;
     }
 
@@ -4035,7 +4031,7 @@ int lua_GetFlipMap(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            Con_Warning("wrong flipmap index");
             return 0;
         }
 
@@ -4044,7 +4040,7 @@ int lua_GetFlipMap(lua_State *lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        Con_Warning("expecting arguments (flip_index)");
         return 0;
     }
 }
@@ -4057,7 +4053,7 @@ int lua_GetFlipState(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            //Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            Con_Warning("wrong flipmap index");
             return 0;
         }
 
@@ -4066,7 +4062,7 @@ int lua_GetFlipState(lua_State *lua)
     }
     else
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        Con_Warning("expecting arguments (flip_index)");
         return 0;
     }
 }
@@ -4079,7 +4075,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        //Con_Warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning("expecting arguments (model_id)");
         return 0;
     }
 
@@ -4738,7 +4734,7 @@ int Engine_LoadMap(const char *name)
 {
     if(!Engine_FileFound(name))
     {
-        //Con_Warning(SYSWARN_FILE_NOT_FOUND, name);
+        Con_Warning("file not found: \"%s\"", name);
         return 0;
     }
 

@@ -56,13 +56,11 @@ typedef struct gl_tex_font_s
 
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
-typedef struct gl_font_node_s
+typedef struct gl_font_cont_s
 {
-    uint16_t                    index;
     uint16_t                    font_size;
     struct gl_tex_font_s       *gl_font;
-    struct gl_font_node_s      *next;
-}gl_font_node_t, *gl_font_node_p;
+}gl_font_cont_t, *gl_font_cont_p;
 
 
 // Font style is different to font itself - whereas engine can have
@@ -70,8 +68,6 @@ typedef struct gl_font_node_s
 // Font style management is done via font manager.
 typedef struct gl_fontstyle_s
 {
-    uint16_t                    index;                      // Unique index which is used to identify style.
-
     GLfloat                     color[4];
     GLfloat                     real_color[4];
     GLfloat                     rect_color[4];
@@ -81,8 +77,6 @@ typedef struct gl_fontstyle_s
     uint8_t                     rect;
     uint8_t                     fading;
     uint8_t                     hidden;
-
-    struct gl_fontstyle_s      *next;
 } gl_fontstyle_t, *gl_fontstyle_p;
 
 #define GUI_FONT_FADE_SPEED             1.0                 // Global fading style speed.
@@ -98,11 +92,11 @@ typedef struct gl_font_manager_s
     GLfloat                 fade_value;            // Multiplier used with font RGB values to animate fade.
     uint8_t                 fade_direction;
 
-    uint32_t                style_count;
+    uint16_t                max_styles;
     struct gl_fontstyle_s  *styles;
 
-    uint32_t                font_count;
-    struct gl_font_node_s  *fonts;
+    uint16_t                max_fonts;
+    struct gl_font_cont_s  *fonts;
     
     FT_Library              font_library;  // GLF font library unit.
 }gl_font_manager_t, *gl_font_manager_p;
@@ -129,7 +123,7 @@ uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
 // and font styles. Every time you want to change font or style, font manager
 // functions should be used.
 
-gl_font_manager_p glf_create_manager();
+gl_font_manager_p glf_create_manager(uint16_t max_fonts, uint16_t max_styles);
 void glf_free_manager(gl_font_manager_p p);
 
 gl_tex_font_p glf_manager_get_font(gl_font_manager_p manager, uint16_t index);
