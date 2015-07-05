@@ -1,13 +1,9 @@
-
 #include <SDL2/SDL.h>
 
 #include <AL/al.h>
 #include <AL/alext.h>
 #include <AL/efx.h>
 #include <AL/efx-presets.h>
-
-#include <ogg/ogg.h>
-#include <vorbis/vorbisfile.h>
 
 #include "audio.h"
 #include "console.h"
@@ -578,35 +574,22 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
 
 bool StreamTrack::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info;
-    int             result;
-
-    if(!(audio_file = fopen(path, "rb")))
+    if(!(sndfile_Stream = sf_open(path, SFM_READ, &sf_info)))
     {
         Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
         method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
         return false;
     }
 
-    if((result = ov_open(audio_file, &vorbis_Stream, NULL, 0)) < 0)
-    {
-        fclose(audio_file);
-        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
-        method = -1;
-        return false;
-    }
-
-    vorbis_Info = ov_info(&vorbis_Stream, -1);
-
     ConsoleInfo::instance().notify(SYSNOTE_OGG_OPENED, path,
-               vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
+               sf_info.channels, sf_info.samplerate, 0.0); //! @todo Dummy bitrate output
 
-    if(vorbis_Info->channels == 1)
+    if(sf_info.channels == 1)
         format = AL_FORMAT_MONO16;
     else
         format = AL_FORMAT_STEREO16;
 
-    rate = vorbis_Info->rate;
+    rate = sf_info.samplerate;
 
     return true;    // Success!
 }
@@ -713,7 +696,7 @@ void StreamTrack::Stop()    // Immediately stop track.
     switch(method)
     {
         case TR_AUDIO_STREAM_METHOD_OGG:
-            ov_clear(&vorbis_Stream);
+            sf_close(sndfile_Stream);
             break;
 
         case TR_AUDIO_STREAM_METHOD_WAD:
@@ -887,30 +870,33 @@ bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
 
 bool StreamTrack::Stream_Ogg(ALuint buffer)
 {
-    char pcm[audio_settings.stream_buffer_size];
-    int  size = 0;
-    int  section;
-    int  result;
+    assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
+    std::vector<short> pcm(audio_settings.stream_buffer_size);
+    size_t size = 0;
 
-    while(size < audio_settings.stream_buffer_size)
+    // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
+    while(size < pcm.size() - sf_info.channels + 1)
     {
-        result = ov_read(&vorbis_Stream, pcm + size, audio_settings.stream_buffer_size - size, 0, 2, 1, &section);
+        // we need to read a multiple of sf_info.channels here
+        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sf_info.channels * sf_info.channels;
+        const sf_count_t samplesRead = sf_read_short(sndfile_Stream, pcm.data() + size, samplesToRead) * sf_info.channels;
 
-        if(result > 0)
+        if(samplesRead > 0)
         {
-            size += result;
+            size += samplesRead;
         }
         else
         {
-            if(result < 0)
+            int error = sf_error(sndfile_Stream);
+            if(error != SF_ERR_NO_ERROR)
             {
-                Audio_LogOGGError(result);
+                Audio_LogSndfileError( error );
             }
             else
             {
                 if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
                 {
-                   ov_pcm_seek(&vorbis_Stream, 0);
+                   sf_seek(sndfile_Stream, 0, SEEK_SET);
                 }
                 else
                 {
@@ -923,7 +909,7 @@ bool StreamTrack::Stream_Ogg(ALuint buffer)
     if(size == 0)
         return false;
 
-    alBufferData(buffer, format, pcm, size, rate);
+    alBufferData(buffer, format, pcm.data(), size, rate);
     return true;
 }
 
@@ -1708,29 +1694,9 @@ bool Audio_LogALError(int error_marker)
 }
 
 
-void Audio_LogOGGError(int code)
+void Audio_LogSndfileError(int code)
 {
-    switch(code)
-    {
-        case OV_EREAD:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Read from media.");
-            break;
-        case OV_ENOTVORBIS:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Not Vorbis data.");
-            break;
-        case OV_EVERSION:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Vorbis version mismatch.");
-            break;
-        case OV_EBADHEADER:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Invalid Vorbis header.");
-            break;
-        case OV_EFAULT:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
-            break;
-        default:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
-            break;
-    }
+    Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
 }
 
 
@@ -1808,7 +1774,7 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, Uint32 buffer_size,
     auto framesRead = sf_readf_short(wavFile, frames.data(), buffer_size);
     frames.resize( framesRead*2 );
 
-    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate/2);
 
     return true;
 }

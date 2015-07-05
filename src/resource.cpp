@@ -3873,10 +3873,6 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     // Generate new audio emitters array.
     world->audio_emitters.resize(tr->sound_sources_count);
 
-    // Copy sound map.
-    world->audio_map.assign(tr->soundmap+0, tr->soundmap+world->audio_map.size());
-    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
-
     // Cycle through raw samples block and parse them to OpenAL buffers.
 
     // Different TR versions have different ways of storing samples.
@@ -3894,7 +3890,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                world->audio_map.resize( TR_AUDIO_MAP_SIZE_TR1 );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
                 for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
                 {
@@ -3909,7 +3905,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
             case TR_III:
             {
-                world->audio_map.resize( (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2)));
                 size_t ind1 = 0;
                 size_t ind2 = 0;
                 bool flag = false;
@@ -3947,7 +3943,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map.resize( (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4) );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4)));
 
                 for(size_t i = 0; i < tr->samples_count; i++)
                 {
