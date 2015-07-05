@@ -315,6 +315,9 @@ void Hair::createHairMesh(const SkeletalModel *model)
 void HairSetup::getSetup(uint32_t hair_entry_index)
 {
     lua::Value res = engine_lua["getHairSetup"](hair_entry_index);
+    if(!res.is<lua::Table>())
+        return;
+
     m_model = res["model"];
     m_linkBody = res["link_body"];
     m_rootWeight = res["props"]["root_weight"];

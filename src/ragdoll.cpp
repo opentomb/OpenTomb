@@ -18,9 +18,10 @@
 
 bool RDSetup::getSetup(int ragdoll_index)
 {
-    bool result = true;
-
     lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
+    if(!rds.is<lua::Table>())
+        return false;
+
     hit_func = static_cast<const char*>(rds["hit_callback"]);
 
     size_t tmp;
@@ -70,7 +71,7 @@ bool RDSetup::getSetup(int ragdoll_index)
         }
     }
 
-    return result;
+    return true;
 }
 
 

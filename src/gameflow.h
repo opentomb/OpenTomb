@@ -24,7 +24,7 @@ typedef struct gameflow_manager_s
     bool                NextAction;
     gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
 
-    char                SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
+    bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
     
 } gameflow_manager_t, *gameflow_manager_p;
 

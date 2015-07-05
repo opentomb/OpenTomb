@@ -739,15 +739,15 @@ void lua_RemoveEntityRagdoll(int ent_id)
     }
 }
 
-char lua_GetSecretStatus(int secret_number)
+bool lua_GetSecretStatus(int secret_number)
 {
     if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
-        return -1;   // No such secret - return
+        return false;   // No such secret - return
 
     return gameflow_manager.SecretsTriggerMap[secret_number];
 }
 
-void lua_SetSecretStatus(int secret_number, char status)
+void lua_SetSecretStatus(int secret_number, bool status)
 {
     if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return;   // No such secret - return
 
@@ -1693,7 +1693,7 @@ bool lua_GetEntityLock(int id)
     return false;
 }
 
-void lua_SetEntityEvent(int id, int event)
+void lua_SetEntityEvent(int id, bool event)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent != NULL)
@@ -1704,14 +1704,14 @@ void lua_SetEntityEvent(int id, int event)
     }
 }
 
-int lua_GetEntityEvent(int id)
+bool lua_GetEntityEvent(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent != NULL)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5;    // event
     }
-    return -1;
+    return false;
 }
 
 int lua_GetEntityMask(int id)
@@ -1746,7 +1746,7 @@ bool lua_GetEntitySectorStatus(int id)
     return -1;
 }
 
-void lua_SetEntitySectorStatus(int id, int status)
+void lua_SetEntitySectorStatus(int id, bool status)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent != NULL)
@@ -2323,7 +2323,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
         if(vfactor.is<lua::Number>())
         {
-            ang3 = abs(vfactor);
+            ang3 = abs(vfactor.to<float>());
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 

@@ -68,7 +68,8 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     if(ent->m_bf.animations.model)
     {
         const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
-        Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->m_id);
+        if(funcName)
+            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->m_id);
     }
 }
 
@@ -873,7 +874,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
+                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
                                                 if(only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
@@ -882,7 +883,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
                                                 }
                                             }
                                             else
@@ -890,16 +891,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 // Ordinary type case (e.g. heavy switch).
                                                 snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
                                                 strcat(item_events, buf);
-                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
+                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, true) \n");
                                             }
                                             break;
 
                                         case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
                                     }
 
@@ -1070,7 +1071,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 strcat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n");
                                 strcat(script, once_condition);
                                 strcat(script, single_events);
-                                strcat(script, "   setEntitySectorStatus(entity_index, 1); \n");
+                                strcat(script, "   setEntitySectorStatus(entity_index, true); \n");
 
                                 if(condition)
                                 {
