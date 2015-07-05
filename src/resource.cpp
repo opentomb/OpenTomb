@@ -4082,7 +4082,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
             case TR_III:
             {
-                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2)));
                 size_t ind1 = 0;
                 size_t ind2 = 0;
                 bool flag = false;
@@ -4120,7 +4120,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4)));
 
                 for(size_t i = 0; i < tr->samples_count; i++)
                 {
