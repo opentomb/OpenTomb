@@ -1774,7 +1774,7 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, Uint32 buffer_size,
     auto framesRead = sf_readf_short(wavFile, frames.data(), buffer_size);
     frames.resize( framesRead*2 );
 
-    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate/2);
 
     return true;
 }
