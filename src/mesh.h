@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include "vmath.h"
+#include <lua.hpp>
 #include "LuaState.h"
 
 class btCollisionShape;

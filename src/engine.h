@@ -11,11 +11,8 @@
 #include "controls.h"
 #include "object.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
-
-namespace lua {
-class State;
-}
 
 #define MAX_ENGINE_PATH                         (1024)
 

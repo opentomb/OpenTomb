@@ -18,6 +18,7 @@
 #include "anim_state_control.h"
 #include "world.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 gameflow_manager_s gameflow_manager;

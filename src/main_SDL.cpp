@@ -54,6 +54,7 @@
 #include <AL/alc.h>
 #include <AL/alext.h>
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 #define NO_AUDIO        0

@@ -47,6 +47,7 @@
 #include "hair.h"
 #include "ragdoll.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 extern SDL_Window             *sdl_window;

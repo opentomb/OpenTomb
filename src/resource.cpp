@@ -36,6 +36,7 @@
 #include "bsp_tree.h"
 #include "shader_description.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 lua::State objects_flags_conf;

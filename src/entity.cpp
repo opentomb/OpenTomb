@@ -19,6 +19,7 @@
 #include "ragdoll.h"
 #include "hair.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 #include "bullet/btBulletCollisionCommon.h"

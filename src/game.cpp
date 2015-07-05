@@ -29,6 +29,7 @@
 #include "hair.h"
 #include "ragdoll.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 btVector3 cam_angles = {0.0, 0.0, 0.0};

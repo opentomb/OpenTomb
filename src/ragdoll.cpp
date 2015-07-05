@@ -13,6 +13,7 @@
 #include "engine.h"
 #include "entity.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 bool RDSetup::getSetup(int ragdoll_index)

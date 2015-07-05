@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "render.h"
 
+#include <lua.hpp>
 #include "LuaState.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
