@@ -870,19 +870,20 @@ bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
 
 bool StreamTrack::Stream_Ogg(ALuint buffer)
 {
+    assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
     std::vector<short> pcm(audio_settings.stream_buffer_size);
-    int size = 0;
+    size_t size = 0;
 
     // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
-    while(size < audio_settings.stream_buffer_size - sf_info.channels + 1)
+    while(size < pcm.size() - sf_info.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
         const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sf_info.channels * sf_info.channels;
-        sf_count_t result = sf_read_short(sndfile_Stream, pcm.data() + size, samplesToRead);
+        const sf_count_t samplesRead = sf_read_short(sndfile_Stream, pcm.data() + size, samplesToRead) * sf_info.channels;
 
-        if(result > 0)
+        if(samplesRead > 0)
         {
-            size += result;
+            size += samplesRead;
         }
         else
         {
