@@ -2323,11 +2323,11 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
         if(vfactor.is<lua::Number>())
         {
-            ang3 = abs(vfactor.to<float>());
+            ang3 = std::abs(vfactor.to<float>());
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 
-        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
+        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(std::abs(ang1), std::abs(ang2), ang3));
     }
     else
     {

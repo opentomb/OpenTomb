@@ -842,12 +842,12 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += ((360 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((360 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
         }
@@ -858,18 +858,18 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] < max_lean)   // Approaching from center
             {
-                m_angles[2] += ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0 - abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                m_angles[2] -= ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
         }
@@ -880,18 +880,18 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((abs(m_angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > 360.0) m_angles[2] -= 360.0;
             }
         }
@@ -1583,7 +1583,7 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(m_command.move[0])) | (abs(m_command.move[1]))));
+    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, (std::abs(m_command.move[0]) || std::abs(m_command.move[1])));
 
     if((m_dirFlag & ENT_MOVE_FORWARD) && (m_command.move[0] == 1))
     {

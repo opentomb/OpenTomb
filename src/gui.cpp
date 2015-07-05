@@ -1126,11 +1126,11 @@ struct gui_buffer_entry_s {
 
 void Gui_FillCrosshairBuffer()
 {
-    gui_buffer_entry_s crosshair_buf[] = {
-        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 255, 0, 0, 255
+    gui_buffer_entry_s crosshair_buf[4] = {
+        {{(GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)}, {255, 0, 0, 255}}
     };
 
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);

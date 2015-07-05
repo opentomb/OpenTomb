@@ -29,7 +29,7 @@ struct OBB;
 struct LitShaderDescription;
 struct SSBoneFrame;
 struct RoomSector;
-struct Render;
+class Render;
 
 class RenderDebugDrawer : public btIDebugDraw
 {

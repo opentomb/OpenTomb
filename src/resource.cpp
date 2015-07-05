@@ -660,8 +660,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -671,8 +671,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -695,8 +695,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -706,8 +706,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;

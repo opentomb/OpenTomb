@@ -420,9 +420,9 @@ private:
     float         mBorderMainColor[5];  // Border main color.
     float         mBorderFadeColor[5];  // Border fade color.
 
-    int8_t        mBaseBlendingMode;    // Blending modes for all bar parts.
-    int8_t        mBackBlendingMode;    // Note there is no alt. blending mode, cause
-    int8_t        mBorderBlendingMode;  // base and alt are actually the same part.
+    // int8_t        mBaseBlendingMode;    // Blending modes for all bar parts.
+    // int8_t        mBackBlendingMode;    // Note there is no alt. blending mode, cause
+    // int8_t        mBorderBlendingMode;  // base and alt are actually the same part.
 
     bool          mExtrude;             // Extrude effect.
     float         mExtrudeDepth[5];     // Extrude effect depth.

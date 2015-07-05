@@ -123,7 +123,7 @@ bool Portal::isWayToSector(RoomSector *sector) const
     {
         if(std::fabs(bb_max[1] - centre[1]) <= 1.0)                                // прилегание плоскости выполнено
         {
-            if(!prtl_range_x[0] < bb_max[0] && prtl_range_x[1] > bb_min[0]) // проверка на пересечение диапазонов
+            if(!(prtl_range_x[0] < bb_max[0] && prtl_range_x[1] > bb_min[0])) // проверка на пересечение диапазонов
             {
                 return true;
             }

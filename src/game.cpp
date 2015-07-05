@@ -599,9 +599,9 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     //Code to manage screen shaking effects
     if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[1] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[2] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
         renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0):(renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 

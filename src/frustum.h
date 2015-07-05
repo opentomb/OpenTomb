@@ -10,7 +10,7 @@
 
 struct Room;
 struct Portal;
-struct Render;
+class Render;
 struct OBB;
 struct Polygon;
 struct Camera;

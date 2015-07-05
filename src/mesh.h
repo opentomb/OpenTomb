@@ -31,7 +31,7 @@ struct Room;
 struct EngineContainer;
 struct OBB;
 struct Vertex;
-struct Render;
+class Render;
 struct Entity;
 
 struct TransparentPolygonReference {

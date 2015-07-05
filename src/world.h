@@ -174,7 +174,7 @@ struct Room;
 struct Polygon;
 struct Camera;
 struct Portal;
-struct Render;
+class Render;
 struct Frustum;
 struct BaseMesh;
 struct StaticMesh;

@@ -1545,7 +1545,6 @@ bool Entity::createRagdoll(RDSetup* setup)
         m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
         if(!m_bf.bone_tags[i].parent) {
-            m_bf.bone_tags[i].mesh_base;
             btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
             m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);

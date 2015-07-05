@@ -157,10 +157,9 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
 void TR_Level::read_level(const std::string& filename, int32_t game_version)
 {
-    int i, len2;
+    int len2 = 0;
 
-    len2 = 0;
-    for(i = 0; i < filename.length(); i++)
+    for(size_t i = 0; i < filename.length(); i++)
     {
         if((filename[i] == '/') || (filename[i] == '\\'))
         {

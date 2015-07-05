@@ -1221,8 +1221,8 @@ void RenderDebugDrawer::addLine(const std::array<GLfloat,3>& start, const std::a
 
 void RenderDebugDrawer::addLine(const btVector3& start, const btVector3& end)
 {
-    std::array<GLfloat,3> startA{start.x(), start.y(), start.z()};
-    std::array<GLfloat,3> endA{end.x(), end.y(), end.z()};
+    std::array<GLfloat,3> startA{{start.x(), start.y(), start.z()}};
+    std::array<GLfloat,3> endA{{end.x(), end.y(), end.z()}};
     addLine(startA, m_color, endA, m_color);
 }
 
@@ -1236,9 +1236,9 @@ void RenderDebugDrawer::addLine(const std::array<GLfloat,3>& start, const std::a
 
 void RenderDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3 &color)
 {
-    std::array<GLfloat,3> fromA{from.x(), from.y(), from.z()};
-    std::array<GLfloat,3> toA{to.x(), to.y(), to.z()};
-    std::array<GLfloat,3> colorA{color.x(), color.y(), color.z()};
+    std::array<GLfloat,3> fromA{{from.x(), from.y(), from.z()}};
+    std::array<GLfloat,3> toA{{to.x(), to.y(), to.z()}};
+    std::array<GLfloat,3> colorA{{color.x(), color.y(), color.z()}};
     addLine(fromA, colorA, toA, colorA);
 }
 
@@ -1293,25 +1293,25 @@ void RenderDebugDrawer::render()
 
 void RenderDebugDrawer::drawAxis(btScalar r, const btTransform &transform)
 {
-    std::array<GLfloat,3> origin{ transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() };
+    std::array<GLfloat,3> origin{{ transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() }};
 
     btVector3 v = transform.getBasis()[0] * r;
     m_buffer.push_back(origin);
-    m_buffer.push_back({1.0, 0.0, 0.0});
-    m_buffer.push_back({v.x(), v.y(), v.z()});
-    m_buffer.push_back({1.0, 0.0, 0.0});
+    m_buffer.push_back({{1.0, 0.0, 0.0}});
+    m_buffer.push_back({{v.x(), v.y(), v.z()}});
+    m_buffer.push_back({{1.0, 0.0, 0.0}});
 
     v = transform.getBasis()[1] * r;
     m_buffer.push_back(origin);
-    m_buffer.push_back({0.0, 0.0, 1.0});
-    m_buffer.push_back({v.x(), v.y(), v.z()});
-    m_buffer.push_back({0.0, 0.0, 1.0});
+    m_buffer.push_back({{0.0, 0.0, 1.0}});
+    m_buffer.push_back({{v.x(), v.y(), v.z()}});
+    m_buffer.push_back({{0.0, 0.0, 1.0}});
 
     v = transform.getBasis()[2] * r;
     m_buffer.push_back(origin);
-    m_buffer.push_back({0.0, 0.0, 1.0});
-    m_buffer.push_back({v.x(), v.y(), v.z()});
-    m_buffer.push_back({0.0, 0.0, 1.0});
+    m_buffer.push_back({{0.0, 0.0, 1.0}});
+    m_buffer.push_back({{v.x(), v.y(), v.z()}});
+    m_buffer.push_back({{0.0, 0.0, 1.0}});
 }
 
 void RenderDebugDrawer::drawFrustum(const Frustum& f)
@@ -1372,10 +1372,10 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mesh
             for(uint32_t i=0; i<mesh->m_vertices.size(); i++,ov++,on++)
             {
                 btVector3 v = transform * *ov;
-                m_buffer.push_back({v.x(), v.y(), v.z()});
+                m_buffer.push_back({{v.x(), v.y(), v.z()}});
                 m_buffer.emplace_back( m_color );
                 v += transform.getBasis() * *on * 128;
-                m_buffer.push_back({v.x(), v.y(), v.z()});
+                m_buffer.push_back({{v.x(), v.y(), v.z()}});
                 m_buffer.emplace_back( m_color );
             }
         }
@@ -1385,10 +1385,10 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mesh
             for (uint32_t i = 0; i < mesh->m_vertices.size(); i++,mv++)
             {
                 btVector3 v = transform * mv->position;
-                m_buffer.push_back({v.x(), v.y(), v.z()});
+                m_buffer.push_back({{v.x(), v.y(), v.z()}});
                 m_buffer.emplace_back(m_color);
                 v += transform.getBasis() * mv->normal * 128;
-                m_buffer.push_back({v.x(), v.y(), v.z()});
+                m_buffer.push_back({{v.x(), v.y(), v.z()}});
                 m_buffer.emplace_back(m_color);
             }
         }
