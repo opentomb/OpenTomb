@@ -293,7 +293,7 @@ void lua_ParseAudio(lua::State& state, struct AudioSettings *as)
 {
     as->music_volume = state["audio"]["music_volume"];
     as->sound_volume = state["audio"]["sound_volume"];
-    as->use_effects = state["audio"]["use_effects"];
+    as->use_effects = state["audio"]["use_effects"].to<bool>();
     as->listener_is_player = state["audio"]["listener_is_player"];
     as->stream_buffer_size = state["audio"]["stream_buffer_size"];
     as->stream_buffer_size *= 1024;

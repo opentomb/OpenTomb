@@ -46,14 +46,14 @@ lua::State level_script;
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != NULL)
+    if(ent->m_bf.animations.model != NULL && objects_flags_conf["getEntityModelProperties"])
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
         ent->m_typeFlags |= flg;
     }
 
-    if(ent->m_bf.animations.model != NULL)
+    if(ent->m_bf.animations.model != NULL && level_script["getEntityModelProperties"])
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
@@ -68,7 +68,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     if(ent->m_bf.animations.model)
     {
         const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
-        Res_CreateEntityFunc(engine_lua, funcName, ent->m_id);
+        Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->m_id);
     }
 }
 

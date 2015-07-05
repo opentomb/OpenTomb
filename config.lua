@@ -5,16 +5,16 @@ screen =
     y = 20;
     width = 1200;
     height = 800;
-    fullscreen = 0;
+    fullscreen = false;
     fov = 75.0;
-    debug_info = 0;
+    debug_info = false;
 }
 
 audio =
 {
     sound_volume = 0.8;
     music_volume = 0.9;
-    use_effects = 1;
+    use_effects = true;
     listener_is_player = 0;
     stream_buffer_size = 128;
 }
