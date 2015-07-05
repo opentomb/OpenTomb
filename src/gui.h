@@ -762,7 +762,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
  */
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeStop(int fader);
-bool Gui_FadeAssignPic(int fader, const char* pic_name);
+bool Gui_FadeAssignPic(int fader, const std::string &pic_name);
 int  Gui_FadeCheck(int fader);
 void Gui_FadeSetup(int fader, 
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,

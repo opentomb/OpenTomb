@@ -29,110 +29,86 @@
 #include "hair.h"
 #include "ragdoll.h"
 
-#include "luahelper.h"
+#include "LuaState.h"
+#include "luastate_extra.h"
 
 btVector3 cam_angles = {0.0, 0.0, 0.0};
 
 extern btScalar time_scale;
-extern lua_State *engine_lua;
+extern lua::State engine_lua;
 
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
-void lua_mlook2(lua::Int8 mlook)
+void lua_mlook(lua::Value mlook)
 {
-    if(!mlook)
+    if(!mlook.is<lua::Integer>())
     {
         control_states.mouse_look = !control_states.mouse_look;
         ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
         return;
     }
 
-    control_states.mouse_look = *mlook;
+    control_states.mouse_look = mlook;
     ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
 }
 
-void lua_mlook1()
+void lua_freelook(lua::Value free)
 {
-    lua_mlook2(lua::None);
-}
-
-void lua_freelook2(lua::Int8 free)
-{
-    if(!free)
+    if(!free.is<lua::Integer>())
     {
         control_states.free_look = !control_states.free_look;
         ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
         return;
     }
 
-    control_states.free_look = *free;
+    control_states.free_look = free;
     ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
 }
 
-void lua_freelook1()
+void lua_cam_distance(lua::Value distance)
 {
-    lua_freelook2(lua::None);
-}
-
-void lua_cam_distance2(lua::Float distance)
-{
-    if(!distance)
+    if(!distance.is<lua::Number>())
     {
         ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
         return;
     }
 
-    control_states.cam_distance = *distance;
+    control_states.cam_distance = distance;
     ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
 }
 
-void lua_cam_distance1()
+void lua_noclip(lua::Value noclip)
 {
-    lua_cam_distance2(lua::None);
-}
-
-void lua_noclip2(lua::Int8 noclip)
-{
-    if(!noclip)
+    if(!noclip.is<lua::Number>())
     {
         control_states.noclip = !control_states.noclip;
     }
     else
     {
-        control_states.noclip = *noclip;
+        control_states.noclip = noclip;
     }
 
     ConsoleInfo::instance().printf("noclip = %d", control_states.noclip);
 }
 
-void lua_noclip1()
+void lua_debuginfo(lua::Value show)
 {
-    lua_noclip2(lua::None);
-}
-
-void lua_debuginfo2(lua::Bool show)
-{
-    if(!show)
+    if(!show.is<lua::Boolean>())
     {
         screen_info.show_debuginfo = !screen_info.show_debuginfo;
     }
     else
     {
-        screen_info.show_debuginfo = *show;
+        screen_info.show_debuginfo = show;
     }
 
     ConsoleInfo::instance().printf("debug info = %d", screen_info.show_debuginfo);
 }
 
-void lua_debuginfo1()
+void lua_timescale(lua::Value scale)
 {
-    lua_debuginfo2(lua::None);
-}
-
-void lua_timescale2(lua::Float scale)
-{
-    if(!scale)
+    if(!scale.is<lua::Number>())
     {
         if(time_scale == 1.0)
         {
@@ -145,15 +121,10 @@ void lua_timescale2(lua::Float scale)
     }
     else
     {
-        time_scale = *scale;
+        time_scale = scale;
     }
 
     ConsoleInfo::instance().printf("time_scale = %.3f", time_scale);
-}
-
-void lua_timescale1()
-{
-    lua_timescale2(lua::None);
 }
 
 void Game_InitGlobals()
@@ -165,17 +136,14 @@ void Game_InitGlobals()
     control_states.cam_distance = 800.0;
 }
 
-void Game_RegisterLuaFunctions(lua_State *lua)
+void Game_RegisterLuaFunctions(lua::State& state)
 {
-    if(lua != NULL)
-    {
-        lua_register(lua, "debuginfo", WRAP_FOR_LUA(lua_debuginfo2,lua_debuginfo1));
-        lua_register(lua, "mlook", WRAP_FOR_LUA(lua_mlook2,lua_mlook1));
-        lua_register(lua, "freelook", WRAP_FOR_LUA(lua_freelook2,lua_freelook1));
-        lua_register(lua, "noclip", WRAP_FOR_LUA(lua_noclip2,lua_noclip1));
-        lua_register(lua, "cam_distance", WRAP_FOR_LUA(lua_cam_distance2,lua_cam_distance1));
-        lua_register(lua, "timescale", WRAP_FOR_LUA(lua_timescale2,lua_timescale1));
-    }
+    state.set("debuginfo", lua_debuginfo);
+    state.set("mlook", lua_mlook);
+    state.set("freelook", lua_freelook);
+    state.set("noclip", lua_noclip);
+    state.set("cam_distance", lua_cam_distance);
+    state.set("timescale", lua_timescale);
 }
 
 
@@ -209,7 +177,7 @@ int Game_Load(const char* name)
         }
         fclose(f);
         Engine_LuaClearTasks();
-        luaL_dofile(engine_lua, token);
+        engine_lua.doFile(token);
     }
     else
     {
@@ -221,7 +189,7 @@ int Game_Load(const char* name)
         }
         fclose(f);
         Engine_LuaClearTasks();
-        luaL_dofile(engine_lua, name);
+        engine_lua.doFile(name);
     }
 
     return 1;
@@ -338,7 +306,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath.c_str(), gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
 

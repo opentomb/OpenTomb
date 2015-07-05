@@ -16,8 +16,8 @@ typedef struct gameflow_action_s
 
 typedef struct gameflow_manager_s
 {
-    char                CurrentLevelName[LEVEL_NAME_MAX_LEN];
-    char                CurrentLevelPath[MAX_ENGINE_PATH];
+    std::string CurrentLevelName;
+    std::string CurrentLevelPath;
     uint8_t             CurrentGameID;
     uint8_t             CurrentLevelID;
 

@@ -1380,50 +1380,49 @@ bool Gui_FadeStop(int fader)
     }
 }
 
-bool Gui_FadeAssignPic(int fader, const char* pic_name)
+bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
 {
     if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
-        size_t len = strlen(pic_name);
         size_t ext_len = 0;
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-        strncpy(buf, pic_name, MAX_ENGINE_PATH);
+        strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
         if(!Engine_FileFound(buf, false))
         {
-            for(;ext_len+1<len;ext_len++)
+            for(; ext_len+1<pic_name.length(); ext_len++)
             {
-                if(buf[len-ext_len-1] == '.')
+                if(buf[pic_name.length()-ext_len-1] == '.')
                 {
                     break;
                 }
             }
 
-            if(ext_len + 1 == len)
+            if(ext_len + 1 == pic_name.length())
             {
                 return false;
             }
 
-            buf[len - ext_len + 0] = 'b';
-            buf[len - ext_len + 1] = 'm';
-            buf[len - ext_len + 2] = 'p';
-            buf[len - ext_len + 3] = 0;
+            buf[pic_name.length() - ext_len + 0] = 'b';
+            buf[pic_name.length() - ext_len + 1] = 'm';
+            buf[pic_name.length() - ext_len + 2] = 'p';
+            buf[pic_name.length() - ext_len + 3] = 0;
             if(!Engine_FileFound(buf, false))
             {
-                buf[len - ext_len + 0] = 'j';
-                buf[len - ext_len + 1] = 'p';
-                buf[len - ext_len + 2] = 'g';
+                buf[pic_name.length() - ext_len + 0] = 'j';
+                buf[pic_name.length() - ext_len + 1] = 'p';
+                buf[pic_name.length() - ext_len + 2] = 'g';
                 if(!Engine_FileFound(buf, false))
                 {
-                    buf[len - ext_len + 0] = 'p';
-                    buf[len - ext_len + 1] = 'n';
-                    buf[len - ext_len + 2] = 'g';
+                    buf[pic_name.length() - ext_len + 0] = 'p';
+                    buf[pic_name.length() - ext_len + 1] = 'n';
+                    buf[pic_name.length() - ext_len + 2] = 'g';
                     if(!Engine_FileFound(buf, false))
                     {
-                        buf[len - ext_len + 0] = 't';
-                        buf[len - ext_len + 1] = 'g';
-                        buf[len - ext_len + 2] = 'a';
+                        buf[pic_name.length() - ext_len + 0] = 't';
+                        buf[pic_name.length() - ext_len + 1] = 'g';
+                        buf[pic_name.length() - ext_len + 2] = 'a';
                         if(!Engine_FileFound(buf, false))
                         {
                             return false;

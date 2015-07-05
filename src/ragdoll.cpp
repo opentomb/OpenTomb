@@ -13,141 +13,70 @@
 #include "engine.h"
 #include "entity.h"
 
+#include "LuaState.h"
+#include "luastate_extra.h"
 
 bool RDSetup::getSetup(int ragdoll_index)
 {
     bool result = true;
 
-    int top = lua_gettop(engine_lua);
-    assert(top >= 0);
+    lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
+    rds["hit_callback"].get(hit_func);
 
-    lua_getglobal(engine_lua, "getRagdollSetup");
-    if(lua_isfunction(engine_lua, -1))
-    {
-        lua_pushinteger(engine_lua, ragdoll_index);
-        if(lua_CallAndLog(engine_lua, 1, 1, 0))
-        {
-            if(lua_istable(engine_lua, -1))
-            {
-                lua_getfield(engine_lua, -1, "hit_callback");
-                if(lua_isstring(engine_lua, -1))
-                {
-                    size_t string_length  = 0;
-                    const char* func_name = lua_tolstring(engine_lua, -1, &string_length);
+    size_t tmp;
 
-                    hit_func.assign(func_name+0, func_name+string_length);
-                }
-                else { result = false; }
-                lua_pop(engine_lua, 1);
+    rds["joint_count"].get(tmp);
+    joint_setup.resize(tmp);
 
-                joint_setup.resize( (uint32_t)lua_GetScalarField(engine_lua, "joint_count") );
-                body_setup.resize( (uint32_t)lua_GetScalarField(engine_lua, "body_count") );
+    rds["body_count"].get(tmp);
+    body_setup.resize(tmp);
 
-                joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
-                joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
+    rds["joint_cfm"].get(joint_cfm);
+    rds["joint_erp"].get(joint_erp);
 
-                if(!body_setup.empty()) {
-
-                    lua_getfield(engine_lua, -1, "body");
-                    if(lua_istable(engine_lua, -1)) {
-                        for(size_t i=0; i<body_setup.size(); i++) {
-                            lua_rawgeti(engine_lua, -1, i+1);
-                            if(lua_istable(engine_lua, -1)) {
-                                body_setup[i].mass = lua_GetScalarField(engine_lua, "mass");
-                                body_setup[i].restitution = lua_GetScalarField(engine_lua, "restitution");
-                                body_setup[i].friction = lua_GetScalarField(engine_lua, "friction");
-
-                                lua_getfield(engine_lua, -1, "damping");
-                                if(lua_istable(engine_lua, -1)) {
-                                    body_setup[i].damping[0] = lua_GetScalarField(engine_lua, 1);
-                                    body_setup[i].damping[1] = lua_GetScalarField(engine_lua, 2);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-                            }
-                            else { result = false; }
-                            lua_pop(engine_lua, 1);
-                        }
-                    }
-                    else { result = false; }
-                    lua_pop(engine_lua, 1);
-                }
-                else { result = false; }
-
-                if(!joint_setup.empty()) {
-
-                    lua_getfield(engine_lua, -1, "joint");
-                    if(lua_istable(engine_lua, -1)) {
-                        for(size_t i=0; i<joint_setup.size(); i++) {
-                            lua_rawgeti(engine_lua, -1, i+1);
-                            if(lua_istable(engine_lua, -1)) {
-                                joint_setup[i].body_index = (uint16_t)lua_GetScalarField(engine_lua, "body_index");
-                                joint_setup[i].joint_type = static_cast<RDJointSetup::Type>(lua_GetScalarField(engine_lua, "joint_type"));
-
-                                lua_getfield(engine_lua, -1, "body1_offset");
-                                if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body1_offset[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body1_offset[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body1_offset[2] = lua_GetScalarField(engine_lua, 3);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-
-                                lua_getfield(engine_lua, -1, "body2_offset");
-                                if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body2_offset[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body2_offset[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body2_offset[2] = lua_GetScalarField(engine_lua, 3);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-
-                                lua_getfield(engine_lua, -1, "body1_angle");
-                                if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body1_angle[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body1_angle[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body1_angle[2] = lua_GetScalarField(engine_lua, 3);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-
-                                lua_getfield(engine_lua, -1, "body2_angle");
-                                if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body2_angle[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body2_angle[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body2_angle[2] = lua_GetScalarField(engine_lua, 3);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-
-                                lua_getfield(engine_lua, -1, "joint_limit");
-                                if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].joint_limit[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].joint_limit[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].joint_limit[2] = lua_GetScalarField(engine_lua, 3);
-                                }
-                                else { result = false; }
-                                lua_pop(engine_lua, 1);
-                            }
-                            else { result = false; }
-                            lua_pop(engine_lua, 1);
-                        }
-                    }
-                    else { result = false; }
-                    lua_pop(engine_lua, 1);
-                }
-                else { result = false; }
-            }
-            else { result = false; }
+    for(size_t i=0; i<body_setup.size(); i++) {
+        rds["body"][i+1]["mass"].get(body_setup[i].mass);
+        rds["body"][i+1]["restitution"].get(body_setup[i].restitution);
+        rds["body"][i+1]["friction"].get(body_setup[i].friction);
+        if(rds["body"][i+1]["damping"].is<lua::Table>()) {
+            rds["body"][i+1]["damping"][1].get(body_setup[i].damping[0]);
+            rds["body"][i+1]["damping"][2].get(body_setup[i].damping[1]);
         }
-        else { result = false; }
+        rds["body"][i+1]["damping"].get(body_setup[i].friction);
     }
-    else { result = false; }
 
-    lua_settop(engine_lua, top);
+    for(size_t i=0; i<joint_setup.size(); i++) {
+        rds["joint"][i+1]["body_index"].get(joint_setup[i].body_index);
+        int tmp;
+        rds["joint"][i+1]["joint_type"].get(tmp);
+        joint_setup[i].joint_type = static_cast<RDJointSetup::Type>(tmp);
+        if(rds["joint"][i+1]["body1_offset"].is<lua::Table>()) {
+            rds["joint"][i+1]["body1_offset"][1].get(joint_setup[i].body1_offset[0]);
+            rds["joint"][i+1]["body1_offset"][2].get(joint_setup[i].body1_offset[1]);
+            rds["joint"][i+1]["body1_offset"][3].get(joint_setup[i].body1_offset[2]);
+        }
+        if(rds["joint"][i+1]["body2_offset"].is<lua::Table>()) {
+            rds["joint"][i+1]["body2_offset"][1].get(joint_setup[i].body2_offset[0]);
+            rds["joint"][i+1]["body2_offset"][2].get(joint_setup[i].body2_offset[1]);
+            rds["joint"][i+1]["body2_offset"][3].get(joint_setup[i].body2_offset[2]);
+        }
+        if(rds["joint"][i+1]["body1_angle"].is<lua::Table>()) {
+            rds["joint"][i+1]["body1_angle"][1].get(joint_setup[i].body1_angle[0]);
+            rds["joint"][i+1]["body1_angle"][2].get(joint_setup[i].body1_angle[1]);
+            rds["joint"][i+1]["body1_angle"][3].get(joint_setup[i].body1_angle[2]);
+        }
+        if(rds["joint"][i+1]["body2_angle"].is<lua::Table>()) {
+            rds["joint"][i+1]["body2_angle"][1].get(joint_setup[i].body2_angle[0]);
+            rds["joint"][i+1]["body2_angle"][2].get(joint_setup[i].body2_angle[1]);
+            rds["joint"][i+1]["body2_angle"][3].get(joint_setup[i].body2_angle[2]);
+        }
+        if(rds["joint"][i+1]["joint_limit"].is<lua::Table>()) {
+            rds["joint"][i+1]["joint_limit"][1].get(joint_setup[i].joint_limit[0]);
+            rds["joint"][i+1]["joint_limit"][2].get(joint_setup[i].joint_limit[1]);
+            rds["joint"][i+1]["joint_limit"][3].get(joint_setup[i].joint_limit[2]);
+        }
+    }
 
-    if(result == false)
-        clearSetup();  // PARANOID: Clean up the mess, if something went wrong.
     return result;
 }
 

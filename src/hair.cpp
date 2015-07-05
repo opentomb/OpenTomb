@@ -5,6 +5,8 @@
 #include "mesh.h"
 #include "render.h"
 
+#include "LuaState.h"
+
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
@@ -310,75 +312,27 @@ void Hair::createHairMesh(const SkeletalModel *model)
     m_mesh->genVBO(&renderer);
 }
 
-bool HairSetup::getSetup(uint32_t hair_entry_index)
+void HairSetup::getSetup(uint32_t hair_entry_index)
 {
-    bool result = true;
-
-    int top = lua_gettop(engine_lua);
-    assert(top >= 0);
-
-    lua_getglobal(engine_lua, "getHairSetup");
-    if(lua_isfunction(engine_lua, -1))
-    {
-        lua_pushinteger(engine_lua, hair_entry_index);
-        if(lua_CallAndLog(engine_lua, 1, 1, 0))
-        {
-            if(lua_istable(engine_lua, -1))
-            {
-                m_model               = (uint32_t)lua_GetScalarField(engine_lua, "model");
-                m_linkBody           = (uint32_t)lua_GetScalarField(engine_lua, "link_body");
-
-                lua_getfield(engine_lua, -1, "props");
-                if(lua_istable(engine_lua, -1))
-                {
-                    m_rootWeight      = lua_GetScalarField(engine_lua, "root_weight");
-                    m_tailWeight      = lua_GetScalarField(engine_lua, "tail_weight");
-                    m_hairInertia     = lua_GetScalarField(engine_lua, "hair_inertia");
-                    m_hairFriction    = lua_GetScalarField(engine_lua, "hair_friction");
-                    m_hairRestitution = lua_GetScalarField(engine_lua, "hair_bouncing");
-                    m_jointOverlap    = lua_GetScalarField(engine_lua, "joint_overlap");
-                    m_jointCfm        = lua_GetScalarField(engine_lua, "joint_cfm");
-                    m_jointErp        = lua_GetScalarField(engine_lua, "joint_erp");
-
-                    lua_getfield(engine_lua, -1, "hair_damping");
-                    if(lua_istable(engine_lua, -1))
-                    {
-                        m_hairDamping[0] = lua_GetScalarField(engine_lua, 1);
-                        m_hairDamping[1] = lua_GetScalarField(engine_lua, 2);
-                    }
-                    lua_pop(engine_lua, 1);
-                }
-                else { result = false; }
-                lua_pop(engine_lua, 1);
-
-                lua_getfield(engine_lua, -1, "offset");
-                if(lua_istable(engine_lua, -1))
-                {
-                    m_headOffset[0] = lua_GetScalarField(engine_lua, 1);
-                    m_headOffset[1] = lua_GetScalarField(engine_lua, 2);
-                    m_headOffset[2] = lua_GetScalarField(engine_lua, 3);
-                }
-                else { result = false; }
-                lua_pop(engine_lua, 1);
-
-                lua_getfield(engine_lua, -1, "root_angle");
-                if(lua_istable(engine_lua, -1))
-                {
-                    m_rootAngle[0] = lua_GetScalarField(engine_lua, 1);
-                    m_rootAngle[1] = lua_GetScalarField(engine_lua, 2);
-                    m_rootAngle[2] = lua_GetScalarField(engine_lua, 3);
-                }
-                else { result = false; }
-                lua_pop(engine_lua, 1);
-            }
-            else { result = false; }
-        }
-        else { result = false; }
-    }
-    else { result = false; }
-
-    lua_settop(engine_lua, top);
-    return result;
+    lua::Value res = engine_lua["getHairSetup"](hair_entry_index);
+    res["model"].get(m_model);
+    res["link_body"].get(m_linkBody);
+    res["props"]["root_weight"].get(m_rootWeight);
+    res["props"]["tail_weight"].get(m_tailWeight);
+    res["props"]["hair_inertia"].get(m_hairInertia);
+    res["props"]["hair_friction"].get(m_hairFriction);
+    res["props"]["hair_bouncing"].get(m_hairRestitution);
+    res["props"]["joint_overlap"].get(m_jointOverlap);
+    res["props"]["joint_cfm"].get(m_jointCfm);
+    res["props"]["joint_erp"].get(m_jointErp);
+    res["props"]["hair_damping"][1].get(m_hairDamping[0]);
+    res["props"]["hair_damping"][2].get(m_hairDamping[1]);
+    res["offset"][1].get(m_headOffset[0]);
+    res["offset"][2].get(m_headOffset[1]);
+    res["offset"][3].get(m_headOffset[2]);
+    res["root_angle"][1].get(m_rootAngle[0]);
+    res["root_angle"][2].get(m_rootAngle[1]);
+    res["root_angle"][3].get(m_rootAngle[2]);
 }
 
 

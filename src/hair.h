@@ -95,5 +95,5 @@ struct HairSetup
     btVector3    m_rootAngle;      // First constraint set angle (to align hair angle)
 
     // Gets scripted hair set-up to specified hair set-up structure.
-    bool getSetup(uint32_t hair_entry_index);
+    void getSetup(uint32_t hair_entry_index);
 };

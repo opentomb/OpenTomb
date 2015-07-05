@@ -54,6 +54,8 @@
 #include <AL/alc.h>
 #include <AL/alext.h>
 
+#include "LuaState.h"
+
 #define NO_AUDIO        0
 
 SDL_Window             *sdl_window     = NULL;
@@ -401,7 +403,7 @@ void Engine_Start()
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    luaL_dofile(engine_lua, "autoexec.lua");
+    luaL_dofile(engine_lua.getState(), "autoexec.lua");
 }
 
 
