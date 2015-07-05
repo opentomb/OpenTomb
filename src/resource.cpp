@@ -37,7 +37,6 @@
 #include "shader_description.h"
 
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 lua::State objects_flags_conf;
 lua::State ent_ID_override;

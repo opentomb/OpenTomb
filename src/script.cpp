@@ -21,7 +21,6 @@
 
 #include <lua.hpp>
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 #include <iostream>
 

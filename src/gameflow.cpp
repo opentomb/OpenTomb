@@ -19,7 +19,6 @@
 #include "world.h"
 
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 gameflow_manager_s gameflow_manager;
 

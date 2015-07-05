@@ -48,7 +48,6 @@
 #include "ragdoll.h"
 
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;

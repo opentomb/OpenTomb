@@ -30,7 +30,6 @@
 #include "ragdoll.h"
 
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 btVector3 cam_angles = {0.0, 0.0, 0.0};
 

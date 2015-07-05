@@ -14,7 +14,6 @@
 #include "entity.h"
 
 #include "LuaState.h"
-#include "luastate_extra.h"
 
 bool RDSetup::getSetup(int ragdoll_index)
 {
