@@ -1277,7 +1277,7 @@ void RenderDebugDrawer::render()
         }
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size(), nullptr, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
 
         std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY) );
         std::copy(m_buffer.begin(), m_buffer.end(), data);
