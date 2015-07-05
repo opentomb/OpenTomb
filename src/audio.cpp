@@ -870,9 +870,8 @@ bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
 
 bool StreamTrack::Stream_Ogg(ALuint buffer)
 {
-    std::vector<short> pcm;
-    pcm.reserve(audio_settings.stream_buffer_size);
-    size_t size = 0;
+    std::vector<short> pcm(audio_settings.stream_buffer_size);
+    int size = 0;
 
     // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
     while(size < audio_settings.stream_buffer_size - sf_info.channels + 1)
