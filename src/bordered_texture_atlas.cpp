@@ -411,12 +411,11 @@ size_t BorderedTextureAtlas::getNumAtlasPages() const
 
 void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames) const
 {
-    std::vector<GLubyte> data(4 * m_resultPageWidth * m_resultPageWidth);
-
     glGenTextures((GLsizei) m_resultPageHeights.size() + additionalTextureNames, textureNames);
 
     for (size_t page = 0; page < m_resultPageHeights.size(); page++)
     {
+        std::vector<GLubyte> data(4 * m_resultPageWidth * m_resultPageWidth, 0);
         for (size_t texture = 0; texture < m_canonicalObjectTextures.size(); texture++)
         {
             const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[texture];
