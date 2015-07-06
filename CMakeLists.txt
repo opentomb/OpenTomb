@@ -15,7 +15,7 @@ INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
 find_package(Freetype)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 
-add_subdirectory(3rdparty)
+# add_subdirectory(3rdparty)
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
