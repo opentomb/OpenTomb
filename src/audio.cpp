@@ -1561,6 +1561,9 @@ void Audio_InitGlobals()
 
 void Audio_InitFX()
 {
+    if( audio_settings.effects_initialized || !alGenAuxiliaryEffectSlots )
+        return;
+    
     memset(&fxManager, 0, sizeof(AudioFxManager));
 
     // Set up effect slots, effects and filters.
@@ -1592,6 +1595,8 @@ void Audio_InitFX()
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
     Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
+    
+    audio_settings.effects_initialized = true;
 }
 
 int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
@@ -1662,7 +1667,7 @@ int Audio_DeInit()
     engine_world.audio_effects.clear();
     engine_world.audio_map.clear();
 
-    if(audio_settings.use_effects)
+    if(audio_settings.effects_initialized)
     {
         for(int i = 0; i < TR_AUDIO_MAX_SLOTS; i++)
         {
@@ -1676,6 +1681,7 @@ int Audio_DeInit()
 
         alDeleteFilters(1, &fxManager.al_filter);
         alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
+        audio_settings.effects_initialized = false;
     }
 
     return 1;

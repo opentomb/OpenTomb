@@ -111,9 +111,6 @@ void Entity::disableCollision()
 
 void Entity::genEntityRigidBody()
 {
-    btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-
     if(m_bf.animations.model == NULL)
     {
         return;
@@ -149,9 +146,11 @@ void Entity::genEntityRigidBody()
 
         if(cshape)
         {
-            cshape->calculateLocalInertia(0.0, localInertia);
+            btVector3 localInertia(0, 0, 0);
+            if(dynamic_cast<btBvhTriangleMeshShape*>(cshape) == nullptr)
+                cshape->calculateLocalInertia(0.0, localInertia);
 
-            startTransform = m_transform * m_bf.bone_tags[i].full_transform;
+            btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             m_bt.bt_body.back().reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
             //bt.bt_body[i]->setCollisionFlags(bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);

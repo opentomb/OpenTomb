@@ -1086,7 +1086,8 @@ void Room::buildNearRoomsList()
         addToNearRoomsList(p.dest_room);
     }
 
-    for(const std::shared_ptr<Room>& r : near_room_list)
+    auto nrl = near_room_list;
+    for(const std::shared_ptr<Room>& r : nrl)
     {
         if(!r)
             continue;

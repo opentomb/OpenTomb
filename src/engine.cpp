@@ -66,19 +66,19 @@ btScalar                                engine_frame_time = 0.0;
 Camera                         engine_camera;
 World                          engine_world;
 
-static btScalar                        *frame_vertex_buffer = NULL;
+static btScalar                        *frame_vertex_buffer = nullptr;
 static size_t                           frame_vertex_buffer_size = 0;
 static size_t                           frame_vertex_buffer_size_left = 0;
 
 lua::State engine_lua;
 
-btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
-btCollisionDispatcher                   *bt_engine_dispatcher;
-btGhostPairCallback                     *bt_engine_ghostPairCallback;
-btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-btSequentialImpulseConstraintSolver     *bt_engine_solver;
-btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
-btOverlapFilterCallback                 *bt_engine_filterCallback;
+btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration = nullptr;
+btCollisionDispatcher                   *bt_engine_dispatcher = nullptr;
+btGhostPairCallback                     *bt_engine_ghostPairCallback = nullptr;
+btBroadphaseInterface                   *bt_engine_overlappingPairCache = nullptr;
+btSequentialImpulseConstraintSolver     *bt_engine_solver = nullptr;
+btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld = nullptr;
+btOverlapFilterCallback                 *bt_engine_filterCallback = nullptr;
 
 RenderDebugDrawer                       debugDrawer;
 

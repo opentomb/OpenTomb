@@ -1209,9 +1209,10 @@ int Character::freeFalling()
         speed[1] = transform.getBasis()[0 + 1] * t;
     }*/
 
-    move = m_speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
+    const btVector3 grav = bt_engine_dynamicsWorld->getGravity();
+    move = m_speed + grav * engine_frame_time * 0.5;
     move *= engine_frame_time;
-    m_speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
+    m_speed += grav * engine_frame_time;
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(m_speed[2]);
     m_speed = m_speed.rotate({0,0,1}, rot * M_PI/180);
 
