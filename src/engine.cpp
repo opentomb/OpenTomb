@@ -3316,7 +3316,6 @@ int Engine_LoadMap(const std::string& name)
     Gui_DrawLoadScreen(0);
 
     renderer.hideSkyBox();
-    renderer.resetRListActiveCount();
     renderer.resetWorld();
 
     gameflow_manager.CurrentLevelPath = name;          // it is needed for "not in the game" levels or correct saves loading.

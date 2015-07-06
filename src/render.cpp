@@ -3,6 +3,8 @@
 #include <cstdlib>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#include <algorithm>
+
 #include "gl_util.h"
 
 #include "bullet/LinearMath/btScalar.h"
@@ -55,8 +57,7 @@ void Render::init()
     m_blocked = true;
     m_cam = nullptr;
 
-    m_rList.clear();
-    m_rListActiveCount= 0;
+    m_renderList.clear();
 
     m_world = nullptr;
 
@@ -82,8 +83,7 @@ void Render::empty()
 {
     m_world = nullptr;
 
-    m_rListActiveCount = 0;
-    m_rList.clear();
+    m_renderList.clear();
 
     m_shaderManager.reset();
 }
@@ -654,17 +654,17 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
 /**
  * drawing world models.
  */
-void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
+void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
 {
     btScalar glMat[16];
 
+#if STENCIL_FRUSTUM
     ////start test stencil test code
     bool need_stencil = false;
-#if STENCIL_FRUSTUM
     if(!room->frustum.empty()) {
         for(const std::shared_ptr<Room>& r : room->overlapped_room_list)
         {
-            if(r->is_in_r_list)
+            if(std::find(m_renderList.begin(), m_renderList.end(), r.get()) != m_renderList.end())
             {
                 need_stencil = true;
                 break;
@@ -793,7 +793,7 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
 }
 
 
-void Render::renderRoomSprites(Room* room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
+void Render::renderRoomSprites(const Room* room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
 {
     if (!room->sprites.empty() && room->sprite_buffer)
     {
@@ -829,29 +829,17 @@ void Render::renderRoomSprites(Room* room, const btTransform &modelViewMatrix, c
  * Если комната уже есть в списке - возвращается ноль и комната повторно не добавляется.
  * Если список полон, то ничего не добавляется
  */
-int Render::addRoom(Room* room)
+bool Render::addRoom(Room* room)
 {
-    int ret = 0;
-
-    if(room->is_in_r_list || !room->active)
+    if(std::find(m_renderList.begin(), m_renderList.end(), room) != m_renderList.end() || !room->active)
     {
-        return 0;
+        return false;
     }
 
-    btVector3 centre = (room->bb_min + room->bb_max) / 2;
-    auto dist = m_cam->m_pos.distance(centre);
+    m_renderList.emplace_back(room);
 
-    if(m_rListActiveCount < m_rList.size())
-    {
-        m_rList[m_rListActiveCount].room = room;
-        m_rList[m_rListActiveCount].active = true;
-        m_rList[m_rListActiveCount].dist = dist;
-        m_rListActiveCount++;
-        ret++;
-
-        if(room->flags & TR_ROOM_FLAG_SKYBOX)
-            m_drawSkybox = true;
-    }
+    if(room->flags & TR_ROOM_FLAG_SKYBOX)
+        m_drawSkybox = true;
 
     for(auto sm : room->static_mesh)
     {
@@ -875,9 +863,7 @@ int Render::addRoom(Room* room)
         sp.was_rendered = false;
     }
 
-    room->is_in_r_list = true;
-
-    return ret;
+    return true;
 }
 
 
@@ -889,20 +875,12 @@ void Render::cleanList()
         m_world->character->m_wasRenderedLines = false;
     }
 
-    for(size_t i=0; i<m_rListActiveCount; i++)
-    {
-        m_rList[i].active = false;
-        m_rList[i].dist = 0.0;
-        Room* r = m_rList[i].room;
-        m_rList[i].room = NULL;
-
-        r->is_in_r_list = false;
-        r->active_frustums = 0;
-        r->frustum.clear();
+    for(Room* room : m_renderList) {
+        room->frustum.clear();
     }
 
     m_drawSkybox = false;
-    m_rListActiveCount = 0;
+    m_renderList.clear();
 }
 
 /**
@@ -945,17 +923,17 @@ void Render::drawList()
     /*
      * room rendering
      */
-    for(uint32_t i=0; i<m_rListActiveCount; i++)
+    for(const Room* room : m_renderList)
     {
-        renderRoom(m_rList[i].room, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
+        renderRoom(room, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
     }
 
     glDisable(GL_CULL_FACE);
 
     ///@FIXME: reduce number of gl state changes
-    for(uint32_t i=0; i<m_rListActiveCount; i++)
+    for(const Room* room : m_renderList)
     {
-        renderRoomSprites(m_rList[i].room, m_cam->m_glViewMat, m_cam->m_glProjMat);
+        renderRoomSprites(room, m_cam->m_glViewMat, m_cam->m_glProjMat);
     }
 
     /*
@@ -963,34 +941,32 @@ void Render::drawList()
      */
     render_dBSP.reset();
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
-    for(uint32_t i=0;i<m_rListActiveCount;i++)
+    for(const Room* room : m_renderList)
     {
-        Room* r = m_rList[i].room;
-        if(r->mesh && !r->mesh->m_transparencyPolygons.empty())
+        if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(r->mesh->m_transparentPolygons, r->transform, {m_cam->frustum});
+            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, {m_cam->frustum});
         }
     }
 
-    for(uint32_t i=0;i<m_rListActiveCount;i++)
+    for(const Room* room : m_renderList)
     {
-        Room* r = m_rList[i].room;
         // Add transparency polygons from static meshes (if they exists)
-        for(auto sm : r->static_mesh)
+        for(auto sm : room->static_mesh)
         {
-            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *r))
+            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *room))
             {
                 render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, {m_cam->frustum});
             }
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(const std::shared_ptr<EngineContainer>& cont : r->containers)
+        for(const std::shared_ptr<EngineContainer>& cont : room->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* ent = static_cast<Entity*>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *r)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room)))
                 {
                     for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
                     {
@@ -1063,9 +1039,9 @@ void Render::drawListDebugLines()
         debugDrawer.drawMeshDebugLines(m_world->sky_box->mesh_tree.front().mesh_base, tr, {}, {}, this);
     }
 
-    for(uint32_t i=0; i<m_rListActiveCount; i++)
+    for(const Room* room : m_renderList)
     {
-        debugDrawer.drawRoomDebugLines(m_rList[i].room, this);
+        debugDrawer.drawRoomDebugLines(room, this);
     }
 
     if(m_drawColl)
@@ -1169,31 +1145,21 @@ void Render::genWorldList()
  */
 void Render::setWorld(World *world)
 {
+    resetWorld();
     uint32_t list_size = world->rooms.size() + 128;                               // magick 128 was added for debug and testing
 
-    if(world)
+    if(m_renderList.size() < list_size)                                    // if old list less than new one requiring
     {
-        if(m_rList.size() < list_size)                                    // if old list less than new one requiring
-        {
-            m_rList.resize(list_size);
-        }
-    }
-    else
-    {
-        m_rList.resize(list_size);
+        m_renderList.resize(list_size);
     }
 
     m_world = world;
     m_drawSkybox = false;
-    m_rListActiveCount = 0;
+    m_renderList.clear();
 
     m_cam = &engine_camera;
     //engine_camera.frustum->next = NULL;
     engine_camera.m_currentRoom = NULL;
-
-    for(auto r : world->rooms) {
-        r->is_in_r_list = false;
-    }
 }
 
 /**
@@ -1445,7 +1411,7 @@ void RenderDebugDrawer::drawSectorDebugLines(RoomSector *rs)
 }
 
 
-void RenderDebugDrawer::drawRoomDebugLines(Room* room, Render* render)
+void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {

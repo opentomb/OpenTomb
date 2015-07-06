@@ -285,7 +285,6 @@ struct Room : public Object
     uint8_t                     alternate_group;
 
     bool active;                                         // flag: is active
-    bool is_in_r_list;                                   // is room in render list
     bool hide;                                           // do not render
     std::shared_ptr<BaseMesh> mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
@@ -311,7 +310,6 @@ struct Room : public Object
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
 
-    uint16_t                    active_frustums;                                // current number of this room active frustums
     std::vector<std::shared_ptr<Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
