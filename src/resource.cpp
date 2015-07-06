@@ -1625,7 +1625,15 @@ void Res_ScriptsOpen(int engine_version)
     level_script.set("setSectorPortal", lua_SetSectorPortal);
     level_script.set("setSectorFlags", lua_SetSectorFlags);
 
-    level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
+    try {
+        level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
 
     if(Engine_FileFound(temp_script_name, false))
     {
@@ -1670,8 +1678,24 @@ void Res_AutoexecOpen(int engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
 
-    engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
-    engine_lua.doFile(temp_script_name);          // do level-specific autoexec
+    try {
+        engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    try {
+        engine_lua.doFile(temp_script_name);          // do level-specific autoexec
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
 }
 
 void TR_GenWorld(World *world, class VT_Level *tr)

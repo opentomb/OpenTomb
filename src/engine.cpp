@@ -3607,7 +3607,17 @@ void Engine_InitConfig(const char *filename)
     {
         lua::State state;
         lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
-        state.doFile(filename);
+        try {
+            state.doFile(filename);
+        }
+        catch(lua::RuntimeError& error) {
+            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            return;
+        }
+        catch(lua::LoadError& error) {
+            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            return;
+        }
 
         lua_ParseScreen(state, &screen_info);
         lua_ParseRender(state, &renderer.settings());
