@@ -83,7 +83,11 @@ class BtEngineClosestConvexResultCallback;
 
 struct Entity : public Object
 {
-    uint32_t                            m_id = 0;                 // Unique entity ID
+private:
+    const uint32_t m_id;                 // Unique entity ID
+public:
+    uint32_t id() const noexcept { return m_id; }
+
     int32_t                             m_OCB = 0;                // Object code bit (since TR4)
     uint8_t                             m_triggerLayout = 0;     // Mask + once + event + sector status flags
     float                               m_timer = 0;              // Set by "timer" trigger field
@@ -123,7 +127,7 @@ struct Entity : public Object
     btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
     
-    Entity();
+    Entity(uint32_t id);
     ~Entity();
 
     void createGhosts();

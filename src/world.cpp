@@ -525,19 +525,19 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 ent->m_self->room = NULL;
             }
 
-            return ent->m_id;
+            return ent->id();
         }
 
-        std::shared_ptr<Entity> ent = std::make_shared<Entity>();
 
+        std::shared_ptr<Entity> ent;
         if(id < 0)
         {
-            ent->m_id = entity_tree.size();
-            entity_tree[ent->m_id] = ent;
+            ent = std::make_shared<Entity>(entity_tree.size());
+            entity_tree[ent->id()] = ent;
         }
         else
         {
-            ent->m_id = id;
+            ent = std::make_shared<Entity>(id);
         }
 
         if(pos != NULL)
@@ -584,7 +584,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         addEntity(ent);
 
-        return ent->m_id;
+        return ent->id();
     }
 
     return 0xFFFFFFFF;
@@ -968,9 +968,9 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
 
 void World::addEntity(std::shared_ptr<Entity> entity)
 {
-    if(entity_tree.find(entity->m_id) != entity_tree.end())
+    if(entity_tree.find(entity->id()) != entity_tree.end())
         return;
-    entity_tree[entity->m_id] = entity;
+    entity_tree[entity->id()] = entity;
 }
 
 

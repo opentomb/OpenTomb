@@ -532,7 +532,7 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->m_id, static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->id(), static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
