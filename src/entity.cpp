@@ -1399,8 +1399,10 @@ void Entity::moveVertical(btScalar dist)
     m_transform.getOrigin() += m_transform.getBasis()[2] * dist;
 }
 
-Entity::Entity()
-    : m_moveType(MOVE_ON_FLOOR)
+Entity::Entity(uint32_t id)
+    : Object()
+    , m_id(id)
+    , m_moveType(MOVE_ON_FLOOR)
     , m_obb(new OBB())
     , m_self(new EngineContainer())
 {
@@ -1481,7 +1483,7 @@ Entity::~Entity() {
     {
         SSAnimation* ss_anim_next = ss_anim->next;
         ss_anim->next = NULL;
-        free(ss_anim);
+        delete ss_anim;
         ss_anim = ss_anim_next;
     }
     m_bf.animations.next = NULL;

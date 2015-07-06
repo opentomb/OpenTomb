@@ -69,7 +69,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     {
         const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
         if(funcName)
-            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->m_id);
+            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
 }
 
@@ -3721,8 +3721,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
     for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr2_item_t *tr_item = &tr->items[i];
-        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>() : std::make_shared<Entity>();
-        entity->m_id = i;
+        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
         entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
         entity->m_transform.getOrigin()[2] = tr_item->pos.y;
@@ -3801,7 +3800,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM = lara->m_bf.animations.model;
 
-            engine_lua.set("player", lara->m_id);
+            engine_lua.set("player", lara->id());
 
             switch(tr->game_version)
             {
@@ -4131,9 +4130,9 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                     if(ent->m_bf.animations.model->id == item->world_model_id)
                     {
                         char buf[64] = {0};
-                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->m_id, ent->m_id);
+                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
                         engine_lua.doString(buf);
-                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->m_id, item->id);
+                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
                         engine_lua.doString(buf);
                         ent->disableCollision();
                     }

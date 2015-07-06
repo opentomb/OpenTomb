@@ -446,82 +446,81 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
 std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, const btTransform& modelViewMatrix, bool skin)
 {
     // Calculate lighting
-
-    if(Room* room = entity->m_self->room) {
-        std::array<GLfloat,4> ambient_component;
-
-        ambient_component[0] = room->ambient_lighting[0];
-        ambient_component[1] = room->ambient_lighting[1];
-        ambient_component[2] = room->ambient_lighting[2];
-        ambient_component[3] = 1.0f;
-
-        if(room->flags & TR_ROOM_FLAG_WATER)
-        {
-            engine_world.calculateWaterTint(&ambient_component, false);
-        }
-
-        GLenum current_light_number = 0;
-        Light *current_light = NULL;
-
-        std::array<GLfloat,3> positions[MAX_NUM_LIGHTS];
-        std::array<GLfloat,4> colors[MAX_NUM_LIGHTS];
-        GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
-        GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
-        memset(colors, 0, sizeof(colors));
-        memset(innerRadiuses, 0, sizeof(innerRadiuses));
-        memset(outerRadiuses, 0, sizeof(outerRadiuses));
-
-        for(uint32_t i = 0; i < room->lights.size() && current_light_number < MAX_NUM_LIGHTS; i++)
-        {
-            current_light = &room->lights[i];
-
-            btVector3 xyz = entity->m_transform.getOrigin() - current_light->pos;
-            btScalar distance = xyz.length();
-
-            // Find color
-            colors[current_light_number][0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
-            colors[current_light_number][1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
-            colors[current_light_number][2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
-            colors[current_light_number][3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
-
-            if(room->flags & TR_ROOM_FLAG_WATER)
-            {
-                engine_world.calculateWaterTint(&colors[current_light_number], false);
-            }
-
-            // Find position
-            btVector3 tmpPos = modelViewMatrix * current_light->pos;
-            std::copy(tmpPos+0, tmpPos+3, positions[current_light_number].begin());
-
-            // Find fall-off
-            if(current_light->light_type == LT_SUN)
-            {
-                innerRadiuses[current_light_number] = 1e20f;
-                outerRadiuses[current_light_number] = 1e21f;
-                current_light_number++;
-            }
-            else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
-            {
-                innerRadiuses[current_light_number] = std::fabs(current_light->inner);
-                outerRadiuses[current_light_number] = std::fabs(current_light->outer);
-                current_light_number++;
-            }
-        }
-
-        const auto& shader = m_shaderManager->getEntityShader(current_light_number, skin);
-        glUseProgramObjectARB(shader->program);
-        glUniform4fvARB(shader->light_ambient, 1, ambient_component.data());
-        glUniform4fvARB(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
-        glUniform3fvARB(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
-        glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
-        glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
-        return shader;
-    }
-    else {
+    if(!entity->m_self || !entity->m_self->room) {
         const auto& shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgramObjectARB(shader->program);
         return shader;
     }
+
+    Room* room = entity->m_self->room;
+
+    std::array<GLfloat,4> ambient_component;
+    ambient_component[0] = room->ambient_lighting[0];
+    ambient_component[1] = room->ambient_lighting[1];
+    ambient_component[2] = room->ambient_lighting[2];
+    ambient_component[3] = 1.0f;
+
+    if(room->flags & TR_ROOM_FLAG_WATER)
+    {
+        engine_world.calculateWaterTint(&ambient_component, false);
+    }
+
+    GLenum current_light_number = 0;
+    Light *current_light = NULL;
+
+    std::array<GLfloat,3> positions[MAX_NUM_LIGHTS];
+    std::array<GLfloat,4> colors[MAX_NUM_LIGHTS];
+    GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
+    GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
+    memset(colors, 0, sizeof(colors));
+    memset(innerRadiuses, 0, sizeof(innerRadiuses));
+    memset(outerRadiuses, 0, sizeof(outerRadiuses));
+
+    for(uint32_t i = 0; i < room->lights.size() && current_light_number < MAX_NUM_LIGHTS; i++)
+    {
+        current_light = &room->lights[i];
+
+        btVector3 xyz = entity->m_transform.getOrigin() - current_light->pos;
+        btScalar distance = xyz.length();
+
+        // Find color
+        colors[current_light_number][0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
+        colors[current_light_number][1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
+        colors[current_light_number][2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
+        colors[current_light_number][3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
+
+        if(room->flags & TR_ROOM_FLAG_WATER)
+        {
+            engine_world.calculateWaterTint(&colors[current_light_number], false);
+        }
+
+        // Find position
+        btVector3 tmpPos = modelViewMatrix * current_light->pos;
+        std::copy(tmpPos+0, tmpPos+3, positions[current_light_number].begin());
+
+        // Find fall-off
+        if(current_light->light_type == LT_SUN)
+        {
+            innerRadiuses[current_light_number] = 1e20f;
+            outerRadiuses[current_light_number] = 1e21f;
+            current_light_number++;
+        }
+        else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
+        {
+            innerRadiuses[current_light_number] = std::fabs(current_light->inner);
+            outerRadiuses[current_light_number] = std::fabs(current_light->outer);
+            current_light_number++;
+        }
+    }
+
+    const auto& shader = m_shaderManager->getEntityShader(current_light_number, skin);
+    glUseProgramObjectARB(shader->program);
+    glUniform4fvARB(shader->light_ambient, 1, ambient_component.data());
+    glUniform4fvARB(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
+    glUniform3fvARB(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
+    glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
+    glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
+    return shader;
 }
 
 void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
