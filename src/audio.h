@@ -3,6 +3,7 @@
 #define AUDIO_H
 
 #include <AL/al.h>
+#include <AL/efx.h>
 #include <AL/efx-presets.h>
 #include <AL/efx-creative.h>
 

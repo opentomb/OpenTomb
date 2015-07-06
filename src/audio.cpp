@@ -1,10 +1,5 @@
 #include <SDL2/SDL.h>
 
-#include <AL/al.h>
-#include <AL/alext.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
-
 #include "audio.h"
 #include "console.h"
 #include "camera.h"
