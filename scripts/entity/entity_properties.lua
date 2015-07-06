@@ -665,7 +665,7 @@ tr3_entity_tbl[288] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 
 -- TRAPS, cont. --
 
-tr3_entity_tbl[291] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Laser sweeper
+tr3_entity_tbl[291] = {coll = COLLISION_TYPE_GHOST, shape = COLLISION_SHAPE_BOX, func = "lasersweep"};           -- Laser sweeper
 tr3_entity_tbl[292] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Electrified Field
 tr3_entity_tbl[295] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Detonator switch box
 

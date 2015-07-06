@@ -472,6 +472,81 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     prepareEntity(id);
 end
 
+function lasersweep_init(id)      -- Laser sweeper (TR3)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].speed         = 1.0;
+    entity_funcs[id].phase_length  = math.abs(2048.0 * frame_time * entity_funcs[id].speed);
+    entity_funcs[id].current_phase = 0.0;
+    
+    entity_funcs[id].stopping      = false;  -- Sweeper will be stopped on the next phase end.
+    entity_funcs[id].current_wait  = 0.0;    -- Wait timer.
+    entity_funcs[id].max_wait      = 1.5;    -- Sweeper will wait for 1.5 seconds at both ends.
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then
+            setEntityActivity(id, 1);
+        else
+            entity_funcs[object_id].stopping = true;
+        end;
+    end;
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityActivity(object_id, 0);
+            return;
+        end;
+        
+        if(entity_funcs[object_id].current_wait == 0.0) then
+            local next_phase = entity_funcs[object_id].current_phase + entity_funcs[object_id].speed;
+            
+            if(((next_phase >= 90.0) and (entity_funcs[object_id].current_phase < 90.0)) or
+               ((next_phase >= 270.0) and (entity_funcs[object_id].current_phase < 270.0))) then
+                entity_funcs[object_id].current_wait = frame_time;
+            end;
+            
+            entity_funcs[object_id].current_phase = next_phase;
+            
+            if(entity_funcs[object_id].current_phase > 360.0) then
+                entity_funcs[object_id].current_phase = entity_funcs[object_id].current_phase - 360.0;
+            end;
+            
+            moveEntityLocal(object_id, 0.0, math.cos(math.rad(entity_funcs[object_id].current_phase)) * entity_funcs[object_id].phase_length, 0.0);
+        else
+            if(entity_funcs[object_id].stopping == true) then
+                setEntityActivity(object_id, 0);
+                entity_funcs[object_id].stopping = false;
+            else
+                entity_funcs[object_id].current_wait = entity_funcs[object_id].current_wait + frame_time;
+                
+                if(entity_funcs[object_id].current_wait > entity_funcs[object_id].max_wait) then
+                    entity_funcs[object_id].current_wait = 0.0;
+                end;
+            end;
+        end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -15.0) end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].current_phase = nil;
+        entity_funcs[object_id].phase_length  = nil;
+        entity_funcs[object_id].speed         = nil;
+        entity_funcs[object_id].stopping      = nil;
+        entity_funcs[object_id].current_wait  = nil;
+        entity_funcs[object_id].max_wait      = nil;
+    end
+    
+    prepareEntity(id);
+end
+
 function propeller_init(id)      -- Generic propeller (TR1-TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
