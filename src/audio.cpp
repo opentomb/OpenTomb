@@ -1,14 +1,9 @@
-
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_audio.h>
 
-#include "al/AL/al.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx.h"
-#include "al/AL/efx-presets.h"
-
-#include <ogg/ogg.h>
-#include <vorbis/vorbisfile.h>
+#include <AL/al.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
 #include "audio.h"
 #include "console.h"
@@ -20,7 +15,180 @@
 #include "system.h"
 #include "render.h"
 #include "string.h"
+
 #include <cmath>
+
+#ifndef AL_ALEXT_PROTOTYPES
+namespace
+{
+extern "C"
+{
+// Effect objects
+LPALGENEFFECTS alGenEffects = nullptr;
+LPALDELETEEFFECTS alDeleteEffects = nullptr;
+LPALISEFFECT alIsEffect = nullptr;
+LPALEFFECTI alEffecti = nullptr;
+LPALEFFECTIV alEffectiv = nullptr;
+LPALEFFECTF alEffectf = nullptr;
+LPALEFFECTFV alEffectfv = nullptr;
+LPALGETEFFECTI alGetEffecti = nullptr;
+LPALGETEFFECTIV alGetEffectiv = nullptr;
+LPALGETEFFECTF alGetEffectf = nullptr;
+LPALGETEFFECTFV alGetEffectfv = nullptr;
+
+//Filter objects
+LPALGENFILTERS alGenFilters = nullptr;
+LPALDELETEFILTERS alDeleteFilters = nullptr;
+LPALISFILTER alIsFilter = nullptr;
+LPALFILTERI alFilteri = nullptr;
+LPALFILTERIV alFilteriv = nullptr;
+LPALFILTERF alFilterf = nullptr;
+LPALFILTERFV alFilterfv = nullptr;
+LPALGETFILTERI alGetFilteri = nullptr;
+LPALGETFILTERIV alGetFilteriv = nullptr;
+LPALGETFILTERF alGetFilterf = nullptr;
+LPALGETFILTERFV alGetFilterfv = nullptr;
+
+// Auxiliary slot object
+LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots = nullptr;
+LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots = nullptr;
+LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot = nullptr;
+LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti = nullptr;
+LPALAUXILIARYEFFECTSLOTIV alAuxiliaryEffectSlotiv = nullptr;
+LPALAUXILIARYEFFECTSLOTF alAuxiliaryEffectSlotf = nullptr;
+LPALAUXILIARYEFFECTSLOTFV alAuxiliaryEffectSlotfv = nullptr;
+LPALGETAUXILIARYEFFECTSLOTI alGetAuxiliaryEffectSloti = nullptr;
+LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv = nullptr;
+LPALGETAUXILIARYEFFECTSLOTF alGetAuxiliaryEffectSlotf = nullptr;
+LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv = nullptr;
+
+}
+
+void loadAlExtFunctions()
+{
+    static bool isLoaded = false;
+    if(isLoaded)
+        return;
+
+    alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects");
+    alDeleteEffects = (LPALDELETEEFFECTS )alGetProcAddress("alDeleteEffects");
+    alIsEffect = (LPALISEFFECT )alGetProcAddress("alIsEffect");
+    alEffecti = (LPALEFFECTI)alGetProcAddress("alEffecti");
+    alEffectiv = (LPALEFFECTIV)alGetProcAddress("alEffectiv");
+    alEffectf = (LPALEFFECTF)alGetProcAddress("alEffectf");
+    alEffectfv = (LPALEFFECTFV)alGetProcAddress("alEffectfv");
+    alGetEffecti = (LPALGETEFFECTI)alGetProcAddress("alGetEffecti");
+    alGetEffectiv = (LPALGETEFFECTIV)alGetProcAddress("alGetEffectiv");
+    alGetEffectf = (LPALGETEFFECTF)alGetProcAddress("alGetEffectf");
+    alGetEffectfv = (LPALGETEFFECTFV)alGetProcAddress("alGetEffectfv");
+    alGenFilters = (LPALGENFILTERS)alGetProcAddress("alGenFilters");
+    alDeleteFilters = (LPALDELETEFILTERS)alGetProcAddress("alDeleteFilters");
+    alIsFilter = (LPALISFILTER)alGetProcAddress("alIsFilter");
+    alFilteri = (LPALFILTERI)alGetProcAddress("alFilteri");
+    alFilteriv = (LPALFILTERIV)alGetProcAddress("alFilteriv");
+    alFilterf = (LPALFILTERF)alGetProcAddress("alFilterf");
+    alFilterfv = (LPALFILTERFV)alGetProcAddress("alFilterfv");
+    alGetFilteri = (LPALGETFILTERI )alGetProcAddress("alGetFilteri");
+    alGetFilteriv = (LPALGETFILTERIV )alGetProcAddress("alGetFilteriv");
+    alGetFilterf = (LPALGETFILTERF )alGetProcAddress("alGetFilterf");
+    alGetFilterfv = (LPALGETFILTERFV )alGetProcAddress("alGetFilterfv");
+    alGenAuxiliaryEffectSlots = (LPALGENAUXILIARYEFFECTSLOTS)alGetProcAddress("alGenAuxiliaryEffectSlots");
+    alDeleteAuxiliaryEffectSlots = (LPALDELETEAUXILIARYEFFECTSLOTS)alGetProcAddress("alDeleteAuxiliaryEffectSlots");
+    alIsAuxiliaryEffectSlot = (LPALISAUXILIARYEFFECTSLOT)alGetProcAddress("alIsAuxiliaryEffectSlot");
+    alAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alGetProcAddress("alAuxiliaryEffectSloti");
+    alAuxiliaryEffectSlotiv = (LPALAUXILIARYEFFECTSLOTIV)alGetProcAddress("alAuxiliaryEffectSlotiv");
+    alAuxiliaryEffectSlotf = (LPALAUXILIARYEFFECTSLOTF)alGetProcAddress("alAuxiliaryEffectSlotf");
+    alAuxiliaryEffectSlotfv = (LPALAUXILIARYEFFECTSLOTFV)alGetProcAddress("alAuxiliaryEffectSlotfv");
+    alGetAuxiliaryEffectSloti = (LPALGETAUXILIARYEFFECTSLOTI)alGetProcAddress("alGetAuxiliaryEffectSloti");
+    alGetAuxiliaryEffectSlotiv = (LPALGETAUXILIARYEFFECTSLOTIV)alGetProcAddress("alGetAuxiliaryEffectSlotiv");
+    alGetAuxiliaryEffectSlotf = (LPALGETAUXILIARYEFFECTSLOTF)alGetProcAddress("alGetAuxiliaryEffectSlotf");
+    alGetAuxiliaryEffectSlotfv = (LPALGETAUXILIARYEFFECTSLOTFV)alGetProcAddress("alGetAuxiliaryEffectSlotfv");
+
+    isLoaded = true;
+}
+}
+#else
+void loadAlExtFunctions()
+{
+    // we have the functions already provided by native extensions
+}
+#endif
+
+
+struct MemBufferFileIo : public SF_VIRTUAL_IO
+{
+    MemBufferFileIo(const uint8_t* data, sf_count_t dataSize)
+        : SF_VIRTUAL_IO()
+        , m_data(data)
+        , m_dataSize(dataSize)
+    {
+        assert(data != nullptr);
+
+        get_filelen = &MemBufferFileIo::getFileLength;
+        seek = &MemBufferFileIo::doSeek;
+        read = &MemBufferFileIo::doRead;
+        write = &MemBufferFileIo::doWrite;
+        tell = &MemBufferFileIo::doTell;
+    }
+
+    static sf_count_t getFileLength(void *user_data)
+    {
+        auto self = static_cast<MemBufferFileIo*>(user_data);
+        return self->m_dataSize;
+    }
+
+    static sf_count_t doSeek(sf_count_t offset, int whence, void *user_data)
+    {
+        auto self = static_cast<MemBufferFileIo*>(user_data);
+        switch(whence) {
+        case SEEK_SET:
+            assert(offset>=0 && offset<=self->m_dataSize);
+            self->m_where = offset;
+            break;
+        case SEEK_CUR:
+            assert(self->m_where+offset <= self->m_dataSize && self->m_where+offset >= 0);
+            self->m_where += offset;
+            break;
+        case SEEK_END:
+            assert(offset >=0 && offset <=self->m_dataSize);
+            self->m_where = self->m_dataSize-offset;
+            break;
+        default:
+            assert(false);
+        }
+        return self->m_where;
+    }
+
+    static sf_count_t doRead(void *ptr, sf_count_t count, void *user_data)
+    {
+        auto self = static_cast<MemBufferFileIo*>(user_data);
+        if(self->m_where+count > self->m_dataSize)
+            count = self->m_dataSize - self->m_where;
+
+        assert(self->m_where+count <= self->m_dataSize);
+
+        uint8_t* buf = static_cast<uint8_t*>(ptr);
+        std::copy(self->m_data+self->m_where, self->m_data+self->m_where+count, buf);
+        self->m_where += count;
+        return count;
+    }
+
+    static sf_count_t doWrite(const void* /*ptr*/, sf_count_t /*count*/, void* /*user_data*/)
+    {
+        return 0; // read-only
+    }
+
+    static sf_count_t doTell(void *user_data)
+    {
+        auto self = static_cast<MemBufferFileIo*>(user_data);
+        return self->m_where;
+    }
+
+private:
+    const uint8_t* const m_data;
+    const sf_count_t m_dataSize;
+    sf_count_t m_where = 0;
+};
 
 btVector3 listener_position;
 struct AudioFxManager    fxManager;
@@ -406,45 +574,32 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
 
 bool StreamTrack::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info;
-    int             result;
-
-    if(!(audio_file = fopen(path, "rb")))
+    if(!(sndfile_Stream = sf_open(path, SFM_READ, &sf_info)))
     {
         Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
         method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
         return false;
     }
 
-    if((result = ov_open(audio_file, &vorbis_Stream, NULL, 0)) < 0)
-    {
-        fclose(audio_file);
-        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
-        method = -1;
-        return false;
-    }
-
-    vorbis_Info = ov_info(&vorbis_Stream, -1);
-
     ConsoleInfo::instance().notify(SYSNOTE_OGG_OPENED, path,
-               vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
+               sf_info.channels, sf_info.samplerate, 0.0); //! @todo Dummy bitrate output
 
-    if(vorbis_Info->channels == 1)
+    if(sf_info.channels == 1)
         format = AL_FORMAT_MONO16;
     else
         format = AL_FORMAT_STEREO16;
 
-    rate = vorbis_Info->rate;
+    rate = sf_info.samplerate;
 
     return true;    // Success!
 }
 
-bool StreamTrack::Load_Wad(const char *path)
+bool StreamTrack::Load_Wad(const char* /*path*/)
 {
     return false;   ///@FIXME: PLACEHOLDER!!!
 }
 
-bool StreamTrack::Load_Wav(const char *path)
+bool StreamTrack::Load_Wav(const char* /*path*/)
 {
     return false;   ///@FIXME: PLACEHOLDER!!!
 }
@@ -541,7 +696,7 @@ void StreamTrack::Stop()    // Immediately stop track.
     switch(method)
     {
         case TR_AUDIO_STREAM_METHOD_OGG:
-            ov_clear(&vorbis_Stream);
+            sf_close(sndfile_Stream);
             break;
 
         case TR_AUDIO_STREAM_METHOD_WAD:
@@ -715,30 +870,33 @@ bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
 
 bool StreamTrack::Stream_Ogg(ALuint buffer)
 {
-    char pcm[audio_settings.stream_buffer_size];
-    int  size = 0;
-    int  section;
-    int  result;
+    assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
+    std::vector<short> pcm(audio_settings.stream_buffer_size);
+    size_t size = 0;
 
-    while(size < audio_settings.stream_buffer_size)
+    // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
+    while(size < pcm.size() - sf_info.channels + 1)
     {
-        result = ov_read(&vorbis_Stream, pcm + size, audio_settings.stream_buffer_size - size, 0, 2, 1, &section);
+        // we need to read a multiple of sf_info.channels here
+        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sf_info.channels * sf_info.channels;
+        const sf_count_t samplesRead = sf_read_short(sndfile_Stream, pcm.data() + size, samplesToRead) * sf_info.channels;
 
-        if(result > 0)
+        if(samplesRead > 0)
         {
-            size += result;
+            size += samplesRead;
         }
         else
         {
-            if(result < 0)
+            int error = sf_error(sndfile_Stream);
+            if(error != SF_ERR_NO_ERROR)
             {
-                Audio_LogOGGError(result);
+                Audio_LogSndfileError( error );
             }
             else
             {
                 if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
                 {
-                   ov_pcm_seek(&vorbis_Stream, 0);
+                   sf_seek(sndfile_Stream, 0, SEEK_SET);
                 }
                 else
                 {
@@ -751,18 +909,18 @@ bool StreamTrack::Stream_Ogg(ALuint buffer)
     if(size == 0)
         return false;
 
-    alBufferData(buffer, format, pcm, size, rate);
+    alBufferData(buffer, format, pcm.data(), size, rate);
     return true;
 }
 
-bool StreamTrack::Stream_Wad(ALuint buffer)
+bool StreamTrack::Stream_Wad(ALuint /*buffer*/)
 {
     ///@FIXME: PLACEHOLDER!!!
 
     return false;
 }
 
-bool StreamTrack::Stream_Wav(ALuint buffer)
+bool StreamTrack::Stream_Wav(ALuint /*buffer*/)
 {
     ///@FIXME: PLACEHOLDER!!!
 
@@ -1390,7 +1548,6 @@ void Audio_LoadOverridedSamples(struct World *world)
     }
 }
 
-
 void Audio_InitGlobals()
 {
     audio_settings.music_volume = 0.7;
@@ -1398,6 +1555,8 @@ void Audio_InitGlobals()
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
     audio_settings.stream_buffer_size = 32;
+
+    loadAlExtFunctions();
 }
 
 void Audio_InitFX()
@@ -1535,49 +1694,25 @@ bool Audio_LogALError(int error_marker)
 }
 
 
-void Audio_LogOGGError(int code)
+void Audio_LogSndfileError(int code)
 {
-    switch(code)
-    {
-        case OV_EREAD:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Read from media.");
-            break;
-        case OV_ENOTVORBIS:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Not Vorbis data.");
-            break;
-        case OV_EVERSION:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Vorbis version mismatch.");
-            break;
-        case OV_EBADHEADER:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Invalid Vorbis header.");
-            break;
-        case OV_EFAULT:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
-            break;
-        default:
-            Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
-            break;
-    }
+    Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
 }
 
 
 int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
-    SDL_AudioSpec wav_spec;
-    Uint8        *wav_buffer;
-    Uint32        wav_length;
+    MemBufferFileIo wavMem(sample_pointer, sample_size);
+    SF_INFO sfInfo;
+    SNDFILE* wavFile = sf_open_virtual(&wavMem, SFM_READ, &sfInfo, &wavMem);
 
-    SDL_RWops *src = SDL_RWFromMem(sample_pointer, sample_size);
-
-    // Decode WAV structure with SDL methods.
-    // SDL automatically defines file format (PCM/ADPCM), so we shouldn't bother
-    // about if it is TR4 compressed samples or TRLE uncompressed samples.
-
-    if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
+    if(!wavFile)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
         return -1;
     }
+
+    const auto waveLengthInBytes = sfInfo.channels * sfInfo.frames * ((sfInfo.format&SF_FORMAT_SUBMASK)!=SF_FORMAT_PCM_16 ? 1 : 2);
 
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1588,17 +1723,17 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     // than native wav length, because for some reason many TR5 uncomp sizes
     // are messed up and actually more than actual sample size.
 
-    if((uncomp_sample_size == 0) || (wav_length < uncomp_sample_size))
+    if((uncomp_sample_size == 0) || (waveLengthInBytes < uncomp_sample_size))
     {
-        uncomp_sample_size = wav_length;
+        uncomp_sample_size = waveLengthInBytes;
     }
 
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, wav_buffer, uncomp_sample_size, wav_spec);
+    bool result = Audio_FillALBuffer(buf_number, wavFile, uncomp_sample_size, &sfInfo);
 
-    SDL_FreeWAV(wav_buffer);
+    sf_close(wavFile);
 
     return (result)?(0):(-3);   // Zero means success.
 }
@@ -1606,12 +1741,8 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
 
 int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 {
-    SDL_RWops     *file;
-    SDL_AudioSpec  wav_spec;
-    Uint8         *wav_buffer;
-    Uint32         wav_length;
-
-    file = SDL_RWFromFile(fname, "rb");
+    SF_INFO sfInfo;
+    SNDFILE* file = sf_open(fname, SFM_READ, &sfInfo);
 
     if(!file)
     {
@@ -1619,109 +1750,31 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
         return -1;
     }
 
-    if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
-    {
-        ConsoleInfo::instance().warning(SYSWARN_BAD_FILE_FORMAT);
-        return -2;
-    }
+    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames, &sfInfo);
 
-    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
-
-    SDL_FreeWAV(wav_buffer);
+    sf_close(file);
 
     return (result)?(0):(-3);   // Zero means success.
 }
 
-bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler)
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
 {
-    if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
+    if(sfInfo->channels > 2)   // We can't use non-mono and barely can use stereo samples.
     {
         Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
         return false;
     }
 
-    // Extract bitsize from SDL audio spec for further usage.
-    uint8_t sample_bitsize = (uint8_t)(wav_spec.format & SDL_AUDIO_MASK_BITSIZE);
+    // calc down to frames
+    buffer_size /= sfInfo->channels;
+    buffer_size /= ((sfInfo->format&SF_FORMAT_SUBMASK)!=SF_FORMAT_PCM_16 ? 1 : 2);
 
-    // Check if bitsize is supported.
-    // We rarely encounter samples with exotic bitsizes, but just in case...
-    if((sample_bitsize != 32) && (sample_bitsize != 16) && (sample_bitsize != 8))
-    {
-        Sys_DebugLog(LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
-        return false;
-    }
+    std::vector<int16_t> frames( buffer_size * 2 ); // stereo data
 
-    // SDL resampler (SDL_ConvertAudio) is actually not needed, as OpenAL works
-    // normally with samples of different formats. Also, it breaks with non-standard
-    // sample rates, ruining whole audio engine in the process. Hence, SDL resampler
-    // is silently ignored by default, but you still can enable it by passing additional
-    // boolean "true" argument to the function.
+    auto framesRead = sf_readf_short(wavFile, frames.data(), buffer_size);
+    frames.resize( framesRead*2 );
 
-    if(use_SDL_resampler)
-    {
-        SDL_AudioCVT cvt;
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
-
-        int    FrameSize = wav_spec.channels * 4;           // channels * sizeof(float32)
-        Uint32 new_len = buffer_size * cvt.len_mult;
-
-        cvt.len = buffer_size;
-
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);   // make align
-        }
-
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, buffer_data, cvt.len);
-
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-
-        ALenum buffer_format = (wav_spec.channels == 1)?(AL_FORMAT_MONO_FLOAT32):(AL_FORMAT_STEREO_FLOAT32);
-
-        alBufferData(buf_number, buffer_format, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-    else    // Standard OpenAL sample loading process.
-    {
-        ALenum sample_format = 0x00;
-
-        if(wav_spec.channels == 1)
-        {
-            switch(sample_bitsize)
-            {
-                case 8:
-                    sample_format = AL_FORMAT_MONO8;
-                    break;
-                case 16:
-                    sample_format = AL_FORMAT_MONO16;
-                    break;
-                case 32:
-                    sample_format = AL_FORMAT_MONO_FLOAT32;
-                    break;
-            }
-        }
-        else
-        {
-            switch(sample_bitsize)
-            {
-                case 8:
-                    sample_format = AL_FORMAT_STEREO8;
-                    break;
-                case 16:
-                    sample_format = AL_FORMAT_STEREO16;
-                    break;
-                case 32:
-                    sample_format = AL_FORMAT_STEREO_FLOAT32;
-                    break;
-            }
-        }
-
-        alBufferData(buf_number, sample_format, buffer_data, buffer_size, wav_spec.freq);
-    }
+    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate/2);
 
     return true;
 }
@@ -1776,7 +1829,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(struct Entity *ent)
+void Audio_UpdateListenerByEntity(struct Entity* /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }

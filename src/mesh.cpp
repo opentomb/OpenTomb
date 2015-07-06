@@ -63,10 +63,10 @@ void BaseMesh::findBB()
 }
 
 
-void BaseMesh::genVBO(const Render *renderer)
+void BaseMesh::genVBO(const Render* /*renderer*/)
 {
-    m_vboVertexArray = 0;
-    m_vboIndexArray = 0;
+    if(m_vboIndexArray || m_vboVertexArray || m_vboSkinArray)
+        return;
 
     /// now, begin VBO filling!
     glGenBuffersARB(1, &m_vboVertexArray);
@@ -85,10 +85,10 @@ void BaseMesh::genVBO(const Render *renderer)
     glGenBuffersARB(1, &m_vboIndexArray);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, m_vboIndexArray);
 
-    GLsizeiptr elementsSize = sizeof(uint32_t) * m_alphaElements;
+    GLsizeiptr elementsSize = sizeof(GLuint) * m_alphaElements;
     for (uint32_t i = 0; i < m_texturePageCount; i++)
     {
-        elementsSize += sizeof(uint32_t) * m_elementsPerTexture[i];
+        elementsSize += sizeof(GLuint) * m_elementsPerTexture[i];
     }
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, m_elements.data(), GL_STATIC_DRAW_ARB);
 
@@ -114,7 +114,7 @@ void BaseMesh::genVBO(const Render *renderer)
 
         glGenBuffersARB(1, &m_animatedVboIndexArray);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, m_animatedVboIndexArray);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, m_allAnimatedElements.size(), m_allAnimatedElements.data(), GL_STATIC_DRAW);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_allAnimatedElements.size(), m_allAnimatedElements.data(), GL_STATIC_DRAW);
 
         // Prepare empty buffer for tex coords
         glGenBuffersARB(1, &m_animatedVboTexCoordArray);
@@ -162,15 +162,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     bb_max.setZero();
     centre.setZero();
     pos.setZero();
-    animations.anim_flags = 0x0000;
-    animations.frame_time = 0.0;
-    animations.period = 1.0 / 30.0;
-    animations.next_state = 0;
-    animations.lerp = 0.0;
-    animations.current_animation = 0;
-    animations.current_frame = 0;
-    animations.next_animation = 0;
-    animations.next_frame = 0;
+    animations = SSAnimation();
 
     animations.next = NULL;
     animations.onFrame = NULL;
@@ -547,7 +539,7 @@ void BaseMesh::genFaces()
     m_transparentPolygons.resize(transparent);
     uint32_t transparentPolygonStart = 0;
 
-    for(const struct Polygon &p : m_polygons)
+    for(const struct Polygon& p : m_polygons)
     {
         if (p.isBroken())
             continue;
@@ -656,7 +648,7 @@ void BaseMesh::genFaces()
 }
 
 
-btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool /*useCompression*/, bool /*buildBvh*/)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;

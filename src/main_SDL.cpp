@@ -5,7 +5,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
-#include <SDL2/SDL_audio.h>
 
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
@@ -51,11 +50,9 @@
 #include "FindConfigFile.h"
 #endif
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-}
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 
 #define NO_AUDIO        0
 
@@ -141,7 +138,7 @@ void Engine_InitGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;                    // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                    // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -216,11 +213,7 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
-#ifdef NDEBUG
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
-#else
-    Uint32 video_flags = SDL_WINDOW_OPENGL;
-#endif
 
     if(screen_info.FS_flag)
     {
@@ -342,7 +335,7 @@ void Engine_InitAL()
 #endif
 }
 
-int main(int argc, char **argv)
+int main(int /*argc*/, char** /*argv*/)
 {
     btScalar time, newtime;
     static btScalar oldtime = 0.0;
@@ -400,11 +393,9 @@ void Engine_Start()
     engine_world.prepare();
 
     // Setting up mouse.
-#ifdef NDEBUG
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-#endif
 
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");

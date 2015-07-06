@@ -39,83 +39,100 @@ extern lua_State *engine_lua;
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
-int lua_mlook(lua_State * lua)
+void lua_mlook2(lua::Int8 mlook)
 {
-    if(lua_gettop(lua) == 0)
+    if(!mlook)
     {
         control_states.mouse_look = !control_states.mouse_look;
         ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
-        return 0;
+        return;
     }
 
-    control_states.mouse_look = lua_tointeger(lua, 1);
+    control_states.mouse_look = *mlook;
     ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
-    return 0;
 }
 
-
-int lua_freelook(lua_State * lua)
+void lua_mlook1()
 {
-    if(lua_gettop(lua) == 0)
+    lua_mlook2(lua::None);
+}
+
+void lua_freelook2(lua::Int8 free)
+{
+    if(!free)
     {
         control_states.free_look = !control_states.free_look;
         ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
-        return 0;
+        return;
     }
 
-    control_states.free_look = lua_tointeger(lua, 1);
+    control_states.free_look = *free;
     ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
-    return 0;
 }
 
-
-int lua_cam_distance(lua_State * lua)
+void lua_freelook1()
 {
-    if(lua_gettop(lua) == 0)
+    lua_freelook2(lua::None);
+}
+
+void lua_cam_distance2(lua::Float distance)
+{
+    if(!distance)
     {
         ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
-        return 0;
+        return;
     }
 
-    control_states.cam_distance = lua_tonumber(lua, 1);
+    control_states.cam_distance = *distance;
     ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
-    return 0;
 }
 
-
-int lua_noclip(lua_State * lua)
+void lua_cam_distance1()
 {
-    if(lua_gettop(lua) == 0)
+    lua_cam_distance2(lua::None);
+}
+
+void lua_noclip2(lua::Int8 noclip)
+{
+    if(!noclip)
     {
         control_states.noclip = !control_states.noclip;
     }
     else
     {
-        control_states.noclip = lua_tointeger(lua, 1);
+        control_states.noclip = *noclip;
     }
 
     ConsoleInfo::instance().printf("noclip = %d", control_states.noclip);
-    return 0;
 }
 
-int lua_debuginfo(lua_State * lua)
+void lua_noclip1()
 {
-    if(lua_gettop(lua) == 0)
+    lua_noclip2(lua::None);
+}
+
+void lua_debuginfo2(lua::Bool show)
+{
+    if(!show)
     {
         screen_info.show_debuginfo = !screen_info.show_debuginfo;
     }
     else
     {
-        screen_info.show_debuginfo = lua_tointeger(lua, 1);
+        screen_info.show_debuginfo = *show;
     }
 
     ConsoleInfo::instance().printf("debug info = %d", screen_info.show_debuginfo);
-    return 0;
 }
 
-int lua_timescale(lua_State * lua)
+void lua_debuginfo1()
 {
-    if(lua_gettop(lua) == 0)
+    lua_debuginfo2(lua::None);
+}
+
+void lua_timescale2(lua::Float scale)
+{
+    if(!scale)
     {
         if(time_scale == 1.0)
         {
@@ -128,11 +145,15 @@ int lua_timescale(lua_State * lua)
     }
     else
     {
-        time_scale = lua_tonumber(lua, 1);
+        time_scale = *scale;
     }
 
     ConsoleInfo::instance().printf("time_scale = %.3f", time_scale);
-    return 0;
+}
+
+void lua_timescale1()
+{
+    lua_timescale2(lua::None);
 }
 
 void Game_InitGlobals()
@@ -148,12 +169,12 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "debuginfo", lua_debuginfo);
-        lua_register(lua, "mlook", lua_mlook);
-        lua_register(lua, "freelook", lua_freelook);
-        lua_register(lua, "noclip", lua_noclip);
-        lua_register(lua, "cam_distance", lua_cam_distance);
-        lua_register(lua, "timescale", lua_timescale);
+        lua_register(lua, "debuginfo", WRAP_FOR_LUA(lua_debuginfo2,lua_debuginfo1));
+        lua_register(lua, "mlook", WRAP_FOR_LUA(lua_mlook2,lua_mlook1));
+        lua_register(lua, "freelook", WRAP_FOR_LUA(lua_freelook2,lua_freelook1));
+        lua_register(lua, "noclip", WRAP_FOR_LUA(lua_noclip2,lua_noclip1));
+        lua_register(lua, "cam_distance", WRAP_FOR_LUA(lua_cam_distance2,lua_cam_distance1));
+        lua_register(lua, "timescale", WRAP_FOR_LUA(lua_timescale2,lua_timescale1));
     }
 }
 
@@ -321,7 +342,7 @@ int Game_Save(const char* name)
 
     // Save flipmap and flipped room states.
 
-    for(int i=0; i < engine_world.flip_data.size(); i++)
+    for(uint32_t i=0; i < engine_world.flip_data.size(); i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
         fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_data[i].state);
@@ -550,7 +571,10 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
-                    Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->m_targetDir = cam->m_targetDir = TR_CAM_TARG_BACK : cam->m_targetDir = TR_CAM_TARG_RIGHT;
+                    if(Cam_HasHit(cb, cameraFrom, cameraTo))
+                        cam->m_targetDir = TR_CAM_TARG_BACK;
+                    else
+                        cam->m_targetDir = TR_CAM_TARG_RIGHT;
                 }
                 else
                 {

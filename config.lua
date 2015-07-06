@@ -62,7 +62,7 @@ console =
     line_size = 72;
     log_size = 16;
     lines_count = 128;
-    showing_lines = 128;
+    showing_lines = 40;
     spacing = 0.5;
     show_cursor_period = 0.5;
     show = 0;
@@ -95,7 +95,7 @@ bind(act.lookright, KEY_RIGHT, JOY_POVRIGHT);
 
 bind(act.inventory, KEY_ESCAPE);
 bind(act.screenshot, KEY_PRINTSCREEN);
-bind(act.console, KEY_BACKQUOTE);
+bind(act.console, KEY_F12);
 bind(act.savegame, KEY_F5);
 bind(act.loadgame, KEY_F6);
 

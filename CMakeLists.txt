@@ -1,26 +1,26 @@
 # Usage (Linux):
-#  MKDIR build folder next to opentomb folder (e.g., opentomb-build)
-#  CD into build folder
-#  cmake ../opentomb
-#  make
+#   $ cd OpenTombSrc
+#   $ mkdir build && cd build
+#   $ cmake .. && make
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(OpenTomb)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
-find_package(Bullet REQUIRED)
+find_package(Bullet)
 INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
 
-find_package(Freetype REQUIRED)
+find_package(Freetype)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+
+add_subdirectory(3rdparty)
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
 
 find_package(OpenAL REQUIRED)
-add_definitions(-DAL_ALEXT_PROTOTYPES)
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
 find_package(Boost REQUIRED)
@@ -49,6 +49,7 @@ endfunction(trylinklib)
 trylinklib("ogg" SHARED)
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisfile" SHARED)
+trylinklib("sndfile" SHARED)
 
 find_package(ZLIB REQUIRED)
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
@@ -91,8 +92,6 @@ ELSE()
     ADD_DEFINITIONS("-DGL_GLEXT_PROTOTYPES")
 ENDIF()
 
-SET(CMAKE_CXX_FLAGS "-std=c++0x")
-
 FIND_PACKAGE(OpenGL REQUIRED)
 
 INCLUDE_DIRECTORIES(
@@ -130,6 +129,7 @@ TARGET_LINK_LIBRARIES(
     ${ogg_LIB}
     ${vorbis_LIB}
     ${vorbisfile_LIB}
+    ${sndfile_LIB}
 )
 
 IF(APPLE)

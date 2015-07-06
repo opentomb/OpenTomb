@@ -355,11 +355,11 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
-        if((i == 0) && (move_len > 1024.0))                                     ///@FIXME: magick const 1024.0!
+        if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
         {
             break;
         }
-        int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;  ///@FIXME (not a critical): magick const 4.0!
+        int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;     ///@FIXME (not a critical): magick const 4.0!
         move /= (btScalar)iter;
 
         for(int j=0; j<=iter; j++) {
@@ -816,7 +816,7 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
+void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
 {
     if(engine_world.anim_commands.empty() || (ss_anim->model == NULL))
     {
@@ -850,7 +850,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
 
             case TR_ANIMCOMMAND_KILL:
                 // This command executes ONLY at the end of animation.
-                if(ss_anim->current_frame == af->frames.size() - 1)
+                if(ss_anim->current_frame == static_cast<int>(af->frames.size() - 1))
                 {
                     kill();
                 }
@@ -1065,7 +1065,7 @@ void Entity::processSector()
 
 void Entity::setAnimation(int animation, int frame, int another_model)
 {
-    if(!m_bf.animations.model || (animation >= m_bf.animations.model->animations.size()))
+    if(!m_bf.animations.model || animation >= static_cast<int>(m_bf.animations.model->animations.size()))
     {
         return;
     }
@@ -1076,7 +1076,8 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     if(another_model >= 0)
     {
         SkeletalModel* model = engine_world.getModelByID(another_model);
-        if((!model) || (animation >= model->animations.size())) return;
+        if(!model || animation >= static_cast<int>(model->animations.size()))
+            return;
         m_bf.animations.model = model;
     }
 
@@ -1181,7 +1182,7 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
      */
     if(anim_flags == ANIM_LOOP_LAST_FRAME)
     {
-        if(*frame >= curr_anim->frames.size() - 1)
+        if(*frame >= static_cast<int>(curr_anim->frames.size() - 1))
         {
             *frame = curr_anim->frames.size() - 1;
             *anim  = bf->animations.current_animation;                          // paranoid dublicate
@@ -1198,7 +1199,7 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
     /*
      * Check next anim if frame >= frames.size()
      */
-    if(*frame >= curr_anim->frames.size())
+    if(*frame >= static_cast<int>(curr_anim->frames.size()))
     {
         if(curr_anim->next_anim)
         {
@@ -1280,7 +1281,6 @@ int Entity::frame(btScalar time)
     int16_t frame, anim, ret = 0x00;
     long int t;
     btScalar dt;
-    AnimationFrame* af;
     StateChange* stc;
     SSAnimation* ss_anim;
 
@@ -1322,7 +1322,7 @@ int Entity::frame(btScalar time)
         doAnimMove(&anim, &frame);
     }
 
-    af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
+    // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
     m_bf.animations.frame_time += time;
 
     t = (m_bf.animations.frame_time) / m_bf.animations.period;
@@ -1471,13 +1471,9 @@ Entity::~Entity() {
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
-                    body->setMotionState(NULL);
+                    body->setMotionState(nullptr);
                 }
-                if(body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                    body->setCollisionShape(NULL);
-                }
+                body->setCollisionShape(nullptr);
 
                 bt_engine_dynamicsWorld->removeRigidBody(body.get());
             }
@@ -1530,7 +1526,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     fixPenetrations(nullptr);
 #endif
 
-    for(int i=0; i<setup->body_setup.size(); i++) {
+    for(size_t i=0; i<setup->body_setup.size(); i++) {
         if( i >= m_bf.bone_tags.size() || !m_bt.bt_body[i] ) {
             result = false;
             continue;   // If body is absent, return false and bypass this body setup.
@@ -1577,7 +1573,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup constraints.
     m_bt.bt_joints.resize(setup->joint_setup.size());
 
-    for(int i=0; i<setup->joint_setup.size(); i++) {
+    for(size_t i=0; i<setup->joint_setup.size(); i++) {
         if( setup->joint_setup[i].body_index >= m_bf.bone_tags.size() || !m_bt.bt_body[setup->joint_setup[i].body_index] ) {
             result = false;
             break;       // If body 1 or body 2 are absent, return false and bypass this joint.

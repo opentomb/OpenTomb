@@ -40,10 +40,11 @@ private:
 
     size_t m_historyPos = 0;                    // Current log position
     size_t m_historySize;
+    //! The most recent entry is at the front.
     std::vector<std::string> m_historyLines;
     
     std::list<Line> m_lines;
-    size_t m_visibleLines;
+    size_t m_visibleLines = 40;
     size_t m_bufferSize;
     
     uint16_t m_lineSize = CON_MAX_LINE_SIZE;                  // Console line size
@@ -61,11 +62,9 @@ private:
     bool inited = false;                     // Ready-to-use flag
     bool m_isVisible;                       // Visibility flag
 
-    std::string& currentLine() {
-        return m_lines.front().text;
-    }
+    std::string m_editingLine;
 
-    ConsoleInfo() = default;
+    ConsoleInfo();
 
 public:
     void init();
@@ -97,7 +96,7 @@ public:
 
     void addLog(const std::string& text);
 
-    void addLine(const std::string& text, font_Style style = FONTSTYLE_CONSOLE_EVENT);
+    void addLine(const std::string& text, font_Style style);
 
     void addText(const std::string& text, font_Style style);
 
@@ -139,6 +138,7 @@ public:
 
     void setVisibleLines(size_t val) {
         m_visibleLines = val;
+        setCursorY(m_visibleLines * m_lineHeight);
     }
 
     size_t visibleLines() const {

@@ -73,7 +73,7 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->m_bf.animations.model->id);      // entity model id
+            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
@@ -720,7 +720,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
         //TR_III+, but works with TR_I - TR_II
         uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
-        uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
+        // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
         uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
@@ -732,7 +732,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if((*entry >= 0) && (*entry < engine_world.rooms.size()))
+                    if(*entry < engine_world.rooms.size())
                     {
                         sector->portal_to_room = *entry;
                         sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
@@ -981,7 +981,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands);
                                                 }
                                             }
                                             else
@@ -1278,7 +1278,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
                     int16_t  slope_t01  = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
                     int16_t  slope_t00  = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                    uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
+                    // uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
 
                     // t01/t02 are 5-bit values, where sign is specified by 0x10 mask.
 
@@ -1568,13 +1568,13 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
 
         uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
+        if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_below = world->rooms[rp]->getSectorRaw(sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
+        if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_above = world->rooms[rp]->getSectorRaw(sector->pos);
         }
@@ -1650,131 +1650,66 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
-int lua_SetSectorFloorConfig(lua_State * lua)
+void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 floor, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        ConsoleInfo::instance().addLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
-    rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->floor_corners[3].m_floats[2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->floor_penetration_config = *pen;
+    if(diag)  rs->floor_diagonal_type = *diag;
+    if(floor) rs->floor = *floor;
+    rs->floor_corners[0] = {z0,z1,z2};
+    rs->floor_corners[0][3] = z3;
 }
 
-int lua_SetSectorCeilingConfig(lua_State * lua)
+void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 ceil, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
-    rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->ceiling_penetration_config = *pen;
+    if(diag)  rs->ceiling_diagonal_type = *diag;
+    if(ceil)  rs->ceiling = *ceil;
+    rs->ceiling_corners[0] = {z0,z1,z2};
+    rs->ceiling_corners[0][3] = z3;
 }
 
-int lua_SetSectorPortal(lua_State * lua)
+void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 4)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    uint32_t p = lua_tointeger(lua, 4);
     if(p < engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
-
-    return 0;
 }
 
-int lua_SetSectorFlags(lua_State * lua)
+void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ftflag, lua::UInt8 cpflag, lua::UInt8 ctflag)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 7)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
-    if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
-
-    return 0;
+    if(fpflag)  rs->floor_penetration_config = *fpflag;
+    if(ftflag)  rs->floor_diagonal_type = *ftflag;
+    if(cpflag)  rs->ceiling_penetration_config = *cpflag;
+    if(ctflag)  rs->ceiling_diagonal_type = *ctflag;
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -1787,10 +1722,10 @@ void Res_ScriptsOpen(int engine_version)
     {
         luaL_openlibs(level_script);
         lua_register(level_script, "print", lua_print);
-        lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
-        lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-        lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
-        lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
+        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
+        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
+        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
+        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
@@ -1998,7 +1933,6 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 {
     room = std::make_shared<Room>();
 
-    Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
     tr_room_portal_t *tr_portal;
@@ -2032,7 +1966,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
-    room->bt_body = NULL;
+    room->bt_body.reset();
     /*
      *  let us load static room meshes
      */
@@ -2464,8 +2398,8 @@ void Res_GenRoomCollision(World *world)
         {
             btVector3 localInertia(0, 0, 0);
             btDefaultMotionState* motionState = new btDefaultMotionState(r->transform);
-            r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-            bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            r->bt_body.reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
+            bt_engine_dynamicsWorld->addRigidBody(r->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             r->bt_body->setUserPointer(r->self.get());
             r->bt_body->setRestitution(1.0);
             r->bt_body->setFriction(1.0);
@@ -2801,7 +2735,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, World *world)
+bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
@@ -2842,7 +2776,7 @@ static void tr_copyNormals(struct Polygon *polygon, const std::shared_ptr<BaseMe
     }
 }
 
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh *mesh, int numCorners, const uint16_t *vertex_indices, struct Polygon *p)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -2858,9 +2792,9 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh *mesh, int numCorners, c
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh *mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
-    for (int i = 0; i < p->vertices.size(); i++)
+    for (size_t i = 0; i < p->vertices.size(); i++)
     {
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
@@ -2879,9 +2813,9 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh *mesh, cons
     mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh *mesh, const uint16_t *vertex_indices, struct Polygon *p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, struct Polygon *p)
 {
-    for (int i = 0; i < p->vertices.size(); i++)
+    for (size_t i = 0; i < p->vertices.size(); i++)
     {
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
@@ -2941,7 +2875,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured triangles
      */
-    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
+    for(int i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2971,7 +2905,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured triangles
      */
-    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
+    for(int i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2989,7 +2923,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured rectangles
      */
-    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
+    for(int i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -3302,7 +3236,7 @@ void Res_GenVBOs(World *world)
 {
     for(uint32_t i=0; i<world->meshes.size(); i++)
     {
-        if(!world->meshes[i]->m_vertices.empty() || world->meshes[i]->m_animatedVertices.size())
+        if(!world->meshes[i]->m_vertices.empty() || !world->meshes[i]->m_animatedVertices.empty())
         {
             world->meshes[i]->genVBO(&renderer);
         }
@@ -3310,7 +3244,7 @@ void Res_GenVBOs(World *world)
 
     for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || world->rooms[i]->mesh->m_animatedVertices.size()))
+        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || !world->rooms[i]->mesh->m_animatedVertices.empty()))
         {
             world->rooms[i]->mesh->genVBO(&renderer);
         }
@@ -3327,7 +3261,7 @@ void Res_GenBaseItems(World* world)
     }
 }
 
-void Res_FixRooms(struct World *world)
+void Res_FixRooms(World *world)
 {
     for(uint32_t i=0;i<world->rooms.size();i++)
     {
@@ -3461,7 +3395,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
      * =================    now, animation loading    ========================
      */
 
-    if(tr_moveable->animation_index < 0 || tr_moveable->animation_index >= tr->animations_count)
+    if(tr_moveable->animation_index >= tr->animations_count)
     {
         /*
          * model has no start offset and any animation
@@ -3707,8 +3641,9 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
-        j &= 0x7fff;
-        if((j >= 0) && (j < model->animations.size()))
+        j &= 0x7fff; // this masks out the sign bit
+        assert( j >= 0 );
+        if(static_cast<size_t>(j) < model->animations.size())
         {
             anim->next_anim = &model->animations[j];
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
@@ -3749,7 +3684,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animations.size()))
+                    if(next_anim_ind < model->animations.size())
                     {
                         sch_p->anim_dispatch.emplace_back();
 
@@ -4098,11 +4033,6 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
 void TR_GenSamples(World *world, class VT_Level *tr)
 {
-    uint8_t      *pointer = tr->samples_data;
-    int8_t        flag;
-    uint32_t      ind1, ind2;
-    uint32_t      comp_size, uncomp_size;
-
     // Generate new buffer array.
     world->audio_buffers.resize(tr->samples_count, 0);
     alGenBuffers(world->audio_buffers.size(), world->audio_buffers.data());
@@ -4120,10 +4050,6 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     // Generate new audio emitters array.
     world->audio_emitters.resize(tr->sound_sources_count);
 
-    // Copy sound map.
-    world->audio_map.assign(tr->soundmap+0, tr->soundmap+world->audio_map.size());
-    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
-
     // Cycle through raw samples block and parse them to OpenAL buffers.
 
     // Different TR versions have different ways of storing samples.
@@ -4133,18 +4059,19 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     //
     // Hence, we specify certain parse method for each game version.
 
-    if(pointer)
+    if(!tr->samples_data.empty())
     {
+        auto pointer = tr->samples_data.data();
         switch(tr->game_version)
         {
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                world->audio_map.resize( TR_AUDIO_MAP_SIZE_TR1 );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
                 for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
                 {
-                    pointer = tr->samples_data + tr->sample_indices[i];
+                    pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
                 }
@@ -4155,22 +4082,23 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
             case TR_III:
             {
-                world->audio_map.resize( (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
-                ind1 = 0;
-                ind2 = 0;
-                flag = 0;
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2)));
+                size_t ind1 = 0;
+                size_t ind2 = 0;
+                bool flag = false;
                 size_t i = 0;
-                while(pointer < tr->samples_data + tr->samples_data_size - 4) {
-                    pointer = tr->samples_data + ind2;
+                while(pointer < tr->samples_data.data() + tr->samples_data.size() - 4) {
+                    pointer = tr->samples_data.data() + ind2;
                     if(0x46464952 == *((int32_t*)pointer)) {
                         // RIFF
-                        if(flag == 0x00) {
+                        if(!flag) {
                             ind1 = ind2;
-                            flag = 0x01;
+                            flag = true;
                         }
                         else {
-                            uncomp_size = ind2 - ind1;
-                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            size_t uncomp_size = ind2 - ind1;
+                            auto* srcData = tr->samples_data.data() + ind1;
+                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], srcData, uncomp_size);
                             i++;
                             if(i >= world->audio_buffers.size())
                             {
@@ -4181,8 +4109,8 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                     }
                     ind2++;
                 }
-                uncomp_size = tr->samples_data_size - ind1;
-                pointer = tr->samples_data + ind1;
+                size_t uncomp_size = tr->samples_data.size() - ind1;
+                pointer = tr->samples_data.data() + ind1;
                 if(i < world->audio_buffers.size()) {
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size);
                 }
@@ -4192,15 +4120,15 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map.resize( (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4) );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4)));
 
                 for(size_t i = 0; i < tr->samples_count; i++)
                 {
                     // Parse sample sizes.
                     // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
-                    uncomp_size = *((uint32_t*)pointer);
+                    size_t uncomp_size = *((uint32_t*)pointer);
                     pointer += 4;
-                    comp_size   = *((uint32_t*)pointer);
+                    size_t comp_size   = *((uint32_t*)pointer);
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
@@ -4213,15 +4141,11 @@ void TR_GenSamples(World *world, class VT_Level *tr)
 
             default:
                 world->audio_map.resize( TR_AUDIO_MAP_SIZE_NONE );
-                free(tr->samples_data);
-                tr->samples_data = NULL;
-                tr->samples_data_size = 0;
+                tr->samples_data.clear();
                 return;
         }
 
-        free(tr->samples_data);
-        tr->samples_data = NULL;
-        tr->samples_data_size = 0;
+        tr->samples_data.clear();
     }
 
     // Cycle through SoundDetails and parse them into native OpenTomb

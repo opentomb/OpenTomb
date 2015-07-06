@@ -174,7 +174,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
     /*
      * Search for the first free room's frustum
      */
-    portal->dest_room->frustum.emplace_back();
+    portal->dest_room->frustum.emplace_back(std::make_shared<Frustum>());
     auto current_gen = portal->dest_room->frustum.back();
 
     current_gen->splitPrepare(portal);                       // prepare to the clipping
@@ -504,7 +504,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
-    struct Polygon* p = obb->polygons;
+    struct Polygon *p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
         auto t = planeDist(p->plane, *cam_pos);

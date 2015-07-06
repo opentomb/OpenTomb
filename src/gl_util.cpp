@@ -23,15 +23,16 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 #include "gl_util.h"
 #include "system.h"
 #include "console.h"
 
 #define GL_LOG_FILENAME "gl_log.txt"
+#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 #ifndef GL_GLEXT_PROTOTYPES
 PFNGLDELETEOBJECTARBPROC                glDeleteObjectARB =                     NULL;

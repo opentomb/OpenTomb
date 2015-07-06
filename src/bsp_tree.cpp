@@ -10,7 +10,7 @@
 #include "mesh.h"
 #include "frustum.h"
 
-void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
+void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
 {
     if(!root)
         root.reset(new BSPNode());

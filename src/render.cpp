@@ -168,9 +168,9 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
     {
         mesh->m_mainVertexArray->bind();
 
-        const uint32_t *elementsbase = NULL;
+        const uint32_t* const elementsbase = nullptr;
 
-        unsigned long offset = 0;
+        size_t offset = 0;
         for(uint32_t texture = 0; texture < mesh->m_texturePageCount; texture++)
         {
             if(mesh->m_elementsPerTexture[texture] == 0)
@@ -410,7 +410,7 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
         // Calculate parent transform
         SSBoneTag &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
-        for (int j = 0; j < ent->m_bf.bone_tags.size(); j++) {
+        for (size_t j = 0; j < ent->m_bf.bone_tags.size(); j++) {
             if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
                 tr1 = ent->m_bt.bt_body[j]->getWorldTransform();
                 foundParentTransform = true;
@@ -695,7 +695,7 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
 
             for(const auto& f : room->frustum) {
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
-                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat [3]), NULL, GL_STREAM_DRAW_ARB);
+                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW_ARB);
 
                 GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 
@@ -1247,7 +1247,7 @@ void RenderDebugDrawer::setDebugMode(int debugMode)
    m_debugMode = debugMode;
 }
 
-void RenderDebugDrawer::draw3dText(const btVector3& location, const char* textString)
+void RenderDebugDrawer::draw3dText(const btVector3& /*location*/, const char* /*textString*/)
 {
    //glRasterPos3f(location.x(),  location.y(),  location.z());
    //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
@@ -1258,7 +1258,7 @@ void RenderDebugDrawer::reportErrorWarning(const char* warningString)
    ConsoleInfo::instance().addLine(warningString, FONTSTYLE_CONSOLE_WARNING);
 }
 
-void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
+void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB, const btVector3& normalOnB, btScalar distance, int /*lifeTime*/, const btVector3& color)
 {
     drawLine(pointOnB, pointOnB + normalOnB * distance, color);
 }
@@ -1277,7 +1277,7 @@ void RenderDebugDrawer::render()
         }
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size(), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
 
         std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY) );
         std::copy(m_buffer.begin(), m_buffer.end(), data);

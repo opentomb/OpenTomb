@@ -21,6 +21,8 @@
 
 #include <lua.hpp>
 
+#include <iostream>
+
 /*
  * MISK
  */
@@ -473,7 +475,7 @@ int lua_DoTasks(lua_State *lua, btScalar time)
 void lua_AddKey(lua_State *lua, int keycode, int state)
 {
     int top = lua_gettop(lua);
-    
+
     lua_getglobal(lua, "addKey");
     
     if(!lua_isfunction(lua, -1))

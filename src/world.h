@@ -317,7 +317,7 @@ struct Room : public Object
 
     std::vector<std::shared_ptr<Room>> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
-    btRigidBody                *bt_body;
+    std::unique_ptr<btRigidBody> bt_body;
 
     std::unique_ptr<EngineContainer> self;
 
@@ -405,7 +405,7 @@ struct World
     void updateAnimTextures();
     void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
 
-    int addEntity(std::shared_ptr<Entity> entity);
+    void addEntity(std::shared_ptr<Entity> entity);
     int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
     int deleteItem(uint32_t item_id);
     Sprite* getSpriteByID(unsigned int ID);

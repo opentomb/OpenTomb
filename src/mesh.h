@@ -33,7 +33,7 @@ struct Render;
 struct Entity;
 
 struct TransparentPolygonReference {
-    const struct Polygon* polygon;
+    const struct Polygon *polygon;
     std::shared_ptr<VertexArray> used_vertex_array;
     size_t firstIndex;
     size_t count;
@@ -63,14 +63,14 @@ struct BaseMesh
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
     std::vector<uint32_t> m_elementsPerTexture;                            //
-    std::vector<uint32_t> m_elements;                                             //
+    std::vector<GLuint> m_elements;                                             //
     uint32_t m_alphaElements;
 
     std::vector<Vertex> m_vertices;
     
     size_t m_animatedElementCount;
     size_t m_alphaAnimatedElementCount;
-    std::vector<uint32_t> m_allAnimatedElements;
+    std::vector<GLuint> m_allAnimatedElements;
     std::vector<AnimatedVertex> m_animatedVertices;
     
     std::vector<TransparentPolygonReference> m_transparentPolygons;
@@ -79,14 +79,16 @@ struct BaseMesh
     btVector3 m_bbMin;                                            // AABB bounding volume
     btVector3 m_bbMax;                                            // AABB bounding volume
     btScalar m_radius;                                                    // radius of the bounding sphere
+#pragma pack(push,1)
     struct MatrixIndex {
         int8_t i=0, j=0;
     };
+#pragma pack(pop)
     std::vector<MatrixIndex> m_matrixIndices;                                       // vertices map for skin mesh
 
-    GLuint                m_vboVertexArray;
-    GLuint                m_vboIndexArray;
-    GLuint                m_vboSkinArray;
+    GLuint                m_vboVertexArray = 0;
+    GLuint                m_vboIndexArray = 0;
+    GLuint                m_vboSkinArray = 0;
     std::shared_ptr<VertexArray> m_mainVertexArray;
     
     // Buffers for animated polygons
@@ -261,24 +263,25 @@ struct Character;
 
 struct SSAnimation
 {
-    int16_t                     last_state;
-    int16_t                     next_state;
-    int16_t                     last_animation;
-    int16_t                     current_animation;                              //
-    int16_t                     next_animation;                                 //
-    int16_t                     current_frame;                                  //
-    int16_t                     next_frame;                                     //
+    int16_t                     last_state = 0;
+    int16_t                     next_state = 0;
+    int16_t                     last_animation = 0;
+    int16_t                     current_animation = 0;                              //
+    int16_t                     next_animation = 0;                                 //
+    //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+    int16_t                     current_frame = 0;                                  //
+    int16_t                     next_frame = 0;                                     //
 
-    uint16_t                    anim_flags;                                     // additional animation control param
+    uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period;                                         // one frame change period
-    btScalar                    frame_time;                                     // current time
-    btScalar                    lerp;
+    btScalar                    period = 1.0 / 30;                                         // one frame change period
+    btScalar                    frame_time = 0;                                     // current time
+    btScalar                    lerp = 0;
 
     void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
-    SkeletalModel    *model;                                          // pointer to the base model
-    SSAnimation      *next;
+    SkeletalModel    *model = nullptr;                                          // pointer to the base model
+    SSAnimation      *next = nullptr;
 };
 
 /*

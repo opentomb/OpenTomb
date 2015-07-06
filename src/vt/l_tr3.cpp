@@ -370,7 +370,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     // remap all sample indices here
     for(i = 0; i < this->sound_details_count; i++)
     {
-        if(this->sound_details[i].sample >= 0 && this->sound_details[i].sample < this->sample_indices_count)
+        if(this->sound_details[i].sample < this->sample_indices_count)
         {
             this->sound_details[i].sample = this->sample_indices[this->sound_details[i].sample];
         }
@@ -388,13 +388,12 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     }
     else
     {
-        this->samples_data_size = SDL_RWsize(newsrc);
+        this->samples_data.resize(SDL_RWsize(newsrc));
         this->samples_count = 0;
-        this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
-        for(i = 0; i < this->samples_data_size; i++)
+        for(i = 0; i < this->samples_data.size(); i++)
         {
             this->samples_data[i] = read_bitu8(newsrc);
-            if((i >= 4) && (*((uint32_t*)(this->samples_data+i-4)) == 0x46464952))   /// RIFF
+            if((i >= 4) && (*((uint32_t*)(this->samples_data.data()+i-4)) == 0x46464952))   /// RIFF
             {
                 this->samples_count++;
             }

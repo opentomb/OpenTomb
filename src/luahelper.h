@@ -1,5 +1,5 @@
 #pragma once
-#if 0
+
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -263,7 +263,7 @@ template<>
 struct ReturnTraits<void>
 {
     template<typename... Args>
-    static int doCall(void (*fun)(Args...), lua_State* lua, const Args&... args) {
+    static int doCall(void (*fun)(Args...), lua_State* /*lua*/, const Args&... args) {
         fun(args...);
         return 0;
     }
@@ -394,7 +394,7 @@ struct MultiDispatcher
     }
 
     template<typename N>
-    int doCall( lua_State* lua, const MPL::false_& )
+    int doCall( lua_State* /*lua*/, const MPL::false_& )
     {
         throw FunctionNotFoundError("A function signature is missing");
         return 0;
@@ -442,4 +442,3 @@ inline detail::MultiDispatcher<F0, Fn...> makeDispatcher(F0* fun0, Fn*... funN) 
     [](lua_State* state)->int{ return ::lua::makeDispatcher(funcs)(state); }
 
 }
-#endif

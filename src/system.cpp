@@ -148,7 +148,7 @@ void Sys_StrRunSec(char *buf, size_t buf_size)
         secbase = tp.tv_sec;
     }
 
-    snprintf(buf, buf_size, "%06d.%0.3d", (int)(tp.tv_sec-secbase), (int)(tp.tv_usec/1000));
+    snprintf(buf, buf_size, "%06d.%03d", (int)(tp.tv_sec-secbase), (int)(tp.tv_usec/1000));
 }
 
 btScalar Sys_FloatTime (void)

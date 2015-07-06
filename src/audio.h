@@ -2,19 +2,17 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "al/AL/al.h"
-#include "al/AL/efx-presets.h"
-#include "al/AL/efx-creative.h"
+#include <AL/al.h>
+#include <AL/efx-presets.h>
+#include <AL/efx-creative.h>
 
-#include <ogg/ogg.h>
-#include <vorbis/vorbisfile.h>
+#include <sndfile.h>
 
 #include "vt/vt_level.h"
 #include "game.h"
 #include "script.h"
 #include "system.h"
 
-#include <SDL2/SDL_audio.h>
 #include <cstdio>
 #include <cstdlib>
 
@@ -249,8 +247,6 @@ enum TR_AUDIO_STREAM_TYPE
 #define TR_AUDIO_STREAMPLAY_IGNORED        0
 #define TR_AUDIO_STREAMPLAY_PROCESSED      1
 
-
-
 struct Camera;
 struct Entity;
 
@@ -258,11 +254,11 @@ struct Entity;
 
 struct AudioSettings
 {
-    ALfloat     music_volume;
-    ALfloat     sound_volume;
-    ALboolean   use_effects;
-    ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
-    int         stream_buffer_size;
+    ALfloat     music_volume = 0;
+    ALfloat     sound_volume = 0;
+    ALboolean   use_effects = AL_FALSE;
+    ALboolean   listener_is_player = AL_FALSE; // RESERVED FOR FUTURE USE
+    int         stream_buffer_size = 0;
 };
 
 // FX manager structure.
@@ -413,7 +409,8 @@ private:
     bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
 
     FILE*           audio_file;          // General handle for opened audio file.
-    OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
+    SNDFILE*        sndfile_Stream;      // Sndfile file reader needs its own handle.
+    SF_INFO         sf_info;
     
     // General OpenAL fields 
     ALbyte         *data;
@@ -456,7 +453,7 @@ void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(Camera *cam);
 void Audio_UpdateListenerByEntity(Entity *ent);
 
-bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples(World *world);
@@ -482,6 +479,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 // Error handling routines.
 
 bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
-void Audio_LogOGGError(int code);               // Ogg-specific error handler.
+void Audio_LogSndfileError(int code);           // Sndfile-specific error handler.
 
 #endif // AUDIO_H

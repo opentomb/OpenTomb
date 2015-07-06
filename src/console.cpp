@@ -18,6 +18,11 @@
 
 #include <iostream>
 
+ConsoleInfo::ConsoleInfo()
+{
+    m_historyLines.emplace_back();
+}
+
 void ConsoleInfo::init()
 {
     // log size check
@@ -68,7 +73,7 @@ void ConsoleInfo::setLineInterval(float interval) {
     // font->font_size has absolute size (after scaling)
     m_lineHeight = (1.0 + m_spacing) * m_font->font_size;
     m_cursorX = 8 + 1;
-    m_cursorY = screen_info.h - m_lineHeight * m_lines.size();
+    m_cursorY = screen_info.h - m_lineHeight * m_visibleLines;
     if(m_cursorY < 8)
     {
         m_cursorY = 8;
@@ -94,8 +99,8 @@ void ConsoleInfo::draw() {
     };
     glUniform2fvARB(shader->screenSize, 2, screenSize);
 
-    int x = 8;
-    int y = m_cursorY;
+    const int x = 8;
+    int y = m_cursorY + m_lineHeight;
     size_t n = 0;
     for(const Line& line : m_lines)
     {
@@ -107,6 +112,9 @@ void ConsoleInfo::draw() {
         if( n >= m_visibleLines )
             break;
     }
+    GLfloat *col = FontManager->GetFontStyle(FONTSTYLE_CONSOLE_INFO)->real_color;
+    std::copy(col, col+4, m_font->gl_font_color);
+    glf_render_str(m_font, (GLfloat)x, (GLfloat)m_cursorY + m_lineHeight, m_editingLine.c_str());
 }
 
 void ConsoleInfo::drawBackground() {
@@ -161,9 +169,10 @@ void ConsoleInfo::edit(int key) {
 
     if(key == SDLK_RETURN)
     {
-        addLog(currentLine());
-        if(!Engine_ExecCmd(currentLine().c_str()))
-            currentLine() = std::string();
+        addLog(m_editingLine);
+        addLine(std::string("> ") +  m_editingLine, FONTSTYLE_CONSOLE_INFO);
+        Engine_ExecCmd(m_editingLine.c_str());
+        m_editingLine.clear();
         m_cursorPos = 0;
         m_cursorX = 8 + 1;
         return;
@@ -172,33 +181,21 @@ void ConsoleInfo::edit(int key) {
     m_blinkTime = 0.0;
     m_showCursor = 1;
 
-    int16_t oldLength = utf8_strlen(currentLine().c_str());    // int16_t is absolutly enough
+    int16_t oldLength = utf8_strlen(m_editingLine.c_str());    // int16_t is absolutly enough
 
     switch(key)
     {
     case SDLK_UP:
-        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-        currentLine() = m_historyLines[m_historyPos];
-        m_historyPos++;
-        if(m_historyPos >= m_historyLines.size())
-        {
-            m_historyPos = 0;
-        }
-        m_cursorPos = utf8_strlen(currentLine().c_str());
-        break;
-
     case SDLK_DOWN:
+        if( m_historyLines.empty() )
+            break;
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-        currentLine() = m_historyLines[m_historyPos];
-        if(m_historyPos == 0)
-        {
-            m_historyPos = m_lines.size() - 1;
-        }
-        else
-        {
-            m_historyPos--;
-        }
-        m_cursorPos = utf8_strlen(currentLine().c_str());
+        if( key==SDLK_UP && m_historyPos < m_historyLines.size()-1 )
+            ++m_historyPos;
+        else if( key==SDLK_DOWN && m_historyPos > 0 )
+            --m_historyPos;
+        m_editingLine = m_historyLines[m_historyPos];
+        m_cursorPos = utf8_strlen(m_editingLine.c_str());
         break;
 
     case SDLK_LEFT:
@@ -225,20 +222,20 @@ void ConsoleInfo::edit(int key) {
 
     case SDLK_BACKSPACE:
         if(m_cursorPos > 0) {
-            currentLine().erase(m_cursorPos-1);
+            m_editingLine.erase(m_cursorPos-1, 1);
             m_cursorPos--;
         }
         break;
 
     case SDLK_DELETE:
         if(m_cursorPos < oldLength) {
-            currentLine().erase(m_cursorPos);
+            m_editingLine.erase(m_cursorPos, 1);
         }
         break;
 
     default:
         if((oldLength < m_lineSize-1) && (key >= SDLK_SPACE)) {
-            currentLine().insert(currentLine().begin() + m_cursorPos, char(key));
+            m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
             m_cursorPos++;
         }
         break;
@@ -249,7 +246,7 @@ void ConsoleInfo::edit(int key) {
 
 void ConsoleInfo::calcCursorPosition() {
     if(m_font) {
-        m_cursorX = 8 + 1 + glf_get_string_len(m_font, currentLine().c_str(), m_cursorPos);
+        m_cursorX = 8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos);
     }
 }
 
@@ -276,6 +273,8 @@ void ConsoleInfo::addText(const std::string &text, font_Style style) {
         size_t end = text.find_first_of("\r\n", pos);
         if( end != pos+1 )
             addLine(text.substr(pos, end-pos-1), style);
+        if( end == std::string::npos )
+            break;
         pos = end+1;
     }
 }

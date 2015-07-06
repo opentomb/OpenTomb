@@ -774,12 +774,11 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     // block size in bytes. Sample block is followed by sample indices array.
 
     this->samples_count = 0;
-    this->samples_data_size = read_bitu32(src);
-    this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
-    for(i=0; i < this->samples_data_size; i++)
+    this->samples_data.resize( read_bitu32(src) );
+    for(i=0; i < this->samples_data.size(); i++)
     {
         this->samples_data[i] = read_bitu8(src);
-        if((i >= 4) && (*((uint32_t*)(this->samples_data+i-4)) == 0x46464952))   /// RIFF
+        if((i >= 4) && (*((uint32_t*)(this->samples_data.data()+i-4)) == 0x46464952))   /// RIFF
         {
             this->samples_count++;
         }

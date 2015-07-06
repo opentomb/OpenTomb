@@ -133,10 +133,8 @@ void Controls_Key(int32_t button, int state)
                         else
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-#ifdef NDEBUG
                             SDL_ShowCursor(0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);
-#endif
                             SDL_StopTextInput();
                         }
                     }
@@ -453,7 +451,7 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_LOOKRIGHT].primary  = SDLK_RIGHT;
 
     control_mapper.action_map[ACT_SCREENSHOT].primary = SDLK_PRINTSCREEN;
-    control_mapper.action_map[ACT_CONSOLE].primary    = SDLK_BACKQUOTE;
+    control_mapper.action_map[ACT_CONSOLE].primary    = SDLK_F12;
     control_mapper.action_map[ACT_SAVEGAME].primary   = SDLK_F5;
     control_mapper.action_map[ACT_LOADGAME].primary   = SDLK_F6;
 }
@@ -462,9 +460,20 @@ void Controls_PollSDLInput()
 {
     SDL_Event event;
     static int mouse_setup = 0;
+    static bool windowHasFocus = true;
     
     while(SDL_PollEvent(&event))
     {
+        if(event.type == SDL_WINDOWEVENT) {
+            if(event.window.event == SDL_WINDOWEVENT_ENTER || event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+                windowHasFocus = true;
+            else if(event.window.event == SDL_WINDOWEVENT_LEAVE || event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+                windowHasFocus = false;
+        }
+
+        if(!windowHasFocus)
+            continue;
+
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
@@ -483,9 +492,7 @@ void Controls_PollSDLInput()
                        (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
                        (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
                     {
-#ifdef NDEBUG
                         SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
-#endif
                     }
                 }
                 mouse_setup = 1;
