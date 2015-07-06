@@ -114,7 +114,6 @@ struct BSPTree2DNode {
             splitHorizontally(needleWidth);
 
             // height already fits, width fits too now, so this is the result
-            isFilled = true;
             *destX = left->x;
             *destY = left->y;
             return true;
