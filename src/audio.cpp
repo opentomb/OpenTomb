@@ -1351,11 +1351,11 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers.size() < 1 || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
+    if(engine_world.audio_buffers.empty() || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
-    if((uint32_t)effect_ID >= engine_world.audio_buffers.size())
+    if((uint32_t)effect_ID >= engine_world.audio_map.size())
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
