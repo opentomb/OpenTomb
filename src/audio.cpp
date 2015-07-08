@@ -1030,8 +1030,10 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
+        {
             ConsoleInfo::instance().addLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
+        }
     }
     else
     {

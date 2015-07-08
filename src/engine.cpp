@@ -2243,14 +2243,13 @@ int lua_SetEntityBodyMass(lua_State *lua)
     uint16_t argn  = 3;
     bool dynamic = false;
 
-    btScalar mass;
-
     if(ent && (static_cast<int>(ent->m_bf.bone_tags.size()) >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
             btVector3 inertia (0.0, 0.0, 0.0);
 
+            btScalar mass = 0;
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
