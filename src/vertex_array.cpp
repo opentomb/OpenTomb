@@ -3,9 +3,11 @@
 #include <cassert>
 #include <cstring>
 
-VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, struct VertexArrayAttribute *attributes)
+VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexArrayAttribute *attributes)
 {
     glGenVertexArrays(1, &m_vertexArrayObject);
+    
+    assert(m_vertexArrayObject && "Incorrect OpenGL function setup");
     glBindVertexArray(m_vertexArrayObject);
     
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, element_vbo);
