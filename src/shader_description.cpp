@@ -10,19 +10,16 @@
 
 #include <cstdlib>
 #include <cassert>
-#include <cstdio>
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShader(type);
     if (!loadShaderFromFile(shader, filename, additionalDefines))
         abort();
-    printf("**** shader %d CREATED\n", shader);
 }
 
 ShaderStage::~ShaderStage()
 {
-    printf("**** shader %d DESTROYED\n", shader);
     glDeleteShader(shader);
 }
 
@@ -40,12 +37,10 @@ ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStag
     printShaderInfoLog(program);
     
     sampler = glGetUniformLocation(program, "color_map");
-    printf("**** program %d CREATED\n", program);
 }
 
 ShaderDescription::~ShaderDescription()
 {
-    printf("**** program %d DESTROYED\n", program);
     glDeleteProgram(program);
 }
 

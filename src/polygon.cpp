@@ -42,7 +42,7 @@ bool Polygon::isBroken() const
 
 void Polygon::findNormal()
 {
-    auto v1 = vertices[1].position - vertices[0].position;
+    auto v1 = vertices[0].position - vertices[1].position;
     auto v2 = vertices[2].position - vertices[1].position;
     plane = v1.cross(v2).normalized();
     plane[3] = plane.length();
