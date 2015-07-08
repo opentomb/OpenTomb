@@ -443,7 +443,6 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
 
 void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 {
-    return;
     uint8_t *nch, *ch = (uint8_t*)text;
     FT_Vector kern;
 
