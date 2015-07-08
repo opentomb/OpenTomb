@@ -1,16 +1,16 @@
 // GLSL vertex program for various room effects (water/flicker) etc.
 
-attribute vec3 position;
-attribute vec4 color;
-attribute vec3 normal;
-attribute vec2 texCoord;
+in vec3 position;
+in vec4 color;
+in vec3 normal;
+in vec2 texCoord;
 
 uniform mat4 modelViewProjection;
 uniform	vec4 tintMult;
 uniform float fCurrentTick;
 
-varying vec4 varying_color;
-varying vec2 varying_texCoord;
+out vec4 varying_color;
+out vec2 varying_texCoord;
 
 void main(void)
 {

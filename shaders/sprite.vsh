@@ -2,15 +2,15 @@
 
 // Per-Vertex inputs
 // - Position of sprite
-attribute vec3 position;
+in vec3 position;
 // - Tex coord (pass-through)
-attribute vec2 texCoord;
+in vec2 texCoord;
 // - Relative position of corner
-attribute vec2 cornerOffset;
+in vec2 cornerOffset;
 
 // Per-Vertex outputs
 // - Tex coord (pass-through
-varying vec2 varying_texCoord;
+out vec2 varying_texCoord;
 
 // Global parameters
 uniform mat4 modelView;

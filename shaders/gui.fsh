@@ -1,9 +1,12 @@
 // GLSL fragment program for drawing a screen-aligned square
 
 // Varying attribute for color
-varying vec4 varying_color;
+in vec4 varying_color;
+
+// Color output
+out vec4 color;
 
 void main(void)
 {
-    gl_FragColor = varying_color;
+    color = varying_color;
 }

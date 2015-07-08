@@ -2,7 +2,7 @@
 // Does the most simple drawing possible, because all information is discarded
 // anyway and only the stencil buffer used.
 
-attribute vec3 position;
+in vec3 position;
 
 uniform mat4 modelViewProjection;
 

@@ -172,7 +172,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     fclose(file);
 
     //printf ( "source = %s\n", buf );
-    static const char* version = "#version 410\n";
+    static const char* version = "#version 150\n";
     static const GLint versionLen = strlen(version);
     if (additionalDefines)
     {

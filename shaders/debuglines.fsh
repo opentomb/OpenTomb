@@ -1,9 +1,12 @@
 // debuglines.fsh
 // Simple shading for the debug lines. No texture, only color
 
-varying vec3 varying_color;
+in vec3 varying_color;
+
+// Color output
+out vec4 color;
 
 void main(void)
 {
-    gl_FragColor = vec4(varying_color, 1);
+    color = vec4(varying_color, 1);
 }

@@ -1,16 +1,16 @@
 // GLSL vertex program for drawing text
 
-attribute vec4 color;
-attribute vec2 texCoord;
-attribute vec2 position;
+in vec4 color;
+in vec2 texCoord;
+in vec2 position;
 
 // Transformation data to get to the screen coordinates
 uniform vec2 screenSize;
 
 // Varying attribute for color
-varying vec4 varying_color;
+out vec4 varying_color;
 // Varying attribute for texture coordinate
-varying vec2 varying_texCoord;
+out vec2 varying_texCoord;
 
 void main(void)
 {
