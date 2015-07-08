@@ -6,7 +6,14 @@ struct ShaderStage
 {
     GLuint shader;
     
+    static ShaderStage* create(GLenum type, const char *filename, const char *additionalDefines = 0) {
+        return new ShaderStage(type, filename, additionalDefines);
+    }
+    
+private:
     ShaderStage(GLenum type, const char *filename, const char *additionalDefines = 0);
+    
+public:
     ~ShaderStage();
 };
 

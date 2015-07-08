@@ -89,17 +89,31 @@ int checkOpenGLError()
 
 void printShaderInfoLog (GLuint object)
 {
+    const auto isProgram = glIsProgram(object);
+    const auto isShader = glIsShader(object);
+    
+    if(!(isProgram^isShader)) {
+        Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
+        return;
+    }
+    
     GLint       logLength     = 0;
     GLint       charsWritten  = 0;
     GLchar * infoLog;
 
     checkOpenGLError();                         // check for OpenGL errors
-    glGetShaderiv(object, GL_INFO_LOG_LENGTH, &logLength);
+    if(isProgram)
+        glGetProgramiv(object, GL_INFO_LOG_LENGTH, &logLength);
+    else
+        glGetShaderiv(object, GL_INFO_LOG_LENGTH, &logLength);
 
     if (logLength > 0)
     {
         infoLog = (GLchar*)malloc(logLength);
-        glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
+        if(isProgram)
+            glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
+        else
+            glGetShaderInfoLog(object, logLength, &charsWritten, infoLog);
         Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
         Sys_DebugLog(GL_LOG_FILENAME, "%s", (const char*)infoLog);
         free(infoLog);
@@ -117,10 +131,14 @@ int loadShaderFromBuff(GLuint ShaderObj, char * source)
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     if(checkOpenGLError())                          // check for OpenGL errors
     {
+        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
         return 0;
     }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
+
+    if(!compileStatus)
+        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
 
     return compileStatus != 0;
 }
@@ -154,15 +172,20 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     fclose(file);
 
     //printf ( "source = %s\n", buf );
+    static const char* version = "#version 410\n";
+    static const GLint versionLen = strlen(version);
     if (additionalDefines)
     {
-        const char *bufs[2] = { additionalDefines, buf };
-        const GLint lengths[2] = { (GLint) strlen(additionalDefines), size };
-        glShaderSource(ShaderObj, 2, bufs, lengths);
+        const char *bufs[3] = { version, additionalDefines, buf };
+        const GLint lengths[3] = { versionLen, (GLint) strlen(additionalDefines), size };
+        glShaderSource(ShaderObj, 3, bufs, lengths);
     }
     else
     {
-        glShaderSource(ShaderObj, 1, (const char **)&buf, &size);
+        
+        const char *bufs[2] = { version, buf };
+        const GLint lengths[2] = { versionLen, size };
+        glShaderSource(ShaderObj, 2, bufs, lengths);
     }
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
     free(buf);                                   // compile the particle vertex shader, and print out
@@ -170,10 +193,16 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     if(checkOpenGLError())                       // check for OpenGL errors
     {
+        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
         return 0;
     }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
+
+    if(compileStatus != GL_TRUE)
+        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+    else
+        Sys_DebugLog(GL_LOG_FILENAME, "compilation succeeded");
 
     return compileStatus != 0;
 }

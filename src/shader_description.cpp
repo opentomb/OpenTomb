@@ -9,16 +9,20 @@
 #include "shader_description.h"
 
 #include <cstdlib>
+#include <cassert>
+#include <cstdio>
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShader(type);
     if (!loadShaderFromFile(shader, filename, additionalDefines))
         abort();
+    printf("**** shader %d CREATED\n", shader);
 }
 
 ShaderStage::~ShaderStage()
 {
+    printf("**** shader %d DESTROYED\n", shader);
     glDeleteShader(shader);
 }
 
@@ -28,13 +32,20 @@ ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStag
     glAttachShader(program, vertex.shader);
     glAttachShader(program, fragment.shader);
     glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+    
+    checkOpenGLError();
     printShaderInfoLog(program);
     
     sampler = glGetUniformLocation(program, "color_map");
+    printf("**** program %d CREATED\n", program);
 }
 
 ShaderDescription::~ShaderDescription()
 {
+    printf("**** program %d DESTROYED\n", program);
     glDeleteProgram(program);
 }
 
@@ -46,6 +57,11 @@ GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const Shad
     glBindAttribLocation(program, vertex_attribs::position, "position");
     glBindAttribLocation(program, vertex_attribs::color, "color");
     glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
     printShaderInfoLog(program);
 }
 
@@ -56,6 +72,11 @@ TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const Sh
     glBindAttribLocation(program, vertex_attribs::color, "color");
     glBindAttribLocation(program, vertex_attribs::tex_coord, "texCoord");
     glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
     
     printShaderInfoLog(program);
 
@@ -71,6 +92,11 @@ SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, cons
     glBindAttribLocation(program, vertex_attribs::corner_offset, "cornerOffset");
     glBindAttribLocation(program, vertex_attribs::tex_coord, "texCoord");
     glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
     printShaderInfoLog(program);
 }
 
@@ -83,7 +109,12 @@ UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const 
     glBindAttribLocation(program, VertexAttribs::Normal, "normal");
     glBindAttribLocation(program, VertexAttribs::MatrixIndex, "matrixIndex");
     glLinkProgram(program);
-    
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
+
     printShaderInfoLog(program);
     
     model_view_projection = glGetUniformLocation(program, "modelViewProjection");
