@@ -1,12 +1,10 @@
+#include "frustum.h"
 
 #include <cstdio>
 #include <cstdlib>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
-#include "frustum.h"
 #include "vmath.h"
 #include "camera.h"
 #include "polygon.h"
@@ -189,7 +187,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
             if(!current_gen->split_by_plane(n, &tmp))
             {
                 portal->dest_room->frustum.pop_back();
-                return NULL;
+                return nullptr;
             }
         }
 
@@ -197,7 +195,6 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
 
         current_gen->parent = emitter;                                      // add parent pointer
         current_gen->parents_count = emitter->parents_count + 1;
-        portal->dest_room->active_frustums++;
         if(portal->dest_room->max_path < current_gen->parents_count)
         {
             portal->dest_room->max_path = current_gen->parents_count;       // maximum path to the room

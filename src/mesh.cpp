@@ -22,13 +22,13 @@ void BaseMesh::clear()
 {
     if(m_vboVertexArray)
     {
-        glDeleteBuffersARB(1, &m_vboVertexArray);
+        glDeleteBuffers(1, &m_vboVertexArray);
         m_vboVertexArray = 0;
     }
 
     if(m_vboIndexArray)
     {
-        glDeleteBuffersARB(1, &m_vboIndexArray);
+        glDeleteBuffers(1, &m_vboIndexArray);
         m_vboIndexArray = 0;
     }
 
@@ -69,28 +69,28 @@ void BaseMesh::genVBO(const Render* /*renderer*/)
         return;
 
     /// now, begin VBO filling!
-    glGenBuffersARB(1, &m_vboVertexArray);
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vboVertexArray);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_vertices.size() * sizeof(Vertex), m_vertices.data(), GL_STATIC_DRAW_ARB);
+    glGenBuffers(1, &m_vboVertexArray);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboVertexArray);
+    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), m_vertices.data(), GL_STATIC_DRAW);
 
     // Store additional skinning information
     if (!m_matrixIndices.empty())
     {
-        glGenBuffersARB(1, &m_vboSkinArray);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vboSkinArray);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_matrixIndices.size(), m_matrixIndices.data(), GL_STATIC_DRAW_ARB);
+        glGenBuffers(1, &m_vboSkinArray);
+        glBindBuffer(GL_ARRAY_BUFFER, m_vboSkinArray);
+        glBufferData(GL_ARRAY_BUFFER, m_matrixIndices.size(), m_matrixIndices.data(), GL_STATIC_DRAW);
     }
 
     // Fill indexes vbo
-    glGenBuffersARB(1, &m_vboIndexArray);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, m_vboIndexArray);
+    glGenBuffers(1, &m_vboIndexArray);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vboIndexArray);
 
     GLsizeiptr elementsSize = sizeof(GLuint) * m_alphaElements;
     for (uint32_t i = 0; i < m_texturePageCount; i++)
     {
         elementsSize += sizeof(GLuint) * m_elementsPerTexture[i];
     }
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, m_elements.data(), GL_STATIC_DRAW_ARB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsSize, m_elements.data(), GL_STATIC_DRAW);
 
     // Prepare vertex array
     VertexArrayAttribute attribs[] = {
@@ -108,18 +108,18 @@ void BaseMesh::genVBO(const Render* /*renderer*/)
     if (!m_allAnimatedElements.empty())
     {
         // And upload.
-        glGenBuffersARB(1, &m_animatedVboVertexArray);
-        glBindBufferARB(GL_ARRAY_BUFFER, m_animatedVboVertexArray);
-        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(AnimatedVertex) * m_animatedVertices.size(), m_animatedVertices.data(), GL_STATIC_DRAW);
+        glGenBuffers(1, &m_animatedVboVertexArray);
+        glBindBuffer(GL_ARRAY_BUFFER, m_animatedVboVertexArray);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(AnimatedVertex) * m_animatedVertices.size(), m_animatedVertices.data(), GL_STATIC_DRAW);
 
-        glGenBuffersARB(1, &m_animatedVboIndexArray);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, m_animatedVboIndexArray);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_allAnimatedElements.size(), m_allAnimatedElements.data(), GL_STATIC_DRAW);
+        glGenBuffers(1, &m_animatedVboIndexArray);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_animatedVboIndexArray);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * m_allAnimatedElements.size(), m_allAnimatedElements.data(), GL_STATIC_DRAW);
 
         // Prepare empty buffer for tex coords
-        glGenBuffersARB(1, &m_animatedVboTexCoordArray);
-        glBindBufferARB(GL_ARRAY_BUFFER, m_animatedVboTexCoordArray);
-        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * m_animatedVertices.size(), 0, GL_STREAM_DRAW);
+        glGenBuffers(1, &m_animatedVboTexCoordArray);
+        glBindBuffer(GL_ARRAY_BUFFER, m_animatedVboTexCoordArray);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * m_animatedVertices.size(), 0, GL_STREAM_DRAW);
 
         // Create vertex array object.
         VertexArrayAttribute attribs[] = {

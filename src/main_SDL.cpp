@@ -10,7 +10,6 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
@@ -53,6 +52,9 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+
+#include <lua.hpp>
+#include "LuaState.h"
 
 #define NO_AUDIO        0
 
@@ -114,7 +116,7 @@ std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 void Engine_InitGL()
 {
-    InitGLExtFuncs();
+    glewInit();
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
@@ -392,16 +394,18 @@ void Engine_Start()
     // Clearing up memory for initial level loading.
     engine_world.prepare();
 
+#ifdef NDEBUG
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
+#endif
 
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    luaL_dofile(engine_lua, "autoexec.lua");
+    luaL_dofile(engine_lua.getState(), "autoexec.lua");
 }
 
 
@@ -508,7 +512,7 @@ void ShowDebugInfo()
 
     light_position = engine_camera.m_pos;
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);

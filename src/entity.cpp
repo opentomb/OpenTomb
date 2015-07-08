@@ -19,6 +19,9 @@
 #include "ragdoll.h"
 #include "hair.h"
 
+#include <lua.hpp>
+#include "LuaState.h"
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
@@ -108,9 +111,6 @@ void Entity::disableCollision()
 
 void Entity::genEntityRigidBody()
 {
-    btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-
     if(m_bf.animations.model == NULL)
     {
         return;
@@ -146,9 +146,11 @@ void Entity::genEntityRigidBody()
 
         if(cshape)
         {
-            cshape->calculateLocalInertia(0.0, localInertia);
+            btVector3 localInertia(0, 0, 0);
+            if(dynamic_cast<btBvhTriangleMeshShape*>(cshape) == nullptr)
+                cshape->calculateLocalInertia(0.0, localInertia);
 
-            startTransform = m_transform * m_bf.bone_tags[i].full_transform;
+            btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             m_bt.bt_body.back().reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
             //bt.bt_body[i]->setCollisionFlags(bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -1048,17 +1050,7 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-
-        int top = lua_gettop(engine_lua);
-        lua_getglobal(engine_lua, "tlist_RunTrigger");
-        if(lua_isfunction(engine_lua, -1))
-        {
-            lua_pushnumber(engine_lua, lowest_sector->trig_index);
-            lua_pushnumber(engine_lua, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
-            lua_pushnumber(engine_lua, m_id);
-            lua_CallAndLog(engine_lua, 3, 1, 0);
-        }
-        lua_settop(engine_lua, top);
+        engine_lua["tlist_RunTrigger"](lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
     }
 }
 
@@ -1554,7 +1546,6 @@ bool Entity::createRagdoll(RDSetup* setup)
         m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
         if(!m_bf.bone_tags[i].parent) {
-            m_bf.bone_tags[i].mesh_base;
             btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
             m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);

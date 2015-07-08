@@ -257,8 +257,9 @@ struct AudioSettings
 {
     ALfloat     music_volume = 0;
     ALfloat     sound_volume = 0;
-    ALboolean   use_effects = AL_FALSE;
-    ALboolean   listener_is_player = AL_FALSE; // RESERVED FOR FUTURE USE
+    bool        use_effects = false;
+    bool        effects_initialized = false;
+    bool        listener_is_player = false; // RESERVED FOR FUTURE USE
     int         stream_buffer_size = 0;
 };
 

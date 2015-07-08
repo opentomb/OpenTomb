@@ -9,15 +9,15 @@ print("Level script loaded (ALEXHUB.lua)");
 static_tbl[10] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Pillar
 static_tbl[11] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};                 -- Wall lamp
 static_tbl[12] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Book shelf
-static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};       -- Book shelf 1, only upper part
-static_tbl[14] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};       -- Book shelf 2, only upper part
+static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};    -- Book shelf 1, only upper part
+static_tbl[14] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};    -- Book shelf 2, only upper part
 static_tbl[18] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Locker
 static_tbl[19] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};                 -- Curtains
 static_tbl[20] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Book shelf 3
 static_tbl[23] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Doorway
 static_tbl[25] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};             -- Stairs
-static_tbl[28] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};       -- Doorway blocker: dummy static 1!
-static_tbl[29] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};       -- Doorway blocker: dummy static 2!
+static_tbl[28] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};    -- Doorway blocker: dummy static 1!
+static_tbl[29] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};    -- Doorway blocker: dummy static 2!
 static_tbl[31] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};             -- Stone arc
 static_tbl[32] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Stone arc with pillar 1 (collision only for pillar)
 static_tbl[33] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};                 -- Stone arc with pillar 2 (collision only for pillar)

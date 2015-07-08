@@ -11,7 +11,9 @@
 #include "controls.h"
 #include "object.h"
 
-#define LEVEL_NAME_MAX_LEN                      (64)
+#include <lua.hpp>
+#include "LuaState.h"
+
 #define MAX_ENGINE_PATH                         (1024)
 
 #define LEVEL_FORMAT_PC         0
@@ -61,8 +63,8 @@ struct lua_State;
 struct EngineContainer
 {
     uint16_t object_type = 0;
-    uint16_t collision_type = COLLISION_TYPE_NONE;
-    uint16_t collision_shape = 0;
+    lua::Integer collision_type = COLLISION_TYPE_NONE;
+    lua::Integer collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
 };
@@ -70,12 +72,12 @@ struct EngineContainer
 //! @todo Use bools where appropriate.
 struct EngineControlState
 {
-    int8_t   free_look = 0;
+    bool     free_look = false;
     btScalar free_look_speed = 0;
 
-    int8_t   mouse_look = 0;
+    bool     mouse_look = false;
     btScalar cam_distance = 0;
-    int8_t   noclip = 0;
+    bool     noclip = false;
 
     btScalar look_axis_x = 0;                       // Unified look axis data.
     btScalar look_axis_y = 0;
@@ -253,27 +255,55 @@ void Engine_Display();
 
 void Engine_BTInit();
 
-int lua_print(lua_State*);
-bool Engine_LuaInit();
+int lua_print(lua_State *state);
+void Engine_LuaInit();
 void Engine_LuaClearTasks();
-void Engine_LuaRegisterFuncs(lua_State *lua);
+void Engine_LuaRegisterFuncs(lua::State &state);
 
 // Simple override to register both upper- and lowercase versions of function name.
 
-void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
+template<typename Function>
+inline void lua_registerc(lua::State& state, const std::string& func_name, Function func)
+{
+    std::string uc, lc;
+    for(char c : func_name)
+    {
+        lc += std::tolower(c);
+        uc += std::toupper(c);
+    }
+
+    state.set(func_name.c_str(), func);
+    state.set(lc.c_str(), func);
+    state.set(uc.c_str(), func);
+}
+
+template<>
+inline void lua_registerc(lua::State& state, const std::string& func_name, int (*func)(lua_State*))
+{
+    std::string uc, lc;
+    for(char c : func_name)
+    {
+        lc += std::tolower(c);
+        uc += std::toupper(c);
+    }
+
+    lua_register(state.getState(), func_name.c_str(), func);
+    lua_register(state.getState(), lc.c_str(), func);
+    lua_register(state.getState(), uc.c_str(), func);
+}
 
 // PC-specific level loader routines.
 
-bool Engine_LoadPCLevel(const char *name);
-int  Engine_GetPCLevelVersion(const char *name);
+bool Engine_LoadPCLevel(const std::string &name);
+int  Engine_GetPCLevelVersion(const std::string &name);
 
 // General level loading routines.
 
-bool Engine_FileFound(const char *name, bool Write = false);
-int  Engine_GetLevelFormat(const char *name);
-void Engine_GetLevelName(char *name, const char *path);
-void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
-int  Engine_LoadMap(const char *name);
+bool Engine_FileFound(const std::string &name, bool Write = false);
+int  Engine_GetLevelFormat(const std::string &name);
+std::string Engine_GetLevelName(const std::string &path);
+std::string Engine_GetLevelScriptName(int game_version, const std::string &postfix = NULL);
+int  Engine_LoadMap(const std::string &name);
 
 int  Engine_ExecCmd(const char *ch);
 

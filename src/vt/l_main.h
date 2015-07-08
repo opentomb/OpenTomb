@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <string>
+
 #include "tr_types.h"
 #include "tr_versions.h"
 
@@ -524,7 +526,7 @@ class TR_Level {
         
     char     sfx_path[256];
         
-    void read_level(const char *filename, int32_t game_version);
+    void read_level(const std::string &filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
 
     protected:

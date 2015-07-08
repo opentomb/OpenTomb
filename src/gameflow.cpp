@@ -1,6 +1,3 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -17,6 +14,9 @@
 #include "gui.h"
 #include "anim_state_control.h"
 #include "world.h"
+
+#include <lua.hpp>
+#include "LuaState.h"
 
 gameflow_manager_s gameflow_manager;
 
@@ -45,37 +45,12 @@ void Gameflow_Do()
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
                 if(Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
                 {
-                    int top = lua_gettop(engine_lua);
-                    lua_getglobal(engine_lua, "getNextLevel");                       // Must be loaded from gameflow script!
-                    lua_pushnumber(engine_lua, gameflow_manager.CurrentGameID);      // Push the 1st argument
-                    lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);     // Push the 2nd argument
-                    lua_pushnumber(engine_lua, gameflow_manager.Actions[i].operand); // Push the 3rd argument
-
-                    if (lua_CallAndLog(engine_lua, 3, 3, 0))
-                    {
-                        gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);   // First value in stack is level id
-                        strncpy(gameflow_manager.CurrentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN); // Second value in stack is level name
-                        strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH); // Third value in stack is level path
-
-                        // Now, load the level! + if character exists then save inventory
-                        /*if((engine_world.character != NULL) && (engine_world.character->character != NULL))
-                        {
-                            inventory_node_p i = engine_world.character->character->inventory;
-                            engine_world.character->character->inventory = NULL;
-                            Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                            engine_world.character->character->inventory = i;
-                        }
-                        else*/
-                        {
-                            Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                        }
-                    }
-                    else
-                    {
-                        Gui_FadeStop(FADER_LOADSCREEN);
-                        ConsoleInfo::instance().addLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
-                    }
-                    lua_settop(engine_lua, top);
+                    const char* levelName;
+                    const char* levelPath;
+                    lua::tie(levelPath, levelName, gameflow_manager.CurrentLevelID) = engine_lua["getNextLevel"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), int(gameflow_manager.Actions[i].operand));
+                    gameflow_manager.CurrentLevelName = levelName;
+                    gameflow_manager.CurrentLevelPath = levelPath;
+                    Engine_LoadMap(gameflow_manager.CurrentLevelPath);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 }
                 else

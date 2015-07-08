@@ -19,5 +19,5 @@ static_tbl[22] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};   
 static_tbl[30] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Barbed wire 1
 static_tbl[40] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Barbed wire 2
 static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Ceiling tile
-static_tbl[48] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Horizontal collision panel: dummy static!
+static_tbl[48] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};  -- Horizontal collision panel: dummy static!
 static_tbl[49] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Chain

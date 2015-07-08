@@ -3,10 +3,6 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
@@ -974,7 +970,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
 }
 
 
-int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
+int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if((model == NULL) || (items_tree.empty()))
@@ -991,10 +987,7 @@ int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_
     item->type = type;
     item->count = count;
     item->name[0] = 0;
-    if(name)
-    {
-        strncpy(item->name, name, 64);
-    }
+    strncpy(item->name, name.c_str(), 64);
     item->bf = std::move(bf);
 
     items_tree[item->id] = item;
@@ -1089,7 +1082,8 @@ void Room::buildNearRoomsList()
         addToNearRoomsList(p.dest_room);
     }
 
-    for(const std::shared_ptr<Room>& r : near_room_list)
+    auto nrl = near_room_list;
+    for(const std::shared_ptr<Room>& r : nrl)
     {
         if(!r)
             continue;

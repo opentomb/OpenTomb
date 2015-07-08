@@ -19,7 +19,7 @@ static_tbl[07] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};   
 
 -- FURNITURE statics
 
-static_tbl[10] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Dummy cube
+static_tbl[10] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Dummy cube
 
 -- ROCK statics
 
@@ -41,4 +41,4 @@ static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH}
 static_tbl[42] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Pillar 2
 static_tbl[43] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Stone lion
 static_tbl[46] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Ornate arch with pillars
-static_tbl[47] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Block panel: dummy static!
+static_tbl[47] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Block panel: dummy static!

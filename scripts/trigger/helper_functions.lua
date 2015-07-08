@@ -24,5 +24,5 @@ end;
 
 function swapEntityEvent(object_id)
     local current_event = getEntityEvent(object_id);
-    setEntityEvent(object_id, bit32.bnot(current_event));
+    setEntityEvent(object_id, not current_event);
 end;

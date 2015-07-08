@@ -36,124 +36,50 @@
 #include "bsp_tree.h"
 #include "shader_description.h"
 
-#include "luahelper.h"
+#include <lua.hpp>
+#include "LuaState.h"
 
-lua_State *objects_flags_conf = NULL;
-lua_State *ent_ID_override = NULL;
-lua_State *level_script = NULL;
+lua::State objects_flags_conf;
+lua::State ent_ID_override;
+lua::State level_script;
 
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if((objects_flags_conf != NULL) && (ent->m_bf.animations.model != NULL))
+    if(ent->m_bf.animations.model != NULL && objects_flags_conf["getEntityModelProperties"])
     {
-        int top = lua_gettop(objects_flags_conf);
-        assert(top >= 0);
-        lua_getglobal(objects_flags_conf, "getEntityModelProperties");
-        if(lua_isfunction(objects_flags_conf, -1))
-        {
-            lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
-            if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
-            {
-                ent->m_self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
-                ent->m_self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
-                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
-                ent->m_typeFlags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
-            }
-        }
-        lua_settop(objects_flags_conf, top);
+        uint16_t flg;
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
+        ent->m_typeFlags |= flg;
     }
 
-    if((level_script != NULL) && (ent->m_bf.animations.model != NULL))
+    if(ent->m_bf.animations.model != NULL && level_script["getEntityModelProperties"])
     {
-        int top = lua_gettop(level_script);
-        assert(top >= 0);
-        lua_getglobal(level_script, "getEntityModelProperties");
-        if(lua_isfunction(level_script, -1))
-        {
-            lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
-            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
-            {
-                if(!lua_isnil(level_script, -4))
-                {
-                    ent->m_self->collision_type = lua_tointeger(level_script, -4);        // get collision type flag
-                }
-                if(!lua_isnil(level_script, -3))
-                {
-                    ent->m_self->collision_shape = lua_tointeger(level_script, -3);       // get collision shape flag
-                }
-                if(!lua_isnil(level_script, -2))
-                {
-                    ent->m_bf.animations.model->hide = lua_tointeger(level_script, -2)!=0;   // get info about model visibility
-                }
-                if(!lua_isnil(level_script, -1))
-                {
-                    ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->m_typeFlags |= lua_tointeger(level_script, -1);                 // get traverse information
-                }
-            }
-        }
-        lua_settop(level_script, top);
+        uint16_t flg;
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
+        ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+        ent->m_typeFlags |= flg;                 // get traverse information
     }
 }
 
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
-    if((objects_flags_conf != NULL) && ent->m_bf.animations.model)
+    if(ent->m_bf.animations.model)
     {
-        int top = lua_gettop(objects_flags_conf);
-        assert(top >= 0);
-        lua_getglobal(objects_flags_conf, "getEntityFunction");
-        if(lua_isfunction(objects_flags_conf, -1))
-        {
-            lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
-            if (lua_CallAndLog(objects_flags_conf, 2, 1, 0))
-            {
-                if(!lua_isnil(objects_flags_conf, -1))
-                {
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id());
-                }
-            }
-        }
-        lua_settop(objects_flags_conf, top);
+        const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
+        if(funcName)
+            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
 }
 
 
-bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
+void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int entity_id)
 {
-    if(lua)
-    {
-        const char* func_template = "%s_init";
-        char buf[64] = {0};
-        int top = lua_gettop(lua);
-        assert(top >= 0);
-        snprintf(buf, 64, func_template, func_name);
-        lua_getglobal(lua, buf);
-
-        if(lua_isfunction(lua, -1))
-        {
-            snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
-            luaL_loadstring(lua, buf);
-            if (lua_CallAndLog(lua, 0, LUA_MULTRET, 0))
-            {
-                lua_pushinteger(lua, entity_id);
-                lua_CallAndLog(lua, 1, 0, 0);
-            }
-            lua_settop(lua, top);
-            return true;
-        }
-        else
-        {
-            lua_settop(lua, top);
-            return false;
-        }
-    }
-    return false;
+    char bufC[64] = "";
+    snprintf(bufC, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
+    state.doString(bufC);
+    state[(func_name + "_init").c_str()](entity_id);
 }
 
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
@@ -164,31 +90,7 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
 
 void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
-    if(level_script != NULL)
-    {
-        int top = lua_gettop(level_script);
-        lua_getglobal(level_script, "getStaticMeshProperties");
-        if(lua_isfunction(level_script, -1))
-        {
-            lua_pushinteger(level_script, r_static->object_id);
-            if(lua_CallAndLog(level_script, 1, 3, 0))
-            {
-                if(!lua_isnil(level_script, -3))
-                {
-                    r_static->self->collision_type = lua_tointeger(level_script, -3);
-                }
-                if(!lua_isnil(level_script, -2))
-                {
-                    r_static->self->collision_shape = lua_tointeger(level_script, -2);
-                }
-                if(!lua_isnil(level_script, -1))
-                {
-                    r_static->hide = lua_tointeger(level_script, -1)!=0;
-                }
-            }
-        }
-        lua_settop(level_script, top);
-    }
+    lua::tie(r_static->self->collision_type, r_static->self->collision_shape, r_static->hide) = level_script["getStaticMeshProperties"](r_static->object_id);
 }
 
 /*
@@ -695,7 +597,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 
 int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 {
-    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
+    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size))
     {
         return 0;
     }
@@ -758,8 +660,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -769,8 +671,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -793,8 +695,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -804,8 +706,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -972,7 +874,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
+                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
                                                 if(only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
@@ -981,7 +883,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
                                                 }
                                             }
                                             else
@@ -989,16 +891,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 // Ordinary type case (e.g. heavy switch).
                                                 snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
                                                 strcat(item_events, buf);
-                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
+                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, true) \n");
                                             }
                                             break;
 
                                         case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
                                     }
 
@@ -1169,7 +1071,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 strcat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n");
                                 strcat(script, once_condition);
                                 strcat(script, single_events);
-                                strcat(script, "   setEntitySectorStatus(entity_index, 1); \n");
+                                strcat(script, "   setEntitySectorStatus(entity_index, true); \n");
 
                                 if(condition)
                                 {
@@ -1222,8 +1124,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     if(action_type != TR_ACTIONTYPE_BYPASS)
                     {
                         // Sys_DebugLog("triggers.lua", script);    // Debug!
-                        luaL_loadstring(engine_lua, script);
-                        lua_CallAndLog(engine_lua, 0, LUA_MULTRET, 0); // Execute compiled script.
+                        engine_lua.doString(script);
                     }
                 }
                 break;
@@ -1650,7 +1551,7 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
-void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 floor, float z0, float z1, float z2, float z3)
+void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
@@ -1659,14 +1560,14 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8
         return;
     }
 
-    if(pen)   rs->floor_penetration_config = *pen;
-    if(diag)  rs->floor_diagonal_type = *diag;
-    if(floor) rs->floor = *floor;
+    if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<int>(pen);
+    if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(diag);
+    if(floor.is<lua::Integer>()) rs->floor = floor;
     rs->floor_corners[0] = {z0,z1,z2};
     rs->floor_corners[0][3] = z3;
 }
 
-void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 ceil, float z0, float z1, float z2, float z3)
+void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value ceil, float z0, float z1, float z2, float z3)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
@@ -1675,9 +1576,10 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UIn
         return;
     }
 
-    if(pen)   rs->ceiling_penetration_config = *pen;
-    if(diag)  rs->ceiling_diagonal_type = *diag;
-    if(ceil)  rs->ceiling = *ceil;
+    if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(pen);
+    if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<int>(diag);
+    if(ceil.is<lua::Integer>()) rs->ceiling = ceil;
+
     rs->ceiling_corners[0] = {z0,z1,z2};
     rs->ceiling_corners[0][3] = z3;
 }
@@ -1697,7 +1599,7 @@ void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
     }
 }
 
-void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ftflag, lua::UInt8 cpflag, lua::UInt8 ctflag)
+void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ftflag, lua::Value cpflag, lua::Value ctflag)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
@@ -1706,10 +1608,10 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ft
         return;
     }
 
-    if(fpflag)  rs->floor_penetration_config = *fpflag;
-    if(ftflag)  rs->floor_diagonal_type = *ftflag;
-    if(cpflag)  rs->ceiling_penetration_config = *cpflag;
-    if(ctflag)  rs->ceiling_diagonal_type = *ctflag;
+    if(fpflag.is<lua::Integer>())  rs->floor_penetration_config = static_cast<int>(fpflag);
+    if(ftflag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(ftflag);
+    if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(cpflag);
+    if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -1717,104 +1619,83 @@ void Res_ScriptsOpen(int engine_version)
     char temp_script_name[256];
     Engine_GetLevelScriptName(engine_version, temp_script_name);
 
-    level_script = luaL_newstate();
-    if(level_script != NULL)
+    lua_register(level_script.getState(), "print", lua_print);
+    level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
+    level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+    level_script.set("setSectorPortal", lua_SetSectorPortal);
+    level_script.set("setSectorFlags", lua_SetSectorFlags);
+
+    try {
+        level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+
+    if(Engine_FileFound(temp_script_name, false))
     {
-        luaL_openlibs(level_script);
-        lua_register(level_script, "print", lua_print);
-        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
-        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
-        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
-        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
-
-        luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
-
-        if(Engine_FileFound(temp_script_name, false))
-        {
-            int lua_err = luaL_dofile(level_script, temp_script_name);
-            if(lua_err)
-            {
-                Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
-                lua_pop(level_script, 1);
-                lua_close(level_script);
-                level_script = NULL;
-            }
+        try {
+            level_script.doFile(temp_script_name);
+        }
+        catch(lua::RuntimeError& error) {
+            Sys_DebugLog("lua_out.txt", "%s", error.what());
+        }
+        catch(lua::LoadError& error) {
+            Sys_DebugLog("lua_out.txt", "%s", error.what());
         }
     }
 
-    objects_flags_conf = luaL_newstate();
-    if(objects_flags_conf != NULL)
-    {
-        luaL_openlibs(objects_flags_conf);
-        int lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_properties.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
-            lua_pop(objects_flags_conf, 1);
-            lua_close(objects_flags_conf);
-            objects_flags_conf = NULL;
-        }
-        lua_err = lua_pcall(objects_flags_conf, 0, 0, 0);
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
-            lua_pop(objects_flags_conf, 1);
-            lua_close(objects_flags_conf);
-            objects_flags_conf = NULL;
-        }
+
+    try {
+        objects_flags_conf.doFile("scripts/entity/entity_properties.lua");
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
     }
 
-    ent_ID_override = luaL_newstate();
-    if(ent_ID_override != NULL)
-    {
-        luaL_openlibs(ent_ID_override);
-        int lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
-            lua_pop(ent_ID_override, 1);
-            lua_close(ent_ID_override);
-            ent_ID_override = NULL;
-        }
-        lua_err = lua_pcall(ent_ID_override, 0, 0, 0);
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
-            lua_pop(ent_ID_override, 1);
-            lua_close(ent_ID_override);
-            ent_ID_override = NULL;
-        }
+    try {
+        ent_ID_override.doFile("scripts/entity/entity_model_ID_override.lua");
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
     }
 }
 
 void Res_ScriptsClose()
 {
-    if(objects_flags_conf)
-    {
-        lua_close(objects_flags_conf);
-        objects_flags_conf = NULL;
-    }
-
-    if(ent_ID_override)
-    {
-        lua_close(ent_ID_override);
-        ent_ID_override = NULL;
-    }
-
-    if(level_script)
-    {
-        lua_close(level_script);
-        level_script = NULL;
-    }
 }
 
 void Res_AutoexecOpen(int engine_version)
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(engine_version, temp_script_name, "_autoexec");
+    std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
 
-    luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
-    luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
+    try {
+        engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    try {
+        engine_lua.doFile(temp_script_name);          // do level-specific autoexec
+    }
+    catch(lua::RuntimeError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
+    catch(lua::LoadError& error) {
+        Sys_DebugLog("lua_out.txt", "%s", error.what());
+    }
 }
 
 void TR_GenWorld(World *world, class VT_Level *tr)
@@ -2638,13 +2519,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
 
-        if(level_script)
-        {
-            int top = lua_gettop(level_script);
-            lua_getglobal(level_script, "UVRotate");
-            uvrotate_script = lua_tointeger(level_script, -1);
-            lua_settop(level_script, top);
-        }
+        level_script["UVRotate"].get(uvrotate_script);
 
         if(i < num_uvrotates)
         {
@@ -3213,14 +3088,14 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 
     // Now load into OpenGL
     GLuint arrayBuffer, elementBuffer;
-    glGenBuffersARB(1, &arrayBuffer);
-    glBindBufferARB(GL_ARRAY_BUFFER, arrayBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
+    glGenBuffers(1, &arrayBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    glGenBuffersARB(1, &elementBuffer);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
+    glGenBuffers(1, &elementBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 
     VertexArrayAttribute attribs[3] = {
@@ -3253,7 +3128,7 @@ void Res_GenVBOs(World *world)
 
 void Res_GenBaseItems(World* world)
 {
-    lua_CallVoidFunc(engine_lua, "genBaseItems");
+    engine_lua["genBaseItems"]();
 
     if(!world->items_tree.empty())
     {
@@ -3843,13 +3718,9 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 
 void TR_GenEntities(World *world, class VT_Level *tr)
 {
-    int top;
-
-    tr2_item_t *tr_item;
-
     for(uint32_t i=0;i<tr->items_count;i++)
     {
-        tr_item = &tr->items[i];
+        tr2_item_t *tr_item = &tr->items[i];
         std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
         entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
@@ -3881,36 +3752,15 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
         entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
 
-        if(ent_ID_override != NULL)
-        {
-            if(entity->m_bf.animations.model == NULL)
-            {
-                top = lua_gettop(ent_ID_override);                              // save LUA stack
-                lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
-                lua_pushinteger(ent_ID_override, tr->game_version);             // add to stack first argument
-                lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
-                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
-                {
-                    entity->m_bf.animations.model = world->getModelByID(lua_tointeger(ent_ID_override, -1));
-                }
-                lua_settop(ent_ID_override, top);                               // restore LUA stack
-            }
+        if(entity->m_bf.animations.model == nullptr) {
+            int id = ent_ID_override["getOverridedID"](tr->game_version, tr_item->object_id);
+            entity->m_bf.animations.model = world->getModelByID(id);
+        }
 
-            top = lua_gettop(ent_ID_override);                                  // save LUA stack
-            lua_getglobal(ent_ID_override, "getOverridedAnim");                 // add to the up of stack LUA's function
-            lua_pushinteger(ent_ID_override, tr->game_version);                 // add to stack first argument
-            lua_pushinteger(ent_ID_override, tr_item->object_id);               // add to stack second argument
-            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                       // call that function
-            {
-                int replace_anim_id = lua_tointeger(ent_ID_override, -1);
-                if(replace_anim_id > 0)
-                {
-                    SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
-                    std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
-                }
-            }
-            lua_settop(ent_ID_override, top);                                      // restore LUA stack
-
+        int replace_anim_id = ent_ID_override["getOverridedAnim"](tr->game_version, tr_item->object_id);
+        if(replace_anim_id > 0) {
+            SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
+            std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
         }
 
         if(entity->m_bf.animations.model == NULL)
@@ -3950,10 +3800,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM = lara->m_bf.animations.model;
 
-            top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, lara->id());
-            lua_setglobal(engine_lua, "player");
-            lua_settop(engine_lua, top);
+            engine_lua.set("player", lara->id());
 
             switch(tr->game_version)
             {
@@ -4284,9 +4131,9 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                     {
                         char buf[64] = {0};
                         snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
-                        luaL_dostring(engine_lua, buf);
+                        engine_lua.doString(buf);
                         snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
-                        luaL_dostring(engine_lua, buf);
+                        engine_lua.doString(buf);
                         ent->disableCollision();
                     }
                 }
