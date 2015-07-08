@@ -1,12 +1,10 @@
+#include "frustum.h"
 
 #include <cstdio>
 #include <cstdlib>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
-#include "frustum.h"
 #include "vmath.h"
 #include "camera.h"
 #include "polygon.h"
@@ -237,6 +235,7 @@ bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
  */
 bool Frustum::isPolyVisible(struct Polygon *p)
 {
+    return true;
     if(planeDist(p->plane, *cam_pos) < 0.0)
     {
         return false;
@@ -346,6 +345,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
+    return true;
     struct Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
@@ -527,6 +527,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 
 bool Frustum::isOBBVisible(OBB *obb)
 {
+    return true;
     bool ins = true;
     struct Polygon *p = obb->polygons;
     for(int i=0;i<6;i++,p++)
@@ -547,6 +548,7 @@ bool Frustum::isOBBVisible(OBB *obb)
 
 bool Frustum::isOBBVisibleInRoom(OBB *obb, const Room& room)
 {
+    return true;
     if(!obb)
         return true;
     if(room.frustum.empty())                                                    // There's no active frustum in room, using camera frustum instead.

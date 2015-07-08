@@ -10,7 +10,6 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
@@ -117,7 +116,7 @@ std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 void Engine_InitGL()
 {
-    InitGLExtFuncs();
+    glewInit();
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
@@ -513,7 +512,7 @@ void ShowDebugInfo()
 
     light_position = engine_camera.m_pos;
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);

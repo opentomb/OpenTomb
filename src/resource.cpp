@@ -3088,14 +3088,14 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 
     // Now load into OpenGL
     GLuint arrayBuffer, elementBuffer;
-    glGenBuffersARB(1, &arrayBuffer);
-    glBindBufferARB(GL_ARRAY_BUFFER, arrayBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
+    glGenBuffers(1, &arrayBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    glGenBuffersARB(1, &elementBuffer);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
+    glGenBuffers(1, &elementBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 
     VertexArrayAttribute attribs[3] = {

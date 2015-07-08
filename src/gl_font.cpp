@@ -5,10 +5,8 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#include <stdint.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#include <math.h>
+#include <cstdint>
+#include <cmath>
 
 #include <ft2build.h>
 #include <freetype.h>
@@ -445,6 +443,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
 
 void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 {
+    return;
     uint8_t *nch, *ch = (uint8_t*)text;
     FT_Vector kern;
 

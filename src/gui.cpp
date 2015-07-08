@@ -2,7 +2,6 @@
 #include <cstdint>
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
-#include <OpenGL/OpenGL.h>
 #else
 #include <SDL2/SDL_image.h>
 #endif
@@ -48,7 +47,7 @@ void Gui_Init()
     Gui_InitNotifier();
     Gui_InitTempLines();
 
-    glGenBuffersARB(1, &crosshairBuffer);
+    glGenBuffers(1, &crosshairBuffer);
     Gui_FillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
@@ -497,7 +496,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
     }
 
     std::copy(style->real_color+0, style->real_color+4, gl_font->gl_font_color);
-    glf_render_str(gl_font, real_x, real_y, l->text);
+    // glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
 void Gui_RenderStrings()
@@ -509,13 +508,13 @@ void Gui_RenderStrings()
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
-        glUseProgramObjectARB(shader->program);
+        glUseProgram(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
             (GLfloat) screen_info.h
         };
-        glUniform2fvARB(shader->screenSize, 1, screenSize);
-        glUniform1iARB(shader->sampler, 0);
+        glUniform2fv(shader->screenSize, 1, screenSize);
+        glUniform1i(shader->sampler, 0);
 
         while(l)
         {
@@ -596,9 +595,9 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
     const std::shared_ptr<LitShaderDescription>& shader = renderer.shaderManager()->getEntityShader(0, false);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->number_of_lights, 0);
-    glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+    glUseProgram(shader->program);
+    glUniform1i(shader->number_of_lights, 0);
+    glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
 
     if(size != 0.0)
     {
@@ -1133,8 +1132,8 @@ void Gui_FillCrosshairBuffer()
         {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)}, {255, 0, 0, 255}}
     };
 
-    glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
     
     VertexArrayAttribute attribs[] = {
         VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
@@ -1147,14 +1146,14 @@ void Gui_DrawCrosshair()
 {
     std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(false);
 
-    glUseProgramObjectARB(shader->program);
+    glUseProgram(shader->program);
     GLfloat factor[2] = {
         2.0f / screen_info.w,
         2.0f / screen_info.h
     };
-    glUniform2fvARB(shader->factor, 1, factor);
+    glUniform2fv(shader->factor, 1, factor);
     GLfloat offset[2] = { -1.f, -1.f };
-    glUniform2fvARB(shader->offset, 1, offset);
+    glUniform2fv(shader->offset, 1, offset);
 
     crosshairArray->bind();
     
@@ -1307,15 +1306,15 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     
     if (rectanglePositionBuffer == 0)
     {
-        glGenBuffersARB(1, &rectanglePositionBuffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectanglePositionBuffer);
+        glGenBuffers(1, &rectanglePositionBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
         GLfloat rectCoords[8] = { 0, 0,
             1, 0,
             1, 1,
             0, 1 };
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
         
-        glGenBuffersARB(1, &rectangleColorBuffer);
+        glGenBuffers(1, &rectangleColorBuffer);
         
         VertexArrayAttribute attribs[] = {
             VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
@@ -1324,28 +1323,28 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         rectangleArray.reset( new VertexArray(0, 2, attribs) );
     }
     
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
-    GLfloat *rectColors = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+    glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
+    GLfloat *rectColors = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
     std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(texture != 0);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
+    glUseProgram(shader->program);
+    glUniform1i(shader->sampler, 0);
     if (texture)
     {
-        glActiveTextureARB(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
-    glUniform2fvARB(shader->offset, 1, offset);
-    glUniform2fvARB(shader->factor, 1, factor);
+    glUniform2fv(shader->offset, 1, offset);
+    glUniform2fv(shader->factor, 1, factor);
 
     rectangleArray->bind();
 

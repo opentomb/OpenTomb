@@ -2,8 +2,6 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <cstdint>
 #include "audio.h"
 #include "camera.h"
