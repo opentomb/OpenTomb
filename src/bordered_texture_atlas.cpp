@@ -109,19 +109,19 @@ void BorderedTextureAtlas::layOutTextures()
         struct CanonicalObjectTexture &canonical = m_canonicalObjectTextures[sorted_indices[texture]];
 
         // Try to find space in an existing page.
-        bool found_place = 0;
+        bool found_place = false;
         for (size_t page = 0; page < m_resultPageHeights.size(); page++)
         {
-            found_place = result_pages[page].findSpaceFor(canonical.width + 2*m_borderWidth,
-                                                         canonical.height + 2*m_borderWidth,
-                                                         &canonical.new_x_with_border,
-                                                         &canonical.new_y_with_border);
+            found_place = result_pages[page].findSpaceFor(canonical.width  + 2*m_borderWidth,
+                                                          canonical.height + 2*m_borderWidth,
+                                                          &canonical.new_x_with_border,
+                                                          &canonical.new_y_with_border);
             if (found_place)
             {
                 canonical.new_page = page;
 
-                unsigned highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
-                if (highest_y + 1 > m_resultPageHeights[page])
+                size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
+                if (highest_y >= m_resultPageHeights[page])
                     m_resultPageHeights[page] = highest_y;
 
                 break;
@@ -132,25 +132,23 @@ void BorderedTextureAtlas::layOutTextures()
         if (!found_place)
         {
             result_pages.emplace_back(0, 0, m_resultPageWidth, m_resultPageWidth);
+            canonical.new_page = m_resultPageHeights.size();
             m_resultPageHeights.emplace_back();
 
             result_pages.back().findSpaceFor(
-                                   canonical.width + 2*m_borderWidth,
+                                   canonical.width  + 2*m_borderWidth,
                                    canonical.height + 2*m_borderWidth,
-                                   &(canonical.new_x_with_border),
-                                   &(canonical.new_y_with_border));
-            assert(!m_resultPageHeights.empty());
-            canonical.new_page = m_resultPageHeights.size() - 1;
+                                   &canonical.new_x_with_border,
+                                   &canonical.new_y_with_border);
 
-            unsigned highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
-            m_resultPageHeights.back() = highest_y;
+            m_resultPageHeights.back() = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
         }
     }
 
     // Fix up heights if necessary
-    for (unsigned page = 0; page < m_resultPageHeights.size(); page++)
+    for (uint32_t& height : m_resultPageHeights)
     {
-        m_resultPageHeights[page] = NextPowerOf2(m_resultPageHeights[page]);
+        height = NextPowerOf2(height);
     }
 }
 
@@ -413,12 +411,11 @@ size_t BorderedTextureAtlas::getNumAtlasPages() const
 
 void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames) const
 {
-    std::vector<GLubyte> data(4 * m_resultPageWidth * m_resultPageWidth);
-
     glGenTextures((GLsizei) m_resultPageHeights.size() + additionalTextureNames, textureNames);
 
     for (size_t page = 0; page < m_resultPageHeights.size(); page++)
     {
+        std::vector<GLubyte> data(4 * m_resultPageWidth * m_resultPageWidth, 0);
         for (size_t texture = 0; texture < m_canonicalObjectTextures.size(); texture++)
         {
             const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[texture];

@@ -10,16 +10,16 @@ VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexA
     assert(m_vertexArrayObject && "Incorrect OpenGL function setup");
     glBindVertexArrayAPPLE(m_vertexArrayObject);
     
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, element_vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_vbo);
     
     for (size_t i = 0; i < numAttributes; i++)
     {
         assert(attributes[i].m_vbo != 0);
         assert(attributes[i].m_stride != 0);
         
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, attributes[i].m_vbo);
-        glEnableVertexAttribArrayARB(attributes[i].m_index);
-        glVertexAttribPointerARB(attributes[i].m_index, attributes[i].m_size,
+        glBindBuffer(GL_ARRAY_BUFFER, attributes[i].m_vbo);
+        glEnableVertexAttribArray(attributes[i].m_index);
+        glVertexAttribPointer(attributes[i].m_index, attributes[i].m_size,
                                  attributes[i].m_type, attributes[i].m_normalized,
                                  attributes[i].m_stride,
                                  (const GLvoid *) attributes[i].m_offset);

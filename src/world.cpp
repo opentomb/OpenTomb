@@ -3,10 +3,6 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
@@ -525,19 +521,19 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 ent->m_self->room = NULL;
             }
 
-            return ent->m_id;
+            return ent->id();
         }
 
-        std::shared_ptr<Entity> ent = std::make_shared<Entity>();
 
+        std::shared_ptr<Entity> ent;
         if(id < 0)
         {
-            ent->m_id = entity_tree.size();
-            entity_tree[ent->m_id] = ent;
+            ent = std::make_shared<Entity>(entity_tree.size());
+            entity_tree[ent->id()] = ent;
         }
         else
         {
-            ent->m_id = id;
+            ent = std::make_shared<Entity>(id);
         }
 
         if(pos != NULL)
@@ -584,7 +580,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         addEntity(ent);
 
-        return ent->m_id;
+        return ent->id();
     }
 
     return 0xFFFFFFFF;
@@ -941,7 +937,7 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     {
         for(Portal& p : r->portals) //For every portal in this room
         {
-            if(p.dest_room->id == id)//If a portal is linked to the input room
+            if(p.dest_room && p.dest_room->id == id)//If a portal is linked to the input room
             {
                 p.dest_room = dest_room;//The portal destination room is the destination room!
                 //Con_Printf("The current room %d! has room %d joined to it!", id, i);
@@ -968,13 +964,13 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
 
 void World::addEntity(std::shared_ptr<Entity> entity)
 {
-    if(entity_tree.find(entity->m_id) != entity_tree.end())
+    if(entity_tree.find(entity->id()) != entity_tree.end())
         return;
-    entity_tree[entity->m_id] = entity;
+    entity_tree[entity->id()] = entity;
 }
 
 
-int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
+int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if((model == NULL) || (items_tree.empty()))
@@ -991,10 +987,7 @@ int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_
     item->type = type;
     item->count = count;
     item->name[0] = 0;
-    if(name)
-    {
-        strncpy(item->name, name, 64);
-    }
+    strncpy(item->name, name.c_str(), 64);
     item->bf = std::move(bf);
 
     items_tree[item->id] = item;
@@ -1089,7 +1082,8 @@ void Room::buildNearRoomsList()
         addToNearRoomsList(p.dest_room);
     }
 
-    for(const std::shared_ptr<Room>& r : near_room_list)
+    auto nrl = near_room_list;
+    for(const std::shared_ptr<Room>& r : nrl)
     {
         if(!r)
             continue;

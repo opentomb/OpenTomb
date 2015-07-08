@@ -1,22 +1,19 @@
+#include "console.h"
+
 #include <cstdio>
 #include <cstdlib>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#if defined(__MACOSX__)
-#include <OpenGL/glext.h>
-#endif
+#include <iostream>
+
 #include <SDL2/SDL_keycode.h>
+#include <GL/glew.h>
 
 #include "gl_font.h"
-#include "console.h"
 #include "system.h"
 #include "engine.h"
 #include "script.h"
 #include "shader_manager.h"
 #include "gui.h"
 #include "vmath.h"
-
-#include <iostream>
 
 ConsoleInfo::ConsoleInfo()
 {
@@ -91,13 +88,13 @@ void ConsoleInfo::draw() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
+    glUseProgram(shader->program);
+    glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {
         static_cast<GLfloat>(screen_info.w),
         static_cast<GLfloat>(screen_info.h)
     };
-    glUniform2fvARB(shader->screenSize, 2, screenSize);
+    glUniform2fv(shader->screenSize, 2, screenSize);
 
     const int x = 8;
     int y = m_cursorY + m_lineHeight;

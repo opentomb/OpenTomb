@@ -7,8 +7,7 @@
 #include <ImageIO/ImageIO.h>
 #include <CoreServices/CoreServices.h>
 #endif
-#include <SDL2/SDL_opengl.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include "system.h"
 #include "console.h"

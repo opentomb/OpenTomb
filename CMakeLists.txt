@@ -9,35 +9,23 @@ PROJECT(OpenTomb)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
-find_package(Bullet)
-if(NOT BULLET_FOUND)
-    message(WARNING "Bullet not found, using internal library")
-    add_subdirectory(3rdparty/libbullet)
-    INCLUDE_DIRECTORIES(3rdparty/libbullet/bullet)
-else()
-    INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
-endif()
-
-find_package(Freetype)
-if(NOT FREETYPE_FOUND)
-    message(WARNING "Freetype not found, using internal library")
-    add_subdirectory(3rdparty/freetype2)
-    INCLUDE_DIRECTORIES(3rdparty/freetype2/include)
-else()
-    INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
-endif()
+add_subdirectory(3rdparty)
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(3rdparty/LuaState/include)
 
 # Don’t attempt to find AL anywhere, just use ours directly.
 INCLUDE_DIRECTORIES(3rdparty/al/)
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
+add_definitions(-DLUA_COMPAT_APIINTCASTS)
 
 #find_package(OpenAL REQUIRED)
 #INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
-find_package(Boost REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+find_package(GLEW REQUIRED)
+INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIRS})
 
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
@@ -144,6 +132,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     ${PROJECT_NAME}
     ${OPENGL_LIBRARIES}
+    ${GLEW_LIBRARIES}
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     ${ZLIB_LIBRARIES}

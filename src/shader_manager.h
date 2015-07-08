@@ -3,7 +3,8 @@
 #include "shader_description.h"
 
 #include <memory>
-#include <assert.h>
+#include <cassert>
+#include <vector>
 
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
@@ -19,6 +20,7 @@ private:
     std::shared_ptr<GuiShaderDescription> m_guiTextured;
     std::shared_ptr<TextShaderDescription> m_text;
     std::shared_ptr<SpriteShaderDescription> m_sprites;
+    std::vector< std::unique_ptr<ShaderStage> > m_stages;
 
 public:
     ShaderManager();

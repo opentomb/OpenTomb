@@ -35,8 +35,8 @@ static_tbl[37] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};   
 static_tbl[38] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};          -- Balcony
 static_tbl[39] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};          -- Balcony 2
 static_tbl[40] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};              -- Doorway
-static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};    -- Doorway dummy mesh 1
-static_tbl[42] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};    -- Doorway dummy mesh 2
+static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Doorway dummy mesh 1
+static_tbl[42] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Doorway dummy mesh 2
 static_tbl[43] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};          -- Stairs 5
 static_tbl[44] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};              -- Fence
 static_tbl[45] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};          -- Grated fence 1

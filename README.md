@@ -140,7 +140,7 @@ from /src directory, and setting up these Project Build options:
         
 * In *Compiler options -> #defines*, put this string:
 
-    ` LOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS `
+    ` -DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS `
     
 * In *Linker settings -> Other linker options*, put this string:
 
@@ -194,6 +194,7 @@ more people involved in project development, so someone may be missing from this
 * pmatulka: Linux port and testing.
 * Richard_trle: Github migration, Github repo maintenance, website design.
 * Saracen: room and static mesh lighting.
+* stohrendorf: CXX-fication, general code refactoring and optimizing.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.
 * vvs-: extensive testing and bug reporting.

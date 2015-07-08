@@ -16,8 +16,8 @@ struct ScreenInfo
     float       fps;
     float       fov;
     float       scale_factor;
-    int8_t      FS_flag;
-    int8_t      show_debuginfo;
+    bool        FS_flag;
+    bool        show_debuginfo;
 };
 
 extern ScreenInfo screen_info;

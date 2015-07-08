@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/LinearMath/btIDebugDraw.h"
@@ -30,7 +29,7 @@ struct OBB;
 struct LitShaderDescription;
 struct SSBoneFrame;
 struct RoomSector;
-struct Render;
+class Render;
 
 class RenderDebugDrawer : public btIDebugDraw
 {
@@ -73,7 +72,7 @@ public:
     void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(Entity *entity, Render *render);
     void drawSectorDebugLines(RoomSector *rs);
-    void drawRoomDebugLines(Room *room, Render *render);
+    void drawRoomDebugLines(const Room *room, Render *render);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
@@ -110,13 +109,6 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_REVERSE           2
 
 
-struct RenderList
-{
-    bool active = false;
-    Room* room = nullptr;
-    btScalar dist = 0;
-};
-
 struct RenderSettings
 {
     float     lod_bias = 0;
@@ -124,9 +116,9 @@ struct RenderSettings
     uint32_t  mipmaps = 3;
     uint32_t  anisotropy = 0;
     bool antialias = false;
-    int8_t    antialias_samples = 0;
-    int8_t    texture_border = 8;
-    int8_t    z_depth = 16;
+    int       antialias_samples = 0;
+    int       texture_border = 8;
+    int       z_depth = 16;
     bool fog_enabled = true;
     GLfloat   fog_color[4]{0,0,0,1};
     float     fog_start_depth = 10000;
@@ -150,8 +142,7 @@ private:
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
 
-    size_t m_rListActiveCount = 0;
-    std::vector<RenderList> m_rList{};
+    std::vector<Room*> m_renderList{};
 
     bool m_drawWire = false;
     bool m_drawRoomBoxes = false;
@@ -177,14 +168,11 @@ public:
     void initGlobals();
     void init();
     void empty();
-    int addRoom(Room *room);
+    bool addRoom(Room *room);
     void setWorld(World* m_world);
     void resetWorld() {
         m_world = nullptr;
-    }
-
-    void resetRListActiveCount() {
-        m_rListActiveCount = 0;
+        m_renderList.clear();
     }
 
     const std::unique_ptr<ShaderManager>& shaderManager() {
@@ -258,8 +246,8 @@ public:
     void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
     void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription>& shader);
     void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
-    void renderRoom(Room *room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
-    void renderRoomSprites(Room *room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
+    void renderRoom(const Room *room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
+    void renderRoomSprites(const Room *room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
 
     int haveFrustumParent(Room *room, Frustum *frus);
     int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);

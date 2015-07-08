@@ -3,11 +3,10 @@
 #define AUDIO_H
 
 #include <AL/al.h>
+#include <AL/efx.h>
 #include <AL/efx-presets.h>
 #include <AL/efx-creative.h>
 
-#include <ogg/ogg.h>
-#include <vorbis/vorbisfile.h>
 #include <sndfile.h>
 
 #include "vt/vt_level.h"
@@ -258,8 +257,9 @@ struct AudioSettings
 {
     ALfloat     music_volume = 0;
     ALfloat     sound_volume = 0;
-    ALboolean   use_effects = AL_FALSE;
-    ALboolean   listener_is_player = AL_FALSE; // RESERVED FOR FUTURE USE
+    bool        use_effects = false;
+    bool        effects_initialized = false;
+    bool        listener_is_player = false; // RESERVED FOR FUTURE USE
     int         stream_buffer_size = 0;
 };
 
@@ -411,7 +411,8 @@ private:
     bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
 
     FILE*           audio_file;          // General handle for opened audio file.
-    OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
+    SNDFILE*        sndfile_Stream;      // Sndfile file reader needs its own handle.
+    SF_INFO         sf_info;
     
     // General OpenAL fields 
     ALbyte         *data;
@@ -480,6 +481,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 // Error handling routines.
 
 bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
-void Audio_LogOGGError(int code);               // Ogg-specific error handler.
+void Audio_LogSndfileError(int code);           // Sndfile-specific error handler.
 
 #endif // AUDIO_H

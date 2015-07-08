@@ -10,7 +10,6 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
@@ -53,6 +52,9 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+
+#include <lua.hpp>
+#include "LuaState.h"
 
 #define NO_AUDIO        0
 
@@ -114,7 +116,7 @@ std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 void Engine_InitGL()
 {
-    InitGLExtFuncs();
+    glewInit();
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
@@ -233,6 +235,10 @@ void Engine_InitSDLVideo()
     // Check for correct number of antialias samples.
     if(renderer.settings().antialias)
     {
+        /* Request opengl 4.4 context. */
+        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);        
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
@@ -275,6 +281,9 @@ void Engine_InitSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #endif
     // set the opengl context version
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);        
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -392,16 +401,18 @@ void Engine_Start()
     // Clearing up memory for initial level loading.
     engine_world.prepare();
 
+#ifdef NDEBUG
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
+#endif
 
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    luaL_dofile(engine_lua, "autoexec.lua");
+    luaL_dofile(engine_lua.getState(), "autoexec.lua");
 }
 
 
@@ -508,7 +519,7 @@ void ShowDebugInfo()
 
     light_position = engine_camera.m_pos;
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);
@@ -532,7 +543,7 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->m_id, static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->id(), static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:

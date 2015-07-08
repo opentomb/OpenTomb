@@ -420,9 +420,9 @@ private:
     float         mBorderMainColor[5];  // Border main color.
     float         mBorderFadeColor[5];  // Border fade color.
 
-    int8_t        mBaseBlendingMode;    // Blending modes for all bar parts.
-    int8_t        mBackBlendingMode;    // Note there is no alt. blending mode, cause
-    int8_t        mBorderBlendingMode;  // base and alt are actually the same part.
+    // int8_t        mBaseBlendingMode;    // Blending modes for all bar parts.
+    // int8_t        mBackBlendingMode;    // Note there is no alt. blending mode, cause
+    // int8_t        mBorderBlendingMode;  // base and alt are actually the same part.
 
     bool          mExtrude;             // Extrude effect.
     float         mExtrudeDepth[5];     // Extrude effect depth.
@@ -762,7 +762,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
  */
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeStop(int fader);
-bool Gui_FadeAssignPic(int fader, const char* pic_name);
+bool Gui_FadeAssignPic(int fader, const std::string &pic_name);
 int  Gui_FadeCheck(int fader);
 void Gui_FadeSetup(int fader, 
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
