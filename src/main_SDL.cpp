@@ -116,6 +116,7 @@ std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 void Engine_InitGL()
 {
+    glewExperimental = GL_TRUE;
     glewInit();
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
