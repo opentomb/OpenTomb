@@ -37,7 +37,7 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
-std::unique_ptr<VertexArray> crosshairArray;
+VertexArray *crosshairArray;
 
 btTransform guiProjectionMatrix;
 
@@ -1140,7 +1140,7 @@ void Gui_FillCrosshairBuffer()
         VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
         VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray.reset( new VertexArray(0, 2, attribs) );
+    crosshairArray = new VertexArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
