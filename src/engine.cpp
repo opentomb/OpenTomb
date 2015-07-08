@@ -4,7 +4,6 @@
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
 #endif
-#include <SDL2/SDL_opengl.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

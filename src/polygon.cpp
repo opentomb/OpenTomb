@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
+
 #include "polygon.h"
 #include "vmath.h"
 #include "camera.h"

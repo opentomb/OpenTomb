@@ -1,3 +1,4 @@
+#pragma once
 /*
  * File:   gl_font.h
  * Author: TeslaRus
@@ -5,18 +6,11 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#ifndef GL_FONT_H
-#define	GL_FONT_H
-
-#ifdef	__cplusplus
-extern "C" {
-#endif
-
 #include <cstdint>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
+
 #include <ft2build.h>
 #include <freetype.h>
+#include <GL/glew.h>
 
 
 typedef struct char_info_s
@@ -69,10 +63,3 @@ void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *tex
 
 uint32_t utf8_strlen(const char *str);
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
-
-#ifdef	__cplusplus
-}
-#endif
-
-#endif	/* GL_FONT_H */
-

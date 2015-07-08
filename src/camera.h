@@ -1,17 +1,11 @@
-
-#ifndef CAMERA_H
-#define CAMERA_H
-
-struct Room;
-struct Polygon;
-struct Frustum;
-
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
+#pragma once
 
 #include <memory>
 #include <vector>
 #include <cmath>
+
+#include <GL/glew.h>
+
 #include "vmath.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
@@ -37,6 +31,10 @@ struct Frustum;
 #define TR_CAM_TARG_FRONT (1)
 #define TR_CAM_TARG_LEFT  (2)
 #define TR_CAM_TARG_RIGHT (3)
+
+struct Room;
+struct Polygon;
+struct Frustum;
 
 struct Camera
 {
@@ -98,5 +96,3 @@ struct StatCameraSink
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
 };
-
-#endif
