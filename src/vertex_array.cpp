@@ -5,10 +5,10 @@
 
 VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexArrayAttribute *attributes)
 {
-    glGenVertexArrays(1, &m_vertexArrayObject);
+    glGenVertexArraysAPPLE(1, &m_vertexArrayObject);
     
     assert(m_vertexArrayObject && "Incorrect OpenGL function setup");
-    glBindVertexArray(m_vertexArrayObject);
+    glBindVertexArrayAPPLE(m_vertexArrayObject);
     
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, element_vbo);
     
@@ -25,15 +25,15 @@ VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexA
                                  (const GLvoid *) attributes[i].m_offset);
     }
     
-    glBindVertexArray(0);
+    glBindVertexArrayAPPLE(0);
 }
 
 void VertexArray::bind()
 {
-    glBindVertexArray(m_vertexArrayObject);
+    glBindVertexArrayAPPLE(m_vertexArrayObject);
 }
 
 VertexArray::~VertexArray()
 {
-    glDeleteVertexArrays(1, &m_vertexArrayObject);
+    glDeleteVertexArraysAPPLE(1, &m_vertexArrayObject);
 }
