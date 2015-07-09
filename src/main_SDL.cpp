@@ -118,8 +118,10 @@ void Engine_InitGL()
 {
     glewExperimental = GL_TRUE;
     glewInit();
+    // GLEW sometimes causes an OpenGL error for no apparent reason. Retrieve and discard it so it doesn't clog up later logging.
+    glGetError();
+    
     glClearColor(0.0, 0.0, 0.0, 1.0);
-    glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -133,9 +135,6 @@ void Engine_InitGL()
         glDisable(GL_MULTISAMPLE);
     }
 
-    // Default state for Alpha func: >= 0.5. That's what all users of alpha
-    // function use anyway.
-    glAlphaFunc(GL_GEQUAL, 0.5);
 }
 
 void Engine_InitSDLControls()
@@ -449,8 +448,6 @@ void Engine_Display()
 
         Gui_SwitchGLMode(1);
         {
-            glEnable(GL_ALPHA_TEST);
-
             Gui_DrawNotifier();
             if(engine_world.character && main_inventory_manager)
             {

@@ -397,26 +397,19 @@ void Gui_Resize()
 
 void Gui_Render()
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
-    glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
     
     glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
     Gui_DrawCrosshair();
-    
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
     ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -1245,11 +1238,8 @@ void Gui_DrawLoadScreen(int value)
 
     Gui_SwitchGLMode(1);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
@@ -1259,7 +1249,6 @@ void Gui_DrawLoadScreen(int value)
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
 
     Gui_SwitchGLMode(0);
 

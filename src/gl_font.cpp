@@ -314,7 +314,8 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         chars_in_column = NextPowerOf2(y + font_size + padding);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, chars_in_column, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, chars_in_column, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
+
         for(ii=i0;ii<glf->glyphs_count;ii++)
         {
             glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;

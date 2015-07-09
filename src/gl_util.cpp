@@ -191,11 +191,6 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     free(buf);                                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
-    if(checkOpenGLError())                       // check for OpenGL errors
-    {
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
-        return 0;
-    }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 

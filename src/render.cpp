@@ -882,27 +882,11 @@ void Render::drawList()
         return;
     }
 
-    if(m_drawWire)
-    {
-        glPolygonMode(GL_FRONT, GL_LINE);
-    }
-    else if(m_drawPoints)
-    {
-        glEnable(GL_POINT_SMOOTH);
-        glPointSize(4);
-        glPolygonMode(GL_FRONT, GL_POINT);
-    }
-    else
-    {
-        glPolygonMode(GL_FRONT, GL_FILL);
-    }
-
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
-    glEnable(GL_ALPHA_TEST);
 
     renderSkyBox(m_cam->m_glViewProjMat);
-
+    
     if(m_world->character)
     {
         renderEntity(m_world->character.get(), m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
@@ -999,9 +983,6 @@ void Render::drawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
-
-    //Reset polygon draw mode
-    glPolygonMode(GL_FRONT, GL_FILL);
 }
 
 void Render::drawListDebugLines()
