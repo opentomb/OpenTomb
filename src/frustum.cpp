@@ -133,7 +133,7 @@ void Frustum::genClipPlanes(Camera *cam)
         ++next_v;
     }
 
-    *cam_pos = cam->m_pos;
+    cam_pos = &(cam->m_pos);
 }
 
 /*
