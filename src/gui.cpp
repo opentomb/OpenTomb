@@ -410,6 +410,7 @@ void Gui_Render()
     ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -1291,8 +1292,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
     };
-
-    glDisable(GL_DEPTH_TEST);
     
     if (rectanglePositionBuffer == 0)
     {
