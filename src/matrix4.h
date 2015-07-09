@@ -21,6 +21,8 @@
 #endif
 #endif
 
+#include <bullet/LinearMath/btTransform.h>
+
 #if defined(_MSC_VER)
 // Microsoft Visual C++
 #ifdef max
@@ -146,6 +148,13 @@ union float4
 	: x(other.x), y(other.y), z(other.z), w(other.w)
 #endif
 	{}
+    
+    /*!
+     * Create a float4 from a btVector3. This throws away the w component of the btVector3 and instead uses 1 (Aside: Gotta love a class that is called vector3 and contains four components. Awesome, bullet guys, just awesome).
+     */
+    float4(const btVector3 &b)
+    : x(b.x()), y(b.y()), z(b.z()), w(1.0)
+    {}
 	
 #ifdef __SSE__
 	float4(__m128 vec) : v(vec) {}
@@ -509,6 +518,15 @@ struct matrix4
 	matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
 	matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
 	matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
+    matrix4(const matrix4 &other) = default;
+    
+    /*!
+     * Create a matrix4 from a btTransform. Note that the reverse is not
+     * possible in the general case, and hence not supported.
+     */
+    matrix4(const btTransform &b) {
+        b.getOpenGLMatrix(&x.x);
+    }
 	
 	static matrix4 position(const float4 &position) { return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
 	static matrix4 rotation(const float4 vector, float angleInRadian);
@@ -575,6 +593,16 @@ struct matrix4
 	{
 		return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
 	};
+    /*!
+     * Allow multiplication with btTransform.
+     *
+     * This is deliberately not symmetric, because there is no valid reason
+     * for multiplying a btTransform from the left.
+     */
+    matrix4 operator*(const btTransform &other) const
+    {
+        return *this * matrix4(other);
+    };
 	matrix4 mulRotationOnly(const matrix4 &other) const
 	{
 		return matrix4(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));

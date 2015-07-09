@@ -78,23 +78,19 @@ void Render::empty()
 }
 
 
-void Render::renderSkyBox(const btTransform& modelViewProjectionMatrix)
+void Render::renderSkyBox(const matrix4& modelViewProjectionMatrix)
 {
     if(m_drawSkybox && (m_world != NULL) && (m_world->sky_box != NULL))
     {
         glDepthMask(GL_FALSE);
         btTransform tr;
-        tr.setIdentity();
         tr.getOrigin() = m_cam->m_pos + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset;
-        tr.getOrigin().setW(1);
         tr.setRotation( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
-        btTransform fullView = modelViewProjectionMatrix * tr;
+        matrix4 fullView = modelViewProjectionMatrix * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
         glUseProgram(shader->program);
-        btScalar glFullView[16];
-        fullView.getOpenGLMatrix(glFullView);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glFullView);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, fullView.c_ptr());
         glUniform1i(shader->sampler, 0);
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fv(shader->tint_mult, 1, tint);
@@ -216,11 +212,9 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
         };
     }
 
-    btTransform mvp = m_cam->m_glViewProjMat * bsp_ref.transform;
-    btScalar glMvp[16];
-    mvp.getOpenGLMatrix(glMvp);
+    matrix4 mvp = m_cam->m_glViewProjMat * bsp_ref.transform;
 
-    glUniformMatrix4fv(shader->model_view_projection, 1, false, glMvp);
+    glUniformMatrix4fv(shader->model_view_projection, 1, false, mvp.c_ptr());
 
     ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
@@ -328,17 +322,14 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame *bframe, const btTransform& mvMatrix, const btTransform& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame *bframe, const matrix4& mvMatrix, const matrix4& mvpMatrix)
 {
     for(const SSBoneTag& btag : bframe->bone_tags) {
-        btTransform mvTransform = mvMatrix * btag.full_transform;
-        btScalar glMatrix[16];
-        mvTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fv(shader->model_view, 1, false, glMatrix);
+        matrix4 mvTransform = mvMatrix * btag.full_transform;
+        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
 
-        btTransform mvpTransform = mvpMatrix * btag.full_transform;
-        mvpTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMatrix);
+        matrix4 mvpTransform = mvpMatrix * btag.full_transform;
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform.c_ptr());
 
         renderMesh(btag.mesh_base);
         if(btag.mesh_slot) {
@@ -347,32 +338,29 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame
     }
 }
 
-void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity* ent, const matrix4& mvMatrix, const matrix4& pMatrix)
 {
     SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
-    btScalar glMatrix[16+16];
-    pMatrix.getOpenGLMatrix(glMatrix);
-
-    glUniformMatrix4fv(shader->projection, 1, false, glMatrix);
+    glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
 
     for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++,btag++)
     {
-        btTransform mvTransforms = mvMatrix * btag->full_transform;
-        mvTransforms.getOpenGLMatrix(glMatrix+0);
-
+        float transforms[32];
+        matrix4 mvTransforms = mvMatrix * btag->full_transform;
+        memcpy(transforms, mvTransforms.c_ptr(), sizeof(float [16]));
+        
         // Calculate parent transform
         const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
 
         btTransform translate;
-        translate.setIdentity();
         translate.getOrigin() += btag->offset;
 
         btTransform secondTransform = *parentTransform * translate;
 
-        mvTransforms = mvMatrix * secondTransform;
-        mvTransforms.getOpenGLMatrix(glMatrix+16);
-        glUniformMatrix4fv(shader->model_view, 2, false, glMatrix);
+        matrix4 mvTransforms2 = mvMatrix * secondTransform;
+        memcpy(&transforms[16], mvTransforms2.c_ptr(), sizeof(float [16]));
+        glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
         if(btag->mesh_skin)
         {
@@ -381,18 +369,16 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
     }
 }
 
-void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity* ent, const matrix4& mvMatrix, const matrix4& pMatrix)
 {
-    btScalar glMatrix[16+16];
-    pMatrix.getOpenGLMatrix(glMatrix);
-    glUniformMatrix4fv(shader->projection, 1, false, glMatrix);
+    glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
 
     for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++)
     {
-        btTransform mvTransforms[2];
+        matrix4 mvTransforms[2];
 
-        btTransform tr0 = ent->m_bt.bt_body[i]->getWorldTransform();
-        btTransform tr1;
+        matrix4 tr0 = ent->m_bt.bt_body[i]->getWorldTransform();
+        matrix4 tr1;
 
         mvTransforms[0] = mvMatrix * tr0;
 
@@ -413,13 +399,14 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
         translate.setIdentity();
         translate.getOrigin() += btag.offset;
 
-        btTransform secondTransform = tr1 * translate;
+        matrix4 secondTransform = tr1 * translate;
         mvTransforms[1] = mvMatrix * secondTransform;
 
-        mvTransforms[0].getOpenGLMatrix(glMatrix+0);
-        mvTransforms[1].getOpenGLMatrix(glMatrix+16);
+        float transforms[32];
+        memcpy(&transforms[0], mvTransforms[0].c_ptr(), sizeof(float[16]));
+        memcpy(&transforms[16], mvTransforms[1].c_ptr(), sizeof(float[16]));
 
-        glUniformMatrix4fv(shader->model_view, 2, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
         if(btag.mesh_skin)
         {
@@ -432,7 +419,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTransform& modelViewMatrix, bool skin)
+const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matrix4 &modelViewMatrix, bool skin)
 {
     // Calculate lighting
     if(!entity->m_self || !entity->m_self->room) {
@@ -443,7 +430,7 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTra
 
     Room* room = entity->m_self->room;
 
-    std::array<GLfloat,4> ambient_component;
+    float ambient_component[4];
     ambient_component[0] = room->ambient_lighting[0];
     ambient_component[1] = room->ambient_lighting[1];
     ambient_component[2] = room->ambient_lighting[2];
@@ -451,14 +438,14 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTra
 
     if(room->flags & TR_ROOM_FLAG_WATER)
     {
-        engine_world.calculateWaterTint(&ambient_component, false);
+        engine_world.calculateWaterTint(ambient_component, false);
     }
 
     GLenum current_light_number = 0;
     Light *current_light = NULL;
 
-    std::array<GLfloat,3> positions[MAX_NUM_LIGHTS];
-    std::array<GLfloat,4> colors[MAX_NUM_LIGHTS];
+    GLfloat positions[MAX_NUM_LIGHTS*3];
+    GLfloat colors[MAX_NUM_LIGHTS*4];
     GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
     GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
     memset(colors, 0, sizeof(colors));
@@ -473,19 +460,21 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTra
         btScalar distance = xyz.length();
 
         // Find color
-        colors[current_light_number][0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
-        colors[current_light_number][1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
-        colors[current_light_number][2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
-        colors[current_light_number][3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
+        colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
+        colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
+        colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
+        colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
 
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            engine_world.calculateWaterTint(&colors[current_light_number], false);
+            engine_world.calculateWaterTint(&colors[current_light_number*4], false);
         }
 
         // Find position
-        btVector3 tmpPos = modelViewMatrix * current_light->pos;
-        std::copy(tmpPos+0, tmpPos+3, positions[current_light_number].begin());
+        float4 tmpPos = modelViewMatrix * current_light->pos;
+        positions[current_light_number*3 + 0] = tmpPos[0];
+        positions[current_light_number*3 + 1] = tmpPos[1];
+        positions[current_light_number*3 + 2] = tmpPos[2];
 
         // Find fall-off
         if(current_light->light_type == LT_SUN)
@@ -504,7 +493,7 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTra
 
     const LitShaderDescription *shader = m_shaderManager->getEntityShader(current_light_number, skin);
     glUseProgram(shader->program);
-    glUniform4fv(shader->light_ambient, 1, ambient_component.data());
+    glUniform4fv(shader->light_ambient, 1, ambient_component);
     glUniform4fv(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
     glUniform3fv(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
     glUniform1fv(shader->light_inner_radius, current_light_number, innerRadiuses);
@@ -512,7 +501,7 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTra
     return shader;
 }
 
-void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
+void Render::renderEntity(Entity* entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection)
 {
     if(entity->m_wasRendered || !entity->m_visible || (entity->m_bf.animations.model->hide && !m_drawNullMeshes))
     {
@@ -537,10 +526,10 @@ void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, co
         }
         else
         {
-            btTransform scaledTransform = entity->m_transform;
-            Mat4_Scale(scaledTransform, entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z());
-            btTransform subModelView = modelViewMatrix * scaledTransform;
-            btTransform subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
+            matrix4 scaledTransform = entity->m_transform;
+            scaledTransform *= matrix4::diagonal(float4(entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z()));
+            matrix4 subModelView = modelViewMatrix * scaledTransform;
+            matrix4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
             if (entity->m_bf.bone_tags[0].mesh_skin) {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
@@ -550,23 +539,19 @@ void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, co
     }
 }
 
-void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
+void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* entity, const matrix4& modelViewMatrix, const matrix4& modelViewProjectionMatrix)
 {
     SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
     for(uint16_t i=0; i<entity->m_bf.bone_tags.size(); i++,btag++)
     {
-        btTransform tr = entity->m_bt.bt_body[i]->getWorldTransform();
-        btTransform mvTransform = modelViewMatrix * tr;
+        matrix4 tr = entity->m_bt.bt_body[i]->getWorldTransform();
+        matrix4 mvTransform = modelViewMatrix * tr;
 
-        btScalar glMatrix[16];
-        mvTransform.getOpenGLMatrix(glMatrix);
+        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
 
-        glUniformMatrix4fv(shader->model_view, 1, false, glMatrix);
-
-        btTransform mvpTransform = modelViewProjectionMatrix * tr;
-        mvpTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMatrix);
+        matrix4 mvpTransform = modelViewProjectionMatrix * tr;
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform.c_ptr());
 
         renderMesh(btag->mesh_base);
         if(btag->mesh_slot)
@@ -577,7 +562,7 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* ent
 }
 
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
-void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &modelViewMatrix, const btTransform &projection)
+void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelViewMatrix, const matrix4 &projection)
 {
     if(!entity || entity->m_hairs.empty())
         return;
@@ -589,13 +574,13 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
     for(size_t h=0; h<entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        btTransform globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform;
-        btTransform globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
+        matrix4 globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform;
+        matrix4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
 
-        btScalar hairModelToGlobalMatrices[MatrixCount][16];
-        (modelViewMatrix * globalAttachment).getOpenGLMatrix(hairModelToGlobalMatrices[0]);
+        float hairModelToGlobalMatrices[MatrixCount][16];
+        memcpy(&hairModelToGlobalMatrices[0], (modelViewMatrix * globalAttachment).c_ptr(), sizeof(float[16]));
 
         // Then: Individual hair pieces
         for(size_t i=0; i<entity->m_hairs[h]->m_elements.size(); i++)
@@ -626,15 +611,14 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
 
             const btTransform &bt_tr = entity->m_hairs[h]->m_elements[i].body->getWorldTransform();
 
-            btTransform globalFromHair = bt_tr * invOriginToHairModel;
+            matrix4 globalFromHair = bt_tr * invOriginToHairModel;
 
-            (modelViewMatrix * globalFromHair).getOpenGLMatrix(hairModelToGlobalMatrices[i+1]);
+            memcpy(&hairModelToGlobalMatrices[(i+1) * 16], (modelViewMatrix * globalFromHair).c_ptr(), sizeof(float[16]));
         }
 
         glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
 
-        projection.getOpenGLMatrix(hairModelToGlobalMatrices[0]);
-        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projection.c_ptr());
 
         renderMesh(entity->m_hairs[h]->m_mesh);
     }
@@ -643,10 +627,8 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
 /**
  * drawing world models.
  */
-void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
+void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection)
 {
-    btScalar glMat[16];
-
 #if STENCIL_FRUSTUM
     ////start test stencil test code
     bool need_stencil = false;
@@ -664,8 +646,7 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
         {
             UnlitShaderDescription *shader = m_shaderManager->getStencilShader();
             glUseProgram(shader->program);
-            engine_camera.m_glViewProjMat.getOpenGLMatrix(glMat);
-            glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
+            glUniformMatrix4fv(shader->model_view_projection, 1, false, engine_camera.m_glViewProjMat.c_ptr());
             glEnable(GL_STENCIL_TEST);
             glClear(GL_STENCIL_BUFFER_BIT);
             glStencilFunc(GL_NEVER, 1, 0x00);
@@ -705,19 +686,18 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
 
     if(!m_skipRoom && room->mesh)
     {
-        btTransform modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
+        matrix4 modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
-        std::array<GLfloat,4> tint;
-        engine_world.calculateWaterTint(&tint, true);
+        float tint[4];
+        engine_world.calculateWaterTint(tint, true);
         glUseProgram(shader->program);
 
-        glUniform4fv(shader->tint_mult, 1, tint.data());
+        glUniform4fv(shader->tint_mult, 1, tint);
         glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
         glUniform1i(shader->sampler, 0);
-        modelViewProjectionTransform.getOpenGLMatrix(glMat);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform.c_ptr());
         renderMesh(room->mesh);
     }
 
@@ -736,16 +716,15 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
                 continue;
             }
 
-            btTransform transform = modelViewProjectionMatrix * sm->transform;
-            transform.getOpenGLMatrix(glMat);
-            glUniformMatrix4fv(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, glMat);
+            matrix4 transform = modelViewProjectionMatrix * sm->transform;
+            glUniformMatrix4fv(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform.c_ptr());
 
             auto tint = sm->tint;
 
             //If this static mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
-                engine_world.calculateWaterTint(&tint, false);
+                engine_world.calculateWaterTint(tint.data(), false);
             }
             glUniform4fv(m_shaderManager->getStaticMeshShader()->tint_mult, 1, tint.data());
             renderMesh(sm->mesh);
@@ -782,17 +761,14 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
 }
 
 
-void Render::renderRoomSprites(const Room* room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
+void Render::renderRoomSprites(const Room* room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix)
 {
     if (!room->sprites.empty() && room->sprite_buffer)
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
-        btScalar glMat[16];
-        modelViewMatrix.getOpenGLMatrix(glMat);
-        glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, glMat);
-        projectionMatrix.getOpenGLMatrix(glMat);
-        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glMat);
+        glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, modelViewMatrix.c_ptr());
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projectionMatrix.c_ptr());
         glUniform1i(shader->sampler, 0);
 
         room->sprite_buffer->data->bind();
@@ -972,9 +948,7 @@ void Render::drawList()
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(false, false);
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        btScalar glMat[16];
-        m_cam->m_glViewProjMat.getOpenGLMatrix(glMat);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -1024,9 +998,7 @@ void Render::drawListDebugLines()
         UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        btScalar glMat[16];
-        m_cam->m_glViewProjMat.getOpenGLMatrix(glMat);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
         glBindTexture(GL_TEXTURE_2D, engine_world.textures.back());
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
@@ -1269,7 +1241,7 @@ void RenderDebugDrawer::drawPortal(const Portal& p)
     addLine(p.vertices.back(), p.vertices.front());
 }
 
-void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_max, const btTransform* transform)
+void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_max, const btTransform *transform)
 {
     m_obb->rebuild(bb_min, bb_max);
     m_obb->transform = transform;
@@ -1295,7 +1267,7 @@ void RenderDebugDrawer::drawOBB(OBB *obb)
     }
 }
 
-void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mesh, const btTransform &transform, const std::vector<btVector3>& overrideVertices, const std::vector<btVector3>& overrideNormals, Render *render)
+void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render)
 {
     if(render->m_drawNormals)
     {
@@ -1330,7 +1302,7 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mesh
     }
 }
 
-void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform &transform, Render* render)
+void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render)
 {
     if(render->m_drawNormals)
     {

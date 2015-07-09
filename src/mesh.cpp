@@ -78,7 +78,7 @@ void BaseMesh::genVBO(const Render* /*renderer*/)
     {
         glGenBuffers(1, &m_vboSkinArray);
         glBindBuffer(GL_ARRAY_BUFFER, m_vboSkinArray);
-        glBufferData(GL_ARRAY_BUFFER, m_matrixIndices.size(), m_matrixIndices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, m_matrixIndices.size() * sizeof(MatrixIndex), m_matrixIndices.data(), GL_STATIC_DRAW);
     }
 
     // Fill indexes vbo

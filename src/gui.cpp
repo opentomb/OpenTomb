@@ -38,7 +38,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
 
-btTransform guiProjectionMatrix;
+matrix4 guiProjectionMatrix;
 
 void Gui_Init()
 {
@@ -611,8 +611,8 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btTransform scaledMvMatrix = mvMatrix * scaledMatrix;
-        btTransform mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
@@ -620,7 +620,7 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
     }
     else
     {
-        btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
         renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
@@ -1099,11 +1099,12 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix.setIdentity();
-        guiProjectionMatrix.getBasis()[0][0] = 2.0 / screen_info.w;
-        guiProjectionMatrix.getBasis()[1][1] = 2.0 / screen_info.h;
-        guiProjectionMatrix.getBasis()[2][2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
+        guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] =-1.0;
+        guiProjectionMatrix[3][1] =-1.0;
+        guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {

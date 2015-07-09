@@ -399,7 +399,7 @@ struct World
     std::vector<uint8_t> stream_track_map;       // Stream track flag map.
 
     void updateAnimTextures();
-    void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
+    void calculateWaterTint(float* tint, bool fixed_colour);
 
     void addEntity(std::shared_ptr<Entity> entity);
     int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string &name);
