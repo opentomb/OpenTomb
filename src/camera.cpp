@@ -14,21 +14,24 @@
 
 void Camera::apply()
 {
-    btMatrix3x3& M = m_glProjMat.getBasis();
-    M.setIdentity();
-    M[0][0] = m_f / m_aspect;
-    M[1][1] = m_f;
-    M[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
-    M[2][3] =-1.0;
+    btMatrix3x3& projection = m_glProjMat.getBasis();
+    projection.setIdentity();
+    projection.setValue(
+                m_f / m_aspect, 0,   0,
+                0,              m_f, 0,
+                0,              0,   (m_distNear + m_distFar) / (m_distNear - m_distFar)
+                );
+    // TODO M[2][3] =-1.0;
     m_glProjMat.getOrigin()[2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
 
-    btMatrix3x3& M2 = m_glViewMat.getBasis();
-    M2[0] = m_rightDir;
-    M2[1] = m_upDir;
-    M2[2] = -m_viewDir;
-    M2 = M2.transpose();
+    btMatrix3x3& view = m_glViewMat.getBasis();
+    view.setValue(
+                m_rightDir.x(), m_upDir.x(), -m_viewDir.x(),
+                m_rightDir.y(), m_upDir.y(), -m_viewDir.y(),
+                m_rightDir.z(), m_upDir.z(), -m_viewDir.z()
+                );
 
-    m_glViewMat.getOrigin() = M2 * m_pos;
+    m_glViewMat.getOrigin() = view * m_pos;
     m_glViewMat.getOrigin().setW(1);
 
     m_glViewProjMat = m_glProjMat * m_glViewMat;

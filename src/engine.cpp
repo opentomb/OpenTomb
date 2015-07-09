@@ -1104,7 +1104,7 @@ float lua_GetEntityDirDot(int id1, int id2)
         return std::numeric_limits<float>::max();
     }
 
-    return e1->m_transform.getBasis()[1].dot(e2->m_transform.getBasis()[1]);
+    return e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1));
 }
 
 std::tuple<float,float,float,float,float,float> lua_GetEntityPosition(int id)
@@ -1172,7 +1172,7 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
         return {};
     }
 
-    auto next_pos = ent->m_transform.getOrigin() + (dx * ent->m_transform.getBasis()[0] + dy * ent->m_transform.getBasis()[1] + dz * ent->m_transform.getBasis()[2]);
+    auto next_pos = ent->m_transform.getOrigin() + (dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2));
 
     RoomSector* curr_sector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
     RoomSector* next_sector = ent->m_self->room->getSectorRaw(next_pos);
@@ -1203,7 +1203,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     auto pos = ent->m_transform.getOrigin();
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        pos += static_cast<btScalar>(dx) * ent->m_transform.getBasis()[0] + static_cast<btScalar>(dy) * ent->m_transform.getBasis()[1] + static_cast<btScalar>(dz) * ent->m_transform.getBasis()[2];
+        pos += static_cast<btScalar>(dx) * ent->m_transform.getBasis().getColumn(0) + static_cast<btScalar>(dy) * ent->m_transform.getBasis().getColumn(1) + static_cast<btScalar>(dz) * ent->m_transform.getBasis().getColumn(2);
 
     RoomSector* curr_sector = ent->m_self->room->getSectorRaw(pos);
     curr_sector = curr_sector->checkPortalPointer();
@@ -1297,9 +1297,9 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
         return;
     }
 
-    ent->m_transform.getOrigin()[0] += dx * ent->m_transform.getBasis()[0][0] + dy * ent->m_transform.getBasis()[1][0] + dz * ent->m_transform.getBasis()[2][0];
-    ent->m_transform.getOrigin()[1] += dx * ent->m_transform.getBasis()[0][1] + dy * ent->m_transform.getBasis()[1][1] + dz * ent->m_transform.getBasis()[2][1];
-    ent->m_transform.getOrigin()[2] += dx * ent->m_transform.getBasis()[0][2] + dy * ent->m_transform.getBasis()[1][2] + dz * ent->m_transform.getBasis()[2][2];
+    ent->m_transform.getOrigin()[0] += dx * ent->m_transform.getBasis().getColumn(0)[0] + dy * ent->m_transform.getBasis().getColumn(1)[0] + dz * ent->m_transform.getBasis().getColumn(2)[0];
+    ent->m_transform.getOrigin()[1] += dx * ent->m_transform.getBasis().getColumn(0)[1] + dy * ent->m_transform.getBasis().getColumn(1)[1] + dz * ent->m_transform.getBasis().getColumn(2)[1];
+    ent->m_transform.getOrigin()[2] += dx * ent->m_transform.getBasis().getColumn(0)[2] + dy * ent->m_transform.getBasis().getColumn(1)[2] + dz * ent->m_transform.getBasis().getColumn(2)[2];
 
     ent->updateRigidBody(true);
 }
@@ -1547,7 +1547,7 @@ bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua:
         offset = e2->m_activationOffset;
 
     auto pos = e2->m_transform * offset;
-    if((e1->m_transform.getBasis()[1].dot(e2->m_transform.getBasis()[1]) > 0.75) &&
+    if((e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1)) > 0.75) &&
             ((e1->m_transform.getOrigin() - pos).length2() < r))
     {
         return true;

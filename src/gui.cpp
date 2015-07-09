@@ -1107,9 +1107,9 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat near_dist = -1.0f;
 
         guiProjectionMatrix.setIdentity();
-        guiProjectionMatrix.getBasis()[0][0] = 2.0 / screen_info.w;
-        guiProjectionMatrix.getBasis()[1][1] = 2.0 / screen_info.h;
-        guiProjectionMatrix.getBasis()[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix.getBasis().getColumn(0)[0] = 2.0 / screen_info.w;
+        guiProjectionMatrix.getBasis().getColumn(1)[1] = 2.0 / screen_info.h;
+        guiProjectionMatrix.getBasis().getColumn(2)[2] =-2.0 / (far_dist - near_dist);
         guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
     }
     else                                                                        // set camera coordinate system

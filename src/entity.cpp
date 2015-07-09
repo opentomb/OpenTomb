@@ -654,9 +654,9 @@ void Entity::updateTransform()
         while(m_angles[i] < 0)
             m_angles[i] += 360;
     }
-    auto& up_dir = m_transform.getBasis()[2];                                   // OZ
-    auto& view_dir = m_transform.getBasis()[1];                                 // OY
-    auto& right_dir = m_transform.getBasis()[0];                                // OX
+    auto& up_dir = m_transform.getBasis().getColumn(2);                                   // OZ
+    auto& view_dir = m_transform.getBasis().getColumn(1);                                 // OY
+    auto& right_dir = m_transform.getBasis().getColumn(0);                                // OX
 
     /*
      * LEFT - RIGHT INIT
@@ -691,19 +691,19 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
-        m_speed = m_transform.getBasis()[1] * t;
+        m_speed = m_transform.getBasis().getColumn(1) * t;
     }
     else if(m_dirFlag & ENT_MOVE_BACKWARD)
     {
-        m_speed = m_transform.getBasis()[1] * -t;
+        m_speed = m_transform.getBasis().getColumn(1) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_LEFT)
     {
-        m_speed = m_transform.getBasis()[0] * -t;
+        m_speed = m_transform.getBasis().getColumn(0) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_RIGHT)
     {
-        m_speed = m_transform.getBasis()[0] * t;
+        m_speed = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
@@ -1351,7 +1351,7 @@ void Entity::checkActivators()
 {
     if(m_self->room != NULL)
     {
-        btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis()[1] * m_bf.bb_max[1];
+        btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
         for(const std::shared_ptr<EngineContainer>& cont : m_self->room->containers)
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
@@ -1384,19 +1384,19 @@ void Entity::checkActivators()
 
 void Entity::moveForward(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis()[1] * dist;
+    m_transform.getOrigin() += m_transform.getBasis().getColumn(1) * dist;
 }
 
 
 void Entity::moveStrafe(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis()[0] * dist;
+    m_transform.getOrigin() += m_transform.getBasis().getColumn(0) * dist;
 }
 
 
 void Entity::moveVertical(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis()[2] * dist;
+    m_transform.getOrigin() += m_transform.getBasis().getColumn(2) * dist;
 }
 
 Entity::Entity(uint32_t id)
