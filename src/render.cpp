@@ -1025,7 +1025,7 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
 
     for(Portal& p : room->portals)                            // перебираем все порталы входной комнаты
     {
-        if((p.dest_room->active) && (p.dest_room != src_room))                // обратно идти даже не пытаемся
+        if(p.dest_room && p.dest_room->active && p.dest_room != src_room)                // обратно идти даже не пытаемся
         {
             auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);             // Главная ф-я портального рендерера. Тут и проверка
             if(gen_frus) {

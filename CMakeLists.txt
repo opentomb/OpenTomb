@@ -7,7 +7,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(OpenTomb)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
 
 add_subdirectory(3rdparty)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
@@ -112,16 +112,24 @@ FILE(GLOB PRJ_HDR
     3rdparty/al/*/*/*.h
 )
 
-FILE(GLOB PRJ_SRC
-    src/*.c*
-    src/vt/*.cpp
-# TODO: Do this conditionally
-    src/mac/*.m
-# TODO: Ugly, find better way.
-    3rdparty/al/*.c
-    3rdparty/al/*/*.c
-    3rdparty/al/*/*/*.c
-)
+if(APPLE)
+    FILE(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+        src/mac/*.m
+        3rdparty/al/*.c
+        3rdparty/al/*/*.c
+        3rdparty/al/*/*/*.c
+    )
+else()
+    FILE(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+        3rdparty/al/*.c
+        3rdparty/al/*/*.c
+        3rdparty/al/*/*/*.c
+    )
+endif()
 
 
 ADD_EXECUTABLE(
