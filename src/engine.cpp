@@ -287,7 +287,7 @@ void dumpRoom(Room* r)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* ent = static_cast<Entity*>(cont->object);
-                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->m_id, ent->m_bf.animations.model->id);
+                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
             }
         }
     }
@@ -3869,7 +3869,7 @@ int Engine_ExecCmd(const char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             Entity* e = static_cast<Entity*>(cont->object);
-                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->m_transform.getOrigin()[0], (int)e->m_transform.getOrigin()[1], (int)e->m_transform.getOrigin()[2], e->m_id);
+                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->m_transform.getOrigin()[0], (int)e->m_transform.getOrigin()[1], (int)e->m_transform.getOrigin()[2], e->id());
                         }
                     }
                 }

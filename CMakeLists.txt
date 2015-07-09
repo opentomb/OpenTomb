@@ -10,22 +10,12 @@ PROJECT(OpenTomb)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
 find_package(Bullet)
-if(NOT BULLET_FOUND)
-    message(WARNING "Bullet not found, using internal library")
-    add_subdirectory(3rdparty/libbullet)
-    INCLUDE_DIRECTORIES(3rdparty/libbullet/bullet)
-else()
-    INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
-endif()
+INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
 
 find_package(Freetype)
-if(NOT FREETYPE_FOUND)
-    message(WARNING "Freetype not found, using internal library")
-    add_subdirectory(3rdparty/freetype2)
-    INCLUDE_DIRECTORIES(3rdparty/freetype2/include)
-else()
-    INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
-endif()
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+
+# add_subdirectory(3rdparty)
 
 # Don’t attempt to find AL anywhere, just use ours directly.
 INCLUDE_DIRECTORIES(3rdparty/al/)

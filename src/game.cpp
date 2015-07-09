@@ -252,54 +252,54 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
         uint32_t room_id = (ent->m_self->room)?(ent->m_self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->m_bf.animations.model->id, room_id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->m_id);
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->id());
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->m_id,
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id(),
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->m_id, ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->m_id, ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->m_id, ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->m_id, ent->m_self->collision_type, ent->m_self->collision_shape);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id(), ent->m_self->collision_type, ent->m_self->collision_shape);
 
     if(ent->m_enabled)
     {
-        fprintf(*f, "\nenableEntity(%d);", ent->m_id);
+        fprintf(*f, "\nenableEntity(%d);", ent->id());
     }
     else
     {
-        fprintf(*f, "\ndisableEntity(%d);", ent->m_id);
+        fprintf(*f, "\ndisableEntity(%d);", ent->id());
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->m_id, ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
+    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->id(), ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
 
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->m_id, ent->m_triggerLayout);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
     if(ent->m_self->room != NULL)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->m_id, ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
     }
     else
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->m_id, ent->m_moveType, ent->m_dirFlag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id(), ent->m_moveType, ent->m_dirFlag);
     }
 
     if(auto ch = std::dynamic_pointer_cast<Character>(ent))
     {
-        fprintf(*f, "\nremoveAllItems(%d);", ent->m_id);
+        fprintf(*f, "\nremoveAllItems(%d);", ent->id());
         for(const InventoryNode& i : ch->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->m_id, i.id, i.count);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
         }
 
         for(int i=0;i<PARAM_SENTINEL;i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->m_id, i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
         }
     }
 }
@@ -692,7 +692,7 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
         if(entity->m_enabled)
         {
             entity->processSector();
-            lua_LoopEntity(engine_lua, entity->m_id);
+            lua_LoopEntity(engine_lua, entity->id());
         }
     }
 }

@@ -116,7 +116,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
             {
                 if(!lua_isnil(objects_flags_conf, -1))
                 {
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->m_id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id());
                 }
             }
         }
@@ -3851,8 +3851,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
     for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr_item = &tr->items[i];
-        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>() : std::make_shared<Entity>();
-        entity->m_id = i;
+        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
         entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
         entity->m_transform.getOrigin()[2] = tr_item->pos.y;
@@ -3953,7 +3952,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             SkeletalModel* LM = lara->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, lara->m_id);
+            lua_pushinteger(engine_lua, lara->id());
             lua_setglobal(engine_lua, "player");
             lua_settop(engine_lua, top);
 
@@ -4051,10 +4050,6 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     // Generate new audio emitters array.
     world->audio_emitters.resize(tr->sound_sources_count);
 
-    // Copy sound map.
-    world->audio_map.assign(tr->soundmap+0, tr->soundmap+world->audio_map.size());
-    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
-
     // Cycle through raw samples block and parse them to OpenAL buffers.
 
     // Different TR versions have different ways of storing samples.
@@ -4072,7 +4067,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                world->audio_map.resize( TR_AUDIO_MAP_SIZE_TR1 );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
                 for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
                 {
@@ -4087,7 +4082,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
             case TR_III:
             {
-                world->audio_map.resize( (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2)));
                 size_t ind1 = 0;
                 size_t ind2 = 0;
                 bool flag = false;
@@ -4125,7 +4120,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map.resize( (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4) );
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4)));
 
                 for(size_t i = 0; i < tr->samples_count; i++)
                 {
@@ -4289,9 +4284,9 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                     if(ent->m_bf.animations.model->id == item->world_model_id)
                     {
                         char buf[64] = {0};
-                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->m_id, ent->m_id);
+                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
                         luaL_dostring(engine_lua, buf);
-                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->m_id, item->id);
+                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
                         luaL_dostring(engine_lua, buf);
                         ent->disableCollision();
                     }
