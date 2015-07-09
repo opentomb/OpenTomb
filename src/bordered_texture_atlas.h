@@ -116,7 +116,7 @@ public:
                            size_t object_texture_count,
                            const tr4_object_texture_t *object_textures,
                            size_t sprite_texture_count,
-                           const tr_Spriteexture_t *Spriteextures);
+                           const tr_Spriteexture_t *sprite_textures);
     
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards

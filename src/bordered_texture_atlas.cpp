@@ -35,7 +35,8 @@ static void memset_pattern4(void *b, const void *pattern, const size_t len)
 }
 #endif
 
-static __inline GLuint NextPowerOf2(GLuint in)
+namespace {
+inline GLuint NextPowerOf2(GLuint in)
 {
      in -= 1;
 
@@ -47,8 +48,7 @@ static __inline GLuint NextPowerOf2(GLuint in)
 
      return in + 1;
 }
-
-#define ARRAY_CAPACITY_INCREASE_STEP 32
+}
 
 /*!
  * Compare function for qsort. It interprets the the parameters as pointers to indices into the canonical object textures of the atlas currently stored in compare_context. It returns -1, 0 or 1 if the first texture is logically ordered before, the same or after the second texture.
@@ -158,7 +158,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
                                                size_t object_texture_count,
                                                const tr4_object_texture_t *object_textures,
                                                size_t sprite_texture_count,
-                                               const tr_Spriteexture_t *Spriteextures)
+                                               const tr_Spriteexture_t *sprite_textures)
 : m_borderWidth(border),
 m_resultPageWidth(0),
 m_resultPageHeights(),
@@ -171,7 +171,17 @@ m_canonicalObjectTextures()
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
-    m_resultPageWidth = max_texture_edge_length;
+
+    // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
+    {
+        size_t areaSum = 0;
+        for(size_t i=0; i<object_texture_count; ++i)
+            areaSum += object_textures[i].x_size * object_textures[i].y_size;
+        for(size_t i=0; i<sprite_texture_count; ++i)
+            areaSum += (sprite_textures[i].x1-sprite_textures[i].x0) * (sprite_textures[i].y1-sprite_textures[i].y0);
+
+        m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
+    }
 
     for (size_t i = 0; i < object_texture_count; i++)
     {
@@ -180,7 +190,7 @@ m_canonicalObjectTextures()
 
     for (size_t i = 0; i < sprite_texture_count; i++)
     {
-        addSpriteTexture(Spriteextures[i]);
+        addSpriteTexture(sprite_textures[i]);
     }
 
     layOutTextures();

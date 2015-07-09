@@ -654,17 +654,14 @@ void Entity::updateTransform()
         while(m_angles[i] < 0)
             m_angles[i] += 360;
     }
-    auto& up_dir = m_transform.getBasis().getColumn(2);                                   // OZ
-    auto& view_dir = m_transform.getBasis().getColumn(1);                                 // OY
-    auto& right_dir = m_transform.getBasis().getColumn(0);                                // OX
 
     /*
      * LEFT - RIGHT INIT
      */
     btScalar t = m_angles[0] * M_PI / 180.0;
-    up_dir = {0,0,1};
-    view_dir = btVector3(0,1,0).rotate(up_dir, t);
-    right_dir = btVector3(1,0,0).rotate(up_dir, t);
+    btVector3 up_dir = {0,0,1};
+    btVector3 view_dir = btVector3(0,1,0).rotate(up_dir, t);
+    btVector3 right_dir = btVector3(1,0,0).rotate(up_dir, t);
 
     if(m_angles[1] != 0.0)
     {
@@ -679,6 +676,12 @@ void Entity::updateTransform()
         right_dir = right_dir.rotate(view_dir, t);
         up_dir = up_dir.rotate(view_dir, t);
     }
+
+    m_transform.getBasis().setValue(
+                right_dir.x(), view_dir.x(), up_dir.x(),
+                right_dir.y(), view_dir.y(), up_dir.y(),
+                right_dir.z(), view_dir.z(), up_dir.z()
+                );
 
     fixPenetrations(nullptr);
 }
