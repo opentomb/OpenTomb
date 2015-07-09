@@ -2,12 +2,10 @@
 #define VEC4_H
 
 /*
- *  Vec4.h
- *  mindstormssimulation
+ *  matrix4.cpp
+ *  OpenTomb
  *
  *  Created by Torsten Kammer on 07.05.10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
  */
 
 #include <cmath>
@@ -52,7 +50,7 @@ static inline int _finite(float a)
 #endif
 
 union float4;
-struct matrix;
+struct matrix4;
 
 union uint4
 {
@@ -256,7 +254,7 @@ union float4
 #endif
 	}
 	
-	matrix transposeMult(const float4 &other) const;
+	matrix4 transposeMult(const float4 &other) const;
 	
 	float4 squared() const
 	{
@@ -501,40 +499,40 @@ public:
 	bool hitsTriangle(const float4 *points, float &length) const;
 };
 
-struct matrix
+struct matrix4
 {
 	float4 x;
 	float4 y;
 	float4 z;
 	float4 w;
 	
-	matrix() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
-	matrix(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
-	matrix(const float *matrix) { memcpy(c_ptr(), matrix, sizeof(float [16])); }
+	matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
+	matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
+	matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
 	
-	static matrix position(const float4 &position) { return matrix(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
-	static matrix rotation(const float4 vector, float angleInRadian);
-	static matrix frustum(float angle, float aspect, float near, float far);
-	static matrix inverseFrustum(float angle, float aspect, float near, float far);
-	static matrix lookat(const float4 &eye, const float4 &center, const float4 &up);
-	static matrix fromQuaternion(const float4 &quaternion);
-	static matrix diagonal(const float4 &diagonal);
+	static matrix4 position(const float4 &position) { return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
+	static matrix4 rotation(const float4 vector, float angleInRadian);
+	static matrix4 frustum(float angle, float aspect, float near, float far);
+	static matrix4 inverseFrustum(float angle, float aspect, float near, float far);
+	static matrix4 lookat(const float4 &eye, const float4 &center, const float4 &up);
+	static matrix4 fromQuaternion(const float4 &quaternion);
+	static matrix4 diagonal(const float4 &diagonal);
 	
-	matrix transposed() const;
+	matrix4 transposed() const;
 	
-	matrix operator+(const matrix &other) const
+	matrix4 operator+(const matrix4 &other) const
 	{
 #ifdef __SSE__
-		return matrix(_mm_add_ps(x.v, other.x.v),
+		return matrix4(_mm_add_ps(x.v, other.x.v),
 					  _mm_add_ps(y.v, other.y.v),
 					  _mm_add_ps(z.v, other.z.v),
 					  _mm_add_ps(w.v, other.w.v));
 #else
-		return matrix(x + other.x, y + other.y, z + other.z, w + other.w);
+		return matrix4(x + other.x, y + other.y, z + other.z, w + other.w);
 #endif
 	}
 	
-	void operator+=(const matrix &other)
+	void operator+=(const matrix4 &other)
 	{
 #ifdef __SSE__
 		x.v = _mm_add_ps(x.v, other.x.v);
@@ -545,15 +543,15 @@ struct matrix
 		*this = *this + other;
 #endif
 	}
-	matrix operator-(const matrix &other) const
+	matrix4 operator-(const matrix4 &other) const
 	{
 #ifdef __SSE__
-		return matrix(_mm_sub_ps(x.v, other.x.v),
+		return matrix4(_mm_sub_ps(x.v, other.x.v),
 					  _mm_sub_ps(y.v, other.y.v),
 					  _mm_sub_ps(z.v, other.z.v),
 					  _mm_sub_ps(w.v, other.w.v));
 #else
-		return matrix(x - other.x, y - other.y, z - other.z, w - other.w);
+		return matrix4(x - other.x, y - other.y, z - other.z, w - other.w);
 #endif
 	}
 	
@@ -573,19 +571,19 @@ struct matrix
 	{
 		return ray4(*this * ray.start(), *this * ray.end());
 	}
-	matrix operator*(const matrix &other) const
+	matrix4 operator*(const matrix4 &other) const
 	{
-		return matrix(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
+		return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
 	};
-	matrix mulRotationOnly(const matrix &other) const
+	matrix4 mulRotationOnly(const matrix4 &other) const
 	{
-		return matrix(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));
+		return matrix4(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));
 	};
-	void operator*=(const matrix &other)
+	void operator*=(const matrix4 &other)
 	{
 		*this = *this * other;
 	}
-	matrix affineInverse() const;
+	matrix4 affineInverse() const;
 	
 	const float *c_ptr() const { return x.c_ptr(); }
 	float *c_ptr() { return x.c_ptr(); }
