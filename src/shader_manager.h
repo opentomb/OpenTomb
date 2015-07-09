@@ -20,7 +20,6 @@ private:
     std::shared_ptr<GuiShaderDescription> m_guiTextured;
     std::shared_ptr<TextShaderDescription> m_text;
     std::shared_ptr<SpriteShaderDescription> m_sprites;
-    std::vector< std::unique_ptr<ShaderStage> > m_stages;
 
 public:
     ShaderManager();

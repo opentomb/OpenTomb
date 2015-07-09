@@ -2,18 +2,20 @@
 
 #include "gl_util.h"
 
+/*!
+ * A shader stage is a simple wrapper to load an OpenGL shader
+ * object more easily.
+ *
+ * Note about ownership: The destructor calls glDeleteShader,
+ * which marks the shader object for deletion. OpenGL only
+ * deletes it when the last program (shader description) using
+ * it is deleted.
+ */
 struct ShaderStage
 {
     GLuint shader;
     
-    static ShaderStage* create(GLenum type, const char *filename, const char *additionalDefines = 0) {
-        return new ShaderStage(type, filename, additionalDefines);
-    }
-    
-private:
     ShaderStage(GLenum type, const char *filename, const char *additionalDefines = 0);
-    
-public:
     ~ShaderStage();
 };
 
