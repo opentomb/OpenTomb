@@ -1,8 +1,8 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
+#include <algorithm>
+
 #include "gl_util.h"
 
 #include "bullet/LinearMath/btScalar.h"
@@ -29,15 +29,6 @@
 Render renderer;
 DynamicBSP render_dBSP;
 extern RenderDebugDrawer debugDrawer;
-
-/*GLhandleARB main_vsh, main_fsh, main_program;
-GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
-*/
-/*bool btCollisionObjectIsVisible(btCollisionObject *colObj)
-{
-    EngineContainer* cont = (EngineContainer*)colObj->getUserPointer();
-    return (cont == NULL) || (cont->room == NULL) || (cont->room->is_in_r_list && cont->room->active);
-}*/
 
 void Render::initGlobals()
 {
@@ -102,13 +93,13 @@ void Render::renderSkyBox(const btTransform& modelViewProjectionMatrix)
         btTransform fullView = modelViewProjectionMatrix * tr;
 
         std::shared_ptr<UnlitTintedShaderDescription> shader = m_shaderManager->getStaticMeshShader();
-        glUseProgramObjectARB(shader->program);
+        glUseProgram(shader->program);
         btScalar glFullView[16];
         fullView.getOpenGLMatrix(glFullView);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glFullView);
-        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glFullView);
+        glUniform1i(shader->sampler, 0);
         GLfloat tint[] = { 1, 1, 1, 1 };
-        glUniform4fvARB(shader->tint_mult, 1, tint);
+        glUniform4fv(shader->tint_mult, 1, tint);
 
         renderMesh(m_world->sky_box->mesh_tree.front().mesh_base);
         glDepthMask(GL_TRUE);
@@ -123,11 +114,11 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
     if(!mesh->m_allAnimatedElements.empty())
     {
         // Respecify the tex coord buffer
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->m_animatedVboTexCoordArray);
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->m_animatedVboTexCoordArray);
         // Tell OpenGL to discard the old values
-        glBufferDataARB(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
-        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        GLfloat *data = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         size_t offset = 0;
         for(const struct Polygon& p : mesh->m_polygons)
@@ -153,7 +144,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
                 offset += 2;
             }
         }
-        glUnmapBufferARB(GL_ARRAY_BUFFER);
+        glUnmapBuffer(GL_ARRAY_BUFFER);
 
         if (mesh->m_animatedElementCount > 0)
         {
@@ -231,7 +222,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     btScalar glMvp[16];
     mvp.getOpenGLMatrix(glMvp);
 
-    glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMvp);
+    glUniformMatrix4fv(shader->model_view_projection, 1, false, glMvp);
 
     ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
@@ -345,11 +336,11 @@ void Render::renderSkeletalModel(const std::shared_ptr<LitShaderDescription>& sh
         btTransform mvTransform = mvMatrix * btag.full_transform;
         btScalar glMatrix[16];
         mvTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fvARB(shader->model_view, 1, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view, 1, false, glMatrix);
 
         btTransform mvpTransform = mvpMatrix * btag.full_transform;
         mvpTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMatrix);
 
         renderMesh(btag.mesh_base);
         if(btag.mesh_slot) {
@@ -365,7 +356,7 @@ void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
 
-    glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
+    glUniformMatrix4fv(shader->projection, 1, false, glMatrix);
 
     for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++,btag++)
     {
@@ -383,7 +374,7 @@ void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>
 
         mvTransforms = mvMatrix * secondTransform;
         mvTransforms.getOpenGLMatrix(glMatrix+16);
-        glUniformMatrix4fvARB(shader->model_view, 2, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view, 2, false, glMatrix);
 
         if(btag->mesh_skin)
         {
@@ -396,7 +387,7 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
 {
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
-    glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
+    glUniformMatrix4fv(shader->projection, 1, false, glMatrix);
 
     for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++)
     {
@@ -430,7 +421,7 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
         mvTransforms[0].getOpenGLMatrix(glMatrix+0);
         mvTransforms[1].getOpenGLMatrix(glMatrix+16);
 
-        glUniformMatrix4fvARB(shader->model_view, 2, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view, 2, false, glMatrix);
 
         if(btag.mesh_skin)
         {
@@ -448,7 +439,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, c
     // Calculate lighting
     if(!entity->m_self || !entity->m_self->room) {
         const auto& shader = m_shaderManager->getEntityShader(0, skin);
-        glUseProgramObjectARB(shader->program);
+        glUseProgram(shader->program);
         return shader;
     }
 
@@ -514,12 +505,12 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, c
     }
 
     const auto& shader = m_shaderManager->getEntityShader(current_light_number, skin);
-    glUseProgramObjectARB(shader->program);
-    glUniform4fvARB(shader->light_ambient, 1, ambient_component.data());
-    glUniform4fvARB(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
-    glUniform3fvARB(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
-    glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
-    glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
+    glUseProgram(shader->program);
+    glUniform4fv(shader->light_ambient, 1, ambient_component.data());
+    glUniform4fv(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
+    glUniform3fv(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
+    glUniform1fv(shader->light_inner_radius, current_light_number, innerRadiuses);
+    glUniform1fv(shader->light_outer_radius, current_light_number, outerRadiuses);
     return shader;
 }
 
@@ -573,11 +564,11 @@ void Render::renderDynamicEntity(const std::shared_ptr<LitShaderDescription>& sh
         btScalar glMatrix[16];
         mvTransform.getOpenGLMatrix(glMatrix);
 
-        glUniformMatrix4fvARB(shader->model_view, 1, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view, 1, false, glMatrix);
 
         btTransform mvpTransform = modelViewProjectionMatrix * tr;
         mvpTransform.getOpenGLMatrix(glMatrix);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMatrix);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMatrix);
 
         renderMesh(btag->mesh_base);
         if(btag->mesh_slot)
@@ -642,10 +633,10 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
             (modelViewMatrix * globalFromHair).getOpenGLMatrix(hairModelToGlobalMatrices[i+1]);
         }
 
-        glUniformMatrix4fvARB(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
+        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
 
         projection.getOpenGLMatrix(hairModelToGlobalMatrices[0]);
-        glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
 
         renderMesh(entity->m_hairs[h]->m_mesh);
     }
@@ -674,16 +665,16 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
         if(need_stencil)
         {
             std::shared_ptr<UnlitShaderDescription> shader = m_shaderManager->getStencilShader();
-            glUseProgramObjectARB(shader->program);
+            glUseProgram(shader->program);
             engine_camera.m_glViewProjMat.getOpenGLMatrix(glMat);
-            glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
+            glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
             glEnable(GL_STENCIL_TEST);
             glClear(GL_STENCIL_BUFFER_BIT);
             glStencilFunc(GL_NEVER, 1, 0x00);
             glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
 
             GLuint stencilVBO;
-            glGenBuffersARB(1, &stencilVBO);
+            glGenBuffers(1, &stencilVBO);
 
             VertexArrayAttribute attribs[] = {
                 VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
@@ -693,10 +684,10 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
             array->bind();
 
             for(const auto& f : room->frustum) {
-                glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
-                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW_ARB);
+                glBindBuffer(GL_ARRAY_BUFFER, stencilVBO);
+                glBufferData(GL_ARRAY_BUFFER, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW);
 
-                GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+                GLfloat *v = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
                 for(int16_t i=f->vertices.size()-1;i>=0;i--) {
                     *v++ = f->vertices[i].x();
@@ -704,12 +695,12 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
                     *v++ = f->vertices[i].z();
                 }
 
-                glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+                glUnmapBuffer(GL_ARRAY_BUFFER);
 
                 glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertices.size());
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
-            glDeleteBuffersARB(1, &stencilVBO);
+            glDeleteBuffers(1, &stencilVBO);
         }
     }
 #endif
@@ -722,19 +713,19 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
 
         std::array<GLfloat,4> tint;
         engine_world.calculateWaterTint(&tint, true);
-        glUseProgramObjectARB(shader->program);
+        glUseProgram(shader->program);
 
-        glUniform4fvARB(shader->tint_mult, 1, tint.data());
-        glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
-        glUniform1iARB(shader->sampler, 0);
+        glUniform4fv(shader->tint_mult, 1, tint.data());
+        glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
+        glUniform1i(shader->sampler, 0);
         modelViewProjectionTransform.getOpenGLMatrix(glMat);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
         renderMesh(room->mesh);
     }
 
     if (!room->static_mesh.empty())
     {
-        glUseProgramObjectARB(m_shaderManager->getStaticMeshShader()->program);
+        glUseProgram(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
             if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, *room))
@@ -749,7 +740,7 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
 
             btTransform transform = modelViewProjectionMatrix * sm->transform;
             transform.getOpenGLMatrix(glMat);
-            glUniformMatrix4fvARB(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, glMat);
+            glUniformMatrix4fv(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, glMat);
 
             auto tint = sm->tint;
 
@@ -758,7 +749,7 @@ void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const bt
             {
                 engine_world.calculateWaterTint(&tint, false);
             }
-            glUniform4fvARB(m_shaderManager->getStaticMeshShader()->tint_mult, 1, tint.data());
+            glUniform4fv(m_shaderManager->getStaticMeshShader()->tint_mult, 1, tint.data());
             renderMesh(sm->mesh);
             sm->was_rendered = 1;
         }
@@ -798,13 +789,13 @@ void Render::renderRoomSprites(Room* room, const btTransform &modelViewMatrix, c
     if (!room->sprites.empty() && room->sprite_buffer)
     {
         std::shared_ptr<SpriteShaderDescription> shader = m_shaderManager->getSpriteShader();
-        glUseProgramObjectARB(shader->program);
+        glUseProgram(shader->program);
         btScalar glMat[16];
         modelViewMatrix.getOpenGLMatrix(glMat);
-        glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, glMat);
+        glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, glMat);
         projectionMatrix.getOpenGLMatrix(glMat);
-        glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, glMat);
-        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glMat);
+        glUniform1i(shader->sampler, 0);
 
         room->sprite_buffer->data->bind();
 
@@ -1021,11 +1012,11 @@ void Render::drawList()
     if(!render_dBSP.root()->polygons_front.empty())
     {
         std::shared_ptr<UnlitTintedShaderDescription> shader = m_shaderManager->getRoomShader(false, false);
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
+        glUseProgram(shader->program);
+        glUniform1i(shader->sampler, 0);
         btScalar glMat[16];
         m_cam->m_glViewProjMat.getOpenGLMatrix(glMat);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -1076,11 +1067,11 @@ void Render::drawListDebugLines()
     if(!debugDrawer.IsEmpty())
     {
         std::shared_ptr<UnlitShaderDescription> shader = m_shaderManager->getDebugLineShader();
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
+        glUseProgram(shader->program);
+        glUniform1i(shader->sampler, 0);
         btScalar glMat[16];
         m_cam->m_glViewProjMat.getOpenGLMatrix(glMat);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures.back());
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
@@ -1267,7 +1258,7 @@ void RenderDebugDrawer::render()
     if(!m_buffer.empty())
     {
         if (m_glbuffer == 0) {
-            glGenBuffersARB(1, &m_glbuffer);
+            glGenBuffers(1, &m_glbuffer);
             VertexArrayAttribute attribs[] = {
                 VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
                 VertexArrayAttribute(UnlitShaderDescription::Color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
@@ -1275,12 +1266,12 @@ void RenderDebugDrawer::render()
             m_vertexArray.reset( new VertexArray(0, 2, attribs) );
         }
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, m_glbuffer);
+        glBufferData(GL_ARRAY_BUFFER, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
 
-        std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY) );
+        std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY) );
         std::copy(m_buffer.begin(), m_buffer.end(), data);
-        glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+        glUnmapBuffer(GL_ARRAY_BUFFER);
 
         m_vertexArray->bind();
         glDrawArrays(GL_LINES, 0, m_buffer.size()/2);

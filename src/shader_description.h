@@ -1,12 +1,10 @@
 #pragma once
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
 
 struct ShaderStage
 {
-    GLhandleARB shader;
+    GLuint shader;
     
     ShaderStage(GLenum type, const char *filename, const char *additionalDefines = 0);
     ~ShaderStage();
@@ -21,7 +19,7 @@ struct ShaderStage
  */
 struct ShaderDescription
 {
-    GLhandleARB program;
+    GLuint program;
     GLint sampler;
     
     ShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);

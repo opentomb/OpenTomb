@@ -5,11 +5,13 @@
 
 ShaderManager::ShaderManager()
 {
+    ShaderStage staticMeshVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/static_mesh.vsh");
+    ShaderStage staticMeshFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/static_mesh.fsh");
     //Color mult prog
-    m_staticMeshShader = std::make_shared<UnlitTintedShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/static_mesh.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/static_mesh.fsh"));
+    m_staticMeshShader = std::make_shared<UnlitTintedShaderDescription>(staticMeshVsh, staticMeshFsh);
     
     //Room prog
-    ShaderStage roomFragmentShader(GL_FRAGMENT_SHADER_ARB, "shaders/room.fsh");
+    ShaderStage roomFragmentShader = ShaderStage(GL_FRAGMENT_SHADER, "shaders/room.fsh");
     for (int isWater = 0; isWater < 2; isWater++)
     {
         for (int isFlicker = 0; isFlicker < 2; isFlicker++)
@@ -17,34 +19,47 @@ ShaderManager::ShaderManager()
             std::ostringstream stream;
             stream << "#define IS_WATER " << isWater << std::endl;
             stream << "#define IS_FLICKER " << isFlicker << std::endl;
-            
-            m_roomShaders[isWater][isFlicker] = std::make_shared<UnlitTintedShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/room.vsh", stream.str().c_str()), roomFragmentShader);
+
+            ShaderStage roomVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/room.vsh", stream.str().c_str());
+            m_roomShaders[isWater][isFlicker] = std::make_shared<UnlitTintedShaderDescription>(roomVsh, roomFragmentShader);
         }
     }
     
     // Entity prog
-    ShaderStage entityVertexShader(GL_VERTEX_SHADER_ARB, "shaders/entity.vsh");
-    ShaderStage entitySkinVertexShader(GL_VERTEX_SHADER_ARB, "shaders/entity_skin.vsh");
+    ShaderStage entityVertexShader = ShaderStage(GL_VERTEX_SHADER, "shaders/entity.vsh");
+    ShaderStage entitySkinVertexShader = ShaderStage(GL_VERTEX_SHADER, "shaders/entity_skin.vsh");
     for (int i = 0; i <= MAX_NUM_LIGHTS; i++) {
         std::ostringstream stream;
         stream << "#define NUMBER_OF_LIGHTS " << i << std::endl;
         
-        ShaderStage fragment(GL_FRAGMENT_SHADER_ARB, "shaders/entity.fsh", stream.str().c_str());
+        ShaderStage fragment = ShaderStage(GL_FRAGMENT_SHADER, "shaders/entity.fsh", stream.str().c_str());
         m_entityShader[i][0] = std::make_shared<LitShaderDescription>(entityVertexShader, fragment);
         m_entityShader[i][1] = std::make_shared<LitShaderDescription>(entitySkinVertexShader, fragment);
     }
     
     // GUI prog
-    ShaderStage guiVertexShader(GL_VERTEX_SHADER_ARB, "shaders/gui.vsh");
-    m_gui = std::make_shared<GuiShaderDescription>(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui.fsh"));
-    m_guiTextured = std::make_shared<GuiShaderDescription>(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui_tex.fsh"));
+    ShaderStage guiVertexShader = ShaderStage(GL_VERTEX_SHADER, "shaders/gui.vsh");
+    ShaderStage guiFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/gui.fsh");
+    m_gui = std::make_shared<GuiShaderDescription>(guiVertexShader, guiFsh);
     
-    m_text = std::make_shared<TextShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/text.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/text.fsh"));
-    m_sprites = std::make_shared<SpriteShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/sprite.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/sprite.fsh"));
+    ShaderStage guiTexFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/gui_tex.fsh");
+    m_guiTextured = std::make_shared<GuiShaderDescription>(guiVertexShader, guiTexFsh);
     
-    m_stencil = std::make_shared<UnlitShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/stencil.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/stencil.fsh"));
+    ShaderStage textVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/text.vsh");
+    ShaderStage textFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/text.fsh");
+    m_text = std::make_shared<TextShaderDescription>(textVsh, textFsh);
     
-    m_debugline = std::make_shared<UnlitShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/debuglines.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/debuglines.fsh"));
+    ShaderStage spriteVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/sprite.vsh");
+    ShaderStage spriteFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/sprite.fsh");
+    m_sprites = std::make_shared<SpriteShaderDescription>(spriteVsh, spriteFsh);
+    
+    ShaderStage stencilVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/stencil.vsh");
+    ShaderStage stencilFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/stencil.fsh");
+    m_stencil = std::make_shared<UnlitShaderDescription>(stencilVsh, stencilFsh);
+
+    ShaderStage debugVsh = ShaderStage(GL_VERTEX_SHADER, "shaders/debuglines.vsh");
+    ShaderStage debugFsh = ShaderStage(GL_FRAGMENT_SHADER, "shaders/debuglines.fsh");
+    m_debugline = std::make_shared<UnlitShaderDescription>(debugVsh, debugFsh);
 }
 
 

@@ -3,7 +3,8 @@
 #include "shader_description.h"
 
 #include <memory>
-#include <assert.h>
+#include <cassert>
+#include <vector>
 
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8

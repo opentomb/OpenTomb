@@ -1,11 +1,9 @@
+#include "camera.h"
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <cstdlib>
 #include <cmath>
 
 #include "gl_util.h"
-#include "camera.h"
 #include "vmath.h"
 #include "polygon.h"
 #include "frustum.h"

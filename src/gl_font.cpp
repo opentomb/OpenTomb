@@ -5,10 +5,8 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#include <stdint.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#include <math.h>
+#include <cstdint>
+#include <cmath>
 
 #include <ft2build.h>
 #include <freetype.h>
