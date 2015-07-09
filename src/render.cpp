@@ -90,7 +90,7 @@ void Render::renderSkyBox(const btTransform& modelViewProjectionMatrix)
         tr.setRotation( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
         btTransform fullView = modelViewProjectionMatrix * tr;
 
-        std::shared_ptr<UnlitTintedShaderDescription> shader = m_shaderManager->getStaticMeshShader();
+        UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
         glUseProgram(shader->program);
         btScalar glFullView[16];
         fullView.getOpenGLMatrix(glFullView);
@@ -178,7 +178,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
 /**
  * draw transparency polygons
  */
-void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef& bsp_ref, const std::shared_ptr<UnlitTintedShaderDescription>& shader)
+void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -229,7 +229,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
 }
 
 
-void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const std::shared_ptr<UnlitTintedShaderDescription>& shader)
+void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
     btScalar d = planeDist(root->plane, engine_camera.m_pos);
 
@@ -277,7 +277,7 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
     }
 }
 
-void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const std::shared_ptr<UnlitTintedShaderDescription>& shader)
+void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
     btScalar d = planeDist(root->plane, engine_camera.m_pos);
 
@@ -328,7 +328,7 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const std::shared_ptr<LitShaderDescription>& shader, SSBoneFrame *bframe, const btTransform& mvMatrix, const btTransform& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame *bframe, const btTransform& mvMatrix, const btTransform& mvpMatrix)
 {
     for(const SSBoneTag& btag : bframe->bone_tags) {
         btTransform mvTransform = mvMatrix * btag.full_transform;
@@ -347,7 +347,7 @@ void Render::renderSkeletalModel(const std::shared_ptr<LitShaderDescription>& sh
     }
 }
 
-void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>& shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
     SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
@@ -381,7 +381,7 @@ void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>
     }
 }
 
-void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>& shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
@@ -432,11 +432,11 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, const btTransform& modelViewMatrix, bool skin)
+const LitShaderDescription *Render::setupEntityLight(Entity* entity, const btTransform& modelViewMatrix, bool skin)
 {
     // Calculate lighting
     if(!entity->m_self || !entity->m_self->room) {
-        const auto& shader = m_shaderManager->getEntityShader(0, skin);
+        const LitShaderDescription *shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgram(shader->program);
         return shader;
     }
@@ -502,7 +502,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, c
         }
     }
 
-    const auto& shader = m_shaderManager->getEntityShader(current_light_number, skin);
+    const LitShaderDescription *shader = m_shaderManager->getEntityShader(current_light_number, skin);
     glUseProgram(shader->program);
     glUniform4fv(shader->light_ambient, 1, ambient_component.data());
     glUniform4fv(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
@@ -520,7 +520,7 @@ void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, co
     }
 
     // Calculate lighting
-    std::shared_ptr<LitShaderDescription> shader = setupEntityLight(entity, modelViewMatrix, false);
+    const LitShaderDescription *shader = setupEntityLight(entity, modelViewMatrix, false);
 
     if(entity->m_bf.animations.model && !entity->m_bf.animations.model->animations.empty())
     {
@@ -531,7 +531,7 @@ void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, co
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
             if (entity->m_bf.bone_tags[0].mesh_skin)
             {
-                std::shared_ptr<LitShaderDescription> skinShader = setupEntityLight(entity, modelViewMatrix, true);
+                const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderDynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
             }
         }
@@ -543,14 +543,14 @@ void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, co
             btTransform subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
             if (entity->m_bf.bone_tags[0].mesh_skin) {
-                std::shared_ptr<LitShaderDescription> skinShader = setupEntityLight(entity, modelViewMatrix, true);
+                const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderSkeletalModelSkin(skinShader, entity, subModelView, projection);
             }
         }
     }
 }
 
-void Render::renderDynamicEntity(const std::shared_ptr<LitShaderDescription>& shader, Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
+void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
 {
     SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
@@ -583,7 +583,7 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
         return;
 
     // Calculate lighting
-    std::shared_ptr<LitShaderDescription> shader = setupEntityLight(entity.get(), modelViewMatrix, true);
+    const LitShaderDescription *shader = setupEntityLight(entity.get(), modelViewMatrix, true);
 
 
     for(size_t h=0; h<entity->m_hairs.size(); h++)
@@ -662,7 +662,7 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
 
         if(need_stencil)
         {
-            std::shared_ptr<UnlitShaderDescription> shader = m_shaderManager->getStencilShader();
+            UnlitShaderDescription *shader = m_shaderManager->getStencilShader();
             glUseProgram(shader->program);
             engine_camera.m_glViewProjMat.getOpenGLMatrix(glMat);
             glUniformMatrix4fv(shader->model_view_projection, 1, false, glMat);
@@ -707,7 +707,7 @@ void Render::renderRoom(const Room* room, const btTransform &modelViewMatrix, co
     {
         btTransform modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
 
-        std::shared_ptr<UnlitTintedShaderDescription> shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
+        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
         std::array<GLfloat,4> tint;
         engine_world.calculateWaterTint(&tint, true);
@@ -786,7 +786,7 @@ void Render::renderRoomSprites(const Room* room, const btTransform &modelViewMat
 {
     if (!room->sprites.empty() && room->sprite_buffer)
     {
-        std::shared_ptr<SpriteShaderDescription> shader = m_shaderManager->getSpriteShader();
+        SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
         btScalar glMat[16];
         modelViewMatrix.getOpenGLMatrix(glMat);
@@ -956,7 +956,7 @@ void Render::drawList()
 
     if((engine_world.character != NULL) && (engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
-        std::shared_ptr<Entity> ent = engine_world.character;
+        Entity *ent = engine_world.character.get();
         for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
         {
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
@@ -969,7 +969,7 @@ void Render::drawList()
 
     if(!render_dBSP.root()->polygons_front.empty())
     {
-        std::shared_ptr<UnlitTintedShaderDescription> shader = m_shaderManager->getRoomShader(false, false);
+        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(false, false);
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         btScalar glMat[16];
@@ -1021,7 +1021,7 @@ void Render::drawListDebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
-        std::shared_ptr<UnlitShaderDescription> shader = m_shaderManager->getDebugLineShader();
+        UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         btScalar glMat[16];
@@ -1040,7 +1040,7 @@ void Render::drawListDebugLines()
  * @frus - frustum that intersects the portal
  * @return number of added rooms
  */
-int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum>& frus)
+int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
 {
     int ret = 0;
     std::shared_ptr<Room> room = portal->dest_room;                                            // куда ведет портал
