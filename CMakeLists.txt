@@ -14,12 +14,15 @@ INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(3rdparty/LuaState/include)
 
+# Don’t attempt to find AL anywhere, just use ours directly.
+INCLUDE_DIRECTORIES(3rdparty/al/)
+
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
 add_definitions(-DLUA_COMPAT_APIINTCASTS)
 
-find_package(OpenAL REQUIRED)
-INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
+#find_package(OpenAL REQUIRED)
+#INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
 find_package(GLEW REQUIRED)
 INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIRS})
@@ -101,11 +104,23 @@ INCLUDE_DIRECTORIES(
 FILE(GLOB PRJ_HDR
     src/*.h*
     src/vt/*.h
+# TODO: Do this conditionally
+    src/mac/*.h
+# TODO: Ugly, find better way
+    3rdparty/al/*.h
+    3rdparty/al/*/*.h
+    3rdparty/al/*/*/*.h
 )
 
 FILE(GLOB PRJ_SRC
     src/*.c*
     src/vt/*.cpp
+# TODO: Do this conditionally
+    src/mac/*.m
+# TODO: Ugly, find better way.
+    3rdparty/al/*.c
+    3rdparty/al/*/*.c
+    3rdparty/al/*/*/*.c
 )
 
 

@@ -10,7 +10,6 @@
 #define ANIM_CMD_JUMP               0x04
 
 
-#include <cstdint>
 #include "bullet/LinearMath/btScalar.h"
 #include "vertex_array.h"
 #include "object.h"

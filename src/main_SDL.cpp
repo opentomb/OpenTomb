@@ -46,7 +46,7 @@
 //#include "string.h"
 
 #if defined(__MACOSX__)
-#include "FindConfigFile.h"
+#include "mac/FindConfigFile.h"
 #endif
 
 #include <AL/al.h>
@@ -116,9 +116,12 @@ std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 void Engine_InitGL()
 {
+    glewExperimental = GL_TRUE;
     glewInit();
+    // GLEW sometimes causes an OpenGL error for no apparent reason. Retrieve and discard it so it doesn't clog up later logging.
+    glGetError();
+    
     glClearColor(0.0, 0.0, 0.0, 1.0);
-    glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -132,9 +135,6 @@ void Engine_InitGL()
         glDisable(GL_MULTISAMPLE);
     }
 
-    // Default state for Alpha func: >= 0.5. That's what all users of alpha
-    // function use anyway.
-    glAlphaFunc(GL_GEQUAL, 0.5);
 }
 
 void Engine_InitSDLControls()
@@ -282,15 +282,16 @@ void Engine_InitSDLVideo()
 #endif
     // set the opengl context version
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);        
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+    assert(sdl_gl_context);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
     ConsoleInfo::instance().addLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
@@ -447,8 +448,6 @@ void Engine_Display()
 
         Gui_SwitchGLMode(1);
         {
-            glEnable(GL_ALPHA_TEST);
-
             Gui_DrawNotifier();
             if(engine_world.character && main_inventory_manager)
             {

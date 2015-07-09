@@ -14,25 +14,46 @@
 
 void Camera::apply()
 {
-    btMatrix3x3& projection = m_glProjMat.getBasis();
-    projection.setIdentity();
-    projection.setValue(
-                m_f / m_aspect, 0,   0,
-                0,              m_f, 0,
-                0,              0,   (m_distNear + m_distFar) / (m_distNear - m_distFar)
-                );
-    // TODO M[2][3] =-1.0;
-    m_glProjMat.getOrigin()[2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat[0][0] = m_f / m_aspect;
+    m_glProjMat[0][1] = 0.0;
+    m_glProjMat[0][2] = 0.0;
+    m_glProjMat[0][3] = 0.0;
+    
+    m_glProjMat[1][0] = 0.0;
+    m_glProjMat[1][1] = m_f;
+    m_glProjMat[1][2] = 0.0;
+    m_glProjMat[1][3] = 0.0;
+    
+    m_glProjMat[2][0] = 0.0;
+    m_glProjMat[2][1] = 0.0;
+    m_glProjMat[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
+    m_glProjMat[2][3] =-1.0;
+    
+    m_glProjMat[3][0] = 0.0;
+    m_glProjMat[3][1] = 0.0;
+    m_glProjMat[3][2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat[3][3] = 0.0;
 
-    btMatrix3x3& view = m_glViewMat.getBasis();
-    view.setValue(
-                m_rightDir.x(), m_upDir.x(), -m_viewDir.x(),
-                m_rightDir.y(), m_upDir.y(), -m_viewDir.y(),
-                m_rightDir.z(), m_upDir.z(), -m_viewDir.z()
-                );
-
-    m_glViewMat.getOrigin() = view * m_pos;
-    m_glViewMat.getOrigin().setW(1);
+    m_glViewMat[0][0] = m_rightDir[0];
+    m_glViewMat[1][0] = m_rightDir[1];
+    m_glViewMat[2][0] = m_rightDir[2];
+    
+    m_glViewMat[0][1] = m_upDir[0];
+    m_glViewMat[1][1] = m_upDir[1];
+    m_glViewMat[2][1] = m_upDir[2];
+    
+    m_glViewMat[0][2] = -m_viewDir[0];
+    m_glViewMat[1][2] = -m_viewDir[1];
+    m_glViewMat[2][2] = -m_viewDir[2];
+    
+    m_glViewMat[3][0] = -(m_glViewMat[0][0] * m_pos[0] + m_glViewMat[1][0] * m_pos[1] + m_glViewMat[2][0]  * m_pos[2]);
+    m_glViewMat[3][1] = -(m_glViewMat[0][1] * m_pos[0] + m_glViewMat[1][1] * m_pos[1] + m_glViewMat[2][1]  * m_pos[2]);
+    m_glViewMat[3][2] = -(m_glViewMat[0][2] * m_pos[0] + m_glViewMat[1][2] * m_pos[1] + m_glViewMat[2][2] * m_pos[2]);
+    
+    m_glViewMat[0][3] = 0.0;
+    m_glViewMat[1][3] = 0.0;
+    m_glViewMat[2][3] = 0.0;
+    m_glViewMat[3][3] = 1.0;
 
     m_glViewProjMat = m_glProjMat * m_glViewMat;
 }

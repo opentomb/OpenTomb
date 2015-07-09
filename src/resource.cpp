@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
+#include <numeric>
 #include <SDL2/SDL.h>
 #include "gl_util.h"
 
@@ -3915,13 +3916,13 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I_UB:
                 world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
-                for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
+                for(size_t i = 0; i < world->audio_buffers.size()-2; i++)
                 {
                     pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
                 }
-                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers.back(), pointer, (tr->samples_count - tr->sample_indices[world->audio_buffers.size()-1]));
+                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers.back(), pointer, (tr->samples_count - tr->sample_indices[world->audio_buffers.size()-2]));
                 break;
 
             case TR_II:

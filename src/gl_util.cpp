@@ -35,7 +35,7 @@
 /*
  * Shaders generation section
  */
-int checkOpenGLError()
+int checkOpenGLErrorDetailed(const char *file, int line)
 {
     for( ; ; )
     {
@@ -48,27 +48,27 @@ int checkOpenGLError()
         switch(glErr)
         {
             case GL_INVALID_VALUE:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE in %s:%d", file, line);
                 break;
 
             case GL_INVALID_ENUM:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM in %s:%d", file, line);
                 break;
 
             case GL_INVALID_OPERATION:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION in %s:%d", file, line);
                 break;
 
             case GL_STACK_OVERFLOW:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW in %s:%d", file, line);
                 break;
 
             case GL_STACK_UNDERFLOW:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW in %s:%d", file, line);
                 break;
 
             case GL_OUT_OF_MEMORY:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY");
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY in %s:%d", file, line);
                 break;
 
                /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
@@ -80,7 +80,7 @@ int checkOpenGLError()
                   GL_NO_RESET_NOTIFICATION_ARB*/
 
             default:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X", glErr);
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X in %s:%d", file, line, glErr);
                 break;
         };
     }
@@ -172,7 +172,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     fclose(file);
 
     //printf ( "source = %s\n", buf );
-    static const char* version = "#version 410\n";
+    static const char* version = "#version 150\n";
     static const GLint versionLen = strlen(version);
     if (additionalDefines)
     {
@@ -191,11 +191,6 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     free(buf);                                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
-    if(checkOpenGLError())                       // check for OpenGL errors
-    {
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
-        return 0;
-    }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 

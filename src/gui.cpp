@@ -36,9 +36,9 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
-std::unique_ptr<VertexArray> crosshairArray;
+VertexArray *crosshairArray;
 
-btTransform guiProjectionMatrix;
+matrix4 guiProjectionMatrix;
 
 void Gui_Init()
 {
@@ -397,26 +397,20 @@ void Gui_Resize()
 
 void Gui_Render()
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
-    glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
     
     glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
     Gui_DrawCrosshair();
-    
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
     ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -507,7 +501,7 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
+        TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
         glUseProgram(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
@@ -594,7 +588,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const std::shared_ptr<LitShaderDescription>& shader = renderer.shaderManager()->getEntityShader(0, false);
+    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
     glUniform1i(shader->number_of_lights, 0);
     glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -618,8 +612,8 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btTransform scaledMvMatrix = mvMatrix * scaledMatrix;
-        btTransform mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
@@ -627,7 +621,7 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
     }
     else
     {
-        btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
         renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
@@ -1106,11 +1100,12 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix.setIdentity();
-        guiProjectionMatrix.getBasis().getColumn(0)[0] = 2.0 / screen_info.w;
-        guiProjectionMatrix.getBasis().getColumn(1)[1] = 2.0 / screen_info.h;
-        guiProjectionMatrix.getBasis().getColumn(2)[2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
+        guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] =-1.0;
+        guiProjectionMatrix[3][1] =-1.0;
+        guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {
@@ -1139,12 +1134,12 @@ void Gui_FillCrosshairBuffer()
         VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
         VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray.reset( new VertexArray(0, 2, attribs) );
+    crosshairArray = new VertexArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
 {
-    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(false);
+    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgram(shader->program);
     GLfloat factor[2] = {
@@ -1245,11 +1240,8 @@ void Gui_DrawLoadScreen(int value)
 
     Gui_SwitchGLMode(1);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
@@ -1259,7 +1251,6 @@ void Gui_DrawLoadScreen(int value)
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
 
     Gui_SwitchGLMode(0);
 
@@ -1301,8 +1292,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
     };
-
-    glDisable(GL_DEPTH_TEST);
     
     if (rectanglePositionBuffer == 0)
     {
@@ -1335,7 +1324,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(texture != 0);
+    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     if (texture)
@@ -1587,7 +1576,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     if (status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        Con_Printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        ConsoleInfo::instance().printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
         return false;
     }
 
@@ -1639,7 +1628,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    Con_Printf("Loaded fader picture: %s", texture_path);
+    ConsoleInfo::instance().printf("Loaded fader picture: %s", texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);

@@ -1,17 +1,17 @@
 // GLSL vertex program for drawing a screen-aligned square
 
-attribute vec2 position;
-attribute vec4 color;
+in vec2 position;
+in vec4 color;
 
 // Transformation matrix to get to the screen coordinates
 uniform vec2 factor;
 // Transformation matrix to get to the screen coordinates
 uniform vec2 offset;
 
-// Varying attribute for position, only used by textured fragment shader
-varying vec2 varying_position;
-// Varying attribute for color
-varying vec4 varying_color;
+// Varying in for position, only used by textured fragment shader
+out vec2 varying_position;
+// Varying in for color
+out vec4 varying_color;
 
 void main(void)
 {

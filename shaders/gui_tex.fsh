@@ -1,17 +1,20 @@
 // GLSL fragment program for drawing a screen-aligned square
 
 // Varying attribute for color
-varying vec4 varying_color;
+in vec4 varying_color;
 
 // Varying attribute for position, used to form tex coordinate
-varying vec2 varying_position;
+in vec2 varying_position;
 
 // Texture
 uniform sampler2D color_map;
+
+// Color output
+out vec4 color;
 
 void main(void)
 {
     vec2 coords = varying_position;
     coords.y = 1.0 - coords.y;
-    gl_FragColor = varying_color * texture2D(color_map, coords);
+    color = varying_color * texture(color_map, coords);
 }

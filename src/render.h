@@ -6,9 +6,11 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/LinearMath/btIDebugDraw.h"
 
+#include <array>
 #include <memory>
 #include <vector>
 
+#include "matrix4.h"
 #include "vertex_array.h"
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
@@ -234,26 +236,26 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(Entity *entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
-    void renderDynamicEntity(const std::shared_ptr<LitShaderDescription> &shader, Entity *entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, Entity *ent, const btTransform& mvMatrix, const btTransform& pMatrix);
-    void renderSkeletalModel(const std::shared_ptr<LitShaderDescription> &shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
-    void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, Entity *ent, const btTransform &mvMatrix, const btTransform &pMatrix);
-    void renderHair(std::shared_ptr<Character> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
-    void renderSkyBox(const btTransform &matrix);
+    void renderEntity(Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
+    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const matrix4 &mvMatrix, const matrix4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
+    void renderHair(std::shared_ptr<Character> entity, const matrix4 &modelViewMatrix, const matrix4 & modelViewProjectionMatrix);
+    void renderSkyBox(const matrix4& matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
-    void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
-    void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription>& shader);
-    void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
-    void renderRoom(const Room *room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
-    void renderRoomSprites(const Room *room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
+    void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);
+    void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
+    void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
+    void renderRoom(const Room *room, const matrix4 &matrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
+    void renderRoomSprites(const Room *room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix);
 
     int haveFrustumParent(Room *room, Frustum *frus);
     int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
     void renderSkyBoxDebugLines();
 
 private:
-    std::shared_ptr<LitShaderDescription> setupEntityLight(Entity *entity, const btTransform& modelViewMatrix, bool skin);
+    const LitShaderDescription *setupEntityLight(Entity *entity, const matrix4 &modelViewMatrix, bool skin);
 };
 
 extern Render renderer;
