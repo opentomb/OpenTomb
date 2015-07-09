@@ -1316,8 +1316,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
     GLfloat *rectColors = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
     glUnmapBuffer(GL_ARRAY_BUFFER);
 

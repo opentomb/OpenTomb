@@ -31,10 +31,10 @@ struct Frustum
     bool isOBBVisible(OBB *obb);
     static bool isOBBVisibleInRoom(OBB *obb, const Room &room);
 
-    static std::shared_ptr<Frustum> portalFrustumIntersect(Portal* portal, const std::shared_ptr<Frustum> &emitter, Render *render);         // Основная функция для работы с порталами.
+    static std::shared_ptr<Frustum> portalFrustumIntersect(Portal* portal, std::shared_ptr<Frustum> emitter, Render *render);         // Основная функция для работы с порталами.
     void splitPrepare(struct Portal *p);// подготовка фрустума к сплиту
     void genClipPlanes(Camera* cam);                      // генерация плоскостей отсечения
-    int split_by_plane(const btVector3 &n, std::vector<btVector3> *buf);              // отсечение части портала плоскостью
+    int split_by_plane(const btVector3 &splitPlane);              // отсечение части портала плоскостью
 };
 
 /**

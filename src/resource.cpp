@@ -1617,8 +1617,7 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
 
 void Res_ScriptsOpen(int engine_version)
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(engine_version, temp_script_name);
+    std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
     lua_register(level_script.getState(), "print", lua_print);
     level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);

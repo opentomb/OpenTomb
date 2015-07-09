@@ -454,7 +454,7 @@ void World::empty()
 
                     bt_engine_dynamicsWorld->removeRigidBody(body);
                     cont->room = NULL;
-                    free(cont);
+                    delete cont;
                     delete body;
                 }
             }

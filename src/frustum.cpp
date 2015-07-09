@@ -22,52 +22,57 @@ void Frustum::splitPrepare(struct Portal *p)
     parent.reset();
 }
 
-int Frustum::split_by_plane(const btVector3 &n, std::vector<btVector3>* buf)
+int Frustum::split_by_plane(const btVector3 &splitPlane)
 {
-    btScalar t;
+    assert( !vertices.empty() );
 
-    btVector3* frontVertex = &vertices.front();
-    btVector3* backVertex = &vertices.back();
+    std::vector<btVector3> buf;
+
+    btVector3* nextVertex = &vertices.front();
+    btVector3* currentVertex = &vertices.back();
 
     btScalar dist[2];
-    dist[0] = planeDist(n, *backVertex);
-    buf->clear();
-    for(uint16_t i=0;i<vertices.size();i++)
+    dist[0] = planeDist(splitPlane, *currentVertex);
+
+    // run through all adjacent vertices
+    for(size_t i=0; i<vertices.size(); i++)
     {
-        dist[1] = planeDist(n, *frontVertex);
+        dist[1] = planeDist(splitPlane, *nextVertex);
 
         if(dist[1] > SPLIT_EPSILON)
         {
             if(dist[0] < -SPLIT_EPSILON)
             {
-                auto dir = *frontVertex - *backVertex;
+                auto dir = *nextVertex - *currentVertex;
                 btVector3 v;
-                rayPlaneIntersect(*backVertex, dir, n, &v, &t);  // Search for intersection point...
-                buf->emplace_back(v);            // Shifting...
+                btScalar t;
+                rayPlaneIntersect(*currentVertex, dir, splitPlane, &v, &t);  // Search for intersection point...
+                buf.emplace_back(v);            // Shifting...
             }
-            buf->emplace_back( *frontVertex );   // Adding...
+            buf.emplace_back( *nextVertex );   // Adding...
         }
         else if(dist[1] < -SPLIT_EPSILON)
         {
             if(dist[0] > SPLIT_EPSILON)
             {
-                auto dir = *frontVertex - *backVertex;
+                auto dir = *nextVertex - *currentVertex;
                 btVector3 v;
-                rayPlaneIntersect(*backVertex, dir, n, &v, &t);  // Search for intersection point...
-                buf->emplace_back(v);
+                btScalar t;
+                rayPlaneIntersect(*currentVertex, dir, splitPlane, &v, &t);  // Search for intersection point...
+                buf.emplace_back(v);
             }
         }
         else
         {
-            buf->emplace_back(*frontVertex);   // Adding...
+            buf.emplace_back(*nextVertex);   // Adding...
         }
 
-        backVertex = frontVertex;
-        ++frontVertex;
+        currentVertex = nextVertex;
+        ++nextVertex;
         dist[0] = dist[1];
     }
 
-    if(buf->size() <= 2)       // Nothing was added or degenerative.
+    if(buf.size() <= 2)       // Nothing was added or degenerative.
     {
         vertices.clear();
         return SPLIT_EMPTY;
@@ -78,30 +83,26 @@ int Frustum::split_by_plane(const btVector3 &n, std::vector<btVector3>* buf)
     memcpy(p->vertex, buf, added*3*sizeof(btScalar));
 #else
     // filter repeating (too closest) points
-    frontVertex = &buf->front();
-    backVertex = &buf->back();
-    auto srcVertexIt = vertices.begin();
-    size_t finalVertexCount = 0;
-    for(uint16_t i=0; i<buf->size(); i++)
+    nextVertex = &buf.front();
+    currentVertex = &buf.back();
+    vertices.clear();
+    for(size_t i=0; i<buf.size(); i++)
     {
-        if(backVertex->distance2(*frontVertex) > SPLIT_EPSILON * SPLIT_EPSILON)
+        if(currentVertex->distance2(*nextVertex) > SPLIT_EPSILON * SPLIT_EPSILON)
         {
-            *srcVertexIt = *frontVertex;
-            ++srcVertexIt;
-            ++finalVertexCount;
+            vertices.emplace_back(*nextVertex);
         }
-        backVertex = frontVertex;
-        ++frontVertex;
+        currentVertex = nextVertex;
+        ++nextVertex;
     }
 
-    if(finalVertexCount <= 2)
+    if(vertices.size() <= 2)
     {
         vertices.clear();
         return SPLIT_EMPTY;
     }
-
-    vertices.resize(finalVertexCount);
 #endif
+
     return SPLIT_SUCCES;
 }
 
@@ -110,7 +111,7 @@ void Frustum::genClipPlanes(Camera *cam)
     if(vertices.empty())
         return;
 
-    planes.resize(4*vertices.size());
+    planes.resize(4*vertices.size(), {0,0,0});
 
     auto next_v = &vertices.front();
     auto curr_v = &vertices.back();
@@ -140,8 +141,9 @@ void Frustum::genClipPlanes(Camera *cam)
  * receiver - points to the base room frustum, which portal leads to - it's taken from the portal!
  * returns a pointer to newly generated frustum.
  */
-std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, Render *render)
+std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::shared_ptr<Frustum> emitter, Render *render)
 {
+    assert( emitter );
     if(!portal->dest_room)
         return nullptr;
 
@@ -177,14 +179,12 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
 
     current_gen->splitPrepare(portal);                       // prepare for clipping
 
-    std::vector<btVector3> tmp;
-    tmp.reserve(current_gen->vertices.size() + emitter->vertices.size() + 4);
-    if(current_gen->split_by_plane(emitter->norm, &tmp))               // splitting by main frustum clip plane
+    if(current_gen->split_by_plane(emitter->norm))               // splitting by main frustum clip plane
     {
         for(size_t i=0; i<emitter->vertices.size(); i++)
         {
             const auto& n = emitter->planes[i];
-            if(!current_gen->split_by_plane(n, &tmp))
+            if(!current_gen->split_by_plane(n))
             {
                 portal->dest_room->frustum.pop_back();
                 return nullptr;
@@ -241,8 +241,9 @@ bool Frustum::isPolyVisible(struct Polygon *p)
     }
 
     // Direction from the camera position to an arbitrary vertex frustum
+    assert( !vertices.empty() );
     auto dir = vertices[0] - *cam_pos;
-    btScalar t;
+    btScalar t = 0;
 
     // Polygon fits whole frustum (shouldn't happen, but we check anyway)
     if(p->rayIntersect(dir, *cam_pos, &t))
@@ -344,7 +345,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
-    struct Polygon poly;
+    Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
 

@@ -165,6 +165,7 @@ void Camera::recalcClipPlanes()
         if(planeDist(m_clipPlanes[i], worldNearViewPoint) < 0.0)
             m_clipPlanes[i] = -m_clipPlanes[i];
 
+    assert( !frustum->vertices.empty() );
     frustum->vertices[0] = m_pos + m_viewDir;
 }
 
@@ -177,6 +178,6 @@ Camera::Camera()
 
     frustum = std::make_shared<Frustum>();
     frustum->cam_pos = &m_pos;
-    frustum->vertices.resize(3);
+    frustum->vertices.resize(3, {0,0,0});
     frustum->planes.assign( m_clipPlanes+0, m_clipPlanes+4 );
 }

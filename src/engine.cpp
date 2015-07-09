@@ -920,7 +920,7 @@ void lua_PrintItems(int entity_id)
 
     for(const InventoryNode& i : ent->m_inventory)
     {
-        ConsoleInfo::instance().printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
+        ConsoleInfo::instance().printf("item[id = %d]: count = %d", i.id, i.count);
     }
 }
 

@@ -101,17 +101,6 @@ INCLUDE_DIRECTORIES(
     ${OPENGL_INCLUDE_DIR}
 )
 
-FILE(GLOB PRJ_HDR
-    src/*.h*
-    src/vt/*.h
-# TODO: Do this conditionally
-    src/mac/*.h
-# TODO: Ugly, find better way
-    3rdparty/al/*.h
-    3rdparty/al/*/*.h
-    3rdparty/al/*/*/*.h
-)
-
 if(APPLE)
     FILE(GLOB PRJ_SRC
         src/*.c*
@@ -121,14 +110,23 @@ if(APPLE)
         3rdparty/al/*/*.c
         3rdparty/al/*/*/*.c
     )
+    FILE(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+        src/mac/*.h
+        3rdparty/al/*.h
+        3rdparty/al/*/*.h
+        3rdparty/al/*/*/*.h
+    )
 else()
     FILE(GLOB PRJ_SRC
         src/*.c*
         src/vt/*.cpp
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
     )
+FILE(GLOB PRJ_HDR
+    src/*.h*
+    src/vt/*.h
+)
 endif()
 
 

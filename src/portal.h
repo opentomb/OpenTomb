@@ -24,8 +24,8 @@ struct RoomSector;
 struct Portal
 {
     std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
-    btVector3 norm;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btVector3 centre;                                                         // центр портала
+    btVector3 norm = {0,0,0};                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
+    btVector3 centre = {0,0,0};                                                         // центр портала
     std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
     unsigned int flag = 0;                                                          // хз, мб потом понадобится
