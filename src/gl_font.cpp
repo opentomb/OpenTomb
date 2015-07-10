@@ -272,11 +272,11 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 {
                     int ii;
                     glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
-                    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, glf->gl_tex_width, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, glf->gl_tex_width, 0, GL_R8, GL_UNSIGNED_BYTE, buffer);
                     for(ii=i0;ii<i;ii++)
                     {
                         glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
@@ -447,7 +447,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
     uint8_t *nch, *ch = (uint8_t*)text;
     FT_Vector kern;
 
-    if((glf == NULL) || (glf->ft_face == NULL) || (text == NULL))
+    if((glf == NULL) || (glf->ft_face == NULL) || (text == NULL) || (text[0] == '\0'))
     {
         return;
     }
@@ -456,7 +456,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
     if(glf->gl_real_tex_indexes_count == 1)
     {
-        GLfloat *p = static_cast<GLfloat*>( FontBuffer_ResizeAndMap(48 * utf8_strlen(text) * sizeof(GLfloat)) );
+        GLfloat *p = FontBuffer_ResizeAndMap(48 * utf8_strlen(text) * sizeof(GLfloat));
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
@@ -539,7 +539,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
         for(;*ch;)
         {
-            GLfloat *p = static_cast<GLfloat*>( FontBuffer_ResizeAndMap(sizeof(GLfloat [32])) );
+            GLfloat *p = FontBuffer_ResizeAndMap(sizeof(GLfloat [32]));
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 

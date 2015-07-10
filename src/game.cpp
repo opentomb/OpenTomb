@@ -42,7 +42,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
 void lua_mlook(lua::Value mlook)
 {
-    if(!mlook.is<lua::Integer>())
+    if(!mlook.is<lua::Boolean>())
     {
         control_states.mouse_look = !control_states.mouse_look;
         ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
@@ -55,7 +55,7 @@ void lua_mlook(lua::Value mlook)
 
 void lua_freelook(lua::Value free)
 {
-    if(!free.is<lua::Integer>())
+    if(!free.is<lua::Boolean>())
     {
         control_states.free_look = !control_states.free_look;
         ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
@@ -80,7 +80,7 @@ void lua_cam_distance(lua::Value distance)
 
 void lua_noclip(lua::Value noclip)
 {
-    if(!noclip.is<lua::Number>())
+    if(!noclip.is<lua::Boolean>())
     {
         control_states.noclip = !control_states.noclip;
     }

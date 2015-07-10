@@ -37,7 +37,7 @@ void fontBuffer_ensureAvailable()
     fontBufferVAO.reset( new VertexArray(0, 3, attribs) );
 }
 
-void *FontBuffer_ResizeAndMap(size_t bytes)
+GLfloat *FontBuffer_ResizeAndMap(size_t bytes)
 {
     fontBuffer_ensureAvailable();
     
@@ -47,7 +47,7 @@ void *FontBuffer_ResizeAndMap(size_t bytes)
         currentSize = bytes;
     }
     glBufferData(GL_ARRAY_BUFFER, currentSize, 0, GL_STREAM_DRAW);
-    return glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    return static_cast<GLfloat*>( glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY) );
 }
 
 void FontBuffer_Unmap()
