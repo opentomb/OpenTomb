@@ -790,9 +790,8 @@ void Render::renderRoomSprites(const Room* room, const matrix4 &modelViewMatrix,
 
 
 /**
- * Безопасное добавление комнаты в список рендерера.
- * Если комната уже есть в списке - возвращается ноль и комната повторно не добавляется.
- * Если список полон, то ничего не добавляется
+ * Add a room to the render list.
+ * If the room is already listed - false is returned and the room is not added twice.
  */
 bool Render::addRoom(Room* room)
 {
@@ -1007,25 +1006,25 @@ void Render::drawListDebugLines()
 }
 
 /**
- * The reccursion algorithm: go through the rooms with portal - frustum occlusion test
- * @portal - we entered to the room through that portal
- * @frus - frustum that intersects the portal
+ * The reccursion algorithm: go through the rooms with portal-frustum occlusion test
+ * @param portal we entered to the room through that portal
+ * @para frus frustum that intersects the portal
  * @return number of added rooms
  */
 int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
 {
-    int ret = 0;
-    std::shared_ptr<Room> room = portal->dest_room;                                            // куда ведет портал
-    std::shared_ptr<Room> src_room = portal->current_room;                                     // откуда ведет портал
+    std::shared_ptr<Room> destination = portal->dest_room;
+    std::shared_ptr<Room> current = portal->current_room;
 
-    if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
+    if(!current || !current->active || !destination || !destination->active)
     {
         return 0;
     }
 
-    for(Portal& p : room->portals)                            // перебираем все порталы входной комнаты
+    int ret = 0;
+    for(Portal& p : destination->portals)
     {
-        if(p.dest_room && p.dest_room->active && p.dest_room != src_room)                // обратно идти даже не пытаемся
+        if(p.dest_room && p.dest_room->active && p.dest_room != current)
         {
             auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);             // Главная ф-я портального рендерера. Тут и проверка
             if(gen_frus) {

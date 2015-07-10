@@ -18,7 +18,8 @@
 void Frustum::splitPrepare(struct Portal *p)
 {
     vertices = p->vertices;
-    norm = -p->norm;
+    norm = -p->normal;
+    norm[3] = -p->normal[3];
     parent.reset();
 }
 
@@ -111,7 +112,7 @@ void Frustum::genClipPlanes(Camera *cam)
     if(vertices.empty())
         return;
 
-    planes.resize(4*vertices.size(), {0,0,0});
+    planes.resize(vertices.size(), {0,0,0});
 
     auto next_v = &vertices.front();
     auto curr_v = &vertices.back();
@@ -122,12 +123,11 @@ void Frustum::genClipPlanes(Camera *cam)
     for(uint16_t i=0; i<vertices.size(); i++)
     {
         auto V1 = *prev_v - cam->m_pos;                    // POV-vertex vector
-        auto V2 = *curr_v - *prev_v;                       // vector connecting neighbor vertices
+        auto V2 = *prev_v - *curr_v;                       // vector connecting neighbor vertices
         V1.normalize();
         V2.normalize();
-        planes[4*i+0] = V1.cross(V2).normalized();
-        planes[4*i+3] = -(planes[4*i+0] * (*curr_v)[0]);
-        planes[4*i+0] = -planes[4*i+0];
+        planes[i] = V1.cross(V2).normalized();
+        planes[i][3] = -planes[i].dot(*curr_v);
 
         prev_v = curr_v;
         curr_v = next_v;
@@ -147,7 +147,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     if(!portal->dest_room)
         return nullptr;
 
-    if(planeDist(portal->norm, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(planeDist(portal->normal, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;
     }
@@ -160,9 +160,9 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     bool in_dist = false, in_face = false;
     for(const btVector3& v : portal->vertices)
     {
-        if(!in_dist && (planeDist(render->camera()->frustum->norm, v) < render->camera()->m_distFar))
+        if(!in_dist && planeDist(render->camera()->frustum->norm, v) < render->camera()->m_distFar)
             in_dist = true;
-        if(!in_face && (planeDist(emitter->norm, v) > 0.0))
+        if(!in_face && planeDist(emitter->norm, v) > 0.0)
             in_face = true;
         if(in_dist && in_face)
             break;

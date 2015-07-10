@@ -1386,7 +1386,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
 
 bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
 {
-    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.norm[1]) > 0.99))
+    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.normal[1]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_x = min_x = p.vertices.front().x();
@@ -1417,7 +1417,7 @@ bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p
             return true;
         }
     }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p.norm[0]) > 0.99))
+    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p.normal[0]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_y = min_y = p.vertices.front().y();
@@ -1506,7 +1506,7 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
         {
             for(const Portal& p : room->portals)
             {
-                if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
+                if((p.normal[2] < 0.01) && ((p.normal[2] > -0.01)))
                 {
                     RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
                     RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
@@ -2193,19 +2193,19 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
          * Portal position fix...
          */
         // X_MIN
-        if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
+        if((p->normal[0] > 0.999) && (((int)p->centre[0])%2))
         {
             p->move({1,0,0});
         }
 
         // Y_MIN
-        if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
+        if((p->normal[1] > 0.999) && (((int)p->centre[1])%2))
         {
             p->move({0,1,0});
         }
 
         // Z_MAX
-        if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
+        if((p->normal[2] <-0.999) && (((int)p->centre[2])%2))
         {
             p->move({0,0,-1});
         }
