@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <cassert>
 
 #include "gl_util.h"
 #include "vmath.h"

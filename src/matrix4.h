@@ -11,7 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
-#include <ostream>
+#include <iosfwd>
 
 #if defined(_WIN32) || defined(__SSE__)
 #include <xmmintrin.h>
@@ -33,8 +33,6 @@
 #undef min
 #endif
 
-#define M_PI 3.1415926536
-
 static inline float fmaxf(float a, float b)
 {
 	return a > b ? a : b;
@@ -49,6 +47,10 @@ static inline int _finite(float a)
 {
 	return std::isfinite(a);
 }
+#endif
+
+#ifndef M_PI
+#define M_PI 3.1415926536
 #endif
 
 union float4;

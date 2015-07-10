@@ -7,6 +7,8 @@
 
 #include "matrix4.h"
 
+#include <iostream>
+
 bool float4::isOnTriangle(const float4 *points) const
 {
 	const float4 zero(0.0f);
@@ -131,7 +133,7 @@ matrix4 matrix4::rotation(float4 axis, float angle)
 
 matrix4 matrix4::frustum(float angle, float aspect, float near, float far)
 {
-	float ymax = near * tanf(angle * float(M_PI) / 180.0f) * 0.5;
+    float ymax = near * tanf(angle * M_PI / 180.0f) * 0.5;
 	float xmax = ymax * aspect;
 	
 	matrix4 result;
