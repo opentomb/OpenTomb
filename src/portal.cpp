@@ -21,8 +21,7 @@ void Portal::move(const btVector3& mv)
     centre += mv;
     for(btVector3& v : vertices)
         v += mv;
-
-    normal[3] = -normal.dot(vertices.front());
+    normal.moveTo(vertices[0]);
 }
 
 
@@ -33,13 +32,13 @@ void Portal::move(const btVector3& mv)
  */
 bool Portal::rayIntersect(const btVector3& ray, const btVector3& dot)
 {
-    btScalar u = normal.dot(ray);
+    btScalar u = normal.normal.dot(ray);
     if(std::fabs(u) < SPLIT_EPSILON)
     {
         // the plane is parallel to the line
         return false;
     }
-    btScalar t = -(normal[3] + normal.dot(dot)) / u;
+    btScalar t = -(normal.dot + normal.normal.dot(dot)) / u;
     if(t <= 0)
     {
         // plane is on the wrong side of the ray
@@ -83,6 +82,5 @@ void Portal::genNormale()
     assert( vertices.size() > 3 );
     auto v1 = vertices[0] - vertices[1];
     auto v2 = vertices[2] - vertices[1];
-    normal = v1.cross(v2).normalized();
-    normal[3] = -normal.dot(vertices.front());
+    normal.assign(v1, v2, vertices[0]);
 }

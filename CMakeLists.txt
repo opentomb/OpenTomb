@@ -14,15 +14,17 @@ INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(3rdparty/LuaState/include)
 
-# Don’t attempt to find AL anywhere, just use ours directly.
-INCLUDE_DIRECTORIES(3rdparty/al/)
+if(APPLE)
+    # Don’t attempt to find AL anywhere, just use ours directly.
+    INCLUDE_DIRECTORIES(3rdparty/al/)
+else()
+    find_package(OpenAL REQUIRED)
+    INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
+endif()
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
 add_definitions(-DLUA_COMPAT_APIINTCASTS)
-
-#find_package(OpenAL REQUIRED)
-#INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
 find_package(GLEW REQUIRED)
 INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIRS})
@@ -123,10 +125,10 @@ else()
         src/*.c*
         src/vt/*.cpp
     )
-FILE(GLOB PRJ_HDR
-    src/*.h*
-    src/vt/*.h
-)
+    FILE(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+    )
 endif()
 
 

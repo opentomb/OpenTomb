@@ -25,7 +25,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     size_t negative = 0;
     size_t in_plane = 0;
     for(const Vertex& v : transformed.vertices) {
-        const auto dist = planeDist(root->plane, v.position);
+        const auto dist = root->plane.distance(v.position);
         if (dist > SPLIT_EPSILON)
             positive++;
         else if (dist < -SPLIT_EPSILON)
@@ -44,7 +44,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
     else //((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
     {
-        if(transformed.plane.dot(root->plane) > 0.9) {
+        if(transformed.plane.normal.dot(root->plane.normal) > 0.9) {
             root->polygons_front.insert(root->polygons_front.end(), face);
         }
         else {

@@ -50,7 +50,7 @@ struct Camera
     matrix4 m_glProjMat;
     matrix4 m_glViewProjMat;
 
-    btVector3 m_clipPlanes[4];        // frustum side clip planes
+    Plane m_clipPlanes[4];        // frustum side clip planes
     std::shared_ptr<Frustum> frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;

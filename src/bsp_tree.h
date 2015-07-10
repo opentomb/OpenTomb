@@ -27,7 +27,7 @@ struct BSPFaceRef {
 
 struct BSPNode
 {
-    btVector3 plane{0,0,0};
+    Plane plane;
     
     std::vector<BSPFaceRef> polygons_front;
     std::vector<BSPFaceRef> polygons_back;

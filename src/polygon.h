@@ -39,7 +39,7 @@ struct Polygon
     uint16_t            frame_offset = 0;                                           // anim texture frame offset
     uint16_t            transparency = 0;                                           // transparency information
     bool                double_side = false;                                            // double side flag
-    btVector3 plane{0,0,0};                                               // polygon plane equation
+    Plane plane;                                               // polygon plane equation
     
     Polygon() = default;
 
@@ -76,11 +76,11 @@ struct Polygon
     void transformSelf(const btTransform &tr);
 
     void findNormal();
-    int  rayIntersect(const btVector3 &dir, const btVector3 &dot, btScalar *t) const;
+    int  rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *t) const;
     bool intersectPolygon(Polygon* p2);
 
-    int  splitClassify(const btVector3 &n);
-    void split(const btVector3 &n, Polygon* front, Polygon* back);
+    int  splitClassify(const Plane &plane);
+    void split(const Plane &n, Polygon* front, Polygon* back);
 
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);
     bool isInsideBQuad(const btVector3 &bb_min, const btVector3 &bb_max);

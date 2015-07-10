@@ -125,46 +125,33 @@ void Camera::recalcClipPlanes()
 
     //==========================================================================
 
-    frustum->norm = m_viewDir;                               // Основная плоскость отсечения (что сзади - то не рисуем)
-    frustum->norm[3] = -m_viewDir.dot(m_pos);                 // плоскость проекции проходит через наблюдателя.
+    frustum->norm.assign( m_viewDir, m_pos );                               // Основная плоскость отсечения (что сзади - то не рисуем)
 
     //==========================================================================
 
     //   DOWN
     btVector3 LU;
     LU = nearViewPoint - m_height / 2.0 * m_upDir;                                       // вектор нижней плоскости отсечения
-
-    m_clipPlanes[2] = m_rightDir.cross(LU);
-    m_clipPlanes[2].normalize();
-    m_clipPlanes[2][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //   UP
     LU = nearViewPoint + m_height / 2.0 * m_upDir;                                       // вектор верхней плоскости отсечения
-
-    m_clipPlanes[3] = m_rightDir.cross(LU);
-    m_clipPlanes[3].normalize();
-    m_clipPlanes[3][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //==========================================================================
 
     //   LEFT
     LU = nearViewPoint - m_width / 2.0 * m_rightDir;                                    // вектор левой плоскости отсечения
-
-    m_clipPlanes[0] = m_upDir.cross(LU);
-    m_clipPlanes[0].normalize();
-    m_clipPlanes[0][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     //   RIGHT
     LU = nearViewPoint + m_width / 2.0 * m_rightDir;                                    // вектор правой плоскости отсечения
-
-    m_clipPlanes[1] = m_upDir.cross(LU);
-    m_clipPlanes[1].normalize();
-    m_clipPlanes[1][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
     for(int i=0; i<4; ++i)
-        if(planeDist(m_clipPlanes[i], worldNearViewPoint) < 0.0)
-            m_clipPlanes[i] = -m_clipPlanes[i];
+        if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
+            m_clipPlanes[i].mirrorNormal();
 
     assert( !frustum->vertices.empty() );
     frustum->vertices[0] = m_pos + m_viewDir;

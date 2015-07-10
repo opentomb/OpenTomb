@@ -18,12 +18,12 @@
 void Frustum::splitPrepare(struct Portal *p)
 {
     vertices = p->vertices;
-    norm = -p->normal;
-    norm[3] = -p->normal[3];
+    norm = p->normal;
+    norm.mirrorNormal();
     parent.reset();
 }
 
-int Frustum::split_by_plane(const btVector3 &splitPlane)
+int Frustum::split_by_plane(const Plane& splitPlane)
 {
     assert( !vertices.empty() );
 
@@ -33,22 +33,18 @@ int Frustum::split_by_plane(const btVector3 &splitPlane)
     btVector3* currentVertex = &vertices.back();
 
     btScalar dist[2];
-    dist[0] = planeDist(splitPlane, *currentVertex);
+    dist[0] = splitPlane.distance(*currentVertex);
 
     // run through all adjacent vertices
     for(size_t i=0; i<vertices.size(); i++)
     {
-        dist[1] = planeDist(splitPlane, *nextVertex);
+        dist[1] = splitPlane.distance(*nextVertex);
 
         if(dist[1] > SPLIT_EPSILON)
         {
             if(dist[0] < -SPLIT_EPSILON)
             {
-                auto dir = *nextVertex - *currentVertex;
-                btVector3 v;
-                btScalar t;
-                rayPlaneIntersect(*currentVertex, dir, splitPlane, &v, &t);  // Search for intersection point...
-                buf.emplace_back(v);            // Shifting...
+                buf.emplace_back( splitPlane.rayIntersect(*currentVertex, *nextVertex - *currentVertex) );            // Shifting...
             }
             buf.emplace_back( *nextVertex );   // Adding...
         }
@@ -56,11 +52,7 @@ int Frustum::split_by_plane(const btVector3 &splitPlane)
         {
             if(dist[0] > SPLIT_EPSILON)
             {
-                auto dir = *nextVertex - *currentVertex;
-                btVector3 v;
-                btScalar t;
-                rayPlaneIntersect(*currentVertex, dir, splitPlane, &v, &t);  // Search for intersection point...
-                buf.emplace_back(v);
+                buf.emplace_back( splitPlane.rayIntersect(*currentVertex, *nextVertex - *currentVertex) );
             }
         }
         else
@@ -112,7 +104,7 @@ void Frustum::genClipPlanes(Camera *cam)
     if(vertices.empty())
         return;
 
-    planes.resize(vertices.size(), {0,0,0});
+    planes.resize(vertices.size());
 
     auto next_v = &vertices.front();
     auto curr_v = &vertices.back();
@@ -126,8 +118,7 @@ void Frustum::genClipPlanes(Camera *cam)
         auto V2 = *prev_v - *curr_v;                       // vector connecting neighbor vertices
         V1.normalize();
         V2.normalize();
-        planes[i] = V1.cross(V2).normalized();
-        planes[i][3] = -planes[i].dot(*curr_v);
+        planes[i].assign(V1, V2, *curr_v);
 
         prev_v = curr_v;
         curr_v = next_v;
@@ -147,7 +138,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     if(!portal->dest_room)
         return nullptr;
 
-    if(planeDist(portal->normal, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(portal->normal.distance(render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;
     }
@@ -160,9 +151,9 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     bool in_dist = false, in_face = false;
     for(const btVector3& v : portal->vertices)
     {
-        if(!in_dist && planeDist(render->camera()->frustum->norm, v) < render->camera()->m_distFar)
+        if(!in_dist && render->camera()->frustum->norm.distance(v) < render->camera()->m_distFar)
             in_dist = true;
-        if(!in_face && planeDist(emitter->norm, v) > 0.0)
+        if(!in_face && emitter->norm.distance(v) > 0.0)
             in_face = true;
         if(in_dist && in_face)
             break;
@@ -235,7 +226,7 @@ bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
  */
 bool Frustum::isPolyVisible(struct Polygon *p)
 {
-    if(planeDist(p->plane, *cam_pos) < 0.0)
+    if(p->plane.distance(*cam_pos) < 0.0)
     {
         return false;
     }
@@ -252,10 +243,10 @@ bool Frustum::isPolyVisible(struct Polygon *p)
     }
 
     // Generate queue order...
-    btVector3* next_n = &planes.front();
+    const Plane* next_n = &planes.front();
     // 3 neighboring clipping planes
-    btVector3* curr_n = &planes.back();
-    btVector3* prev_n = curr_n - 1;
+    const Plane* curr_n = &planes.back();
+    const Plane* prev_n = curr_n - 1;
     // in case no intersection
     bool ins = true;
     // iterate through all the planes of this frustum
@@ -265,18 +256,18 @@ bool Frustum::isPolyVisible(struct Polygon *p)
         Vertex* curr_v = &p->vertices.front();
         Vertex* prev_v = &p->vertices.back();
         // signed distance from the current point to the previous plane
-        btScalar dist0 = planeDist(*curr_n, prev_v->position);
+        btScalar dist0 = curr_n->distance(prev_v->position);
         bool outs = true;
         // iterate through all the vertices of the polygon
         for(size_t j=0; j<p->vertices.size(); j++)
         {
-            btScalar dist1 = planeDist(*curr_n, curr_v->position);
+            btScalar dist1 = curr_n->distance(curr_v->position);
             // the split point in the plane
             if(std::fabs(dist0) < SPLIT_EPSILON)
             {
-                if((planeDist(*prev_n, prev_v->position) > -SPLIT_EPSILON) &&
-                   (planeDist(*next_n, prev_v->position) > -SPLIT_EPSILON) &&
-                   (planeDist(norm, prev_v->position) > -SPLIT_EPSILON))
+                if((prev_n->distance(prev_v->position) > -SPLIT_EPSILON) &&
+                   (next_n->distance(prev_v->position) > -SPLIT_EPSILON) &&
+                   (norm.distance(prev_v->position) > -SPLIT_EPSILON))
                 {
                     // Frustum-vertex intersection test is passed.
                     return true;
@@ -288,10 +279,9 @@ bool Frustum::isPolyVisible(struct Polygon *p)
             {
                 // vector connecting vertices
                 dir = curr_v->position - prev_v->position;
-                btVector3 T;
                 // We are looking for the point of intersection
-                rayPlaneIntersect(prev_v->position, dir, *curr_n, &T, &t);
-                if((planeDist(*prev_n, T) > -SPLIT_EPSILON) && (planeDist(*next_n, T) > -SPLIT_EPSILON))
+                const btVector3 T = curr_n->rayIntersect(prev_v->position, dir);
+                if((prev_n->distance(T) > -SPLIT_EPSILON) && (next_n->distance(T) > -SPLIT_EPSILON))
                 {
                     // Frustum-ray intersection test is passed.
                     return true;
@@ -340,8 +330,7 @@ bool Frustum::isPolyVisible(struct Polygon *p)
  *
  * @param bbmin - aabb corner (x_min, y_min, z_min)
  * @param bbmax - aabb corner (x_max, y_max, z_max)
- * @param frustum - test frustum
- * @return 1 if aabb is in frustum.
+ * @return true if aabb is in frustum.
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
@@ -351,12 +340,12 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 
     /* X_AXIS */
 
-    poly.plane[1] = 0.0;
-    poly.plane[2] = 0.0;
+    poly.plane.normal[1] = 0.0;
+    poly.plane.normal[2] = 0.0;
     if((*cam_pos)[0] < bbmin[0])
     {
-        poly.plane[0] = -1.0;
-        poly.plane[3] = bbmin[0];
+        poly.plane.normal[0] = -1.0;
+        poly.plane.dot = bbmin[0];
         poly.vertices[0].position[0] = bbmin[0];
         poly.vertices[0].position[1] = bbmax[1];
         poly.vertices[0].position[2] = bbmax[2];
@@ -381,8 +370,8 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
     }
     else if((*cam_pos)[0] > bbmax[0])
     {
-        poly.plane[0] = 1.0;
-        poly.plane[3] =-bbmax[0];
+        poly.plane.normal[0] = 1.0;
+        poly.plane.dot =-bbmax[0];
         poly.vertices[0].position[0] = bbmax[0];
         poly.vertices[0].position[1] = bbmax[1];
         poly.vertices[0].position[2] = bbmax[2];
@@ -408,12 +397,12 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 
     /* Y AXIS */
 
-    poly.plane[0] = 0.0;
-    poly.plane[2] = 0.0;
+    poly.plane.normal[0] = 0.0;
+    poly.plane.normal[2] = 0.0;
     if((*cam_pos)[1] < bbmin[1])
     {
-        poly.plane[1] = -1.0;
-        poly.plane[3] = bbmin[1];
+        poly.plane.normal[1] = -1.0;
+        poly.plane.dot = bbmin[1];
         poly.vertices[0].position[0] = bbmax[0];
         poly.vertices[0].position[1] = bbmin[1];
         poly.vertices[0].position[2] = bbmax[2];
@@ -438,8 +427,8 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
     }
     else if((*cam_pos)[1] > bbmax[1])
     {
-        poly.plane[1] = 1.0;
-        poly.plane[3] = -bbmax[1];
+        poly.plane.normal[1] = 1.0;
+        poly.plane.dot = -bbmax[1];
         poly.vertices[0].position[0] = bbmax[0];
         poly.vertices[0].position[1] = bbmax[1];
         poly.vertices[0].position[2] = bbmax[2];
@@ -465,12 +454,12 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 
     /* Z AXIS */
 
-    poly.plane[0] = 0.0;
-    poly.plane[1] = 0.0;
+    poly.plane.normal[0] = 0.0;
+    poly.plane.normal[1] = 0.0;
     if((*cam_pos)[2] < bbmin[2])
     {
-        poly.plane[2] = -1.0;
-        poly.plane[3] = bbmin[2];
+        poly.plane.normal[2] = -1.0;
+        poly.plane.dot = bbmin[2];
         poly.vertices[0].position[0] = bbmax[0];
         poly.vertices[0].position[1] = bbmax[1];
         poly.vertices[0].position[2] = bbmin[2];
@@ -495,8 +484,8 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
     }
     else if((*cam_pos)[2] > bbmax[2])
     {
-        poly.plane[2] = 1.0;
-        poly.plane[3] = -bbmax[2];
+        poly.plane.normal[2] = 1.0;
+        poly.plane.dot = -bbmax[2];
         poly.vertices[0].position[0] = bbmax[0];
         poly.vertices[0].position[1] = bbmax[1];
         poly.vertices[0].position[2] = bbmax[2];
@@ -530,7 +519,7 @@ bool Frustum::isOBBVisible(OBB *obb)
     struct Polygon *p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
-        auto t = planeDist(p->plane, *cam_pos);
+        auto t = p->plane.distance(*cam_pos);
         if((t > 0.0) && isPolyVisible(p))
         {
             return true;
@@ -554,7 +543,7 @@ bool Frustum::isOBBVisibleInRoom(OBB *obb, const Room& room)
         auto p = obb->polygons;
         for(int i=0;i<6;i++,p++)
         {
-            auto t = planeDist(p->plane, engine_camera.m_pos);
+            auto t = p->plane.distance(engine_camera.m_pos);
             if((t > 0.0) && engine_camera.frustum->isPolyVisible(p))
             {
                 return true;
@@ -570,7 +559,7 @@ bool Frustum::isOBBVisibleInRoom(OBB *obb, const Room& room)
     for(const auto& frustum : room.frustum) {
         auto p = obb->polygons;
         for(int i=0;i<6;i++,p++) {
-            auto t = planeDist(p->plane, *frustum->cam_pos);
+            auto t = p->plane.distance(*frustum->cam_pos);
             if((t > 0.0) && frustum->isPolyVisible(p))
             {
                 return true;

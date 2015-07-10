@@ -1,6 +1,5 @@
-#include <SDL2/SDL.h>
-
 #include "audio.h"
+
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
@@ -11,9 +10,10 @@
 #include "render.h"
 #include "string.h"
 
+#include <SDL2/SDL.h>
+
 #include <cmath>
 
-#define AL_ALEXT_PROTOTYPES
 #ifndef AL_ALEXT_PROTOTYPES
 namespace
 {

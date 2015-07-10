@@ -225,7 +225,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
 
 void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = planeDist(root->plane, engine_camera.m_pos);
+    btScalar d = root->plane.distance(engine_camera.m_pos);
 
     if(d >= 0)
     {
@@ -273,7 +273,7 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
 
 void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = planeDist(root->plane, engine_camera.m_pos);
+    btScalar d = root->plane.distance(engine_camera.m_pos);
 
     if(d >= 0)
     {
