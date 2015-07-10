@@ -858,7 +858,8 @@ void Render::drawList()
     }
 
     glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     renderSkyBox(m_cam->m_glViewProjMat);
     

@@ -178,7 +178,7 @@ m_canonicalObjectTextures()
         for(size_t i=0; i<object_texture_count; ++i)
             areaSum += object_textures[i].x_size * object_textures[i].y_size;
         for(size_t i=0; i<sprite_texture_count; ++i)
-            areaSum += (sprite_textures[i].x1-sprite_textures[i].x0) * (sprite_textures[i].y1-sprite_textures[i].y0);
+            areaSum += std::abs( (sprite_textures[i].x1-sprite_textures[i].x0) * (sprite_textures[i].y1-sprite_textures[i].y0) );
 
         m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
     }
