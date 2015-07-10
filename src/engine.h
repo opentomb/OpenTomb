@@ -76,7 +76,7 @@ struct EngineControlState
     btScalar free_look_speed = 0;
 
     bool     mouse_look = false;
-    btScalar cam_distance = 0;
+    btScalar cam_distance = 800;
     bool     noclip = false;
 
     btScalar look_axis_x = 0;                       // Unified look axis data.

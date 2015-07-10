@@ -194,7 +194,7 @@ typedef struct gui_text_line_s
 
     GLfloat                     rect[4];    //x0, yo, x1, y1
 
-    int8_t                      show;
+    bool                        show;
 
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;

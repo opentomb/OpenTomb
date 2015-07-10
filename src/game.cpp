@@ -436,9 +436,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos[0] = renderer.camera()->m_pos[0] + renderer.camera()->m_viewDir[0] * control_states.cam_distance;
-        pos[1] = renderer.camera()->m_pos[1] + renderer.camera()->m_viewDir[1] * control_states.cam_distance;
-        pos[2] = renderer.camera()->m_pos[2] + renderer.camera()->m_viewDir[2] * control_states.cam_distance - 512.0;
+        pos = renderer.camera()->m_pos + renderer.camera()->m_viewDir * control_states.cam_distance;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
     }
@@ -459,8 +457,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if(control_states.use_small_medi)
         {
-            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 &&
-               ch->changeParam(PARAM_HEALTH, 250))
+            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(PARAM_HEALTH, 250))
             {
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
@@ -856,13 +853,13 @@ void Game_Prepare()
         // Set character values to default.
 
         engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        engine_world.character->setParam       (PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
         engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        engine_world.character->setParam       (PARAM_AIR    , LARA_PARAM_AIR_MAX    );
         engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParam       (PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
         engine_world.character->setParamMaximum(PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        engine_world.character->setParam       (PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
         // Set character statistics to default.
 

@@ -66,7 +66,7 @@ void Gui_InitTempLines()
         gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
         gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
-        gui_temp_lines[i].show = 0;
+        gui_temp_lines[i].show = false;
 
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
@@ -241,7 +241,7 @@ void Gui_Destroy()
 {
     for(int i = 0; i < GUI_MAX_TEMP_LINES ;i++)
     {
-        gui_temp_lines[i].show = 0;
+        gui_temp_lines[i].show = false;
         gui_temp_lines[i].text_size = 0;
         free(gui_temp_lines[i].text);
         gui_temp_lines[i].text = NULL;
@@ -346,7 +346,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->absXoffset = l->X * screen_info.scale_factor;
         l->absYoffset = l->Y * screen_info.scale_factor;
 
-        l->show = 1;
+        l->show = true;
         return l;
     }
 
@@ -522,7 +522,7 @@ void Gui_RenderStrings()
             if(l->show)
             {
                 Gui_RenderStringLine(l);
-                l->show = 0;
+                l->show = false;
             }
         }
 
@@ -661,7 +661,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
     mLabel_Title.text           = mLabel_Title_text;
     mLabel_Title_text[0]        = 0;
-    mLabel_Title.show           = 0;
+    mLabel_Title.show           = false;
 
     mLabel_ItemName.X           = 0.0;
     mLabel_ItemName.Y           = 50.0;
@@ -672,7 +672,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
     mLabel_ItemName.text        = mLabel_ItemName_text;
     mLabel_ItemName_text[0]     = 0;
-    mLabel_ItemName.show        = 0;
+    mLabel_ItemName.show        = false;
 
     Gui_AddLine(&mLabel_ItemName);
     Gui_AddLine(&mLabel_Title);
@@ -684,10 +684,10 @@ gui_InventoryManager::~gui_InventoryManager()
     mNextState = INVENTORY_DISABLED;
     mInventory = NULL;
 
-    mLabel_ItemName.show = 0;
+    mLabel_ItemName.show = false;
     Gui_DeleteLine(&mLabel_ItemName);
 
-    mLabel_Title.show = 0;
+    mLabel_Title.show = false;
     Gui_DeleteLine(&mLabel_Title);
 }
 
@@ -856,21 +856,21 @@ void gui_InventoryManager::frame(float time)
                         mItemTime = 0.0;
                         mItemAngle = 0.0;
                     }
-                    mLabel_ItemName.show = 1;
-                    mLabel_Title.show = 1;
+                    mLabel_ItemName.show = true;
+                    mLabel_Title.show = true;
                     break;
 
                 case INVENTORY_CLOSE:
                     Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     mCurrentState = mNextState;
                     break;
 
                 case INVENTORY_R_LEFT:
                 case INVENTORY_R_RIGHT:
                     Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
-                    mLabel_ItemName.show = 0;
+                    mLabel_ItemName.show = false;
                     mCurrentState = mNextState;
                     mItemTime = 0.0;
                     break;
@@ -887,8 +887,8 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     break;
 
                 case INVENTORY_DOWN:
@@ -903,8 +903,8 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     break;
             };
             break;
@@ -1028,7 +1028,7 @@ void gui_InventoryManager::frame(float time)
                 mNextState = INVENTORY_DISABLED;
                 mRingVerticalAngle = 180.0;
                 mRingTime = 0.0;
-                mLabel_Title.show = 0;
+                mLabel_Title.show = false;
                 mRingRadius = mBaseRingRadius;
                 mCurrentItemsType = 1;
             }

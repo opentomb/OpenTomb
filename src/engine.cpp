@@ -627,7 +627,7 @@ int lua_GetCharacterCombatMode(int id)
     return -1;
 }
 
-void lua_ChangeCharacterParam(int id, int parameter, float value)
+void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
 {
     std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
@@ -637,9 +637,12 @@ void lua_ChangeCharacterParam(int id, int parameter, float value)
         return;
     }
 
-    if(ent)
+    if(ent && (value.is<lua::Number>() || value.is<lua::Integer>()))
     {
-        ent->changeParam(parameter, value);
+        if(value.is<lua::Number>())
+            ent->changeParam(parameter, value.to<lua::Number>());
+        else
+            ent->changeParam(parameter, value.to<lua::Integer>());
     }
     else
     {
