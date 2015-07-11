@@ -192,9 +192,19 @@ void OBB_Transform(obb_p obb)
 {
     if(obb->transform != NULL)
     {
-        for(int i=0;i<6;i++)
+        polygon_p p = obb->polygons;
+        polygon_p src_p = obb->base_polygons;
+        
+        for(int i=0;i<6;i++,p++,src_p++)
         {
-            Polygon_vTransform(obb->polygons+i, obb->base_polygons+i, obb->transform);
+            vertex_p v = p->vertices;
+            vertex_p src_v = src_p->vertices;
+            Mat4_vec3_rot_macro(p->plane, obb->transform, src_p->plane);
+            for(uint16_t i=0;i<4;i++,v++,src_v++)
+            {
+                Mat4_vec3_mul_macro(v->position, obb->transform, src_v->position);
+            }
+            p->plane[3] = -vec3_dot(p->plane, p->vertices[0].position);
         }
         Mat4_vec3_mul_macro(obb->centre, obb->transform, obb->base_centre);
     }

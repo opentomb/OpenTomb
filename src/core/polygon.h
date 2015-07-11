@@ -64,7 +64,6 @@ void Polygon_Copy(polygon_p dst, polygon_p src);
 
 void Polygon_MoveSelf(polygon_p p, btScalar move[3]);
 void Polygon_Move(polygon_p ret, polygon_p src, btScalar move[3]);
-void Polygon_vTransform(polygon_p ret, polygon_p src, btScalar tr[16]);
 void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16]);
 void Polygon_TransformSelf(polygon_p p, btScalar tr[16]);
 

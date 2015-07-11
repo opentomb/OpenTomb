@@ -176,22 +176,6 @@ void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16])
 }
 
 
-void Polygon_vTransform(polygon_p ret, polygon_p src, btScalar tr[16])
-{
-    vertex_p ret_v, src_v;
-
-    Mat4_vec3_rot_macro(ret->plane, tr, src->plane);
-    ret_v = ret->vertices;
-    src_v = src->vertices;
-    for(uint16_t i=0;i<src->vertex_count;i++,ret_v++,src_v++)
-    {
-        Mat4_vec3_mul_macro(ret_v->position, tr, src_v->position);
-    }
-
-    ret->plane[3] = -vec3_dot(ret->plane, ret->vertices[0].position);
-}
-
-
 int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t)
 {
     btScalar tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];

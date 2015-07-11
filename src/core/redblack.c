@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "redblack.h"
-//#include "system.h"
+#include "system.h"
 
-void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
+static void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
+static void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x);
+static void rotateRight(RedBlackHeader_p header, RedBlackNode_p x);
+static RedBlackNode_p TreeSuccessor(RedBlackNode_p n);
 
 // This method search the tree for a node with key 'key', and
 // return the node on success otherwise treeNULL.
@@ -264,8 +267,7 @@ RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        //Sys_extError("insufficient memory (insertNode)\n");
-        exit(1);
+        Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
     x->key = key;
@@ -328,8 +330,7 @@ RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        //Sys_extError("insufficient memory (insertNode)\n");
-        exit(1);
+        Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
     x->key = key;

@@ -1877,10 +1877,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     world->version = tr->game_version;
 
-    Res_ScriptsOpen(world->version);   // Open configuration scripts.
+    Res_ScriptsOpen(world->version);    // Open configuration scripts.
     Gui_DrawLoadScreen(150);
 
-    Res_GenRBTrees(world);               // Generate red-black trees
+    Res_GenRBTrees(world);              // Generate red-black trees
     Gui_DrawLoadScreen(200);
 
     TR_GenTextures(world, tr);          // Generate OGL textures
@@ -1907,7 +1907,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     TR_GenRooms(world, tr);             // Build all rooms
     Gui_DrawLoadScreen(500);
 
-    Res_GenRoomFlipMap(world);           // Generate room flipmaps
+    Res_GenRoomFlipMap(world);          // Generate room flipmaps
     Gui_DrawLoadScreen(520);
 
     // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
@@ -2724,130 +2724,137 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
-
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
-    world->anim_sequences_count = num_sequences;
-    world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
-
-    anim_seq_p seq = world->anim_sequences;
-    for(uint16_t i = 0; i < num_sequences; i++,seq++)
+    if(num_sequences)
     {
-        seq->frames_count = *(pointer++) + 1;
-        seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
+        world->anim_sequences_count = num_sequences;
+        world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
 
-        // Fill up new sequence with frame list.
-        seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
-        seq->frame_lock        = false; // by default anim is playing
-        seq->uvrotate          = false; // by default uvrotate
-        seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-        seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
-        seq->frame_time        = 0.0;   // Reset frame time to initial state.
-        seq->current_frame     = 0;     // Reset current frame to zero.
-
-        for(uint16_t j = 0; j < seq->frames_count; j++)
+        anim_seq_p seq = world->anim_sequences;
+        for(uint16_t i = 0; i < num_sequences; i++,seq++)
         {
-            seq->frame_list[j] = *(pointer++);  // Add one frame.
-        }
+            seq->frames_count = *(pointer++) + 1;
+            seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
 
-        // UVRotate textures case.
-        // In TR4-5, it is possible to define special UVRotate animation mode.
-        // It is specified by num_uvrotates variable. If sequence belongs to
-        // UVRotate range, each frame will be divided in half and continously
-        // scrolled from one part to another by shifting UV coordinates.
-        // In OpenTomb, we can have BOTH UVRotate and classic frames mode
-        // applied to the same sequence, but there we specify compatibility
-        // method for TR4-5.
-
-        if(level_script)
-        {
-            int top = lua_gettop(level_script);
-            lua_getglobal(level_script, "UVRotate");
-            uvrotate_script = lua_tointeger(level_script, -1);
-            lua_settop(level_script, top);
-        }
-
-        if(i < num_uvrotates)
-        {
+            // Fill up new sequence with frame list.
+            seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
             seq->frame_lock        = false; // by default anim is playing
+            seq->uvrotate          = false; // by default uvrotate
+            seq->reverse_direction = false; // Needed for proper reverse-type start-up.
+            seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+            seq->frame_time        = 0.0;   // Reset frame time to initial state.
+            seq->current_frame     = 0;     // Reset current frame to zero.
 
-            seq->uvrotate = true;
-            // Get texture height and divide it in half.
-            // This way, we get a reference value which is used to identify
-            // if scrolling is completed or not.
-            seq->frames_count = 8;
-            seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            seq->frame_list = (uint32_t *) calloc(seq->frames_count, sizeof(uint32_t));
-
-            if(uvrotate_script > 0)
+            for(uint16_t j = 0; j < seq->frames_count; j++)
             {
-                seq->anim_type        = TR_ANIMTEXTURE_FORWARD;
-            }
-            else if(uvrotate_script < 0)
-            {
-                seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
+                seq->frame_list[j] = *(pointer++);  // Add one frame.
             }
 
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            // UVRotate textures case.
+            // In TR4-5, it is possible to define special UVRotate animation mode.
+            // It is specified by num_uvrotates variable. If sequence belongs to
+            // UVRotate range, each frame will be divided in half and continously
+            // scrolled from one part to another by shifting UV coordinates.
+            // In OpenTomb, we can have BOTH UVRotate and classic frames mode
+            // applied to the same sequence, but there we specify compatibility
+            // method for TR4-5.
+            if((i < num_uvrotates) && (seq->frames_count == 1))
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, (GLfloat)j * seq->uvrotate_speed, true);
-                seq->frames[j].tex_ind = p.tex_index;
+                uint32_t original_frame_list = seq->frame_list[0];
+                if(level_script)
+                {
+                    int top = lua_gettop(level_script);
+                    lua_getglobal(level_script, "UVRotate");
+                    uvrotate_script = lua_tointeger(level_script, -1);
+                    lua_settop(level_script, top);
+                }
 
-                GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
-                A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
-                B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                seq->frame_lock = false; // by default anim is playing
+                seq->uvrotate = true;
+                seq->frames_count = 16;
+                seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+                free(seq->frame_list);
+                seq->frame_list = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
 
-                A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
-                A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
-                B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
-                B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+                if(uvrotate_script > 0)
+                {
+                    seq->anim_type        = TR_ANIMTEXTURE_FORWARD;
+                }
+                else if(uvrotate_script < 0)
+                {
+                    seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
+                }
 
-                d = A0[0] * B0[1] - A0[1] * B0[0];
-                seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
-                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
-                seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
-
-                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
-                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                engine_world.tex_atlas->getCoordinates(original_frame_list, false, &p0, 0.0, false);
+                btScalar v_min, v_max;
+                v_min = v_max = p0.vertices->tex_coord[1];
+                for(uint16_t j=1;j<p0.vertex_count;j++)
+                {
+                    if(p0.vertices[j].tex_coord[1] > v_max)
+                    {
+                        v_max = p0.vertices[j].tex_coord[1];
+                    }
+                    if(p0.vertices[j].tex_coord[1] < v_min)
+                    {
+                        v_min = p0.vertices[j].tex_coord[1];
+                    }
+                }
+                seq->uvrotate_max = 0.5 * (v_max - v_min);
+                seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
+                for(uint16_t j=0;j<seq->frames_count;j++)
+                {
+                    seq->frame_list[j] = original_frame_list;
+                    seq->frames[j].tex_ind = p0.tex_index;
+                    seq->frames[j].mat[0] = 1.0;
+                    seq->frames[j].mat[1] = 0.0;
+                    seq->frames[j].mat[2] = 0.0;
+                    seq->frames[j].mat[3] = 1.0;
+                    seq->frames[j].move[0] = 0.0;
+                    seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
+                }
             }
-        }
-        else
-        {
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            else
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
-                seq->frames[j].tex_ind = p.tex_index;
+                seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
+                for(uint16_t j=0;j<seq->frames_count;j++)
+                {
+                    engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
+                    seq->frames[j].tex_ind = p.tex_index;
+                    if(j > 0)   // j == 0 -> d == 0;
+                    {
+                        ///@PARANOID: texture transformation may be not only move
+                        GLfloat A0[2], B0[2], A[2], B[2], d;
+                        A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                        A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                        B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                        B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
 
-                GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
-                A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
-                B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                        A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
+                        A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
+                        B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
+                        B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
 
-                A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
-                A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
-                B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
-                B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+                        d = A0[0] * B0[1] - A0[1] * B0[0];
+                        seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
+                        seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
+                        seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                        seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+                    }
+                    else
+                    {
+                        seq->frames[j].mat[0 + 0 * 2] = 1.0;
+                        seq->frames[j].mat[1 + 0 * 2] = 0.0;
+                        seq->frames[j].mat[0 + 1 * 2] = 0.0;
+                        seq->frames[j].mat[1 + 1 * 2] = 1.0;
+                    }
 
-                d = A0[0] * B0[1] - A0[1] * B0[0];
-                seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
-                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
-                seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
-
-                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
-                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                    seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
+                    seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                }
             }
-
-        }
+        }  ///end for(uint16_t i = 0; i < num_sequences; i++,seq++)
     }
     Polygon_Clear(&p0);
     Polygon_Clear(&p);

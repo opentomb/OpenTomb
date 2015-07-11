@@ -34,10 +34,6 @@ typedef struct RedBlackHeader_s
     void (*rb_free_data)(void *data);
 } RedBlackHeader_t, *RedBlackHeader_p;
 
-void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x);
-void rotateRight(RedBlackHeader_p header, RedBlackNode_p x);
-RedBlackNode_p TreeSuccessor(RedBlackNode_p n);
-
 RedBlackNode_p RB_SearchNode(void *key, RedBlackHeader_p header);
 RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header);
 RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header);
