@@ -1,17 +1,18 @@
 
-#include "stdlib.h"
+#include <stdlib.h>
 
-#include "mesh.h"
-#include "polygon.h"
-#include "world.h"
-#include "vmath.h"
-#include "engine.h"
-#include "system.h"
-#include "gl_util.h"
-#include "obb.h"
-#include "resource.h"
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
+
+#include "core/system.h"
+#include "core/gl_util.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
+#include "mesh.h"
+#include "world.h"
+#include "engine.h"
+#include "obb.h"
+#include "resource.h"
 
 
 vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3]);

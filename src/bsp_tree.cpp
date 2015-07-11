@@ -2,11 +2,11 @@
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "gl_util.h"
-#include "bullet/LinearMath/btScalar.h"
-#include "polygon.h"
+
+#include "core/gl_util.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "bsp_tree.h"
-#include "vmath.h"
 #include "frustum.h"
 #include "mesh.h"
 

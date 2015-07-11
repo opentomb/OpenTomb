@@ -23,7 +23,7 @@
 #include <string.h>
 
 #include "l_main.h"
-#include "../system.h"
+#include "../core/system.h"
 
 #define RCSID "$Id: l_main.cpp,v 1.10 2002/09/20 15:59:02 crow Exp $"
 

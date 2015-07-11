@@ -3,19 +3,19 @@
 #include <stdlib.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "gl_util.h"
 
 #include "bullet/LinearMath/btScalar.h"
 
+#include "core/gl_util.h"
+#include "core/console.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "render.h"
-#include "console.h"
 #include "world.h"
 #include "portal.h"
 #include "frustum.h"
-#include "polygon.h"
 #include "camera.h"
 #include "script.h"
-#include "vmath.h"
 #include "mesh.h"
 #include "hair.h"
 #include "entity.h"

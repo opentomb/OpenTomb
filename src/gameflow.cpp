@@ -7,15 +7,14 @@
 #include <ctype.h>
 
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 }
 
-#include "console.h"
+#include "core/console.h"
 #include "engine.h"
 #include "gameflow.h"
 #include "engine.h"

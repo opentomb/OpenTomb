@@ -2,13 +2,11 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "vmath.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "obb.h"
-#include "polygon.h"
 #include "entity.h"
 
-#include "bullet/LinearMath/btScalar.h"
-#include "engine.h"
 
 obb_p OBB_Create()
 {

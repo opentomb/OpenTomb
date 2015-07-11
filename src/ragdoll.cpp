@@ -2,8 +2,9 @@
 #include <math.h>
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+
+#include "core/vmath.h"
 #include "ragdoll.h"
-#include "vmath.h"
 #include "character_controller.h"
 
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])

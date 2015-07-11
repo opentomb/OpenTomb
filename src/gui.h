@@ -2,10 +2,10 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#include "gl_font.h"
+#include "core/gl_font.h"
+#include "core/console.h"
 #include "entity.h"
 #include "render.h"
-#include "console.h"
 #include "character_controller.h"
 
 

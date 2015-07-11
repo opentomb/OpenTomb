@@ -7,16 +7,17 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
+
 #include "anim_state_control.h"
 #include "engine.h"
 #include "controls.h"
-#include "console.h"
 #include "gui.h"
-#include "system.h"
 #include "game.h"
 #include "main_SDL.h"
 #include "script.h"
-#include "vmath.h"
 
 extern int done;
 

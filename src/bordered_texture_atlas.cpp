@@ -15,9 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/gl_util.h"
+#include "core/polygon.h"
 #include "bsp_tree_2d.h"
-#include "gl_util.h"
-#include "polygon.h"
 #include "vt/vt_level.h"
 
 #ifndef __APPLE__

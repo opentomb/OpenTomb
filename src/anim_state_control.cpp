@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "vmath.h"
-#include "polygon.h"
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "engine.h"
 #include "world.h"
 #include "game.h"
@@ -12,9 +14,7 @@
 #include "camera.h"
 #include "render.h"
 #include "portal.h"
-#include "system.h"
 #include "script.h"
-#include "console.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "vt/tr_versions.h"

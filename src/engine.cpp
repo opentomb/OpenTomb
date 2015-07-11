@@ -13,21 +13,21 @@
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 }
 
 #include "vt/vt_level.h"
-
+#include "core/system.h"
+#include "core/gl_font.h"
+#include "core/console.h"
+#include "core/redblack.h"
+#include "core/vmath.h"
 #include "engine.h"
-#include "vmath.h"
 #include "controls.h"
-#include "console.h"
-#include "system.h"
 #include "script.h"
 #include "frustum.h"
 #include "portal.h"
@@ -43,8 +43,6 @@ extern "C" {
 #include "audio.h"
 #include "character_controller.h"
 #include "gameflow.h"
-#include "redblack.h"
-#include "gl_font.h"
 #include "engine_string.h"
 #include "hair.h"
 #include "ragdoll.h"

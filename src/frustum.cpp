@@ -4,16 +4,14 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "bullet/LinearMath/btScalar.h"
-
+#include "core/system.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "frustum.h"
-#include "vmath.h"
 #include "camera.h"
-#include "polygon.h"
 #include "portal.h"
 #include "render.h"
 #include "world.h"
-#include "system.h"
 #include "obb.h"
 
 

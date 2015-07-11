@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "gl_util.h"
+#include "core/gl_util.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "camera.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "frustum.h"
 
 

@@ -22,7 +22,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
 #include "l_main.h"
-#include "../system.h"
+#include "../core/system.h"
 #include "../audio.h"
 
 #define RCSID "$Id: l_tr2.cpp,v 1.15 2002/09/20 15:59:02 crow Exp $"
@@ -192,9 +192,9 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.alternate_room  = read_bit16(src);
     room.alternate_group = 0;   // Doesn't exist in TR1-3
-    
+
     room.flags = read_bitu16(src);
-    
+
     if(room.flags & 0x0020)
     {
         room.reverb_info = 0;
@@ -203,7 +203,7 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
     {
         room.reverb_info = 2;
     }
-        
+
     room.light_colour.r = room.intensity1 / 16384.0f;
     room.light_colour.g = room.intensity1 / 16384.0f;
     room.light_colour.b = room.intensity1 / 16384.0f;
@@ -384,13 +384,13 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     this->demo_data_count = read_bitu16(src);
     this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
     for(i=0; i < this->demo_data_count; i++)
-        this->demo_data[i] = read_bitu8(src);                
+        this->demo_data[i] = read_bitu8(src);
 
     // Soundmap
     this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR2 * sizeof(int16_t));
     for(i=0; i < TR_AUDIO_MAP_SIZE_TR2; i++)
         this->soundmap[i] = read_bit16(src);
-                
+
     this->sound_details_count = read_bitu32(src);
     this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
 

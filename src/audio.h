@@ -2,6 +2,10 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <SDL2/SDL_audio.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
@@ -14,14 +18,10 @@ extern "C" {
 #include "ogg/vorbisfile.h"
 }
 
+#include "core/system.h"
 #include "vt/vt_level.h"
 #include "game.h"
 #include "script.h"
-#include "system.h"
-
-#include <SDL2/SDL_audio.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid

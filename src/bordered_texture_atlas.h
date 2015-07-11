@@ -30,7 +30,7 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "vt/tr_types.h"
-#include "polygon.h"
+#include "core/polygon.h"
 
 class bordered_texture_atlas
 {

@@ -5,14 +5,16 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 }
 
-#include "vmath.h"
-#include "polygon.h"
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
+#include "core/redblack.h"
+#include "core/polygon.h"
 #include "engine.h"
 #include "controls.h"
 #include "world.h"
@@ -22,13 +24,10 @@ extern "C" {
 #include "camera.h"
 #include "render.h"
 #include "portal.h"
-#include "system.h"
 #include "script.h"
-#include "console.h"
 #include "anim_state_control.h"
 #include "obb.h"
 #include "character_controller.h"
-#include "redblack.h"
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"

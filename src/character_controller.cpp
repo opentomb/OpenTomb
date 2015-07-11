@@ -1,10 +1,13 @@
 
-#include "world.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
+#include "core/vmath.h"
+#include "core/console.h"
+#include "core/polygon.h"
+#include "world.h"
 #include "character_controller.h"
 #include "obb.h"
 #include "anim_state_control.h"
@@ -13,10 +16,7 @@
 #include "gui.h"
 #include "mesh.h"
 #include "hair.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "resource.h"
-#include "console.h"
 #include "engine_string.h"
 
 void Character_Create(struct entity_s *ent)

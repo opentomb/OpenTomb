@@ -2,7 +2,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#include "redblack.h"
+#include "core/redblack.h"
 
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way

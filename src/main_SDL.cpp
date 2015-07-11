@@ -13,10 +13,9 @@
 #include <SDL2/SDL_haptic.h>
 
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
@@ -26,22 +25,23 @@ extern "C" {
 #include "bullet/btBulletDynamicsCommon.h"
 #include "vt/vt_level.h"
 
+#include "core/system.h"
+#include "core/console.h"
+#include "core/gl_util.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
+
 #include "obb.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "main_SDL.h"
-#include "gl_util.h"
 #include "script.h"
-#include "console.h"
-#include "system.h"
 #include "camera.h"
-#include "polygon.h"
 #include "portal.h"
 #include "engine.h"
 #include "controls.h"
 #include "world.h"
 #include "render.h"
-#include "vmath.h"
 #include "gui.h"
 #include "mesh.h"
 #include "game.h"

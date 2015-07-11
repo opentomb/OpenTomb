@@ -5,17 +5,22 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
-#include "gl_util.h"
 
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 }
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
+#include "core/system.h"
+#include "core/vmath.h"
+#include "core/gl_util.h"
+#include "core/console.h"
+#include "core/redblack.h"
+#include "core/polygon.h"
 #include "vt/vt_level.h"
 #include "audio.h"
 #include "world.h"
@@ -23,12 +28,8 @@ extern "C" {
 #include "entity.h"
 #include "gameflow.h"
 #include "resource.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "portal.h"
-#include "console.h"
 #include "frustum.h"
-#include "system.h"
 #include "game.h"
 #include "gui.h"
 #include "anim_state_control.h"
@@ -37,7 +38,6 @@ extern "C" {
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
-#include "redblack.h"
 #include "bsp_tree.h"
 #include "shader_description.h"
 

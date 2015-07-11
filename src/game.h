@@ -8,10 +8,9 @@
 
 #include <stdint.h>
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 }
 
 // This is the global game logic refresh interval.

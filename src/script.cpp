@@ -3,9 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
 #include "script.h"
-#include "system.h"
-#include "console.h"
 #include "entity.h"
 #include "world.h"
 #include "engine.h"
@@ -14,17 +21,10 @@
 #include "gameflow.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "vmath.h"
 #include "render.h"
 #include "audio.h"
 #include "gui.h"
 #include "engine_string.h"
-
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
 
 /*
  * MISK

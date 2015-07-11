@@ -8,9 +8,11 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
+#include "core/console.h"
+#include "core/redblack.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "audio.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "camera.h"
 #include "portal.h"
 #include "frustum.h"
@@ -22,8 +24,6 @@
 #include "script.h"
 #include "obb.h"
 #include "gui.h"
-#include "redblack.h"
-#include "console.h"
 #include "resource.h"
 #include "bsp_tree.h"
 

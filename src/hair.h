@@ -5,22 +5,22 @@
 #include <stdint.h>
 
 extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 }
 
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/LinearMath/btVector3.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
 
+#include "core/vmath.h"
 #include "character_controller.h"
 #include "engine.h"
 #include "entity.h"
 #include "game.h"
 #include "mesh.h"
 #include "script.h"
-#include "vmath.h"
 #include "world.h"
 
 #define HAIR_TR1       0

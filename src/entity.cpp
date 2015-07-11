@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "vmath.h"
+#include "core/console.h"
+#include "core/vmath.h"
 #include "mesh.h"
 #include "entity.h"
 #include "render.h"
 #include "camera.h"
 #include "world.h"
 #include "engine.h"
-#include "console.h"
 #include "script.h"
 #include "gui.h"
 #include "anim_state_control.h"
@@ -592,7 +592,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
             {
                 break;
             }
-            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
+            int iter = (btScalar)(2.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
             move.m_floats[0] /= (btScalar)iter;
             move.m_floats[1] /= (btScalar)iter;
             move.m_floats[2] /= (btScalar)iter;

@@ -5,6 +5,11 @@
 /* Define to the library version */
 #define ALSOFT_VERSION "1.15.1.TRE"
 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846
+#define M_PI_2      1.57079632679489661923
+#endif
+
 /* Define any available alignment declaration */
 #define ALIGN(x)
 #ifdef __MINGW32__

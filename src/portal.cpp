@@ -3,10 +3,9 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "bullet/LinearMath/btScalar.h"
-#include "polygon.h"
+#include "core/vmath.h"
+#include "core/polygon.h"
 #include "portal.h"
-#include "vmath.h"
 #include "camera.h"
 #include "world.h"
 #include "render.h"

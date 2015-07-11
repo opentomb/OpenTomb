@@ -22,7 +22,7 @@
 #include <SDL2/SDL.h>
 #include <zlib.h>
 #include "l_main.h"
-#include "../system.h"
+#include "../core/system.h"
 #include "../audio.h"
 
 #define RCSID "$Id: l_tr5.cpp,v 1.14 2002/09/20 15:59:02 crow Exp $"

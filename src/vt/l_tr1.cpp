@@ -20,8 +20,9 @@
  */
 
 #include <SDL2/SDL.h>
+
 #include "l_main.h"
-#include "../system.h"
+#include "../core/system.h"
 #include "../audio.h"
 
 #define RCSID "$Id: l_tr1.cpp,v 1.16 2002/09/20 15:59:02 crow Exp $"
@@ -329,7 +330,7 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.alternate_room  = read_bit16(src);
     room.alternate_group = 0;   // Doesn't exist in TR1-3
-    
+
     room.flags = read_bitu16(src);
         room.reverb_info = 2;
 
@@ -526,7 +527,7 @@ void TR_Level::read_tr_moveable(SDL_RWops * const src, tr_moveable_t & moveable)
     moveable.mesh_tree_index = read_bitu32(src);
     moveable.frame_offset = read_bitu32(src);
     moveable.animation_index = read_bitu16(src);
-    
+
     // Disable unused skybox polygons.
     if((this->game_version == TR_III) && (moveable.object_id == 355))
     {
@@ -658,7 +659,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         uint32_t frame_offset = this->animations[i].frame_offset / 2;
         this->animations[i].frame_size = this->frame_data[frame_offset + 9] * 2 + 10;
     }
-        
+
     this->static_meshes_count = read_bitu32(src);
     this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
     for (i = 0; i < this->static_meshes_count; i++)

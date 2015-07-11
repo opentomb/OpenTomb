@@ -10,8 +10,8 @@
 
 #include <stdint.h>
 
-#include "polygon.h"
-#include "bullet/LinearMath/btScalar.h"
+#include "core/polygon.h"
+#include "core/vmath.h"
 
 /*
  * In base_edges we safe the initial shape polygons

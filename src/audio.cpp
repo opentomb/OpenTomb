@@ -14,15 +14,15 @@ extern "C" {
 #include "ogg/vorbisfile.h"
 }
 
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
 #include "audio.h"
-#include "console.h"
 #include "gui.h"
 #include "camera.h"
 #include "engine.h"
-#include "vmath.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "system.h"
 #include "render.h"
 #include "engine_string.h"
 #include <math.h>

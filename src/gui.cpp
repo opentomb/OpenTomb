@@ -2,16 +2,16 @@
 #include <stdint.h>
 #include <SDL2/SDL_image.h>
 
-#include "gl_util.h"
-#include "gl_font.h"
+#include "core/gl_util.h"
+#include "core/gl_font.h"
+#include "core/system.h"
+#include "core/console.h"
+#include "core/vmath.h"
 
 #include "gui.h"
 #include "character_controller.h"
 #include "engine.h"
 #include "render.h"
-#include "system.h"
-#include "console.h"
-#include "vmath.h"
 #include "camera.h"
 #include "engine_string.h"
 #include "shader_description.h"
@@ -1043,14 +1043,17 @@ void gui_InventoryManager::render()
                 continue;
             }
 
-            btScalar matrix[16];
+            btScalar matrix[16], offset[3];
             Mat4_E_macro(matrix);
-            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
+            matrix[12 + 2] = - mBaseRingRadius * 2.0;
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
             btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
             Mat4_RotateY(matrix, ang);
-            Mat4_Translate(matrix, 0.0, mVerticalOffset, mRingRadius);
+            offset[0] = 0.0;
+            offset[1] = mVerticalOffset;
+            offset[2] = mRingRadius;
+            Mat4_Translate(matrix, offset);
             Mat4_RotateX(matrix, -90.0);
             Mat4_RotateZ(matrix, 90.0);
             if(num == mItemsOffset)
@@ -1075,7 +1078,10 @@ void gui_InventoryManager::render()
                 Mat4_RotateZ(matrix, 90.0 - ang);
                 Item_Frame(bi->bf, 0.0);
             }
-            Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
+            offset[0] = -0.5 * bi->bf->centre[0];
+            offset[1] = -0.5 * bi->bf->centre[1];
+            offset[2] = -0.5 * bi->bf->centre[2];
+            Mat4_Translate(matrix, offset);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
             Gui_RenderItem(bi->bf, 0.0, matrix);
 
@@ -2450,7 +2456,9 @@ void gui_ItemNotifier::Draw()
             Item_Frame(item->bf, 0.0);
             btScalar matrix[16];
             Mat4_E_macro(matrix);
-            Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
+            matrix[12 + 0] = mCurrPosX;
+            matrix[12 + 1] = mPosY;
+            matrix[12 + 2] = -2048.0;
             Mat4_RotateY(matrix, mCurrRotX + mRotX);
             Mat4_RotateX(matrix, mCurrRotY + mRotY);
             Gui_RenderItem(item->bf, mSize, matrix);

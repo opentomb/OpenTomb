@@ -23,8 +23,9 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
+
 #include "l_main.h"
-#include "../system.h"
+#include "../core/system.h"
 
 /** \brief reads signed 8-bit value.
   *
@@ -164,7 +165,7 @@ float TR_Level::read_mixfloat(SDL_RWops * const src)
 {
      int16_t base_int;
     uint16_t sign_int;
-    
+
     if (src == NULL)
         Sys_extError("read_mixfloat: src == NULL");
 
@@ -173,6 +174,6 @@ float TR_Level::read_mixfloat(SDL_RWops * const src)
 
     base_int = SDL_SwapLE32(base_int);
     sign_int = SDL_SwapLE32(sign_int);
-    
+
     return ((float)base_int + ((float)sign_int / 65535.0));
 }
