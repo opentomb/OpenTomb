@@ -3590,6 +3590,9 @@ int Engine_ExecCmd(const char *ch)
             catch(lua::RuntimeError& error) {
                 ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
             }
+            catch(lua::LoadError& error) {
+                ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
+            }
             return 0;
         }
     }

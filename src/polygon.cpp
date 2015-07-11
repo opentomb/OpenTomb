@@ -110,14 +110,14 @@ void Polygon::vTransform(Polygon* src, const btTransform& tr)
 }
 
 
-int Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScalar *t) const
+bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScalar* lambda) const
 {
     btScalar u = plane.normal.dot(rayDir);
     if(std::fabs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
-        return 0;                                                               // plane is parallel to the ray - no intersection
+        return false;                                                               // plane is parallel to the ray - no intersection
     }
-    *t = -plane.distance(dot) / u;
+    *lambda = -plane.distance(dot) / u;
 
     auto vp = &vertices.front();                                                           // current polygon pointer
     btVector3 T = dot - vp[0].position;
@@ -139,10 +139,10 @@ int Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScala
         tt = 1.0 - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (tt <= 1.0) && (tt >= 0.0))
         {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 

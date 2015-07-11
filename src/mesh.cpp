@@ -490,7 +490,7 @@ void BaseMesh::genFaces()
     m_alphaAnimatedElementCount = 0;
 
     size_t transparent = 0;
-    for (const auto& p : m_polygons) {
+    for (const Polygon& p : m_polygons) {
         if (p.isBroken())
             continue;
 

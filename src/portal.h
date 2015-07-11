@@ -38,7 +38,7 @@ struct Portal
     ~Portal() = default;
 
     void move(const btVector3 &mv);
-    bool rayIntersect(const btVector3 &dir, const btVector3 &dot);              // check the intersection of the beam and portal
+    bool rayIntersect(const btVector3 &dir, const btVector3 &point);              // check the intersection of the beam and portal
 
     void genNormale();
 };

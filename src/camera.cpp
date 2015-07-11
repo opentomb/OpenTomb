@@ -149,6 +149,7 @@ void Camera::recalcClipPlanes()
     m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
+    // Ensure that normals point outside
     for(int i=0; i<4; ++i)
         if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
             m_clipPlanes[i].mirrorNormal();

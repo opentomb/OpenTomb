@@ -76,7 +76,7 @@ struct Polygon
     void transformSelf(const btTransform &tr);
 
     void findNormal();
-    int  rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *t) const;
+    bool rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *lambda) const;
     bool intersectPolygon(Polygon* p2);
 
     int  splitClassify(const Plane &plane);

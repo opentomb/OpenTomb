@@ -3723,8 +3723,8 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
         entity->m_transform.getOrigin()[2] = tr_item->pos.y;
         entity->m_angles[0] = tr_item->rotation;
-        entity->m_angles[1] = 0.0;
-        entity->m_angles[2] = 0.0;
+        entity->m_angles[1] = 0;
+        entity->m_angles[2] = 0;
         entity->updateTransform();
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {

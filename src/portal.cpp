@@ -30,39 +30,35 @@ void Portal::move(const btVector3& mv)
  * @param ray ray directionа
  * @param dot point of ray-plane intersection
  */
-bool Portal::rayIntersect(const btVector3& ray, const btVector3& dot)
+bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
 {
-    btScalar u = normal.normal.dot(ray);
-    if(std::fabs(u) < SPLIT_EPSILON)
+    if(std::fabs(normal.normal.dot(ray)) < SPLIT_EPSILON)
     {
-        // the plane is parallel to the line
+        // the plane is nearly parallel to the ray
         return false;
     }
-    btScalar t = -(normal.dot + normal.normal.dot(dot)) / u;
-    if(t <= 0)
+    if(-normal.distance(rayStart) <= 0)
     {
         // plane is on the wrong side of the ray
         return false;
     }
 
-    // A pointer to the current triangle
-    btVector3* currentVertex = &vertices.front();
     // The vector that does not change for the entire polygon
-    btVector3 T = dot - *currentVertex;
+    const btVector3 T = rayStart - vertices[0];
 
     btVector3 edge = vertices[1]-vertices[0];
     // Bypass polygon fan, one of the vectors remains unchanged
-    for(size_t i=0; i<vertices.size()-2; i++, currentVertex++)
+    for(size_t i=2; i<vertices.size(); i++)
     {
         // PREV
         btVector3 prevEdge = edge;
-        edge = currentVertex[2] - vertices[0];
+        edge = vertices[i] - vertices[0];
 
         btVector3 P = ray.cross(edge);
         btVector3 Q = T.cross(prevEdge);
 
-        t = P.dot(prevEdge);
-        u = P.dot(T) / t;
+        btScalar t = P.dot(prevEdge);
+        btScalar u = P.dot(T) / t;
         btScalar v = Q.dot(ray) / t;
         t = 1.0 - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (t <= 1.0) && (t >= 0.0))

@@ -167,8 +167,9 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
 
-    // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
+#if 0
     {
+    // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
         size_t areaSum = 0;
         for(const tr4_object_texture_t& t : object_textures)
             areaSum += t.x_size * t.y_size;
@@ -177,6 +178,9 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
 
         m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
     }
+#else
+    m_resultPageWidth = NextPowerOf2(max_texture_edge_length);
+#endif
 
     for(const tr4_object_texture_t& tex : object_textures)
     {
@@ -316,10 +320,10 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
-                                         bool reverse,
-                                         struct Polygon *poly,
-                                         int shift,
-                                         bool split)  const
+                                          bool reverse,
+                                          struct Polygon *poly,
+                                          int shift,
+                                          bool split)  const
 {
     assert(poly->vertices.size() <= 4);
 

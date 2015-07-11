@@ -649,39 +649,7 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateTransform()
 {
-    for(int i=0; i<3; ++i) {
-        m_angles[i] = std::fmod(m_angles[i], 360);
-        while(m_angles[i] < 0)
-            m_angles[i] += 360;
-    }
-
-    /*
-     * LEFT - RIGHT INIT
-     */
-    btScalar t = m_angles[0] * M_PI / 180.0;
-    btVector3 up_dir = {0,0,1};
-    btVector3 view_dir = btVector3(0,1,0).rotate(up_dir, t);
-    btVector3 right_dir = btVector3(1,0,0).rotate(up_dir, t);
-
-    if(m_angles[1] != 0.0)
-    {
-        t = m_angles[1] * M_PI / 360.0;                                   // UP - DOWN
-        up_dir = up_dir.rotate(right_dir, t);
-        view_dir = view_dir.rotate(right_dir, t);
-    }
-
-    if(m_angles[2] != 0.0)
-    {
-        t = m_angles[2] * M_PI / 360.0;                                   // ROLL
-        right_dir = right_dir.rotate(view_dir, t);
-        up_dir = up_dir.rotate(view_dir, t);
-    }
-
-    m_transform.getBasis().setValue(
-                right_dir.x(), view_dir.x(), up_dir.x(),
-                right_dir.y(), view_dir.y(), up_dir.y(),
-                right_dir.z(), view_dir.z(), up_dir.z()
-                );
+    m_transform.getBasis().setEulerZYX(btRadians(m_angles[2]), btRadians(m_angles[1]), btRadians(m_angles[0]));
 
     fixPenetrations(nullptr);
 }

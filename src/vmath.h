@@ -14,19 +14,29 @@
 #define PLANE_Y        2
 #define PLANE_Z        3
 
+/**
+ * A simple Hesse normal form plane
+ */
 struct Plane
 {
+    //! The plane's normal
     btVector3 normal;
+    //! The plane's distance to the origin
     btScalar dot;
 
+    /**
+     * Calculates the normalized distance of an arbitrary point in terms of the normal
+     * @param pos The point
+     * @return The distance in multiples of the normal (if >0, @a pos is in the direction of the normal)
+     */
     btScalar distance(const btVector3& pos) const
     {
-        return dot + normal.dot(pos);
+        return normal.dot(pos) - dot;
     }
 
     btVector3 rayIntersect(const btVector3& rayStart, const btVector3& rayDir, btScalar& lambda) const
     {
-        lambda = -(dot + normal.dot(rayStart));
+        lambda = dot - normal.dot(rayStart);
         lambda /= normal.dot(rayDir);
         return rayStart + lambda * rayDir;
     }
@@ -40,13 +50,13 @@ struct Plane
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
         normal = v1.cross(v2).normalized();
-        dot = -normal.dot( pos );
+        dot = normal.dot( pos );
     }
 
     void assign(const btVector3& n, const btVector3& pos)
     {
         normal = n.normalized();
-        dot = -normal.dot( pos );
+        dot = normal.dot( pos );
     }
 
     void mirrorNormal()
@@ -57,7 +67,8 @@ struct Plane
 
     void moveTo(const btVector3& where)
     {
-        dot = -normal.dot(where);
+        //! @todo Project the (where--0) onto the normal before calculating the dot
+        dot = normal.dot(where);
     }
 };
 

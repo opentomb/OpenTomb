@@ -144,6 +144,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
         {
             mesh->m_animatedVertexArray->bind();
 
+            //! @bug textures[0] only works if all animated textures are on the first page
             glBindTexture(GL_TEXTURE_2D, m_world->textures[0]);
             glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, 0);
         }
