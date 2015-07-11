@@ -50,6 +50,8 @@ void Sys_DebugLog(const char *file, const char *fmt, ...);
 
 void Sys_TakeScreenShot();
 
+int Sys_FileFound(const char *name, int checkWrite);
+
 #define Sys_LogCurrPlace Sys_DebugLog(SYS_LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
 #define Sys_extError(...) {Sys_LogCurrPlace Sys_Error(__VA_ARGS__);}
 #define Sys_extWarn(...) {Sys_LogCurrPlace Sys_Warn(__VA_ARGS__);}

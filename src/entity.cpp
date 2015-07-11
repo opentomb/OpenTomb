@@ -3,17 +3,18 @@
 
 #include "core/console.h"
 #include "core/vmath.h"
+#include "core/obb.h"
 #include "mesh.h"
 #include "entity.h"
 #include "render.h"
 #include "camera.h"
 #include "world.h"
 #include "engine.h"
+#include "engine_bullet.h"
 #include "script.h"
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "obb.h"
 #include "gameflow.h"
 #include "engine_string.h"
 #include "ragdoll.h"
@@ -1910,7 +1911,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
                     {
                         lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }

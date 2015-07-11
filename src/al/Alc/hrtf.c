@@ -34,6 +34,10 @@
 #define PATH_MAX 4096
 #endif
 
+#ifndef M_PI
+#define M_PI        3.14159265358979323846
+#define M_PI_2      1.57079632679489661923
+#endif
 
 /* Current data set limits defined by the makehrtf utility. */
 #define MIN_IR_SIZE                  (8)

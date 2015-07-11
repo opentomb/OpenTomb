@@ -8,10 +8,10 @@
 #include "core/gl_util.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
+#include "core/obb.h"
 #include "mesh.h"
 #include "world.h"
 #include "engine.h"
-#include "obb.h"
 #include "resource.h"
 
 

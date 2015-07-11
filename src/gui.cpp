@@ -1370,7 +1370,7 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
         strncpy(buf, pic_name, MAX_ENGINE_PATH);
-        if(!Engine_FileFound(buf, false))
+        if(!Sys_FileFound(buf, 0))
         {
             for(;ext_len+1<len;ext_len++)
             {
@@ -1389,22 +1389,22 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
             buf[len - ext_len + 1] = 'm';
             buf[len - ext_len + 2] = 'p';
             buf[len - ext_len + 3] = 0;
-            if(!Engine_FileFound(buf, false))
+            if(!Sys_FileFound(buf, 0))
             {
                 buf[len - ext_len + 0] = 'j';
                 buf[len - ext_len + 1] = 'p';
                 buf[len - ext_len + 2] = 'g';
-                if(!Engine_FileFound(buf, false))
+                if(!Sys_FileFound(buf, 0))
                 {
                     buf[len - ext_len + 0] = 'p';
                     buf[len - ext_len + 1] = 'n';
                     buf[len - ext_len + 2] = 'g';
-                    if(!Engine_FileFound(buf, false))
+                    if(!Sys_FileFound(buf, 0))
                     {
                         buf[len - ext_len + 0] = 't';
                         buf[len - ext_len + 1] = 'g';
                         buf[len - ext_len + 2] = 'a';
-                        if(!Engine_FileFound(buf, false))
+                        if(!Sys_FileFound(buf, 0))
                         {
                             return false;
                         }

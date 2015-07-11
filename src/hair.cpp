@@ -1,6 +1,8 @@
 
 #include <math.h>
-#include "bullet/LinearMath/btScalar.h"
+
+#include "engine.h"
+#include "engine_bullet.h"
 #include "hair.h"
 
 bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)

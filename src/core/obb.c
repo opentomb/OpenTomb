@@ -2,10 +2,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "core/vmath.h"
-#include "core/polygon.h"
+#include "vmath.h"
+#include "polygon.h"
 #include "obb.h"
-#include "entity.h"
 
 
 obb_p OBB_Create()
@@ -212,18 +211,18 @@ void OBB_Transform(obb_p obb)
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
+int OBB_OBB_Test(obb_p obb1, obb_p obb2)
 {
     //translation, in parent frame
     btScalar v[3], T[3];
-    vec3_sub(v, e2->obb->centre, e1->obb->centre);
+    vec3_sub(v, obb2->centre, obb1->centre);
     //translation, in A's frame
-    T[0] = vec3_dot(v, e1->transform + 0);
-    T[1] = vec3_dot(v, e1->transform + 4);
-    T[2] = vec3_dot(v, e1->transform + 8);
+    T[0] = vec3_dot(v, obb1->transform + 0);
+    T[1] = vec3_dot(v, obb1->transform + 4);
+    T[2] = vec3_dot(v, obb1->transform + 8);
 
-    btScalar *a = e1->obb->extent;
-    btScalar *b = e2->obb->extent;
+    btScalar *a = obb1->extent;
+    btScalar *b = obb2->extent;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];
@@ -235,8 +234,8 @@ int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            btScalar *e1b = e1->transform + 4 * i;
-            btScalar *e2b = e2->transform + 4 * k;
+            btScalar *e1b = obb1->transform + 4 * i;
+            btScalar *e2b = obb2->transform + 4 * k;
             R[i][k] = vec3_dot(e1b, e2b);
         }
     }

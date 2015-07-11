@@ -25,8 +25,6 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 
-#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
-
 #ifdef BT_USE_DOUBLE_PRECISION
     #define GL_BT_SCALAR GL_DOUBLE
 #else
@@ -45,56 +43,6 @@ struct sprite_s;
 struct base_mesh_s;
 struct obb_s;
 struct lit_shader_description;
-
-class render_DebugDrawer:public btIDebugDraw
-{
-    uint32_t m_debugMode;
-    uint32_t m_max_lines;
-    uint32_t m_lines;
-    bool     m_need_realloc;
-
-    GLuint  m_gl_vbo;
-    GLfloat m_color[3];
-    GLfloat *m_buffer;
-    
-    struct obb_s *m_obb;
-
-    public:
-        // engine debug function
-        render_DebugDrawer();
-        ~render_DebugDrawer();
-        bool IsEmpty()
-        {
-            return m_lines == 0;
-        }
-        void reset();
-        void render();
-        void setColor(GLfloat r, GLfloat g, GLfloat b)
-        {
-            m_color[0] = r;
-            m_color[1] = g;
-            m_color[2] = b;
-        }
-        void drawAxis(btScalar r, btScalar transform[16]);
-        void drawPortal(struct portal_s *p);
-        void drawFrustum(struct frustum_s *f);
-        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
-        void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
-        void drawEntityDebugLines(struct entity_s *entity);
-        void drawSectorDebugLines(struct room_sector_s *rs);
-        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
-        
-        // bullet's debug interface
-        virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
-        virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
-        virtual void   reportErrorWarning(const char* warningString);
-        virtual void   draw3dText(const btVector3& location, const char* textString);
-        virtual void   setDebugMode(int debugMode);
-        virtual int    getDebugMode() const {return m_debugMode;}
-};
-
 
 // Native TR blending modes.
 

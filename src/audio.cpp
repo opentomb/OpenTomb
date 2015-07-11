@@ -1388,7 +1388,7 @@ void Audio_LoadOverridedSamples(struct world_s *world)
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
-                        if(Engine_FileFound(sample_name))
+                        if(Sys_FileFound(sample_name, 0))
                         {
                             Audio_LoadALbufferFromWAV_File(world->audio_buffers[buffer_counter], sample_name);
                         }

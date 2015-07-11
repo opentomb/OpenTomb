@@ -30,8 +30,8 @@ extern "C" {
 #include "core/gl_util.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
+#include "core/obb.h"
 
-#include "obb.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "main_SDL.h"

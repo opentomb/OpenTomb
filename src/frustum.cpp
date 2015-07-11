@@ -7,12 +7,12 @@
 #include "core/system.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
+#include "core/obb.h"
 #include "frustum.h"
 #include "camera.h"
 #include "portal.h"
 #include "render.h"
 #include "world.h"
-#include "obb.h"
 
 
 frustumManager engine_frustumManager(32768);

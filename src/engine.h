@@ -4,8 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <stdint.h>
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
+
 #include "world.h"
 #include "script.h"
 #include "controls.h"
@@ -48,14 +47,7 @@
 #define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
 #define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
 
-class btDefaultCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
-class btDiscreteDynamicsWorld;
-
 struct camera_s;
-struct lua_State;
 
 typedef struct engine_container_s
 {
@@ -125,6 +117,7 @@ typedef struct engine_control_state_s
 }engine_control_state_t, *engine_control_state_p;
 
 
+extern lua_State                               *engine_lua;
 extern struct engine_control_state_s            control_states;
 extern struct control_settings_s                control_mapper;
 
@@ -134,110 +127,6 @@ extern btScalar                                 engine_frame_time;
 extern struct camera_s                          engine_camera;
 extern struct world_s                           engine_world;
 
-
-extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
-extern btCollisionDispatcher                   *bt_engine_dispatcher;
-extern btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-extern btSequentialImpulseConstraintSolver     *bt_engine_solver ;
-extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
-
-
-
-class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
-{
-public:
-    bt_engine_ClosestRayResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-    {
-        m_cont = cont;
-        m_skip_ghost = skip_ghost;
-    }
-
-    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
-    {
-        room_p r0 = NULL, r1 = NULL;
-        engine_container_p c1;
-
-        r0 = (m_cont)?(m_cont->room):(NULL);
-        c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
-
-        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
-        {
-            return 1.0;
-        }
-
-        if(!r0 || !r1)
-        {
-            return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-        }
-
-        if(r0 && r1)
-        {
-            if(Room_IsInNearRoomsList(r0, r1))
-            {
-                return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-            }
-            else
-            {
-                return 1.0;
-            }
-        }
-
-        return 1.0;
-    }
-
-    bool               m_skip_ghost;
-    engine_container_p m_cont;
-};
-
-
-class bt_engine_ClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
-{
-public:
-    bt_engine_ClosestConvexResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-    {
-        m_cont = cont;
-        m_skip_ghost = skip_ghost;
-    }
-
-    virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
-    {
-        room_p r0 = NULL, r1 = NULL;
-        engine_container_p c1;
-
-        r0 = (m_cont)?(m_cont->room):(NULL);
-        c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
-
-        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
-        {
-            return 1.0;
-        }
-
-        if(!r0 || !r1)
-        {
-            return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
-        }
-
-        if(r0 && r1)
-        {
-            if(Room_IsInNearRoomsList(r0, r1))
-            {
-                return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
-            }
-            else
-            {
-                return 1.0;
-            }
-        }
-
-        return 1.0;
-    }
-
-protected:
-    bool               m_skip_ghost;
-    engine_container_p m_cont;
-};
 
 engine_container_p Container_Create();
 
@@ -252,18 +141,6 @@ void Engine_Shutdown(int val) __attribute__((noreturn));
 void Engine_Frame(btScalar time);
 void Engine_Display();
 
-void Engine_BTInit();
-
-int lua_print(lua_State * lua);
-
-bool Engine_LuaInit();
-void Engine_LuaClearTasks();
-void Engine_LuaRegisterFuncs(lua_State *lua);
-
-// Simple override to register both upper- and lowercase versions of function name.
-
-void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
-
 // PC-specific level loader routines.
 
 bool Engine_LoadPCLevel(const char *name);
@@ -271,7 +148,6 @@ int  Engine_GetPCLevelVersion(const char *name);
 
 // General level loading routines.
 
-bool Engine_FileFound(const char *name, bool Write = false);
 int  Engine_GetLevelFormat(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);

@@ -13,6 +13,7 @@
 
 #include "anim_state_control.h"
 #include "engine.h"
+#include "engine_bullet.h"
 #include "controls.h"
 #include "gui.h"
 #include "game.h"

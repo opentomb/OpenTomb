@@ -7,6 +7,7 @@
 #include "core/vmath.h"
 #include "core/polygon.h"
 #include "engine.h"
+#include "engine_bullet.h"
 #include "world.h"
 #include "game.h"
 #include "mesh.h"

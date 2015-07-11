@@ -7,11 +7,12 @@
 #include "core/vmath.h"
 #include "core/console.h"
 #include "core/polygon.h"
+#include "core/obb.h"
 #include "world.h"
 #include "character_controller.h"
-#include "obb.h"
 #include "anim_state_control.h"
 #include "engine.h"
+#include "engine_bullet.h"
 #include "entity.h"
 #include "gui.h"
 #include "mesh.h"
@@ -1874,7 +1875,7 @@ int Character_FindTraverse(struct entity_s *ch)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p e = (entity_p)cont->object;
-                if((e->type_flags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
+                if((e->type_flags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(e->obb, ch->obb) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
                 {
                     int oz = (ch->angles[0] + 45.0) / 90.0;
                     ch->angles[0] = oz * 90.0;

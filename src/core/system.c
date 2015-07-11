@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
 
@@ -247,4 +248,30 @@ void Sys_TakeScreenShot()
     SDL_FreeSurface(surface);
     free(pixels);
     screenshot_cnt++;
+}
+
+
+int Sys_FileFound(const char *name, int checkWrite)
+{
+    SDL_RWops *ff;
+
+    if(checkWrite)
+    {
+        
+        ff = SDL_RWFromFile(name, "ab");
+    }
+    else
+    {
+        ff = SDL_RWFromFile(name, "rb");
+    }
+
+    if(!ff)
+    {
+        return 0;
+    }
+    else
+    {
+        SDL_RWclose(ff);
+        return 1;
+    }
 }

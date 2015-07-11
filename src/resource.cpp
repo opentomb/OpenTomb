@@ -21,6 +21,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/polygon.h"
+#include "core/obb.h"
 #include "vt/vt_level.h"
 #include "audio.h"
 #include "world.h"
@@ -34,8 +35,9 @@ extern "C" {
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "obb.h"
 #include "engine.h"
+#include "engine_lua.h"
+#include "engine_bullet.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
 #include "bsp_tree.h"
@@ -1783,7 +1785,7 @@ void Res_ScriptsOpen(int engine_version)
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
-        if(Engine_FileFound(temp_script_name, false))
+        if(Sys_FileFound(temp_script_name, 0))
         {
             int lua_err = luaL_dofile(level_script, temp_script_name);
             if(lua_err)
