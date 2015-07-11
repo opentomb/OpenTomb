@@ -22,9 +22,7 @@ nbproject/
 dist/
 data/
 save/
-opentomb-code.cbp
 opentomb-code.cscope_file_list
-opentomb-code.depend
 opentomb-code.layout
 OpenTomb\.xcodeproj/project\.xcworkspace
 OpenTomb\.xcodeproj/xcuserdata

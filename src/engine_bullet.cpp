@@ -163,6 +163,7 @@ render_DebugDrawer::render_DebugDrawer()
     m_obb = OBB_Create();
 }
 
+
 render_DebugDrawer::~render_DebugDrawer()
 {
     free(m_buffer);
@@ -175,6 +176,7 @@ render_DebugDrawer::~render_DebugDrawer()
     OBB_Clear(m_obb);
     m_obb = NULL;
 }
+
 
 void render_DebugDrawer::reset()
 {
@@ -195,6 +197,7 @@ void render_DebugDrawer::reset()
     }
     m_lines = 0;
 }
+
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
 {
@@ -219,10 +222,12 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
     }
 }
 
+
 void render_DebugDrawer::setDebugMode(int debugMode)
 {
    m_debugMode = debugMode;
 }
+
 
 void render_DebugDrawer::draw3dText(const btVector3& location, const char* textString)
 {
@@ -230,10 +235,12 @@ void render_DebugDrawer::draw3dText(const btVector3& location, const char* textS
    //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
 }
 
+
 void render_DebugDrawer::reportErrorWarning(const char* warningString)
 {
    Con_AddLine(warningString, FONTSTYLE_CONSOLE_WARNING);
 }
+
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
 {
@@ -263,6 +270,7 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
     }
 }
 
+
 void render_DebugDrawer::render()
 {
     if((m_lines > 0) && (m_gl_vbo != 0))
@@ -278,6 +286,7 @@ void render_DebugDrawer::render()
     vec3_set_zero(m_color);
     m_lines = 0;
 }
+
 
 void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 {
@@ -334,6 +343,7 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
     v[2] = 1.0;
 }
 
+
 void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 {
     if(f != NULL)
@@ -372,6 +382,7 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
         vec3_copy(v, m_color);
     }
 }
+
 
 void render_DebugDrawer::drawPortal(struct portal_s *p)
 {
@@ -412,6 +423,7 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
     }
 }
 
+
 void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform)
 {
     if(m_lines + 12 < m_max_lines)
@@ -426,6 +438,7 @@ void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScal
         m_need_realloc = true;
     }
 }
+
 
 void render_DebugDrawer::drawOBB(struct obb_s *obb)
 {
@@ -505,6 +518,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     }
 }
 
+
 void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
     if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
@@ -554,6 +568,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
     }
 }
 
+
 void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
 {
     if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
@@ -568,6 +583,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         }
     }
 }
+
 
 void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
 {

@@ -16,12 +16,12 @@ extern "C" {
 #include "al/AL/alc.h"
 }
 
-#include "vt/vt_level.h"
 #include "core/system.h"
 #include "core/gl_font.h"
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/vmath.h"
+#include "vt/vt_level.h"
 #include "render.h"
 #include "gui.h"
 #include "gameflow.h"
@@ -31,13 +31,13 @@ extern "C" {
 #include "engine_lua.h"
 #include "engine_bullet.h"
 
-extern SDL_Window             *sdl_window;
-extern SDL_GLContext           sdl_gl_context;
-extern SDL_GameController     *sdl_controller;
-extern SDL_Joystick           *sdl_joystick;
-extern SDL_Haptic             *sdl_haptic;
-extern ALCdevice              *al_device;
-extern ALCcontext             *al_context;
+extern SDL_Window                      *sdl_window;
+extern SDL_GLContext                   sdl_gl_context;
+extern SDL_GameController              *sdl_controller;
+extern SDL_Joystick                    *sdl_joystick;
+extern SDL_Haptic                      *sdl_haptic;
+extern ALCdevice                       *al_device;
+extern ALCcontext                      *al_context;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -60,7 +60,6 @@ void Engine_InitDefaultGlobals()
 }
 
 // First stage of initialization.
-
 void Engine_Init_Pre()
 {
     /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
@@ -82,7 +81,6 @@ void Engine_Init_Pre()
 }
 
 // Second stage of initialization.
-
 void Engine_Init_Post()
 {
     lua_CallVoidFunc(engine_lua, "loadscript_post", true);
@@ -93,6 +91,7 @@ void Engine_Init_Post()
 
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
+
 
 void Engine_Destroy()
 {
@@ -338,6 +337,7 @@ void Engine_GetLevelName(char *name, const char *path)
     name[i-start] = 0;
 }
 
+
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
@@ -374,9 +374,13 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
     }
 
     strcat(name, level_name);
-    if(postfix) strcat(name, postfix);
+    if(postfix)
+    {
+        strcat(name, postfix);
+    }
     strcat(name, ".lua");
 }
+
 
 bool Engine_LoadPCLevel(const char *name)
 {
@@ -402,6 +406,7 @@ bool Engine_LoadPCLevel(const char *name)
 
     return true;
 }
+
 
 int Engine_LoadMap(const char *name)
 {
@@ -467,6 +472,7 @@ int Engine_LoadMap(const char *name)
 
     return 1;
 }
+
 
 int Engine_ExecCmd(char *ch)
 {
