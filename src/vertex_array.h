@@ -37,10 +37,10 @@ struct VertexArrayAttribute {
 };
 
 class VertexArray {
-    GLuint m_vertexArrayObject;
+    GLuint m_vertexArrayObject = 0;
 
 public:
-    VertexArray(GLuint element_vbo, size_t numAttributes, struct VertexArrayAttribute *attributes);
+    VertexArray(GLuint element_vbo, size_t numAttributes, const VertexArrayAttribute *attributes);
     ~VertexArray();
 
     void bind();

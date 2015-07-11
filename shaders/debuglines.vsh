@@ -1,12 +1,12 @@
 // debuglines.vsh
 // Simple shading for the debug lines. No texture, only color
 
-attribute vec3 position;
-attribute vec3 color;
+in vec3 position;
+in vec3 color;
 
 uniform mat4 modelViewProjection;
 
-varying vec3 varying_color;
+out vec3 varying_color;
 
 void main(void)
 {

@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstring>
 #include <vector>
+#include <string>
+
 #include "tr_types.h"
 #include "tr_versions.h"
 
@@ -25,10 +27,9 @@ class TR_Level {
             
             this->textile8_count = 0;
             this->textile16_count = 0;
-            this->textile32_count = 0;
             this->textile8 = NULL;
             this->textile16 = NULL;
-            this->textile32 = NULL;
+            this->textile32.clear();
             
             this->floor_data_size = 0;          // destroyed
             this->floor_data = NULL;            // destroyed
@@ -48,13 +49,11 @@ class TR_Level {
             this->moveables = NULL;             // destroyed
             this->static_meshes_count = 0;      // destroyed
             this->static_meshes = NULL;         // destroyed
-            this->object_textures_count = 0;    // destroyed
-            this->object_textures = NULL;       // destroyed
+            this->object_textures.clear();       // destroyed
             this->animated_textures_count = 0;  // destroyed
             this->animated_textures_uv_count = 0; // destroyed
             this->animated_textures = NULL;     // destroyed
-            this->Spriteextures_count = 0;    // destroyed
-            this->Spriteextures = NULL;       // destroyed
+            this->sprite_textures.clear();       // destroyed
             this->sprite_sequences_count = 0;   // destroyed
             this->sprite_sequences = NULL;      // destroyed
             this->cameras_count = 0;            // destroyed
@@ -117,12 +116,7 @@ class TR_Level {
                 this->textile16 = NULL; 
             }
             
-            if(this->textile32_count)
-            {
-                this->textile32_count = 0; 
-                free(this->textile32); 
-                this->textile32 = NULL; 
-            }
+            this->textile32.clear();
             
             /**destroy other data**/
             if(this->floor_data_size)
@@ -181,12 +175,7 @@ class TR_Level {
                 this->static_meshes = NULL; 
             }
             
-            if(this->object_textures_count)
-            {
-                this->object_textures_count = 0; 
-                free(this->object_textures); 
-                this->object_textures = NULL; 
-            }
+            this->object_textures.clear();
             
             if(this->animated_textures_count)
             {
@@ -195,12 +184,7 @@ class TR_Level {
                 this->animated_textures = NULL; 
             }
             
-            if(this->Spriteextures_count)
-            {
-                this->Spriteextures_count = 0; 
-                free(this->Spriteextures); 
-                this->Spriteextures = NULL; 
-            }
+            this->sprite_textures.clear();
             
             if(this->sprite_sequences_count)
             {
@@ -453,10 +437,9 @@ class TR_Level {
     
     uint32_t textile8_count;
     uint32_t textile16_count;
-    uint32_t textile32_count;
     tr_textile8_t *textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
     tr2_textile16_t *textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
-    tr4_textile32_t *textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
+    std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     uint32_t rooms_count;
     tr5_room_t *rooms;                      ///< \brief all rooms (normal and alternate).
     uint32_t floor_data_size;               ///< \brief the floor data size
@@ -477,13 +460,11 @@ class TR_Level {
     tr_moveable_t *moveables;               ///< \brief data for the moveables.
     uint32_t static_meshes_count;
     tr_staticmesh_t *static_meshes;         ///< \brief data for the static meshes.
-    uint32_t object_textures_count;
-    tr4_object_texture_t *object_textures;  ///< \brief object texture definitions.
+    std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
     uint32_t animated_textures_count;
     uint16_t *animated_textures;            ///< \brief animated textures.
     uint32_t animated_textures_uv_count;
-    uint32_t Spriteextures_count;
-    tr_Spriteexture_t *Spriteextures;   ///< \brief sprite texture definitions.
+    std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
     uint32_t sprite_sequences_count;
     tr_sprite_sequence_t *sprite_sequences; ///< \brief sprite sequences for animation.
     uint32_t cameras_count;
@@ -524,7 +505,7 @@ class TR_Level {
         
     char     sfx_path[256];
         
-    void read_level(const char *filename, int32_t game_version);
+    void read_level(const std::string &filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
 
     protected:
@@ -565,7 +546,7 @@ class TR_Level {
     void read_tr_room(SDL_RWops * const src, tr5_room_t & room);
     void read_tr_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);
     void read_tr_object_texture(SDL_RWops * const src, tr4_object_texture_t & object_texture);
-    void read_tr_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture);
+    void read_tr_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t & Spriteexture);
     void read_tr_sprite_sequence(SDL_RWops * const src, tr_sprite_sequence_t & sprite_sequence);
     void read_tr_mesh(SDL_RWops * const src, tr4_mesh_t & mesh);
     void read_tr_state_changes(SDL_RWops * const src, tr_state_change_t & state_change);
@@ -606,7 +587,7 @@ class TR_Level {
     void read_tr4_item(SDL_RWops * const src, tr2_item_t & item);
     void read_tr4_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);
     void read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture_t & object_texture);
-    void read_tr4_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture);
+    void read_tr4_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t & Spriteexture);
     void read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh);
     void read_tr4_animation(SDL_RWops * const src, tr_animation_t & animation);
     void read_tr4_level(SDL_RWops * const _src);

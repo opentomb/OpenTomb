@@ -88,27 +88,27 @@ struct ControlSettings
     float    mouse_sensitivity = 0;
 
     // Global joystick settings.
-    int8_t   use_joy = 0;
-    int8_t   joy_number = 0;
-    int8_t   joy_rumble = 0;
+    bool   use_joy = 0;
+    int    joy_number = 0;
+    bool   joy_rumble = 0;
 
     // Look axis settings.
     btScalar joy_look_x = 0;                        // Raw look axis data!
     btScalar joy_look_y = 0;                        // Raw look axis data!
-    int8_t   joy_look_invert_x = 0;
-    int8_t   joy_look_invert_y = 0;
+    bool     joy_look_invert_x = 0;
+    bool     joy_look_invert_y = 0;
     btScalar joy_look_sensitivity = 0;
     int16_t  joy_look_deadzone = 0;
 
     // Move axis settings.
     btScalar joy_move_x = 0;                        // Raw move axis data!
     btScalar joy_move_y = 0;                        // Raw move axis data!
-    int8_t   joy_move_invert_x = 0;
-    int8_t   joy_move_invert_y = 0;
+    bool     joy_move_invert_x = 0;
+    bool     joy_move_invert_y = 0;
     btScalar joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 
-    int8_t   joy_axis_map[AXIS_LASTINDEX] = {0};      // Axis array for action mapper.
+    int      joy_axis_map[AXIS_LASTINDEX] = {0};      // Axis array for action mapper.
 
     ControlAction  action_map[ACT_LASTINDEX]{};         // Actions array for action mapper.
 };

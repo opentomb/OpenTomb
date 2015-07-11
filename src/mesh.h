@@ -10,15 +10,14 @@
 #define ANIM_CMD_JUMP               0x04
 
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#include <cstdint>
 #include "bullet/LinearMath/btScalar.h"
 #include "vertex_array.h"
 #include "object.h"
 #include <memory>
 #include <vector>
 #include "vmath.h"
+#include <lua.hpp>
+#include "LuaState.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -29,7 +28,7 @@ struct Room;
 struct EngineContainer;
 struct OBB;
 struct Vertex;
-struct Render;
+class Render;
 struct Entity;
 
 struct TransparentPolygonReference {
@@ -388,7 +387,7 @@ struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    bool hide;                                           // do not render
+    lua::Boolean hide;                                           // do not render
     btVector3 bbox_min;                                    // bbox info
     btVector3 bbox_max;
     btVector3 centre;                                      // the centre of model

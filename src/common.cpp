@@ -3,10 +3,11 @@
 #ifndef __APPLE_CC__
 #include <SDL2/SDL_image.h>
 #else
-#include <ApplicationServices/ApplicationServices.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <ImageIO/ImageIO.h>
+#include <CoreServices/CoreServices.h>
 #endif
-#include <SDL2/SDL_opengl.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include "system.h"
 #include "console.h"

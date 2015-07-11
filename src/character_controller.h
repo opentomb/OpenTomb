@@ -222,7 +222,7 @@ struct HeightInfo
     int8_t                                      walls_climb_dir;
 
     btVector3                                   floor_normale;
-    btVector3                                   floor_point;
+    btVector3                                   floor_point = {0,0,0};
     int16_t                                     floor_hit = 0;
     btCollisionObject                          *floor_obj;
 
@@ -326,7 +326,7 @@ struct Character : public Entity
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
     btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
-    btScalar                     m_fallDownHeight;
+    btScalar                     m_fallDownHeight = 0;
     btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 

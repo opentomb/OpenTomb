@@ -46,7 +46,7 @@ void Sys_Init()
     system_fps.font_id  = FONT_PRIMARY;
     system_fps.style_id = FONTSTYLE_MENU_TITLE;
 
-    system_fps.show  = 1;
+    system_fps.show  = true;
 
     Gui_AddLine(&system_fps);
 }
@@ -64,7 +64,7 @@ void Sys_InitGlobals()
 
 void Sys_Destroy()
 {
-    system_fps.show = 0;
+    system_fps.show = false;
     system_fps.text_size = 0;
     free(system_fps.text);
     system_fps.text = NULL;

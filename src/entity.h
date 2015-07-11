@@ -98,7 +98,7 @@ public:
     bool m_active = true;
     bool m_visible = true;
 
-    uint8_t                             m_dirFlag;           // (move direction)
+    uint8_t                             m_dirFlag = 0;           // (move direction)
     uint16_t                            m_moveType;          // on floor / free fall / swim ....
     
     bool m_wasRendered;       // render once per frame trigger

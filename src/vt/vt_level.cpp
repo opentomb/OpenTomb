@@ -13,10 +13,9 @@ void VT_Level::prepare_level()
     {
         if (!read_32bit_textiles)
         {
-            if (textile32_count == 0)
+            if (textile32.empty())
             {
-                this->textile32_count = this->num_textiles;
-                this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
+                this->textile32.resize( this->num_textiles );
             }
             for (i = 0; i < (num_textiles - num_misc_textiles); i++)
                 convert_textile16_to_textile32(textile16[i], textile32[i]);
@@ -24,8 +23,7 @@ void VT_Level::prepare_level()
     }
     else
     {
-        this->textile32_count = this->num_textiles;
-            this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
+        this->textile32.resize( this->num_textiles );
         for (i = 0; i < num_textiles; i++)
             convert_textile8_to_textile32(textile8[i], palette, textile32[i]);
     }

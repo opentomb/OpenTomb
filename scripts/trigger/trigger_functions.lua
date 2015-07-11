@@ -159,8 +159,8 @@ end
 -- Sets specified secret index as found and plays audiotrack with pop-up notification.
 
 function findSecret(secret_number)
-    if(getSecretStatus(secret_number) == 0) then
-        setSecretStatus(secret_number, 1);  -- Set actual secret status
+    if(not getSecretStatus(secret_number)) then
+        setSecretStatus(secret_number, true);  -- Set actual secret status
         playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
         --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
     end;
