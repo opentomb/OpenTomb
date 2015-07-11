@@ -203,17 +203,13 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     uint8_t max[2] = { 0, 0 }, min[2] = { 255, 255 };
     for (int i = 0; i < 3; i++)
     {
-        if (texture.vertices[i].xpixel > max[0])
-            max[0] = texture.vertices[i].xpixel;
-        if (texture.vertices[i].ypixel > max[1])
-            max[1] = texture.vertices[i].ypixel;
-        if (texture.vertices[i].xpixel < min[0])
-            min[0] = texture.vertices[i].xpixel;
-        if (texture.vertices[i].ypixel < min[1])
-            min[1] = texture.vertices[i].ypixel;
+        max[0] = std::max(max[0], texture.vertices[i].xpixel);
+        max[1] = std::max(max[1], texture.vertices[i].ypixel);
+        min[0] = std::min(min[0], texture.vertices[i].xpixel);
+        min[1] = std::min(min[1], texture.vertices[i].ypixel);
     }
-    uint8_t width = max[0] - min[0];
-    uint8_t height = max[1] - min[1];
+    const uint8_t width = max[0] - min[0];
+    const uint8_t height = max[1] - min[1];
 
     // See whether it already exists
     size_t canonical_index = std::numeric_limits<size_t>::max();
@@ -238,7 +234,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
         canonical_index = m_canonicalObjectTextures.size();
         m_canonicalObjectTextures.emplace_back();
 
-        CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
+        CanonicalObjectTexture &canonical = m_canonicalObjectTextures.back();
         canonical.width = width;
         canonical.height = height;
         canonical.original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
@@ -432,7 +428,7 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             if (canonical.new_page != page)
                 continue;
 
-            const char *original = (char *) m_originalPages[canonical.original_page].pixels;
+            const uint32_t* pixels = reinterpret_cast<const uint32_t*>( m_originalPages[canonical.original_page].pixels );
 
             // Add top border
             for (int border = 0; border < m_borderWidth; border++)
@@ -444,16 +440,16 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
 
                 // expand top-left pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x],
+                                4 * m_borderWidth);
                 // copy top line
                 memcpy(&data[(y*m_resultPageWidth + x + m_borderWidth) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
+                       &pixels[old_y * 256 + old_x],
                        canonical.width * 4);
                 // expand top-right pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x + m_borderWidth + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x + canonical.width],
+                                4 * m_borderWidth);
             }
 
             // Copy main content
@@ -466,16 +462,16 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
 
                 // expand left pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x],
+                                4 * m_borderWidth);
                 // copy line
                 memcpy(&data[(y*m_resultPageWidth + x + m_borderWidth) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
+                       &pixels[old_y * 256 + old_x],
                        canonical.width * 4);
                 // expand right pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x + m_borderWidth + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x + canonical.width],
+                                4 * m_borderWidth);
             }
 
             // Add bottom border
@@ -488,16 +484,16 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
 
                 // expand bottom-left pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x],
+                                4 * m_borderWidth);
                 // copy bottom line
                 memcpy(&data[(y*m_resultPageWidth + x + m_borderWidth) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
+                       &pixels[old_y * 256 + old_x],
                        canonical.width * 4);
                 // expand bottom-right pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x + m_borderWidth + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * m_borderWidth);
+                                &pixels[old_y * 256 + old_x + canonical.width],
+                                4 * m_borderWidth);
             }
         }
 
