@@ -673,7 +673,6 @@ void StreamTrack::End()     // Smoothly end track with fadeout.
 
 void StreamTrack::Stop()    // Immediately stop track.
 {
-    int queued;
 
     active = false;         // Clear activity flag.
 
@@ -682,6 +681,7 @@ void StreamTrack::Stop()    // Immediately stop track.
         if(IsPlaying())
             alSourceStop(source);
 
+        int queued;
         alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
 
         while(queued--)
@@ -696,7 +696,10 @@ void StreamTrack::Stop()    // Immediately stop track.
     switch(method)
     {
         case TR_AUDIO_STREAM_METHOD_OGG:
-            sf_close(sndfile_Stream);
+            if(sndfile_Stream) {
+                sf_close(sndfile_Stream);
+                sndfile_Stream = nullptr;
+            }
             break;
 
         case TR_AUDIO_STREAM_METHOD_WAD:
