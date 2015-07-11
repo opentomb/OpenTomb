@@ -131,7 +131,6 @@ else()
     )
 endif()
 
-
 ADD_EXECUTABLE(
     ${PROJECT_NAME}
     ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}

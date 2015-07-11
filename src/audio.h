@@ -3,6 +3,7 @@
 #define AUDIO_H
 
 #include <AL/al.h>
+#include <AL/alext.h>
 #include <AL/efx.h>
 #include <AL/efx-presets.h>
 #include <AL/efx-creative.h>
@@ -261,6 +262,8 @@ struct AudioSettings
     bool        effects_initialized = false;
     bool        listener_is_player = false; // RESERVED FOR FUTURE USE
     int         stream_buffer_size = 0;
+    ALCdevice*  device = nullptr;
+    ALCcontext* context = nullptr;
 };
 
 // FX manager structure.

@@ -649,7 +649,7 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateTransform()
 {
-    m_transform.getBasis().setEulerZYX(btRadians(m_angles[2]), btRadians(m_angles[1]), btRadians(m_angles[0]));
+    m_transform.getBasis().setEulerYPR(btRadians(m_angles[1]), btRadians(m_angles[2]), btRadians(m_angles[0]));
 
     fixPenetrations(nullptr);
 }
