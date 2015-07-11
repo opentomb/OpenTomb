@@ -7,24 +7,27 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(OpenTomb)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
 
-find_package(Bullet)
-INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
-
-find_package(Freetype)
+add_subdirectory(3rdparty)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(3rdparty/LuaState/include)
 
-# add_subdirectory(3rdparty)
+if(APPLE)
+    # Don’t attempt to find AL anywhere, just use ours directly.
+    INCLUDE_DIRECTORIES(3rdparty/al/)
+else()
+    find_package(OpenAL REQUIRED)
+    INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
+endif()
 
 find_package(Lua REQUIRED)
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
+add_definitions(-DLUA_COMPAT_APIINTCASTS)
 
-find_package(OpenAL REQUIRED)
-INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
-
-find_package(Boost REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+find_package(GLEW REQUIRED)
+INCLUDE_DIRECTORIES(${GLEW_INCLUDE_DIRS})
 
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
@@ -100,16 +103,33 @@ INCLUDE_DIRECTORIES(
     ${OPENGL_INCLUDE_DIR}
 )
 
-FILE(GLOB PRJ_HDR
-    src/*.h*
-    src/vt/*.h
-)
-
-FILE(GLOB PRJ_SRC
-    src/*.c*
-    src/vt/*.cpp
-)
-
+if(APPLE)
+    FILE(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+        src/mac/*.m
+        3rdparty/al/*.c
+        3rdparty/al/*/*.c
+        3rdparty/al/*/*/*.c
+    )
+    FILE(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+        src/mac/*.h
+        3rdparty/al/*.h
+        3rdparty/al/*/*.h
+        3rdparty/al/*/*/*.h
+    )
+else()
+    FILE(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+    )
+    FILE(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+    )
+endif()
 
 ADD_EXECUTABLE(
     ${PROJECT_NAME}
@@ -119,6 +139,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
     ${PROJECT_NAME}
     ${OPENGL_LIBRARIES}
+    ${GLEW_LIBRARIES}
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     ${ZLIB_LIBRARIES}

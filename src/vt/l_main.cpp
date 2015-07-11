@@ -155,13 +155,11 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     //delete [] buffer;
 }
 
-void TR_Level::read_level(const char *filename, int32_t game_version)
+void TR_Level::read_level(const std::string& filename, int32_t game_version)
 {
-    int len, i, len2;
+    int len2 = 0;
 
-    len = strlen(filename);
-    len2 = 0;
-    for(i = 0; i < len; i++)
+    for(size_t i = 0; i < filename.length(); i++)
     {
         if((filename[i] == '/') || (filename[i] == '\\'))
         {
@@ -171,12 +169,12 @@ void TR_Level::read_level(const char *filename, int32_t game_version)
 
     if(len2 > 0)
     {
-        memcpy(this->sfx_path, filename, len2 + 1);
+        memcpy(this->sfx_path, filename.c_str(), len2 + 1);
         this->sfx_path[len2+1] = 0;
         strcat(this->sfx_path, "MAIN.SFX");
     }
 
-    this->read_level(SDL_RWFromFile(filename, "rb"), game_version);
+    this->read_level(SDL_RWFromFile(filename.c_str(), "rb"), game_version);
 }
 
 /** \brief reads the level.

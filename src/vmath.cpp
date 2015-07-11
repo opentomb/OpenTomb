@@ -34,9 +34,9 @@ void Mat4_Translate(btTransform& mat, btScalar x, btScalar y, btScalar z)
 
 void Mat4_Scale(btTransform& mat, btScalar x, btScalar y, btScalar z)
 {
-    mat.getBasis()[0][0] *= x;
-    mat.getBasis()[0][1] *= y;
-    mat.getBasis()[0][2] *= z;
+    mat.getBasis().getColumn(0)[0] *= x;
+    mat.getBasis().getColumn(0)[1] *= y;
+    mat.getBasis().getColumn(0)[2] *= z;
 }
 
 void Mat4_RotateX(btTransform& mat, btScalar ang)
@@ -46,11 +46,11 @@ void Mat4_RotateX(btTransform& mat, btScalar ang)
     btScalar cosa = cos(tmp);
 
     btVector3 R[2];
-    R[0] = mat.getBasis()[1] * cosa + mat.getBasis()[2] * sina;
-    R[1] =-mat.getBasis()[1] * sina + mat.getBasis()[2] * cosa;
+    R[0] = mat.getBasis().getColumn(1) * cosa + mat.getBasis().getColumn(2) * sina;
+    R[1] =-mat.getBasis().getColumn(1) * sina + mat.getBasis().getColumn(2) * cosa;
 
-    mat.getBasis()[1] = R[0];
-    mat.getBasis()[2] = R[1];
+    mat.getBasis().getColumn(1) = R[0];
+    mat.getBasis().getColumn(2) = R[1];
 }
 
 void Mat4_RotateY(btTransform& mat, btScalar ang)
@@ -60,11 +60,11 @@ void Mat4_RotateY(btTransform& mat, btScalar ang)
     btScalar cosa = cos(tmp);
 
     btVector3 R[2];
-    R[0] = mat.getBasis()[0] * cosa - mat.getBasis()[2] * sina;
-    R[1] = mat.getBasis()[0] * sina + mat.getBasis()[2] * cosa;
+    R[0] = mat.getBasis().getColumn(0) * cosa - mat.getBasis().getColumn(2) * sina;
+    R[1] = mat.getBasis().getColumn(0) * sina + mat.getBasis().getColumn(2) * cosa;
 
-    mat.getBasis()[0] = R[0];
-    mat.getBasis()[2] = R[1];
+    mat.getBasis().getColumn(0) = R[0];
+    mat.getBasis().getColumn(2) = R[1];
 }
 
 void Mat4_RotateZ(btTransform& mat, btScalar ang)
@@ -74,9 +74,9 @@ void Mat4_RotateZ(btTransform& mat, btScalar ang)
     btScalar cosa = cos(tmp);
 
     btVector3 R[2];
-    R[0] = mat.getBasis()[0] * cosa +  mat.getBasis()[1] * sina;
-    R[1] =-mat.getBasis()[0] * sina +  mat.getBasis()[1] * cosa;
+    R[0] = mat.getBasis().getColumn(0) * cosa +  mat.getBasis().getColumn(1) * sina;
+    R[1] =-mat.getBasis().getColumn(0) * sina +  mat.getBasis().getColumn(1) * cosa;
 
-    mat.getBasis()[0] = R[0];
-    mat.getBasis()[1] = R[1];
+    mat.getBasis().getColumn(0) = R[0];
+    mat.getBasis().getColumn(1) = R[1];
 }

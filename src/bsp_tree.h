@@ -6,8 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
 
 #include "vmath.h"
@@ -29,7 +27,7 @@ struct BSPFaceRef {
 
 struct BSPNode
 {
-    btVector3 plane{0,0,0};
+    Plane plane;
     
     std::vector<BSPFaceRef> polygons_front;
     std::vector<BSPFaceRef> polygons_back;

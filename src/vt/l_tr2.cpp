@@ -303,15 +303,13 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     for (i = 0; i < this->static_meshes_count; i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
-    this->object_textures_count = read_bitu32(src);
-    this->object_textures = (tr4_object_texture_t*)malloc(this->object_textures_count * sizeof(tr4_object_texture_t));
-    for (i = 0; i < this->object_textures_count; i++)
+    this->object_textures.resize( read_bitu32(src) );
+    for (i = 0; i < this->object_textures.size(); i++)
         read_tr_object_texture(src, this->object_textures[i]);
 
-    this->Spriteextures_count = read_bitu32(src);
-    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
-    for (i = 0; i < this->Spriteextures_count; i++)
-        read_tr_Spriteexture(src, this->Spriteextures[i]);
+    this->sprite_textures.resize( read_bitu32(src) );
+    for (i = 0; i < this->sprite_textures.size(); i++)
+        read_tr_Spriteexture(src, this->sprite_textures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));

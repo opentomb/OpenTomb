@@ -1,3 +1,4 @@
+#pragma once
 //
 //  font_buffer.h
 //  OpenTomb
@@ -7,14 +8,9 @@
 //  a standard C interface.
 //
 
-#ifndef __OpenTomb__font_buffer__
-#define __OpenTomb__font_buffer__
+#include <cstddef>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-#include <stddef.h>
+#include <GL/glew.h>
 
 /*!
  * Sets the minimum size of the font buffer that is needed, in bytes, and 
@@ -30,7 +26,7 @@ extern "C" {
  * directly to the GPU, and the reverse path may not be set up, so reading
  * will result in undefined behavior.
  */
-void *FontBuffer_ResizeAndMap(size_t bytes);
+GLfloat* FontBuffer_ResizeAndMap(size_t bytes);
 
 /*!
  * Stops mapping. After this is called, the pointer created by MapForWriting
@@ -44,9 +40,3 @@ void FontBuffer_Unmap();
  * ResizeAndMap and Unmap. Creates the internal structures if necessary.
  */
 void FontBuffer_Bind();
-    
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* defined(__OpenTomb__font_buffer__) */

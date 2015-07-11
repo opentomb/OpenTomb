@@ -26,7 +26,7 @@ void fontBuffer_ensureAvailable()
         return;
     }
     
-    glGenBuffersARB(1, &fontBufferVBO);
+    glGenBuffers(1, &fontBufferVBO);
     
     VertexArrayAttribute attribs[] = {
         VertexArrayAttribute(TextShaderDescription::vertex_attribs::position, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [0])),
@@ -37,22 +37,22 @@ void fontBuffer_ensureAvailable()
     fontBufferVAO.reset( new VertexArray(0, 3, attribs) );
 }
 
-void *FontBuffer_ResizeAndMap(size_t bytes)
+GLfloat *FontBuffer_ResizeAndMap(size_t bytes)
 {
     fontBuffer_ensureAvailable();
     
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, fontBufferVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, fontBufferVBO);
     if (bytes > currentSize)
     {
         currentSize = bytes;
     }
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, currentSize, 0, GL_STREAM_DRAW);
-    return glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+    glBufferData(GL_ARRAY_BUFFER, currentSize, 0, GL_STREAM_DRAW);
+    return static_cast<GLfloat*>( glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY) );
 }
 
 void FontBuffer_Unmap()
 {
-    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 }
 
 void FontBuffer_Bind()

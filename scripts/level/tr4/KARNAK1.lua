@@ -10,11 +10,11 @@ print("Level script loaded (KARNAK1.lua)");
 
 static_tbl[0]  = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Tree
 static_tbl[11] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Gate
-static_tbl[12] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Gate: dummy static 1!
-static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Gate: dummy static 2!
+static_tbl[12] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Gate: dummy static 1!
+static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true}; -- Gate: dummy static 2!
 static_tbl[14] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Plate
 static_tbl[15] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Vase
-static_tbl[16] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX, hide = 1};  -- Cube: dummy static 3!
+static_tbl[16] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX, hide = true}; -- Cube: dummy static 3!
 static_tbl[17] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Pedestal
 
 -- ROCK statics

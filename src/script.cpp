@@ -20,6 +20,7 @@
 #include "string.h"
 
 #include <lua.hpp>
+#include "LuaState.h"
 
 #include <iostream>
 
@@ -124,655 +125,222 @@ int SC_ParseInt(char **ch)
     return 0;
 }
 
-/**
- * get tbl[key]
- * @TODO: delete functions like lua_Get[Set]xxxField! Use only native LUA functions;
- */
-btScalar lua_GetScalarField(lua_State *lua, const char *key)
-{
-    btScalar ret = 0.0;
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0.0;
-    }
-
-    lua_getfield(lua, -1, key);
-    ret = lua_tonumber(lua, -1);
-    lua_settop(lua, top);
-    return ret;
-}
-
-btScalar lua_GetScalarField(lua_State *lua, int index)
-{
-    btScalar ret = 0.0;
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0.0;
-    }
-
-    lua_rawgeti(lua, -1, index);
-    ret = lua_tonumber(lua, -1);
-    lua_settop(lua, top);
-    return ret;
-}
-
-
 /*
  *   Specific functions to get specific parameters from script.
  */
- int lua_GetGlobalSound(lua_State *lua, int global_sound_id)
+int lua_GetGlobalSound(lua::State& state, int global_sound_id)
 {
-    lua_Integer sound_id = 0;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getGlobalSound");
-
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, engine_world.version);
-            lua_pushinteger(lua, global_sound_id);
-            if(lua_CallAndLog(lua, 2, 1, 0))
-            {
-                sound_id = lua_tointeger(lua, -1);
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    return (int)sound_id;
+    return state["getGlobalSound"](engine_world.version, global_sound_id);
 }
 
-int lua_GetSecretTrackNumber(lua_State *lua)
+int lua_GetSecretTrackNumber(lua::State& state)
 {
-    lua_Integer track_number = 0;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getSecretTrackNumber");
-
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, engine_world.version);
-            track_number = lua_tointeger(lua, -1);
-            if(lua_CallAndLog(lua, 2, 1, 0))
-                track_number = lua_tointeger(lua, -1);
-        }
-        lua_settop(lua, top);
-    }
-
-    return (int)track_number;
+    return state["getSecretTrackNumber"](engine_world.version);
 }
 
-int lua_GetNumTracks(lua_State *lua)
+int lua_GetNumTracks(lua::State& state)
 {
-    lua_Integer num_tracks = 0;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getNumTracks");
-
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, engine_world.version);
-            if(lua_CallAndLog(lua, 1, 1, 0))
-                num_tracks = lua_tointeger(lua, -1);
-        }
-        lua_settop(lua, top);
-    }
-
-    return (int)num_tracks;
+    return state["getNumTracks"](engine_world.version);
 }
 
 
-bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask)
+bool lua_GetOverridedSamplesInfo(lua::State& state, int *num_samples, int *num_sounds, char *sample_name_mask)
 {
-    bool result = false;
+    const char* realPath;
+    lua::tie(realPath, *num_sounds, *num_samples) = state["getOverridedSamplesInfo"](engine_world.version);
 
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getOverridedSamplesInfo");
-        const char *real_path;
+    strcpy(sample_name_mask, realPath);
 
-        if(lua_isfunction(lua, -1))
-        {
-            size_t string_length = 0;
-
-            lua_pushinteger(lua, engine_world.version);
-            if (lua_CallAndLog(lua, 1, 3, 0))
-            {
-                real_path   = lua_tolstring(lua, -1, &string_length);
-               *num_sounds  = (int)lua_tointeger(lua, -2);
-               *num_samples = (int)lua_tointeger(lua, -3);
-
-                strcpy(sample_name_mask, real_path);
-
-                if((*num_sounds != -1) && (*num_samples != -1) && (strcmp(real_path, "NONE") != 0))
-                    result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    // If Lua environment doesn't exist or script function returned -1 in one of the
-    // fields, it means that corresponding sample override table is missing or not
-    // valid - hence, return false.
-
-    return result;
+    return *num_sounds != -1 && *num_samples != -1 && strcmp(realPath, "NONE")!=0;
 }
 
 
-bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count)
+bool lua_GetOverridedSample(lua::State& state, int sound_id, int *first_sample_number, int *samples_count)
 {
-    bool result = false;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getOverridedSample");
-
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, engine_world.version);
-            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
-            lua_pushinteger(lua, sound_id);
-            if(lua_CallAndLog(lua, 3, 2, 0))
-            {
-                *first_sample_number = (int)lua_tointeger(lua, -2);
-                *samples_count       = (int)lua_tointeger(lua, -1);
-                
-                if((*first_sample_number != -1) && (*samples_count != -1))
-                    result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    return result;
+    lua::tie(*first_sample_number, *samples_count) = state["getOverridedSample"](engine_world.version, int(gameflow_manager.CurrentLevelID), sound_id);
+    return *first_sample_number != -1 && *samples_count != -1;
 }
 
 
-bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int *load_method, int *stream_type)
 {
-    bool result = false;
-    
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        size_t  string_length  = 0;
-        const char *real_path;
-
-        lua_getglobal(lua, "getTrackInfo");
-
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, engine_world.version);
-            lua_pushinteger(lua, track_index);
-            if(lua_CallAndLog(lua, 2, 3, 0))
-            {
-                real_path   = lua_tolstring(lua, -3, &string_length);
-               *stream_type = (int)lua_tointeger(lua, -2);
-               *load_method = (int)lua_tointeger(lua, -1);
-
-                // Lua returns constant string pointer, which we can't assign to
-                // provided argument; so we need to straightly copy it.
-
-                strcpy(file_path, real_path);
-
-                if(*stream_type != -1)
-                    result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    // If Lua wasn't able to extract file path from the script, most likely it means
-    // that entry is broken or missing, or wrong track ID was specified. So we return
-    // FALSE in such cases.
-
-    return result;
+    const char* realPath;
+    lua::tie(realPath, *stream_type, *load_method) = state["getTrackInfo"](engine_world.version, track_index);
+    strcpy(file_path, realPath);
+    return *stream_type != -1;
 }
 
 
-bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer)
+bool lua_GetString(lua::State& state, int string_index, size_t string_size, char *buffer)
 {
-    bool result = false;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "getString");
-
-        if(lua_isfunction(lua, -1))
-        {
-            size_t *string_length = NULL;
-
-            lua_pushinteger(lua, string_index);
-            if (lua_CallAndLog(lua, 1, 1, 0))
-            {
-                const char* lua_str = lua_tolstring(lua, -1, string_length);
-                strncpy(buffer, lua_str, string_size);
-                result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    return result;
+    const char* str = state["getString"](string_index);
+    strncpy(buffer, str, string_size);
+    return true;
 }
 
-bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char *buffer)
+bool lua_GetSysNotify(lua::State& state, int string_index, size_t string_size, char *buffer)
 {
-    bool result = false;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getSysNotify");
-
-        if(lua_isfunction(lua, -1))
-        {
-            size_t *string_length = NULL;
-
-            lua_pushinteger(lua, string_index);
-            if (lua_CallAndLog(lua, 1, 1, 0))
-            {
-                const char* lua_str = lua_tolstring(lua, -1, string_length);
-                strncpy(buffer, lua_str, string_size);
-                result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    return result;
+    const char* str = state["getSysNotify"](string_index);
+    strncpy(buffer, str, string_size);
+    return true;
 }
 
 
-bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
+bool lua_GetLoadingScreen(lua::State& state, int level_index, char *pic_path)
 {
-    bool result = false;
-    size_t  string_length  = 0;
-    int     top;
-
-    const char *real_path;
-
-    if(lua != NULL)
-    {
-        top = lua_gettop(lua);
-
-        lua_getglobal(lua, "getLoadingScreen");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, gameflow_manager.CurrentGameID);
-            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
-            lua_pushinteger(lua, level_index);
-            if (lua_CallAndLog(lua, 3, 1, 0))
-            {
-                real_path = lua_tolstring(lua, -1, &string_length);
-
-                // Lua returns constant string pointer, which we can't assign to
-                // provided argument; so we need to straightly copy it.
-                
-                strncpy(pic_path, real_path, MAX_ENGINE_PATH);
-
-                result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    // If Lua wasn't able to extract file path from the script, most likely it means
-    // that entry is broken or missing, or wrong track ID was specified. So we return
-    // FALSE in such cases.
-
-    return result;
+    const char* realPath = state["getLoadingScreen"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), level_index);
+    strncpy(pic_path, realPath, MAX_ENGINE_PATH);
+    return true;
 }
 
-
-/**
- * set tbl[key]
- */
-int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
-{
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0;
-    }
-
-    lua_pushnumber(lua, val);
-    lua_setfield(lua, -2, key);
-    lua_settop(lua, top);
-    return 1;
-}
 
 /*
  * Gameplay functions
  */
 
-int lua_DoTasks(lua_State *lua, btScalar time)
+void lua_DoTasks(lua::State& state, btScalar time)
 {
-    lua_pushnumber(lua, time);
-    lua_setglobal(lua, "frame_time");
-    
-    lua_CallVoidFunc(lua, "doTasks");
-    lua_CallVoidFunc(lua, "clearKeys");
-    
-    return 0;
+    state.set( "frame_time", time );
+    state["doTasks"]();
+    state["clearKeys"]();
 }
 
-void lua_AddKey(lua_State *lua, int keycode, int state)
+void lua_AddKey(lua::State& lstate, int keycode, int state)
 {
-    int top = lua_gettop(lua);
-
-    lua_getglobal(lua, "addKey");
-    
-    if(!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        return;
-    }
-    
-    lua_pushinteger(lua, keycode);
-    lua_pushinteger(lua, state);
-    lua_CallAndLog(lua, 2, 0, 0);
-    
-    lua_settop(lua, top);
+    lstate["addKey"](keycode, state);
 }
 
-bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call)
+void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator)
 {
-    int top = lua_gettop(lua);
-    
-    lua_getglobal(lua, func_name);
-    
-    if(!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        return false;
-    }
-    
-    lua_CallAndLog(lua, 0, 0, 0);
-    
-    if(destroy_after_call)
-    {
-        lua_pushstring(engine_lua, "nil");
-        lua_setglobal(lua, func_name);
-    }
-        
-    lua_settop(lua, top);
-    return true;
+    if(id_activator>0)
+        state["execEntity"](id_callback, id_object, id_activator);
+    else
+        state["execEntity"](id_callback, id_object);
 }
 
-int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
-{
-    int top = lua_gettop(lua);
-
-    lua_getglobal(lua, "execEntity");
-    if (!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        //Sys_Warn("Broken \"execEntity\" script function");
-        return -1;
-    }
-
-    int argn = 0;
-    
-    lua_pushinteger(lua, id_callback);  argn++;
-    lua_pushinteger(lua, id_object);    argn++;
-    
-    if(id_activator >= 0)
-    {
-        lua_pushinteger(lua, id_activator);
-        argn++;
-    }
-    
-    lua_CallAndLog(lua, argn, 0, 0);
-
-    lua_settop(lua, top);
-    return 1;
-}
-
-void lua_LoopEntity(lua_State *lua, int object_id)
+void lua_LoopEntity(lua::State& state, int object_id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(object_id);
-    if((lua) && ent->m_active)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "loopEntity");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, object_id);
-            lua_CallAndLog(lua, 1, 0, 0);
-        }
-        lua_settop(lua, top);
+    if(ent && ent->m_active) {
+        state["loopEntity"](object_id);
     }
 }
 
 /*
  * Game structures parse
  */
-int lua_ParseControls(lua_State *lua, struct ControlSettings *cs)
+void lua_ParseControls(lua::State& state, struct ControlSettings *cs)
 {
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "controls");
-        cs->mouse_sensitivity = lua_GetScalarField(lua, "mouse_sensitivity");
-        cs->use_joy = lua_GetScalarField(lua, "use_joy");
-        cs->joy_number = lua_GetScalarField(lua, "joy_number");
-        cs->joy_rumble = lua_GetScalarField(lua, "joy_rumble");
-        cs->joy_axis_map[AXIS_LOOK_X] = lua_GetScalarField(lua, "joy_look_axis_x");
-        cs->joy_axis_map[AXIS_LOOK_Y] = lua_GetScalarField(lua, "joy_look_axis_y");
-        cs->joy_look_invert_x = lua_GetScalarField(lua, "joy_look_invert_x");
-        cs->joy_look_invert_y = lua_GetScalarField(lua, "joy_look_invert_y");
-        cs->joy_look_sensitivity = lua_GetScalarField(lua, "joy_look_sensitivity");
-        cs->joy_look_deadzone = lua_GetScalarField(lua, "joy_look_deadzone");
-        cs->joy_axis_map[AXIS_MOVE_X] = lua_GetScalarField(lua, "joy_move_axis_x");
-        cs->joy_axis_map[AXIS_MOVE_Y] = lua_GetScalarField(lua, "joy_move_axis_y");
-        cs->joy_move_invert_x = lua_GetScalarField(lua, "joy_move_invert_x");
-        cs->joy_move_invert_y = lua_GetScalarField(lua, "joy_move_invert_y");
-        cs->joy_move_sensitivity = lua_GetScalarField(lua, "joy_move_sensitivity");
-        cs->joy_move_deadzone = lua_GetScalarField(lua, "joy_move_deadzone");
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
+    cs->mouse_sensitivity = state["controls"]["mouse_sensitivity"];
+    cs->use_joy = state["controls"]["use_joy"];
+    cs->joy_number = state["controls"]["joy_number"];
+    cs->joy_rumble = state["controls"]["joy_rumble"];
+    cs->joy_axis_map[AXIS_MOVE_X] = state["controls"]["joy_look_axis_x"];
+    cs->joy_axis_map[AXIS_MOVE_Y] = state["controls"]["joy_look_axis_y"];
+    cs->joy_look_invert_x = state["controls"]["joy_look_invert_x"];
+    cs->joy_look_invert_y = state["controls"]["joy_look_invert_y"];
+    cs->joy_look_sensitivity = state["controls"]["joy_look_sensitivity"];
+    cs->joy_look_deadzone = state["controls"]["joy_look_deadzone"];
+    cs->joy_move_invert_x = state["controls"]["joy_move_invert_x"];
+    cs->joy_move_invert_y = state["controls"]["joy_move_invert_y"];
+    cs->joy_move_sensitivity = state["controls"]["joy_move_sensitivity"];
+    cs->joy_move_deadzone = state["controls"]["joy_move_deadzone"];
 }
 
-int lua_ParseScreen(lua_State *lua, struct ScreenInfo *sc)
+void lua_ParseScreen(lua::State& state, struct ScreenInfo *sc)
 {
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "screen");
-        sc->x = (int16_t)lua_GetScalarField(lua, "x");
-        sc->y = (int16_t)lua_GetScalarField(lua, "y");
-        sc->w = (int16_t)lua_GetScalarField(lua, "width");
-        sc->h = (int16_t)lua_GetScalarField(lua, "height");
-        sc->w_unit = (GLfloat)sc->w / GUI_SCREEN_METERING_RESOLUTION;
-        sc->h_unit = (GLfloat)sc->h / GUI_SCREEN_METERING_RESOLUTION;
-        sc->FS_flag = (int8_t)lua_GetScalarField(lua, "fullscreen");
-        sc->show_debuginfo = (int8_t)lua_GetScalarField(lua, "debug_info");
-        sc->fov = (float)lua_GetScalarField(lua, "fov");
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
+    sc->x = state["screen"]["x"];
+    sc->y = state["screen"]["y"];
+    sc->w = state["screen"]["width"];
+    sc->h = state["screen"]["height"];
+    sc->w = state["screen"]["width"];
+    sc->w_unit = sc->w / GUI_SCREEN_METERING_RESOLUTION;
+    sc->h = state["screen"]["height"];
+    sc->h_unit = sc->h / GUI_SCREEN_METERING_RESOLUTION;
+    sc->FS_flag = state["screen"]["fullscreen"];
+    sc->show_debuginfo = state["screen"]["debug_info"];
+    sc->fov = state["screen"]["fov"];
 }
 
-int lua_ParseRender(lua_State *lua, struct RenderSettings *rs)
+void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
 {
-    if(lua)
+    rs->mipmap_mode = state["render"]["mipmap_mode"];
+    rs->mipmaps = state["render"]["mipmaps"];
+    rs->lod_bias = state["render"]["lod_bias"];
+    rs->anisotropy = state["render"]["anisotropy"];
+    rs->antialias = state["render"]["antialias"];
+    rs->antialias_samples = state["render"]["antialias_samples"];
+    rs->texture_border = state["render"]["texture_border"];
+    rs->z_depth = state["render"]["z_depth"];
+    rs->fog_enabled = state["render"]["fog_enabled"];
+    rs->fog_start_depth = state["render"]["fog_start_depth"];
+    rs->fog_end_depth = state["render"]["fog_end_depth"];
+    rs->fog_color[0] = state["render"]["fog_color"]["r"];
+    rs->fog_color[0] /= 255.0;
+    rs->fog_color[1] = state["render"]["fog_color"]["g"];
+    rs->fog_color[1] /= 255.0;
+    rs->fog_color[2] = state["render"]["fog_color"]["b"];
+    rs->fog_color[2] /= 255.0;
+    rs->fog_color[3] = 1;
+    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
     {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "render");
-        rs->mipmap_mode = lua_GetScalarField(lua, "mipmap_mode");
-        rs->mipmaps = lua_GetScalarField(lua, "mipmaps");
-        rs->lod_bias = lua_GetScalarField(lua, "lod_bias");
-        rs->anisotropy = lua_GetScalarField(lua, "anisotropy");
-        rs->antialias = lua_GetScalarField(lua, "antialias")!=0;
-        rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
-        rs->texture_border = lua_GetScalarField(lua, "texture_border");
-        rs->z_depth = lua_GetScalarField(lua, "z_depth");
-        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled") != 0;
-        rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
-        rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
-
-        lua_getfield(lua, -1, "fog_color");
-        if(lua_istable(lua, -1))
-        {
-            rs->fog_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-            rs->fog_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-            rs->fog_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
-            rs->fog_color[3] = 1.0; // Not sure if we need this at all...
-        }
-
-        if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
-        {
-            rs->z_depth = 24;
-        }
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
-}
-
-int lua_ParseAudio(lua_State *lua, struct AudioSettings *as)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "audio");
-        as->music_volume = lua_GetScalarField(lua, "music_volume");
-        as->sound_volume = lua_GetScalarField(lua, "sound_volume");
-        as->use_effects  = lua_GetScalarField(lua, "use_effects");
-        as->listener_is_player = lua_GetScalarField(lua, "listener_is_player");
-        as->stream_buffer_size = (lua_GetScalarField(lua, "stream_buffer_size")) * 1024;
-        if(as->stream_buffer_size <= 0)
-        {
-            as->stream_buffer_size = 128 * 1024;
-        }
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
-}
-
-int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "console");
-        lua_getfield(lua, -1, "background_color");
-        if(lua_istable(lua, -1))
-        {
-            cn->setBackgroundColor( (GLfloat)lua_GetScalarField(lua, "r") / 255.0,
-                                    (GLfloat)lua_GetScalarField(lua, "g") / 255.0,
-                                    (GLfloat)lua_GetScalarField(lua, "b") / 255.0,
-                                    (GLfloat)lua_GetScalarField(lua, "a") / 255.0);
-        }
-        lua_pop(lua, 1);
-
-        float tf = lua_GetScalarField(lua, "spacing");
-        if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
-        {
-            cn->setSpacing( tf );
-        }
-        int t = lua_GetScalarField(lua, "line_size");
-        if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
-        {
-            cn->setLineSize( t );
-        }
-        t = lua_GetScalarField(lua, "showing_lines");
-        if(t >= CON_MIN_LINES && t <= CON_MAX_LINES)
-        {
-            cn->setVisibleLines( t );
-        }
-        t = lua_GetScalarField(lua, "log_size");
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            cn->setHistorySize( t );
-        }
-        t = lua_GetScalarField(lua, "lines_count");
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            cn->setBufferSize( t );
-        }
-
-        cn->setVisible( lua_GetScalarField(lua, "show") != 0 );
-        cn->setShowCursorPeriod( lua_GetScalarField(lua, "show_cursor_period") );
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
-}
-
-void lua_Clean(lua_State *lua)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "tlist_Clear");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_CallAndLog(lua, 0, 1, 0);
-        }
-
-        lua_getglobal(lua, "entfuncs_Clear");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_CallAndLog(lua, 0, 1, 0);
-        }
-        lua_settop(lua, top);
+        rs->z_depth = 24;
     }
 }
 
-bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline)
+void lua_ParseAudio(lua::State& state, struct AudioSettings *as)
 {
-    if (lua_pcall(lua, nargs, nresults, errfunc) != LUA_OK)
+    as->music_volume = state["audio"]["music_volume"];
+    as->sound_volume = state["audio"]["sound_volume"];
+    as->use_effects = state["audio"]["use_effects"].to<bool>();
+    as->listener_is_player = state["audio"]["listener_is_player"].to<bool>();
+    as->stream_buffer_size = state["audio"]["stream_buffer_size"];
+    as->stream_buffer_size *= 1024;
+    if(as->stream_buffer_size <= 0)
+        as->stream_buffer_size = 128 * 1024;
+    as->music_volume = state["audio"]["music_volume"];
+    as->music_volume = state["audio"]["music_volume"];
+}
+
+void lua_ParseConsole(lua::State& state, ConsoleInfo *cn)
+{
     {
-        char errormessage[4096];
-        if (lua_gettop(lua) > 0 && lua_isstring(lua, -1))
-        {
-            const char *luaErrorDescription = lua_tostring(lua, -1);
-            snprintf(errormessage, sizeof(errormessage), "Lua error: %s (called from %s:%d)", luaErrorDescription, cfile, cline);
-            lua_pop(lua, 1);
-        }
-        else
-        {
-            snprintf(errormessage, sizeof(errormessage), "Lua error without message (called from %s:%d)", cfile, cline);
-        }
-        //fprintf(stderr, "%s\n", errormessage);
-        ConsoleInfo::instance().addLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
-        return false;
+        float r = state["console"]["background_color"]["r"];
+        float g = state["console"]["background_color"]["g"];
+        float b = state["console"]["background_color"]["b"];
+        float a = state["console"]["background_color"]["a"];
+        cn->setBackgroundColor(r/255, g/255, b/255, a/255);
     }
-    return true;
+
+    float tmpF = state["console"]["spacing"];
+    if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
+        cn->setSpacing( tmpF );
+
+    int tmpI = state["console"]["line_size"];
+    if(tmpI >= CON_MIN_LINE_SIZE && tmpI <= CON_MAX_LINE_SIZE)
+        cn->setLineSize( tmpI );
+
+    tmpI = state["console"]["showing_lines"];
+    if(tmpI >= CON_MIN_LINES && tmpI <= CON_MIN_LINES)
+        cn->setVisibleLines( tmpI );
+
+    tmpI = state["console"]["log_size"];
+    if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
+        cn->setHistorySize( tmpI );
+
+    tmpI = state["console"]["lines_count"];
+    if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
+        cn->setBufferSize( tmpI );
+
+    bool tmpB = state["console"]["show"];
+    cn->setVisible( tmpB );
+
+    tmpF = state["console"]["show_cursor_period"];
+    cn->setShowCursorPeriod( tmpF );
+}
+
+void lua_Clean(lua::State& state)
+{
+    state["tlist_Clear"]();
+    state["entfuncs_Clear"]();
 }

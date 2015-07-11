@@ -40,7 +40,7 @@ function checkDebugKeys()
             setEntityAnim(player, 108);
         end;
         
-        setEntityCollision(player, 1);
+        setEntityCollision(player, true);
         removeEntityRagdoll(player);
         setEntityMoveType(player, MOVE_FREE_FALLING);
         setEntityResponse(player, RESP_KILL, 0);
