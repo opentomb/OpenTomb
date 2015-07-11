@@ -26,3 +26,16 @@ function swapEntityEvent(object_id)
     local current_event = getEntityEvent(object_id);
     setEntityEvent(object_id, bit32.bnot(current_event));
 end;
+
+function swapEntityActivity(object_id)
+    if(getEntityActivity(object_id) == 1) then
+        setEntityActivity(object_id, 0);
+    else
+        setEntityActivity(object_id, 1);
+    end;
+end;
+
+function swapEntityEnability(object_id)
+    local current_enability = getEntityEnability(object_id);
+    if(current_enability == 1) then disableEntity(object_id) else enableEntity(object_id) end;
+end;

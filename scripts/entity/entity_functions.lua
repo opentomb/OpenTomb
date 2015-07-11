@@ -115,16 +115,12 @@ function anim_init(id)      -- Ordinary animatings
     disableEntity(id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        enableEntity(id);
-        setEntityActivity(object_id, 1);
-        setEntityState(object_id, 1);
+        swapEntityState(object_id, 1, 0);
+        swapEntityActivity(object_id);
+        swapEntityEnability(object_id);
     end    
     
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        disableEntity(id);
-        setEntityActivity(object_id, 0);
-        setEntityState(object_id, 0);
-    end
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
@@ -135,48 +131,75 @@ function pushable_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
 end
 
-function venicebird_init(id)    -- Venice singing birds (TR2)
+
+function gen_soundsource_init(id)    -- Generic sound source (continous)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].sound_id = 0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 1);
+        stopSound(entity_funcs[object_id].sound_id, object_id); -- Needed for deactivation cases.
+        swapEntityActivity(object_id);
     end
     
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 0);
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        playSound(entity_funcs[object_id].sound_id, object_id);
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityActivity(object_id, 0)
+            stopSound(entity_funcs[object_id].sound_id, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].sound_id = nil;
+    end
+end
+
+function randomized_soundsource_init(id)    -- Randomized sound source
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].chance   = 0;  -- Max. chance is 1000, if large, always plays.
+    entity_funcs[id].sound_id = 0;
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        swapEntityActivity(object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        if(getEntityDistance(player, object_id) < 8192.0) then
-            if(math.random(100000) > 99500) then playSound(316, object_id) end;
+        if((math.random(1000) > (1000 - entity_funcs[object_id].chance)) and (getEntityDistance(player, object_id) < 8192.0)) then
+            playSound(entity_funcs[object_id].sound_id, object_id);
         end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].chance   = nil;
+        entity_funcs[object_id].sound_id = nil;
     end
     
     prepareEntity(id);
 end
 
-function drips_init(id)    -- Maria Doria drips (TR2)
+function venicebird_init(id)    -- Venice singing birds (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    randomized_soundsource_init(id);
     
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 1);
-    end
+    entity_funcs[id].chance   = 2;
+    entity_funcs[id].sound_id = 316;
+end
+
+function drips_init(id)         -- Maria Doria drips (TR2)
+
+    randomized_soundsource_init(id);
     
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 0);
-    end
-    
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        if(getEntityDistance(player, object_id) < 8192.0) then
-            if(math.random(100000) > 99500) then playSound(329, object_id) end;
-        end;
-    end
-    
-    prepareEntity(id);
+    entity_funcs[id].chance   = 5;
+    entity_funcs[id].sound_id = 329;
 end
 
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
@@ -185,12 +208,10 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 1);
+        swapEntityActivity(object_id);
     end
     
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 0);
-    end
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityDistance(player, object_id) < 4096.0) then
@@ -202,52 +223,16 @@ end
 
 function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(id, 0);
+    gen_soundsource_init(id);
     
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 0) then setEntityActivity(object_id, 1) end;
-    end
-    
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then
-            setEntityActivity(object_id, 0);
-            stopSound(332, object_id);
-        end;
-    end
-    
-    entity_funcs[id].onLoop = function(object_id)
-        playSound(332, object_id);
-        if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityActivity(object_id, 0)
-            stopSound(332, object_id);
-        end;
-    end
+    entity_funcs[id].sound_id = 332;
 end
 
 function alarmbell_init(id)    -- Home Sweet Home alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(id, 0);
+    gen_soundsource_init(id);
     
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 0) then setEntityActivity(object_id, 1) end;
-    end
-    
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then
-            setEntityActivity(object_id, 0);
-            stopSound(335, object_id);
-        end;
-    end
-    
-    entity_funcs[id].onLoop = function(object_id)
-        playSound(335, object_id);
-        if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityActivity(object_id, 0)
-            stopSound(335, object_id);
-        end;
-    end
+    entity_funcs[id].sound_id = 335;
 end
 
 function heli_TR2_init(id)    -- Helicopter (TR2)
@@ -430,7 +415,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     
     entity_funcs[id].current_angle =  0.0;
     entity_funcs[id].speed         = -0.5;  -- Full turn in 14 seconds, clockwise.
-    entity_funcs[id].radius        =  math.abs(4096.0 * frame_time * entity_funcs[id].speed);
+    entity_funcs[id].radius        =  math.abs(4096.0 * FRAME_TIME * entity_funcs[id].speed);
     
     moveEntityLocal(id, 512.0, 0.0, 0.0);  -- Fix position
     
@@ -458,7 +443,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -10.0) end;
+        if(getEntityActivity(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -35.0) end;
     end
     
     
@@ -479,7 +464,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
     setEntityActivity(id, 0);
     
     entity_funcs[id].speed         = 1.0;
-    entity_funcs[id].phase_length  = math.abs(2048.0 * frame_time * entity_funcs[id].speed);
+    entity_funcs[id].phase_length  = math.abs(2048.0 * FRAME_TIME * entity_funcs[id].speed);
     entity_funcs[id].current_phase = 0.0;
     
     entity_funcs[id].stopping      = false;  -- Sweeper will be stopped on the next phase end.
@@ -507,7 +492,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
             
             if(((next_phase >= 90.0) and (entity_funcs[object_id].current_phase < 90.0)) or
                ((next_phase >= 270.0) and (entity_funcs[object_id].current_phase < 270.0))) then
-                entity_funcs[object_id].current_wait = frame_time;
+                entity_funcs[object_id].current_wait = FRAME_TIME;
             end;
             
             entity_funcs[object_id].current_phase = next_phase;
@@ -522,7 +507,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
                 setEntityActivity(object_id, 0);
                 entity_funcs[object_id].stopping = false;
             else
-                entity_funcs[object_id].current_wait = entity_funcs[object_id].current_wait + frame_time;
+                entity_funcs[object_id].current_wait = entity_funcs[object_id].current_wait + FRAME_TIME;
                 
                 if(entity_funcs[object_id].current_wait > entity_funcs[object_id].max_wait) then
                     entity_funcs[object_id].current_wait = 0.0;
@@ -755,7 +740,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     setEntityCollision(object_id, 0);
                     once = false;
                 end;
-                if(dropEntity(object_id, frame_time)) then
+                if(dropEntity(object_id, FRAME_TIME)) then
                     setEntityAnim(object_id, 3);
                     return false;
                 end;
@@ -784,7 +769,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             setEntityVisibility(object_id, 1);
             addTask(
             function()
-                if(dropEntity(object_id, frame_time)) then
+                if(dropEntity(object_id, FRAME_TIME)) then
                     setEntityAnim(object_id, 2);
                     setEntityCollision(object_id, 0);
                     return false;
@@ -853,52 +838,51 @@ function twobp_init(id)        -- Two-block platform
     entity_funcs[id].push_height    = 128.0;
     entity_funcs[id].push_speed     = 2.0;
     entity_funcs[id].push           = false;   -- Push flag, set when Lara is on platform.
-    
-    entity_funcs[id].raise_height   = 0.0;
-    entity_funcs[id].raise_speed    = 0.0;
     entity_funcs[id].current_height = 0.0;     -- Used for all modes.
-    
-    entity_funcs[id].mode           = 0;       -- 0 - normal ascent, 1 - normal descent, 2 - push.
     entity_funcs[id].waiting        = true;    -- Initial state is stopped.
     
+    local curr_OCB = getEntityOCB(id);
+    
+    entity_funcs[id].raise_height = bit32.rshift(bit32.band(curr_OCB, 0xFFF0), 4) * 256.0;
+    entity_funcs[id].raise_speed  = bit32.band(curr_OCB, 0x000F) / 2.0; -- Double FPS.
+    
+    -- Mode legend: 0 - normal ascent, 1 - normal descent, 2 - push.
+    -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.
+    
+    if(curr_OCB == 0) then entity_funcs[id].mode = 2 else entity_funcs[id].mode = 0 end;
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        local curr_OCB = getEntityOCB(object_id);
+        if(getEntityActivity(object_id) == 1) then
+            if(entity_funcs[object_id].mode < 2) then
+                if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
+                entity_funcs[object_id].current_height = entity_funcs[object_id].raise_height - entity_funcs[object_id].current_height;
+            else
+                setEntityActivity(object_id, 0);
+            end;
+        else
+            setEntityActivity(object_id, 1);
+        end;
         
-        entity_funcs[object_id].raise_height = bit32.rshift(bit32.band(curr_OCB, 0xFFF0), 4) * 256.0;
-        entity_funcs[object_id].raise_speed  = bit32.band(curr_OCB, 0x000F) / 2.0; -- Double FPS.
-        
-        entity_funcs[object_id].current_height = 0.0;
-        entity_funcs[object_id].waiting        = false;
-        
-        -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.
-        
-        if(curr_OCB == 0) then entity_funcs[object_id].mode = 2 else entity_funcs[object_id].mode = 0 end;
-        
-        setEntityActivity(object_id, 1);
+        entity_funcs[object_id].waiting = false;
     end
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id, activator_id)
         if(entity_funcs[object_id].waiting == false) then
-            if(entity_funcs[object_id].mode == 0) then
+            if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].current_height < entity_funcs[object_id].raise_height) then
-                    moveEntityLocal(object_id, 0.0, 0.0, entity_funcs[object_id].raise_speed);
+                    if(entity_funcs[object_id].mode == 0) then
+                        moveEntityLocal(object_id, 0.0, 0.0, entity_funcs[object_id].raise_speed);
+                    else
+                        moveEntityLocal(object_id, 0.0, 0.0, -entity_funcs[object_id].raise_speed);
+                    end;
+                    
                     entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + entity_funcs[object_id].raise_speed;
                 else
+                    if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
                     entity_funcs[object_id].waiting = true;
-                    entity_funcs[object_id].mode = 1;   -- Inverse mode - new feature.
                     entity_funcs[object_id].current_height = 0.0; -- Reset height counter.
-                    setEntityActivity(object_id, 0);
-                end;
-            elseif(entity_funcs[object_id].mode == 1) then
-                if(entity_funcs[object_id].current_height < entity_funcs[object_id].raise_height) then
-                    moveEntityLocal(object_id, 0.0, 0.0, -entity_funcs[object_id].raise_speed);
-                    entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + entity_funcs[object_id].raise_speed;
-                else
-                    entity_funcs[object_id].waiting = true;
-                    entity_funcs[object_id].mode = 0;
-                    entity_funcs[object_id].current_height = 0.0;
                     setEntityActivity(object_id, 0);
                 end;
             elseif(entity_funcs[object_id].mode == 2) then
@@ -906,6 +890,8 @@ function twobp_init(id)        -- Two-block platform
                     if(entity_funcs[object_id].current_height < entity_funcs[object_id].push_height) then
                         moveEntityLocal(object_id, 0.0, 0.0, -entity_funcs[object_id].push_speed);
                         entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + entity_funcs[object_id].push_speed;
+                    else
+                        entity_funcs[object_id].current_height = entity_funcs[object_id].push_height;
                     end;
                 else
                     if(entity_funcs[object_id].current_height > 0.0) then
@@ -922,7 +908,7 @@ function twobp_init(id)        -- Two-block platform
     end;
     
     entity_funcs[id].onStand = function(object_id, activator_id)
-        if(getEntityModel(activator_id) == 0) then  -- Lara
+        if((getEntityActivity(object_id) == 1) and (getEntityModel(activator_id) == 0)) then  -- Lara
             entity_funcs[object_id].push = true;
         end;
     end;
@@ -1580,7 +1566,7 @@ function damocles_init(id)      -- Sword of Damocles
                 addTask(
                 function()
                     moveEntityToEntity(object_id, player, 32.0, true);
-                    if(dropEntity(object_id, frame_time, true)) then
+                    if(dropEntity(object_id, FRAME_TIME, true)) then
                         playSound(103, object_id);
                         setEntityActivity(object_id, 0);
                         entity_funcs[object_id].falling = false;

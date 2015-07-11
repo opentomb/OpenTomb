@@ -10,6 +10,8 @@
 -- Pre OpenGL/SDL init script loading.
 
 function loadscript_pre()
+    dofile("scripts/system/constants.lua");
+    
     dofile("scripts/strings/getstring.lua");
     dofile("scripts/system/sys_scripts.lua");
     dofile("scripts/system/debug.lua");
