@@ -404,7 +404,7 @@ typedef struct {               // 16 bytes
     int16_t         top_side;
     int16_t         right_side;
     int16_t         bottom_side;
-} tr_Spriteexture_t;
+} tr_sprite_texture_t;
 //typedef prtl::array < tr_Spriteexture_t > tr_Spriteexture_array_t;
 
 /** \brief Sprite sequence.

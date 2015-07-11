@@ -103,7 +103,7 @@ class BorderedTextureAtlas
     void addObjectTexture(const tr4_object_texture_t &texture);
     
     /*! Adds a sprite texture to the list. */
-    void addSpriteTexture(const tr_Spriteexture_t &texture);
+    void addSpriteTexture(const tr_sprite_texture_t &texture);
     
 public:
     /*!
@@ -111,12 +111,9 @@ public:
      * @param border The border width around each texture.
      */
     BorderedTextureAtlas(int border,
-                           size_t page_count,
-                           const tr4_textile32_t *pages,
-                           size_t object_texture_count,
-                           const tr4_object_texture_t *object_textures,
-                           size_t sprite_texture_count,
-                           const tr_Spriteexture_t *sprite_textures);
+                           const std::vector<tr4_textile32_t> &pages,
+                           const std::vector<tr4_object_texture_t> &object_textures,
+                           const std::vector<tr_sprite_texture_t> &sprite_textures);
     
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards

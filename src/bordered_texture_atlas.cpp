@@ -133,15 +133,13 @@ void BorderedTextureAtlas::layOutTextures()
         {
             result_pages.emplace_back(0, 0, m_resultPageWidth, m_resultPageWidth);
             canonical.new_page = m_resultPageHeights.size();
-            m_resultPageHeights.emplace_back();
 
-            result_pages.back().findSpaceFor(
-                                   canonical.width  + 2*m_borderWidth,
-                                   canonical.height + 2*m_borderWidth,
-                                   &canonical.new_x_with_border,
-                                   &canonical.new_y_with_border);
+            result_pages.back().findSpaceFor(canonical.width  + 2*m_borderWidth,
+                                             canonical.height + 2*m_borderWidth,
+                                             &canonical.new_x_with_border,
+                                             &canonical.new_y_with_border);
 
-            m_resultPageHeights.back() = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
+            m_resultPageHeights.emplace_back(canonical.new_y_with_border + canonical.height + m_borderWidth * 2);
         }
     }
 
@@ -153,19 +151,16 @@ void BorderedTextureAtlas::layOutTextures()
 }
 
 BorderedTextureAtlas::BorderedTextureAtlas(int border,
-                                               size_t page_count,
-                                               const tr4_textile32_t *pages,
-                                               size_t object_texture_count,
-                                               const tr4_object_texture_t *object_textures,
-                                               size_t sprite_texture_count,
-                                               const tr_Spriteexture_t *sprite_textures)
-: m_borderWidth(border),
-m_resultPageWidth(0),
-m_resultPageHeights(),
-m_originalPages(pages+0, pages+page_count),
-m_fileObjectTextures(),
-m_canonicalTexturesForSpriteTextures(),
-m_canonicalObjectTextures()
+                                           const std::vector<tr4_textile32_t>& pages,
+                                           const std::vector<tr4_object_texture_t>& object_textures,
+                                           const std::vector<tr_sprite_texture_t>& sprite_textures)
+: m_borderWidth(border)
+, m_resultPageWidth(0)
+, m_resultPageHeights()
+, m_originalPages(pages)
+, m_fileObjectTextures()
+, m_canonicalTexturesForSpriteTextures()
+, m_canonicalObjectTextures()
 {
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
@@ -175,22 +170,22 @@ m_canonicalObjectTextures()
     // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
     {
         size_t areaSum = 0;
-        for(size_t i=0; i<object_texture_count; ++i)
-            areaSum += object_textures[i].x_size * object_textures[i].y_size;
-        for(size_t i=0; i<sprite_texture_count; ++i)
-            areaSum += std::abs( (sprite_textures[i].x1-sprite_textures[i].x0) * (sprite_textures[i].y1-sprite_textures[i].y0) );
+        for(const tr4_object_texture_t& t : object_textures)
+            areaSum += t.x_size * t.y_size;
+        for(const tr_sprite_texture_t& t : sprite_textures)
+            areaSum += std::abs( (t.x1-t.x0) * (t.y1-t.y0) );
 
         m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
     }
 
-    for (size_t i = 0; i < object_texture_count; i++)
+    for(const tr4_object_texture_t& tex : object_textures)
     {
-        addObjectTexture(object_textures[i]);
+        addObjectTexture(tex);
     }
 
-    for (size_t i = 0; i < sprite_texture_count; i++)
+    for (const tr_sprite_texture_t& tex : sprite_textures)
     {
-        addSpriteTexture(sprite_textures[i]);
+        addSpriteTexture(tex);
     }
 
     layOutTextures();
@@ -266,7 +261,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     }
 }
 
-void BorderedTextureAtlas::addSpriteTexture(const tr_Spriteexture_t &texture)
+void BorderedTextureAtlas::addSpriteTexture(const tr_sprite_texture_t &texture)
 {
     // Determine the canonical texture for this texture.
     unsigned x = texture.x0;

@@ -247,7 +247,7 @@ void TR_Level::read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture
  /*
   * tr4 + sprite loading
   */
-void TR_Level::read_tr4_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture)
+void TR_Level::read_tr4_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t & Spriteexture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
 
@@ -383,8 +383,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         {
             uncomp_buffer = new uint8_t[uncomp_size];
 
-            this->textile32_count = this->num_textiles;
-            this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
+            this->textile32.resize( this->num_textiles );
             comp_buffer = new uint8_t[comp_size];
 
             if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
@@ -419,7 +418,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         comp_size = read_bitu32(src);
         if (comp_size > 0)
         {
-            if (this->textile32_count == 0)
+            if (this->textile32.empty())
             {
                 uncomp_buffer = new uint8_t[uncomp_size];
 
@@ -468,10 +467,9 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             if ((uncomp_size / (256 * 256 * 4)) > 2)
                 Sys_extWarn("read_tr4_level: num_misc_textiles > 2");
 
-            if (this->textile32_count == 0)
+            if (this->textile32.empty())
             {
-                this->textile32_count = this->num_textiles;
-                this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
+                this->textile32.resize( this->num_textiles );
             }
             comp_buffer = new uint8_t[comp_size];
 
@@ -584,10 +582,9 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bit8(newsrc) != 'R')
         Sys_extError("read_tr4_level: 'SPR' not found");
 
-    this->Spriteextures_count = read_bitu32(newsrc);
-    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
-    for (i = 0; i < this->Spriteextures_count; i++)
-        read_tr4_Spriteexture(newsrc, this->Spriteextures[i]);
+    this->sprite_textures.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->sprite_textures.size(); i++)
+        read_tr4_Spriteexture(newsrc, this->sprite_textures[i]);
 
     this->sprite_sequences_count = read_bitu32(newsrc);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
@@ -674,9 +671,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bit8(newsrc) != 'X')
         Sys_extError("read_tr4_level: '\\0TEX' not found");
 
-    this->object_textures_count = read_bitu32(newsrc);
-    this->object_textures = (tr4_object_texture_t*)malloc(this->object_textures_count * sizeof(tr4_object_texture_t));
-    for (i = 0; i < this->object_textures_count; i++)
+    this->object_textures.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->object_textures.size(); i++)
         read_tr4_object_texture(newsrc, this->object_textures[i]);
 
     this->items_count = read_bitu32(newsrc);

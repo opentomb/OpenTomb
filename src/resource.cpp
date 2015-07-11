@@ -2363,19 +2363,19 @@ void TR_GenCameras(World *world, class VT_Level *tr)
  */
 void TR_GenSprites(World *world, class VT_Level *tr)
 {
-    if(tr->Spriteextures_count == 0)
+    if(tr->sprite_textures.empty())
     {
         world->sprites.clear();
         return;
     }
 
 
-    for(uint32_t i=0;i<tr->Spriteextures_count;i++)
+    for(size_t i=0; i<tr->sprite_textures.size(); i++)
     {
         world->sprites.emplace_back();
         auto s = &world->sprites.back();
 
-        auto tr_st = &tr->Spriteextures[i];
+        auto tr_st = &tr->sprite_textures[i];
 
         s->left = tr_st->left_side;
         s->right = tr_st->right_side;
@@ -2406,12 +2406,9 @@ void TR_GenTextures(World* world, class VT_Level *tr)
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
     world->tex_atlas.reset( new BorderedTextureAtlas(border_size,
-                                                  tr->textile32_count,
-                                                  tr->textile32,
-                                                  tr->object_textures_count,
-                                                  tr->object_textures,
-                                                  tr->Spriteextures_count,
-                                                  tr->Spriteextures) );
+                                                     tr->textile32,
+                                                     tr->object_textures,
+                                                     tr->sprite_textures) );
 
     world->textures.resize(world->tex_atlas->getNumAtlasPages() + 1);
 
