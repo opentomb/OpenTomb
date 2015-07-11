@@ -4,3 +4,6 @@
 [submodule "3rdparty/libbullet/bullet"]
 	path = 3rdparty/bullet
 	url = https://github.com/bulletphysics/bullet3.git
+[submodule "3rdparty/--force"]
+	path = 3rdparty/--force
+	url = https://github.com/stohrendorf/LuaState.git
