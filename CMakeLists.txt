@@ -9,8 +9,9 @@ PROJECT(OpenTomb)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
 
-add_subdirectory(3rdparty)
+find_package(Freetype)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+find_package(Bullet)
 INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(3rdparty/LuaState/include)
 
