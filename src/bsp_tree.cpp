@@ -127,32 +127,32 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
         }
     }
 
-    if((positive > 0) && (negative == 0))                   // SPLIT_FRONT
+    if ((positive > 0) && (negative == 0))                  // SPLIT_FRONT
     {
-        if(root->front == NULL)
+        if (root->front == NULL)
         {
             root->front = this->createBSPNode();
         }
         this->addPolygon(root->front, p);
     }
-    else if((positive == 0) && (negative > 0))              // SPLIT_BACK
+    else if ((positive == 0) && (negative > 0))             // SPLIT_BACK
     {
-        if(root->back == NULL)
+        if (root->back == NULL)
         {
             root->back = this->createBSPNode();
         }
         this->addPolygon(root->back, p);
     }
-    else if((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
+    else if ((positive == 0) && (negative == 0))            // SPLIT_IN_PLANE
     {
         this->addBSPPolygon(root, p);
     }
     else                                                    // SPLIT_IN_BOTH
     {
         polygon_p front, back;
-        front = this->createPolygon(positive + in_plane + 2);
+        front = this->createPolygon(p->vertex_count + 2);
         front->vertex_count = 0;
-        back = this->createPolygon(negative + in_plane + 2);
+        back = this->createPolygon(p->vertex_count + 2);
         back->vertex_count = 0;
         Polygon_Split(p, root->plane, front, back);
 

@@ -2759,7 +2759,9 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // In OpenTomb, we can have BOTH UVRotate and classic frames mode
             // applied to the same sequence, but there we specify compatibility
             // method for TR4-5.
-            if((i < num_uvrotates) && (seq->frames_count == 1))
+            // I need to find logic of original levels + add script functions or
+            // other sticks for corret textures animationg.
+            if((i < num_uvrotates) && (seq->frames_count <= 2))
             {
                 uint32_t original_frame_list = seq->frame_list[0];
                 if(level_script)
@@ -2773,35 +2775,23 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                 seq->frame_lock = false; // by default anim is playing
                 seq->uvrotate = true;
                 seq->frames_count = 16;
+                seq->uvrotate_max = 0.5 * world->tex_atlas->getTextureHeight(original_frame_list);
+                seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
+
                 seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
                 free(seq->frame_list);
                 seq->frame_list = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
 
                 if(uvrotate_script > 0)
                 {
-                    seq->anim_type        = TR_ANIMTEXTURE_FORWARD;
+                    seq->anim_type = TR_ANIMTEXTURE_FORWARD;
                 }
                 else if(uvrotate_script < 0)
                 {
-                    seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
+                    seq->anim_type = TR_ANIMTEXTURE_BACKWARD;
                 }
 
                 engine_world.tex_atlas->getCoordinates(original_frame_list, false, &p0, 0.0, false);
-                btScalar v_min, v_max;
-                v_min = v_max = p0.vertices->tex_coord[1];
-                for(uint16_t j=1;j<p0.vertex_count;j++)
-                {
-                    if(p0.vertices[j].tex_coord[1] > v_max)
-                    {
-                        v_max = p0.vertices[j].tex_coord[1];
-                    }
-                    if(p0.vertices[j].tex_coord[1] < v_min)
-                    {
-                        v_min = p0.vertices[j].tex_coord[1];
-                    }
-                }
-                seq->uvrotate_max = 0.5 * (v_max - v_min);
-                seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
                 for(uint16_t j=0;j<seq->frames_count;j++)
                 {
                     seq->frame_list[j] = original_frame_list;

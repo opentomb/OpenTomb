@@ -166,8 +166,8 @@ public:
     /*!
      * Returns height of specified file object texture.
      */
-    unsigned long getTextureHeight(unsigned long texture) const;
-    
+    unsigned long getCanonicalTextureHeight(unsigned long texture) const;
+    float getTextureHeight(unsigned long texture) const;
     /*!
      * Uploads the current data to OpenGL, as one or more texture pages.
      * textureNames has to have a length of at least GetNumAtlasPages and will

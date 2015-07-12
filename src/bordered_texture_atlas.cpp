@@ -331,7 +331,7 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
     number_sprite_textures += 1;
 }
 
-unsigned long bordered_texture_atlas::getTextureHeight(unsigned long texture) const
+unsigned long bordered_texture_atlas::getCanonicalTextureHeight(unsigned long texture) const
 {
     assert(texture < number_file_object_textures);
 
@@ -339,6 +339,16 @@ unsigned long bordered_texture_atlas::getTextureHeight(unsigned long texture) co
     const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
 
     return canonical.height;
+}
+
+float bordered_texture_atlas::getTextureHeight(unsigned long texture) const
+{
+    assert(texture < number_file_object_textures);
+
+    const file_object_texture &file_object_texture = file_object_textures[texture];
+    const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
+
+    return (GLfloat)canonical.height / (GLfloat)(result_page_height[canonical.new_page]);
 }
 
 ///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))

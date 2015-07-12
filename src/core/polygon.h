@@ -19,12 +19,6 @@ extern "C" {
 
 #define SPLIT_EPSILON (0.02)
 
-#define Polygon_AddVertexMacro(p, v)\
-{\
-    *((p)->vertices + (p)->vertex_count) = *(v);\
-    (p)->vertex_count++;\
-}
-
 /*
  * The structure taken from Cochrane. Next I realise one in my style.
  * make it aligned... is it enough good?
@@ -73,7 +67,6 @@ int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
 int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back);
-void Polygon_AddVertex(polygon_p p, struct vertex_s *v);
 
 int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
 int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);

@@ -431,7 +431,7 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
 
     curr_v = src->vertices;
     prev_v = src->vertices + src->vertex_count - 1;
-
+    
     dist[0] = vec3_plane_dist(n, prev_v->position);
     for(uint16_t i=0;i<src->vertex_count;i++)
     {
@@ -457,10 +457,10 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertexMacro(front, &tv);
-                Polygon_AddVertexMacro(back, &tv);
+                front->vertices[front->vertex_count++] = tv;
+                back->vertices[back->vertex_count++] = tv;
             }
-            Polygon_AddVertexMacro(front, curr_v);
+            front->vertices[front->vertex_count++] = *curr_v;
         }
         else if(dist[1] < -SPLIT_EPSILON)
         {
@@ -482,15 +482,15 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertexMacro(front, &tv);
-                Polygon_AddVertexMacro(back, &tv);
+                front->vertices[front->vertex_count++] = tv;
+                back->vertices[back->vertex_count++] = tv;
             }
-            Polygon_AddVertexMacro(back, curr_v);
+            back->vertices[back->vertex_count++] = *curr_v;
         }
         else
         {
-            Polygon_AddVertexMacro(front, curr_v);
-            Polygon_AddVertexMacro(back, curr_v);
+            front->vertices[front->vertex_count++] = *curr_v;
+            back->vertices[back->vertex_count++] = *curr_v;
         }
 
         prev_v = curr_v;
@@ -533,16 +533,3 @@ int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
 
     return 1;
 }
-
-/**
- * For correct function using You must alloc anough polygons vertices in advance and
- * set vertex_count field to zero!
- * @param p: polygon pointer, where to vertes adds;
- * @param v: vertex pointer with new data;
- */
-void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
-{
-    *(p->vertices + p->vertex_count) = *v;
-    p->vertex_count++;
-}
-
