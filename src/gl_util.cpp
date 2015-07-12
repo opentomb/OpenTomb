@@ -29,7 +29,6 @@
 #include "system.h"
 #include "console.h"
 
-#define GL_LOG_FILENAME "gl_log.txt"
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 /*
@@ -91,12 +90,12 @@ void printShaderInfoLog (GLuint object)
 {
     const auto isProgram = glIsProgram(object);
     const auto isShader = glIsShader(object);
-    
+
     if(!(isProgram^isShader)) {
         Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
         return;
     }
-    
+
     GLint       logLength     = 0;
     GLint       charsWritten  = 0;
     GLchar * infoLog;
@@ -182,7 +181,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     }
     else
     {
-        
+
         const char *bufs[2] = { version, buf };
         const GLint lengths[2] = { versionLen, size };
         glShaderSource(ShaderObj, 2, bufs, lengths);

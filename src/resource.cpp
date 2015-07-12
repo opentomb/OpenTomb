@@ -1629,10 +1629,10 @@ void Res_ScriptsOpen(int engine_version)
         level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
     }
     catch(lua::RuntimeError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     catch(lua::LoadError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 
     if(Engine_FileFound(temp_script_name, false))
@@ -1641,10 +1641,10 @@ void Res_ScriptsOpen(int engine_version)
             level_script.doFile(temp_script_name);
         }
         catch(lua::RuntimeError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
         catch(lua::LoadError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
 
@@ -1653,20 +1653,20 @@ void Res_ScriptsOpen(int engine_version)
         objects_flags_conf.doFile("scripts/entity/entity_properties.lua");
     }
     catch(lua::RuntimeError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     catch(lua::LoadError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 
     try {
         ent_ID_override.doFile("scripts/entity/entity_model_ID_override.lua");
     }
     catch(lua::RuntimeError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     catch(lua::LoadError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 }
 
@@ -1682,19 +1682,19 @@ void Res_AutoexecOpen(int engine_version)
         engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
     }
     catch(lua::RuntimeError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     catch(lua::LoadError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     try {
         engine_lua.doFile(temp_script_name);          // do level-specific autoexec
     }
     catch(lua::RuntimeError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     catch(lua::LoadError& error) {
-        Sys_DebugLog("lua_out.txt", "%s", error.what());
+        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 }
 

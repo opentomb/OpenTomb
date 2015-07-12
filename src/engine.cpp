@@ -3614,11 +3614,11 @@ void Engine_InitConfig(const char *filename)
             state.doFile(filename);
         }
         catch(lua::RuntimeError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
             return;
         }
         catch(lua::LoadError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
             return;
         }
 

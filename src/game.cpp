@@ -181,10 +181,10 @@ int Game_Load(const char* name)
             engine_lua.doFile(token);
         }
         catch(lua::RuntimeError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
         catch(lua::LoadError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
     else
@@ -201,10 +201,10 @@ int Game_Load(const char* name)
             engine_lua.doFile(name);
         }
         catch(lua::RuntimeError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
         catch(lua::LoadError& error) {
-            Sys_DebugLog("lua_out.txt", "%s", error.what());
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
 

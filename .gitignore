@@ -6,6 +6,7 @@
 *.exe
 *.dll
 *.bak
+*.log
 *.cbTemp
 .DS_Store
 CMakeLists.txt.user
@@ -16,6 +17,8 @@ obj/
 bin/
 build/
 nbproject/
+cbproject/
+prj/
 dist/
 data/
 save/
