@@ -15,17 +15,17 @@
 #include "character_controller.h"
 #include "obb.h"
 #include "gameflow.h"
-#include "string.h"
+#include "strings.h"
 #include "ragdoll.h"
 #include "hair.h"
 
 #include <lua.hpp>
 #include "LuaState.h"
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 
 void Entity::createGhosts()
@@ -649,7 +649,7 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateTransform()
 {
-    m_transform.getBasis().setEulerYPR(btRadians(m_angles[1]), btRadians(m_angles[2]), btRadians(m_angles[0]));
+    m_transform.getBasis().setEulerZYX(btRadians(m_angles[1]), btRadians(m_angles[2]), btRadians(m_angles[0]));
 
     fixPenetrations(nullptr);
 }

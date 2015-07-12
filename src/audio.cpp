@@ -8,7 +8,7 @@
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
-#include "string.h"
+#include "strings.h"
 
 #include <SDL2/SDL.h>
 
@@ -1598,7 +1598,7 @@ void Audio_InitFX()
 {
     if( audio_settings.effects_initialized )
         return;
-    
+
     memset(&fxManager, 0, sizeof(AudioFxManager));
 
     // Set up effect slots, effects and filters.
@@ -1630,7 +1630,7 @@ void Audio_InitFX()
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
     Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
-    
+
     audio_settings.effects_initialized = true;
 }
 

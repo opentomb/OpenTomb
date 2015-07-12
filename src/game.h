@@ -2,9 +2,9 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include <cstdint>
 #include <lua.hpp>

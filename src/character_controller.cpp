@@ -1,9 +1,9 @@
 
 #include "world.h"
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
 #include "character_controller.h"
 #include "obb.h"
@@ -17,7 +17,7 @@
 #include "polygon.h"
 #include "resource.h"
 #include "console.h"
-#include "string.h"
+#include "strings.h"
 
 Character::Character(uint32_t id)
     : Entity(id)

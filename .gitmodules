@@ -1,9 +1,3 @@
-[submodule "3rdparty/freetype2"]
-	path = 3rdparty/freetype2
-	url = git://git.sv.nongnu.org/freetype/freetype2.git
-[submodule "3rdparty/libbullet/bullet"]
-	path = 3rdparty/bullet
-	url = https://github.com/bulletphysics/bullet3.git
 [submodule "3rdparty/LuaState"]
 	path = 3rdparty/LuaState
 	url = https://github.com/stohrendorf/LuaState.git

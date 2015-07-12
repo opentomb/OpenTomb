@@ -1,15 +1,15 @@
 #pragma once
 
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCapsuleShape.h"
-#include "bullet/BulletCollision/CollisionShapes/btSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
-#include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletCollision/CollisionShapes/btCapsuleShape.h>
+#include <bullet/BulletCollision/CollisionShapes/btSphereShape.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
+#include <bullet/BulletCollision/CollisionShapes/btBoxShape.h>
+#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+#include <bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <cstdint>
 #include <vector>
@@ -310,18 +310,18 @@ struct Character : public Entity
 {
     CharacterCommand   m_command;                    // character control commands
     CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
-    
+
     std::list<InventoryNode> m_inventory;
     CharacterParam     m_parameters{};
     CharacterStats     m_statistics;
-    
+
     std::vector<std::shared_ptr<Hair>> m_hairs{};
-    
+
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
-    
+
     int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
-    
+
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
@@ -335,7 +335,7 @@ struct Character : public Entity
     btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
     btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
     btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
-    
+
     std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
     std::unique_ptr<btSphereShape> m_climbSensor;
 
@@ -343,7 +343,7 @@ struct Character : public Entity
     ClimbInfo          m_climb{};
 
     Entity* m_traversedObject = nullptr;
-    
+
     std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
     std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
 

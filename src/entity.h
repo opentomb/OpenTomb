@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include "object.h"
 #include "mesh.h"
 
@@ -73,7 +73,7 @@ struct BtEntityData
     std::vector<std::unique_ptr<btCollisionShape>> shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
     std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
-    
+
     std::vector<EntityCollisionNode> last_collisions;
 };
 
@@ -100,7 +100,7 @@ public:
 
     uint8_t                             m_dirFlag = 0;           // (move direction)
     uint16_t                            m_moveType;          // on floor / free fall / swim ....
-    
+
     bool m_wasRendered;       // render once per frame trigger
     bool m_wasRenderedLines; // same for debug lines
 
@@ -110,7 +110,7 @@ public:
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
-    
+
     SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
@@ -126,7 +126,7 @@ public:
 
     btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
-    
+
     Entity(uint32_t id);
     ~Entity();
 

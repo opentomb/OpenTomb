@@ -15,8 +15,8 @@
 
 #include <lua.hpp>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 #include "vt/vt_level.h"
 
 #include "obb.h"
@@ -43,7 +43,6 @@
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
-//#include "string.h"
 
 #if defined(__MACOSX__)
 #include "mac/FindConfigFile.h"
@@ -120,7 +119,7 @@ void Engine_InitGL()
     glewInit();
     // GLEW sometimes causes an OpenGL error for no apparent reason. Retrieve and discard it so it doesn't clog up later logging.
     glGetError();
-    
+
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
     glEnable(GL_DEPTH_TEST);

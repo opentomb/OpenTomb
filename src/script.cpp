@@ -17,7 +17,7 @@
 #include "vmath.h"
 #include "render.h"
 #include "audio.h"
-#include "string.h"
+#include "strings.h"
 
 #include <lua.hpp>
 #include "LuaState.h"

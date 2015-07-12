@@ -9,9 +9,9 @@
 #include <cstring>
 #include <cctype>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <lua.hpp>
 
@@ -42,7 +42,7 @@
 #include "character_controller.h"
 #include "gameflow.h"
 #include "gl_font.h"
-#include "string.h"
+#include "strings.h"
 #include "hair.h"
 #include "ragdoll.h"
 
