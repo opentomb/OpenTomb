@@ -43,8 +43,10 @@ sys_notify[034]     = "No hairs for character %d - nothing to remove.";
 sys_notify[035]     = "Ragdoll setup with index %d is corrupted or doesn't exist!";
 sys_notify[036]     = "Can't create ragdoll for entity %d!";
 sys_notify[037]     = "Can't remove ragdoll for entity %d - possibly no ragdoll?";
+sys_notify[038]     = "Load_Wad: track count is out of bounds - max. %d."
+sys_notify[039]     = "Load_Wad: can't seek at offset %X."
 
-sys_notify[1000]    = "Ogg stream opened (%s): channels = %d, sample rate = %d, bitrate = %.1f";
+sys_notify[1000]    = "Track opened (%s): channels = %d, sample rate = %d";
 sys_notify[1001]    = "Reading file: \"%s\"";
 sys_notify[1002]    = "Giving item %i x%i to entity %x";
 sys_notify[1003]    = "Changing current level ID to %d";
@@ -63,3 +65,4 @@ sys_notify[1015]    = "Loaded PC-specific level file (VT loader used).";
 sys_notify[1016]    = "Loaded PSX-specific level file.";
 sys_notify[1017]    = "Loaded Dreamcast-specific level file.";
 sys_notify[1018]    = "Loaded OpenTomb level file.";
+sys_notify[1019]    = "Reading wad (%s): offset %X, size %X."

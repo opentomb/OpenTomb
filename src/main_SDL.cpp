@@ -315,26 +315,66 @@ void Engine_InitSDLImage()
 void Engine_InitAL()
 {
 #if !NO_AUDIO
+
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
         ALC_FREQUENCY,       44100, 0};
 
-    //const char *drv = SDL_GetCurrentAudioDriver();
 
-    al_device = alcOpenDevice(NULL);
-    if (!al_device)
+    Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
+
+    const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+
+    if (!devlist)
     {
         Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
     }
 
-    al_context = alcCreateContext(al_device, paramList);
-    if(!alcMakeContextCurrent(al_context))
+    while(*devlist)
     {
-        Sys_DebugLog(LOG_FILENAME, "InitAL: AL context is not current!");
+        Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
+        ALCdevice* dev = alcOpenDevice(devlist);
+
+        if(audio_settings.use_effects)
+        {
+            if( alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE )
+            {
+                Sys_DebugLog(LOG_FILENAME, " EFX supported!");
+                al_device = dev;
+                break;
+            }
+            else
+            {
+                alcCloseDevice(dev);
+                devlist += std::strlen(devlist)+1;
+            }
+        }
+        else
+        {
+            al_device = dev;
+            break;
+        }
+    }
+
+    al_context = alcCreateContext(al_device, paramList);
+
+    if(!al_context)
+    {
+        Sys_DebugLog(LOG_FILENAME, " Failed to create OpenAL context.");
+        alcCloseDevice(al_device);
+        al_device = nullptr;
         return;
     }
+
+    alcMakeContextCurrent(al_context);
+
+    Audio_LoadALExtFunctions(al_device);
+
+    std::string driver = "OpenAL library: ";
+    driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);
+    ConsoleInfo::instance().addLine(driver, FONTSTYLE_CONSOLE_INFO);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);

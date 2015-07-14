@@ -1,5 +1,8 @@
 #include "audio.h"
 
+#include <cmath>
+#include <cstdio>
+
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
@@ -12,11 +15,7 @@
 
 #include <SDL2/SDL.h>
 
-#include <cmath>
-
 #ifndef AL_ALEXT_PROTOTYPES
-namespace
-{
 extern "C"
 {
 // Effect objects
@@ -60,13 +59,13 @@ LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv = nullptr;
 
 }
 
-void loadAlExtFunctions(ALCdevice* device)
+void Audio_LoadALExtFunctions(ALCdevice* device)
 {
     static bool isLoaded = false;
     if(isLoaded)
         return;
 
-    printf("OpenAL device extensions: %s\n", alcGetString(device, ALC_EXTENSIONS));
+    printf("\nOpenAL device extensions: %s\n", alcGetString(device, ALC_EXTENSIONS));
     assert(alcIsExtensionPresent(device, ALC_EXT_EFX_NAME) == ALC_TRUE);
 
     alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects"); assert(alGenEffects);
@@ -105,9 +104,8 @@ void loadAlExtFunctions(ALCdevice* device)
 
     isLoaded = true;
 }
-}
 #else
-void loadAlExtFunctions(ALCdevice*)
+void Audio_LoadALExtFunctions(ALCdevice* device)
 {
     // we have the functions already provided by native extensions
 }
@@ -555,34 +553,28 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
     dampable      = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);   // Damp only looped (BGM) tracks.
 
     // Select corresponding stream loading method.
-    // Currently, only OGG streaming is available, everything else is a placeholder.
 
-    switch(method)
+    if(method == TR_AUDIO_STREAM_METHOD_TRACK)
     {
-        case TR_AUDIO_STREAM_METHOD_OGG:
-            return (Load_Ogg(path));
-
-        case TR_AUDIO_STREAM_METHOD_WAD:
-            return (Load_Wad(path));
-
-        case TR_AUDIO_STREAM_METHOD_WAV:
-            return (Load_Wav(path));
+        return (Load_Track(path));
     }
-
-    return false;   // No success.
+    else
+    {
+        return (Load_Wad((uint8_t)index, path));
+    }
 }
 
-bool StreamTrack::Load_Ogg(const char *path)
+bool StreamTrack::Load_Track(const char *path)
 {
     if(!(sndfile_Stream = sf_open(path, SFM_READ, &sf_info)))
     {
-        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
-        method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
+        Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
+        method = -1;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
         return false;
     }
 
-    ConsoleInfo::instance().notify(SYSNOTE_OGG_OPENED, path,
-               sf_info.channels, sf_info.samplerate, 0.0); //! @todo Dummy bitrate output
+    ConsoleInfo::instance().notify(SYSNOTE_TRACK_OPENED, path,
+               sf_info.channels, sf_info.samplerate);
 
     if(sf_info.channels == 1)
         format = AL_FORMAT_MONO16;
@@ -594,14 +586,58 @@ bool StreamTrack::Load_Ogg(const char *path)
     return true;    // Success!
 }
 
-bool StreamTrack::Load_Wad(const char* /*path*/)
+bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 {
-    return false;   ///@FIXME: PLACEHOLDER!!!
-}
+    if(index >= TR_AUDIO_STREAM_WAD_COUNT)
+    {
+        ConsoleInfo::instance().warning(SYSNOTE_WAD_OUT_OF_BOUNDS, TR_AUDIO_STREAM_WAD_COUNT);
+        return false;
+    }
+    else
+    {
+        audio_file = fopen(filename, "rb");
 
-bool StreamTrack::Load_Wav(const char* /*path*/)
-{
-    return false;   ///@FIXME: PLACEHOLDER!!!
+        if(!audio_file)
+        {
+            ConsoleInfo::instance().warning(SYSWARN_FILE_NOT_FOUND, filename);
+            return false;
+        }
+        else
+        {
+            char track_name[TR_AUDIO_STREAM_WAD_NAMELENGTH];
+            uint32_t offset = 0;
+            uint32_t length = 0;
+
+            fseek(audio_file, (index * TR_AUDIO_STREAM_WAD_STRIDE), 0);
+            fread((void*)track_name, TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, audio_file);
+            fread((void*)&length, sizeof(uint32_t), 1, audio_file);
+            fread((void*)&offset, sizeof(uint32_t), 1, audio_file);
+
+            fseek(audio_file, offset, 0);
+
+            if(!(sndfile_Stream = sf_open_fd(fileno(audio_file), SFM_READ, &sf_info, false)))
+            {
+                ConsoleInfo::instance().warning(SYSNOTE_WAD_SEEK_FAILED, offset);
+                method = -1;
+                return false;
+            }
+            else
+            {
+                ConsoleInfo::instance().notify(SYSNOTE_WAD_PLAYING, filename, offset, length);
+                ConsoleInfo::instance().notify(SYSNOTE_TRACK_OPENED, track_name,
+                            sf_info.channels, sf_info.samplerate);
+            }
+
+            if(sf_info.channels == 1)
+                format = AL_FORMAT_MONO16;
+            else
+                format = AL_FORMAT_STEREO16;
+
+            rate = sf_info.samplerate;
+
+            return true;    // Success!
+        }
+    }
 }
 
 bool StreamTrack::Play(bool fade_in)
@@ -691,22 +727,16 @@ void StreamTrack::Stop()    // Immediately stop track.
         }
     }
 
-    // Format-specific clean-up routines should belong here.
-
-    switch(method)
+    if(sndfile_Stream)
     {
-        case TR_AUDIO_STREAM_METHOD_OGG:
-            if(sndfile_Stream) {
-                sf_close(sndfile_Stream);
-                sndfile_Stream = nullptr;
-            }
-            break;
+        sf_close(sndfile_Stream);
+        sndfile_Stream = nullptr;
+    }
 
-        case TR_AUDIO_STREAM_METHOD_WAD:
-            break;  ///@FIXME: PLACEHOLDER!!!
-
-        case TR_AUDIO_STREAM_METHOD_WAV:
-            break;  ///@FIXME: PLACEHOLDER!!!
+    if(audio_file)
+    {
+        fclose(audio_file);
+        audio_file = nullptr;
     }
 }
 
@@ -851,27 +881,7 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
     return ((state == AL_PLAYING) || (state == AL_PAUSED));
 }
 
-bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
-{
-    // This is the global stream update routine. In the next switch, you can
-    // change specific stream method's routine (although only Ogg streaming
-    // has been implemented yet).
-
-    switch(method)
-    {
-        case TR_AUDIO_STREAM_METHOD_OGG:
-            return (Stream_Ogg(buffer));
-
-        case TR_AUDIO_STREAM_METHOD_WAD:
-            return (Stream_Wad(buffer));
-
-        case TR_AUDIO_STREAM_METHOD_WAV:
-            return (Stream_Wav(buffer));
-    };
-    return false;
-}
-
-bool StreamTrack::Stream_Ogg(ALuint buffer)
+bool StreamTrack::Stream(ALuint buffer)
 {
     assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
     std::vector<short> pcm(audio_settings.stream_buffer_size);
@@ -914,20 +924,6 @@ bool StreamTrack::Stream_Ogg(ALuint buffer)
 
     alBufferData(buffer, format, pcm.data(), size, rate);
     return true;
-}
-
-bool StreamTrack::Stream_Wad(ALuint /*buffer*/)
-{
-    ///@FIXME: PLACEHOLDER!!!
-
-    return false;
-}
-
-bool StreamTrack::Stream_Wav(ALuint /*buffer*/)
-{
-    ///@FIXME: PLACEHOLDER!!!
-
-    return false;
 }
 
 void StreamTrack::SetFX()
@@ -1540,7 +1536,7 @@ void Audio_LoadOverridedSamples(struct World *world)
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
                         if(Engine_FileFound(sample_name))
                         {
-                            Audio_LoadALbufferFromWAV_File(world->audio_buffers[buffer_counter], sample_name);
+                            Audio_LoadALbufferFromFile(world->audio_buffers[buffer_counter], sample_name);
                         }
                     }
                 }
@@ -1560,38 +1556,6 @@ void Audio_InitGlobals()
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
     audio_settings.stream_buffer_size = 32;
-
-    printf("Probing OpenAL devices for EFX compatible device...\n");
-    const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
-    while(*devlist) {
-        printf("    - Device: %s\n", devlist);
-        ALCdevice* dev = alcOpenDevice(devlist);
-        if( alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE ) {
-            printf("    >>> EFX supported!\n");
-            if(!audio_settings.device) {
-                audio_settings.device = dev;
-                audio_settings.context = alcCreateContext(audio_settings.device, nullptr);
-                if(!audio_settings.context) {
-                    printf("    >>> Failed to create context.\n");
-                    alcCloseDevice(dev);
-                    audio_settings.device = nullptr;
-                }
-            }
-            else {
-                alcCloseDevice(dev);
-            }
-        }
-
-        devlist += std::strlen(devlist)+1;
-    }
-
-    assert( audio_settings.device != nullptr );
-    assert( audio_settings.context != nullptr );
-
-
-    alcMakeContextCurrent( audio_settings.context );
-
-    loadAlExtFunctions(audio_settings.device);
 }
 
 void Audio_InitFX()
@@ -1694,7 +1658,7 @@ int Audio_DeInit()
     engine_world.stream_tracks.clear();
     engine_world.stream_track_map.clear();
 
-    ///@CRITICAL: You must delete all sources before buffers deleting!!!
+    ///@CRITICAL: You must delete all sources before deleting buffers!
 
     alDeleteBuffers(engine_world.audio_buffers.size(), engine_world.audio_buffers.data());
     engine_world.audio_buffers.clear();
@@ -1719,11 +1683,6 @@ int Audio_DeInit()
         audio_settings.effects_initialized = false;
     }
 
-    //! @bug Crash ahead!
-    alcMakeContextCurrent(nullptr);
-    alcDestroyContext(audio_settings.context);
-    alcCloseDevice(audio_settings.device);
-
     return 1;
 }
 
@@ -1745,8 +1704,31 @@ void Audio_LogSndfileError(int code)
     Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
 }
 
+float Audio_GetByteDepth(SF_INFO sfInfo)
+{
+    switch(sfInfo.format & SF_FORMAT_SUBMASK)
+    {
+        case SF_FORMAT_PCM_S8:
+        case SF_FORMAT_PCM_U8:
+            return 1;
+        case SF_FORMAT_PCM_16:
+            return 2;
+        case SF_FORMAT_PCM_24:
+            return 3;
+            break;
+        case SF_FORMAT_PCM_32:
+        case SF_FORMAT_FLOAT:
+            return 4;
+        case SF_FORMAT_DOUBLE:
+            return 8;
+        case SF_FORMAT_MS_ADPCM:
+            return 0.5;
+        default:
+            return 1;
+    }
+}
 
-int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
+int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     MemBufferFileIo wavMem(sample_pointer, sample_size);
     SF_INFO sfInfo;
@@ -1758,7 +1740,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
         return -1;
     }
 
-    const auto waveLengthInBytes = sfInfo.channels * sfInfo.frames * ((sfInfo.format&SF_FORMAT_SUBMASK)!=SF_FORMAT_PCM_16 ? 1 : 2);
+    uint32_t waveLengthInBytes = (uint32_t)((float)(sfInfo.channels * sfInfo.frames) * Audio_GetByteDepth(sfInfo));
 
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1777,7 +1759,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, wavFile, uncomp_sample_size, &sfInfo);
+    bool result = Audio_FillALBuffer(buf_number, wavFile, &sfInfo);
 
     sf_close(wavFile);
 
@@ -1785,7 +1767,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
 }
 
 
-int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
+int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
 {
     SF_INFO sfInfo;
     SNDFILE* file = sf_open(fname, SFM_READ, &sfInfo);
@@ -1796,32 +1778,25 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
         return -1;
     }
 
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames, &sfInfo);
+    bool result = Audio_FillALBuffer(buf_number, file, &sfInfo);
 
     sf_close(file);
 
     return (result)?(0):(-3);   // Zero means success.
 }
 
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, SF_INFO *sfInfo)
 {
-    if(sfInfo->channels > 2)   // We can't use non-mono and barely can use stereo samples.
+    if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
+        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
         return false;
     }
 
-    // calc down to frames
-    buffer_size /= sfInfo->channels;
-    buffer_size /= ((sfInfo->format&SF_FORMAT_SUBMASK)!=SF_FORMAT_PCM_16 ? 1 : 2);
+    std::vector<int16_t> frames( sfInfo->frames ); // MONO data
 
-    std::vector<int16_t> frames( buffer_size * 2 ); // stereo data
-
-    auto framesRead = sf_readf_short(wavFile, frames.data(), buffer_size);
-    frames.resize( framesRead*2 );
-
-    alBufferData(buf_number, AL_FORMAT_STEREO16, frames.data(), frames.size() * sizeof(int16_t), sfInfo->samplerate/2);
-
+    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), frames.size() * sizeof(int16_t), sfInfo->samplerate);
+    Audio_LogALError(0);
     return true;
 }
 

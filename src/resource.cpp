@@ -3912,13 +3912,12 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I_UB:
                 world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
-                for(size_t i = 0; i < world->audio_buffers.size()-2; i++)
+                for(size_t i = 0; i < tr->samples_count-1; i++)
                 {
                     pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
-                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
+                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, size);
                 }
-                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers.back(), pointer, (tr->samples_count - tr->sample_indices[world->audio_buffers.size()-2]));
                 break;
 
             case TR_II:
@@ -3941,7 +3940,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                         else {
                             size_t uncomp_size = ind2 - ind1;
                             auto* srcData = tr->samples_data.data() + ind1;
-                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], srcData, uncomp_size);
+                            Audio_LoadALbufferFromMem(world->audio_buffers[i], srcData, uncomp_size);
                             i++;
                             if(i >= world->audio_buffers.size())
                             {
@@ -3955,7 +3954,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 size_t uncomp_size = tr->samples_data.size() - ind1;
                 pointer = tr->samples_data.data() + ind1;
                 if(i < world->audio_buffers.size()) {
-                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size);
+                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, uncomp_size);
                 }
                 break;
             }
@@ -3975,7 +3974,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, comp_size, uncomp_size);
+                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, comp_size, uncomp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;

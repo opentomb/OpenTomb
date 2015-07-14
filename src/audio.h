@@ -169,8 +169,7 @@ enum TR_AUDIO_SOUND_GLOBALID
 
 
 // NUMBUFFERS is a number of buffers cyclically used for each stream.
-// Double is enough, but we use quad for further stability, because
-// OGG codec seems to be very sensitive to buffering.
+// Double is enough, but we use quad for further stability.
 
 #define TR_AUDIO_STREAM_NUMBUFFERS 4
 
@@ -190,18 +189,21 @@ enum TR_AUDIO_SOUND_GLOBALID
 
 #define TR_AUDIO_STREAM_MAP_SIZE 256
 
+// CDAUDIO.WAD step size defines CDAUDIO's header stride, on which each track
+// info is placed. Also CDAUDIO count specifies static amount of tracks existing
+// in CDAUDIO.WAD file. Name length specifies maximum string size for trackname.
+
+#define TR_AUDIO_STREAM_WAD_STRIDE     268
+#define TR_AUDIO_STREAM_WAD_NAMELENGTH 260
+#define TR_AUDIO_STREAM_WAD_COUNT      130
+
 // Stream loading method describes the way audiotracks are loaded.
-// There are either seperate OGG files, single CDAUDIO.WAD file or
-// seperate ADPCM WAV files.
-// You can add extra types with implementation of extra audio codecs,
-// only thing to do is to add corresponding stream and load routines
-// into class' private section.
+// There are either seperate track files or single CDAUDIO.WAD file.
 
 enum TR_AUDIO_STREAM_METHOD
 {
-    TR_AUDIO_STREAM_METHOD_OGG,    // OGG files. Used in TR1-2 (replaces CD audio).
+    TR_AUDIO_STREAM_METHOD_TRACK,  // Separate tracks. Used in TR 1, 2, 4, 5.
     TR_AUDIO_STREAM_METHOD_WAD,    // WAD file.  Used in TR3.
-    TR_AUDIO_STREAM_METHOD_WAV,    // WAV files. Used in TR4-5.
     TR_AUDIO_STREAM_METHOD_LASTINDEX
 
 };
@@ -262,8 +264,6 @@ struct AudioSettings
     bool        effects_initialized = false;
     bool        listener_is_player = false; // RESERVED FOR FUTURE USE
     int         stream_buffer_size = 0;
-    ALCdevice*  device = nullptr;
-    ALCcontext* context = nullptr;
 };
 
 // FX manager structure.
@@ -284,9 +284,9 @@ struct AudioFxManager
 // Contains all global effect parameters.
 
 struct AudioEffect
-{    
+{
     // General sound source parameters (similar to TR sound info).
-    
+
     ALfloat     pitch = 0;          // [PIT in TR] Global pitch shift.
     ALfloat     gain = 0;           // [VOL in TR] Global gain (volume).
     ALfloat     range = 0;          // [RAD in TR] Range (radius).
@@ -294,18 +294,18 @@ struct AudioEffect
     ALuint      loop = 0;           // 0 = none, 1 = W, 2 = R, 3 = L.
     ALboolean   rand_pitch = false;     // Similar to flag 0x200000 (P) in native TRs.
     ALboolean   rand_gain = false;      // Similar to flag 0x400000 (V) in native TRs.
-    
+
     // Additional sound source parameters.
     // These are not natively in TR engines, but can be later assigned by
     // external script.
-    
+
     ALboolean   rand_freq = false;          // Slightly randomize frequency.
     ALuint      rand_pitch_var = 0;     // Pitch randomizer bounds.
     ALuint      rand_gain_var = 0;      // Gain  randomizer bounds.
     ALuint      rand_freq_var = 0;      // Frequency randomizer bounds.
 
     // Sample reference parameters.
-    
+
     ALuint      sample_index = 0;       // First (or only) sample (buffer) index.
     ALuint      sample_count = 0;       // Sample amount to randomly select from.
 };
@@ -333,7 +333,7 @@ class AudioSource
 public:
     AudioSource();  // Audio source constructor.
    ~AudioSource();  // Audio source destructor.
-   
+
     void Play();    // Make source active and play it.
     void Pause();   // Pause source (leaving it active).
     void Stop();    // Stop and destroy source.
@@ -347,9 +347,9 @@ public:
     void SetFX();                           // Set reverb FX, according to room flag.
     void UnsetFX();                         // Remove any reverb FX from source.
     void SetUnderwater();                   // Apply low-pass underwater filter.
-    
+
     bool IsActive();            // Check if source is active.
-    
+
     int32_t     emitter_ID;     // Entity of origin. -1 means no entity (hence - empty source).
     uint32_t    emitter_type;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
     uint32_t    effect_index;   // Effect index. Used to associate effect with entity for R/W flags.
@@ -357,12 +357,12 @@ public:
     uint32_t    sample_count;   // How many buffers to use, beginning with sample_index.
 
     friend int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID);
-    
+
 private:
     bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
     bool        is_water;       // Marker to define if sample is in underwater state or not.
     ALuint      source_index;   // Source index. Should be unique for each source.
-    
+
     void LinkEmitter();                             // Link source to parent emitter.
     void SetPosition(const ALfloat pos_vector[]);   // Set source position.
     void SetVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
@@ -372,52 +372,49 @@ private:
 // Main stream track class is used to create multi-channel soundtrack player,
 // which differs from classic TR scheme, where each new soundtrack interrupted
 // previous one. With flexible class handling, we now can implement multitrack
-// player with automatic channel and crossfade management. 
+// player with automatic channel and crossfade management.
 
 class StreamTrack
 {
 public:
     StreamTrack();      // Stream track constructor.
    ~StreamTrack();      // Stream track destructor.
-    
+
     // Load routine prepares track for playing. Arguments are track index,
     // stream type (background, one-shot or chat) and load method, which
     // differs for TR1-2, TR3 and TR4-5.
-    
+
     bool Load(const char *path, const int index, const int type, const int load_method);
-    
+
     bool Play(bool fade_in = false);     // Begins to play track.
     void Pause();                        // Pauses track, preserving position.
     void End();                          // End track with fade-out.
     void Stop();                         // Immediately stop track.
     bool Update();                       // Update track and manage streaming.
-    
+
     bool IsTrack(const int track_index); // Checks desired track's index.
     bool IsType(const int track_type);   // Checks desired track's type.
     bool IsPlaying();                    // Checks if track is playing.
     bool IsActive();                     // Checks if track is still active.
     bool IsDampable();                   // Checks if track is dampable.
-    
+
     void SetFX();                        // Set reverb FX, according to room flag.
     void UnsetFX();                      // Remove any reverb FX from source.
-    
+
     static bool damp_active;             // Global flag for damping BGM tracks.
 
 private:
-    bool Load_Ogg(const char *path);     // Ogg file loading routine.
-    bool Load_Wad(const char *path);     // Wad file loading routine.
-    bool Load_Wav(const char *path);     // Wav file loading routine.
-    
+    bool Load_Track(const char *path);                     // Track loading.
+    bool Load_Wad(uint8_t index, const char *filename);    // Wad loading.
+
     bool Stream(ALuint buffer);          // General stream routine.
-    bool Stream_Ogg(ALuint buffer);      // Ogg-specific streaming routine.
-    bool Stream_Wad(ALuint buffer);      // Wad-specific streaming routine.
-    bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
 
     FILE*           audio_file;          // General handle for opened audio file.
     SNDFILE*        sndfile_Stream;      // Sndfile file reader needs its own handle.
     SF_INFO         sf_info;
-    
-    // General OpenAL fields 
+
+    // General OpenAL fields
+
     ALbyte         *data;
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
@@ -425,12 +422,12 @@ private:
     ALsizei         rate;
     ALfloat         current_volume;     // Stream volume, considering fades.
     ALfloat         damped_volume;      // Additional damp volume multiplier.
-    
+
     bool            active;             // Used when track is being faded by other one.
     bool            dampable;           // Specifies if track can be damped by others.
     int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
     int             current_track;      // Needed to prevent same track sending.
-    int             method;             // OGG (TR1-2), WAD (TR3) or WAV (TR4-5).
+    int             method;             // TRACK (TR1-2/4-5) or WAD (TR3).
 };
 
 // General audio routines.
@@ -458,9 +455,9 @@ void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(Camera *cam);
 void Audio_UpdateListenerByEntity(Entity *ent);
 
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
-int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
-int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, SF_INFO *sfInfo);
+int  Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
+int  Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples(World *world);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
@@ -485,5 +482,10 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 
 bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
 void Audio_LogSndfileError(int code);           // Sndfile-specific error handler.
+
+// Helper functions.
+
+float   Audio_GetByteDepth(SF_INFO sfInfo);
+void    Audio_LoadALExtFunctions(ALCdevice* device);
 
 #endif // AUDIO_H

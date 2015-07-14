@@ -7,7 +7,14 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
-if( CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+# -std-gnu++11 is needed for picky fileno function in streaming track code.
+# I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wextra -msse3")
+endif()
+
+if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
 endif()
 

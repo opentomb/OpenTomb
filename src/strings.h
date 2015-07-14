@@ -116,8 +116,10 @@
 #define SYSWARN_NO_RAGDOLL_SETUP         35
 #define SYSWARN_CANT_CREATE_RAGDOLL      36
 #define SYSWARN_CANT_REMOVE_RAGDOLL      37
+#define SYSNOTE_WAD_OUT_OF_BOUNDS        38
+#define SYSNOTE_WAD_SEEK_FAILED          39
 
-#define SYSNOTE_OGG_OPENED               1000
+#define SYSNOTE_TRACK_OPENED             1000
 #define SYSNOTE_READING_FILE             1001
 #define SYSNOTE_GIVING_ITEM              1002
 #define SYSNOTE_CHANGING_LEVEL           1003
@@ -136,6 +138,7 @@
 #define SYSNOTE_LOADED_PSX_LEVEL         1016
 #define SYSNOTE_LOADED_DC_LEVEL          1017
 #define SYSNOTE_LOADED_OT_LEVEL          1018
+#define SYSNOTE_WAD_PLAYING              1019
 
 // String conversion preload size is used when decoding UTF-8 string
 // to UTF-32 string. To avoid reallocating memory zone each parsed
