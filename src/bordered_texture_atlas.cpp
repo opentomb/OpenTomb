@@ -121,7 +121,7 @@ void BorderedTextureAtlas::layOutTextures()
                 canonical.new_page = page;
 
                 size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
-                if (highest_y >= m_resultPageHeights[page])
+                if (highest_y + 1 > m_resultPageHeights[page])
                     m_resultPageHeights[page] = highest_y;
 
                 break;
