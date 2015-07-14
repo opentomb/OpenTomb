@@ -62,8 +62,8 @@ tr1_entity_tbl[17] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 tr1_entity_tbl[18] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- T-Rex
 tr1_entity_tbl[19] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Raptor
 tr1_entity_tbl[20] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Winged mutant
-tr1_entity_tbl[21] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (RESPAWN POINT?)
-tr1_entity_tbl[22] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (AI TARGET?)
+tr1_entity_tbl[21] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (RESPAWN POINT?)
+tr1_entity_tbl[22] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (AI TARGET?)
 tr1_entity_tbl[23] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Centaur
 tr1_entity_tbl[24] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Mummy
 tr1_entity_tbl[25] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- DinoWarrior (UNUSED!)
@@ -86,7 +86,7 @@ tr1_entity_tbl[38] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_T
 tr1_entity_tbl[39] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
 tr1_entity_tbl[40] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Lifting door
-tr1_entity_tbl[42] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};   -- Slamming sawtooth doors
+tr1_entity_tbl[42] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};       -- Slamming sawtooth doors
 tr1_entity_tbl[43] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Thor's hammer (block)
@@ -204,8 +204,8 @@ tr1_entity_tbl[166] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr1_entity_tbl[169] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Camera target
 tr1_entity_tbl[170] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Waterfall mist
 
-tr1_entity_tbl[172] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Mutant bullet
-tr1_entity_tbl[173] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Mutant grenade
+tr1_entity_tbl[172] = {coll = COLLISION_TYPE_GHOST, shape = COLLISION_SHAPE_BOX};                     -- Mutant bullet
+tr1_entity_tbl[173] = {coll = COLLISION_TYPE_GHOST, shape = COLLISION_SHAPE_BOX};                     -- Mutant grenade
 
 tr1_entity_tbl[177] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Lava particle emitter
 
@@ -665,7 +665,7 @@ tr3_entity_tbl[288] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 
 -- TRAPS, cont. --
 
-tr3_entity_tbl[291] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Laser sweeper
+tr3_entity_tbl[291] = {coll = COLLISION_TYPE_GHOST, shape = COLLISION_SHAPE_BOX, func = "lasersweep"};           -- Laser sweeper
 tr3_entity_tbl[292] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Electrified Field
 tr3_entity_tbl[295] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Detonator switch box
 

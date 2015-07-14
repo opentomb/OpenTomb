@@ -4,7 +4,9 @@
 #include "gl_util.h"
 #include "bullet/LinearMath/btScalar.h"
 
-#define LOG_FILENAME "d_log.txt"
+#define LOG_FILENAME     "debug.log"
+#define LUA_LOG_FILENAME "lua.log"
+#define GL_LOG_FILENAME  "gl.log"
 
 struct ScreenInfo
 {
@@ -12,12 +14,12 @@ struct ScreenInfo
     int16_t     y;
     int16_t     w;  GLfloat w_unit;   // Metering unit.
     int16_t     h;  GLfloat h_unit;   // Metering unit.
-    
+
     float       fps;
     float       fov;
     float       scale_factor;
-    int8_t      FS_flag;
-    int8_t      show_debuginfo;
+    bool        FS_flag;
+    bool        show_debuginfo;
 };
 
 extern ScreenInfo screen_info;

@@ -4,36 +4,74 @@
 
 #include <cmath>
 #include <array>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/LinearMath/btMatrix3x3.h"
-#include "bullet/LinearMath/btQuaternion.h"
-#include "bullet/LinearMath/btTransform.h"
+
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/LinearMath/btMatrix3x3.h>
+#include <bullet/LinearMath/btQuaternion.h>
+#include <bullet/LinearMath/btTransform.h>
 
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
 
-inline btScalar planeDist(const btVector3& p, const btVector3& dot)
-{
-    return p[3] + p[0]*dot[0] + p[1]*dot[1] + p[2]*dot[2];
-}
-
 /**
- * p - point of ray entrance                                                    in
- * v - ray direction                                                            in
- * n - plane equaton                                                            in
- * dot - ray and plane intersection                                             out
- * t - parametric intersection coordinate
+ * A simple Hesse normal form plane
  */
-inline void rayPlaneIntersect(const btVector3& p, const btVector3& v, const btVector3& n, btVector3* dot, btScalar* t)
+struct Plane
 {
-    *t = -(n[3] + n[0]*p[0] + n[1]*p[1] + n[2]*p[2]);
-    *t /= (n[0]*v[0] + n[1]*v[1] + n[2]*v[2]);
-    *dot = p + *t * v;
-}
+    //! The plane's normal
+    btVector3 normal;
+    //! The plane's distance to the origin
+    btScalar dot;
 
-//vec4 - btScalar[4] (x, y, z, w)
+    /**
+     * Calculates the normalized distance of an arbitrary point in terms of the normal
+     * @param pos The point
+     * @return The distance in multiples of the normal (if >0, @a pos is in the direction of the normal)
+     */
+    btScalar distance(const btVector3& pos) const
+    {
+        return normal.dot(pos) - dot;
+    }
+
+    btVector3 rayIntersect(const btVector3& rayStart, const btVector3& rayDir, btScalar& lambda) const
+    {
+        lambda = dot - normal.dot(rayStart);
+        lambda /= normal.dot(rayDir);
+        return rayStart + lambda * rayDir;
+    }
+
+    btVector3 rayIntersect(const btVector3& rayStart, const btVector3& rayDir) const
+    {
+        btScalar t;
+        return rayIntersect(rayStart, rayDir, t);
+    }
+
+    void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
+    {
+        normal = v1.cross(v2).normalized();
+        dot = normal.dot( pos );
+    }
+
+    void assign(const btVector3& n, const btVector3& pos)
+    {
+        normal = n.normalized();
+        dot = normal.dot( pos );
+    }
+
+    void mirrorNormal()
+    {
+        normal = -normal;
+        dot = -dot;
+    }
+
+    void moveTo(const btVector3& where)
+    {
+        //! @todo Project the (where--0) onto the normal before calculating the dot
+        dot = normal.dot(where);
+    }
+};
 
 void vec4_SetTRRotations(btQuaternion &v, const btVector3 &rot);
 /*

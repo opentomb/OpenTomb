@@ -2,14 +2,11 @@
 *.d
 *.o
 *.so
-*.htm
-*.html
 *.orig
-*.txt
-*.ttf
 *.exe
 *.dll
 *.bak
+*.log
 *.cbTemp
 .DS_Store
 CMakeLists.txt.user
@@ -20,6 +17,8 @@ obj/
 bin/
 build/
 nbproject/
+cbproject/
+prj/
 dist/
 data/
 save/
@@ -30,5 +29,4 @@ opentomb-code.depend
 opentomb-code.layout
 OpenTomb\.xcodeproj/project\.xcworkspace
 OpenTomb\.xcodeproj/xcuserdata
-syntax: glob
-*.png
+

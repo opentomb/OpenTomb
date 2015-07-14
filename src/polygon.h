@@ -3,12 +3,13 @@
 #define POLYGON_H
 
 #include <cstdint>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "vmath.h"
 #include <vector>
 #include <array>
+
+#include <GL/glew.h>
+
+#include "bullet/LinearMath/btScalar.h"
+#include "vmath.h"
 
 #define SPLIT_FRONT    0x00
 #define SPLIT_BACK     0x01
@@ -23,22 +24,22 @@
  */
 struct Vertex
 {
-    btVector3 position;
-    btVector3 normal;
-    std::array<GLfloat,4> color;
-    std::array<GLfloat,2> tex_coord;
+    btVector3 position = {0,0,0};
+    btVector3 normal = {0,0,0};
+    std::array<GLfloat,4> color{{0,0,0,0}};
+    std::array<GLfloat,2> tex_coord{{0,0}};
 };
 
 
 struct Polygon
 {
     std::vector<Vertex> vertices{4};                                               // vertices data
-    uint16_t            tex_index;                                              // texture index
-    uint16_t            anim_id;                                                // anim texture ID
-    uint16_t            frame_offset;                                           // anim texture frame offset
-    uint16_t            transparency;                                           // transparency information
-    bool                double_side;                                            // double side flag
-    btVector3 plane;                                               // polygon plane equation
+    uint16_t            tex_index = 0;                                              // texture index
+    uint16_t            anim_id = 0;                                                // anim texture ID
+    uint16_t            frame_offset = 0;                                           // anim texture frame offset
+    uint16_t            transparency = 0;                                           // transparency information
+    bool                double_side = false;                                            // double side flag
+    Plane plane;                                               // polygon plane equation
     
     Polygon() = default;
 
@@ -75,11 +76,11 @@ struct Polygon
     void transformSelf(const btTransform &tr);
 
     void findNormal();
-    int  rayIntersect(const btVector3 &dir, const btVector3 &dot, btScalar *t) const;
+    bool rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *lambda) const;
     bool intersectPolygon(Polygon* p2);
 
-    int  splitClassify(const btVector3 &n);
-    void split(const btVector3 &n, Polygon* front, Polygon* back);
+    int  splitClassify(const Plane &plane);
+    void split(const Plane &n, Polygon* front, Polygon* back);
 
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);
     bool isInsideBQuad(const btVector3 &bb_min, const btVector3 &bb_max);

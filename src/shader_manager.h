@@ -3,51 +3,62 @@
 #include "shader_description.h"
 
 #include <memory>
-#include <assert.h>
+#include <cassert>
+#include <vector>
 
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
+/*!
+ * Class containing all shaders used by OpenTomb. The shader objects
+ * are owned by this manager and must not be deleted by anyone.
+ */
 class ShaderManager {
 private:
-    std::shared_ptr<UnlitTintedShaderDescription> m_roomShaders[2][2];
-    std::shared_ptr<UnlitTintedShaderDescription> m_staticMeshShader;
-    std::shared_ptr<UnlitShaderDescription> m_stencil;
-    std::shared_ptr<UnlitShaderDescription> m_debugline;
-    std::shared_ptr<LitShaderDescription> m_entityShader[MAX_NUM_LIGHTS+1][2];
-    std::shared_ptr<GuiShaderDescription> m_gui;
-    std::shared_ptr<GuiShaderDescription> m_guiTextured;
-    std::shared_ptr<TextShaderDescription> m_text;
-    std::shared_ptr<SpriteShaderDescription> m_sprites;
+    UnlitTintedShaderDescription *m_roomShaders[2][2];
+    UnlitTintedShaderDescription *m_staticMeshShader;
+    UnlitShaderDescription *m_stencil;
+    UnlitShaderDescription *m_debugline;
+    LitShaderDescription *m_entityShader[MAX_NUM_LIGHTS+1][2];
+    GuiShaderDescription *m_gui;
+    GuiShaderDescription *m_guiTextured;
+    TextShaderDescription *m_text;
+    SpriteShaderDescription *m_sprites;
 
 public:
     ShaderManager();
+    /*!
+     * Deletes the manager. Note: This destructor does nothing and
+     * does not delete the shaders, as the manager will only get
+     * destroyed when the program exits anyway, in which case all the
+     * shaders get destroyed by OpenGL.
+     */
     ~ShaderManager() = default;
     
-    std::shared_ptr<LitShaderDescription> getEntityShader(unsigned numberOfLights, bool skin) const {
+    LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const {
         assert(numberOfLights <= MAX_NUM_LIGHTS);
 
         return m_entityShader[numberOfLights][skin ? 1 : 0];
     }
     
-    std::shared_ptr<UnlitTintedShaderDescription> getStaticMeshShader() const { return m_staticMeshShader; }
+    UnlitTintedShaderDescription *getStaticMeshShader() const { return m_staticMeshShader; }
     
-    std::shared_ptr<UnlitShaderDescription> getStencilShader() const { return m_stencil; }
+    UnlitShaderDescription *getStencilShader() const { return m_stencil; }
     
-    std::shared_ptr<UnlitShaderDescription> getDebugLineShader() const { return m_debugline; }
+    UnlitShaderDescription *getDebugLineShader() const { return m_debugline; }
     
-    std::shared_ptr<UnlitTintedShaderDescription> getRoomShader(bool isFlickering, bool isWater) const
+    UnlitTintedShaderDescription *getRoomShader(bool isFlickering, bool isWater) const
     {
         return m_roomShaders[isWater ? 1 : 0][isFlickering ? 1 : 0];
     }
 
-    std::shared_ptr<GuiShaderDescription> getGuiShader(bool includingTexture) const
+    GuiShaderDescription *getGuiShader(bool includingTexture) const
     {
         if (includingTexture)
             return m_guiTextured;
         else
             return m_gui;
     }
-    std::shared_ptr<TextShaderDescription> getTextShader() const { return m_text; }
-    std::shared_ptr<SpriteShaderDescription> getSpriteShader() const { return m_sprites; }
+    TextShaderDescription *getTextShader() const { return m_text; }
+    SpriteShaderDescription *getSpriteShader() const { return m_sprites; }
 };

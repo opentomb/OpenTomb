@@ -9,102 +9,128 @@
 #include "shader_description.h"
 
 #include <cstdlib>
+#include <cassert>
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
-    shader = glCreateShaderObjectARB(type);
+    shader = glCreateShader(type);
     if (!loadShaderFromFile(shader, filename, additionalDefines))
         abort();
 }
 
 ShaderStage::~ShaderStage()
 {
-    glDeleteObjectARB(shader);
+    glDeleteShader(shader);
 }
 
 ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 {
-    program = glCreateProgramObjectARB();
-    glAttachObjectARB(program, vertex.shader);
-    glAttachObjectARB(program, fragment.shader);
-    glLinkProgramARB(program);
-    printInfoLog(program);
+    program = glCreateProgram();
+    glAttachShader(program, vertex.shader);
+    glAttachShader(program, fragment.shader);
+    glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
     
-    sampler = glGetUniformLocationARB(program, "color_map");
+    checkOpenGLError();
+    printShaderInfoLog(program);
+    
+    sampler = glGetUniformLocation(program, "color_map");
 }
 
 ShaderDescription::~ShaderDescription()
 {
-    glDeleteObjectARB(program);
+    glDeleteProgram(program);
 }
 
 GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : ShaderDescription(vertex, fragment)
 {
-    offset = glGetUniformLocationARB(program, "offset");
-    factor = glGetUniformLocationARB(program, "factor");
-    glBindAttribLocationARB(program, vertex_attribs::position, "position");
-    glBindAttribLocationARB(program, vertex_attribs::color, "color");
-    glLinkProgramARB(program);
-    printInfoLog(program);
+    offset = glGetUniformLocation(program, "offset");
+    factor = glGetUniformLocation(program, "factor");
+    glBindAttribLocation(program, vertex_attribs::position, "position");
+    glBindAttribLocation(program, vertex_attribs::color, "color");
+    glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
+    printShaderInfoLog(program);
 }
 
 TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : ShaderDescription(vertex, fragment)
 {
-    glBindAttribLocationARB(program, vertex_attribs::position, "position");
-    glBindAttribLocationARB(program, vertex_attribs::color, "color");
-    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
-    glLinkProgramARB(program);
-    
-    printInfoLog(program);
+    glBindAttribLocation(program, vertex_attribs::position, "position");
+    glBindAttribLocation(program, vertex_attribs::color, "color");
+    glBindAttribLocation(program, vertex_attribs::tex_coord, "texCoord");
+    glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
 
-    screenSize = glGetUniformLocationARB(program, "screenSize");
+    checkOpenGLError();
+    
+    printShaderInfoLog(program);
+
+    screenSize = glGetUniformLocation(program, "screenSize");
 }
 
 SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : ShaderDescription(vertex, fragment)
 {
-    model_view = glGetUniformLocationARB(program, "modelView");
-    projection = glGetUniformLocationARB(program, "projection");
-    glBindAttribLocationARB(program, vertex_attribs::position, "position");
-    glBindAttribLocationARB(program, vertex_attribs::corner_offset, "cornerOffset");
-    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
-    glLinkProgramARB(program);
-    printInfoLog(program);
+    model_view = glGetUniformLocation(program, "modelView");
+    projection = glGetUniformLocation(program, "projection");
+    glBindAttribLocation(program, vertex_attribs::position, "position");
+    glBindAttribLocation(program, vertex_attribs::corner_offset, "cornerOffset");
+    glBindAttribLocation(program, vertex_attribs::tex_coord, "texCoord");
+    glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
+    printShaderInfoLog(program);
 }
 
 UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : ShaderDescription(vertex, fragment)
 {
-    glBindAttribLocationARB(program, VertexAttribs::Position, "position");
-    glBindAttribLocationARB(program, VertexAttribs::Color, "color");
-    glBindAttribLocationARB(program, VertexAttribs::TexCoord, "texCoord");
-    glBindAttribLocationARB(program, VertexAttribs::Normal, "normal");
-    glBindAttribLocationARB(program, VertexAttribs::MatrixIndex, "matrixIndex");
-    glLinkProgramARB(program);
+    glBindAttribLocation(program, VertexAttribs::Position, "position");
+    glBindAttribLocation(program, VertexAttribs::Color, "color");
+    glBindAttribLocation(program, VertexAttribs::TexCoord, "texCoord");
+    glBindAttribLocation(program, VertexAttribs::Normal, "normal");
+    glBindAttribLocation(program, VertexAttribs::MatrixIndex, "matrixIndex");
+    glLinkProgram(program);
+    GLint isLinked;
+    glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
+    assert(isLinked == GL_TRUE);
+
+    checkOpenGLError();
+
+    printShaderInfoLog(program);
     
-    printInfoLog(program);
-    
-    model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
+    model_view_projection = glGetUniformLocation(program, "modelViewProjection");
 }
 
 LitShaderDescription::LitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : UnlitShaderDescription(vertex, fragment)
 {
-    model_view = glGetUniformLocationARB(program, "modelView");
-    projection = glGetUniformLocationARB(program, "projection");
-    number_of_lights = glGetUniformLocationARB(program, "number_of_lights");
-    light_position = glGetUniformLocationARB(program, "light_position");
-    light_color = glGetUniformLocationARB(program, "light_color");
-    light_inner_radius = glGetUniformLocationARB(program, "light_innerRadius");
-    light_outer_radius = glGetUniformLocationARB(program, "light_outerRadius");
-    light_ambient = glGetUniformLocationARB(program, "light_ambient");
+    model_view = glGetUniformLocation(program, "modelView");
+    projection = glGetUniformLocation(program, "projection");
+    number_of_lights = glGetUniformLocation(program, "number_of_lights");
+    light_position = glGetUniformLocation(program, "light_position");
+    light_color = glGetUniformLocation(program, "light_color");
+    light_inner_radius = glGetUniformLocation(program, "light_innerRadius");
+    light_outer_radius = glGetUniformLocation(program, "light_outerRadius");
+    light_ambient = glGetUniformLocation(program, "light_ambient");
 }
 
 UnlitTintedShaderDescription::UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 : UnlitShaderDescription(vertex, fragment)
 {
-    current_tick = glGetUniformLocationARB(program, "fCurrentTick");
-    tint_mult = glGetUniformLocationARB(program, "tintMult");
+    current_tick = glGetUniformLocation(program, "fCurrentTick");
+    tint_mult = glGetUniformLocation(program, "tintMult");
 }

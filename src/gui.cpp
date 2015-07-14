@@ -2,7 +2,6 @@
 #include <cstdint>
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
-#include <OpenGL/OpenGL.h>
 #else
 #include <SDL2/SDL_image.h>
 #endif
@@ -18,7 +17,7 @@
 #include "console.h"
 #include "vmath.h"
 #include "camera.h"
-#include "string.h"
+#include "strings.h"
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "vertex_array.h"
@@ -37,9 +36,9 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
-std::unique_ptr<VertexArray> crosshairArray;
+VertexArray *crosshairArray;
 
-btTransform guiProjectionMatrix;
+matrix4 guiProjectionMatrix;
 
 void Gui_Init()
 {
@@ -48,7 +47,7 @@ void Gui_Init()
     Gui_InitNotifier();
     Gui_InitTempLines();
 
-    glGenBuffersARB(1, &crosshairBuffer);
+    glGenBuffers(1, &crosshairBuffer);
     Gui_FillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
@@ -67,7 +66,7 @@ void Gui_InitTempLines()
         gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
         gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
-        gui_temp_lines[i].show = 0;
+        gui_temp_lines[i].show = false;
 
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
@@ -242,7 +241,7 @@ void Gui_Destroy()
 {
     for(int i = 0; i < GUI_MAX_TEMP_LINES ;i++)
     {
-        gui_temp_lines[i].show = 0;
+        gui_temp_lines[i].show = false;
         gui_temp_lines[i].text_size = 0;
         free(gui_temp_lines[i].text);
         gui_temp_lines[i].text = NULL;
@@ -347,7 +346,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->absXoffset = l->X * screen_info.scale_factor;
         l->absYoffset = l->Y * screen_info.scale_factor;
 
-        l->show = 1;
+        l->show = true;
         return l;
     }
 
@@ -398,26 +397,20 @@ void Gui_Resize()
 
 void Gui_Render()
 {
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
-    glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
-    
+
     glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
     Gui_DrawCrosshair();
-    
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
     ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -508,14 +501,14 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
-        glUseProgramObjectARB(shader->program);
+        TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
+        glUseProgram(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
             (GLfloat) screen_info.h
         };
-        glUniform2fvARB(shader->screenSize, 1, screenSize);
-        glUniform1iARB(shader->sampler, 0);
+        glUniform2fv(shader->screenSize, 1, screenSize);
+        glUniform1i(shader->sampler, 0);
 
         while(l)
         {
@@ -529,7 +522,7 @@ void Gui_RenderStrings()
             if(l->show)
             {
                 Gui_RenderStringLine(l);
-                l->show = 0;
+                l->show = false;
             }
         }
 
@@ -595,10 +588,10 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const std::shared_ptr<LitShaderDescription>& shader = renderer.shaderManager()->getEntityShader(0, false);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->number_of_lights, 0);
-    glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
+    glUseProgram(shader->program);
+    glUniform1i(shader->number_of_lights, 0);
+    glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
 
     if(size != 0.0)
     {
@@ -619,8 +612,8 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btTransform scaledMvMatrix = mvMatrix * scaledMatrix;
-        btTransform mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
@@ -628,7 +621,7 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
     }
     else
     {
-        btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
+        matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
         renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
@@ -668,7 +661,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
     mLabel_Title.text           = mLabel_Title_text;
     mLabel_Title_text[0]        = 0;
-    mLabel_Title.show           = 0;
+    mLabel_Title.show           = false;
 
     mLabel_ItemName.X           = 0.0;
     mLabel_ItemName.Y           = 50.0;
@@ -679,7 +672,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
     mLabel_ItemName.text        = mLabel_ItemName_text;
     mLabel_ItemName_text[0]     = 0;
-    mLabel_ItemName.show        = 0;
+    mLabel_ItemName.show        = false;
 
     Gui_AddLine(&mLabel_ItemName);
     Gui_AddLine(&mLabel_Title);
@@ -691,10 +684,10 @@ gui_InventoryManager::~gui_InventoryManager()
     mNextState = INVENTORY_DISABLED;
     mInventory = NULL;
 
-    mLabel_ItemName.show = 0;
+    mLabel_ItemName.show = false;
     Gui_DeleteLine(&mLabel_ItemName);
 
-    mLabel_Title.show = 0;
+    mLabel_Title.show = false;
     Gui_DeleteLine(&mLabel_Title);
 }
 
@@ -863,21 +856,21 @@ void gui_InventoryManager::frame(float time)
                         mItemTime = 0.0;
                         mItemAngle = 0.0;
                     }
-                    mLabel_ItemName.show = 1;
-                    mLabel_Title.show = 1;
+                    mLabel_ItemName.show = true;
+                    mLabel_Title.show = true;
                     break;
 
                 case INVENTORY_CLOSE:
                     Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     mCurrentState = mNextState;
                     break;
 
                 case INVENTORY_R_LEFT:
                 case INVENTORY_R_RIGHT:
                     Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
-                    mLabel_ItemName.show = 0;
+                    mLabel_ItemName.show = false;
                     mCurrentState = mNextState;
                     mItemTime = 0.0;
                     break;
@@ -894,8 +887,8 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     break;
 
                 case INVENTORY_DOWN:
@@ -910,8 +903,8 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
-                    mLabel_ItemName.show = 0;
-                    mLabel_Title.show = 0;
+                    mLabel_ItemName.show = false;
+                    mLabel_Title.show = false;
                     break;
             };
             break;
@@ -1035,7 +1028,7 @@ void gui_InventoryManager::frame(float time)
                 mNextState = INVENTORY_DISABLED;
                 mRingVerticalAngle = 180.0;
                 mRingTime = 0.0;
-                mLabel_Title.show = 0;
+                mLabel_Title.show = false;
                 mRingRadius = mBaseRingRadius;
                 mCurrentItemsType = 1;
             }
@@ -1107,11 +1100,12 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix.setIdentity();
-        guiProjectionMatrix.getBasis()[0][0] = 2.0 / screen_info.w;
-        guiProjectionMatrix.getBasis()[1][1] = 2.0 / screen_info.h;
-        guiProjectionMatrix.getBasis()[2][2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
+        guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] =-1.0;
+        guiProjectionMatrix[3][1] =-1.0;
+        guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {
@@ -1126,38 +1120,38 @@ struct gui_buffer_entry_s {
 
 void Gui_FillCrosshairBuffer()
 {
-    gui_buffer_entry_s crosshair_buf[] = {
-        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 255, 0, 0, 255,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 255, 0, 0, 255
+    gui_buffer_entry_s crosshair_buf[4] = {
+        {{(GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f)}, {255, 0, 0, 255}},
+        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)}, {255, 0, 0, 255}}
     };
 
-    glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
-    
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+
     VertexArrayAttribute attribs[] = {
         VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
         VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray.reset( new VertexArray(0, 2, attribs) );
+    crosshairArray = new VertexArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
 {
-    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(false);
+    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
 
-    glUseProgramObjectARB(shader->program);
+    glUseProgram(shader->program);
     GLfloat factor[2] = {
         2.0f / screen_info.w,
         2.0f / screen_info.h
     };
-    glUniform2fvARB(shader->factor, 1, factor);
+    glUniform2fv(shader->factor, 1, factor);
     GLfloat offset[2] = { -1.f, -1.f };
-    glUniform2fvARB(shader->offset, 1, offset);
+    glUniform2fv(shader->offset, 1, offset);
 
     crosshairArray->bind();
-    
+
     glDrawArrays(GL_LINES, 0, 4);
 }
 
@@ -1246,11 +1240,8 @@ void Gui_DrawLoadScreen(int value)
 
     Gui_SwitchGLMode(1);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
@@ -1260,7 +1251,6 @@ void Gui_DrawLoadScreen(int value)
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
-    glPopAttrib();
 
     Gui_SwitchGLMode(0);
 
@@ -1303,49 +1293,47 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             break;
     };
 
-    glDisable(GL_DEPTH_TEST);
-    
     if (rectanglePositionBuffer == 0)
     {
-        glGenBuffersARB(1, &rectanglePositionBuffer);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectanglePositionBuffer);
+        glGenBuffers(1, &rectanglePositionBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
         GLfloat rectCoords[8] = { 0, 0,
             1, 0,
             1, 1,
             0, 1 };
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
-        
-        glGenBuffersARB(1, &rectangleColorBuffer);
-        
+        glBufferData(GL_ARRAY_BUFFER, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
+
+        glGenBuffers(1, &rectangleColorBuffer);
+
         VertexArrayAttribute attribs[] = {
             VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
             VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
         };
         rectangleArray.reset( new VertexArray(0, 2, attribs) );
     }
-    
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
-    GLfloat *rectColors = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+
+    glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
+    GLfloat *rectColors = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+    glUnmapBuffer(GL_ARRAY_BUFFER);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(texture != 0);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
+    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(texture != 0);
+    glUseProgram(shader->program);
+    glUniform1i(shader->sampler, 0);
     if (texture)
     {
-        glActiveTextureARB(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
-    glUniform2fvARB(shader->offset, 1, offset);
-    glUniform2fvARB(shader->factor, 1, factor);
+    glUniform2fv(shader->offset, 1, offset);
+    glUniform2fv(shader->factor, 1, factor);
 
     rectangleArray->bind();
 
@@ -1380,50 +1368,49 @@ bool Gui_FadeStop(int fader)
     }
 }
 
-bool Gui_FadeAssignPic(int fader, const char* pic_name)
+bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
 {
     if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
-        size_t len = strlen(pic_name);
         size_t ext_len = 0;
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-        strncpy(buf, pic_name, MAX_ENGINE_PATH);
+        strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
         if(!Engine_FileFound(buf, false))
         {
-            for(;ext_len+1<len;ext_len++)
+            for(; ext_len+1<pic_name.length(); ext_len++)
             {
-                if(buf[len-ext_len-1] == '.')
+                if(buf[pic_name.length()-ext_len-1] == '.')
                 {
                     break;
                 }
             }
 
-            if(ext_len + 1 == len)
+            if(ext_len + 1 == pic_name.length())
             {
                 return false;
             }
 
-            buf[len - ext_len + 0] = 'b';
-            buf[len - ext_len + 1] = 'm';
-            buf[len - ext_len + 2] = 'p';
-            buf[len - ext_len + 3] = 0;
+            buf[pic_name.length() - ext_len + 0] = 'b';
+            buf[pic_name.length() - ext_len + 1] = 'm';
+            buf[pic_name.length() - ext_len + 2] = 'p';
+            buf[pic_name.length() - ext_len + 3] = 0;
             if(!Engine_FileFound(buf, false))
             {
-                buf[len - ext_len + 0] = 'j';
-                buf[len - ext_len + 1] = 'p';
-                buf[len - ext_len + 2] = 'g';
+                buf[pic_name.length() - ext_len + 0] = 'j';
+                buf[pic_name.length() - ext_len + 1] = 'p';
+                buf[pic_name.length() - ext_len + 2] = 'g';
                 if(!Engine_FileFound(buf, false))
                 {
-                    buf[len - ext_len + 0] = 'p';
-                    buf[len - ext_len + 1] = 'n';
-                    buf[len - ext_len + 2] = 'g';
+                    buf[pic_name.length() - ext_len + 0] = 'p';
+                    buf[pic_name.length() - ext_len + 1] = 'n';
+                    buf[pic_name.length() - ext_len + 2] = 'g';
                     if(!Engine_FileFound(buf, false))
                     {
-                        buf[len - ext_len + 0] = 't';
-                        buf[len - ext_len + 1] = 'g';
-                        buf[len - ext_len + 2] = 'a';
+                        buf[pic_name.length() - ext_len + 0] = 't';
+                        buf[pic_name.length() - ext_len + 1] = 'g';
+                        buf[pic_name.length() - ext_len + 2] = 'a';
                         if(!Engine_FileFound(buf, false))
                         {
                             return false;
@@ -1589,7 +1576,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     if (status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        Con_Printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        ConsoleInfo::instance().printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
         return false;
     }
 
@@ -1641,7 +1628,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    Con_Printf("Loaded fader picture: %s", texture_path);
+    ConsoleInfo::instance().printf("Loaded fader picture: %s", texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);

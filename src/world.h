@@ -2,14 +2,12 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <cstdint>
 #include "audio.h"
 #include "camera.h"
 #include "bordered_texture_atlas.h"
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
 #include "object.h"
 
 #include <memory>
@@ -174,7 +172,7 @@ struct Room;
 struct Polygon;
 struct Camera;
 struct Portal;
-struct Render;
+class Render;
 struct Frustum;
 struct BaseMesh;
 struct StaticMesh;
@@ -285,7 +283,6 @@ struct Room : public Object
     uint8_t                     alternate_group;
 
     bool active;                                         // flag: is active
-    bool is_in_r_list;                                   // is room in render list
     bool hide;                                           // do not render
     std::shared_ptr<BaseMesh> mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
@@ -311,7 +308,6 @@ struct Room : public Object
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
 
-    uint16_t                    active_frustums;                                // current number of this room active frustums
     std::vector<std::shared_ptr<Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
@@ -403,10 +399,10 @@ struct World
     std::vector<uint8_t> stream_track_map;       // Stream track flag map.
 
     void updateAnimTextures();
-    void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
+    void calculateWaterTint(float* tint, bool fixed_colour);
 
     void addEntity(std::shared_ptr<Entity> entity);
-    int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
+    int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
     Sprite* getSpriteByID(unsigned int ID);
     SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID

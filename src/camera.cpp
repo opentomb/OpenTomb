@@ -1,11 +1,10 @@
+#include "camera.h"
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <cstdlib>
 #include <cmath>
+#include <cassert>
 
 #include "gl_util.h"
-#include "camera.h"
 #include "vmath.h"
 #include "polygon.h"
 #include "frustum.h"
@@ -16,22 +15,46 @@
 
 void Camera::apply()
 {
-    btMatrix3x3& M = m_glProjMat.getBasis();
-    M.setIdentity();
-    M[0][0] = m_f / m_aspect;
-    M[1][1] = m_f;
-    M[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
-    M[2][3] =-1.0;
-    m_glProjMat.getOrigin()[2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat[0][0] = m_f / m_aspect;
+    m_glProjMat[0][1] = 0.0;
+    m_glProjMat[0][2] = 0.0;
+    m_glProjMat[0][3] = 0.0;
+    
+    m_glProjMat[1][0] = 0.0;
+    m_glProjMat[1][1] = m_f;
+    m_glProjMat[1][2] = 0.0;
+    m_glProjMat[1][3] = 0.0;
+    
+    m_glProjMat[2][0] = 0.0;
+    m_glProjMat[2][1] = 0.0;
+    m_glProjMat[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
+    m_glProjMat[2][3] =-1.0;
+    
+    m_glProjMat[3][0] = 0.0;
+    m_glProjMat[3][1] = 0.0;
+    m_glProjMat[3][2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat[3][3] = 0.0;
 
-    btMatrix3x3& M2 = m_glViewMat.getBasis();
-    M2[0] = m_rightDir;
-    M2[1] = m_upDir;
-    M2[2] = -m_viewDir;
-    M2 = M2.transpose();
-
-    m_glViewMat.getOrigin() = M2 * m_pos;
-    m_glViewMat.getOrigin().setW(1);
+    m_glViewMat[0][0] = m_rightDir[0];
+    m_glViewMat[1][0] = m_rightDir[1];
+    m_glViewMat[2][0] = m_rightDir[2];
+    
+    m_glViewMat[0][1] = m_upDir[0];
+    m_glViewMat[1][1] = m_upDir[1];
+    m_glViewMat[2][1] = m_upDir[2];
+    
+    m_glViewMat[0][2] = -m_viewDir[0];
+    m_glViewMat[1][2] = -m_viewDir[1];
+    m_glViewMat[2][2] = -m_viewDir[2];
+    
+    m_glViewMat[3][0] = -(m_glViewMat[0][0] * m_pos[0] + m_glViewMat[1][0] * m_pos[1] + m_glViewMat[2][0]  * m_pos[2]);
+    m_glViewMat[3][1] = -(m_glViewMat[0][1] * m_pos[0] + m_glViewMat[1][1] * m_pos[1] + m_glViewMat[2][1]  * m_pos[2]);
+    m_glViewMat[3][2] = -(m_glViewMat[0][2] * m_pos[0] + m_glViewMat[1][2] * m_pos[1] + m_glViewMat[2][2] * m_pos[2]);
+    
+    m_glViewMat[0][3] = 0.0;
+    m_glViewMat[1][3] = 0.0;
+    m_glViewMat[2][3] = 0.0;
+    m_glViewMat[3][3] = 1.0;
 
     m_glViewProjMat = m_glProjMat * m_glViewMat;
 }
@@ -102,47 +125,36 @@ void Camera::recalcClipPlanes()
 
     //==========================================================================
 
-    frustum->norm = m_viewDir;                               // Основная плоскость отсечения (что сзади - то не рисуем)
-    frustum->norm[3] = -m_viewDir.dot(m_pos);                 // плоскость проекции проходит через наблюдателя.
+    frustum->norm.assign( m_viewDir, m_pos );                               // Основная плоскость отсечения (что сзади - то не рисуем)
 
     //==========================================================================
 
     //   DOWN
     btVector3 LU;
     LU = nearViewPoint - m_height / 2.0 * m_upDir;                                       // вектор нижней плоскости отсечения
-
-    m_clipPlanes[2] = m_rightDir.cross(LU);
-    m_clipPlanes[2].normalize();
-    m_clipPlanes[2][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //   UP
     LU = nearViewPoint + m_height / 2.0 * m_upDir;                                       // вектор верхней плоскости отсечения
-
-    m_clipPlanes[3] = m_rightDir.cross(LU);
-    m_clipPlanes[3].normalize();
-    m_clipPlanes[3][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //==========================================================================
 
     //   LEFT
     LU = nearViewPoint - m_width / 2.0 * m_rightDir;                                    // вектор левой плоскости отсечения
-
-    m_clipPlanes[0] = m_upDir.cross(LU);
-    m_clipPlanes[0].normalize();
-    m_clipPlanes[0][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     //   RIGHT
     LU = nearViewPoint + m_width / 2.0 * m_rightDir;                                    // вектор правой плоскости отсечения
-
-    m_clipPlanes[1] = m_upDir.cross(LU);
-    m_clipPlanes[1].normalize();
-    m_clipPlanes[1][3] = -m_clipPlanes[2].dot(m_pos);
+    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
+    // Ensure that normals point outside
     for(int i=0; i<4; ++i)
-        if(planeDist(m_clipPlanes[i], worldNearViewPoint) < 0.0)
-            m_clipPlanes[i] = -m_clipPlanes[i];
+        if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
+            m_clipPlanes[i].mirrorNormal();
 
+    assert( !frustum->vertices.empty() );
     frustum->vertices[0] = m_pos + m_viewDir;
 }
 
@@ -155,6 +167,6 @@ Camera::Camera()
 
     frustum = std::make_shared<Frustum>();
     frustum->cam_pos = &m_pos;
-    frustum->vertices.resize(3);
+    frustum->vertices.resize(3, {0,0,0});
     frustum->planes.assign( m_clipPlanes+0, m_clipPlanes+4 );
 }

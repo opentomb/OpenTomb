@@ -1,9 +1,9 @@
 
 #include "world.h"
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
 #include "character_controller.h"
 #include "obb.h"
@@ -17,10 +17,10 @@
 #include "polygon.h"
 #include "resource.h"
 #include "console.h"
-#include "string.h"
+#include "strings.h"
 
-Character::Character()
-    : Entity()
+Character::Character(uint32_t id)
+    : Entity(id)
 {
     m_climbSensor.reset( new btSphereShape(m_climbR) );
 
@@ -450,7 +450,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 int Character::hasStopSlant(HeightInfo *next_fc)
 {
     const auto& pos = m_transform.getOrigin();
-    const auto& v1 = m_transform.getBasis()[1];
+    const auto& v1 = m_transform.getBasis().getColumn(1);
     const auto& v2 = next_fc->floor_normale;
     return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < m_criticalSlantZComponent) &&
            (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
@@ -502,8 +502,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - m_transform.getBasis()[1][0] * m_climbR * 2.0;
-    from[1] = pos[1] - m_transform.getBasis()[1][1] * m_climbR * 2.0;
+    from[0] = pos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
+    from[1] = pos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
     from[2] = tmp[2];
     to = tmp;
 
@@ -582,7 +582,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     }
 
     // get the character plane equation
-    auto n2 = m_transform.getBasis()[0];
+    auto n2 = m_transform.getBasis().getColumn(0);
     n2[3] = -n2.dot(pos);
 
     /*
@@ -635,7 +635,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     n2[0] = n2[1];
     n2[1] =-n2[2];
     n2[2] = 0.0;
-    if(n2[0] * m_transform.getBasis()[1][0] + n2[1] * m_transform.getBasis()[1][1] > 0)       // direction fixing
+    if(n2[0] * m_transform.getBasis().getColumn(1)[0] + n2[1] * m_transform.getBasis().getColumn(1)[1] > 0)       // direction fixing
     {
         n2[0] = -n2[0];
         n2[1] = -n2[1];
@@ -692,14 +692,14 @@ ClimbInfo Character::checkWallsClimbability()
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
 
-    from[0] = pos[0] + m_transform.getBasis()[2][0] * m_bf.bb_max[2] - m_transform.getBasis()[1][0] * m_climbR;
-    from[1] = pos[1] + m_transform.getBasis()[2][1] * m_bf.bb_max[2] - m_transform.getBasis()[1][1] * m_climbR;
-    from[2] = pos[2] + m_transform.getBasis()[2][2] * m_bf.bb_max[2] - m_transform.getBasis()[1][2] * m_climbR;
+    from[0] = pos[0] + m_transform.getBasis().getColumn(2)[0] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[0] * m_climbR;
+    from[1] = pos[1] + m_transform.getBasis().getColumn(2)[1] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[1] * m_climbR;
+    from[2] = pos[2] + m_transform.getBasis().getColumn(2)[2] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[2] * m_climbR;
     to = from;
     t = m_forvardSize + m_bf.bb_max[1];
-    to[0] += m_transform.getBasis()[1][0] * t;
-    to[1] += m_transform.getBasis()[1][1] * t;
-    to[2] += m_transform.getBasis()[1][2] * t;
+    to[0] += m_transform.getBasis().getColumn(1)[0] * t;
+    to[1] += m_transform.getBasis().getColumn(1)[1] * t;
+    to[2] += m_transform.getBasis().getColumn(1)[2] * t;
 
     ccb->m_closestHitFraction = 1.0;
     ccb->m_hitCollisionObject = NULL;
@@ -746,14 +746,14 @@ ClimbInfo Character::checkWallsClimbability()
     if(ret.wall_hit)
     {
         t = 0.67 * m_height;
-        from[0] -= m_transform.getBasis()[2][0] * t;
-        from[1] -= m_transform.getBasis()[2][1] * t;
-        from[2] -= m_transform.getBasis()[2][2] * t;
+        from[0] -= m_transform.getBasis().getColumn(2)[0] * t;
+        from[1] -= m_transform.getBasis().getColumn(2)[1] * t;
+        from[2] -= m_transform.getBasis().getColumn(2)[2] * t;
         to = from;
         t = m_forvardSize + m_bf.bb_max[1];
-        to[0] += m_transform.getBasis()[1][0] * t;
-        to[1] += m_transform.getBasis()[1][1] * t;
-        to[2] += m_transform.getBasis()[1][2] * t;
+        to[0] += m_transform.getBasis().getColumn(1)[0] * t;
+        to[1] += m_transform.getBasis().getColumn(1)[1] * t;
+        to[2] += m_transform.getBasis().getColumn(1)[2] * t;
 
         ccb->m_closestHitFraction = 1.0;
         ccb->m_hitCollisionObject = NULL;
@@ -769,7 +769,7 @@ ClimbInfo Character::checkWallsClimbability()
     }
 
     // now check ceiling limit (and floor too... may be later)
-    /*vec3_add(from, point, transform.getBasis()[1]);
+    /*vec3_add(from, point, transform.getBasis().getColumn(1));
     to = from;
     from[2] += 520.0;                                                  ///@FIXME: magick;
     to[2] -= 520.0;                                                    ///@FIXME: magick... again...
@@ -797,19 +797,19 @@ void Character::setToJump(btScalar v_vertical, btScalar v_horizontal)
     // Calculate the direction of jump by vector multiplication.
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
-        spd = m_transform.getBasis()[1] * t;
+        spd = m_transform.getBasis().getColumn(1) * t;
     }
     else if(m_dirFlag & ENT_MOVE_BACKWARD)
     {
-        spd = m_transform.getBasis()[1] * -t;
+        spd = m_transform.getBasis().getColumn(1) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_LEFT)
     {
-        spd = m_transform.getBasis()[0] * -t;
+        spd = m_transform.getBasis().getColumn(0) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_RIGHT)
     {
-        spd = m_transform.getBasis()[0] * t;
+        spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
@@ -842,12 +842,12 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += ((360 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((360 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
         }
@@ -858,18 +858,18 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] < max_lean)   // Approaching from center
             {
-                m_angles[2] += ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0 - abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                m_angles[2] -= ((abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
         }
@@ -880,18 +880,18 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((abs(m_angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0 - abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > 360.0) m_angles[2] -= 360.0;
             }
         }
@@ -1015,7 +1015,7 @@ int Character::moveOnFloor()
             Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->m_id, m_id);
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id(), id());
             }
         }
     }
@@ -1043,7 +1043,7 @@ int Character::moveOnFloor()
             spd = tv * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
-            t = tv[0] * m_transform.getBasis()[0][1] + tv[1] * m_transform.getBasis()[1][1];
+            t = tv[0] * m_transform.getBasis().getColumn(0)[1] + tv[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
                 m_response.slide = CHARACTER_SLIDE_FRONT;
@@ -1070,19 +1070,19 @@ int Character::moveOnFloor()
 
             if(m_dirFlag & ENT_MOVE_FORWARD)
             {
-                spd = m_transform.getBasis()[1] * t;
+                spd = m_transform.getBasis().getColumn(1) * t;
             }
             else if(m_dirFlag & ENT_MOVE_BACKWARD)
             {
-                spd = m_transform.getBasis()[1] * -t;
+                spd = m_transform.getBasis().getColumn(1) * -t;
             }
             else if(m_dirFlag & ENT_MOVE_LEFT)
             {
-                spd = m_transform.getBasis()[0] * -t;
+                spd = m_transform.getBasis().getColumn(0) * -t;
             }
             else if(m_dirFlag & ENT_MOVE_RIGHT)
             {
-                spd = m_transform.getBasis()[0] * t;
+                spd = m_transform.getBasis().getColumn(0) * t;
             }
             else
             {
@@ -1187,31 +1187,10 @@ int Character::freeFalling()
 
     updateTransform();                                                 // apply rotations
 
-    /*btScalar t = current_speed * bf-> speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
-    if(dir_flag & ENT_MOVE_FORWARD)
-    {
-        speed[0] = transform.getBasis()[1][0] * t;
-        speed[1] = transform.getBasis()[1][1] * t;
-    }
-    else if(dir_flag & ENT_MOVE_BACKWARD)
-    {
-        speed[0] =-transform.getBasis()[1][0] * t;
-        speed[1] =-transform.getBasis()[1][1] * t;
-    }
-    else if(dir_flag & ENT_MOVE_LEFT)
-    {
-        speed[0] =-transform.getBasis()[0 + 0] * t;
-        speed[1] =-transform.getBasis()[0 + 1] * t;
-    }
-    else if(dir_flag & ENT_MOVE_RIGHT)
-    {
-        speed[0] = transform.getBasis()[0 + 0] * t;
-        speed[1] = transform.getBasis()[0 + 1] * t;
-    }*/
-
-    move = m_speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
+    const btVector3 grav = bt_engine_dynamicsWorld->getGravity();
+    move = m_speed + grav * engine_frame_time * 0.5;
     move *= engine_frame_time;
-    m_speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
+    m_speed += grav * engine_frame_time;
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(m_speed[2]);
     m_speed = m_speed.rotate({0,0,1}, rot * M_PI/180);
 
@@ -1324,19 +1303,19 @@ int Character::monkeyClimbing()
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
-        spd = m_transform.getBasis()[1] * t;
+        spd = m_transform.getBasis().getColumn(1) * t;
     }
     else if(m_dirFlag & ENT_MOVE_BACKWARD)
     {
-        spd = m_transform.getBasis()[1] * -t;
+        spd = m_transform.getBasis().getColumn(1) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_LEFT)
     {
-        spd = m_transform.getBasis()[0] * -t;
+        spd = m_transform.getBasis().getColumn(0) * -t;
     }
     else if(m_dirFlag & ENT_MOVE_RIGHT)
     {
-        spd = m_transform.getBasis()[0] * t;
+        spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
@@ -1394,8 +1373,8 @@ int Character::wallsClimbing()
 
     m_angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
     updateTransform();
-    pos[0] = climb->point[0] - m_transform.getBasis()[1][0] * m_bf.bb_max[1];
-    pos[1] = climb->point[1] - m_transform.getBasis()[1][1] * m_bf.bb_max[1];
+    pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
+    pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
@@ -1459,19 +1438,19 @@ int Character::climbing()
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
-        spd = m_transform.getBasis()[1] * t;
+        spd = m_transform.getBasis().getColumn(1) * t;
     }
     else if(m_dirFlag == ENT_MOVE_BACKWARD)
     {
-        spd = m_transform.getBasis()[1] * -t;
+        spd = m_transform.getBasis().getColumn(1) * -t;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd = m_transform.getBasis()[0] * -t;
+        spd = m_transform.getBasis().getColumn(0) * -t;
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd = m_transform.getBasis()[0] * t;
+        spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
@@ -1538,7 +1517,7 @@ int Character::moveUnderWater()
 
         updateTransform();                                             // apply rotations
 
-        spd = m_transform.getBasis()[1] * t;                     // OY move only!
+        spd = m_transform.getBasis().getColumn(1) * t;                     // OY move only!
         m_speed = spd;
     }
 
@@ -1551,7 +1530,7 @@ int Character::moveUnderWater()
     updateRoomPos();
     if(m_heightInfo.water && (pos[2] + m_bf.bb_max[2] >= m_heightInfo.transition_level))
     {
-        if(/*(spd[2] > 0.0)*/m_transform.getBasis()[1][2] > 0.67)             ///@FIXME: magick!
+        if(/*(spd[2] > 0.0)*/m_transform.getBasis().getColumn(1)[2] > 0.67)             ///@FIXME: magick!
         {
             m_moveType = MOVE_ON_WATER;
             //pos[2] = fc.transition_level;
@@ -1583,23 +1562,23 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(m_command.move[0])) | (abs(m_command.move[1]))));
+    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, (std::abs(m_command.move[0]) || std::abs(m_command.move[1])));
 
     if((m_dirFlag & ENT_MOVE_FORWARD) && (m_command.move[0] == 1))
     {
-        spd = m_transform.getBasis()[1] * t;
+        spd = m_transform.getBasis().getColumn(1) * t;
     }
     else if((m_dirFlag & ENT_MOVE_BACKWARD) && (m_command.move[0] == -1))
     {
-        spd = m_transform.getBasis()[1] * -t;
+        spd = m_transform.getBasis().getColumn(1) * -t;
     }
     else if((m_dirFlag & ENT_MOVE_LEFT) && (m_command.move[1] == -1))
     {
-        spd = m_transform.getBasis()[0] * -t;
+        spd = m_transform.getBasis().getColumn(0) * -t;
     }
     else if((m_dirFlag & ENT_MOVE_RIGHT) && (m_command.move[1] == 1))
     {
-        spd = m_transform.getBasis()[0] * t;
+        spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
@@ -1654,20 +1633,20 @@ int Character::findTraverse()
     m_traversedObject = NULL;
 
     // OX move case
-    if(m_transform.getBasis()[1][0] > 0.9)
+    if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
         obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][0] < -0.9)
+    else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
         obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
-    else if(m_transform.getBasis()[1][1] > 0.9)
+    else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
         obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][1] < -0.9)
+    else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
         obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
@@ -1754,20 +1733,20 @@ int Character::checkTraverse(Entity* obj)
 
     if(obj_s == ch_s)
     {
-        if(m_transform.getBasis()[1][0] > 0.8)
+        if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
             ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
         }
-        else if(m_transform.getBasis()[1][0] < -0.8)
+        else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
             ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
         }
         // OY move case
-        else if(m_transform.getBasis()[1][1] > 0.8)
+        else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
             ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
         }
-        else if(m_transform.getBasis()[1][1] < -0.8)
+        else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
             ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
         }
@@ -1808,20 +1787,20 @@ int Character::checkTraverse(Entity* obj)
      * PUSH MOVE CHECK
      */
     // OX move case
-    if(m_transform.getBasis()[1][0] > 0.8)
+    if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][0] < -0.8)
+    else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
-    else if(m_transform.getBasis()[1][1] > 0.8)
+    else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][1] < -0.8)
+    else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
@@ -1854,20 +1833,20 @@ int Character::checkTraverse(Entity* obj)
      */
     next_s = NULL;
     // OX move case
-    if(m_transform.getBasis()[1][0] > 0.8)
+    if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][0] < -0.8)
+    else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
-    else if(m_transform.getBasis()[1][1] > 0.8)
+    else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
-    else if(m_transform.getBasis()[1][1] < -0.8)
+    else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }

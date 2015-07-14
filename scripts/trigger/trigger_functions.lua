@@ -57,13 +57,14 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
     -- Ignore activation, if activity lock is set.
+    -- This weird setup means that activity lock only takes action if current trigger itself is NOT
+    -- one-shot, else it has bigger priority than entity lock, and activation continues.
     
-    if(lock == 1) then return end;   -- No action if object is locked.
-    lock = trigger_lock;             -- Update object lock.
+    if((lock == 1) and (trigger_lock == 0)) then return end;
     
     -- Apply trigger mask to entity mask.
 
-    if(trigger_op == 1) then
+    if(trigger_op == TRIGGER_OP_XOR) then
         mask = bit32.bxor(mask, trigger_mask);   -- Switch cases
     else
         mask = bit32.bor(mask, trigger_mask);    -- Other cases
@@ -75,6 +76,7 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     if((mask == 0x1F) and (event == 0)) then
         execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
         event = 1;
+        lock = bit32.bor(lock, trigger_lock);
     elseif((mask ~= 0x1F) and (event == 1)) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         event = 0;
@@ -95,11 +97,13 @@ function deactivateEntity(object_id, activator_id)
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- Ignore activation, if activity lock is set.
+    -- It seems that antitrigger event DOES NOT check lock state - however, it copies
+    -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
     
-    if(lock == 1) then return end;
+    -- if(lock == 1) then return end;
     
     -- Execute entity deactivation function, only if activation was previously set.
+    
     if(event == 1) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         
@@ -155,8 +159,8 @@ end
 -- Sets specified secret index as found and plays audiotrack with pop-up notification.
 
 function findSecret(secret_number)
-    if(getSecretStatus(secret_number) == 0) then
-        setSecretStatus(secret_number, 1);  -- Set actual secret status
+    if(not getSecretStatus(secret_number)) then
+        setSecretStatus(secret_number, true);  -- Set actual secret status
         playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
         --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
     end;

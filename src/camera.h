@@ -1,18 +1,13 @@
-
-#ifndef CAMERA_H
-#define CAMERA_H
-
-struct Room;
-struct Polygon;
-struct Frustum;
-
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
+#pragma once
 
 #include <memory>
 #include <vector>
 #include <cmath>
+
+#include <GL/glew.h>
+
 #include "vmath.h"
+#include "matrix4.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0
@@ -38,6 +33,10 @@ struct Frustum;
 #define TR_CAM_TARG_LEFT  (2)
 #define TR_CAM_TARG_RIGHT (3)
 
+struct Room;
+struct Polygon;
+struct Frustum;
+
 struct Camera
 {
     btVector3 m_pos{0,0,0};                 // camera position
@@ -47,11 +46,11 @@ struct Camera
     btVector3 m_rightDir{1,0,0};           // strafe vector
     btVector3 m_ang;                 // camera orientation
 
-    btTransform m_glViewMat = btTransform::getIdentity();
-    btTransform m_glProjMat = btTransform::getIdentity();
-    btTransform m_glViewProjMat = btTransform::getIdentity();
+    matrix4 m_glViewMat;
+    matrix4 m_glProjMat;
+    matrix4 m_glViewProjMat;
 
-    btVector3 m_clipPlanes[4];        // frustum side clip planes
+    Plane m_clipPlanes[4];        // frustum side clip planes
     std::shared_ptr<Frustum> frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;
@@ -98,5 +97,3 @@ struct StatCameraSink
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
 };
-
-#endif

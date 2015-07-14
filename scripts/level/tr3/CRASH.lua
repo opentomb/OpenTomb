@@ -25,7 +25,7 @@ static_tbl[34] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};   
 static_tbl[35] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};          -- Wheel and ropes
 static_tbl[36] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};          -- Ropes
 static_tbl[37] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};          -- Ropes (horizontal)
-static_tbl[38] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};-- Dummy cube
+static_tbl[38] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = true};-- Dummy cube
 static_tbl[39] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};          -- Ring
 static_tbl[40] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};      -- Cockpit 2
 static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};      -- Control panel 3

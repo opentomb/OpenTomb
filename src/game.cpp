@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 #include <lua.hpp>
 
 #include "vmath.h"
@@ -29,110 +29,86 @@
 #include "hair.h"
 #include "ragdoll.h"
 
-#include "luahelper.h"
+#include <lua.hpp>
+#include "LuaState.h"
 
 btVector3 cam_angles = {0.0, 0.0, 0.0};
 
 extern btScalar time_scale;
-extern lua_State *engine_lua;
+extern lua::State engine_lua;
 
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
-void lua_mlook2(lua::Int8 mlook)
+void lua_mlook(lua::Value mlook)
 {
-    if(!mlook)
+    if(!mlook.is<lua::Boolean>())
     {
         control_states.mouse_look = !control_states.mouse_look;
         ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
         return;
     }
 
-    control_states.mouse_look = *mlook;
+    control_states.mouse_look = mlook;
     ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
 }
 
-void lua_mlook1()
+void lua_freelook(lua::Value free)
 {
-    lua_mlook2(lua::None);
-}
-
-void lua_freelook2(lua::Int8 free)
-{
-    if(!free)
+    if(!free.is<lua::Boolean>())
     {
         control_states.free_look = !control_states.free_look;
         ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
         return;
     }
 
-    control_states.free_look = *free;
+    control_states.free_look = free;
     ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
 }
 
-void lua_freelook1()
+void lua_cam_distance(lua::Value distance)
 {
-    lua_freelook2(lua::None);
-}
-
-void lua_cam_distance2(lua::Float distance)
-{
-    if(!distance)
+    if(!distance.is<lua::Number>())
     {
         ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
         return;
     }
 
-    control_states.cam_distance = *distance;
+    control_states.cam_distance = distance;
     ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
 }
 
-void lua_cam_distance1()
+void lua_noclip(lua::Value noclip)
 {
-    lua_cam_distance2(lua::None);
-}
-
-void lua_noclip2(lua::Int8 noclip)
-{
-    if(!noclip)
+    if(!noclip.is<lua::Boolean>())
     {
         control_states.noclip = !control_states.noclip;
     }
     else
     {
-        control_states.noclip = *noclip;
+        control_states.noclip = noclip;
     }
 
     ConsoleInfo::instance().printf("noclip = %d", control_states.noclip);
 }
 
-void lua_noclip1()
+void lua_debuginfo(lua::Value show)
 {
-    lua_noclip2(lua::None);
-}
-
-void lua_debuginfo2(lua::Bool show)
-{
-    if(!show)
+    if(!show.is<lua::Boolean>())
     {
         screen_info.show_debuginfo = !screen_info.show_debuginfo;
     }
     else
     {
-        screen_info.show_debuginfo = *show;
+        screen_info.show_debuginfo = show;
     }
 
     ConsoleInfo::instance().printf("debug info = %d", screen_info.show_debuginfo);
 }
 
-void lua_debuginfo1()
+void lua_timescale(lua::Value scale)
 {
-    lua_debuginfo2(lua::None);
-}
-
-void lua_timescale2(lua::Float scale)
-{
-    if(!scale)
+    if(!scale.is<lua::Number>())
     {
         if(time_scale == 1.0)
         {
@@ -145,37 +121,29 @@ void lua_timescale2(lua::Float scale)
     }
     else
     {
-        time_scale = *scale;
+        time_scale = scale;
     }
 
     ConsoleInfo::instance().printf("time_scale = %.3f", time_scale);
 }
 
-void lua_timescale1()
-{
-    lua_timescale2(lua::None);
-}
-
 void Game_InitGlobals()
 {
     control_states.free_look_speed = 3000.0;
-    control_states.mouse_look = 1;
-    control_states.free_look = 0;
-    control_states.noclip = 0;
+    control_states.mouse_look = true;
+    control_states.free_look = false;
+    control_states.noclip = false;
     control_states.cam_distance = 800.0;
 }
 
-void Game_RegisterLuaFunctions(lua_State *lua)
+void Game_RegisterLuaFunctions(lua::State& state)
 {
-    if(lua != NULL)
-    {
-        lua_register(lua, "debuginfo", WRAP_FOR_LUA(lua_debuginfo2,lua_debuginfo1));
-        lua_register(lua, "mlook", WRAP_FOR_LUA(lua_mlook2,lua_mlook1));
-        lua_register(lua, "freelook", WRAP_FOR_LUA(lua_freelook2,lua_freelook1));
-        lua_register(lua, "noclip", WRAP_FOR_LUA(lua_noclip2,lua_noclip1));
-        lua_register(lua, "cam_distance", WRAP_FOR_LUA(lua_cam_distance2,lua_cam_distance1));
-        lua_register(lua, "timescale", WRAP_FOR_LUA(lua_timescale2,lua_timescale1));
-    }
+    state.set("debuginfo", lua_debuginfo);
+    state.set("mlook", lua_mlook);
+    state.set("freelook", lua_freelook);
+    state.set("noclip", lua_noclip);
+    state.set("cam_distance", lua_cam_distance);
+    state.set("timescale", lua_timescale);
 }
 
 
@@ -209,7 +177,15 @@ int Game_Load(const char* name)
         }
         fclose(f);
         Engine_LuaClearTasks();
-        luaL_dofile(engine_lua, token);
+        try {
+            engine_lua.doFile(token);
+        }
+        catch(lua::RuntimeError& error) {
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+        }
+        catch(lua::LoadError& error) {
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+        }
     }
     else
     {
@@ -221,7 +197,15 @@ int Game_Load(const char* name)
         }
         fclose(f);
         Engine_LuaClearTasks();
-        luaL_dofile(engine_lua, name);
+        try {
+            engine_lua.doFile(name);
+        }
+        catch(lua::RuntimeError& error) {
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+        }
+        catch(lua::LoadError& error) {
+            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+        }
     }
 
     return 1;
@@ -252,54 +236,54 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
         uint32_t room_id = (ent->m_self->room)?(ent->m_self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->m_bf.animations.model->id, room_id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->m_id);
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->id());
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->m_id,
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id(),
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->m_id, ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->m_id, ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->m_id, ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->m_id, ent->m_self->collision_type, ent->m_self->collision_shape);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id(), ent->m_self->collision_type, ent->m_self->collision_shape);
 
     if(ent->m_enabled)
     {
-        fprintf(*f, "\nenableEntity(%d);", ent->m_id);
+        fprintf(*f, "\nenableEntity(%d);", ent->id());
     }
     else
     {
-        fprintf(*f, "\ndisableEntity(%d);", ent->m_id);
+        fprintf(*f, "\ndisableEntity(%d);", ent->id());
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->m_id, ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
+    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->id(), ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
 
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->m_id, ent->m_triggerLayout);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
     if(ent->m_self->room != NULL)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->m_id, ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
     }
     else
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->m_id, ent->m_moveType, ent->m_dirFlag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id(), ent->m_moveType, ent->m_dirFlag);
     }
 
     if(auto ch = std::dynamic_pointer_cast<Character>(ent))
     {
-        fprintf(*f, "\nremoveAllItems(%d);", ent->m_id);
+        fprintf(*f, "\nremoveAllItems(%d);", ent->id());
         for(const InventoryNode& i : ch->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->m_id, i.id, i.count);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
         }
 
         for(int i=0;i<PARAM_SENTINEL;i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->m_id, i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
         }
     }
 }
@@ -338,7 +322,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath.c_str(), gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
 
@@ -395,7 +379,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             }
         }
 
-        if(control_states.mouse_look != 0)
+        if(control_states.mouse_look)
         {
             cam_angles[0] -= 0.015 * control_states.look_axis_x;
             cam_angles[1] -= 0.015 * control_states.look_axis_y;
@@ -424,7 +408,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         }
     }
 
-    if(control_states.mouse_look != 0)
+    if(control_states.mouse_look)
     {
         cam_angles[0] -= 0.015 * control_states.look_axis_x;
         cam_angles[1] -= 0.015 * control_states.look_axis_y;
@@ -432,7 +416,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if((control_states.free_look != 0) || !std::dynamic_pointer_cast<Character>(ent))
+    if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
@@ -441,7 +425,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveVertical(dist * move_logic[2]);
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
     }
-    else if(control_states.noclip != 0)
+    else if(control_states.noclip)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
@@ -452,9 +436,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos[0] = renderer.camera()->m_pos[0] + renderer.camera()->m_viewDir[0] * control_states.cam_distance;
-        pos[1] = renderer.camera()->m_pos[1] + renderer.camera()->m_viewDir[1] * control_states.cam_distance;
-        pos[2] = renderer.camera()->m_pos[2] + renderer.camera()->m_viewDir[2] * control_states.cam_distance - 512.0;
+        pos = renderer.camera()->m_pos + renderer.camera()->m_viewDir * control_states.cam_distance;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
     }
@@ -475,8 +457,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if(control_states.use_small_medi)
         {
-            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 &&
-               ch->changeParam(PARAM_HEALTH, 250))
+            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(PARAM_HEALTH, 250))
             {
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
@@ -543,7 +524,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     btVector3 cam_pos = cam->m_pos;
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(control_states.mouse_look == 0)//If mouse look is off
+    if(!control_states.mouse_look)//If mouse look is off
     {
         float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
         float targetAngle  = ent->m_angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
@@ -631,9 +612,9 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     //Code to manage screen shaking effects
     if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[1] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[2] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
         renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0):(renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 
@@ -692,7 +673,7 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
         if(entity->m_enabled)
         {
             entity->processSector();
-            lua_LoopEntity(engine_lua, entity->m_id);
+            lua_LoopEntity(engine_lua, entity->id());
         }
     }
 }
@@ -872,13 +853,13 @@ void Game_Prepare()
         // Set character values to default.
 
         engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        engine_world.character->setParam       (PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
         engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        engine_world.character->setParam       (PARAM_AIR    , LARA_PARAM_AIR_MAX    );
         engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParam       (PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
         engine_world.character->setParamMaximum(PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        engine_world.character->setParam       (PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
         // Set character statistics to default.
 

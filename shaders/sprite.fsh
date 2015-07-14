@@ -2,13 +2,16 @@
 
 // Per-pixel inputs
 // - texture coordinate
-varying vec2 varying_texCoord;
+in vec2 varying_texCoord;
 
 // Global parameters
 // - Texture
 uniform sampler2D color_map;
 
+// Color output
+out vec4 color;
+
 void main(void)
 {
-    gl_FragColor = texture2D(color_map, varying_texCoord);
+    color = texture(color_map, varying_texCoord);
 }

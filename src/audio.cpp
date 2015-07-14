@@ -1,11 +1,5 @@
-#include <SDL2/SDL.h>
-
-#include <AL/al.h>
-#include <AL/alext.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
-
 #include "audio.h"
+
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
@@ -14,7 +8,9 @@
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
-#include "string.h"
+#include "strings.h"
+
+#include <SDL2/SDL.h>
 
 #include <cmath>
 
@@ -64,15 +60,18 @@ LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv = nullptr;
 
 }
 
-void loadAlExtFunctions()
+void loadAlExtFunctions(ALCdevice* device)
 {
     static bool isLoaded = false;
     if(isLoaded)
         return;
 
-    alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects");
-    alDeleteEffects = (LPALDELETEEFFECTS )alGetProcAddress("alDeleteEffects");
-    alIsEffect = (LPALISEFFECT )alGetProcAddress("alIsEffect");
+    printf("OpenAL device extensions: %s\n", alcGetString(device, ALC_EXTENSIONS));
+    assert(alcIsExtensionPresent(device, ALC_EXT_EFX_NAME) == ALC_TRUE);
+
+    alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects"); assert(alGenEffects);
+    alDeleteEffects = (LPALDELETEEFFECTS)alGetProcAddress("alDeleteEffects");
+    alIsEffect = (LPALISEFFECT)alGetProcAddress("alIsEffect");
     alEffecti = (LPALEFFECTI)alGetProcAddress("alEffecti");
     alEffectiv = (LPALEFFECTIV)alGetProcAddress("alEffectiv");
     alEffectf = (LPALEFFECTF)alGetProcAddress("alEffectf");
@@ -108,7 +107,7 @@ void loadAlExtFunctions()
 }
 }
 #else
-void loadAlExtFunctions()
+void loadAlExtFunctions(ALCdevice*)
 {
     // we have the functions already provided by native extensions
 }
@@ -435,6 +434,7 @@ void AudioSource::SetFX()
         effect = fxManager.al_effect[fxManager.current_room_type];
         slot   = fxManager.al_slot[fxManager.current_slot];
 
+        assert( alIsAuxiliaryEffectSlot != nullptr );
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
             alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
@@ -673,7 +673,6 @@ void StreamTrack::End()     // Smoothly end track with fadeout.
 
 void StreamTrack::Stop()    // Immediately stop track.
 {
-    int queued;
 
     active = false;         // Clear activity flag.
 
@@ -682,6 +681,7 @@ void StreamTrack::Stop()    // Immediately stop track.
         if(IsPlaying())
             alSourceStop(source);
 
+        int queued;
         alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
 
         while(queued--)
@@ -696,7 +696,10 @@ void StreamTrack::Stop()    // Immediately stop track.
     switch(method)
     {
         case TR_AUDIO_STREAM_METHOD_OGG:
-            sf_close(sndfile_Stream);
+            if(sndfile_Stream) {
+                sf_close(sndfile_Stream);
+                sndfile_Stream = nullptr;
+            }
             break;
 
         case TR_AUDIO_STREAM_METHOD_WAD:
@@ -837,7 +840,7 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 
 bool StreamTrack::IsPlaying()                       // Check if track is playing.
 {
-    ALenum state;
+    ALenum state = AL_STOPPED;
 
     if(alIsSource(source))
     {
@@ -1035,8 +1038,10 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
+        {
             ConsoleInfo::instance().addLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
+        }
     }
     else
     {
@@ -1356,11 +1361,11 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers.size() < 1 || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
+    if(engine_world.audio_buffers.empty() || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
-    if((uint32_t)effect_ID >= engine_world.audio_buffers.size())
+    if((uint32_t)effect_ID >= engine_world.audio_map.size())
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
@@ -1556,11 +1561,44 @@ void Audio_InitGlobals()
     audio_settings.listener_is_player = false;
     audio_settings.stream_buffer_size = 32;
 
-    loadAlExtFunctions();
+    printf("Probing OpenAL devices for EFX compatible device...\n");
+    const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+    while(*devlist) {
+        printf("    - Device: %s\n", devlist);
+        ALCdevice* dev = alcOpenDevice(devlist);
+        if( alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE ) {
+            printf("    >>> EFX supported!\n");
+            if(!audio_settings.device) {
+                audio_settings.device = dev;
+                audio_settings.context = alcCreateContext(audio_settings.device, nullptr);
+                if(!audio_settings.context) {
+                    printf("    >>> Failed to create context.\n");
+                    alcCloseDevice(dev);
+                    audio_settings.device = nullptr;
+                }
+            }
+            else {
+                alcCloseDevice(dev);
+            }
+        }
+
+        devlist += std::strlen(devlist)+1;
+    }
+
+    assert( audio_settings.device != nullptr );
+    assert( audio_settings.context != nullptr );
+
+
+    alcMakeContextCurrent( audio_settings.context );
+
+    loadAlExtFunctions(audio_settings.device);
 }
 
 void Audio_InitFX()
 {
+    if( audio_settings.effects_initialized )
+        return;
+
     memset(&fxManager, 0, sizeof(AudioFxManager));
 
     // Set up effect slots, effects and filters.
@@ -1592,6 +1630,8 @@ void Audio_InitFX()
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
     Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
+
+    audio_settings.effects_initialized = true;
 }
 
 int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
@@ -1662,7 +1702,7 @@ int Audio_DeInit()
     engine_world.audio_effects.clear();
     engine_world.audio_map.clear();
 
-    if(audio_settings.use_effects)
+    if(audio_settings.effects_initialized)
     {
         for(int i = 0; i < TR_AUDIO_MAX_SLOTS; i++)
         {
@@ -1676,7 +1716,13 @@ int Audio_DeInit()
 
         alDeleteFilters(1, &fxManager.al_filter);
         alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
+        audio_settings.effects_initialized = false;
     }
+
+    //! @bug Crash ahead!
+    alcMakeContextCurrent(nullptr);
+    alcDestroyContext(audio_settings.context);
+    alcCloseDevice(audio_settings.device);
 
     return 1;
 }

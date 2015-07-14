@@ -16,15 +16,15 @@ typedef struct gameflow_action_s
 
 typedef struct gameflow_manager_s
 {
-    char                CurrentLevelName[LEVEL_NAME_MAX_LEN];
-    char                CurrentLevelPath[MAX_ENGINE_PATH];
+    std::string CurrentLevelName;
+    std::string CurrentLevelPath;
     uint8_t             CurrentGameID;
-    uint8_t             CurrentLevelID;
+    int CurrentLevelID;
 
     bool                NextAction;
     gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
 
-    char                SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
+    bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
     
 } gameflow_manager_t, *gameflow_manager_p;
 

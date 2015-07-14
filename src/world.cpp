@@ -3,12 +3,8 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "audio.h"
 #include "vmath.h"
@@ -458,7 +454,7 @@ void World::empty()
 
                     bt_engine_dynamicsWorld->removeRigidBody(body);
                     cont->room = NULL;
-                    free(cont);
+                    delete cont;
                     delete body;
                 }
             }
@@ -525,19 +521,19 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 ent->m_self->room = NULL;
             }
 
-            return ent->m_id;
+            return ent->id();
         }
 
-        std::shared_ptr<Entity> ent = std::make_shared<Entity>();
 
+        std::shared_ptr<Entity> ent;
         if(id < 0)
         {
-            ent->m_id = entity_tree.size();
-            entity_tree[ent->m_id] = ent;
+            ent = std::make_shared<Entity>(entity_tree.size());
+            entity_tree[ent->id()] = ent;
         }
         else
         {
-            ent->m_id = id;
+            ent = std::make_shared<Entity>(id);
         }
 
         if(pos != NULL)
@@ -584,7 +580,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         addEntity(ent);
 
-        return ent->m_id;
+        return ent->id();
     }
 
     return 0xFFFFFFFF;
@@ -968,13 +964,13 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
 
 void World::addEntity(std::shared_ptr<Entity> entity)
 {
-    if(entity_tree.find(entity->m_id) != entity_tree.end())
+    if(entity_tree.find(entity->id()) != entity_tree.end())
         return;
-    entity_tree[entity->m_id] = entity;
+    entity_tree[entity->id()] = entity;
 }
 
 
-int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
+int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if((model == NULL) || (items_tree.empty()))
@@ -991,10 +987,7 @@ int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_
     item->type = type;
     item->count = count;
     item->name[0] = 0;
-    if(name)
-    {
-        strncpy(item->name, name, 64);
-    }
+    strncpy(item->name, name.c_str(), 64);
     item->bf = std::move(bf);
 
     items_tree[item->id] = item;
@@ -1089,7 +1082,8 @@ void Room::buildNearRoomsList()
         addToNearRoomsList(p.dest_room);
     }
 
-    for(const std::shared_ptr<Room>& r : near_room_list)
+    auto nrl = near_room_list;
+    for(const std::shared_ptr<Room>& r : nrl)
     {
         if(!r)
             continue;
@@ -1173,7 +1167,7 @@ void World::updateAnimTextures()                                                
     }
 }
 
-void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
+void World::calculateWaterTint(float* tint, bool fixed_colour)
 {
     if(version < TR_IV)  // If water room and level is TR1-3
     {
@@ -1182,16 +1176,16 @@ void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
              // Placeholder, color very similar to TR1 PSX ver.
             if(fixed_colour)
             {
-                (*tint)[0] = 0.585f;
-                (*tint)[1] = 0.9f;
-                (*tint)[2] = 0.9f;
-                (*tint)[3] = 1.0f;
+                tint[0] = 0.585f;
+                tint[1] = 0.9f;
+                tint[2] = 0.9f;
+                tint[3] = 1.0f;
             }
             else
             {
-                (*tint)[0] *= 0.585f;
-                (*tint)[1] *= 0.9f;
-                (*tint)[2] *= 0.9f;
+                tint[0] *= 0.585f;
+                tint[1] *= 0.9f;
+                tint[2] *= 0.9f;
             }
         }
         else
@@ -1199,16 +1193,16 @@ void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
             // TOMB3 - closely matches TOMB3
             if(fixed_colour)
             {
-                (*tint)[0] = 0.275f;
-                (*tint)[1] = 0.45f;
-                (*tint)[2] = 0.5f;
-                (*tint)[3] = 1.0f;
+                tint[0] = 0.275f;
+                tint[1] = 0.45f;
+                tint[2] = 0.5f;
+                tint[3] = 1.0f;
             }
             else
             {
-                (*tint)[0] *= 0.275f;
-                (*tint)[1] *= 0.45f;
-                (*tint)[2] *= 0.5f;
+                tint[0] *= 0.275f;
+                tint[1] *= 0.45f;
+                tint[2] *= 0.5f;
             }
         }
     }
@@ -1216,10 +1210,10 @@ void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
     {
         if(fixed_colour)
         {
-            (*tint)[0] = 1.0f;
-            (*tint)[1] = 1.0f;
-            (*tint)[2] = 1.0f;
-            (*tint)[3] = 1.0f;
+            tint[0] = 1.0f;
+            tint[1] = 1.0f;
+            tint[2] = 1.0f;
+            tint[3] = 1.0f;
         }
     }
 }
