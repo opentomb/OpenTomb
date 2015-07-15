@@ -436,6 +436,8 @@ void Engine_Start()
     // OpenAL initialization.
     Engine_InitAL();
 
+    ConsoleInfo::instance().addLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
+
     // Clearing up memory for initial level loading.
     engine_world.prepare();
 

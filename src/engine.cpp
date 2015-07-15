@@ -193,8 +193,6 @@ void Engine_Init_Post()
 
     Gui_Init();
     Sys_Init();
-
-    ConsoleInfo::instance().addLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
 // Bullet Physics initialization.
