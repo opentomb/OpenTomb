@@ -26,33 +26,33 @@ the original Tomb Raider source code, because all attempts to retrieve sources f
 in vain.
 
 Instead, everything is being developed completely from scratch.
-However, OpenTomb uses certain legacy routines from such unfinished open-source projects as
+However, OpenTomb uses certain legacy routines from unfinished open-source projects such as
 OpenRaider and VT project (found at icculus.org), plus it incorporates some code from
 Quake Tenebrae.
 
-All in all, OpenTomb tries to recreate the original Tomb Raider experience, although with
+All in all, OpenTomb is an attempt to recreate the original Tomb Raider experience, along with
 contemporary updates, features and additions — to fully benefit from running on modern
-PCs with powerful CPUs and graphic cards — unlike original engines, which are getting older
-and older (original engine, on which all classics were based, will turn 20 next year).
+PCs with powerful CPUs and graphic cards — unlike the original engines, which are getting older.
+The original engine, on which all classics were based on will turn 20 next year!
 
 2. Why it's developed?
 ----------------------
 
-Many may ask — why develop another TR engine clone, while we have fully working Windows
-builds of TR2-5, and TR1 is perfectly working through DosBox? The answer is simple - the
-older the engine gets, the lower the chance it'll become compatible with future systems; but in case of
+Many may ask — "Why develop another TR engine clone, while we have fully working Windows
+builds of TR2-5, and TR1 is perfectly working through DosBox?". The answer is simple - the
+older the engine gets, the lower the chance it'll be compatible with future systems; but in case of
 OpenTomb, you can port it to any platform you wish due to usage of many cross-platform libraries.
 
-Other people may ask — why we're developing it, if there are already patchers for existing
+Other people may ask — "Why we're developing it". If there are already patchers for existing
 engines, like TREP, TRNG, etc.? The answer is simple — no matter how advanced your patcher
-is, you are limited by the original binary meaning. No new features, no graphical enhancements and no 
+is, you are limited by the original binary meaning: no new features, no graphical enhancements and no 
 new structures or functions. You are not that limited with open-source engine.
 
 3. Features
 -----------
 
-* OpenTomb has a completely different collision approach. Engine uses a special terrain
-  generator to make every room's optimized collisional mesh from so-called "floordata",
+* OpenTomb has a completely different collision approach. The Engine uses a special terrain
+  generation algorithm to convert every room's optimized collisional mesh from so-called "floordata",
   which was a significant limiting factor in the original engine.  
 * OpenTomb does not run at fixed 30 FPS, as any old engine did. Instead, variable FPS
   rate is implemented, just like in any contemporary PC game.  
@@ -75,7 +75,7 @@ for your videocard, as OpenTomb may use some other advanced OpenGL features.
 ----------------------
 
 OpenTomb is a cross-platform engine — currently, you can run it on Windows, Mac or Linux.
-No mobile implementations are made yet, but they are fully possible.
+No mobile ports have been made yet, but they are fully possible.
 
 6. Configuration and autoexec files
 -----------------------------------
@@ -189,8 +189,8 @@ their licenses:
 10. Credits
 ----------
 
-NB: Please note that the authors and contributors list is constantly extending! There ar more and
-more developers getting involved in the development of OpenTomb so someone may be missing from this list!
+NB: Please note that the authors and contributors list is constantly extending! There are more and
+more developers getting involved in the development of OpenTomb so some recent ones may be missing from this list!
 
 * TeslaRus: main developer.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
