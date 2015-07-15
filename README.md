@@ -129,41 +129,25 @@ assets and where to get them:
 
 To compile OpenTomb, primarily you need libs and defines for these external libraries:
 
-* SDL 2.0.3 (get it from http://libsdl.org/download-2.0.php)
-* SDL_Image 2.0 - for Win/Linux (get it from https://www.libsdl.org/projects/SDL_image/)
-* zlib (get it from http://www.zlib.net/ or http://xmlsoft.org/sources/win32/64bit/)
+* Bullet 2.83 (https://github.com/bulletphysics/bullet3/releases)
+* Freetype 2.3.5 (http://www.freetype.org/download.html)
+* GLEW 1.12.0 (http://glew.sourceforge.net/)
+* libsndfile 1.0.25 (http://www.mega-nerd.com/libsndfile/#Download)
+* libogg 1.3.2 (http://xiph.org/downloads/)
+* libvorbis 1.3.5 (http://xiph.org/downloads/)
+* OpenAL Soft 1.16.0 (http://kcat.strangesoft.net/openal.html#download)
+* SDL 2.0.3 (http://libsdl.org/download-2.0.php)
+* SDL_Image 2.0 - for Win/Linux (https://www.libsdl.org/projects/SDL_image/)
+* zlib (http://www.zlib.net/ or http://xmlsoft.org/sources/win32/64bit/)
 
-There is a CMakeLists.txt file provided with source code, so you can compile OpenTomb using
-CMake. On Windows, you can also compile it from Code::Blocks IDE (project file is also provided).
-Alternatively, you can manually compile it in Code::Blocks by recursively adding all source files
-from /src directory, and setting up these Project Build options:
-
-* In *Compiler options -> Compiler flags*, specify **-std=c++11** flag.
-* In *Compiler options -> Other compiler options*, put this string:
-
-    ` -I"src\bullet" -I"src\freetype2\include" `
-        
-* In *Compiler options -> #defines*, put this string:
-
-    ` -DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS `
-    
-* In *Linker settings -> Other linker options*, put this string:
-
-    ` -static -lmingw32 -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread `
+We recommend compiling using CMake. There is a CMakeLists.txt file provided with source code.
+You can automatically generate Visual Studio, Eclipse and Code::Blocks projects with CMake as well.
 
 On Linux, just download the source code and run in terminal:
 
     cmake . && make
-    
-Necessary dependencies are development headers for SDL2, SDL2 Image, GLU, ZLIB. You can install
-them in Ubuntu-based distro with this command:
 
-    sudo apt-get install libsdl2-dev libsdl2-image-dev libglu1-mesa-dev zlib1g-dev
-
-You can also fully compile the engine using build.sh file in /src folder.
-On Mac, use XCode project, which is also available in source code.
-
-NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile properly!
+NB: Please note that OpenTomb requires GNU C++11 extensions (-std=gnu++11) flag to compile properly!
 You may use CPU-specific optimization flags (-march=prescott, -march=i486, -march=core2),
 as well as general optimization flags (-O1 and -O2), but DON'T USE -O3 flag, as Bullet tends to
 crash with this optimization level.
@@ -177,11 +161,15 @@ be open-source with GPL-compatible licenses. Here is the list of used libraries,
 their licenses:
 
 * OpenGL — does not need licensing (http://opengl3.org/about/licensing/)
+* GLEW — GLEW BSD
 * OpenAL Soft — LGPL
+* libsndfile — LGPL
+* libogg/libvorbis — Xiph BSD
 * SDL / SDL Image — zlib
 * Bullet — zlib
-* Freetype2 — GPL
+* Freetype — GPL
 * Lua — MIT
+* zlib — zlib
 
 * Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
     
