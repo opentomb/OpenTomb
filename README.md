@@ -6,7 +6,7 @@ OpenTomb — an open-source Tomb Raider 1-5 engine remake
 ### Table of contents ###
 
 1. What is this?
-2. Why it's developed?
+2. Why is it developed?
 3. Features
 4. System requirements
 5. Supported platforms
@@ -21,8 +21,8 @@ OpenTomb — an open-source Tomb Raider 1-5 engine remake
 ----------------
 
 OpenTomb is an open-source engine reimplementation project intended to play levels from all
-classic-era Tomb Raider games (TR 1—5) and custom TRLE levels. The project does not use any
-old Tomb Raider source code, because all attempts to retrieve sources from Eidos / Core were
+classic-era Tomb Raider games (TR 1—5) including TRLE levels. The project does not use any of
+the original Tomb Raider source code, because all attempts to retrieve sources from Eidos / Core were
 in vain.
 
 Instead, everything is being developed completely from scratch.
@@ -30,8 +30,8 @@ However, OpenTomb uses certain legacy routines from such unfinished open-source 
 OpenRaider and VT project (found at icculus.org), plus it incorporates some code from
 Quake Tenebrae.
 
-All in all, OpenTomb tries to recreate original Tomb Raider games experience, although with
-contemporary updates, features and additions — to fully benefit from being running on modern
+All in all, OpenTomb tries to recreate the original Tomb Raider experience, although with
+contemporary updates, features and additions — to fully benefit from running on modern
 PCs with powerful CPUs and graphic cards — unlike original engines, which are getting older
 and older (original engine, on which all classics were based, will turn 20 next year).
 
@@ -40,26 +40,26 @@ and older (original engine, on which all classics were based, will turn 20 next 
 
 Many may ask — why develop another TR engine clone, while we have fully working Windows
 builds of TR2-5, and TR1 is perfectly working through DosBox? The answer is simple - the
-older engine gets, less chance it'll become compatible with further systems; but in case of
-OpenTomb, you can port it to any platform you wish.
+older the engine gets, the lower the chance it'll become compatible with future systems; but in case of
+OpenTomb, you can port it to any platform you wish due to usage of many cross-platform libraries.
 
 Other people may ask — why we're developing it, if there are already patchers for existing
 engines, like TREP, TRNG, etc.? The answer is simple — no matter how advanced your patcher
-is, you are limited by original binary — no new features, no graphic enhancements, no new
-structures and functions. You are not that limited with open-source engine.
+is, you are limited by the original binary meaning. No new features, no graphical enhancements and no 
+new structures or functions. You are not that limited with open-source engine.
 
 3. Features
 -----------
 
-* OpenTomb has completely different collision approach. Engine uses special terrain
+* OpenTomb has a completely different collision approach. Engine uses a special terrain
   generator to make every room's optimized collisional mesh from so-called "floordata",
-  which was a significant limiting factor in originals.  
-* OpenTomb does not run at fixed 30 FPS speed, as any old engine did. Instead, variable FPS
+  which was a significant limiting factor in the original engine.  
+* OpenTomb does not run at fixed 30 FPS, as any old engine did. Instead, variable FPS
   rate is implemented, just like in any contemporary PC game.  
-* OpenTomb uses common and flexible libraries, like OpenGL, OpenAL, SDL and Bullet Physics.  
-* Lua scripting is a key gameplay feature in OpenTomb, as all entity functionality is not
-  hardcoded, as it was in classic engines, but moved into plain-text files, which can be
-  modified and extended any time.  
+* OpenTomb uses common and flexible libraries such as OpenGL, OpenAL, SDL and Bullet Physics.  
+* Lua scripting is a key feature in OpenTomb, all entity functionality is not hardcoded like 
+  it was in the original engines. Lua scripts are game script files which can be
+  modified and extended any time providing the ability to manipulate several OpenTomb level factors.
 * Many abandoned and unused features from originals were enabled in OpenTomb. New animations,
   unused items, hidden PSX-specific structures inside level files, and so on! Also, original
   functionality is being drastically extended, while preserving original gameplay pipeline.
@@ -95,29 +95,35 @@ commands or add new ones — like changing start-up level by modifying setgamef(
 7. Installation and running
 ---------------------------
 
-You don't need to install OpenTomb, but you need all classic TR game resources. Problem is,
-these resources (except level files themselves) are tend to be in some cryptic formats or
-incompatible across game versions. Because of this, you need to convert some game resources
+You don't need to install OpenTomb, but you need the classic TR game resources for the specifc
+games you'd like to play within OpenTomb. 
+Problem is, these resources (except level files) tend to be in some cryptic formats or
+are incompatible across game versions. Because of this, you need to convert some game resources
 by yourself or get them from somewhere on the Net. Anyway, here is the list of all needed
 assets and where to get them:
 
  * Data folders from each game. Get them from your retail game CDs or Steam/GOG bundles.
-   Just take data folder from each game's folder, and put it into corresponding
-   /data/tr*/ folder.
+   Just take data folder from each game's folder, and put it into the corresponding
+   /data/tr*/ folder. 
+  
+   An example level path is: "root/data/tr1/data/level1.phd".
+   Where "root" is the folder containing OpenTomb.exe. GOG versions may have these files
+   in a separate file called GAME.GOG. This can be simply renamed to GAME.ISO then mounted
+   as a standard ISO file revealing the "/DATA/" folders.
    
- * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you should
-   convert original soundtracks by yourself, or just download whole TR1-5 music package
-   here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip  
-   PLEASE NOTE: script file bundled in this archive is outdated, so don't overwrite
-   existing soundtrack.lua file with one provided in archive.
+ * CD audio tracks. OpenTomb only supports OGG audiotracks for the moment. You could
+   convert the original soundtracks by yourself or just download the whole TR1-5 music 
+   package here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip  
+   PLEASE NOTE: The script files bundled in this archive are outdated, so don't overwrite
+   the existing soundtrack.lua file with the one within the archive.
    
  * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your
-   installed official game. Just put this pix directory into /data/tr3/ folder. As for
-   other games, it's a bit tricky to get loading screens, as there were no loading
-   screens for PC versions TR1-2, TR4 used level screenshots as loading screens, and TR5
-   used encrypted format to store all loading graphics. So, to ease your life, you can
-   simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
-   Just put it right into OpenTomb directory, and that should do the trick.
+   officially installed. Just copy or move the pix directory into /data/tr3/ within 
+   OpenTomb's folder. As for other games, it's a bit tricky to get loading screens.
+   There were no loading screens for PC versions TR1-2, TR4 used level screenshots as loading screens.
+   TR5 used an encrypted format to store all loading screen files. So, to ease your life, you can
+   simply download the loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
+   Just extract these files directly into the main OpenTomb directory, and that should do the trick.
     
 8. Compiling
 ------------
@@ -155,7 +161,7 @@ them in Ubuntu-based distro with this command:
 
     sudo apt-get install libsdl2-dev libsdl2-image-dev libglu1-mesa-dev zlib1g-dev
 
-You can also fully compile engine using build.sh file in /src folder.
+You can also fully compile the engine using build.sh file in /src folder.
 On Mac, use XCode project, which is also available in source code.
 
 NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile properly!
@@ -168,7 +174,7 @@ crash with this optimization level.
 
 OpenTomb is an open-source engine distributed under LGPLv3 license, which means that ANY part of
 the source code must be open-source as well. Hence, all used libraries and bundled resources must
-be open-source with GPL-compatible licenses. Here is the list of used libraries and resources and
+be open-source with GPL-compatible licenses. Here is the list of used libraries, resources and
 their licenses:
 
 * OpenGL — does not need licensing (http://opengl3.org/about/licensing/)
@@ -183,8 +189,8 @@ their licenses:
 10. Credits
 ----------
 
-NB: Please note that authors and contributors list is constantly extending, as there is more and
-more people involved in project development, so someone may be missing from this list!
+NB: Please note that the authors and contributors list is constantly extending! There ar more and
+more developers getting involved in the development of OpenTomb so someone may be missing from this list!
 
 * TeslaRus: main developer.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
