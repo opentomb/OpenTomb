@@ -1,7 +1,7 @@
-[![Build Status](https://drone.io/github.com/opentomb/OpenTomb/status.png)](http://sourceforge.net/projects/opentomb/files/NightlyBuilds/)
-
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
+
+[![Build Status](https://drone.io/github.com/opentomb/OpenTomb/status.png)](http://sourceforge.net/projects/opentomb/files/NightlyBuilds/)
 
 ### Table of contents ###
 
@@ -22,8 +22,8 @@ OpenTomb — an open-source Tomb Raider 1-5 engine remake
 
 OpenTomb is an open-source engine reimplementation project intended to play levels from all
 classic-era Tomb Raider games (TR 1—5) including TRLE levels. The project does not use any of
-the original Tomb Raider source code, because all attempts to retrieve sources from Eidos / Core were
-in vain.
+the original Tomb Raider source code, because all attempts to retrieve sources from Eidos / Core
+were in vain.
 
 Instead, everything is being developed completely from scratch.
 However, OpenTomb uses certain legacy routines from unfinished open-source projects such as
@@ -45,8 +45,8 @@ OpenTomb, you can port it to any platform you wish due to usage of many cross-pl
 
 Other people may ask — "Why we're developing it". If there are already patchers for existing
 engines, like TREP, TRNG, etc.? The answer is simple — no matter how advanced your patcher
-is, you are limited by the original binary meaning: no new features, no graphical enhancements and no 
-new structures or functions. You are not that limited with open-source engine.
+is, you are limited by the original binary meaning: no new features, no graphical enhancements and
+no new structures or functions. You are not that limited with open-source engine.
 
 3. Features
 -----------
@@ -111,18 +111,17 @@ assets and where to get them:
    in a separate file called GAME.GOG. This can be simply renamed to GAME.ISO then mounted
    as a standard ISO file revealing the "/DATA/" folders.
    
- * CD audio tracks. OpenTomb only supports OGG audiotracks for the moment. You could
-   convert the original soundtracks by yourself or just download the whole TR1-5 music 
-   package here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip  
-   PLEASE NOTE: The script files bundled in this archive are outdated, so don't overwrite
-   the existing soundtrack.lua file with the one within the archive.
+ * CD audio tracks. OpenTomb supports OGG audiotracks (for TR1/TR2), CDAUDIO.WAD file (for TR3),
+   PCM and MS-ADPCM wave files (for TRLE and TR4/5 respectively). For TR1/TR2, you can
+   convert the original soundtracks by yourself or just download the whole TR1-2 music 
+   package here: https://www.dropbox.com/s/fm3qpdhnbzntkml/tr1-2_soundtracks_for_opentomb.zip?dl=0
    
- * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your
-   officially installed. Just copy or move the pix directory into /data/tr3/ within 
-   OpenTomb's folder. As for other games, it's a bit tricky to get loading screens.
-   There were no loading screens for PC versions TR1-2, TR4 used level screenshots as loading screens.
-   TR5 used an encrypted format to store all loading screen files. So, to ease your life, you can
-   simply download the loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
+ * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your officially
+   installed game. Just copy or move the pix directory into /data/tr3/ within OpenTomb's folder.
+   As for other games, it's a bit tricky to get loading screens. There were no loading screens for
+   PC versions of TR1-2, and TR4 used level screenshots as loading screens. TR5 used an encrypted
+   format to store all loading screen files. So, to ease your life, you can simply download the
+   loading screen package here: https://www.dropbox.com/s/uycdw9x294ipc0r/loading_screens.zip?dl=0
    Just extract these files directly into the main OpenTomb directory, and that should do the trick.
     
 8. Compiling
@@ -190,12 +189,13 @@ their licenses:
 ----------
 
 NB: Please note that the authors and contributors list is constantly extending! There are more and
-more developers getting involved in the development of OpenTomb so some recent ones may be missing from this list!
+more developers getting involved in the development of OpenTomb so some recent ones may be missing
+from this list!
 
 * TeslaRus: main developer.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
-* Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state control fix-ups, camera programming.
-* Lwmte: state and scripting fix-ups, controls, GUI and audio modules, trigger and entity system rewrites.
+* Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state fix-ups, camera.
+* Lwmte: state fix-ups, controls, GUI and audio modules, trigger and entity scripts.
 * Nickotte: interface programming, ring inventory implementation, camera fix-ups.
 * pmatulka: Linux port and testing.
 * Richard_trle: Github migration, Github repo maintenance, website design.
@@ -207,6 +207,6 @@ more developers getting involved in the development of OpenTomb so some recent o
 
 Additional contributions from: Ado Croft (extensive testing), E. Popov (TRN caustics shader port),
 godmodder (general help), jack9267 (vt loader optimization), meta2tr (testing and bugtracking),
-shabtronic (renderer fix-ups), Tonttu (console patch) and xythobuz (additional Mac compatibility patches).
+shabtronic (renderer fix-ups), Tonttu (console patch) and xythobuz (additional Mac patches).
 
 Translations by: Joey79100 (French), Nickotte (Italian), Lwmte (Russian), SuiKaze Raider (Spanish).

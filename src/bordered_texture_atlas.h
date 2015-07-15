@@ -45,7 +45,7 @@ class BorderedTextureAtlas
         BOTTOM_LEFT,
         BOTTOM_RIGHT
     };
-    
+
     /*!
      * An internal representation of a file texture. Note that this only stores a reference to the canonical texture and how the corners of the canonical texture map to this.
      */
@@ -54,7 +54,7 @@ class BorderedTextureAtlas
         size_t canonical_texture_index;
         CornerLocation corner_locations[4];
     };
-    
+
     /*!
      * The canonical texture. In TR, a lot of textures can refer to the same rectangle of pixels, only in different winding orders. It is not practical to treat these as different textures, so they are all mapped to one canonical object texture. This structure consists of two parts: Describing the original location, and describing the new final location. The latter is only valid after the data in the texture atlas has been laid out.
      */
@@ -63,65 +63,66 @@ class BorderedTextureAtlas
         // The unadjusted size
         uint8_t width;
         uint8_t height;
-        
+
         // Original origin
         uint16_t original_page;
         uint8_t original_x;
         uint8_t original_y;
-        
+
         // New origin
         size_t new_page;
         size_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
         size_t new_y_with_border; // See above.
     };
-    
+
     // How much border to add.
     int m_borderWidth;
-    
+
     // Result pages
     // Note: No capacity here, this is handled internally by the layout method. Also, all result pages have the same width, which will always be less than or equal to the height.
     uint32_t m_resultPageWidth;
     std::vector<uint32_t> m_resultPageHeights;
-    
+
     // Original data
     std::vector<tr4_textile32_t> m_originalPages;
-    
+
     // Object textures in the file.
     std::vector<FileObjectTexture> m_fileObjectTextures;
-    
+
     // Sprite texture in the file.
     // Note: No data is saved for them, they get mapped directly to canonical textures.
     std::vector<size_t> m_canonicalTexturesForSpriteTextures;
-    
+
     // Canonical object textures
     std::vector<CanonicalObjectTexture> m_canonicalObjectTextures;
-    
+
     /*! Lays out the texture data and switches the atlas to laid out mode. */
     void layOutTextures();
-    
+
     /*! Adds an object texture to the list. */
     void addObjectTexture(const tr4_object_texture_t &texture);
-    
+
     /*! Adds a sprite texture to the list. */
     void addSpriteTexture(const tr_sprite_texture_t &texture);
-    
+
 public:
     /*!
      * Create a new Bordered texture atlas with the specified border width and textures. This lays out all the data for the textures, but does not upload anything to OpenGL yet.
      * @param border The border width around each texture.
      */
     BorderedTextureAtlas(int border,
-                           const std::vector<tr4_textile32_t> &pages,
-                           const std::vector<tr4_object_texture_t> &object_textures,
-                           const std::vector<tr_sprite_texture_t> &sprite_textures);
-    
+                         bool conserve_memory,
+                         const std::vector<tr4_textile32_t> &pages,
+                         const std::vector<tr4_object_texture_t> &object_textures,
+                         const std::vector<tr_sprite_texture_t> &sprite_textures);
+
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards
      * is an error and undefined. If textures have been uploaded, then the OpenGL
      * texture objects will not be destroyed.
      */
     ~BorderedTextureAtlas() = default;
-    
+
     /*!
      * Returns the texture coordinates of the specified texture. This must only be
      * called after all pages and object texture coordinates have been added.
@@ -138,25 +139,25 @@ public:
                         struct Polygon* poly,
                         int shift = 0,
                         bool split = false) const;
-    
+
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
     void getSpriteCoordinates(size_t Spriteexture,
                               uint32_t &outPage,
                               GLfloat *coordinates) const;
-    
+
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a
      * layout if none has happened so far.
      */
     size_t getNumAtlasPages() const;
-    
+
     /*!
      * Returns height of specified file object texture.
      */
     size_t getTextureHeight(size_t texture) const;
-    
+
     /*!
      * Uploads the current data to OpenGL, as one or more texture pages.
      * textureNames has to have a length of at least GetNumAtlasPages and will

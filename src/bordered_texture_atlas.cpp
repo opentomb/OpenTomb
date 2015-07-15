@@ -51,9 +51,14 @@ inline GLuint NextPowerOf2(GLuint in)
 }
 
 /*!
- * Compare function for qsort. It interprets the the parameters as pointers to indices into the canonical object textures of the atlas currently stored in compare_context. It returns -1, 0 or 1 if the first texture is logically ordered before, the same or after the second texture.
+ * Compare function for std::sort. It interprets the the parameters as pointers
+ * to indices into the canonical object textures of the atlas currently stored
+ * in compare_context. It returns true or false if the first texture is logically
+ * ordered before, the same or after the second texture.
  *
- * A texture comes before another texture if it is higher. If both have the same height, the wider texture comes first. If both have the same height and width, they are ordered the same.
+ * A texture comes before another texture if it is higher. If both have the same
+ * height, the wider texture comes first. If both have the same height and width,
+ * they are ordered the same.
  */
 
 struct BorderedTextureAtlas::TextureSizeComparator
@@ -70,7 +75,7 @@ struct BorderedTextureAtlas::TextureSizeComparator
         const BorderedTextureAtlas::CanonicalObjectTexture &texture1 = context->m_canonicalObjectTextures[index1];
         const BorderedTextureAtlas::CanonicalObjectTexture &texture2 = context->m_canonicalObjectTextures[index2];
 
-        // First order by height. qsort brings "lower" values to the front, so treat greater height as lower.
+        // First order by height.
         if (texture1.height > texture2.height)
             return true;
         else if (texture1.height < texture2.height)
@@ -151,6 +156,7 @@ void BorderedTextureAtlas::layOutTextures()
 }
 
 BorderedTextureAtlas::BorderedTextureAtlas(int border,
+                                           bool conserve_memory,
                                            const std::vector<tr4_textile32_t>& pages,
                                            const std::vector<tr4_object_texture_t>& object_textures,
                                            const std::vector<tr_sprite_texture_t>& sprite_textures)
@@ -167,9 +173,9 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
 
-#if 0
+    if(conserve_memory)
     {
-    // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
+        // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
         size_t areaSum = 0;
         for(const tr4_object_texture_t& t : object_textures)
             areaSum += t.x_size * t.y_size;
@@ -178,9 +184,10 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
 
         m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
     }
-#else
-    m_resultPageWidth = NextPowerOf2(max_texture_edge_length);
-#endif
+    else
+    {
+        m_resultPageWidth = NextPowerOf2(max_texture_edge_length);
+    }
 
     for(const tr4_object_texture_t& tex : object_textures)
     {

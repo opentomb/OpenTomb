@@ -38,16 +38,16 @@ class RenderDebugDrawer : public btIDebugDraw
 
     std::array<GLfloat,3> m_color{{0,0,0}};
     std::vector<std::array<GLfloat,3>> m_buffer;
-    
+
     std::unique_ptr<OBB> m_obb;
 
     void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &end);
     void addLine(const btVector3& start, const btVector3& end);
     void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &startColor, const std::array<GLfloat,3> &end, const std::array<GLfloat,3> &endColor);
-    
+
     std::unique_ptr<VertexArray> m_vertexArray{};
     GLuint m_glbuffer = 0;
-    
+
 public:
     // engine debug function
     RenderDebugDrawer();
@@ -116,11 +116,12 @@ struct RenderSettings
     uint32_t  mipmap_mode = 3;
     uint32_t  mipmaps = 3;
     uint32_t  anisotropy = 0;
-    bool antialias = false;
+    bool      antialias = false;
     int       antialias_samples = 0;
     int       texture_border = 8;
+    bool      save_texture_memory = false;
     int       z_depth = 16;
-    bool fog_enabled = true;
+    bool      fog_enabled = true;
     GLfloat   fog_color[4]{0,0,0,1};
     float     fog_start_depth = 10000;
     float     fog_end_depth = 16000;
