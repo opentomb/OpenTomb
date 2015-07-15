@@ -2,6 +2,9 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <cstdio>
+#include <cstdlib>
+
 #include <AL/al.h>
 #include <AL/alext.h>
 #include <AL/efx.h>
@@ -14,9 +17,6 @@
 #include "game.h"
 #include "script.h"
 #include "system.h"
-
-#include <cstdio>
-#include <cstdlib>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid

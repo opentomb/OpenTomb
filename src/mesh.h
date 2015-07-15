@@ -1,6 +1,17 @@
-
 #ifndef MESH_H
 #define MESH_H
+
+#include <memory>
+#include <vector>
+#include <bullet/LinearMath/btScalar.h>
+
+#include "vertex_array.h"
+#include "object.h"
+#include "vmath.h"
+
+#include <lua.hpp>
+#include "LuaState.h"
+
 
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
@@ -9,15 +20,6 @@
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 
-
-#include "bullet/LinearMath/btScalar.h"
-#include "vertex_array.h"
-#include "object.h"
-#include <memory>
-#include <vector>
-#include "vmath.h"
-#include <lua.hpp>
-#include "LuaState.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -66,12 +68,12 @@ struct BaseMesh
     uint32_t m_alphaElements;
 
     std::vector<Vertex> m_vertices;
-    
+
     size_t m_animatedElementCount;
     size_t m_alphaAnimatedElementCount;
     std::vector<GLuint> m_allAnimatedElements;
     std::vector<AnimatedVertex> m_animatedVertices;
-    
+
     std::vector<TransparentPolygonReference> m_transparentPolygons;
 
     btVector3 m_center;                                            // geometry centre of mesh
@@ -89,7 +91,7 @@ struct BaseMesh
     GLuint                m_vboIndexArray = 0;
     GLuint                m_vboSkinArray = 0;
     std::shared_ptr<VertexArray> m_mainVertexArray;
-    
+
     // Buffers for animated polygons
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
@@ -134,7 +136,7 @@ struct SpriteBuffer
 {
     // Vertex data for the sprites
     std::unique_ptr<VertexArray> data;
-    
+
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages;
     // The element count for each sub-range.
@@ -295,7 +297,7 @@ struct SSBoneFrame
     btVector3 centre;                                      // bounding box centre
 
     SSAnimation       animations;                                     // animations list
-    
+
     bool hasSkin;                                       // whether any skinned meshes need rendering
 
     void fromModel(SkeletalModel* model);

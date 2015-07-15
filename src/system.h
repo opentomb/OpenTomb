@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <bullet/LinearMath/btScalar.h>
+
 #include "gl_util.h"
-#include "bullet/LinearMath/btScalar.h"
 
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"

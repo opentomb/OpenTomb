@@ -1,14 +1,13 @@
 #pragma once
 
 #include <cstdint>
-
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/LinearMath/btIDebugDraw.h"
-
 #include <array>
 #include <memory>
 #include <vector>
+
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btIDebugDraw.h>
 
 #include "matrix4.h"
 #include "vertex_array.h"

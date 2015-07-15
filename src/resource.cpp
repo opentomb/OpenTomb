@@ -5,15 +5,14 @@
 #include <cstdint>
 #include <cstdlib>
 #include <numeric>
+
 #include <SDL2/SDL.h>
-#include "gl_util.h"
 
-#include <lua.hpp>
-
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "vt/vt_level.h"
+#include "gl_util.h"
 #include "audio.h"
 #include "world.h"
 #include "mesh.h"

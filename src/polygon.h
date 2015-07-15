@@ -7,8 +7,8 @@
 #include <array>
 
 #include <GL/glew.h>
+#include <bullet/LinearMath/btScalar.h>
 
-#include "bullet/LinearMath/btScalar.h"
 #include "vmath.h"
 
 #define SPLIT_FRONT    0x00
@@ -40,7 +40,7 @@ struct Polygon
     uint16_t            transparency = 0;                                           // transparency information
     bool                double_side = false;                                            // double side flag
     Plane plane;                                               // polygon plane equation
-    
+
     Polygon() = default;
 
     Polygon(const Polygon& rhs)

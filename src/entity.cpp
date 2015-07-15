@@ -43,6 +43,7 @@ void Entity::createGhosts()
         m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
 
         m_bt.ghostObjects.emplace_back( new btPairCachingGhostObject() );
+
 #pragma message("FIXME: Code has been removed due to missing API feature: bt.ghostObjects[i]->setIgnoreCollisionCheck(bt.bt_body[i], true)")
 
         btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;

@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
+#include <bullet/LinearMath/btScalar.h>
 
-#include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
 #include "portal.h"
 #include "vmath.h"
