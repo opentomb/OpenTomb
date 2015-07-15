@@ -58,7 +58,7 @@ struct BSPTree2DNode {
 
     bool fits(size_t w, size_t h) const noexcept
     {
-        return !isFilled && (w < width || h < height);
+        return !isFilled && (w <= width && h <= height);
     }
 
     /**
@@ -114,6 +114,7 @@ struct BSPTree2DNode {
             splitHorizontally(needleWidth);
 
             // height already fits, width fits too now, so this is the result
+            left->isFilled = true;
             *destX = left->x;
             *destY = left->y;
             return true;
