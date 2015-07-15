@@ -135,6 +135,7 @@ To compile OpenTomb, primarily you need libs and defines for these external libr
 * libsndfile 1.0.25 (http://www.mega-nerd.com/libsndfile/#Download)
 * libogg 1.3.2 (http://xiph.org/downloads/)
 * libvorbis 1.3.5 (http://xiph.org/downloads/)
+* Lua 5.3.1 (http://www.lua.org/download.html)
 * OpenAL Soft 1.16.0 (http://kcat.strangesoft.net/openal.html#download)
 * SDL 2.0.3 (http://libsdl.org/download-2.0.php)
 * SDL_Image 2.0 - for Win/Linux (https://www.libsdl.org/projects/SDL_image/)
