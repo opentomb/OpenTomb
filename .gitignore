@@ -7,9 +7,18 @@
 *.dll
 *.bak
 *.log
+*.png
+*.bmarks
+*.cbp
+*.cscope_file_list
+*.depend
+*.layout
 *.cbTemp
 .DS_Store
 CMakeLists.txt.user
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
 .dep.inc
 Makefile
 lib/
@@ -22,11 +31,6 @@ prj/
 dist/
 data/
 save/
-opentomb-code.bmarks
-opentomb-code.cbp
-opentomb-code.cscope_file_list
-opentomb-code.depend
-opentomb-code.layout
 OpenTomb\.xcodeproj/project\.xcworkspace
 OpenTomb\.xcodeproj/xcuserdata
 

@@ -72,15 +72,15 @@ struct BorderedTextureAtlas::TextureSizeComparator
 
         // First order by height. qsort brings "lower" values to the front, so treat greater height as lower.
         if (texture1.height > texture2.height)
-            return false;
-        else if (texture1.height < texture2.height)
             return true;
+        else if (texture1.height < texture2.height)
+            return false;
 
         // Then order by width
         if (texture1.width > texture2.width)
-            return false;
-        else if (texture1.width < texture2.width)
             return true;
+        else if (texture1.width < texture2.width)
+            return false;
 
         // If they have the same height and width then their order does not matter.
         return false;
@@ -121,7 +121,7 @@ void BorderedTextureAtlas::layOutTextures()
                 canonical.new_page = page;
 
                 size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
-                if (highest_y >= m_resultPageHeights[page])
+                if (highest_y + 1 > m_resultPageHeights[page])
                     m_resultPageHeights[page] = highest_y;
 
                 break;
@@ -154,13 +154,13 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
                                            const std::vector<tr4_textile32_t>& pages,
                                            const std::vector<tr4_object_texture_t>& object_textures,
                                            const std::vector<tr_sprite_texture_t>& sprite_textures)
-: m_borderWidth(border)
-, m_resultPageWidth(0)
-, m_resultPageHeights()
-, m_originalPages(pages)
-, m_fileObjectTextures()
-, m_canonicalTexturesForSpriteTextures()
-, m_canonicalObjectTextures()
+    : m_borderWidth(border)
+    , m_resultPageWidth(0)
+    , m_resultPageHeights()
+    , m_originalPages(pages)
+    , m_fileObjectTextures()
+    , m_canonicalTexturesForSpriteTextures()
+    , m_canonicalObjectTextures()
 {
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);

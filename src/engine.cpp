@@ -193,8 +193,6 @@ void Engine_Init_Post()
 
     Gui_Init();
     Sys_Init();
-
-    ConsoleInfo::instance().addLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
 // Bullet Physics initialization.
@@ -2452,6 +2450,11 @@ void lua_PlayStream(int id, lua::Value mask)
     }
 }
 
+void lua_StopStreams()
+{
+    Audio_StopStreams();
+}
+
 void lua_PlaySound(uint32_t id, lua::Value ent_id)
 {
     if(id >= engine_world.audio_map.size())
@@ -2780,6 +2783,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     lua_registerc(state, "stopSound", lua_StopSound);
 
     lua_registerc(state, "playStream", lua_PlayStream);
+    lua_registerc(state, "stopStreams", lua_StopStreams);
 
     lua_registerc(state, "setLevel", lua_SetLevel);
     lua_registerc(state, "getLevel", lua_GetLevel);

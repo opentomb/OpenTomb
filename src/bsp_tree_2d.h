@@ -53,12 +53,12 @@ struct BSPTree2DNode {
     void splitVertically(size_t splitLocation) {
         assert( splitLocation < height );
         left.reset(new BSPTree2DNode(x, y, width, splitLocation));
-        right.reset(new BSPTree2DNode(x, y + splitLocation, width, height-splitLocation));
+        right.reset(new BSPTree2DNode(x, y + splitLocation, width, height - splitLocation));
     }
 
     bool fits(size_t w, size_t h) const noexcept
     {
-        return !isFilled && w <= width && h <= height;
+        return !isFilled && (w <= width && h <= height);
     }
 
     /**
@@ -114,6 +114,7 @@ struct BSPTree2DNode {
             splitHorizontally(needleWidth);
 
             // height already fits, width fits too now, so this is the result
+            left->isFilled = true;
             *destX = left->x;
             *destY = left->y;
             return true;
