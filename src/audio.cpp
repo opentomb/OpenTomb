@@ -241,6 +241,23 @@ bool AudioSource::IsActive()
 }
 
 
+bool AudioSource::IsPlaying()
+{
+    if(alIsSource(source_index))
+    {
+        ALenum state = AL_STOPPED;
+        alGetSourcei(source_index, AL_SOURCE_STATE, &state);
+
+        // Paused state and existing file pointers also counts as playing.
+        return ((state == AL_PLAYING) || (state == AL_PAUSED));
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 void AudioSource::Play()
 {
     if(alIsSource(source_index))
@@ -288,37 +305,26 @@ void AudioSource::Stop()
     if(alIsSource(source_index))
     {
         alSourceStop(source_index);
-        active = false;
     }
 }
 
 
 void AudioSource::Update()
 {
-    ALint   state;
-    ALfloat range, gain;
-
-    alGetSourcei(source_index, AL_SOURCE_STATE, &state);
+    // Bypass any non-active source.
+    if(!active) return;
 
     // Disable and bypass source, if it is stopped.
-    if(state == AL_STOPPED)
+    if(!IsPlaying())
     {
         active = false;
         return;
     }
 
-    // Stop source, if it is disabled, but still playing.
-    if((!active) && (state == AL_PLAYING))
-    {
-        Stop();
-        return;
-    }
+    // Bypass source, if it is global.
+    if(emitter_type == TR_AUDIO_EMITTER_GLOBAL) return;
 
-    // Bypass source, if it is paused or global.
-    if( (state == AL_PAUSED) || (emitter_type == TR_AUDIO_EMITTER_GLOBAL) )
-    {
-        return;
-    }
+    ALfloat range, gain;
 
     alGetSourcef(source_index, AL_GAIN, &gain);
     alGetSourcef(source_index, AL_MAX_DISTANCE, &range);
@@ -499,11 +505,12 @@ StreamTrack::StreamTrack()
 {
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
     alGenSources(1, &source);
-    audio_file = NULL;
-    data       = NULL;
     format     = 0x00;
     rate       = 0;
     dampable   = false;
+
+    wad_file   = nullptr;
+    snd_file   = nullptr;
 
     if(alIsSource(source))
     {
@@ -518,6 +525,7 @@ StreamTrack::StreamTrack()
         current_volume =  0.0f;
         damped_volume  =  0.0f;
         active         =  false;
+        ending         =  false;
         stream_type    =  TR_AUDIO_STREAM_TYPE_ONESHOT;
 
         // Setting method to -1 at init is required to prevent accidental
@@ -566,7 +574,7 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
 
 bool StreamTrack::Load_Track(const char *path)
 {
-    if(!(sndfile_Stream = sf_open(path, SFM_READ, &sf_info)))
+    if(!(snd_file = sf_open(path, SFM_READ, &sf_info)))
     {
         Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
         method = -1;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
@@ -595,9 +603,9 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
     }
     else
     {
-        audio_file = fopen(filename, "rb");
+        wad_file = fopen(filename, "rb");
 
-        if(!audio_file)
+        if(!wad_file)
         {
             ConsoleInfo::instance().warning(SYSWARN_FILE_NOT_FOUND, filename);
             return false;
@@ -608,14 +616,14 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
             uint32_t offset = 0;
             uint32_t length = 0;
 
-            fseek(audio_file, (index * TR_AUDIO_STREAM_WAD_STRIDE), 0);
-            fread((void*)track_name, TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, audio_file);
-            fread((void*)&length, sizeof(uint32_t), 1, audio_file);
-            fread((void*)&offset, sizeof(uint32_t), 1, audio_file);
+            fseek(wad_file, (index * TR_AUDIO_STREAM_WAD_STRIDE), 0);
+            fread((void*)track_name, TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, wad_file);
+            fread((void*)&length, sizeof(uint32_t), 1, wad_file);
+            fread((void*)&offset, sizeof(uint32_t), 1, wad_file);
 
-            fseek(audio_file, offset, 0);
+            fseek(wad_file, offset, 0);
 
-            if(!(sndfile_Stream = sf_open_fd(fileno(audio_file), SFM_READ, &sf_info, false)))
+            if(!(snd_file = sf_open_fd(fileno(wad_file), SFM_READ, &sf_info, false)))
             {
                 ConsoleInfo::instance().warning(SYSNOTE_WAD_SEEK_FAILED, offset);
                 method = -1;
@@ -692,6 +700,7 @@ bool StreamTrack::Play(bool fade_in)
     alSourceQueueBuffers(source, buffers_to_play, buffers);
     alSourcePlay(source);
 
+    ending = false;
     active = true;
     return   true;
 }
@@ -704,14 +713,11 @@ void StreamTrack::Pause()
 
 void StreamTrack::End()     // Smoothly end track with fadeout.
 {
-    active = false;
+    ending = true;
 }
 
 void StreamTrack::Stop()    // Immediately stop track.
 {
-
-    active = false;         // Clear activity flag.
-
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
         if(IsPlaying())
@@ -727,16 +733,16 @@ void StreamTrack::Stop()    // Immediately stop track.
         }
     }
 
-    if(sndfile_Stream)
+    if(snd_file)
     {
-        sf_close(sndfile_Stream);
-        sndfile_Stream = nullptr;
+        sf_close(snd_file);
+        snd_file = nullptr;
     }
 
-    if(audio_file)
+    if(wad_file)
     {
-        fclose(audio_file);
-        audio_file = nullptr;
+        fclose(wad_file);
+        wad_file = nullptr;
     }
 }
 
@@ -746,6 +752,13 @@ bool StreamTrack::Update()
     bool buffered      = true;
     bool change_gain   = false;
 
+    if(!active) return true; // Nothing to do here.
+
+    if(!IsPlaying())
+    {
+       active = false;
+       return true;
+    }
 
     // Update damping, if track supports it.
 
@@ -771,7 +784,7 @@ bool StreamTrack::Update()
         }
     }
 
-    if(!active)     // If track has ended, crossfade it.
+    if(ending)     // If track is ending, crossfade it.
     {
         switch(stream_type)
         {
@@ -801,7 +814,7 @@ bool StreamTrack::Update()
     }
     else
     {
-        // If track is active and playing, restore it from crossfade.
+        // If track is not ending and playing, restore it from crossfade.
         if(current_volume < 1.0)
         {
             switch(stream_type)
@@ -870,15 +883,18 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 
 bool StreamTrack::IsPlaying()                       // Check if track is playing.
 {
-    ALenum state = AL_STOPPED;
-
     if(alIsSource(source))
     {
-       alGetSourcei(source, AL_SOURCE_STATE, &state);
-    }
+        ALenum state = AL_STOPPED;
+        alGetSourcei(source, AL_SOURCE_STATE, &state);
 
-    // Paused also counts as playing.
-    return ((state == AL_PLAYING) || (state == AL_PAUSED));
+        // Paused state and existing file pointers also counts as playing.
+        return ((state == AL_PLAYING) || (state == AL_PAUSED) || (wad_file) || (snd_file));
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool StreamTrack::Stream(ALuint buffer)
@@ -892,7 +908,7 @@ bool StreamTrack::Stream(ALuint buffer)
     {
         // we need to read a multiple of sf_info.channels here
         const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sf_info.channels * sf_info.channels;
-        const sf_count_t samplesRead = sf_read_short(sndfile_Stream, pcm.data() + size, samplesToRead) * sf_info.channels;
+        const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead) * sf_info.channels;
 
         if(samplesRead > 0)
         {
@@ -900,7 +916,7 @@ bool StreamTrack::Stream(ALuint buffer)
         }
         else
         {
-            int error = sf_error(sndfile_Stream);
+            int error = sf_error(snd_file);
             if(error != SF_ERR_NO_ERROR)
             {
                 Audio_LogSndfileError( error );
@@ -909,7 +925,7 @@ bool StreamTrack::Stream(ALuint buffer)
             {
                 if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
                 {
-                   sf_seek(sndfile_Stream, 0, SEEK_SET);
+                   sf_seek(snd_file, 0, SEEK_SET);
                 }
                 else
                 {
@@ -1102,26 +1118,16 @@ void Audio_UpdateStreams()
 
     for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
-        if(engine_world.stream_tracks[i].IsPlaying())
-        {
-            engine_world.stream_tracks[i].Update();
-        }
-        else
-        {
-            if(engine_world.stream_tracks[i].IsActive())
-            {
-                engine_world.stream_tracks[i].Stop();
-            }
-        }
+        engine_world.stream_tracks[i].Update();
     }
 }
 
-bool Audio_IsTrackPlaying(uint32_t track_index)
+bool Audio_IsTrackPlaying(int32_t track_index)
 {
     for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
-        if(engine_world.stream_tracks[i].IsPlaying() &&
-           engine_world.stream_tracks[i].IsTrack(track_index))
+        if( ((track_index == -1) || (engine_world.stream_tracks[i].IsTrack(track_index))) &&
+            engine_world.stream_tracks[i].IsPlaying() )
         {
             return true;
         }
@@ -1314,7 +1320,7 @@ int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new 
 {
     for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
-        if(engine_world.audio_sources[i].IsActive() == false)
+        if(!engine_world.audio_sources[i].IsActive())
         {
             return i;
         }
@@ -1326,20 +1332,13 @@ int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new 
 
 int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
 {
-    int state;
-
     for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
-        if( (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type) &&
-            (engine_world.audio_sources[i].emitter_ID   == ( int32_t)entity_ID  ) &&
-            (engine_world.audio_sources[i].effect_index == (uint32_t)effect_ID  ) )
+        if( ((entity_type == -1) || (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type)) &&
+            ((entity_ID   == -1) || (engine_world.audio_sources[i].emitter_ID   == ( int32_t)entity_ID  )) &&
+            ((effect_ID   == -1) || (engine_world.audio_sources[i].effect_index == (uint32_t)effect_ID  ))  )
         {
-            alGetSourcei(engine_world.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
-
-            if((engine_world.audio_sources[i].IsActive()) || (state == AL_PLAYING))
-            {
-                return i;
-            }
+            if(engine_world.audio_sources[i].IsPlaying()) return i;
         }
     }
 
@@ -1654,6 +1653,8 @@ int Audio_DeInit()
     Audio_StopAllSources();
     Audio_StopStreams();
 
+    Audio_DeInitDelay();
+
     engine_world.audio_sources.clear();
     engine_world.stream_tracks.clear();
     engine_world.stream_track_map.clear();
@@ -1684,6 +1685,25 @@ int Audio_DeInit()
     }
 
     return 1;
+}
+
+bool Audio_DeInitDelay()
+{
+    float begin_time   = Sys_FloatTime();
+    float curr_time    = 0.0;
+
+    while( (Audio_IsTrackPlaying()) || (Audio_IsEffectPlaying() >= 0) )
+    {
+        curr_time = Sys_FloatTime() - begin_time;
+
+        if(curr_time > TR_AUDIO_DEINIT_DELAY)
+        {
+            Sys_DebugLog(LOG_FILENAME, "Audio deinit timeout reached! Something is wrong with audio driver.");
+            break;
+        }
+    }
+
+    return true;
 }
 
 
@@ -1732,15 +1752,13 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
 {
     MemBufferFileIo wavMem(sample_pointer, sample_size);
     SF_INFO sfInfo;
-    SNDFILE* wavFile = sf_open_virtual(&wavMem, SFM_READ, &sfInfo, &wavMem);
+    SNDFILE* sample = sf_open_virtual(&wavMem, SFM_READ, &sfInfo, &wavMem);
 
-    if(!wavFile)
+    if(!sample)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
         return -1;
     }
-
-    uint32_t waveLengthInBytes = (uint32_t)((float)(sfInfo.channels * sfInfo.frames) * Audio_GetByteDepth(sfInfo));
 
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1751,17 +1769,19 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
     // than native wav length, because for some reason many TR5 uncomp sizes
     // are messed up and actually more than actual sample size.
 
-    if((uncomp_sample_size == 0) || (waveLengthInBytes < uncomp_sample_size))
+    uint32_t real_size = sfInfo.frames * sizeof(uint16_t);
+
+    if((uncomp_sample_size == 0) || (real_size < uncomp_sample_size))
     {
-        uncomp_sample_size = waveLengthInBytes;
+        uncomp_sample_size = real_size;
     }
 
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, wavFile, &sfInfo);
+    bool result = Audio_FillALBuffer(buf_number, sample, uncomp_sample_size, &sfInfo);
 
-    sf_close(wavFile);
+    sf_close(sample);
 
     return (result)?(0):(-3);   // Zero means success.
 }
@@ -1778,14 +1798,14 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
         return -1;
     }
 
-    bool result = Audio_FillALBuffer(buf_number, file, &sfInfo);
+    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(uint16_t), &sfInfo);
 
     sf_close(file);
 
     return (result)?(0):(-3);   // Zero means success.
 }
 
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, SF_INFO *sfInfo)
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
 {
     if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
@@ -1793,9 +1813,10 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE* wavFile, SF_INFO *sfInfo)
         return false;
     }
 
-    std::vector<int16_t> frames( sfInfo->frames ); // MONO data
+    std::vector<int16_t> frames( buffer_size / sizeof(int16_t));
+    const sf_count_t samplesRead = sf_readf_short(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), frames.size() * sizeof(int16_t), sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
     Audio_LogALError(0);
     return true;
 }

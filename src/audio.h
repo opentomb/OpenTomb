@@ -228,7 +228,7 @@ enum TR_AUDIO_STREAM_TYPE
 // tracks should be switched fastly.
 
 #define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (GAME_LOGIC_REFRESH_INTERVAL    / 0.3f)
-#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (GAME_LOGIC_REFRESH_INTERVAL / 2.0f)
+#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (GAME_LOGIC_REFRESH_INTERVAL / 1.0f)
 #define TR_AUDIO_STREAM_CROSSFADE_CHAT (GAME_LOGIC_REFRESH_INTERVAL       / 0.1f)
 
 // Damp coefficient specifies target volume level on a tracks
@@ -250,6 +250,13 @@ enum TR_AUDIO_STREAM_TYPE
 #define TR_AUDIO_STREAMPLAY_NOFREESTREAM (-1)
 #define TR_AUDIO_STREAMPLAY_IGNORED        0
 #define TR_AUDIO_STREAMPLAY_PROCESSED      1
+
+// Audio de-initialization delay gives some time to OpenAL to shut down its
+// currently active sources. If timeout is reached, it means that something is
+// really wrong with audio subsystem; usually five seconds is enough.
+
+#define TR_AUDIO_DEINIT_DELAY 5.0
+
 
 struct Camera;
 struct Entity;
@@ -348,6 +355,7 @@ public:
     void UnsetFX();                         // Remove any reverb FX from source.
     void SetUnderwater();                   // Apply low-pass underwater filter.
 
+    bool IsPlaying();           // Check if source is currently playing.
     bool IsActive();            // Check if source is active.
 
     int32_t     emitter_ID;     // Entity of origin. -1 means no entity (hence - empty source).
@@ -409,13 +417,12 @@ private:
 
     bool Stream(ALuint buffer);          // General stream routine.
 
-    FILE*           audio_file;          // General handle for opened audio file.
-    SNDFILE*        sndfile_Stream;      // Sndfile file reader needs its own handle.
+    FILE*           wad_file;   // General handle for opened wad file.
+    SNDFILE*        snd_file;   // Sndfile file reader needs its own handle.
     SF_INFO         sf_info;
 
     // General OpenAL fields
 
-    ALbyte         *data;
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
     ALenum          format;
@@ -423,7 +430,8 @@ private:
     ALfloat         current_volume;     // Stream volume, considering fades.
     ALfloat         damped_volume;      // Additional damp volume multiplier.
 
-    bool            active;             // Used when track is being faded by other one.
+    bool            active;             // If track is active or not.
+    bool            ending;             // Used when track is being faded by other one.
     bool            dampable;           // Specifies if track can be damped by others.
     int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
     int             current_track;      // Needed to prevent same track sending.
@@ -443,7 +451,7 @@ void Audio_Update();
 
 int  Audio_GetFreeSource();
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain);
-int  Audio_IsEffectPlaying(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);
+int  Audio_IsEffectPlaying(int effect_ID = -1, int entity_type = -1, int entity_ID = -1);
 
 int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // Send to play effect with given parameters.
 int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.
@@ -455,7 +463,7 @@ void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(Camera *cam);
 void Audio_UpdateListenerByEntity(Entity *ent);
 
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, SF_INFO *sfInfo);
+bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples(World *world);
@@ -464,16 +472,16 @@ int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *
 
 // Stream tracks (music / BGM) routines.
 
-int  Audio_GetFreeStream();                         // Get free (stopped) stream.
-bool Audio_IsTrackPlaying(uint32_t track_index);    // See if track is already playing.
+int  Audio_GetFreeStream();                          // Get free (stopped) stream.
+bool Audio_IsTrackPlaying(int32_t track_index = -1); // See if track is already playing.
 bool Audio_TrackAlreadyPlayed(uint32_t track_index,
-                              int8_t mask = 0);     // Check if track played with given activation mask.
-void Audio_UpdateStreams();                         // Update all streams.
-void Audio_UpdateStreamsDamping();                  // See if there any damping tracks playing.
-void Audio_PauseStreams(int stream_type = -1);      // Pause ALL streams (of specified type).
-void Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
-bool Audio_EndStreams(int stream_type = -1);        // End ALL streams (with crossfade).
-bool Audio_StopStreams(int stream_type = -1);       // Immediately stop ALL streams.
+                              int8_t mask = 0);      // Check if track played with given activation mask.
+void Audio_UpdateStreams();                          // Update all streams.
+void Audio_UpdateStreamsDamping();                   // See if there any damping tracks playing.
+void Audio_PauseStreams(int stream_type = -1);       // Pause ALL streams (of specified type).
+void Audio_ResumeStreams(int stream_type = -1);      // Resume ALL streams.
+bool Audio_EndStreams(int stream_type = -1);         // End ALL streams (with crossfade).
+bool Audio_StopStreams(int stream_type = -1);        // Immediately stop ALL streams.
 
 // Generally, you need only this function to trigger any track.
 int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
@@ -487,5 +495,6 @@ void Audio_LogSndfileError(int code);           // Sndfile-specific error handle
 
 float   Audio_GetByteDepth(SF_INFO sfInfo);
 void    Audio_LoadALExtFunctions(ALCdevice* device);
+bool    Audio_DeInitDelay();
 
 #endif // AUDIO_H
