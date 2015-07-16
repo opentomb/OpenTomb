@@ -40,9 +40,10 @@ void frustumManager::reset()
     if(m_need_realloc)
     {
         uint32_t new_buffer_size = m_buffer_size * 1.5;
-        uint8_t *new_buffer = (uint8_t*)realloc(m_buffer, new_buffer_size * sizeof(uint8_t));
+        uint8_t *new_buffer = (uint8_t*)malloc(new_buffer_size * sizeof(uint8_t));
         if(new_buffer != NULL)
         {
+            free(m_buffer);
             m_buffer = new_buffer;
             m_buffer_size = new_buffer_size;
         }

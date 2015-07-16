@@ -2712,7 +2712,6 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 {
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
-    int32_t   uvrotate_script = 0;
     polygon_t p0, p;
 
     p0.vertex_count = 0;
@@ -2763,86 +2762,50 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // other sticks for corret textures animationg.
             if((i < num_uvrotates) && (seq->frames_count <= 2))
             {
-                uint32_t original_frame_list = seq->frame_list[0];
-                if(level_script)
-                {
-                    int top = lua_gettop(level_script);
-                    lua_getglobal(level_script, "UVRotate");
-                    uvrotate_script = lua_tointeger(level_script, -1);
-                    lua_settop(level_script, top);
-                }
-
-                seq->frame_lock = false; // by default anim is playing
-                seq->uvrotate = true;
-                seq->frames_count = 16;
-                seq->uvrotate_max = 0.5 * world->tex_atlas->getTextureHeight(original_frame_list);
-                seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-
-                seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-                free(seq->frame_list);
-                seq->frame_list = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
-
-                if(uvrotate_script > 0)
-                {
-                    seq->anim_type = TR_ANIMTEXTURE_FORWARD;
-                }
-                else if(uvrotate_script < 0)
-                {
-                    seq->anim_type = TR_ANIMTEXTURE_BACKWARD;
-                }
-
-                engine_world.tex_atlas->getCoordinates(original_frame_list, false, &p0, 0.0, false);
-                for(uint16_t j=0;j<seq->frames_count;j++)
-                {
-                    seq->frame_list[j] = original_frame_list;
-                    seq->frames[j].tex_ind = p0.tex_index;
-                    seq->frames[j].mat[0] = 1.0;
-                    seq->frames[j].mat[1] = 0.0;
-                    seq->frames[j].mat[2] = 0.0;
-                    seq->frames[j].mat[3] = 1.0;
-                    seq->frames[j].move[0] = 0.0;
-                    seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
-                }
+                seq->uvrotate   = true;
+                seq->frame_rate = 0.05 * 16;
             }
-            else
+            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
+            for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
-                for(uint16_t j=0;j<seq->frames_count;j++)
+                if(seq->uvrotate)
                 {
-                    engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
-                    seq->frames[j].tex_ind = p.tex_index;
-                    if(j > 0)   // j == 0 -> d == 0;
-                    {
-                        ///@PARANOID: texture transformation may be not only move
-                        GLfloat A0[2], B0[2], A[2], B[2], d;
-                        A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                        A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
-                        B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                        B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
-
-                        A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
-                        A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
-                        B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
-                        B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
-
-                        d = A0[0] * B0[1] - A0[1] * B0[0];
-                        seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                        seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
-                        seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
-                        seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
-                    }
-                    else
-                    {
-                        seq->frames[j].mat[0 + 0 * 2] = 1.0;
-                        seq->frames[j].mat[1 + 0 * 2] = 0.0;
-                        seq->frames[j].mat[0 + 1 * 2] = 0.0;
-                        seq->frames[j].mat[1 + 1 * 2] = 1.0;
-                    }
-
-                    seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
-                    seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                    seq->frames[j].uvrotate_max = 0.5 * world->tex_atlas->getTextureHeight(seq->frame_list[j]);
+                    seq->frames[j].current_uvrotate = 0.0;
                 }
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
+                seq->frames[j].tex_ind = p.tex_index;
+                if(j > 0)   // j == 0 -> d == 0;
+                {
+                    ///@PARANOID: texture transformation may be not only move
+                    GLfloat A0[2], B0[2], A[2], B[2], d;
+                    A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                    A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                    B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                    B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+
+                    A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
+                    A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
+                    B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
+                    B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+
+                    d = A0[0] * B0[1] - A0[1] * B0[0];
+                    seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
+                    seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
+                    seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                    seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+                }
+                else
+                {
+                    seq->frames[j].mat[0 + 0 * 2] = 1.0;
+                    seq->frames[j].mat[1 + 0 * 2] = 0.0;
+                    seq->frames[j].mat[0 + 1 * 2] = 0.0;
+                    seq->frames[j].mat[1 + 1 * 2] = 1.0;
+                }
+
+                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
+                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
             }
         }  ///end for(uint16_t i = 0; i < num_sequences; i++,seq++)
     }

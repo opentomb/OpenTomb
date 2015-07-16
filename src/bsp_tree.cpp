@@ -278,7 +278,7 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, str
                     Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
                     vec4_copy(dst_v->color, src_v->color);
                     dst_v->tex_coord[0] = tf->mat[0+0*2] * src_v->tex_coord[0] + tf->mat[0+1*2] * src_v->tex_coord[1] + tf->move[0];
-                    dst_v->tex_coord[1] = tf->mat[1+0*2] * src_v->tex_coord[0] + tf->mat[1+1*2] * src_v->tex_coord[1] + tf->move[1];
+                    dst_v->tex_coord[1] = tf->mat[1+0*2] * src_v->tex_coord[0] + tf->mat[1+1*2] * src_v->tex_coord[1] + tf->move[1] - tf->current_uvrotate;
                 }
             }
             else

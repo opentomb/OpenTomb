@@ -183,9 +183,10 @@ void render_DebugDrawer::reset()
     if(m_need_realloc)
     {
         uint32_t new_buffer_size = m_max_lines * 12 * 2;
-        GLfloat *new_buffer = (GLfloat*)realloc(m_buffer, new_buffer_size * sizeof(GLfloat));
+        GLfloat *new_buffer = (GLfloat*)malloc(new_buffer_size * sizeof(GLfloat));
         if(new_buffer != NULL)
         {
+            free(m_buffer);
             m_buffer = new_buffer;
             m_max_lines *= 2;
         }

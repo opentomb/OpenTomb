@@ -3901,13 +3901,13 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
             // Fill up new sequence with frame list.
             seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
-            seq->frame_lock        = false; // by default anim is playing
+            seq->frame_lock        = false;         // by default anim is playing
             seq->uvrotate          = true;
-            seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate        = 0.025;  // Should be passed as 1 / FPS.
-            seq->frame_time        = 0.0;   // Reset frame time to initial state.
-            seq->current_frame     = 0;     // Reset current frame to zero.
-            seq->frames_count      = 16;
+            seq->reverse_direction = false;         // Needed for proper reverse-type start-up.
+            seq->frame_rate        = 0.025 * 16;    // Should be passed as 1 / FPS.
+            seq->frame_time        = 0.0;           // Reset frame time to initial state.
+            seq->current_frame     = 0;             // Reset current frame to zero.
+            seq->frames_count      = 1;
             seq->frame_list        = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
             seq->frame_list[0]     = 0;
             seq->frames            = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
@@ -3926,25 +3926,22 @@ int lua_genUVRotateAnimation(lua_State *lua)
                 }
             }
 
-            seq->uvrotate_max = 0.5 * (v_max - v_min);
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            for(uint16_t j=0;j<seq->frames_count;j++)
-            {
-                seq->frames[j].tex_ind = p->tex_index;
-                seq->frames[j].mat[0] = 1.0;
-                seq->frames[j].mat[1] = 0.0;
-                seq->frames[j].mat[2] = 0.0;
-                seq->frames[j].mat[3] = 1.0;
-                seq->frames[j].move[0] = 0.0;
-                seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
-            }
+            seq->frames->uvrotate_max = 0.5 * (v_max - v_min);
+            seq->frames->current_uvrotate = 0.0f;
+            seq->frames->tex_ind = p->tex_index;
+            seq->frames->mat[0] = 1.0;
+            seq->frames->mat[1] = 0.0;
+            seq->frames->mat[2] = 0.0;
+            seq->frames->mat[3] = 1.0;
+            seq->frames->move[0] = 0.0;
+            seq->frames->move[1] = 0.0;
 
             for(;p!=NULL;p=p->next)
             {
                 p->anim_id = engine_world.anim_sequences_count;
                 for(uint16_t j=0;j<p->vertex_count;j++)
                 {
-                    p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->uvrotate_max;
+                    p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->frames->uvrotate_max;
                 }
             }
         }

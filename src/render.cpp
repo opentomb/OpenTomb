@@ -163,7 +163,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
             {
                 const GLfloat *v = p->vertices[i].tex_coord;
                 data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1] - tf->current_uvrotate;
 
                 offset += 2;
             }
@@ -389,7 +389,13 @@ void Render_UpdateAnimTextures()                                                
         }
 
         seq->frame_time += engine_frame_time;
-        if(seq->frame_time >= seq->frame_rate)
+        if(seq->uvrotate)
+        {
+            int j = (seq->frame_time / seq->frame_rate);
+            seq->frame_time -= (btScalar)j * seq->frame_rate;
+            seq->frames[seq->current_frame].current_uvrotate = seq->frame_time * seq->frames[seq->current_frame].uvrotate_max / seq->frame_rate;
+        }
+        else if(seq->frame_time >= seq->frame_rate)
         {
             int j = (seq->frame_time / seq->frame_rate);
             seq->frame_time -= (btScalar)j * seq->frame_rate;

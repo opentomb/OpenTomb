@@ -132,9 +132,11 @@ typedef struct light_s
 
 typedef struct tex_frame_s
 {
-    btScalar    mat[4];
-    btScalar    move[2];
     uint16_t    tex_ind;
+    GLfloat     mat[4];
+    GLfloat     move[2];
+    GLfloat     uvrotate_max;           // Reference value used to restart rotation.
+    GLfloat     current_uvrotate;       // Current coordinate window position.
 }tex_frame_t, *tex_frame_p;
 
 typedef struct anim_seq_s
@@ -153,9 +155,9 @@ typedef struct anim_seq_s
     btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
 
-    btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
-    btScalar    uvrotate_max;           // Reference value used to restart rotation.
-    btScalar    current_uvrotate;       // Current coordinate window position.
+    //btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
+    //btScalar    uvrotate_max;           // Reference value used to restart rotation.
+    //btScalar    current_uvrotate;       // Current coordinate window position.
 
     struct tex_frame_s  *frames;
 
