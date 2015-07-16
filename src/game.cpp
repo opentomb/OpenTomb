@@ -425,7 +425,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveVertical(dist * move_logic[2]);
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
     }
-    else if(control_states.noclip)
+    else if(!control_states.noclip)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
