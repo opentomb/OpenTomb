@@ -3857,8 +3857,6 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
 
-            world->addEntity(lara);
-
             continue;
         }
 
