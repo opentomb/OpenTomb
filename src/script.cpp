@@ -271,6 +271,7 @@ void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
     rs->antialias = state["render"]["antialias"];
     rs->antialias_samples = state["render"]["antialias_samples"];
     rs->texture_border = state["render"]["texture_border"];
+    rs->save_texture_memory = state["render"]["save_texture_memory"];
     rs->z_depth = state["render"]["z_depth"];
     rs->fog_enabled = state["render"]["fog_enabled"];
     rs->fog_start_depth = state["render"]["fog_start_depth"];

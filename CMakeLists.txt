@@ -185,4 +185,6 @@ if(APPLE)
         PROPERTIES LINK_FLAGS
         "-L${SDL2_LIBRARY_DIRS} -framework CoreFoundation -framework ApplicationServices"
     )
-endif(APPLE)
+endif()
+
+add_subdirectory(doc)

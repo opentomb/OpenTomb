@@ -5,12 +5,13 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
+
 #include "vmath.h"
 
 struct Room;
 struct Portal;
-class Render;
+class  Render;
 struct OBB;
 struct Polygon;
 struct Camera;

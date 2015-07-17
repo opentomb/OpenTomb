@@ -1,5 +1,7 @@
 
 #include <cstdlib>
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "mesh.h"
 #include "polygon.h"
@@ -12,8 +14,6 @@
 #include "resource.h"
 #include "render.h"
 #include "shader_description.h"
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
 
 
 Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);

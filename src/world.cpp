@@ -589,6 +589,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
 
 std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
 {
+    if(character->id() == id) return character;
     auto it = entity_tree.find(id);
     if(it==entity_tree.end())
         return nullptr;

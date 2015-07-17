@@ -1871,7 +1871,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(struct Entity* /*ent*/)
+void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> ent)
 {
     ///@FIXME: Add entity listener updater here.
 }
@@ -1880,5 +1880,13 @@ void Audio_Update()
 {
     Audio_UpdateSources();
     Audio_UpdateStreams();
-    Audio_UpdateListenerByCamera(renderer.camera());
+
+    if(audio_settings.listener_is_player)
+    {
+        Audio_UpdateListenerByEntity(engine_world.character);
+    }
+    else
+    {
+        Audio_UpdateListenerByCamera(renderer.camera());
+    }
 }

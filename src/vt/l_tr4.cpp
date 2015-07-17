@@ -247,13 +247,13 @@ void TR_Level::read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture
  /*
   * tr4 + sprite loading
   */
-void TR_Level::read_tr4_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t & Spriteexture)
+void TR_Level::read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
 
-    Spriteexture.tile = read_bitu16(src);
-    if (Spriteexture.tile > 128)
-        Sys_extWarn("Spriteexture.tile > 128");
+    sprite_texture.tile = read_bitu16(src);
+    if (sprite_texture.tile > 128)
+        Sys_extWarn("sprite_texture.tile > 128");
 
     tx = read_bitu8(src);
     ty = read_bitu8(src);
@@ -264,15 +264,15 @@ void TR_Level::read_tr4_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t 
     tright = read_bit16(src);
     tbottom = read_bit16(src);
 
-    Spriteexture.x0 = tleft;
-    Spriteexture.x1 = tright;
-    Spriteexture.y0 = tbottom;
-    Spriteexture.y1 = ttop;
+    sprite_texture.x0 = tleft;
+    sprite_texture.x1 = tright;
+    sprite_texture.y0 = tbottom;
+    sprite_texture.y1 = ttop;
 
-    Spriteexture.left_side = tx;
-    Spriteexture.right_side = tx + tw / (256);
-    Spriteexture.bottom_side = ty;
-    Spriteexture.top_side = ty + th / (256);
+    sprite_texture.left_side = tx;
+    sprite_texture.right_side = tx + tw / (256);
+    sprite_texture.bottom_side = ty;
+    sprite_texture.top_side = ty + th / (256);
 }
 
 void TR_Level::read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
@@ -584,7 +584,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
 
     this->sprite_textures.resize( read_bitu32(newsrc) );
     for (i = 0; i < this->sprite_textures.size(); i++)
-        read_tr4_Spriteexture(newsrc, this->sprite_textures[i]);
+        read_tr4_sprite_texture(newsrc, this->sprite_textures[i]);
 
     this->sprite_sequences_count = read_bitu32(newsrc);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
@@ -608,23 +608,23 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     this->flyby_cameras = (tr4_flyby_camera_t*)malloc(this->flyby_cameras_count * sizeof(tr4_flyby_camera_t));
     for (i = 0; i < this->flyby_cameras_count; i++)
     {
-        this->flyby_cameras[i].x1 = read_bit32(newsrc);
-        this->flyby_cameras[i].y1 = read_bit32(newsrc);
-        this->flyby_cameras[i].z1 = read_bit32(newsrc);
-        this->flyby_cameras[i].x2 = read_bit32(newsrc);
-        this->flyby_cameras[i].y2 = read_bit32(newsrc);
-        this->flyby_cameras[i].z2 = read_bit32(newsrc);                    // 24
+        this->flyby_cameras[i].cam_x = read_bit32(newsrc);
+        this->flyby_cameras[i].cam_y = read_bit32(newsrc);
+        this->flyby_cameras[i].cam_z = read_bit32(newsrc);
+        this->flyby_cameras[i].target_x = read_bit32(newsrc);
+        this->flyby_cameras[i].target_y = read_bit32(newsrc);
+        this->flyby_cameras[i].target_z = read_bit32(newsrc);
 
-        this->flyby_cameras[i].index1 = read_bit8(newsrc);
-        this->flyby_cameras[i].index2 = read_bit8(newsrc);                 // 26
+        this->flyby_cameras[i].sequence = read_bit8(newsrc);
+        this->flyby_cameras[i].index    = read_bit8(newsrc);
 
-        this->flyby_cameras[i].unknown[0] = read_bitu16(newsrc);
-        this->flyby_cameras[i].unknown[1] = read_bitu16(newsrc);
-        this->flyby_cameras[i].unknown[2] = read_bitu16(newsrc);
-        this->flyby_cameras[i].unknown[3] = read_bitu16(newsrc);
-        this->flyby_cameras[i].unknown[4] = read_bitu16(newsrc);           // 36
+        this->flyby_cameras[i].fov   = read_bitu16(newsrc);
+        this->flyby_cameras[i].roll  = read_bitu16(newsrc);
+        this->flyby_cameras[i].timer = read_bitu16(newsrc);
+        this->flyby_cameras[i].speed = read_bitu16(newsrc);
+        this->flyby_cameras[i].flags = read_bitu16(newsrc);
 
-        this->flyby_cameras[i].id = read_bit32(newsrc);                    // 40
+        this->flyby_cameras[i].room_id = read_bitu32(newsrc);
     }
     //SDL_RWseek(newsrc, this->flyby_cameras.size() * 40, SEEK_CUR);
 

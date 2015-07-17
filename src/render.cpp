@@ -3,10 +3,9 @@
 #include <cstdlib>
 #include <algorithm>
 
+#include <bullet/LinearMath/btScalar.h>
+
 #include "gl_util.h"
-
-#include "bullet/LinearMath/btScalar.h"
-
 #include "render.h"
 #include "console.h"
 #include "world.h"
@@ -350,7 +349,7 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
         float transforms[32];
         matrix4 mvTransforms = mvMatrix * btag->full_transform;
         memcpy(transforms, mvTransforms.c_ptr(), sizeof(float [16]));
-        
+
         // Calculate parent transform
         const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
 
@@ -863,7 +862,7 @@ void Render::drawList()
     glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     renderSkyBox(m_cam->m_glViewProjMat);
-    
+
     if(m_world->character)
     {
         renderEntity(m_world->character.get(), m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);

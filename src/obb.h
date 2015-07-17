@@ -9,11 +9,11 @@
 #define OBB_H
 
 #include <cstdint>
+#include <memory>
+#include <bullet/LinearMath/btScalar.h>
 
 #include "polygon.h"
-#include "bullet/LinearMath/btScalar.h"
 
-#include <memory>
 
 /*
  * In base_edges we safe the initial shape polygons

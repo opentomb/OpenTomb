@@ -2,6 +2,9 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include <cstdio>
+#include <cstdlib>
+
 #include <AL/al.h>
 #include <AL/alext.h>
 #include <AL/efx.h>
@@ -14,9 +17,6 @@
 #include "game.h"
 #include "script.h"
 #include "system.h"
-
-#include <cstdio>
-#include <cstdlib>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid
@@ -461,7 +461,7 @@ void Audio_StopAllSources();     // Used in audio deinit.
 void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
 void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(Camera *cam);
-void Audio_UpdateListenerByEntity(Entity *ent);
+void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> ent);
 
 bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);

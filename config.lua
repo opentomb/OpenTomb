@@ -1,4 +1,3 @@
--- LUA config file
 screen =
 {
     x = 50;
@@ -21,14 +20,15 @@ audio =
 
 render =
 {
-    mipmap_mode = 3;
+    mipmap_mode = 3;                            -- 0 = no filter, 1/2 = bilinear filter, 3 = trilinear filter.
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
     anisotropy = 4;                             -- Maximum depends and is limited by hardware capabilities.
     antialias = true;
     antialias_samples = 4;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
-    texture_border = 16;
+    texture_border = 16;                        -- Needed to prevent mipmap border bleeding.
+    save_texture_memory = false;                -- Alternative texture generation algorithm, slower but less memory used.
     fog_color = {r = 255, g = 255, b = 255};
 }
 
@@ -36,9 +36,9 @@ controls =
 {
     mouse_sensitivity = 25.0;
 
-    use_joy = false;                                -- Use joystick - yes (1) or no (0)
+    use_joy = false;                            -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.
-    joy_rumble = false;                             -- Force feedback
+    joy_rumble = false;                         -- Force feedback
 
     joy_move_axis_x = 0;                        -- Movement axes options.
     joy_move_axis_y = 1;
