@@ -383,11 +383,11 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t Spriteexture, uint32_t &outPage, GLfloat *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
 {
-    assert(Spriteexture < m_canonicalTexturesForSpriteTextures.size());
+    assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
-    const size_t canonical_index = m_canonicalTexturesForSpriteTextures[Spriteexture];
+    const size_t canonical_index = m_canonicalTexturesForSpriteTextures[sprite_texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
 
     outPage = canonical.new_page;

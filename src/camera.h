@@ -97,3 +97,27 @@ struct StatCameraSink
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
 };
+
+// Flyby camera structure.
+
+struct FlybyCamera
+{
+    GLfloat     cam_x;      // Camera position vector
+    GLfloat     cam_y;
+    GLfloat     cam_z;
+
+    GLfloat     target_x;   // Target orientation vector
+    GLfloat     target_y;
+    GLfloat     target_z;
+
+    GLfloat     fov;
+    GLfloat     roll;
+    GLfloat     speed;
+
+    uint32_t    sequence;   // Sequence number to which camera belongs
+    uint32_t    index;      // Index in sequence
+    uint32_t    timer;      // How much to sit there
+    uint32_t    room_id;
+
+    uint16_t    flags;      // See TRLE manual
+};

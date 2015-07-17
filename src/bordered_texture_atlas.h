@@ -143,7 +143,7 @@ public:
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
-    void getSpriteCoordinates(size_t Spriteexture,
+    void getSpriteCoordinates(size_t sprite_texture,
                               uint32_t &outPage,
                               GLfloat *coordinates) const;
 

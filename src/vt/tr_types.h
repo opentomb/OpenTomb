@@ -123,8 +123,8 @@ typedef struct {
     uint16_t intensity2;        // Almost always equal to Intensity1 [absent from TR1 data files]
     uint32_t fade1;             // Falloff value 1
     uint32_t fade2;             // Falloff value 2 [absent from TR1 data files]
-    uint8_t light_type;         // same as D3D (i.e. 2 is for spotlight) 
-    uint8_t unknown;            // always 0xff? 
+    uint8_t light_type;         // same as D3D (i.e. 2 is for spotlight)
+    uint8_t unknown;            // always 0xff?
     float r_inner;
     float r_outer;
     float length;
@@ -231,7 +231,7 @@ typedef struct {
     int16_t alternate_room;         // number of the room that this room can alternate
     int8_t  alternate_group;        // number of group which is used to switch alternate rooms
     // with (e.g. empty/filled with water is implemented as an empty room that alternates with a full room)
-    
+
         uint16_t flags;
     // Flag bits:
     // 0x0001 - room is filled with water,
@@ -239,25 +239,25 @@ typedef struct {
     // TR1 has only the water flag and the extra unknown flag 0x0100.
     // TR3 most likely has flags for "is raining", "is snowing", "water is cold", and "is
     // filled by quicksand", among others.
-    
+
         uint8_t water_scheme;
     // Water scheme is used with various room options, for example, R and M room flags in TRLE.
     // Also, it specifies lighting scheme, when 0x4000 vertex attribute is set.
 
     uint8_t reverb_info;
-    
+
     // Reverb info is used in TR3-5 and contains index that specifies reverb type.
     // 0 - Outside, 1 - Small room, 2 - Medium room, 3 - Large room, 4 - Pipe.
-    
+
     tr5_colour_t light_colour;    // Present in TR5 only
 
     // TR5 only:
-    
+
     float room_x;
     float room_z;
     float room_y_bottom;
     float room_y_top;
-    
+
     uint32_t unknown_r1;
     uint32_t unknown_r2;
     uint32_t unknown_r3;
@@ -322,30 +322,30 @@ typedef struct {        // 4 bytes
 
 /** \brief Frame.
   *
-  * Frames indicates how composite meshes are positioned and rotated.  
+  * Frames indicates how composite meshes are positioned and rotated.
   * They work in conjunction with Animations[] and Bone2[].
-  *  
+  *
   * A given frame has the following format:
   *    short BB1x, BB1y, BB1z           // bounding box (low)
   *    short BB2x, BB2y, BB2z           // bounding box (high)
   *    short OffsetX, OffsetY, OffsetZ  // starting offset for this moveable
   *    (TR1 ONLY: short NumValues       // number of angle sets to follow)
   *    (TR2/3: NumValues is implicitly NumMeshes (from moveable))
-  *   
+  *
   * What follows next is a list of angle sets.  In TR2/3, an angle set can
   * specify either one or three axes of rotation.  If either of the high two
   * bits (0xc000) of the first angle unsigned short are set, it's one axis:
-  *  only one  unsigned short, 
-  *  low 10 bits (0x03ff), 
-  *  scale is 0x100 == 90 degrees;  
-  * the high two  bits are interpreted as follows:  
+  *  only one  unsigned short,
+  *  low 10 bits (0x03ff),
+  *  scale is 0x100 == 90 degrees;
+  * the high two  bits are interpreted as follows:
   *  0x4000 == X only, 0x8000 == Y only,
   *  0xC000 == Z only.
-  *   
+  *
   * If neither of the high bits are set, it's a three-axis rotation.  The next
   * 10 bits (0x3ff0) are the X rotation, the next 10 (including the following
-  * unsigned short) (0x000f, 0xfc00) are the Y rotation, 
-  * the next 10 (0x03ff) are the Z rotation, same scale as 
+  * unsigned short) (0x000f, 0xfc00) are the Y rotation,
+  * the next 10 (0x03ff) are the Z rotation, same scale as
   * before (0x100 == 90 degrees).
   *
   * Rotations are performed in Y, X, Z order.
@@ -395,9 +395,9 @@ typedef struct {           // 24 bytes [TR1: 22 bytes]
   */
 typedef struct {               // 16 bytes
     uint16_t        tile;
-    int16_t         x0;        // tex coords 
-    int16_t         y0;        // 
-    int16_t         x1;        // 
+    int16_t         x0;        // tex coords
+    int16_t         y0;        //
+    int16_t         x1;        //
     int16_t         y1;        //
 
     int16_t         left_side;
@@ -405,7 +405,7 @@ typedef struct {               // 16 bytes
     int16_t         right_side;
     int16_t         bottom_side;
 } tr_sprite_texture_t;
-//typedef prtl::array < tr_Spriteexture_t > tr_Spriteexture_array_t;
+//typedef prtl::array < tr_sprite_texture_t > tr_sprite_texture_array_t;
 
 /** \brief Sprite sequence.
   */
@@ -523,9 +523,9 @@ typedef struct {
  * SoundDetails (also called SampleInfos in native TR sources) are properties
  * for each sound index from SoundMap. It contains all crucial information
  * that is needed to play certain sample, except offset to raw wave buffer,
- * which is unnecessary, as it is managed internally by DirectSound. 
+ * which is unnecessary, as it is managed internally by DirectSound.
  */
- 
+
 typedef struct {                         // 8 bytes
     uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
     uint16_t volume;                     // Global sample value
@@ -598,19 +598,23 @@ typedef struct {
 } tr_camera_t;
 //typedef prtl::array < tr_camera_t > tr_camera_array_t;
 
-/** \brief Extra Camera.
+/** \brief Flyby Camera.
   */
 typedef struct {
-    int32_t x1;
-    int32_t y1;
-    int32_t z1;
-    int32_t x2;
-    int32_t y2;
-    int32_t z2;
-    uint8_t index1;
-    uint8_t index2;
-    uint16_t unknown[5];
-    int32_t id;
+    int32_t  cam_x;
+    int32_t  cam_y;
+    int32_t  cam_z;
+    int32_t  target_x;
+    int32_t  target_y;
+    int32_t  target_z;
+    uint8_t  sequence;
+    uint8_t  index;
+    uint16_t fov;
+    uint16_t roll;
+    uint16_t timer;
+    uint16_t speed;
+    uint16_t flags;
+    uint32_t room_id;
 } tr4_flyby_camera_t;
 //typedef prtl::array < tr4_flyby_camera_t > tr4_flyby_camera_array_t;
 

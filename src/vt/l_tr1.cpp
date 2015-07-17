@@ -329,7 +329,7 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.alternate_room  = read_bit16(src);
     room.alternate_group = 0;   // Doesn't exist in TR1-3
-    
+
     room.flags = read_bitu16(src);
         room.reverb_info = 2;
 
@@ -380,14 +380,14 @@ void TR_Level::read_tr_object_texture(SDL_RWops * const src, tr4_object_texture_
   *
   * some sanity checks get done and if they fail an exception gets thrown.
   */
-void TR_Level::read_tr_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t & Spriteexture)
+void TR_Level::read_tr_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
     float w, h;
 
-    Spriteexture.tile = read_bitu16(src);
-    if (Spriteexture.tile > 64)
-        Sys_extWarn("Spriteexture.tile > 64");
+    sprite_texture.tile = read_bitu16(src);
+    if (sprite_texture.tile > 64)
+        Sys_extWarn("sprite_texture.tile > 64");
 
     tx = read_bitu8(src);
     ty = read_bitu8(src);
@@ -400,15 +400,15 @@ void TR_Level::read_tr_Spriteexture(SDL_RWops * const src, tr_sprite_texture_t &
 
     w = tw / 256.0;
     h = th / 256.0;
-    Spriteexture.x0 = tx;
-    Spriteexture.y0 = ty;
-    Spriteexture.x1 = Spriteexture.x0 + w;
-    Spriteexture.y1 = Spriteexture.y0 + h;
+    sprite_texture.x0 = tx;
+    sprite_texture.y0 = ty;
+    sprite_texture.x1 = sprite_texture.x0 + w;
+    sprite_texture.y1 = sprite_texture.y0 + h;
 
-    Spriteexture.left_side = tleft;
-    Spriteexture.right_side = tright;
-    Spriteexture.top_side =-tbottom;
-    Spriteexture.bottom_side =-ttop;
+    sprite_texture.left_side = tleft;
+    sprite_texture.right_side = tright;
+    sprite_texture.top_side =-tbottom;
+    sprite_texture.bottom_side =-ttop;
 }
 
 /** \brief reads sprite sequence definition.
@@ -526,7 +526,7 @@ void TR_Level::read_tr_moveable(SDL_RWops * const src, tr_moveable_t & moveable)
     moveable.mesh_tree_index = read_bitu32(src);
     moveable.frame_offset = read_bitu32(src);
     moveable.animation_index = read_bitu16(src);
-    
+
     // Disable unused skybox polygons.
     if((this->game_version == TR_III) && (moveable.object_id == 355))
     {
@@ -658,7 +658,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         uint32_t frame_offset = this->animations[i].frame_offset / 2;
         this->animations[i].frame_size = this->frame_data[frame_offset + 9] * 2 + 10;
     }
-        
+
     this->static_meshes_count = read_bitu32(src);
     this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
     for (i = 0; i < this->static_meshes_count; i++)
@@ -670,7 +670,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
 
     this->sprite_textures.resize( read_bitu32(src) );
     for (i = 0; i < this->sprite_textures.size(); i++)
-        read_tr_Spriteexture(src, this->sprite_textures[i]);
+        read_tr_sprite_texture(src, this->sprite_textures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
