@@ -2027,9 +2027,8 @@ such, the information in this document may contain errors or omissions, and many
 misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is&nbsp;a spare-time project that set out to
 document the Tomb Raider file formats. </p>
                 <p>Generally, game versions are referenced by abbreviations. Therefore, Tomb Raider / Unfinished Business is reffered to as <i>TR1</i>, Tomb Raider II is referred to as <i>TR2</i>, and so on.</p>
-                <p>In data types description, there may be version-specific data fields. For this case, if the information is&nbsp;specific to TR2 onwards, it&nbsp;is highlighted in <strong><span class="red">RED</span></strong>. Likewise, information specific to TR3 is highlighted in <strong><span class="green"><font color="#00B050">GREEN</font></span></strong>.&nbsp;Information&nbsp;specific&nbsp;to&nbsp;Tomb&nbsp;Raider&nbsp;IV(TR4)&nbsp;is&nbsp;highlighted&nbsp;in&nbsp;<b><font color="#F79646">ORANGE</font></b>,&nbsp;and&nbsp;Tomb&nbsp;Raider&nbsp;Chronicles&nbsp;info&nbsp;is&nbsp;highlighted&nbsp;in&nbsp;<b><font
+                <p>In data types description, there may be version-specific data fields. For this case, if the information is&nbsp;specific to TR2 onwards, it is highlighted in <strong><span class="red">RED</span></strong>. Likewise, information specific to TR3 is highlighted in <strong><span class="green"><font color="#00B050">GREEN</font></span></strong>. Information specific to Tomb Raider IV(TR4) is highlighted in <b><font color="#F79646">ORANGE</font></b>, and Tomb Raider Chronicles info is highlighted in <b><font
 color="#7030A0">VIOLET</font></b>.  </p>
-                <p>&nbsp;</p>
             </div>
 <div class="paragraph"><p>Tomb Raider, Tomb Raider Gold, Unfinished Business, Tomb Raider II, Tomb Raider III, Tomb Raider: The Last Revelation, Tomb Raider Chronicles,&nbsp;Lara Croft, and all images and data within the data files and game engine
 are Copyright &copy; Square Enix.</p></div>
@@ -2387,7 +2386,7 @@ environmental map on transformed meshes.</li>
                 </div>
                 <div class="listingblock">
                     <div class="content">
-<!-- Generator: GNU source-highlight 3.1.8
+                        <!-- Generator: GNU source-highlight 3.1.8
 by Lorenzo Bettini
 http://www.lorenzobettini.it
 http://www.gnu.org/software/src-highlite -->
@@ -2432,27 +2431,7 @@ http://www.gnu.org/software/src-highlite -->
     <span style="color: #008080">uint16_t</span> Tile<span style="color: #990000">[</span><span style="color: #993399">256</span> <span style="color: #990000">*</span> <span style="color: #993399">256</span><span style="color: #990000">];</span>
 <span style="color: #FF0000">}</span><span style="color: #990000">;</span></tt></pre></div></div>
 </div>
-<div class="sect2">
-<h3 id="_textures">7.7. Textures</h3>
-<div class="paragraph"><p>All mesh surfaces are either <em>coloured</em> or <em>textured</em>.  Coloured surfaces are “painted” with a single colour that is either specified explicitly
-or using an index into the palette.  Textured surfaces map textures (bitmapped images) from the texture tiles (textiles) to each point on the mesh surface.
-This is done using conventional UV mapping, which is specified in “Object Textures” below; each object texture specifies a mapping from a set of vertices to
-locations in the textile, and these texture vertices are associated with position vertices specified here.</p></div>
-</div>
         </div>
-</div>
-<div class="sect1">
-<h2 id="_sounds">8. Sounds</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>There are several sorts of sounds, which can be classified as either continuous or triggered. Continuous sounds are level-background sounds (such as
-the blowing wind in “The Great Wall”) and sound sources (such as waterfalls; these are in <span class="monospaced">SoundSources[]</span>). Triggered sounds are sounds played when some event
-happens, such as at certain animation frames (footsteps and other Lara sounds), when doors open and close, and when weapons are fired. Sounds are stored in two
-places: the game-data files and the CD audio tracks (the latter are separate soundfiles in the MacOS version). The latter kind of sound is referred to
-straightforwardly, by index, while the former kind of sound is referred to using a three-layer indexing scheme, to provide a maximum amount of abstraction. An
-internal sound index references <span class="monospaced">SoundMap[]</span>, which points to a <span class="monospaced">SoundDetails[]</span> record, which in turn points to a <span class="monospaced">SampleIndices[]</span> entry, which in turn points to a
-sound sample. <span class="monospaced">SoundDetails[]</span> contains such features as sound intensity, how many sound samples to choose from, among others. The sound samples themselves are in
-Microsoft WAVE format, and they are embedded either in the data files (TR1, some later TR demos) or in a separate file (<span class="monospaced">MAIN.SFX</span>) in TR2 and TR3.</p></div>
-</div>
 </div>
 <h1 id="_room_geometry">Room Geometry</h1>
 <div class="sect1">
