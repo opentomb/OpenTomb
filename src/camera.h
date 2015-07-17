@@ -70,6 +70,8 @@ struct Camera
     Room* m_currentRoom = nullptr;
 
     Camera();
+    Camera(const Camera&) = delete;
+    Camera& operator=(const Camera&) = delete;
 
     void apply();
     void setFovAspect(GLfloat fov, GLfloat aspect);
