@@ -76,7 +76,7 @@ bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
 void Portal::genNormale()
 {
     assert( vertices.size() > 3 );
-    auto v1 = vertices[0] - vertices[1];
+    auto v1 = vertices[1] - vertices[0];
     auto v2 = vertices[2] - vertices[1];
     normal.assign(v1, v2, vertices[0]);
 }
