@@ -1,7 +1,7 @@
-find_program(SRC_HIGHLIGHT source-highlight) # internally used by asciidoc
+find_program(PYGMENTIZE NAMES pygmentize pygmentize.py) # internally used by asciidoc
 find_program(ASCIIDOC NAMES asciidoc asciidoc.py)
 
-if(SRC_HIGHLIGHT AND ASCIIDOC)
+if(PYGMENTIZE AND ASCIIDOC)
     add_custom_target(
       trosettastone
       COMMAND ${ASCIIDOC} -b html5 trosettastone.asc
