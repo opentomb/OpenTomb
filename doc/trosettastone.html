@@ -2073,8 +2073,6 @@ else
 <div class="sect1">
 <h2 id="_foreword">1. Foreword</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Since 2003 Tomb Raider community, and especially programmers and resource hacking enthusiasts, used outdated document called TRosettaStone, which wasn&#8217;t updated since 1999. Also, there was an updated version available, which was done by E. Popov - that&#8217;s the one which we will use as basis for this document. Also, this document will widely borrow from TREP user&#8217;s manual, NGLE manual, and a bunch of TRF threads about internal game engine structures. Maybe other documents will be used as well, but in any case, you will get a reference and a link in the end of this text.</p></div>
-<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily to simply exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will explore not only game file formats, but also internal game logic, procedures and all such things. It will be updated synchronously with development of OpenTomb, one of such reimplementation projects, which received wide feedback from the community lately.</p></div>
 <div class="quoteblock">
 <div class="content">The Rosetta Stone was the key that unlocked the mysteries of Egyptian hieroglyphics. It contains an inscription praising King Ptolemy V, which is repeated
 three times&#8201;&#8212;&#8201;once in hieroglyphic, once in demotic, and once in Greek. By translating the Greek, comparisons could be made with the demotic and hieroglyphic
@@ -2083,65 +2081,143 @@ could be likened to a form of digital archæology, and hopefully this document w
 &#8220;TR-hieroglyphic&#8221; works.</div>
 <div class="attribution">
 </div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_description">2. Description</h2>
-<div class="sectionbody">
+<div class="paragraph"><p>Since 2003 Tomb Raider community, and especially programmers and resource hacking enthusiasts, used outdated document called TRosettaStone, which wasn&#8217;t updated since 1999. Also, there was an updated version available, which was done by E. Popov - that&#8217;s the one which we will use as basis for this document. Also, this document will widely borrow from TREP user&#8217;s manual, NGLE manual, and a bunch of TRF threads about internal game engine structures. Maybe other documents will be used as well, but in any case, you will get a reference and a link in the end of this text.</p></div>
+<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily to simply exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will explore not only game file formats, but also internal game logic, procedures and all such things. It will be updated synchronously with development of OpenTomb, one of such reimplementation projects, which received wide feedback from the community lately.</p></div>
+<div class="sect2">
+<h3 id="_description">1.1. Description</h3>
 <div class="paragraph"><p>This document contains detailed descriptions of the classic-era Tomb Raider data file formats. It is assumed that the reader has knowledge and experience programming in C or C++, and has at least a passing familiarity with graphics programming. This document is self-contained; all hyperlinks refer only to itself. All information in this document was derived independently, without the aid or assistance of anyone at Core Design or Eidos. As such, the information in this document may contain errors or omissions, and many structure and variable names were deduced from the interpretation of the data (and therefore could be misleading or completely wrong). However, we re-use certain variable and function names from original Tomb Raider debug builds and mappings from leaked Core Design PSX SDK. All the information in this document was tested and is therefore plausible, but could also be a misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is a spare-time project that set out to document the Tomb Raider file formats.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_conventions">3. Conventions</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Generally, game versions are referenced by abbreviations. Therefore, Tomb Raider / Unfinished Business is reffered to as <strong>TR1</strong>, Tomb Raider II is referred to as <strong>TR2</strong>, and so on. Regarding the level editing and modding tools, Tomb Raider Level Editor is referenced as <strong>TRLE</strong>, its patched version is referenced as <strong>NGLE</strong>, and Tomb Raider Engine Patcher is referenced as <strong>TREP</strong>.</p></div>
+<div class="sect2">
+<h3 id="_conventions">1.2. Conventions</h3>
+<div class="paragraph"><p>Generally, game versions are referenced by abbreviations:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>TR1</strong> refers to Tomb Raider and Tomb Raider: Unfinished Business
+</p>
+</li>
+<li>
+<p>
+<strong>TR2</strong> refers to Tomb Raider II and Tomb Raider: The Golden Mask
+</p>
+</li>
+<li>
+<p>
+<strong>TR3</strong> refers to Tomb Raider III and Tomb Raider: The Lost Artifact
+</p>
+</li>
+<li>
+<p>
+<strong>TR4</strong> refers to Tomb Raider: The Last Revelation
+</p>
+</li>
+<li>
+<p>
+<strong>TR5</strong> refers to Tomb Raider: Chronicles
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>NOTE:</strong> when level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em> (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released by Eidos / Core, along with TR5.</p></div>
+<div class="paragraph"><p>Also, if external programs and utilities are concerned, here&#8217;s abbreviations for them:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>TRLE</strong> refers to Tomb Raider Level Editor&#8201;&#8212;&#8201;an official tool by Core Design used to build levels.
+</p>
+</li>
+<li>
+<p>
+<strong>NGLE</strong> refers to TRLE version which was unofficially patched and now extensively used by level editing community.
+</p>
+</li>
+<li>
+<p>
+<strong>Dxtre3d</strong> refers to so-called <em>unofficial</em> level editor developed by Felix aka <em>Turbo Pascal</em>.
+</p>
+</li>
+<li>
+<p>
+<strong>TREP</strong> refers to a binary patcher which is used to patch <em>TR4 engine</em> in its <em>Level Editor</em> version (bundled with TR5) for some advanced features and upgrades by level editing community.
+</p>
+</li>
+<li>
+<p>
+<strong>TRNG</strong> is another patcher with same purpose as TREP, however, incompatible with it. TRNG offers even more advanced features and upgrades to old <em>TR4 engine</em>.
+</p>
+</li>
+<li>
+<p>
+<strong>FLEP</strong> refers to a similar patcher as <em>TREP</em>, which is used for same <em>TR4 engine</em>, albeit previously modified by <em>TRNG</em>.
+</p>
+</li>
+</ul></div>
 <div class="paragraph"><p>When there is some version-specific info about certain structures or methods, this information will be marked as <strong>TRx ONLY</strong>, where <strong>x</strong> means game version(s). Additionally, if the information is specific to TR2 onwards, it is highlighted in <strong><span class="red">RED</span></strong>. Likewise, information specific to TR3 is highlighted in <strong><span class="green">GREEN</span></strong>. Information specific to Tomb Raider IV(TR4) is highlighted in <strong><span class="blue">BLUE</span></strong>, and Tomb Raider Chronicles info is highlighted in <strong><span class="purple">PURPLE</span></strong>.</p></div>
 </div>
+<div class="sect2">
+<h3 id="_current_unknowns">1.3. Current unknowns</h3>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+Room light structure from TR4 needs additional description.
+</p>
+</li>
+<li>
+<p>
+Same for TR5 room light structure.
+</p>
+</li>
+<li>
+<p>
+Exact description of what is exactly "room layer" in TR5.
+</p>
+</li>
+</ol></div>
 </div>
-<div class="sect1">
-<h2 id="_copyright_note">4. Copyright note</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_copyright_note">1.4. Copyright note</h3>
 <div class="paragraph"><p>Tomb Raider, Tomb Raider Gold, Unfinished Business, Tomb Raider II, Tomb Raider III, Tomb Raider: The Last Revelation, Tomb Raider Chronicles, Lara Croft, and all images and data within the data files and game engine are Copyright © Square Enix.</p></div>
 </div>
 </div>
-<h1 id="_the_fundamentals">The Fundamentals</h1>
+</div>
 <div class="sect1">
-<h2 id="_overview">1. Overview</h2>
+<h2 id="_the_fundamentals">2. The Fundamentals</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>In this section, we&#8217;ll try to describe basic file types of Tomb Raider, as well as basic data types used in structures.</p></div>
 <div class="sect2">
-<h3 id="_file_types">1.1. File types</h3>
-<div class="paragraph"><p>Tomb Raider is driven by various sets of files - level files, script files, FMVs, audio tracks and sound files. In TR4 and TR5, there is also specific file type which contains cutscene data - <em>cutseq pack</em>.</p></div>
+<h3 id="_overview">2.1. Overview</h3>
+<div class="paragraph"><p>In this section, we&#8217;ll try to describe basic file types of Tomb Raider, as well as basic data types used in structures.</p></div>
 <div class="sect3">
-<h4 id="_the_script_files">1.1.1. The script files</h4>
+<h4 id="_file_types">2.1.1. File types</h4>
+<div class="paragraph"><p>Tomb Raider is driven by various sets of files - level files, script files, FMVs, audio tracks and sound files. In TR4 and TR5, there is also specific file type which contains cutscene data - <em>cutseq pack</em>.</p></div>
+<div class="sect4">
+<h5 id="_the_script_files">The script files</h5>
 <div class="paragraph"><p>The script file structure differs from version to version.</p></div>
 <div class="paragraph"><p>In TR1, all script info was embedded into executable (<span class="monospaced">tomb.exe</span>). TR2 and TR3 had unified <span class="monospaced">TOMBPC.DAT</span> file, which contains all the text strings describing the various elements in the game (e.g. the game engine knows about <em>&#8220;Key 1&#8221;</em>; it looks in <span class="monospaced">TOMBPC.DAT</span> to determine the name to be displayed in Lara&#8217;s inventory, such as <em>&#8220;Rusty Key&#8221;</em> or <em>&#8220;Taste rostige&#8221;</em> or <em>&#8220;Cle Rouillee&#8221;</em>), the level and cut-scene filenames (e.g. <span class="monospaced">WALL.TR2</span>, <span class="monospaced">CUT3.TR2</span>), the order in which they are to be played, and various per-level and per-game configuration options (e.g. what weapons and objects Lara starts the level with, whether or not the "cheat" codes work, etc.).</p></div>
 <div class="paragraph"><p>TR4 and TR5 introduced other script structure, where actual script defining gameflow was separated from text strings used in game - hence, both TR4 and TR5 have two <span class="monospaced">.DAT</span> files - <span class="monospaced">SCRIPT.DAT</span> and <span class="monospaced">LANGUAGE.DAT</span>, where <span class="monospaced">LANGUAGE</span> differs depending on regional origin of the game - <span class="monospaced">US.DAT</span>, <span class="monospaced">FRENCH.DAT</span>, <span class="monospaced">JAPANESE.DAT</span>, and so on.</p></div>
 </div>
-<div class="sect3">
-<h4 id="_the_level_files">1.1.2. The level files</h4>
+<div class="sect4">
+<h5 id="_the_level_files">The level files</h5>
 <div class="paragraph"><p>The level files, <span class="monospaced">{level-name}.PHD/TUB/TR2/TR4/TRC</span>, contain everything about the level, including the geographical geometry, the geometry (meshes) of all animate and inanimate objects in the level, all the textures and colour data, all animation data, index information (and, in TR1, TR4 and TR5 - also the <em>actual sound sample data</em>) for all sounds, accessibility maps - everything necessary to run the game. For whatever reason, Core has included everything in one file instead of breaking it up into logical groupings; this means that every level contains all the meshes, textures, sound information, and animation data for Lara and all of her weapons. There are a fair number of other redundancies, too.</p></div>
 <div class="paragraph"><p>It&#8217;s good to note the origins of level file extension. While it is obvious that TR2/TR4/TRC extensions specify game version, <span class="monospaced">.PHD</span> is actually abbreviation for one of the key developers of Tomb Raider 1: <em>Phil H. Daniels</em>. Looks like that this programmer contributed a lot of the code to early version of Tomb Raider, because phd also became a prefix for several helper functions in source code, like <span class="monospaced">phd_sin</span>, <span class="monospaced">phd_cos</span>, and so on. Most likely, he was responsible for developing level file structure of Tomb Raider.</p></div>
 </div>
-<div class="sect3">
-<h4 id="_fmvs_full_motion_videos">1.1.3. FMVs (Full Motion Videos)</h4>
+<div class="sect4">
+<h5 id="_fmvs_full_motion_videos">FMVs (Full Motion Videos)</h5>
 <div class="paragraph"><p>TR1-3 shared the same proprietary Eidos codec for videos, called <em>Escape</em>. The extension for such files is <span class="monospaced">.RPL</span>, that&#8217;s why they occasionally (and mistakingly) called Replay codec. Signature feature of RPL videos is that they are always interlaced with black stripes; most likely, this was used to conserve disk space (however, <em>PlayStation</em> videos were in <span class="monospaced">.STR</span> format, which is basic MPEG compression, and they had no interlacing - but suffered from blocking issues). In TR1 and TR2, framerate was limited to 15 FPS, while in TR3 it was doubled to 30 FPS.</p></div>
 <div class="paragraph"><p>For a long time, Escape codec was largely unexplored and barely reverse-engineered; there was only an abandoned open source <em>Mplayer</em> implementation for some Escape codec versions, but recent <em>ffmpeg</em> revisions feature fully functional decoder for Escape videos.</p></div>
 <div class="paragraph"><p>Since TR4, all FMVs are in <em>Bink Video</em> format, which is much more common and easy to rip, convert and explore.</p></div>
 </div>
-<div class="sect3">
-<h4 id="_sound_files_audio_tracks">1.1.4. Sound files - audio tracks</h4>
+<div class="sect4">
+<h5 id="_sound_files_audio_tracks">Sound files - audio tracks</h5>
 <div class="paragraph"><p>TR1 1 and TR2 used <em>CD-Audio</em> tracks for in-game music, and therefore, they needed auxilary CD-audio fed into the soundcard. That&#8217;s the reason why most contemporary PCs have issues with audiotrack playback in these games - such setup is no longer supported in modern CD/DVD/BD drives, and digital pipeline is not always giving the same result. Currently, various modernized game repacks (such as <em>Steam</em> or <em>GOG</em> releases) officially features no-cd patches with embedded <em>MP3 player</em>, which takes place of deprecated CD-Audio player.</p></div>
 <div class="paragraph"><p>In TR3, we have somewhat special audiotrack setup. Audio format was indeed changed to simple <em>WAV (MS-ADPCM codec)</em>, but all tracks were embedded into <span class="monospaced">CDAUDIO.WAD</span> file, which also contained a header with a list of all tracks and their durations. So, when game requests an audiotrack to play, it takes info on needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then goes straight to an offset for this track into it.</p></div>
 <div class="paragraph"><p>In TR4-5, track format remained the same (MS-ADPCM), but tracks were no longer embedded into <span class="monospaced">CDAUDIO.WAD</span>. Instead, each track was saved as simple <span class="monospaced">.WAV</span> file, and file names themselves were embedded into executable. Hence, when TR4-5 plays an audiotracks, it refers to internal filename table, and then loads an audiotrack with corresponding name.</p></div>
 </div>
-<div class="sect3">
-<h4 id="_sound_files_samples">1.1.5. Sound files - samples</h4>
+<div class="sect4">
+<h5 id="_sound_files_samples">Sound files - samples</h5>
 <div class="paragraph"><p>TR2 and TR3 also featured external sound sample files, which allowed to share samples between all level files. This sound file is called <span class="monospaced">MAIN.SFX</span>, and usually placed in <span class="monospaced">DATA</span> subfolder. Hence, engine loads sound samples not from level files (as it&#8217;s done in TR1, TR4 and TR5), but rather from this <span class="monospaced">MAIN.SFX</span> file.</p></div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_basic_data_types">1.2. Basic data types</h3>
+<div class="sect3">
+<h4 id="_basic_data_types">2.1.2. Basic data types</h4>
 <div class="paragraph"><p>For the purposes of further discussion, the following are assumed:</p></div>
 <table class="tableblock frame-all grid-all"
 style="
@@ -2197,26 +2273,21 @@ below.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(pop)</span>
 </pre></div></div></div>
-<div class="sect3">
-<h4 id="_note_about_float_phobic_nature_of_tomb_raider">1.2.1. Note about float-phobic nature of Tomb Raider</h4>
+<div class="sect4">
+<h5 id="_note_about_float_phobic_nature_of_tomb_raider">Note about float-phobic nature of Tomb Raider</h5>
 <div class="paragraph"><p>In 90% of all cases, Tomb Raider engines use integer numbers, even for geometry calculations and animation interpolations. The root of this setup lies in multi-platform nature of the code, which was simultaneously written for PC and PlayStation. While PCs had enough computational power to deal with floats at that time, PlayStation relied primarily on integers.</p></div>
 <div class="paragraph"><p>However, some internal variables and constants (like drawing distance and fog distance constants) are PC-specific and stored in floating point numbers. Also, last game in series, TR5, extensively used floating-point numbers for certain data types&#8201;&#8212;&#8201;like colours, vertices, lights and some coordinates.</p></div>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_coordinates">2. Coordinates</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_coordinates">2.1.3. Coordinates</h4>
 <div class="paragraph"><p>The world coordinate system is oriented with the $X-Z$ plane horizontal and $Y$ vertical, with $-Y$ being &#8220;up&#8221; (e.g. decreasing $Y$ values indicate
 increasing altitude). The world coordinate system is specified using <span class="monospaced">int32_t</span> values; however, the geography is limited to the $+X$/$+Z$ quadrant for reasons that are
 explained below. Mesh coordinates are relative and are specified using `int16_t`s.</p></div>
 <div class="paragraph"><p>There are some additional coordinate values used, such as &#8220;the number of 1024-unit blocks between points A and B&#8221;;  these are simply scaled versions of more conventional coordinates.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_colours">3. Colours</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_colours">2.1.4. Colours</h4>
 <div class="paragraph"><p>All colours in TR are specified either explicitly (using either the <a href="#tr2_colour">[tr2_colour]</a> structure, described below, or the 16-bit
 ARGB structure) or implicitly, by indexing one of the palettes. However, it is only applicable to TR1-3 - there is no palette in TR4 and TR5.</p></div>
 <div class="paragraph"><p>The 16-bit textile array, which contains <a href="#tr2_textile16">[tr2_textile16]</a> structures, specifies colours using 16-bit ARGB, where the highest bit
@@ -2225,10 +2296,8 @@ ARGB structure) or implicitly, by indexing one of the palettes. However, it is o
 <a href="#tr2_colour">[tr2_colour]</a>, while the last byte is ignored (set to 0).</p></div>
 <div class="paragraph"><p><strong>TR4-5 ONLY:</strong> The 32-bit textile array, which contains <a href="#tr_textile32">[tr_textile32]</a> structures, specifies colours using 32-bit ARGB, where the highest byte is the alpha channel (255 means the texel is fully opaque, 0 the texel is fully transparent).  The next bytes specify (in this order) the red / green / blue channels. The 16 and 32-bit textile arrays depict the same graphics data, but of course the 32-bit array has a better colour resolution. It&#8217;s the one used if you select a 32 bits A8R8G8B8 texture format in the setup menu from TR4 and TR5.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_objects">4. Objects</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_objects">2.1.5. Objects</h4>
 <div class="paragraph"><p>There are two basic types of objects in TR2&#8201;&#8212;&#8201;meshes and sprites.</p></div>
 <div class="paragraph"><p><em>Meshes</em> are collections of textured or coloured polygons that are assembled to
 form a three-dimensional object (such as a tree, a tiger, or Lara herself). The &#8220;rooms&#8221; themselves are also composed of meshes. Mesh objects may contain more
@@ -2240,62 +2309,48 @@ abundant; TR2 has very few scenery sprites, and TR3&#8217;s pickups are models i
 array (e.g. <span class="monospaced">Moveables[i]</span>) or using an identifying tag (<span class="monospaced">ObjectID</span>). In the latter case, the related array (<span class="monospaced">Items[]</span>, <span class="monospaced">Moveables[]</span>, etc.) is searched until a
 matching <span class="monospaced">ObjectID</span> is found.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_animations">5. Animations</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_animations">2.1.6. Animations</h4>
 <div class="paragraph"><p>There are three basic types of animations in TR, two corresponding with textures&#8201;&#8212;&#8201;sprite animations and animated textures&#8201;&#8212;&#8201;and one corresponding directly with meshes.</p></div>
-<div class="sect2">
-<h3 id="_sprite_animations">5.1. Sprite animations</h3>
+<div class="sect4">
+<h5 id="_sprite_animations">Sprite animations</h5>
 <div class="paragraph"><p>Sprite animation (sprite sequences) consists simply of a series of sprites that are to be displayed one after another, e.g. grenade explosions. Sprite animations were quite common in earlier games (TR1 and TR2), while in TR3 onwards there are almost no sprite animations&#8201;&#8212;&#8201;only notable example is fire particle sprites and water splash effect.</p></div>
 </div>
-<div class="sect2">
-<h3 id="_animated_textures">5.2. Animated textures</h3>
-<div class="sect3">
-<h4 id="_classic_frames">5.2.1. Classic frames</h4>
-<div class="paragraph"><p>These are simply a list of textures that are cycled through in an endless loop; they are normally used as geographic elements of the levels (e.g. water surface, bubbling lava, Atlantean flesh walls), but practically, Tomb Raider engines are capable of applying animated textures to mesh geometry. This feature is primarily used in custom levels.</p></div>
-</div>
-<div class="sect3">
-<h4 id="_uv_rotate">5.2.2. UV Rotate</h4>
-<div class="paragraph"><p>Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76.</p></div>
+<div class="sect4">
+<h5 id="_animated_textures">Animated textures</h5>
+<div class="paragraph"><p><strong>Classic frames:</strong> These are simply a list of textures that are cycled through in an endless loop; they are normally used as geographic elements of the levels (e.g. water surface, bubbling lava, Atlantean flesh walls), but practically, Tomb Raider engines are capable of applying animated textures to mesh geometry. This feature is primarily used in custom levels.</p></div>
+<div class="paragraph"><p><strong>UV Rotate:</strong> Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76.</p></div>
 <div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument. If such command is found (and argument is not zero&#8201;&#8212;&#8201;for example, <span class="monospaced">UVRotate = 4</span>), engine uses special variable value kept in level file, <span class="monospaced">animated_textures_uv_count</span>, to determine if animation range belongs to UVRotate mode or classic frames mode. Then, if it belongs to UVRotate mode, each frame of this range is treated as individual rotating texture.</p></div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_mesh_animations">5.3. Mesh animations</h3>
+<div class="sect4">
+<h5 id="_mesh_animations">Mesh animations</h5>
 <div class="paragraph"><p>Mesh animations are much more complex than sprite and texture animations, and done by what is essentially a skeletal-modeling scheme. These involve some arrays (Frames[] and MeshTree[]) of offsets and rotations for each element of a composite mesh. Frames are then grouped into an array (Animations[]) that describes discrete &#8220;movements&#8221;, e.g. Lara taking a step or a tiger striking with its paw. The animations are “sewn together” by a state change array and an animation dispatch array, which, together with state information about the character, ensure that the animation is fluid (e.g. if Lara is running and the player releases the RUN key, she will stop; depending upon which of her feet was down at the time, either her left or right foot will strike the floor as part of the &#8220;stop&#8221; animation. The correct animation (left foot stop vs. right foot stop) is selected using these structures and the state information).</p></div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_lighting">6. Lighting</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_lighting">2.1.7. Lighting</h4>
 <div class="paragraph"><p>There are two main types of lighting in Tomb Raider, <em>constant</em> and <em>vertex</em>. Constant lighting means that all parts of an object have the same illumination, while in vertex lighting, each polygon vertex has its own light value, and the illumination of the polygon interiors is interpolated from the vertex values.</p></div>
 <div class="paragraph"><p>Furthermore, lighting can be either internal or external. Internal lighting is specified in an object’s data, external lighting is calculated using the room’s light sources (ambient light, point light sources, spotlights (TR4-5), dynamic lights).</p></div>
 <div class="paragraph"><p>When available, external lighting also uses the vertex normals to calculate the incoming light at each vertex. Light intensities are described either with a single value or with a 16 bits color value (you can see it more like a &#8220;color filter&#8221;), depending mainly on the TR version.</p></div>
 <div class="paragraph"><p>Light intensities are described with a single value in TR1 and a pair of values in TR2 and TR3; the paired values are almost always equal, and the pairing may reflect some feature that was only imperfectly implemented, such as off/on or minimum/maximum values. In TR1 and TR2, the light values go from 0 (maximum light) to 8192 (minimum light), while in TR3, the light values go from 0 (minimum light) to 32767 (maximum light).</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_textures">7. Textures</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_textures">2.1.8. Textures</h4>
 <div class="paragraph"><p>All mesh surfaces are either <em>coloured</em> (<strong>TR1-3 only</strong>) or <em>textured</em>.</p></div>
 <div class="paragraph"><p><em>Coloured</em> surfaces are &#8220;painted&#8221; with a single colour that is either specified explicitly or using an index into the palette. <em>Textured</em> surfaces map textures (bitmapped images) from the texture tiles (textiles) to each point on the mesh surface.  This is done using conventional UV mapping, which is specified in &#8220;Object Textures&#8221; below; each object texture specifies a mapping from a set of vertices to locations in the textile, and these texture vertices are associated with position vertices specified here. Each textile is a 256x256 pixels wide area.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_sound_samples">8. Sound samples</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_sound_samples">2.1.9. Sound samples</h4>
 <div class="paragraph"><p>There are two ways for sound samples to play.</p></div>
 <div class="paragraph"><p>First one is basically sound emitter sitting at a static global position in level, and continuously emitting specified sound (such as waterfalls&#8201;&#8212;&#8201;these are in <a href="#SoundSources[]">[SoundSources[]]</a>). Second one is triggered sounds&#8201;&#8212;&#8201;these are sounds played when some event happens, such as at certain animation frames (footsteps and other Lara sounds), when doors open and close, and when weapons are fired.</p></div>
 <div class="paragraph"><p>Either way, each played sound is referred to using a three-layer indexing scheme, to provide a maximum amount of abstraction. An internal sound index references <a href="#SoundMap[]">[SoundMap[]]</a>, which points to a <a href="#SoundDetails[]">[SoundDetails[]]</a> record, which in turn points to a <a href="#SampleIndices[]">[SampleIndices[]]</a> entry, which in turn points to a sound sample. <a href="#SoundDetails[]">[SoundDetails[]]</a>, contains such features as sound intensity, how many sound samples to choose from, among others. The sound samples themselves are in Microsoft WAVE format, and, as already mentioned, they are embedded either in the data files (TR1, TR4 and TR5) or in a separate file (<span class="monospaced">MAIN.SFX</span>) in TR2 and TR3.</p></div>
 </div>
 </div>
-<h1 id="_basic_data_structures">Basic Data Structures</h1>
+<div class="sect2">
+<h3 id="_basic_data_structures">2.2. Basic Data Structures</h3>
 <div class="paragraph"><p>Much of the .TR2 file is comprised of structures based on a few fundamental data structures, described below.</p></div>
-<div class="sect1">
-<h2 id="_colour_structure">1. Colour structure</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_colour_structure">2.2.1. Colour structure</h4>
 <div class="paragraph"><p>This is how most colours are specified.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_colour</span>   <span class="c1">// 3 bytes</span>
@@ -2328,10 +2383,8 @@ bytes instead of this structure.)</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_vertex_structure">2. Vertex structure</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_vertex_structure">2.2.2. Vertex structure</h4>
 <div class="paragraph"><p>This is how vertices are specified, using relative coordinates.  They are generally formed into lists, such that other entities (such as
 quads or triangles) can refer to them by simply using their index in the list.</p></div>
 <div class="listingblock">
@@ -2352,10 +2405,8 @@ quads or triangles) can refer to them by simply using their index in the list.</
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_rectangular_quad_face_definition">3. Rectangular (quad) face definition</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_rectangular_quad_face_definition">2.2.3. Rectangular (quad) face definition</h4>
 <div class="paragraph"><p>Four vertices (the values are indices into the appropriate vertex list) and a texture (an index into the object-texture
 list) or colour (index into 8-bit palette or 16-bit palette).  If the rectangle is a coloured polygon (not textured), the .Texture element contains two indices:
 the low byte (<span class="monospaced">.Texture &amp; 0xff</span>) is an index into the 256-colour palette, while the high byte (<span class="monospaced">.Texture &gt;&gt; 8</span>) is in index into the 16-bit palette, when present. A
@@ -2365,7 +2416,7 @@ textured rectangle will have its vertices mapped onto all 4 vertices of an objec
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">Effects</span>    <span class="c1">// TR4-5 ONLY: alpha blending and environment mapping strength</span>
+    <span class="kt">uint16_t</span> <span class="n">Effects</span>    <span class="c1">// TR4-5 ONLY: alpha blending and environment mapping</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">.Texture</span> field can have the bit 15 set: when it is, the face is <em>double-sided</em> (i.e. visible from both sides).</p></div>
@@ -2374,12 +2425,12 @@ textured rectangle will have its vertices mapped onto all 4 vertices of an objec
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bit 0:</em> if set, face has additive alpha blending (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr_object_texture">[tr_object_texture]</a> is 2).
+<em>Bit 0:</em> if set, face has <em>additive alpha blending</em> (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr_object_texture">[tr_object_texture]</a> is 2).
 </p>
 </li>
 <li>
 <p>
-<em>Bits 1-7:</em> strength of environment mapping effect (so-called &#8220;shiny effect&#8221; in TRLE community). Environment map is derived from special pre-rendered texture. The bigger the value is, the more visible the effect is.
+<em>Bits 1-7:</em> strength of <em>environment mapping</em> effect (so-called &#8220;shiny effect&#8221; in TRLE community). Environment map is derived from special pre-rendered texture. The bigger the value is, the more visible the effect is.
 </p>
 <div class="olist arabic"><ol class="arabic">
 <li>
@@ -2395,8 +2446,9 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 </ol></div>
 </li>
 </ul></div>
-<div class="sect2">
-<h3 id="_triangular_face_definition">3.1. Triangular face definition</h3>
+</div>
+<div class="sect3">
+<h4 id="_triangular_face_definition">2.2.4. Triangular face definition</h4>
 <div class="paragraph"><p>This structure has the same layout than the quad face definition, except a textured triangle will have its vertices mapped <em>onto the first 3 vertices of an object texture, in appropriate correspondence</em>. Moreover, a triangle has only 3 vertices, not 4.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_face3</span>    <span class="c1">// 8-10 bytes</span>
@@ -2408,8 +2460,8 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 </pre></div></div></div>
 <div class="paragraph"><p>All the info about <span class="monospaced">.Texture</span> and <span class="monospaced">.Effects</span> field is also similar to same info from <a href="#tr2_face4">[tr2_face4]</a> definition.</p></div>
 </div>
-<div class="sect2">
-<h3 id="_8_bit_texture_tile">3.2. 8-bit texture tile</h3>
+<div class="sect3">
+<h4 id="_8_bit_texture_tile">2.2.5. 8-bit texture tile</h4>
 <div class="paragraph"><p>Each <span class="monospaced">uint8_t</span> represents a pixel whose colour is in the 8-bit palette.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_textile8</span>    <span class="c1">// 65536 bytes</span>
@@ -2418,8 +2470,8 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-<div class="sect2">
-<h3 id="_16_bit_texture_tile">3.3. 16-bit texture tile</h3>
+<div class="sect3">
+<h4 id="_16_bit_texture_tile">2.2.6. 16-bit texture tile</h4>
 <div class="paragraph"><p>Each <span class="monospaced">uint16_t</span> represents a pixel whose colour is of the form ARGB, MSB-to-LSB:</p></div>
 <div class="paragraph"><p>1-bit transparency (0 ::= transparent, 1 ::= opaque) (<span class="monospaced">0x8000</span>) <br>
 5-bit red channel (<span class="monospaced">0x7c00</span>) <br>
@@ -2432,8 +2484,8 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-<div class="sect2">
-<h3 id="_32_bit_texture_tile">3.4. 32-bit texture tile</h3>
+<div class="sect3">
+<h4 id="_32_bit_texture_tile">2.2.7. 32-bit texture tile</h4>
 <div class="paragraph"><p>Each <span class="monospaced">uint32_t</span> represents a pixel whose colour is of the form ARGB, (A = most significant byte), each component being one byte.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_textile32</span>    <span class="c1">// 262144 bytes</span>
@@ -2443,12 +2495,11 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 </pre></div></div></div>
 </div>
 </div>
-</div>
-<h1 id="_room_geometry">Room Geometry</h1>
-<div class="sect1">
-<h2 id="_overview_2">1. Overview</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>A `room_ in TR2 is simply a rectangular three-dimensional area. A room may be &#8220;indoors&#8221; or &#8220;outdoors,&#8221; may or may not be enclosed, may be
+<div class="sect2">
+<h3 id="_room_geometry">2.3. Room Geometry</h3>
+<div class="sect3">
+<h4 id="_overview_2">2.3.1. Overview</h4>
+<div class="paragraph"><p>A <em>room</em> in TR2 is simply a rectangular three-dimensional area. A room may be &#8220;indoors&#8221; or &#8220;outdoors,&#8221; may or may not be enclosed, may be
 accessible or inaccessible to Lara, may or may not contain doors or objects.</p></div>
 <div class="paragraph"><p>All rooms have &#8220;portals,&#8221; called &#8220;doors&#8221; in some documentation, which are pathways to adjacent rooms. There are two kinds of portals&#8201;&#8212;&#8201;visibility portals and collisional portals. Visibility portals are for determining how much of a room (if any) is visible from another room, while collisional portals are for enabling an object to travel from one room to another.</p></div>
 <div class="paragraph"><p>The visibility portals are most likely for doing &#8220;portal rendering&#8221;, which is a visibility-calculation scheme that goes as follows: the viewpoint is a member of some room, which is then listed as visible from it. This room&#8217;s portals are checked for visibility from that viewpoint, and visible portals have their opposite-side rooms marked as visible. These rooms are then checked for portals that are visible from the viewpoint through the viewpoint&#8217;s room&#8217;s portals, and visible ones have their opposite-side rooms marked as visible. This operation is repeated, with viewing through intermediate portals, until all visible portals have been found. The result is a tree of rooms, starting from the viewpoint&#8217;s room; only those rooms and their contents need to be rendered.</p></div>
@@ -2468,93 +2519,233 @@ objects interact with the world geometry. Furthermore, these two types are speci
 <div class="paragraph"><p>Rooms are defined with a complex structure, which is described below &#8220;inside-out,&#8221; meaning that the smaller component structures are described first, followed
 by the larger structures that are built using the smaller structures.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_room_structures">2. Room Structures</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_room_header">2.1. Room header</h3>
-<div class="paragraph"><p><span class="monospaced">X</span>/<span class="monospaced">Z</span> indicate the base position of the room mesh in world coordinates (<span class="monospaced">Y</span> is always zero-relative)</p></div>
+<div class="sect3">
+<h4 id="_room_structures">2.3.2. Room Structures</h4>
+<div class="sect4">
+<h5 id="_room_header">Room header</h5>
+<div class="paragraph"><p>$X / Z$ indicate the base position of the room mesh in world coordinates ($Y$ is always zero-relative)</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_info</span>    <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>             <span class="c1">// Z-offset of room (world coordinates)</span>
-    <span class="kt">int32_t</span> <span class="n">yBottom</span><span class="p">;</span>       <span class="c1">// (actually largest value, but indicates lowest point in room)</span>
-    <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>          <span class="c1">// (actually smallest value, but indicates highest point in room)</span>
+    <span class="kt">int32_t</span> <span class="n">yBottom</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">yBottom</span> is actually largest value, but indicates <em>lowest</em> point in the room.
+<span class="monospaced">yTop</span> is actually smallest value, but indicates <em>highest</em> point in the room.</p></div>
 </div>
-<div class="sect2">
-<h3 id="_portal_structure">2.2. Portal structure</h3>
+<div class="sect4">
+<h5 id="_portal_structure">Portal structure</h5>
 <div class="paragraph"><p>These portals, sometimes called &#8220;doors&#8221;, define the view from a room into another room. This can be through a &#8220;real&#8221; door, a window,
 or even some open area that makes the rooms look like one big room. Note that &#8220;rooms&#8221; here are really just areas; they aren&#8217;t necessarily enclosed.  The
-portal structure below defines visibility portals, not an actual moveable door mesh, texture, or action (if any).  And if the portal is not properly oriented,
-the camera cannot &#8220;see&#8221; through it.</p></div>
+portal structure below defines <em>only visibility portals</em>, not an actual moveable door mesh, texture, or action (if any).  And if the portal is not properly oriented, the camera cannot &#8220;see&#8221; through it.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_portal</span>  <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint16_t</span> <span class="n">AdjoiningRoom</span><span class="p">;</span> <span class="c1">// which room this portal leads to</span>
-    <span class="n">tr2_vertex</span> <span class="n">Normal</span><span class="p">;</span> <span class="c1">// which way the portal faces (the normal</span>
-                       <span class="c1">// points _away_ from the adjacent room; to be seen through, it must point _toward_ the viewpoint).</span>
-    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// the corners of this portal (the right-hand rule applies with respect to the normal)</span>
-                            <span class="c1">// if the right-hand-rule is not followed, the portal will</span>
-                            <span class="c1">// contain visual artifacts instead of a viewport to</span>
-                            <span class="c1">// AdjoiningRoom</span>
+    <span class="kt">uint16_t</span>   <span class="n">AdjoiningRoom</span><span class="p">;</span> <span class="c1">// Which room this portal leads to</span>
+    <span class="n">tr2_vertex</span> <span class="n">Normal</span><span class="p">;</span>
+    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Normal</span> field tells which way the portal faces (the normal points <em>away</em> from the adjacent room; to be seen through, it must point <em>toward</em> the viewpoint).</p></div>
+<div class="paragraph"><p><span class="monospaced">Vertices</span> are the corners of this portal (the right-hand rule applies with respect to the normal). If the right-hand-rule is not followed, the portal will  contain visual artifacts instead of a viewport to <span class="monospaced">AdjoiningRoom</span>.</p></div>
 </div>
-<div class="sect2">
-<h3 id="_room_sector_structure">2.3. Room Sector structure</h3>
-<div class="paragraph"><p>All the geometry specified here is collisional geometry. Sectors are 1024 * 1024 (world coordinates). Floor and Ceiling are signed
-numbers of 256 units of height (relative to 0), e.g. Floor <span class="monospaced">0x04</span> corresponds to $Y = 1024$ in world coordinates. Note: this implies that, while $X$ and $Z$ can be
-quite large, $Y$ is constrained to -32768..32512. Floor/Ceiling value of <span class="monospaced">0x81</span> is used to indicate impenetrable walls around the sector. Floor values are used by
-the game engine to determine what objects Lara can traverse and how. Relative steps of 1 (-256) can be walked up; steps of 2..7 (-512..-1792) can/must be jumped
-up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall). <span class="monospaced">RoomAbove</span> and <span class="monospaced">RoomBelow</span> indicate what neighboring rooms are in these directions; if
-<span class="monospaced">RoomAbove</span> is not &#8220;none&#8221;, then the ceiling is a collisional portal to that room, while if <span class="monospaced">RoomBelow</span> is not &#8220;none&#8221;, then the floor is a collisional portal to
-that room.</p></div>
+<div class="sect4">
+<h5 id="_room_sector_structure">Room Sector structure</h5>
+<div class="paragraph"><p>All the geometry specified here is <em>collisional geometry</em>.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_sector</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_sector</span> <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 8 bytes</span>
     <span class="kt">uint16_t</span> <span class="n">FDindex</span><span class="p">;</span>    <span class="c1">// Index into FloorData[]</span>
-    <span class="kt">uint16_t</span> <span class="n">BoxIndex</span><span class="p">;</span>   <span class="c1">// Index into Boxes[]/Zones[] (-1 if none)</span>
-    <span class="kt">uint8_t</span>  <span class="n">RoomBelow</span><span class="p">;</span>  <span class="c1">// The number of the room below this one (-1 or 255 if none)</span>
-    <span class="kt">int8_t</span>   <span class="n">Floor</span><span class="p">;</span>      <span class="c1">// Absolute height of floor (multiply by 256 for world coordinates)</span>
-    <span class="kt">uint8_t</span>  <span class="n">RoomAbove</span><span class="p">;</span>  <span class="c1">// The number of the room above this one (-1 or 255 if none)</span>
-    <span class="kt">int8_t</span>   <span class="n">Ceiling</span><span class="p">;</span>    <span class="c1">// Absolute height of ceiling (multiply by 256 for world coordinates)</span>
+    <span class="kt">uint16_t</span> <span class="n">BoxIndex</span><span class="p">;</span>   <span class="c1">// Index into Boxes[] (-1 if none)</span>
+    <span class="kt">uint8_t</span>  <span class="n">RoomBelow</span><span class="p">;</span>  <span class="c1">// -1 or 255 is none</span>
+    <span class="kt">int8_t</span>   <span class="n">Floor</span><span class="p">;</span>      <span class="c1">// Absolute height of floor</span>
+    <span class="kt">uint8_t</span>  <span class="n">RoomAbove</span><span class="p">;</span>  <span class="c1">// -1 or 255 if none</span>
+    <span class="kt">int8_t</span>   <span class="n">Ceiling</span><span class="p">;</span>    <span class="c1">// Absolute height of ceiling</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">
-<div class="paragraph"><p><span class="green">In TR3, <span class="monospaced">BoxIndex</span> is more complicated. Only bits 4-14 are the &#8220;real&#8221; index; bits 0-3 are most likely some kind of flag, such as what kind of footstep sound to
-make (wood, metal, snow). Furthermore, there is a special value of the &#8220;real&#8221; index, 2047, or <span class="monospaced">0x7ff</span>.</span></p></div>
-</td>
-</tr></table>
+<div class="paragraph"><p><span class="monospaced">Floor</span> and <span class="monospaced">Ceiling</span> are signed numbers of 256 units of height (relative to 0)&#8201;&#8212;&#8201;e.g. Floor <span class="monospaced">0x04</span> corresponds to $Y = 1024$ in world coordinates. Therefore, 256 units is a <em>minimum vertical stride of collisional geometry</em>. However, this rule could be broken by specific entities, which Lara can stand on. But <em>horizontal</em> sector dimensions, which, as mentioned earlier, are 1024 x 1024 (in world coordinates), could not. Therefore, minimal horizontal platform dimensions, on which Lara can stand and grab, are 1024 x 1024 as well.</p></div>
+<div class="paragraph"><p><strong>NOTE:</strong> this implies that, while $X$ and $Z$ can be quite large, $Y$ is constrained to -32768..32512.</p></div>
+<div class="paragraph"><p><span class="monospaced">Floor</span> and <span class="monospaced">Ceiling</span> value of <span class="monospaced">0x81</span> is a magic number used to indicate impenetrable walls around the sector. <span class="monospaced">Floor</span> values are used by
+the game engine to determine what objects Lara can traverse and how. Relative steps of 1 (-256) can be walked up; steps of 2..7 (-512..-1792) can/must be jumped
+up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomAbove</span> and <span class="monospaced">RoomBelow</span> values indicate what neighboring rooms are in these directions&#8201;&#8212;&#8201;the number of the room below this one and the number of the room above this one. If <span class="monospaced">RoomAbove</span> is not <em>none</em>, then the ceiling is a <em>collisional portal</em> to that room, while if <span class="monospaced">RoomBelow</span> is not <em>none</em>, then the floor is a <em>collisional portal</em> to that room.</p></div>
+<div class="paragraph"><p>Also, <span class="monospaced">RoomBelow</span> value is extensively used by engine to determine actual sector data and triggers in so-called <em>stacked room setups</em>, when one room is placed above another through collisional portal. The thing is, engine uses sector data and triggers <em>only for the lowest sector</em> of the stacked room setup, so it recursively scans for a lowest room to determine which sector to use.</p></div>
+<div class="paragraph"><p><span class="monospaced">FDindex</span> is a pointer to specific entry in <a href="#FloorData">[FloorData]</a> array, which keeps all the information about sector flags, triggers and other parameters. While it is implied that one <span class="monospaced">FDindex</span> entry may be shared between several sectors, it is usually not the case with original Tomb Raider levels built with <em>TRLE</em>. However, <em>Dxtre3d</em> takes advantage of this feature and may optimize similar sectors to share same FDindex pointer.</p></div>
+<div class="paragraph"><p><span class="monospaced">BoxIndex</span> is a pointer to special <a href="#Boxes">[Boxes]</a> array entry, which is basically a subset of sectors with same height configuration. It is primarily used for AI pathfinding (see <a href="#Non-player character behaviour">[Non-player character behaviour]</a> chapter for more details).</p></div>
+<div class="paragraph"><p><strong>TR3-5 ONLY:</strong> In these games, <span class="monospaced">BoxIndex</span> field is more complicated, and actually contains <em>two packed values</em>. Bits 4-14 contain the <em>actual box index</em>, and bits 0-3 contain <em>material index</em>, which is used to produce specific footstep sound, when Lara is walking or running in this sector. On PlayStation game versions, this index was also used to determine if footprint textures should be applied to this particular place.</p></div>
+<div class="paragraph"><p>Majority of <em>material index</em> values are the same across game versions, but some of them exist only in particular game. Here is the description:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>0</strong>&#8201;&#8212;&#8201;Mud
+</p>
+</li>
+<li>
+<p>
+<strong>1</strong>&#8201;&#8212;&#8201;Snow (TR3 and TR5 only)
+</p>
+</li>
+<li>
+<p>
+<strong>2</strong>&#8201;&#8212;&#8201;Sand
+</p>
+</li>
+<li>
+<p>
+<strong>3</strong>&#8201;&#8212;&#8201;Gravel
+</p>
+</li>
+<li>
+<p>
+<strong>4</strong>&#8201;&#8212;&#8201;Ice (TR3 and TR5 only)
+</p>
+</li>
+<li>
+<p>
+<strong>5</strong>&#8201;&#8212;&#8201;Water <em>(unused, as water footstep is only activated in water rooms)</em>
+</p>
+</li>
+<li>
+<p>
+<strong>6</strong>&#8201;&#8212;&#8201;Stone <em>(unused, as it is default footstep sound)</em>
+</p>
+</li>
+<li>
+<p>
+<strong>7</strong>&#8201;&#8212;&#8201;Wood
+</p>
+</li>
+<li>
+<p>
+<strong>8</strong>&#8201;&#8212;&#8201;Metal
+</p>
+</li>
+<li>
+<p>
+<strong>9</strong>&#8201;&#8212;&#8201;Marble (TR4 only)
+</p>
+</li>
+<li>
+<p>
+<strong>10</strong>&#8201;&#8212;&#8201;Grass
+</p>
+</li>
+<li>
+<p>
+<strong>11</strong>&#8201;&#8212;&#8201;Concrete
+</p>
+</li>
+<li>
+<p>
+<strong>12</strong>&#8201;&#8212;&#8201;Old wood
+</p>
+</li>
+<li>
+<p>
+<strong>13</strong>&#8201;&#8212;&#8201;Old metal
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Mud, snow, sand, grass and maybe some other materials produce footprints in PlayStation version.</p></div>
+<div class="paragraph"><p>Furthermore, in TR3-5, <em>actual box index</em> may contain special value 2047, which is most likely indicates that this sector is a slope on which Lara can slide (and, therefore, possibly impassable by most NPCs).</p></div>
+</div>
+<div class="sect4">
+<h5 id="_room_light_structure">Room Light structure</h5>
+<div class="quoteblock">
+<div class="content">Important note: TR engines always used static room lights only for processing lighting on entities (such as Lara, enemies, doors, and others). For room meshes, they used so-called <em>pre-baked lighting</em>, which is done on level building stage: lights are calculated and applied to room faces via vertex colours. There is no way to change room lighting when the level is compiled&#8201;&#8212;&#8201;meaning, any changes in light positions, intensities and colour won&#8217;t affect room faces.</div>
+<div class="attribution">
+</div></div>
+<div class="paragraph"><p>There are four different types of room light structures. First one is used in TR1-2, second is used in TR3, third is used in TR4, and fourth is used in TR5. Here is the description of each:</p></div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_room_lighting_structure">2.4. Room Lighting structure</h3>
-<div class="paragraph"><p>X/Y/Z are in world coordinates.  Intensity1/Intensity2 are almost always equal. This lighting only affects externally-lit objects.
-Tomb Raider 1 has only the first of the paired Intensity and Fade values.</p></div>
+<div class="sect3">
+<h4 id="_tr1_2_room_lighting">2.3.3. TR1-2 Room Lighting</h4>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_light</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_light</span>   <span class="c1">// 18 bytes (TR2: 24 bytes)</span>
 <span class="p">{</span>
-    <span class="c1">// 24 bytes [TR1: 18 bytes]</span>
-    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>        <span class="c1">// position of light, in world coordinates</span>
+     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// Position of light, in world coordinates</span>
+     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
-    <span class="kt">uint16_t</span> <span class="n">Intensity2</span><span class="p">;</span>    <span class="c1">// Almost always equal to Intensity1 [absent from TR1 data files]</span>
-    <span class="kt">uint32_t</span> <span class="n">Fade1</span><span class="p">;</span>         <span class="c1">// Falloff value 1</span>
-    <span class="kt">uint32_t</span> <span class="n">Fade2</span><span class="p">;</span>         <span class="c1">// Falloff value 2 [absent from TR1 data files]</span>
+    <span class="kt">uint16_t</span> <span class="n">Intensity2</span><span class="p">;</span>    <span class="c1">// Only in TR2</span>
+    <span class="kt">uint32_t</span> <span class="n">Fade1</span><span class="p">;</span>         <span class="c1">// Falloff value</span>
+    <span class="kt">uint32_t</span> <span class="n">Fade2</span><span class="p">;</span>         <span class="c1">// Only in TR2</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">X/Y/Z</span> are in world coordinates. <span class="monospaced">Intensity1/Intensity2</span> are almost always equal. This lighting only affects externally-lit objects. Tomb Raider 1 has only the first of the paired <span class="monospaced">Intensity</span> and <span class="monospaced">Fade</span> values.</p></div>
+<div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (dark) to 0x1FFF (bright). However, some rooms occasionally have some lights with intensity greater than 0x1FFF (for example, look at room #9, 2nd light in <span class="monospaced">level1.phd</span>). <span class="monospaced">Fade1</span> is the maximum distance the light shines on, and ranges from 0 to 0x7FFF.</p></div>
+<div class="paragraph"><p><strong>TR2 ONLY:</strong> <span class="monospaced">Intensity2</span> and <span class="monospaced">Fade2</span> values are seemingly not used. <span class="monospaced">Intensity1</span> can go very well beyond 0x1FFF, right to 0x7FFF (ultra bright light). Above 0x7FFF, it is always black, so the number is pseudo-signed (negative values are always treated as zero).</p></div>
+</div>
+<div class="sect3">
+<h4 id="_tr3_room_lighting">2.3.4. TR3 Room Lighting</h4>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_light</span>   <span class="c1">// 24 bytes [TR1: only 18 bytes]</span>
+<span class="p">{</span>
+        <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// Position of light, in world coordinates</span>
+        <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
+        <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
+    <span class="n">tr2_colour4</span> <span class="n">Colour</span><span class="p">;</span>        <span class="c1">// Colour of the light</span>
+       <span class="kt">uint32_t</span> <span class="n">Intensity</span><span class="p">;</span>
+       <span class="kt">uint32_t</span> <span class="n">Fade</span><span class="p">;</span>          <span class="c1">// Falloff value</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Intensity</span> is the power of the light and ranges mainly from 0 (low power) to 0x1FFF (high power). Though, values greater than 0x1FFF do exist and their meanings are unknown.
+<span class="monospaced">Fade</span> is the distance max the light can shine on. Range is mainly from 0 to 0x7FFF, but negative values do exist and their meanings are unknown.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_tr4_room_lighting">2.3.5. TR4 Room Lighting</h4>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_room_light</span>   <span class="c1">// 24 bytes [TR1: only 18 bytes]</span>
+<span class="p">{</span>
+        <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// Position of light, in world coordinates</span>
+        <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
+        <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
+     <span class="n">tr2_colour</span> <span class="n">Colour</span><span class="p">;</span>        <span class="c1">// Colour of the light</span>
+        <span class="kt">uint8_t</span> <span class="n">LightType</span><span class="p">;</span>
+        <span class="kt">uint8_t</span> <span class="n">Unknown</span><span class="p">;</span>       <span class="c1">// Always 0xFF?</span>
+        <span class="kt">uint8_t</span> <span class="n">Intensity</span><span class="p">;</span>
+          <span class="kt">float</span> <span class="n">In</span><span class="p">;</span>            <span class="c1">// Also called hotspot in TRLE manual</span>
+          <span class="kt">float</span> <span class="n">Out</span><span class="p">;</span>           <span class="c1">// Also called falloff in TRLE manual</span>
+          <span class="kt">float</span> <span class="n">Length</span><span class="p">;</span>
+          <span class="kt">float</span> <span class="n">CutOff</span><span class="p">;</span>
+          <span class="kt">float</span> <span class="n">dx</span><span class="p">;</span>            <span class="c1">// Direction - used only by sun and spot lights</span>
+          <span class="kt">float</span> <span class="n">dy</span><span class="p">;</span>
+          <span class="kt">float</span> <span class="n">dz</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">LightType</span> is somewhat similar to D3D light type, but here are light descriptions anyway.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>0</strong>&#8201;&#8212;&#8201;Sun
+</p>
+</li>
+<li>
+<p>
+<strong>1</strong>&#8201;&#8212;&#8201;Light
+</p>
+</li>
+<li>
+<p>
+<strong>2</strong>&#8201;&#8212;&#8201;Spot
+</p>
+</li>
+<li>
+<p>
+<strong>3</strong>&#8201;&#8212;&#8201;Shadow
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_tr5_room_lighting">2.3.6. TR5 Room Lighting</h4>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_room_vertex_structure">2.5. Room Vertex structure</h3>
+<h3 id="_room_vertex_structure">2.4. Room Vertex structure</h3>
 <div class="paragraph"><p>This defines the vertices within a room. Room lighting is internal vertex lighting, except for necessarily external sources like
 flares; room ambient lights and point sources are ignored. Tomb Raider 1 has only the first of the two light values and lacks the rendering attributes.</p></div>
 <div class="listingblock">
@@ -2574,7 +2765,7 @@ flares; room ambient lights and point sources are ignored. Tomb Raider 1 has onl
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_room_sprite_structure">2.6. Room Sprite structure</h3>
+<h3 id="_room_sprite_structure">2.5. Room Sprite structure</h3>
 <div class="paragraph"><p>This indicates a point in space (<span class="monospaced">Room.Vertices[room_sprite.Vertex]</span>) and a sprite to display there (<span class="monospaced">.Texture</span> is an index into the
 sprite texture list).</p></div>
 <div class="listingblock">
@@ -2587,7 +2778,7 @@ sprite texture list).</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_room_data_structure">2.7. Room Data structure</h3>
+<h3 id="_room_data_structure">2.6. Room Data structure</h3>
 <div class="paragraph"><p>This is the geometry of the &#8220;room,&#8221; including walls, floors, rocks, water, etc. It does <em>not</em> include objects that Lara can interact
 with (keyboxes, moveable blocks, moveable doors, etc.) The surfaces specified here are rendered surfaces.</p></div>
 <div class="admonitionblock">
@@ -2616,7 +2807,7 @@ with (keyboxes, moveable blocks, moveable doors, etc.) The surfaces specified he
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_room_static_mesh_structure">2.8. Room Static Mesh structure</h3>
+<h3 id="_room_static_mesh_structure">2.7. Room Static Mesh structure</h3>
 <div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the
 <a href="#tr2_item">[tr2_item]</a> structure, except that static meshes typically have no animations and are confined to a single room.</p></div>
 <div class="listingblock">
@@ -2633,7 +2824,7 @@ with (keyboxes, moveable blocks, moveable doors, etc.) The surfaces specified he
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_room_structure">2.9. Room structure</h3>
+<h3 id="_room_structure">2.8. Room structure</h3>
 <div class="paragraph"><p>Here&#8217;s where all the room data come together.  As it&#8217;s stored in the file, the <a href="#tr2_room_info"><span class="monospaced">tr2_room_info</span></a> structure comes
 first, followed by a <span class="monospaced">uint32_t</span> NumDataWords, which specifies the number of 16-bit words to follow.  Those data words must be parsed in order to
 interpret and construct the variable-length arrays of vertices, meshes, doors, and sectors.</p></div>
@@ -5232,7 +5423,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-17 20:49:26 MSK
+Last updated 2015-07-18 00:44:40 MSK
 </div>
 </div>
 </body>
