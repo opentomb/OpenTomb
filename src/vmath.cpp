@@ -45,12 +45,11 @@ void Mat4_RotateX(btTransform& mat, btScalar ang)
     btScalar sina = sin(tmp);
     btScalar cosa = cos(tmp);
 
-    btVector3 R[2];
-    R[0] = mat.getBasis().getColumn(1) * cosa + mat.getBasis().getColumn(2) * sina;
-    R[1] =-mat.getBasis().getColumn(1) * sina + mat.getBasis().getColumn(2) * cosa;
-
-    mat.getBasis().getColumn(1) = R[0];
-    mat.getBasis().getColumn(2) = R[1];
+    auto m = mat.getBasis().transpose();
+    m[1] = mat.getBasis()[1] * cosa + mat.getBasis()[2] * sina;
+    m[2] =-mat.getBasis()[1] * sina + mat.getBasis()[2] * cosa;
+    
+    mat.getBasis() = m.transpose();
 }
 
 void Mat4_RotateY(btTransform& mat, btScalar ang)
@@ -59,12 +58,11 @@ void Mat4_RotateY(btTransform& mat, btScalar ang)
     btScalar sina = sin(tmp);
     btScalar cosa = cos(tmp);
 
-    btVector3 R[2];
-    R[0] = mat.getBasis().getColumn(0) * cosa - mat.getBasis().getColumn(2) * sina;
-    R[1] = mat.getBasis().getColumn(0) * sina + mat.getBasis().getColumn(2) * cosa;
-
-    mat.getBasis().getColumn(0) = R[0];
-    mat.getBasis().getColumn(2) = R[1];
+    auto m = mat.getBasis().transpose();
+    m[0] = mat.getBasis()[0] * cosa - mat.getBasis()[2] * sina;
+    m[2] = mat.getBasis()[0] * sina + mat.getBasis()[2] * cosa;
+    
+    mat.getBasis() = m.transpose();
 }
 
 void Mat4_RotateZ(btTransform& mat, btScalar ang)
@@ -73,10 +71,9 @@ void Mat4_RotateZ(btTransform& mat, btScalar ang)
     btScalar sina = sin(tmp);
     btScalar cosa = cos(tmp);
 
-    btVector3 R[2];
-    R[0] = mat.getBasis().getColumn(0) * cosa +  mat.getBasis().getColumn(1) * sina;
-    R[1] =-mat.getBasis().getColumn(0) * sina +  mat.getBasis().getColumn(1) * cosa;
-
-    mat.getBasis().getColumn(0) = R[0];
-    mat.getBasis().getColumn(1) = R[1];
+    auto m = mat.getBasis().transpose();
+    m[0] = mat.getBasis()[0] * cosa + mat.getBasis()[1] * sina;
+    m[1] =-mat.getBasis()[0] * sina + mat.getBasis()[1] * cosa;
+    
+    mat.getBasis() = m.transpose();
 }
