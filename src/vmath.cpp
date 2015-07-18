@@ -10,13 +10,13 @@
 void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
 {
     btQuaternion qZ;
-    qZ.setRotation({0,0,1}, M_PI * rot[2] / 360.0);
+    qZ.setRotation({0,0,1}, M_PI * rot[2] / 180.0);
 
     btQuaternion qX;
-    qX.setRotation({1,0,0}, M_PI * rot[0] / 360.0);
+    qX.setRotation({1,0,0}, M_PI * rot[0] / 180.0);
 
     btQuaternion qY;
-    qY.setRotation({0,1,0}, M_PI * rot[1] / 360.0);
+    qY.setRotation({0,1,0}, M_PI * rot[1] / 180.0);
 
     v = qZ * qX * qY;
 }
