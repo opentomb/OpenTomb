@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="generator" content="AsciiDoc 8.6.9">
-<title>Tomb Raider II Data Formats (TRosettaStone)</title>
+<title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -2053,9 +2053,9 @@ else
 /*]]>*/
 </script>
 </head>
-<body class="book" style="max-width:100%">
+<body class="book">
 <div id="header">
-<h1>Tomb Raider II Data Formats (TRosettaStone)</h1>
+<h1>Tomb Raider Data Formats (TRosettaStone)</h1>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -2065,9 +2065,8 @@ else
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph"><p>Document Version 3.00 (150716)</p></div>
-<div class="paragraph"><p><strong>Tomb Raider I-V Data File Format</strong>
-(Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.)
-(Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.)<br></p></div>
+<div class="paragraph"><p><strong>Tomb Raider I-V Data File Format</strong></p></div>
+<div class="paragraph"><p>(Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available. Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.)</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -2117,7 +2116,16 @@ could be likened to a form of digital archæology, and hopefully this document w
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><strong>NOTE:</strong> when level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em> (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released by Eidos / Core, along with TR5.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>When level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em> (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released by Eidos / Core, along with TR5.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>Also, if external programs and utilities are concerned, here&#8217;s abbreviations for them:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -2583,7 +2591,16 @@ portal structure below defines <em>only visibility portals</em>, not an actual m
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Floor</span> and <span class="monospaced">Ceiling</span> are signed numbers of 256 units of height (relative to 0)&#8201;&#8212;&#8201;e.g. Floor <span class="monospaced">0x04</span> corresponds to $Y = 1024$ in world coordinates. Therefore, 256 units is a <em>minimum vertical stride of collisional geometry</em>. However, this rule could be broken by specific entities, which Lara can stand on. But <em>horizontal</em> sector dimensions, which, as mentioned earlier, are 1024 x 1024 (in world coordinates), could not. Therefore, minimal horizontal platform dimensions, on which Lara can stand and grab, are 1024 x 1024 as well.</p></div>
-<div class="paragraph"><p><strong>NOTE:</strong> this implies that, while $X$ and $Z$ can be quite large, $Y$ is constrained to -32768..32512.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>This implies that, while $X$ and $Z$ can be quite large, $Y$ is constrained to -32768..32512.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="paragraph"><p><span class="monospaced">Floor</span> and <span class="monospaced">Ceiling</span> value of <span class="monospaced">0x81</span> is a magic number used to indicate impenetrable walls around the sector. <span class="monospaced">Floor</span> values are used by
 the game engine to determine what objects Lara can traverse and how. Relative steps of 1 (-256) can be walked up; steps of 2..7 (-512..-1792) can/must be jumped
 up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div>
@@ -2670,10 +2687,16 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 </div>
 <div class="sect4">
 <h5 id="_room_light_structure">Room Light structure</h5>
-<div class="quoteblock">
-<div class="content">Important note: TR engines always used static room lights only for processing lighting on entities (such as Lara, enemies, doors, and others). This is called <em>external lighting</em>. For room meshes, they used so-called <em>internal, or 'pre-baked</em> lighting, which is done on level building stage: lights are calculated and applied to room faces via vertex colours. There is no way to change room lighting when the level is compiled&#8201;&#8212;&#8201;meaning, any changes in light positions, intensities and colour won&#8217;t affect room faces.</div>
-<div class="attribution">
-</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>TR engines always used static room lights only for processing lighting on entities (such as Lara, enemies, doors, and others). This is called <em>external lighting</em>. For room meshes, they used so-called <em>internal, or 'pre-baked</em> lighting, which is done on level building stage: lights are calculated and applied to room faces via vertex colours. There is no way to change room lighting when the level is compiled&#8201;&#8212;&#8201;meaning, any changes in light positions, intensities and colour won&#8217;t affect room faces.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>There are four different types of room light structures. First one is used in TR1-2, second is used in TR3, third is used in TR4, and fourth is used in TR5. Here is the description of each:</p></div>
 <div class="listingblock">
 <div class="title">TR1-2 Room Lighting</div>
@@ -2912,7 +2935,16 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <div class="paragraph"><p>This is the whole geometry of the &#8220;room,&#8221; including walls, floors, ceilings, and other embedded landscape. It <em>does not</em> include objects that Lara can interact
 with (keyholes, moveable blocks, moveable doors, etc.), neither does it include <em>static meshes</em> (mentioned below in the next section).</p></div>
 <div class="paragraph"><p>The surfaces specified here are rendered surfaces.</p></div>
-<div class="paragraph"><p><strong>NOTE:</strong> 'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them. Also <span class="monospaced">tr_room_vertex</span> could be replaced by any other version-specific room vertex type (<span class="monospaced">tr3_room_vertex</span>, etc.). '</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them. Also <span class="monospaced">tr_room_vertex</span> could be replaced by any other version-specific room vertex type (<span class="monospaced">tr3_room_vertex</span>, etc.). '</p></div>
+</td>
+</tr></table>
+</div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_data</span>    <span class="c1">// (variable length)</span>
 <span class="p">{</span>
@@ -3226,11 +3258,8 @@ part of the operand. However, this will also work correctly in TR1 and TR2.</spa
 </td>
 </tr></table>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_span_class_monospaced_floordata_span_functions">4. <span class="monospaced">FloorData</span> Functions</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_floordata_functions">3.1. FloorData Functions</h3>
 <div class="ulist"><div class="title">Function <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;Portal Sector</div><ul>
 <li>
 <p>
@@ -3538,10 +3567,8 @@ Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="m
 </ul></div>
 <div class="paragraph"><div class="title">Function <span class="monospaced">0x13</span></div><p>Has subfunction 0x00 and no operand. Unknown, but is possibly monkey-swingability of the ceiling.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_floordata_fdlist_functions">5. FloorData FDlist functions</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_trigger_functions">3.2. Trigger functions</h3>
 <div class="ulist"><div class="title">FDfunction <span class="monospaced">0x00</span>&#8201;&#8212;&#8201;Activate or deactivate item</div><ul>
 <li>
 <p>
@@ -3673,10 +3700,12 @@ Operand (bits 0..9 (<span class="monospaced">0x3ff</span>))  Which secret (0..Nu
 information.</p></div>
 </div>
 </div>
-<h1 id="_mesh_geometry">Mesh Geometry</h1>
+</div>
 <div class="sect1">
-<h2 id="_overview_3">1. Overview</h2>
+<h2 id="_mesh_geometry">4. Mesh Geometry</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview_3">4.1. Overview</h3>
 <div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR2 (as well as a few parts of the landscape) are specified as <em>meshes</em>.  A <em>mesh</em> is simply a
 list of vertices and how they&#8217;re arranged.  The TR2 mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed
 anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both Textured and
@@ -3684,10 +3713,8 @@ Coloured.  The elements of each <a href="#tr2_face4">[tr2_face4]</a> or <a href=
 into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array
 <span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_meshes">2. Meshes</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_meshes">4.2. Meshes</h3>
 <div class="paragraph"><p>The sign of the number of normals specifies which sort of lighting to use. If the sign is positive, then external vertex lighting is used, with the
 lighting calculated from the room&#8217;s ambient and point-source lighting values. The latter appears to use a simple Lambert law for directionality: intensity is
 proportional to $\max(\langle (\mathrm{normal direction}), (\mathrm{direction to source}) \rangle, 0)$. If the sign is negative, then internal vertex lighting is used, using the data included with
@@ -3724,10 +3751,8 @@ the mesh.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_static_meshes">3. Static Meshes</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_static_meshes">4.3. Static Meshes</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * StaticMesh structure. This defines meshes that don&#39;t move (e.g. skeletons</span>
@@ -3748,10 +3773,8 @@ the mesh.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_moveables">4. Moveables</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_moveables">4.4. Moveables</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * Moveable structure. This defines a list of contiguous meshes that</span>
@@ -3776,10 +3799,8 @@ the mesh.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_items">5. Items</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_items">4.5. Items</h3>
 <div class="paragraph"><p>Items are instances of objects, which can be sprite sequences or movables. For an object to appear in a level, it must be referenced in the <span class="monospaced">Items[]</span>
 array. Multiple instances are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID
 is used to locate the appropriate sprite sequence or movable for the item.</p></div>
@@ -3801,10 +3822,8 @@ is used to locate the appropriate sprite sequence or movable for the item.</p></
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_sprites">6. Sprites</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_sprites">4.6. Sprites</h3>
 <div class="paragraph"><p>These are &#8220;billboard&#8221; objects that are always rendered perpendicular to the view direction. These are used for text and explosion effects and similar things;
 they are also used for some scenery objects and pickup items, though this use gets less as one goes from TR1 to TR3. The various &#8220;Sides&#8221; below are the
 positions of the sprite sides relative to the sprite&#8217;s overall position, measured in TR&#8217;s world-coordinate units.</p></div>
@@ -3824,10 +3843,8 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_sprite_sequences">7. Sprite Sequences</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_sprite_sequences">4.7. Sprite Sequences</h3>
 <div class="paragraph"><p>These are collections of sprites that are referred to as a group. The members of this group can be cycled through (animated sprites such as flames) or selected
 in other ways (text). Some sequences have only one member; this is done so as to access all the sprites in the same way.</p></div>
 <div class="listingblock">
@@ -3841,10 +3858,12 @@ in other ways (text). Some sequences have only one member; this is done so as to
 </pre></div></div></div>
 </div>
 </div>
-<h1 id="_mesh_construction_and_animation">Mesh Construction and Animation</h1>
+</div>
 <div class="sect1">
-<h2 id="_overview_4">1. Overview</h2>
+<h2 id="_mesh_construction_and_animation">5. Mesh Construction and Animation</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview_4">5.1. Overview</h3>
 <div class="paragraph"><p>The animated mesh objects in the Tomb Raider series are sets of meshes that are moved relative to each other, as defined by <span class="monospaced">Moveables[]</span> entries. Each entry
 describes which meshes to be used (a contiguous set of them referred to in <span class="monospaced">MeshPointers[]</span>), what hierarchy and relative offsets they have (contents of
 <span class="monospaced">MeshTree[]</span> pointed to), and what animations are to be used (contents of <span class="monospaced">Animations[]</span> pointed to).</p></div>
@@ -3983,10 +4002,8 @@ sounds, emitting bubbles, and so forth.</p></div>
 various goons in TR2&#8217;s Venice levels&#8201;&#8212;&#8201;some of them have a full set of animations, while some others have only the standing animation. The ones with only the
 standing animation borrow their other animations from the fully-animated ones.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_data_structures">2. Data Structures</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_data_structures">5.2. Data Structures</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * MeshTree structure</span>
@@ -4239,10 +4256,12 @@ etc.
 </pre></div></div></div>
 </div>
 </div>
-<h1 id="_non_player_character_behaviour">Non-Player Character Behaviour</h1>
+</div>
 <div class="sect1">
-<h2 id="_overview_5">1. Overview</h2>
+<h2 id="_non_player_character_behaviour">6. Non-Player Character Behaviour</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview_5">6.1. Overview</h3>
 <div class="paragraph"><p>All the Tomb Raider game physics and entity behavior appears to be hardcoded, with each type ID being associated with some specific sort of behavior (as Lara,
 as a boat, as a tiger, as a door, as a boulder, as a lock, etc.). There is no sign of the sorts of schemes used by some other game engines for specifying this
 behavior in data files. One scheme is to use generic characters, generic projectiles, and so forth, and to specialize them by reading in appropriate records
@@ -4264,12 +4283,10 @@ their overall indexing is the same as the boxes, meaning that each box will have
 will prefer to go into the overlaps-list boxes that have the same zone value as the box it is currently in. For example, one can create guard paths by making
 chains of zone-ID-sharing boxes, with their overlaps pointing to the next boxes in those chains.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_data_structures_2">2. Data Structures</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_boxes">2.1. Boxes</h3>
+<h3 id="_data_structures_2">6.2. Data Structures</h3>
+<div class="sect3">
+<h4 id="_boxes">6.2.1. Boxes</h4>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_box</span>
 <span class="p">{</span>
@@ -4284,13 +4301,13 @@ chains of zone-ID-sharing boxes, with their overlaps pointing to the next boxes 
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-<div class="sect2">
-<h3 id="_overlaps">2.2. Overlaps</h3>
+<div class="sect3">
+<h4 id="_overlaps">6.2.2. Overlaps</h4>
 <div class="paragraph"><p>This is a set of lists of neighboring boxes for each box, each member being a <span class="monospaced">uint16_t</span>; the highest bit being set marks the end of each list. NPCs apparently use
 this list to decide where to go next.</p></div>
 </div>
-<div class="sect2">
-<h3 id="_zones">2.3. Zones</h3>
+<div class="sect3">
+<h4 id="_zones">6.2.3. Zones</h4>
 <div class="paragraph"><p>This is a set of <span class="monospaced">int16_t</span>'s, <span class="red">6 for TR1</span> and 10 for TR2 and TR3. NPCs prefer to travel to a box with the same zone ID as the one they are currently at. Which of
 these zone IDs it uses depends on the kind of the NPC and its current state. The first half of the Zones structure is for the &#8220;normal&#8221; room state, and the
 second half is for the &#8220;alternate&#8221; room state. TR1, for example, has 2 sets of ground zones and 1 set of fly zones; its zones are</p></div>
@@ -4331,10 +4348,12 @@ have 4 ground zones.</p></div>
 </div>
 </div>
 </div>
-<h1 id="_sound">Sound</h1>
+</div>
 <div class="sect1">
-<h2 id="_overview_6">1. Overview</h2>
+<h2 id="_sound">7. Sound</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview_6">7.1. Overview</h3>
 <div class="paragraph"><p>The Tomb Raider series makes abundant use of sound, which appears in a variety of contexts. Sounds can be either continuous or triggered. Continuous ones can be
 for the whole level or produced by some sound-source object. The whole-level sound is a CD-track sound, which is played continuously, thus the blowing-wind
 sounds in the underground parts of &#8220;The Great Wall&#8221;. Sound-source objects make sound in a range around some specific point. Likewise, triggered ones can be
@@ -4369,10 +4388,8 @@ format:</span></p></div>
 separate files in Microsoft WAVE format. The Macintosh version of TR3 contains an additional file, <span class="monospaced">CDAudio.db</span>, which contains the names of all the track files
 as 32-byte zero-padded C strings with no extra contents.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_data_structures_3">2. Data Structures</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_data_structures_3">7.2. Data Structures</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * SoundSource structure</span>
@@ -4407,17 +4424,18 @@ as 32-byte zero-padded C strings with no extra contents.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_sampleindices">3. SampleIndices</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_sampleindices">7.3. SampleIndices</h3>
 <div class="paragraph"><p><span class="red">In TR1, this is a list of indices into the embedded sound-samples object, which precedes this object in the level file.</span>
 In TR2 and TR3, this is
 a list of indices into the file &#8216;MAIN.SFX`; the indices are the index numbers of that file&#8217;s embedded sound samples, rather than the samples&#8217; starting
 locations. That file itself is a set of concatenated soundfiles with no catalogue info present. In all the TR series, the sound format used is Microsoft WAVE.</p></div>
 </div>
 </div>
-<h1 id="_miscellany">Miscellany</h1>
+</div>
+<div class="sect1">
+<h2 id="_miscellany">8. Miscellany</h2>
+<div class="sectionbody">
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4426,9 +4444,8 @@ locations. That file itself is a set of concatenated soundfiles with no catalogu
 <td class="content">These are various odds and ends that do not fit into the earlier categories.</td>
 </tr></table>
 </div>
-<div class="sect1">
-<h2 id="_version">1. Version</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_version">8.1. Version</h3>
 <div class="paragraph"><p>Every level file (<span class="monospaced">.PHD</span>, <span class="monospaced">.TUB</span>, <span class="monospaced">.TR2</span>) begins with a <span class="monospaced">uint32_t</span> version number.  This seems to be used by the engine to guarantee
 compatibility between various level editor versions and the game engine version.  More generally, it can be used to determine what sort of level is being read.
 Here are the known (observed) values for the version header:</p></div>
@@ -4455,18 +4472,14 @@ Here are the known (observed) values for the version header:</p></div>
 </li>
 </ul></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_palette">2. Palette</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_palette">8.2. Palette</h3>
 <div class="paragraph"><p>This consists of 256 <a href="#tr2_colour">[tr2_colour]</a> structs, one for each palette entry. However, the individual colour values range from 0 to 63; they
 must be multiplied by 4 to get the correct values.</p></div>
 <div class="paragraph"><p>This used for all 8-bit colour, such as 8-bit textures.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_object_textures">3. Object Textures</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_object_textures">8.3. Object Textures</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * Object-texture vertex structure. It specifies a vertex location in textile coordinates.</span>
@@ -4506,10 +4519,8 @@ must be multiplied by 4 to get the correct values.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_animated_textures_2">4. Animated Textures</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_animated_textures_2">8.4. Animated Textures</h3>
 <div class="paragraph"><p>Animated textures describe sets of object textures that are cycled through to produce texture animations; they are a set of int16_t&#8217;s with the following format
 (not a &#8220;real&#8221; C/C++ structure):</p></div>
 <div class="listingblock">
@@ -4520,12 +4531,11 @@ must be multiplied by 4 to get the correct values.</p></div>
     <span class="kt">int16_t</span> <span class="n">TextureIDs</span><span class="p">[</span><span class="n">NumTextureIDs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span> <span class="c1">// offsets into ObjectTextures[], in animation order.</span>
 <span class="p">}</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span>
 </pre></div></div></div>
-<div class="paragraph"><p>If a texture belongs to an animated-texture group, it will automatically be animated by the engine. The animation framerate is most likely hardcoded.</p></div>
+<div class="paragraph"><p>If a texture belongs to an animated-texture group, it will automatically be animated by the engine. The animation framerate is hardcoded for <em>classic frames</em> mode and for <em>UVRotate</em> applied to specific entities, usually called <em>waterfalls</em>. In case of waterfall entities, it&#8217;s worth mentioning that the only texture to be rotated is a texture applied to the first face in the first mesh of the model&#8201;&#8212;&#8201;if any other textures are applied to other faces, they won&#8217;t scroll.</p></div>
+<div class="paragraph"><p>Room faces that have <em>UVRotate</em> assigned to them are scrolled with the speed specified in <span class="monospaced">UVRotate</span> script command.</p></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_cameras">5. Cameras</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_cameras">8.5. Cameras</h3>
 <div class="paragraph"><p>These are positions to switch the camera to; the camera gets switched to one of these as specified in the floordata, which also specify what to look at, how
 long to switch, and whether to do so only once.</p></div>
 <div class="listingblock">
@@ -4539,10 +4549,8 @@ long to switch, and whether to do so only once.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_cinematic_frames">6. Cinematic Frames</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_cinematic_frames">8.6. Cinematic Frames</h3>
 <div class="paragraph"><p>These are camera positionings for cutscenes. All the entity animations are specified separately, and it is not clear where there is any syncing between these
 frames and any of the animations.</p></div>
 <div class="listingblock">
@@ -4561,10 +4569,8 @@ frames and any of the animations.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_lightmap">7. LightMap</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_lightmap">8.7. LightMap</h3>
 <div class="paragraph"><p>A 32*256 array of <span class="monospaced">uint8_t</span> which is apparently for applying light to 8-bit colour, in some documentation called <span class="monospaced">ColourMap</span>. The current
 palette index and lighting value are used to calcuate an index to this table, which is a table of palette indices.</p></div>
 <div class="paragraph"><p>The Tomb Raider series' software rendering, like that of most real-time-3D games, uses 8-bit colour for speed and low bulk; however, there is the serious
@@ -4582,10 +4588,129 @@ the corresponding lighting value is, <span class="red">for TR1</span>,</p></div>
 brightness and greater values being darker.</p></div>
 </div>
 </div>
-<h1 id="_level_file_formats">Level File Formats</h1>
+</div>
 <div class="sect1">
-<h2 id="_the_entire_tr2_level_format">1. The Entire TR2 Level Format</h2>
+<h2 id="_level_file_formats">9. Level File Formats</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_entire_tr1_level_format">9.1. The Entire TR1 Level Format</h3>
+<div class="paragraph"><p>What follows is the physical <span class="monospaced">.PHD</span> file layout, byte for byte.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/caution.png" alt="Caution">
+</td>
+<td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
+</tr></table>
+</div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
+<span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
+<span class="k">virtual</span> <span class="k">struct</span>
+<span class="p">{</span>
+    <span class="n">tr2_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
+    <span class="k">virtual</span> <span class="k">struct</span>
+    <span class="p">{</span>
+        <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+        <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 8 bytes [TR1 version])</span>
+        <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
+        <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
+        <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
+        <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
+        <span class="n">tr2_room_door</span> <span class="n">Doors</span><span class="p">[</span><span class="n">NumDoors</span><span class="p">];</span> <span class="c1">// door list (NumDoors * 32 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumZsector</span><span class="p">;</span> <span class="c1">// sector table width (2 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumXsector</span><span class="p">;</span> <span class="c1">// sector table height (2 bytes)</span>
+        <span class="n">tr2_room_sector</span> <span class="n">SectorData</span><span class="p">[</span><span class="n">NumZsector</span> <span class="o">*</span> <span class="n">NumXsector</span><span class="p">];</span> <span class="c1">// sector table (NumZsector * NumXsector * 8 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
+        <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span> <span class="c1">// number of lights to follow (2 bytes)</span>
+        <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span> <span class="c1">// light list (NumLights * 18 bytes [TR1 version])</span>
+        <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of static mesh records to follow (2 bytes)</span>
+        <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 18 bytes [TR1 version])</span>
+        <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+    <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
+<span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">FloorData</span><span class="p">[</span><span class="n">NumFloorData</span><span class="p">];</span> <span class="c1">// floor data (NumFloorData * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshData</span><span class="p">;</span> <span class="c1">// number of uint16_t&#39;s of mesh data to follow (=Meshes[]) (4 bytes)</span>
+<span class="k">virtual</span> <span class="k">struct</span>
+<span class="p">{</span>
+    <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// relative coordinates of mesh centre (6 bytes)</span>
+    <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// unknown (4 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (NumVertices * 6 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
+    <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
+    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
+    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
+    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
+    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+<span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimations</span><span class="p">;</span> <span class="c1">// number of animations to follow (4 bytes)</span>
+<span class="n">tr2_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumStateChanges</span><span class="p">;</span> <span class="c1">// number of state changes to follow (4 bytes)</span>
+<span class="n">tr2_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of animation dispatches to follow (4 bytes)</span>
+<span class="n">tr2_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// number of animation commands to follow (4 bytes)</span>
+<span class="n">tr2_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshTrees</span><span class="p">;</span> <span class="c1">// number of MeshTrees to follow (4 bytes)</span>
+<span class="n">tr2_meshtree</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumFrames</span><span class="p">;</span> <span class="c1">// number of words of frame data to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">Frames</span><span class="p">[</span><span class="n">NumFrames</span><span class="p">];</span> <span class="c1">// frame data (NumFrames * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMoveables</span><span class="p">;</span> <span class="c1">// number of moveables to follow (4 bytes)</span>
+<span class="n">tr2_moveable</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of StaticMesh data records to follow (4 bytes)</span>
+<span class="n">tr2_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
+<span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures in TR3)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSpriteTextures</span><span class="p">;</span> <span class="c1">// number of sprite textures to follow (4 bytes)</span>
+<span class="n">tr2_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSpriteSequences</span><span class="p">;</span> <span class="c1">// number of sprite sequences records to follow (4 bytes)</span>
+<span class="n">tr2_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumCameras</span><span class="p">;</span> <span class="c1">// number of camera data records to follow (4 bytes)</span>
+<span class="n">tr2_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSoundSources</span><span class="p">;</span> <span class="c1">// number of sound source data records to follow (4 bytes)</span>
+<span class="n">tr2_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumBoxes</span><span class="p">;</span> <span class="c1">// number of box data records to follow (4 bytes)</span>
+<span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 20 bytes [TR1 version])</span>
+<span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
+<span class="kt">int16_t</span> <span class="n">Zones</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// zone data (NumBoxes * 12 bytes [TR1 version])</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
+<span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 22 bytes [TR1 version])</span>
+<span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
+<span class="n">tr2_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
+<span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumDemoData</span><span class="p">;</span> <span class="c1">// number of demo data records to follow (2 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">DemoData</span><span class="p">[</span><span class="n">NumDemoData</span><span class="p">];</span> <span class="c1">// demo data (NumDemoData bytes)</span>
+<span class="kt">int16_t</span> <span class="n">SoundMap</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// sound map (512 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSoundDetails</span><span class="p">;</span> <span class="c1">// number of sound-detail records to follow (4 bytes)</span>
+<span class="n">tr2_sample_info</span> <span class="n">SoundDetails</span><span class="p">[</span><span class="n">NumSoundDetails</span><span class="p">];</span> <span class="c1">// sound-detail list (NumSoundDetails * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSamples</span> <span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">in</span> <span class="n">Samples</span><span class="p">)</span>
+<span class="kt">uint8_t</span> <span class="n">Samples</span> <span class="p">(</span><span class="n">array</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="o">--</span> <span class="n">embedded</span> <span class="n">sound</span> <span class="n">samples</span> <span class="n">in</span> <span class="n">Microsoft</span> <span class="n">WAVE</span> <span class="n">format</span><span class="p">)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_the_entire_tr2_level_format">9.2. The Entire TR2 Level Format</h3>
 <div class="paragraph"><p>What follows is the physical <span class="monospaced">.TR2</span> file layout, byte for byte.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -4704,129 +4829,8 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_the_entire_tr1_level_format">2. The Entire TR1 Level Format</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>What follows is the physical <span class="monospaced">.PHD</span> file layout, byte for byte.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
-</td>
-<td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
-</tr></table>
-</div>
-<div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
-<span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
-<span class="k">virtual</span> <span class="k">struct</span>
-<span class="p">{</span>
-    <span class="n">tr2_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
-    <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
-    <span class="k">virtual</span> <span class="k">struct</span>
-    <span class="p">{</span>
-        <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
-        <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 8 bytes [TR1 version])</span>
-        <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
-        <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
-        <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
-        <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
-        <span class="n">tr2_room_door</span> <span class="n">Doors</span><span class="p">[</span><span class="n">NumDoors</span><span class="p">];</span> <span class="c1">// door list (NumDoors * 32 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumZsector</span><span class="p">;</span> <span class="c1">// sector table width (2 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumXsector</span><span class="p">;</span> <span class="c1">// sector table height (2 bytes)</span>
-        <span class="n">tr2_room_sector</span> <span class="n">SectorData</span><span class="p">[</span><span class="n">NumZsector</span> <span class="o">*</span> <span class="n">NumXsector</span><span class="p">];</span> <span class="c1">// sector table (NumZsector * NumXsector * 8 bytes)</span>
-        <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
-        <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span> <span class="c1">// number of lights to follow (2 bytes)</span>
-        <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span> <span class="c1">// light list (NumLights * 18 bytes [TR1 version])</span>
-        <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of static mesh records to follow (2 bytes)</span>
-        <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 18 bytes [TR1 version])</span>
-        <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
-    <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
-<span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
-<span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">FloorData</span><span class="p">[</span><span class="n">NumFloorData</span><span class="p">];</span> <span class="c1">// floor data (NumFloorData * 2 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumMeshData</span><span class="p">;</span> <span class="c1">// number of uint16_t&#39;s of mesh data to follow (=Meshes[]) (4 bytes)</span>
-<span class="k">virtual</span> <span class="k">struct</span>
-<span class="p">{</span>
-    <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// relative coordinates of mesh centre (6 bytes)</span>
-    <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// unknown (4 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
-    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (NumVertices * 6 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
-    <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
-<span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
-<span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumAnimations</span><span class="p">;</span> <span class="c1">// number of animations to follow (4 bytes)</span>
-<span class="n">tr2_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumStateChanges</span><span class="p">;</span> <span class="c1">// number of state changes to follow (4 bytes)</span>
-<span class="n">tr2_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of animation dispatches to follow (4 bytes)</span>
-<span class="n">tr2_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// number of animation commands to follow (4 bytes)</span>
-<span class="n">tr2_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumMeshTrees</span><span class="p">;</span> <span class="c1">// number of MeshTrees to follow (4 bytes)</span>
-<span class="n">tr2_meshtree</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumFrames</span><span class="p">;</span> <span class="c1">// number of words of frame data to follow (4 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">Frames</span><span class="p">[</span><span class="n">NumFrames</span><span class="p">];</span> <span class="c1">// frame data (NumFrames * 2 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumMoveables</span><span class="p">;</span> <span class="c1">// number of moveables to follow (4 bytes)</span>
-<span class="n">tr2_moveable</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of StaticMesh data records to follow (4 bytes)</span>
-<span class="n">tr2_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
-<span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures in TR3)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSpriteTextures</span><span class="p">;</span> <span class="c1">// number of sprite textures to follow (4 bytes)</span>
-<span class="n">tr2_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSpriteSequences</span><span class="p">;</span> <span class="c1">// number of sprite sequences records to follow (4 bytes)</span>
-<span class="n">tr2_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumCameras</span><span class="p">;</span> <span class="c1">// number of camera data records to follow (4 bytes)</span>
-<span class="n">tr2_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSoundSources</span><span class="p">;</span> <span class="c1">// number of sound source data records to follow (4 bytes)</span>
-<span class="n">tr2_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumBoxes</span><span class="p">;</span> <span class="c1">// number of box data records to follow (4 bytes)</span>
-<span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 20 bytes [TR1 version])</span>
-<span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
-<span class="kt">int16_t</span> <span class="n">Zones</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// zone data (NumBoxes * 12 bytes [TR1 version])</span>
-<span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
-<span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 22 bytes [TR1 version])</span>
-<span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
-<span class="n">tr2_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
-<span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
-<span class="kt">uint16_t</span> <span class="n">NumDemoData</span><span class="p">;</span> <span class="c1">// number of demo data records to follow (2 bytes)</span>
-<span class="kt">uint8_t</span> <span class="n">DemoData</span><span class="p">[</span><span class="n">NumDemoData</span><span class="p">];</span> <span class="c1">// demo data (NumDemoData bytes)</span>
-<span class="kt">int16_t</span> <span class="n">SoundMap</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// sound map (512 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSoundDetails</span><span class="p">;</span> <span class="c1">// number of sound-detail records to follow (4 bytes)</span>
-<span class="n">tr2_sample_info</span> <span class="n">SoundDetails</span><span class="p">[</span><span class="n">NumSoundDetails</span><span class="p">];</span> <span class="c1">// sound-detail list (NumSoundDetails * 8 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSamples</span> <span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">in</span> <span class="n">Samples</span><span class="p">)</span>
-<span class="kt">uint8_t</span> <span class="n">Samples</span> <span class="p">(</span><span class="n">array</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="o">--</span> <span class="n">embedded</span> <span class="n">sound</span> <span class="n">samples</span> <span class="n">in</span> <span class="n">Microsoft</span> <span class="n">WAVE</span> <span class="n">format</span><span class="p">)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
-</pre></div></div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_the_entire_tr3_level_format">3. The Entire TR3 Level Format</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_entire_tr3_level_format">9.3. The Entire TR3 Level Format</h3>
 <div class="paragraph"><p>What follows is the physical Tomb Raider III <span class="monospaced">.TR2</span> file layout, byte for byte.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -4944,10 +4948,14 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
 </pre></div></div></div>
 </div>
+<div class="sect2">
+<h3 id="_the_entire_tr4_level_format">9.4. The Entire TR4 Level Format</h3>
 </div>
-<div class="sect1">
-<h2 id="_itemized_differences_between_tri_and_trii">4. Itemized Differences between TRI and TRII</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_the_entire_tr5_level_format">9.5. The Entire TR5 Level Format</h3>
+</div>
+<div class="sect2">
+<h3 id="_itemized_differences_between_tr1_and_tr2">9.6. Itemized Differences between TR1 and TR2</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -5019,10 +5027,8 @@ Between SoundDetails and SampleIndices, TR1 has all the level&#8217;s sound samp
 </li>
 </ul></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_itemized_differences_between_trii_and_triii">5. Itemized Differences between TRII and TRIII</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_itemized_differences_between_tr2_and_tr3">9.7. Itemized Differences between TR2 and TR3</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -5041,10 +5047,14 @@ Finally, in TR2, the <span class="monospaced">tr2_object_texture</span> data is 
 </li>
 </ul></div>
 </div>
+<div class="sect2">
+<h3 id="_itemized_differences_between_tr3_and_tr4">9.8. Itemized Differences between TR3 and TR4</h3>
 </div>
-<div class="sect1">
-<h2 id="_itemized_differences_between_8220_normal_8221_trs_and_demos">6. Itemized Differences between &#8220;normal&#8221; TRs and Demos</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_itemized_differences_between_tr4_and_tr5">9.9. Itemized Differences between TR4 and TR5</h3>
+</div>
+<div class="sect2">
+<h3 id="_itemized_differences_between_8220_normal_8221_trs_and_demos">9.10. Itemized Differences between &#8220;normal&#8221; TRs and Demos</h3>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -5072,10 +5082,12 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
 <div class="paragraph"><p>No rearrangements are known for the TR3 demos.</p></div>
 </div>
 </div>
-<h1 id="_scripting_with_span_class_monospaced_tombpc_dat_span">Scripting with <span class="monospaced">TOMBPC.DAT</span></h1>
+</div>
 <div class="sect1">
-<h2 id="_overview_7">1. Overview</h2>
+<h2 id="_scripting_with_span_class_monospaced_tombpc_dat_span">10. Scripting with <span class="monospaced">TOMBPC.DAT</span></h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview_7">10.1. Overview</h3>
 <div class="paragraph"><p>The flow of the game, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene
 files, all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled using a file called <span class="monospaced">TOMBPC.DAT</span>. This file is
 normally compiled using a utility called <span class="monospaced">GAMEFLOW.EXE</span>, which was (apparently) accidentally distributed by Eidos in the German distribution of Tomb Raider II
@@ -5189,10 +5201,8 @@ separate TR1 and Unfinished Business apps. What follows is a description of the 
 <span class="n">StringArray</span> <span class="n">KeyStrings10</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Key 4</span>
 </pre></div></div></div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_levelscript_description">2. LevelScript Description</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_levelscript_description">10.2. LevelScript Description</h3>
 <div class="paragraph"><p>In LevelScript, Opcodes and Operands are all <span class="monospaced">uint16_t</span>.  Note that if a level is a demo level, its level ID will be 1024 higher than a &#8220;normal&#8221;
 level ID.</p></div>
 <div class="ulist"><div class="title">Opcodes</div><ul>
@@ -5287,8 +5297,8 @@ level ID.</p></div>
 </p>
 </li>
 </ul></div>
-<div class="sect2">
-<h3 id="_opcode_18_stuff_to_give">2.1. Opcode-18 stuff to give</h3>
+<div class="sect3">
+<h4 id="_opcode_18_stuff_to_give">10.2.1. Opcode-18 stuff to give</h4>
 <div class="paragraph"><p>(repeat means give another)</p></div>
 <div class="ulist"><div class="title">After finding all the secrets in a level (Tomb Raider 2)</div><ul>
 <li>
@@ -5565,8 +5575,8 @@ level ID.</p></div>
 </li>
 </ul></div>
 </div>
-<div class="sect2">
-<h3 id="_tomb_raider_2_identifications">2.2. Tomb Raider 2 identifications</h3>
+<div class="sect3">
+<h4 id="_tomb_raider_2_identifications">10.2.2. Tomb Raider 2 identifications</h4>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -5707,10 +5717,21 @@ level ID.</p></div>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_cdaudio_wad_soundtrack_file_tr3">11. CDAUDIO.WAD soundtrack file (TR3)</h2>
+<div class="sectionbody">
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cutseq_file_format_tr4_tr5">12. CUTSEQ file format (TR4-TR5)</h2>
+<div class="sectionbody">
+</div>
+</div>
+</div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-18 05:53:16 MSK
+Last updated 2015-07-18 14:13:54 MSK
 </div>
 </div>
 </body>
