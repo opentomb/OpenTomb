@@ -144,7 +144,6 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.intensity1 = 32767;
     room.intensity2 = 32767;
     room.light_mode = 0;
-    room.alternate_room = 0;
 
     if (read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator1 has wrong value");
