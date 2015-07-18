@@ -34,9 +34,7 @@ void Mat4_Translate(btTransform& mat, btScalar x, btScalar y, btScalar z)
 
 void Mat4_Scale(btTransform& mat, btScalar x, btScalar y, btScalar z)
 {
-    mat.getBasis().getColumn(0)[0] *= x;
-    mat.getBasis().getColumn(0)[1] *= y;
-    mat.getBasis().getColumn(0)[2] *= z;
+    mat.getBasis() = mat.getBasis().scaled(btVector3(x,y,z));
 }
 
 void Mat4_RotateX(btTransform& mat, btScalar ang)
