@@ -177,7 +177,6 @@ void Engine_Init_Pre()
 
     Com_Init();
     renderer.init();
-    engine_camera = Camera();
     renderer.setCamera( &engine_camera );
 
     Engine_BTInit();

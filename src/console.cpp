@@ -94,7 +94,7 @@ void ConsoleInfo::draw() {
         static_cast<GLfloat>(screen_info.w),
         static_cast<GLfloat>(screen_info.h)
     };
-    glUniform2fv(shader->screenSize, 2, screenSize);
+    glUniform2fv(shader->screenSize, 1, screenSize);
 
     const int x = 8;
     int y = m_cursorY + m_lineHeight;

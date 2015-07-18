@@ -105,7 +105,7 @@
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
-#define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
+#define DEFAULT_FALL_DOWN_HEIGHT                (320.0)                         ///@FIXME: check original
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
@@ -326,7 +326,7 @@ struct Character : public Entity
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
     btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
-    btScalar                     m_fallDownHeight = 0;
+    btScalar                     m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
     btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
