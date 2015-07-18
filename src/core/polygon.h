@@ -47,6 +47,37 @@ typedef struct polygon_s
 }polygon_t, *polygon_p;
 
 /*
+ *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
+ */
+
+typedef struct tex_frame_s
+{
+    uint16_t    tex_ind;
+    GLfloat     mat[4];
+    GLfloat     move[2];
+    GLfloat     uvrotate_max;           // Reference value used to restart rotation.
+    GLfloat     current_uvrotate;       // Current coordinate window position.
+}tex_frame_t, *tex_frame_p;
+
+typedef struct anim_seq_s
+{
+    int8_t      uvrotate;               // UVRotate mode flag.
+    int8_t      frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
+    int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
+    int8_t      reverse_direction;      // Used only with type 2 to identify current animation direction.
+    uint16_t    current_frame;          // Current frame for this sequence.
+    btScalar    frame_time;             // Time passed since last frame update.
+    btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
+    struct tex_frame_s  *frames;
+
+    uint32_t*   frame_list;             // Offset into anim textures frame list.
+}anim_seq_t, *anim_seq_p;
+
+
+__inline void ApplyAnimTextureTransformation(GLfloat *uv_out, const GLfloat *uv_in, const struct tex_frame_s *tf);
+
+/*
  * polygons functions
  */
 polygon_p Polygon_CreateArray(unsigned int pcount);

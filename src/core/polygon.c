@@ -9,6 +9,12 @@
 #include "polygon.h"
 
 
+void ApplyAnimTextureTransformation(GLfloat *uv_out, const GLfloat *uv_in, const struct tex_frame_s *tf)
+{
+    uv_out[0] = tf->mat[0+0*2] * uv_in[0] + tf->mat[0+1*2] * uv_in[1] + tf->move[0];
+    uv_out[1] = tf->mat[1+0*2] * uv_in[0] + tf->mat[1+1*2] * uv_in[1] + tf->move[1] - tf->current_uvrotate;
+}
+
 /*
  * POLYGONS
  */

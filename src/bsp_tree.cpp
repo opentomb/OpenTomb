@@ -8,7 +8,6 @@
 #include "core/polygon.h"
 #include "bsp_tree.h"
 #include "frustum.h"
-#include "mesh.h"
 
 #define NEED_REALLOC_TREE_BUFF        (1)
 #define NEED_REALLOC_VERTEX_BUFF      (2)
@@ -277,8 +276,7 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, str
                     dst_v = np->vertices + i;
                     Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
                     vec4_copy(dst_v->color, src_v->color);
-                    dst_v->tex_coord[0] = tf->mat[0+0*2] * src_v->tex_coord[0] + tf->mat[0+1*2] * src_v->tex_coord[1] + tf->move[0];
-                    dst_v->tex_coord[1] = tf->mat[1+0*2] * src_v->tex_coord[0] + tf->mat[1+1*2] * src_v->tex_coord[1] + tf->move[1] - tf->current_uvrotate;
+                    ApplyAnimTextureTransformation(dst_v->tex_coord, src_v->tex_coord, tf);
                 }
             }
             else

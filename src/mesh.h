@@ -127,45 +127,6 @@ typedef struct light_s
 }light_t, *light_p;
 
 /*
- *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
- */
-
-typedef struct tex_frame_s
-{
-    uint16_t    tex_ind;
-    GLfloat     mat[4];
-    GLfloat     move[2];
-    GLfloat     uvrotate_max;           // Reference value used to restart rotation.
-    GLfloat     current_uvrotate;       // Current coordinate window position.
-}tex_frame_t, *tex_frame_p;
-
-typedef struct anim_seq_s
-{
-    bool        uvrotate;               // UVRotate mode flag.
-    bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
-
-    bool        blend;                  // Blend flag.  Reserved for future use!
-    btScalar    blend_rate;             // Blend rate.  Reserved for future use!
-    btScalar    blend_time;             // Blend value. Reserved for future use!
-
-    int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
-    bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
-    btScalar    frame_time;             // Time passed since last frame update.
-    uint16_t    current_frame;          // Current frame for this sequence.
-    btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-    uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-
-    //btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
-    //btScalar    uvrotate_max;           // Reference value used to restart rotation.
-    //btScalar    current_uvrotate;       // Current coordinate window position.
-
-    struct tex_frame_s  *frames;
-
-    uint32_t*   frame_list;       // Offset into anim textures frame list.
-}anim_seq_t, *anim_seq_p;
-
-
-/*
  * room static mesh.
  */
 typedef struct static_mesh_s

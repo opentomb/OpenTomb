@@ -153,19 +153,14 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
-        size_t offset = 0;
         for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
         {
             anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
             uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
-            for(uint16_t i=0;i<p->vertex_count;i++)
+            for(uint16_t i=0;i<p->vertex_count;i++,data+=2)
             {
-                const GLfloat *v = p->vertices[i].tex_coord;
-                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1] - tf->current_uvrotate;
-
-                offset += 2;
+                ApplyAnimTextureTransformation(data, p->vertices[i].tex_coord, tf);
             }
         }
         glUnmapBufferARB(GL_ARRAY_BUFFER);
