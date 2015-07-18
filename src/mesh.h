@@ -290,17 +290,18 @@ struct SSAnimation
  */
 struct SSBoneFrame
 {
-    std::vector<SSBoneTag> bone_tags;                                      // array of bones
+    std::vector<SSBoneTag> bone_tags;                      // array of bones
     btVector3 pos;                                         // position (base offset)
     btVector3 bb_min;                                      // bounding box min coordinates
     btVector3 bb_max;                                      // bounding box max coordinates
     btVector3 centre;                                      // bounding box centre
 
-    SSAnimation       animations;                                     // animations list
+    SSAnimation animations;                                // animations list
 
-    bool hasSkin;                                       // whether any skinned meshes need rendering
+    bool hasSkin;                                          // whether any skinned meshes need rendering
 
     void fromModel(SkeletalModel* model);
+    void updateCurrentBoneFrame(const btTransform* transform);
 };
 
 /*

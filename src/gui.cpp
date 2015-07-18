@@ -575,7 +575,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
     bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity::updateCurrentBoneFrame(bf, nullptr);
+    bf->updateCurrentBoneFrame(nullptr);
 }
 
 

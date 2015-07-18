@@ -1814,7 +1814,7 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
     }
 
     std::vector<int16_t> frames( buffer_size / sizeof(int16_t));
-    const sf_count_t samplesRead = sf_readf_short(wavFile, frames.data(), frames.size());
+    /*const sf_count_t samplesRead =*/ sf_readf_short(wavFile, frames.data(), frames.size());
 
     alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
     Audio_LogALError(0);
@@ -1871,7 +1871,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> ent)
+void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }
