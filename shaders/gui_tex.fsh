@@ -16,5 +16,8 @@ void main(void)
 {
     vec2 coords = varying_position;
     coords.y = 1.0 - coords.y;
-    color = varying_color * texture(color_map, coords);
+    vec4 c = varying_color * texture(color_map, coords);
+    if(c.a < 0.5)
+        discard;
+    color = c;
 }
