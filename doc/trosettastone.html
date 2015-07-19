@@ -2470,16 +2470,25 @@ list) or colour (index into 8-bit palette or 16-bit palette).  If the rectangle 
 the low byte (<span class="monospaced">Texture &amp; 0xFF</span>) is an index into the 256-colour palette, while the high byte (<span class="monospaced">Texture &gt;&gt; 8</span>) is in index into the 16-bit palette, when present. A
 textured rectangle will have its vertices mapped onto all 4 vertices of an object texture, in appropriate correspondence.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face4</span>    <span class="c1">// 10-12 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face4</span>    <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">Effects</span>    <span class="c1">// TR4-5 ONLY: alpha blending and environment mapping</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Texture</span> field can have the bit 15 set: when it is, the face is <em>double-sided</em> (i.e. visible from both sides).</p></div>
 <div class="paragraph"><p><strong>TR1-3 ONLY:</strong> If the rectangle is a coloured polygon (not textured), the .Texture element contains two indices: the low byte (<span class="monospaced">Texture &amp; 0xFF</span>) is an index into the 256-colour palette, while the high byte (<span class="monospaced">Texture &gt;&gt; 8</span>) is in index into the 16-bit palette, when present.</p></div>
-<div class="paragraph"><p><strong>TR4-5 ONLY:</strong> The extra field <span class="monospaced">Effects</span> exists only for tris / quads making meshes (used by moveables and static meshes), not for tris / quads making rooms! It has this layout:</p></div>
+<div class="paragraph"><p>TR4 and later introduced an extended version only used for meshes, not for triangles and quads making rooms:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>struct tr4_mesh_face4    // 12 bytes
+{
+    uint16_t Vertices[4];
+    uint16_t Texture;
+    uint16_t Effects    // TR4-5 ONLY: alpha blending and environment mapping
+};</pre>
+</div></div>
+<div class="paragraph"><p>The only difference is the extra field <span class="monospaced">Effects</span>. It has this layout:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2509,7 +2518,13 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <h4 id="_triangular_face_definition">2.2.4. Triangular face definition</h4>
 <div class="paragraph"><p>This structure has the same layout than the quad face definition, except a textured triangle will have its vertices mapped <em>onto the first 3 vertices of an object texture, in appropriate correspondence</em>. Moreover, a triangle has only 3 vertices, not 4.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face3</span>    <span class="c1">// 8-10 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face3</span>    <span class="c1">// 8 bytes</span>
+<span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">tr4_mesh_face3</span>    <span class="c1">// 10 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
@@ -2548,7 +2563,7 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_textile32</span>    <span class="c1">// 262144 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
+    <span class="kt">uint32_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
@@ -2583,7 +2598,7 @@ by the larger structures that are built using the smaller structures.</p></div>
 <h5 id="_room_header">Room header</h5>
 <div class="paragraph"><p>$X / Z$ indicate the base position of the room mesh in world coordinates ($Y$ is always zero-relative)</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes (in TR5 - 20 bytes)</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>             <span class="c1">// Y-offset of room (world coordinates) - only in TR5</span>
@@ -2592,9 +2607,20 @@ by the larger structures that are built using the smaller structures.</p></div>
     <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">y</span> value exists only in TR5, and usually is 0.</p></div>
 <div class="paragraph"><p><span class="monospaced">yBottom</span> is actually largest value, but indicates <em>lowest</em> point in the room.
 <span class="monospaced">yTop</span> is actually smallest value, but indicates <em>highest</em> point in the room.</p></div>
+<div class="paragraph"><p>TR5 uses an extended version of this structure:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_info</span>    <span class="c1">// 20 bytes</span>
+<span class="p">{</span>
+    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
+    <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>             <span class="c1">// Y-offset of room (world coordinates) - only in TR5</span>
+    <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>             <span class="c1">// Z-offset of room (world coordinates)</span>
+    <span class="kt">int32_t</span> <span class="n">yBottom</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p>The additional <span class="monospaced">y</span> value is usually 0.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_portal_structure">Portal structure</h5>
@@ -2620,9 +2646,9 @@ portal structure below defines <em>only visibility portals</em>, not an actual m
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">FDindex</span><span class="p">;</span>    <span class="c1">// Index into FloorData[]</span>
     <span class="kt">uint16_t</span> <span class="n">BoxIndex</span><span class="p">;</span>   <span class="c1">// Index into Boxes[] (-1 if none)</span>
-    <span class="kt">uint8_t</span>  <span class="n">RoomBelow</span><span class="p">;</span>  <span class="c1">// -1 or 255 is none</span>
+    <span class="kt">uint8_t</span>  <span class="n">RoomBelow</span><span class="p">;</span>  <span class="c1">// 255 is none</span>
     <span class="kt">int8_t</span>   <span class="n">Floor</span><span class="p">;</span>      <span class="c1">// Absolute height of floor</span>
-    <span class="kt">uint8_t</span>  <span class="n">RoomAbove</span><span class="p">;</span>  <span class="c1">// -1 or 255 if none</span>
+    <span class="kt">uint8_t</span>  <span class="n">RoomAbove</span><span class="p">;</span>  <span class="c1">// 255 if none</span>
     <span class="kt">int8_t</span>   <span class="n">Ceiling</span><span class="p">;</span>    <span class="c1">// Absolute height of ceiling</span>
 <span class="p">};</span>
 </pre></div></div></div>
@@ -2740,14 +2766,23 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <span class="p">{</span>
      <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
+    <span class="kt">uint32_t</span> <span class="n">Fade1</span><span class="p">;</span>         <span class="c1">// Falloff value</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">X/Y/Z</span> are in world coordinates. <span class="monospaced">Intensity1/Intensity2</span> are almost always equal. This lighting only affects <em>externally-lit</em> objects. Tomb Raider 1 has only the first of the paired <span class="monospaced">Intensity</span> and <span class="monospaced">Fade</span> values.</p></div>
+<div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (dark) to 0x1FFF (bright). However, some rooms occasionally have some lights with intensity greater than 0x1FFF (for example, look at room #9, 2nd light in <span class="monospaced">level1.phd</span>). <span class="monospaced">Fade1</span> is the maximum distance the light shines on, and ranges from 0 to 0x7FFF.</p></div>
+<div class="paragraph"><p>TR2 uses an extended version of this structure:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_light</span>   <span class="c1">// 24 bytes</span>
+<span class="p">{</span>
+     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
+    <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity2</span><span class="p">;</span>    <span class="c1">// Only in TR2</span>
     <span class="kt">uint32_t</span> <span class="n">Fade1</span><span class="p">;</span>         <span class="c1">// Falloff value</span>
     <span class="kt">uint32_t</span> <span class="n">Fade2</span><span class="p">;</span>         <span class="c1">// Only in TR2</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">X/Y/Z</span> are in world coordinates. <span class="monospaced">Intensity1/Intensity2</span> are almost always equal. This lighting only affects <em>externally-lit</em> objects. Tomb Raider 1 has only the first of the paired <span class="monospaced">Intensity</span> and <span class="monospaced">Fade</span> values.</p></div>
-<div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (dark) to 0x1FFF (bright). However, some rooms occasionally have some lights with intensity greater than 0x1FFF (for example, look at room #9, 2nd light in <span class="monospaced">level1.phd</span>). <span class="monospaced">Fade1</span> is the maximum distance the light shines on, and ranges from 0 to 0x7FFF.</p></div>
-<div class="paragraph"><p><strong>TR2 ONLY:</strong> <span class="monospaced">Intensity2</span> and <span class="monospaced">Fade2</span> values are seemingly not used. <span class="monospaced">Intensity1</span> can go very well beyond 0x1FFF, right to 0x7FFF (ultra bright light). Above 0x7FFF, it is always black, so the number is pseudo-signed (negative values are always treated as zero).</p></div>
+<div class="paragraph"><p><span class="monospaced">Intensity2</span> and <span class="monospaced">Fade2</span> values are seemingly not used. <span class="monospaced">Intensity1</span> can go very well beyond 0x1FFF, right to 0x7FFF (ultra bright light). Above 0x7FFF, it is always black, so the number is pseudo-signed (negative values are always treated as zero).</p></div>
 <div class="listingblock">
 <div class="title">TR3 Room Lighting</div>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_light</span>   <span class="c1">// 24 bytes</span>
@@ -2861,7 +2896,17 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <div class="paragraph"><p>As TR3 introduced colored lighting, room vertex structure drastically changed. It changed once again in TR5, when floating-point numbers were introduced. So we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p></div>
 <div class="listingblock">
 <div class="title">TR1-2 Room Vertex structure</div>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes (TR2 - 12 bytes)</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes</span>
+<span class="p">{</span>
+     <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
+       <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Vertex</span> is the coordinates of the vertex, relative to <a href="#tr_room_info">[tr_room_info]</a> <span class="monospaced">x</span> and <span class="monospaced">z</span> values.</p></div>
+<div class="paragraph"><p><span class="monospaced">Lighting1</span> ranges from 0 (bright) to 0x1FFF (dark). This value is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range.</p></div>
+<div class="paragraph"><p>TR2 uses an extended version of the structure:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
        <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>
@@ -2869,9 +2914,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
        <span class="kt">int16_t</span> <span class="n">Lighting2</span><span class="p">;</span>  <span class="c1">// Almost always equal to Lighting1 (absent from TR1)</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">Vertex</span> is the coordinates of the vertex, relative to <a href="#tr_room_info">[tr_room_info]</a> <span class="monospaced">x</span> and <span class="monospaced">z</span> values.</p></div>
-<div class="paragraph"><p><span class="monospaced">Lighting1</span> ranges from 0 (bright) to 0x1FFF (dark). This value is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range.</p></div>
-<div class="paragraph"><p><strong>TR2 ONLY:</strong> <span class="monospaced">Attributes</span> field is a <em>set of flags</em>, and their meaning is:</p></div>
+<div class="paragraph"><p><span class="monospaced">Attributes</span> field is a <em>set of flags</em>, and their meaning is:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3002,8 +3045,21 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <h5 id="_room_static_mesh_structure">Room Static Mesh structure</h5>
 <div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the <a href="#tr2_item">[tr2_item]</a> structure, except that static meshes have no animations and are confined to a single room.</p></div>
 <div class="listingblock">
-<div class="title">TR1-2 Room Static Mesh structure</div>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes (20 bytes in TR2)</span>
+<div class="title">TR1 Room Static Mesh structure</div>
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
+    <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">MeshID</span><span class="p">;</span>     <span class="c1">// Which StaticMesh item to draw</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (bright) to 0x1FFF (dark).</p></div>
+<div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (0xC000) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting is needed, as you can simply interpret it using this formula:</p></div>
+<div class="paragraph"><p>` float Real_Rotation = (float)Rotation / 16384.0f * -90; `</p></div>
+<div class="paragraph"><p>TR2 again uses an extended version:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3012,10 +3068,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
     <span class="kt">uint16_t</span> <span class="n">MeshID</span><span class="p">;</span>     <span class="c1">// Which StaticMesh item to draw</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (bright) to 0x1FFF (dark).</p></div>
 <div class="paragraph"><p><span class="monospaced">Intensity2</span> is seemingly not used, as changing this value does nothing.</p></div>
-<div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (0xC000) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting is needed, as you can simply interpret it using this formula:</p></div>
-<div class="paragraph"><p>` float Real_Rotation = (float)Rotation / 16384.0f * -90; `</p></div>
 <div class="listingblock">
 <div class="title">TR3-5 Room Static Mesh structure</div>
 <div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
@@ -3374,7 +3427,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="paragraph"><p><span class="monospaced">NumRoomTriangles</span> and <span class="monospaced">NumRoomRectangles</span> are respectively the numbers of triangular and rectangular faces in a given room. <strong>NOTE:</strong> If room is <em>null room</em>, each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">LightDataSize</span> is the size of the light data in bytes (<em>not</em> in <span class="monospaced">tr5_room_light</span> units).</p></div>
 <div class="paragraph"><p><span class="monospaced">Unknown6</span> could probably be a copy of <span class="monospaced">ReverbInfo</span> (see further), as its value usually ranges from 0 to 3.</p></div>
-<div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <span class="monospaced">tr_room_info</span> structure. If room is a <em>null room</em>, both of these values are `0xCDCDCDCD.</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <span class="monospaced">tr_room_info</span> structure. If room is a <em>null room</em>, both of these values are <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">NumLayers</span> is a number of layers (volumes) in this room.</p></div>
 <div class="paragraph"><p><span class="monospaced">LayerOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the layer data.</p></div>
 <div class="paragraph"><p><span class="monospaced">VerticesOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the verex data.</p></div>
@@ -3471,6 +3524,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </p>
 </li>
 </ul></div>
+<div class="paragraph"><p><strong><span class="big red">Old TRosettaStone text ahead&#8201;&#8212;&#8201;current progress is above this bookmark.</span></strong></p></div>
 </div>
 </div>
 </div>
@@ -6038,7 +6092,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-19 04:20:55 MSK
+Last updated 2015-07-19 16:28:42 MSK
 </div>
 </div>
 </body>
