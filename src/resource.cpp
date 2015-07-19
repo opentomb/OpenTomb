@@ -4116,23 +4116,24 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
     {
         std::shared_ptr<BaseItem> item = it->second;
 
-        for(uint32_t i=0;i<engine_world.rooms.size();i++)
+        for(const std::shared_ptr<Room>& room : engine_world.rooms)
         {
-            for(const std::shared_ptr<EngineContainer>& cont : engine_world.rooms[i]->containers)
+            for(const std::shared_ptr<EngineContainer>& cont : room->containers)
             {
-                if(cont->object_type == OBJECT_ENTITY)
-                {
-                    Entity* ent = static_cast<Entity*>(cont->object);
-                    if(ent->m_bf.animations.model->id == item->world_model_id)
-                    {
-                        char buf[64] = {0};
-                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
-                        engine_lua.doString(buf);
-                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
-                        engine_lua.doString(buf);
-                        ent->disableCollision();
-                    }
-                }
+                if(cont->object_type != OBJECT_ENTITY)
+                    continue;
+
+                Entity* ent = static_cast<Entity*>(cont->object);
+                if(ent->m_bf.animations.model->id != item->world_model_id)
+                    continue;
+
+                char buf[64] = {0};
+                snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
+                engine_lua.doString(buf);
+
+                snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
+                engine_lua.doString(buf);
+                ent->disableCollision();
             }
         }
     }

@@ -971,12 +971,12 @@ void World::addEntity(std::shared_ptr<Entity> entity)
 }
 
 
-int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
+bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
-    if((model == NULL) || (items_tree.empty()))
+    if(!model)
     {
-        return 0;
+        return false;
     }
 
     std::unique_ptr<SSBoneFrame> bf(new SSBoneFrame());
@@ -993,7 +993,7 @@ int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_
 
     items_tree[item->id] = item;
 
-    return 1;
+    return true;
 }
 
 

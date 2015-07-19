@@ -899,7 +899,6 @@ int lua_GetItemsCount(int entity_id, int item_id)
 
 void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
-
     engine_world.createItem(item_id, model_id, world_model_id, type, count, name ? name : std::string());
 }
 

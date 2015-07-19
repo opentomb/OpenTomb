@@ -51,7 +51,7 @@ int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items coun
         return 0;
 
 
-    count = (count == -1) ? item->count : count;
+    count = (count < 0) ? item->count : count;
 
     for(InventoryNode& i : m_inventory) {
         if(i.id == item_id)
