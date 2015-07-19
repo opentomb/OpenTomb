@@ -711,77 +711,9 @@ void Entity::addOverrideAnim(int model_id)
 }
 
 
-void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
+void Entity::updateCurrentBoneFrame()
 {
-    SSBoneTag* btag = bf->bone_tags.data();
-    BoneTag* src_btag, *next_btag;
-    SkeletalModel* model = bf->animations.model;
-    BoneFrame* curr_bf, *next_bf;
-
-    next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
-    curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
-
-    btVector3 tr, cmd_tr;
-    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
-    {
-        tr = *etr * curr_bf->move;
-        cmd_tr = tr * bf->animations.lerp;
-    }
-    else
-    {
-        tr.setZero();
-        cmd_tr.setZero();
-    }
-
-    bf->bb_max = curr_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
-    bf->bb_min = curr_bf->bb_min.lerp( next_bf->bb_min, bf->animations.lerp ) + cmd_tr;
-    bf->centre = curr_bf->centre.lerp( next_bf->centre, bf->animations.lerp ) + cmd_tr;
-    bf->pos = curr_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
-
-    next_btag = next_bf->bone_tags.data();
-    src_btag = curr_bf->bone_tags.data();
-    for(uint16_t k=0;k<curr_bf->bone_tags.size();k++,btag++,src_btag++,next_btag++)
-    {
-        btag->offset = src_btag->offset.lerp( next_btag->offset, bf->animations.lerp );
-        btag->transform.getOrigin() = btag->offset;
-        btag->transform.getOrigin()[3] = 1.0;
-        if(k == 0)
-        {
-            btag->transform.getOrigin() += bf->pos;
-            btag->qrotate = src_btag->qrotate.slerp( next_btag->qrotate, bf->animations.lerp );
-        }
-        else
-        {
-            BoneTag* ov_src_btag = src_btag;
-            BoneTag* ov_next_btag = next_btag;
-            btScalar ov_lerp = bf->animations.lerp;
-            for(SSAnimation* ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
-            {
-                if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
-                {
-                    BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
-                    BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
-                    ov_src_btag = &ov_curr_bf->bone_tags[k];
-                    ov_next_btag = &ov_next_bf->bone_tags[k];
-                    ov_lerp = ov_anim->lerp;
-                    break;
-                }
-            }
-            btag->qrotate = ov_src_btag->qrotate.slerp(ov_next_btag->qrotate, ov_lerp);
-        }
-        btag->transform.setRotation(btag->qrotate);
-    }
-
-    /*
-     * build absolute coordinate matrix system
-     */
-    btag = bf->bone_tags.data();
-    btag->full_transform = btag->transform;
-    btag++;
-    for(uint16_t k=1;k<curr_bf->bone_tags.size();k++,btag++)
-    {
-        btag->full_transform = btag->parent->full_transform * btag->transform;
-    }
+    m_bf.updateCurrentBoneFrame(&m_transform);
 }
 
 
@@ -1065,7 +997,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     //btScalar dt = bf.animations.frame_time - (btScalar)t * bf.animations.period;
     m_bf.animations.frame_time = (btScalar)frame * m_bf.animations.period;// + dt;
 
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame();
     updateRigidBody(false);
 }
 
@@ -1297,7 +1229,7 @@ int Entity::frame(btScalar time)
 
     frameImpl(time, frame, ret);
 
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame();
     fixPenetrations(nullptr);
 
     return ret;
@@ -1480,7 +1412,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup bodies.
     m_bt.bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity::updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame();
     m_bt.no_fix_all = false;
     m_bt.no_fix_body_parts = 0x00000000;
 #if 0

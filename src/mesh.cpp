@@ -954,3 +954,62 @@ void BaseMesh::polySortInMesh()
         }
     }
 }
+
+void SSBoneFrame::updateCurrentBoneFrame(const btTransform* transform)
+{
+
+    SkeletalModel* model = animations.model;
+    const BoneFrame* const currBoneFrame = &model->animations[animations.current_animation].frames[animations.current_frame];
+    const BoneFrame* const nextBoneFrame = &model->animations[animations.next_animation   ].frames[animations.next_frame   ];
+
+    btVector3 lerpMove = {0,0,0};
+    if(transform!=nullptr && (currBoneFrame->command & ANIM_CMD_MOVE))
+    {
+        btVector3 move = *transform * currBoneFrame->move;
+        lerpMove = move * animations.lerp;
+    }
+
+    bb_max = currBoneFrame->bb_max.lerp( nextBoneFrame->bb_max, animations.lerp ) + lerpMove;
+    bb_min = currBoneFrame->bb_min.lerp( nextBoneFrame->bb_min, animations.lerp ) + lerpMove;
+    centre = currBoneFrame->centre.lerp( nextBoneFrame->centre, animations.lerp ) + lerpMove;
+    pos = currBoneFrame->pos.lerp(nextBoneFrame->pos, animations.lerp) + lerpMove;
+
+    for(size_t k=0; k<currBoneFrame->bone_tags.size(); k++)
+    {
+        bone_tags[k].offset = currBoneFrame->bone_tags[k].offset.lerp( nextBoneFrame->bone_tags[k].offset, animations.lerp );
+        bone_tags[k].transform.getOrigin() = bone_tags[k].offset;
+        bone_tags[k].transform.getOrigin()[3] = 1.0;
+        if(k == 0)
+        {
+            bone_tags[k].transform.getOrigin() += pos;
+            bone_tags[k].qrotate = currBoneFrame->bone_tags[k].qrotate.slerp( nextBoneFrame->bone_tags[k].qrotate, animations.lerp );
+        }
+        else
+        {
+            const BoneTag* currBoneTagIt = &currBoneFrame->bone_tags[k];
+            const BoneTag* nextBoneTagIt = &nextBoneFrame->bone_tags[k];
+            btScalar animLerp = animations.lerp;
+            for(SSAnimation* animation=animations.next; animation!=NULL; animation = animation->next)
+            {
+                if((animation->model != NULL) && (animation->model->mesh_tree[k].replace_anim != 0))
+                {
+                    currBoneTagIt = &animation->model->animations[animation->current_animation].frames[animation->current_frame].bone_tags[k];
+                    nextBoneTagIt = &animation->model->animations[animation->next_animation   ].frames[animation->next_frame   ].bone_tags[k];
+                    animLerp = animation->lerp;
+                    break;
+                }
+            }
+            bone_tags[k].qrotate = currBoneTagIt->qrotate.slerp(nextBoneTagIt->qrotate, animLerp);
+        }
+        bone_tags[k].transform.setRotation(bone_tags[k].qrotate);
+    }
+
+    /*
+     * build absolute coordinate matrix system
+     */
+    bone_tags.front().full_transform = bone_tags.front().transform;
+    for(size_t k=1; k<currBoneFrame->bone_tags.size(); k++)
+    {
+        bone_tags[k].full_transform = bone_tags[k].parent->full_transform * bone_tags[k].transform;
+    }
+}

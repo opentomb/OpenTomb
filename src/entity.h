@@ -162,7 +162,7 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
+    void updateCurrentBoneFrame();
     void doAnimCommands(SSAnimation *ss_anim, int changing);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);

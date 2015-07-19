@@ -90,7 +90,7 @@ void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*st
         move -= p;
         ent->m_transform.getOrigin() += move;
         ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
-        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
+        ent->updateCurrentBoneFrame();
         ent->updateRigidBody(false);
         ent->ghostUpdate();
         ent->m_moveType = MOVE_ON_FLOOR;
