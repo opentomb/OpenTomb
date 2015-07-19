@@ -1635,7 +1635,7 @@ std::tuple<int,bool,bool> lua_GetEntityTriggerLayout(int id)
     };
 }
 
-void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua::Value once)
+void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua::Value lock)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
@@ -1645,15 +1645,15 @@ void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua:
         return;
     }
 
-    if(once.is<lua::Boolean>()) {
+    if(lock.is<lua::Boolean>()) {
         uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= mask;          // mask  - 00011111
-        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= static_cast<bool>(eventOrLayout) << 5;   // event - 00100000
-        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= static_cast<bool>(once) << 6;   // lock  - 01000000
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= eventOrLayout.to<bool>() << 5;   // event - 00100000
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= lock.to<bool>() << 6;   // lock  - 01000000
         ent->m_triggerLayout = trigger_layout;
     }
     else {
-        ent->m_triggerLayout = static_cast<int>(eventOrLayout);
+        ent->m_triggerLayout = eventOrLayout.to<int>();
     }
 }
 

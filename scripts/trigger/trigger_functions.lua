@@ -110,7 +110,7 @@ function deactivateEntity(object_id, activator_id)
         -- Activation mask and timer are forced to zero when entity is deactivated.
         -- Activity lock is ignored, since it can't be raised by antitriggers.
 
-        setEntityTriggerLayout(object_id, 0x00, 0, lock);
+        setEntityTriggerLayout(object_id, 0x00, false, lock);
         setEntityTimer(object_id, 0.0);
     end;    
 end
