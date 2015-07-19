@@ -503,7 +503,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     {
         EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
 
-        if(!only_room.is<lua::Boolean>() || !static_cast<bool>(only_room) || (static_cast<bool>(only_room) && (cont->object_type == OBJECT_ROOM_BASE)))
+        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && (cont->object_type == OBJECT_ROOM_BASE)))
         {
             move.setInterpolate3(from ,to, cb.m_closestHitFraction);
             ent->m_transform.getOrigin()[2] = move[2];
@@ -1203,11 +1203,11 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     auto pos = ent->m_transform.getOrigin();
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        pos += static_cast<btScalar>(dx) * ent->m_transform.getBasis().getColumn(0) + static_cast<btScalar>(dy) * ent->m_transform.getBasis().getColumn(1) + static_cast<btScalar>(dz) * ent->m_transform.getBasis().getColumn(2);
+        pos += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
 
     RoomSector* curr_sector = ent->m_self->room->getSectorRaw(pos);
     curr_sector = curr_sector->checkPortalPointer();
-    btVector3 point = (ceiling.is<lua::Boolean>() && static_cast<bool>(ceiling))
+    btVector3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
                     ? curr_sector->getCeilingPoint()
                     : curr_sector->getFloorPoint();
 
@@ -1528,7 +1528,7 @@ bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua:
     }
 
     std::shared_ptr<Entity> e2 = engine_world.getEntityByID(id2);
-    if((e2 == NULL) || (e1 == e2))
+    if(!e2 || e1 == e2)
     {
         return false;
     }
@@ -1633,19 +1633,6 @@ std::tuple<int,bool,bool> lua_GetEntityTriggerLayout(int id)
         (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT),    // event
         (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK)     // lock
     };
-}
-
-void lua_SetEntityTriggerLayout1(int id, int layout)
-{
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
-
-    if(ent == NULL)
-    {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
-        return;
-    }
-
-    ent->m_triggerLayout = layout;
 }
 
 void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua::Value once)
@@ -2441,7 +2428,7 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        Audio_StreamPlay(id, static_cast<int>(mask));
+        Audio_StreamPlay(id, mask.to<int>());
     }
     else
     {

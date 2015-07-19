@@ -60,7 +60,7 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     -- This weird setup means that activity lock only takes action if current trigger itself is NOT
     -- one-shot, else it has bigger priority than entity lock, and activation continues.
     
-    if((lock == 1) and (trigger_lock == 0)) then return end;
+    if(lock and trigger_lock) then return end;
     
     -- Apply trigger mask to entity mask.
 
@@ -73,13 +73,13 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     -- Full entity mask (11111) is always a reason to activate an entity.
     -- If mask is not full, entity won't activate - no exclusions.
     
-    if((mask == 0x1F) and (event == 0)) then
+    if((mask == 0x1F) and (not event)) then
         execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
-        event = 1;
-        lock = bit32.bor(lock, trigger_lock);
-    elseif((mask ~= 0x1F) and (event == 1)) then
+        event = true;
+        lock = lock or trigger_lock;
+    elseif((mask ~= 0x1F) and event) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
-        event = 0;
+        event = false;
     end;
     
     -- Update trigger layout.
@@ -100,11 +100,11 @@ function deactivateEntity(object_id, activator_id)
     -- It seems that antitrigger event DOES NOT check lock state - however, it copies
     -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
     
-    -- if(lock == 1) then return end;
+    -- if(lock) then return end;
     
     -- Execute entity deactivation function, only if activation was previously set.
     
-    if(event == 1) then
+    if(event) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         
         -- Activation mask and timer are forced to zero when entity is deactivated.

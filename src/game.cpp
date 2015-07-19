@@ -329,7 +329,7 @@ int Game_Save(const char* name)
     for(uint32_t i=0; i < engine_world.flip_data.size(); i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
-        fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_data[i].state);
+        fprintf(f, "setFlipState(%d, %s);\n", i, engine_world.flip_data[i].state?"true":"false");
     }
 
     Save_Entity(&f, engine_world.character);    // Save Lara.

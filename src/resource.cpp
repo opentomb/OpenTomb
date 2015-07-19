@@ -874,33 +874,33 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
+                                                snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
                                                 if(only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
-                                                    snprintf(buf2, 128, " setEntityLock(%d, 1) \n", operands);
+                                                    snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
                                                 }
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and switch_sectorstatus) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
                                                 }
                                             }
                                             else
                                             {
                                                 // Ordinary type case (e.g. heavy switch).
-                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
                                                 strcat(item_events, buf);
-                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, true) \n");
+                                                snprintf(buf, 128, " if(not switch_sectorstatus) then \n   setEntitySectorStatus(entity_index, true) \n");
                                             }
                                             break;
 
                                         case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityLock(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((not getEntityEnability(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                             break;
                                     }
 
@@ -920,14 +920,14 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                         // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                                         if(activator == TR_ACTIVATOR_SWITCH)
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
                                             strcat(item_events, buf);
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", operands, mask_mode, only_once);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once?"true":"false");
                                             strcat(anti_events, buf);
                                         }
                                         else
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", operands, trigger_mask, mask_mode, only_once, timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once?"true":"false", timer_field);
                                             strcat(item_events, buf);
                                             snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
                                             strcat(anti_events, buf);
@@ -961,12 +961,12 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 // anti-events array.
                                 if(activator == TR_ACTIVATOR_SWITCH)
                                 {
-                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", operands, operands);
+                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
                                     strcat(single_events, buf);
                                 }
                                 else
                                 {
-                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", operands, trigger_mask, operands);
+                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, true); \n", operands, trigger_mask, operands);
                                     strcat(single_events, buf);
                                 }
                                 break;
@@ -974,14 +974,14 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             case TR_FD_TRIGFUNC_FLIPON:
                                 // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_ON trigger, room will remain flipped.
-                                snprintf(buf, 128, "   setFlipState(%d, 1); \n", operands);
+                                snprintf(buf, 128, "   setFlipState(%d, true); \n", operands);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPOFF:
                                 // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_OFF trigger, room will remain unflipped.
-                                snprintf(buf, 128, "   setFlipState(%d, 0); \n", operands);
+                                snprintf(buf, 128, "   setFlipState(%d, false); \n", operands);
                                 strcat(single_events, buf);
                                 break;
 
@@ -1068,7 +1068,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             if(single_events[0])
                             {
                                 if(condition) strcat(once_condition, " ");
-                                strcat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n");
+                                strcat(once_condition, " if(not getEntitySectorStatus(entity_index)) then \n");
                                 strcat(script, once_condition);
                                 strcat(script, single_events);
                                 strcat(script, "   setEntitySectorStatus(entity_index, true); \n");
