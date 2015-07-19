@@ -2080,11 +2080,11 @@ could be likened to a form of digital archæology, and hopefully this document w
 &#8220;TR-hieroglyphic&#8221; works.</div>
 <div class="attribution">
 </div></div>
-<div class="paragraph"><p>Since 2003 Tomb Raider community, and especially programmers and resource hacking enthusiasts, used outdated document called TRosettaStone, which wasn&#8217;t updated since 1999. Also, there was an updated version available, which was done by E. Popov&#8201;&#8212;&#8201;that&#8217;s the one which we will use as basis for this document. Also, this document will widely borrow from TREP user&#8217;s manual, NGLE manual, and a bunch of TRF threads about internal game engine structures. Maybe other documents will be used as well, but in any case, you will get a reference and a link in the end of this text.</p></div>
-<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily to simply exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will explore not only game file formats, but also internal game logic, procedures and all such things. It will be updated synchronously with development of OpenTomb, one of such reimplementation projects, which received wide feedback from the community lately.</p></div>
+<div class="paragraph"><p>Since 2003 the Tomb Raider community, especially programmers and resource hacking enthusiasts used an outdated document called TRosettaStone, which hadn&#8217;t been updated since 1999. There was an updated version available, which was done by E. Popov&#8201;&#8212;&#8201;that&#8217;s the one which we will use as basis for this document. Also, this document will widely borrow information from TREP user&#8217;s manual, NGLE manual, and a bunch of TRF threads about internal game engine structures. Maybe other documents will be used as well, but in any case, you will get a reference and a link at the end of this text.</p></div>
+<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily at simply exploring already existing game assets, such as levels, sound files, scripts, etc. This document is being created as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will explore not only game file formats, but also internal game logic, procedures and other related aspects. It will be updated synchronously with development of OpenTomb, one of such reimplementation projects, which has received lots of feedback from the community.</p></div>
 <div class="sect2">
 <h3 id="_description">1.1. Description</h3>
-<div class="paragraph"><p>This document contains detailed descriptions of the classic-era Tomb Raider data file formats. It is assumed that the reader has knowledge and experience programming in C or C++, and has at least a passing familiarity with graphics programming. This document is self-contained; all hyperlinks refer only to itself. All information in this document was derived independently, without the aid or assistance of anyone at Core Design or Eidos. As such, the information in this document may contain errors or omissions, and many structure and variable names were deduced from the interpretation of the data (and therefore could be misleading or completely wrong). However, we re-use certain variable and function names from original Tomb Raider debug builds and mappings from leaked Core Design PSX SDK. All the information in this document was tested and is therefore plausible, but could also be a misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is a spare-time project that set out to document the Tomb Raider file formats.</p></div>
+<div class="paragraph"><p>This document contains detailed descriptions of the classic-era Tomb Raider data file formats. It is assumed that the reader has knowledge and experience programming in C or C++ and has at least a passing familiarity with graphics programming. This document is self-contained; all hyperlinks refer only to itself. All information in this document was derived independently, without the aid or assistance of anyone at Core Design or Eidos. As such, the information in this document may contain errors or omissions, and many structure and variable names were deduced from the interpretation of the data (and therefore could be misleading or completely wrong). However, we re-use certain variable and function names from original Tomb Raider debug builds and mappings/symbols from the leaked Tomb Raider Chronicles PSX SDK. All the information in this document was tested and is therefore plausible, but could also be a misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is a spare-time project that set out to document the Tomb Raider file formats.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_conventions">1.2. Conventions</h3>
@@ -2246,7 +2246,7 @@ Clarify fog bulb values which affect its radius.
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>It&#8217;s good to note the origins of level file extension. While it is obvious that TR2/TR4/TRC extensions specify game version, <span class="monospaced">.PHD</span> is actually abbreviation for one of the key developers of Tomb Raider 1: <em>Phil H. Daniels</em>. Looks like that this programmer contributed a lot of the code to early version of Tomb Raider, because phd also became a prefix for several helper functions in source code, like <span class="monospaced">phd_sin</span>, <span class="monospaced">phd_cos</span>, and so on. Most likely, he was responsible for developing level file structure of Tomb Raider.</p></div>
+<div class="paragraph"><p>It&#8217;s good to note the origins of level file extension. While it is obvious that TR2/TR4/TRC extensions specify abbreviations of the game name. <span class="monospaced">.PHD</span> is actually the initials of the <em>Lead Programmer</em> for Tomb Raider 1: <em>Paul Howard Douglas</em>. Looks like this programmer contributed a lot of the code during early development stages of Tomb Raider. This is suggested because the <em>phd</em> initials also became a prefix for several helper functions in the original source code, for instance: <span class="monospaced">phd_sin</span>, <span class="monospaced">phd_cos</span> etc. Most likely, he was also responsible for developing the level file structure for Tomb Raider.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_fmvs_full_motion_videos">FMVs (Full Motion Videos)</h5>
@@ -2953,21 +2953,21 @@ width:75%;
 <div class="ulist"><ul>
 <li>
 <p>
-if both <span class="monospaced">x</span> and <span class="monospaced">y</span> $LightDirectionVectorX = \cos(X) * \sin(Y)$
+if both <span class="monospaced">x</span> and <span class="monospaced">y</span> $\mathnormal{LightDirectionVectorX} = \cos(X) * \sin(Y)$
 </p>
 </li>
 <li>
 <p>
-LightDirectionVectorY = $\sin(X)$
+$\mathnormal{LightDirectionVectorY} = \sin(X)$
 </p>
 </li>
 <li>
 <p>
-LightDirectionVectorZ = $\cos(X) * \cos(Y)$
+$\mathnormal{LightDirectionVectorZ} = \cos(X) * \cos(Y)$
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><span class="monospaced">x2</span>, <span class="monospaced">y2</span>, <span class="monospaced">z2</span>, <span class="monospaced">dx2</span>, <span class="monospaced">dy2</span> and <span class="monospaced">dz2</span> values repeat previous corresponding information in long data types vice floats.</p></div>
+<div class="paragraph"><p><span class="monospaced">x2</span>, <span class="monospaced">y2</span>, <span class="monospaced">z2</span>, <span class="monospaced">dx2</span>, <span class="monospaced">dy2</span> and <span class="monospaced">dz2</span> values repeat previous corresponding information in long data types instead of floats.</p></div>
 <div class="paragraph"><p><span class="monospaced">Separator</span> and <span class="monospaced">Filler</span> value (0xCD) is very common in TR5 format, presumably it&#8217;s a programmer&#8217;s joke abbreviating studio&#8217;s name (Core Design = CD).</p></div>
 </div>
 <div class="sect4">
@@ -6181,7 +6181,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-19 21:00:39 CEST
+Last updated 2015-07-20 01:15:43 CEST
 </div>
 </div>
 </body>
