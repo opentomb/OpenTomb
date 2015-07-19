@@ -39,15 +39,16 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c99" />
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
-			<Add option="-std=c99" />
-			<Add option="-DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />
+			<Add option="-m32" />
+			<Add option="-DOV_EXCLUDE_STATIC_CALLBACKS" />
 			<Add directory="src/bullet" />
 			<Add directory="src/freetype2/include" />
 		</Compiler>
 		<Linker>
-			<Add option="-static -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread" />
+			<Add option="-static -m32 -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />

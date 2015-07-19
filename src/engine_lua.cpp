@@ -1773,6 +1773,8 @@ int lua_SetEntityAngles(lua_State * lua)
             ent->angles[1] = lua_tonumber(lua, 3);
             ent->angles[2] = lua_tonumber(lua, 4);
         }
+        
+        Entity_UpdateTransform(ent);
     }
 
     return 0;

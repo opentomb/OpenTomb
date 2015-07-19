@@ -239,24 +239,22 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
 {
     bool result = false;
 
-    if(lua)
+    if (lua)
     {
         int top = lua_gettop(lua);
         lua_getglobal(lua, "getOverridedSamplesInfo");
         const char *real_path;
 
-        if(lua_isfunction(lua, -1))
+        if (lua_isfunction(lua, -1))
         {
-            size_t string_length = 0;
-
             lua_pushinteger(lua, engine_world.version);
             if (lua_CallAndLog(lua, 1, 3, 0))
             {
+                size_t string_length = 0;
                 real_path   = lua_tolstring(lua, -1, &string_length);
-               *num_sounds  = (int)lua_tointeger(lua, -2);
-               *num_samples = (int)lua_tointeger(lua, -3);
-
-                strcpy(sample_name_mask, real_path);
+               *num_sounds  = lua_tointeger(lua, -2);
+               *num_samples = lua_tointeger(lua, -3);
+                strncpy(sample_name_mask, real_path, 255);
 
                 if((*num_sounds != -1) && (*num_samples != -1) && (strcmp(real_path, "NONE") != 0))
                     result = true;
@@ -310,7 +308,6 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     if(lua)
     {
         int top = lua_gettop(lua);
-        size_t  string_length  = 0;
         const char *real_path;
 
         lua_getglobal(lua, "getTrackInfo");
@@ -321,6 +318,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
             lua_pushinteger(lua, track_index);
             if(lua_CallAndLog(lua, 2, 3, 0))
             {
+                size_t string_length  = 0;
                 real_path   = lua_tolstring(lua, -3, &string_length);
                *stream_type = (int)lua_tointeger(lua, -2);
                *load_method = (int)lua_tointeger(lua, -1);
@@ -328,7 +326,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
                 // Lua returns constant string pointer, which we can't assign to
                 // provided argument; so we need to straightly copy it.
 
-                strcpy(file_path, real_path);
+                strncpy(file_path, real_path, 255);
 
                 if(*stream_type != -1)
                     result = true;

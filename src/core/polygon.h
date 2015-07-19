@@ -42,7 +42,7 @@ typedef struct polygon_s
     uint16_t            transparency;                                           // transparency information
     uint8_t             double_side;                                            // double side flag
     btScalar            plane[4];                                               // polygon plane equation
-    
+
     struct polygon_s   *next;                                                   // polygon list (for BSP using)
 }polygon_t, *polygon_p;
 
@@ -65,13 +65,13 @@ typedef struct anim_seq_s
     int8_t      frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
     int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
     int8_t      reverse_direction;      // Used only with type 2 to identify current animation direction.
-    uint16_t    current_frame;          // Current frame for this sequence.
-    btScalar    frame_time;             // Time passed since last frame update.
-    btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-    struct tex_frame_s  *frames;
+    uint16_t    current_frame;          // Current frame for this sequence.
+    GLfloat     frame_time;             // Time passed since last frame update.
+    GLfloat     frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
-    uint32_t*   frame_list;             // Offset into anim textures frame list.
+    struct tex_frame_s  *frames;
+    uint32_t            *frame_list;    // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
 

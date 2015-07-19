@@ -855,11 +855,11 @@ tr4_entity_tbl[129] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 
 tr4_entity_tbl[130] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"}; -- Rolling ball
 tr4_entity_tbl[131] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey floor - UNUSED?
-tr4_entity_tbl[132] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth spikes
+tr4_entity_tbl[132] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth spikes
 tr4_entity_tbl[133] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Joby spikes
 tr4_entity_tbl[134] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Slicer dicer
 tr4_entity_tbl[135] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Chain
-tr4_entity_tbl[136] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Plough
+tr4_entity_tbl[136] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "plough"}; -- Plough
 tr4_entity_tbl[137] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Stargate
 tr4_entity_tbl[138] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Hammer
 tr4_entity_tbl[139] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Burning floor
@@ -876,9 +876,9 @@ tr4_entity_tbl[147] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr4_entity_tbl[148] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Pole rope
 tr4_entity_tbl[149] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- One block platform  - UNUSED
 tr4_entity_tbl[150] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Two block platform
-tr4_entity_tbl[151] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Raising block 1 - RESIZABLE MESH!
-tr4_entity_tbl[152] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Raising block 2 - RESIZABLE MESH!
-tr4_entity_tbl[153] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Expanding platform - RESIZABLE MESH!
+tr4_entity_tbl[151] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "rblock"}; -- Raising block 1 - RESIZABLE MESH!
+tr4_entity_tbl[152] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "rblock2"}; -- Raising block 2 - RESIZABLE MESH!
+tr4_entity_tbl[153] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "expplatform"}; -- Expanding platform - RESIZABLE MESH!
 tr4_entity_tbl[154] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Squishy block 1
 tr4_entity_tbl[155] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Squishy block 2
 
@@ -1336,7 +1336,7 @@ tr5_entity_tbl[115] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 -- TRAPS & INTERACTION OBJECTS
 
 tr5_entity_tbl[116] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey Floor - UNUSED?
-tr5_entity_tbl[117] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth Spikes
+tr5_entity_tbl[117] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth Spikes
 tr5_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Rome Hammer
 tr5_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Hammer 2 - UNUSED?
 
@@ -1359,7 +1359,7 @@ tr5_entity_tbl[131] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 
 tr5_entity_tbl[132] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- One block platform - UNUSED?
 tr5_entity_tbl[133] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Two block platform - UNUSED?
-tr5_entity_tbl[134] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};     -- Raising block
+tr5_entity_tbl[134] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "rblock"};     -- Raising block
 
 tr5_entity_tbl[135] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Teleport (Ex-RAISING_BLOCK2?)
 tr5_entity_tbl[136] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Headset talk point (Ex-EXPANDING_PLATFORM?)
@@ -1760,8 +1760,31 @@ function getEntityModelProperties(ver, id)
     end;
 
     if(tbl[id] == nil) then
-        return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil, nil, nil;
+        return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil, nil;
     else
-        return tbl[id].coll, tbl[id].shape, tbl[id].hide, tbl[id].trav, tbl[id].func;
+        return tbl[id].coll, tbl[id].shape, tbl[id].hide, tbl[id].trav;
+    end;
+end;
+
+function getEntityFunction(ver, id)
+    tbl = {};
+    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+        tbl = tr1_entity_tbl;
+    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+        tbl = tr2_entity_tbl;
+    elseif(ver < 6) then                -- TR_III
+        tbl = tr3_entity_tbl;
+    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+        tbl = tr4_entity_tbl;
+    elseif(ver < 9) then                -- TR_V
+        tbl = tr5_entity_tbl;
+    else
+        return nil, nil, nil, nil;
+    end;
+
+    if(tbl[id] == nil) then
+        return nil;
+    else
+        return tbl[id].func;
     end;
 end;

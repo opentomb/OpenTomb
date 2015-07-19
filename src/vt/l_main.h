@@ -8,6 +8,27 @@
 #include "tr_types.h"
 #include "tr_versions.h"
 
+
+// Audio map size is a size of effect ID array, which is used to translate
+// global effect IDs to level effect IDs. If effect ID in audio map is -1
+// (0xFFFF), it means that this effect is absent in current level.
+// Normally, audio map size is a constant for each TR game version and
+// won't change from level to level.
+
+#define TR_AUDIO_MAP_SIZE_NONE (-1)
+#define TR_AUDIO_MAP_SIZE_TR1  256
+#define TR_AUDIO_MAP_SIZE_TR2  370
+#define TR_AUDIO_MAP_SIZE_TR3  370
+#define TR_AUDIO_MAP_SIZE_TR4  370
+#define TR_AUDIO_MAP_SIZE_TR5  450
+
+// Default range and pitch values are required for compatibility with
+// TR1 and TR2 levels, as there is no such parameters in SoundDetails
+// structures.
+
+#define TR_AUDIO_DEFAULT_RANGE 8
+#define TR_AUDIO_DEFAULT_PITCH 1.0       // 0.0 - only noise
+
 /** \brief A complete TR level.
   *
   * This contains all necessary functions to load a TR level.

@@ -23,7 +23,6 @@
 
 #include "l_main.h"
 #include "../core/system.h"
-#include "../audio.h"
 
 #define RCSID "$Id: l_tr1.cpp,v 1.16 2002/09/20 15:59:02 crow Exp $"
 

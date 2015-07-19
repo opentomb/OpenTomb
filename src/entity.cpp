@@ -996,6 +996,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 
         Entity_UpdateRoomPos(ent);
         if(ent->self->collision_type & 0x0001)
+        //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
         {
             btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
