@@ -2265,7 +2265,7 @@ Clarify fog bulb values which affect its radius.
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>Audio tracks can be <em>looped</em> or <em>one-shot</em>. Looped tracks are usually contain background ambience (these creepy sounds heard in the beginning of <em>Caves</em>, and so on), but occasionally they can use music (e. g., <em>Jeep theme</em> from TR4). One-shot tracks are used for musical pieces which are usually triggered on certain event, and also for &#8220;voice chatting`` (e. g. approaching the monk from ``Diving Area&#8221; in TR2).</p></div>
+<div class="paragraph"><p>Audio tracks can be <em>looped</em> or <em>one-shot</em>. Looped tracks are usually contain background ambience (these creepy sounds heard in the beginning of <em>Caves</em>, and so on), but occasionally they can use music (e. g., <em>Jeep theme</em> from TR4). One-shot tracks are used for musical pieces which are usually triggered on certain event, and also for &#8220;voice chatting&#8221; (e. g. approaching the monk from &#8220;Diving Area&#8221; in TR2).</p></div>
 <div class="paragraph"><p>As both <em>looped</em> and <em>one-shot</em> tracks use the same audio playing routine, there&#8217;s no chance both <em>looped</em> and <em>one-shot</em> tracks could be played simultaneously. This is the reason why background ambience stops and restarts every time another (one-shot) track is triggered. However, this limitation was lifted in <em>TREP</em> and <em>TRNG</em>.</p></div>
 </td>
 </tr></table>
@@ -2348,7 +2348,7 @@ below.</p></div>
 <h4 id="_coordinates">2.1.3. Coordinates</h4>
 <div class="paragraph"><p>The world coordinate system is oriented with the $X-Z$ plane horizontal and $Y$ vertical, with $-Y$ being &#8220;up&#8221; (e.g. decreasing $Y$ values indicate
 increasing altitude). The world coordinate system is specified using <span class="monospaced">int32_t</span> values; however, the geography is limited to the $+X$/$+Z$ quadrant for reasons that are
-explained below. Mesh coordinates are relative and are specified using `int16_t`s.</p></div>
+explained below. Mesh coordinates are relative and are specified using <span class="monospaced">int16_t</span>.</p></div>
 <div class="paragraph"><p>There are some additional coordinate values used, such as &#8220;the number of 1024-unit blocks between points A and B&#8221;;  these are simply scaled versions of more conventional coordinates.</p></div>
 </div>
 <div class="sect3">
@@ -2364,7 +2364,7 @@ explained below. Mesh coordinates are relative and are specified using `int16_t`
 (<span class="monospaced">0x8000</span>) is a crude alpha channel (really just simple transparency&#8201;&#8212;&#8201;<em>0 = transparent</em>, <em>1 = opaque</em>).  The next 5 bits (<span class="monospaced">0x7c00</span>) specify the red channel, the next 5 bits (<span class="monospaced">0x03e0</span>) specify the green channel, and the last 5 bits (<span class="monospaced">0x001f</span>) specify the blue channel, each on a scale from 0..31.</p></div>
 <div class="paragraph"><p><strong>TR1-3 ONLY:</strong> If, for some reason, 16-bit textures are turned off, all colours and textures use an 8-bit palette that is stored in the level file.  This palette consists of a 256-element array of <a href="#tr_colour">[tr_colour]</a> structures, each designating some colour;  textures and other elements that need to reference a colour specify an index (0..255) into the <span class="monospaced">Palette[]</span> array.  There is also a 16-bit palette, which is used for identifying colours of solid polygons.  The 16-bit palette contains up to 256 four-byte entries;  the first three bytes are a
 <a href="#tr_colour">[tr_colour]</a>, while the last byte is ignored (set to 0).</p></div>
-<div class="paragraph"><p><strong>TR4-5 ONLY:</strong> The 32-bit textile array, which contains <a href="#tr_textile32">[tr_textile32]</a> structures, specifies colours using 32-bit ARGB, where the highest byte is the alpha channel (255 means the texel is fully opaque, 0 the texel is fully transparent).  The next bytes specify (in this order) the red / green / blue channels. The 16 and 32-bit textile arrays depict the same graphics data, but of course the 32-bit array has a better colour resolution. It&#8217;s the one used if you select a 32 bits A8R8G8B8 texture format in the setup menu from TR4 and TR5.</p></div>
+<div class="paragraph"><p><strong>TR4-5 ONLY:</strong> The 32-bit textile array, which contains <a href="#tr4_textile32">[tr4_textile32]</a> structures, specifies colours using 32-bit ARGB, where the highest byte is the alpha channel (255 means the texel is fully opaque, 0 the texel is fully transparent).  The next bytes specify (in this order) the red / green / blue channels. The 16 and 32-bit textile arrays depict the same graphics data, but of course the 32-bit array has a better colour resolution. It&#8217;s the one used if you select a 32 bits A8R8G8B8 texture format in the setup menu from TR4 and TR5.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_objects">2.1.6. Objects</h4>
@@ -2388,7 +2388,7 @@ matching <span class="monospaced">ObjectID</span> is found.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_animated_textures">Animated textures</h5>
-<div class="paragraph"><p>These are either a list of textures cycled through in endless loop, or (in TR4-5) a single texture with shifting coordinates, creating an illusion of ``rolling`` image.</p></div>
+<div class="paragraph"><p>These are either a list of textures cycled through in endless loop, or (in TR4-5) a single texture with shifting coordinates, creating an illusion of &#8220;rolling&#8221; image.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_mesh_animations">Mesh animations</h5>
@@ -2405,8 +2405,8 @@ matching <span class="monospaced">ObjectID</span> is found.</p></div>
 <div class="sect3">
 <h4 id="_sound_samples">2.1.9. Sound samples</h4>
 <div class="paragraph"><p>There are two ways for sound samples to play.</p></div>
-<div class="paragraph"><p>First one is basically sound emitter sitting at a static global position in level, and continuously emitting specified sound (such as waterfalls&#8201;&#8212;&#8201;these are in <a href="#SoundSources[]">[SoundSources[]]</a>). Second one is triggered sounds&#8201;&#8212;&#8201;these are sounds played when some event happens, such as at certain animation frames (footsteps and other Lara sounds), when doors open and close, and when weapons are fired.</p></div>
-<div class="paragraph"><p>Either way, each played sound is referred to using a three-layer indexing scheme, to provide a maximum amount of abstraction. An internal sound index references <a href="#SoundMap[]">[SoundMap[]]</a>, which points to a <a href="#SoundDetails[]">[SoundDetails[]]</a> record, which in turn points to a <a href="#SampleIndices[]">[SampleIndices[]]</a> entry, which in turn points to a sound sample. <a href="#SoundDetails[]">[SoundDetails[]]</a>, contains such features as sound intensity, how many sound samples to choose from, among others. The sound samples themselves are in Microsoft WAVE format, and, as already mentioned, they are embedded either in the data files (TR1, TR4 and TR5) or in a separate file (<span class="monospaced">MAIN.SFX</span>) in TR2 and TR3.</p></div>
+<div class="paragraph"><p>First one is basically sound emitter sitting at a static global position in level, and continuously emitting specified sound (such as waterfalls&#8201;&#8212;&#8201;these are in <span class="monospaced">SoundSources[]</span>). Second one is triggered sounds&#8201;&#8212;&#8201;these are sounds played when some event happens, such as at certain animation frames (footsteps and other Lara sounds), when doors open and close, and when weapons are fired.</p></div>
+<div class="paragraph"><p>Either way, each played sound is referred to using a three-layer indexing scheme, to provide a maximum amount of abstraction. An internal sound index references <span class="monospaced">SoundMap[]</span>, which points to a <span class="monospaced">SoundDetails[]</span> record, which in turn points to a <span class="monospaced">SampleIndices[]</span> entry, which in turn points to a sound sample. <span class="monospaced">SoundDetails[]</span>, contains such features as sound intensity, how many sound samples to choose from, among others. The sound samples themselves are in Microsoft WAVE format, and, as already mentioned, they are embedded either in the data files (TR1, TR4 and TR5) or in a separate file (<span class="monospaced">MAIN.SFX</span>) in TR2 and TR3.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -2416,6 +2416,7 @@ matching <span class="monospaced">ObjectID</span> is found.</p></div>
 <h4 id="_colour_structure">2.2.1. Colour structure</h4>
 <div class="paragraph"><p>This is how most colours are specified.</p></div>
 <div class="listingblock">
+<a id="tr_colour"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_colour</span>   <span class="c1">// 3 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Red</span><span class="p">;</span>        <span class="c1">// Red component (0 -- darkest, 255 -- brightest)</span>
@@ -2475,6 +2476,7 @@ list) or colour (index into 8-bit palette or 16-bit palette).  If the rectangle 
 the low byte (<span class="monospaced">Texture &amp; 0xFF</span>) is an index into the 256-colour palette, while the high byte (<span class="monospaced">Texture &gt;&gt; 8</span>) is in index into the 16-bit palette, when present. A
 textured rectangle will have its vertices mapped onto all 4 vertices of an object texture, in appropriate correspondence.</p></div>
 <div class="listingblock">
+<a id="tr_face4"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face4</span>    <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
@@ -2497,7 +2499,7 @@ textured rectangle will have its vertices mapped onto all 4 vertices of an objec
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bit 0:</em> if set, face has <em>additive alpha blending</em> (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr_object_texture">[tr_object_texture]</a> is 2).
+<em>Bit 0:</em> if set, face has <em>additive alpha blending</em> (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr2_object_texture">[tr2_object_texture]</a> is 2).
 </p>
 </li>
 <li>
@@ -2523,6 +2525,7 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <h4 id="_triangular_face_definition">2.2.4. Triangular face definition</h4>
 <div class="paragraph"><p>This structure has the same layout than the quad face definition, except a textured triangle will have its vertices mapped <em>onto the first 3 vertices of an object texture, in appropriate correspondence</em>. Moreover, a triangle has only 3 vertices, not 4.</p></div>
 <div class="listingblock">
+<a id="tr_face3"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face3</span>    <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
@@ -2556,6 +2559,7 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 5-bit green channel (<span class="monospaced">0x03e0</span>) <br>
 5-bit blue channel (<span class="monospaced">0x001f</span>)</p></div>
 <div class="listingblock">
+<a id="tr_textile16"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_textile16</span>    <span class="c1">// 131072 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
@@ -2566,6 +2570,7 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 <h4 id="_32_bit_texture_tile">2.2.7. 32-bit texture tile</h4>
 <div class="paragraph"><p>Each <span class="monospaced">uint32_t</span> represents a pixel whose colour is of the form ARGB, (A = most significant byte), each component being one byte.</p></div>
 <div class="listingblock">
+<a id="tr4_textile32"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_textile32</span>    <span class="c1">// 262144 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
@@ -2603,6 +2608,7 @@ by the larger structures that are built using the smaller structures.</p></div>
 <h5 id="_room_header">Room header</h5>
 <div class="paragraph"><p>$X / Z$ indicate the base position of the room mesh in world coordinates ($Y$ is always zero-relative)</p></div>
 <div class="listingblock">
+<a id="tr_room_info"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
@@ -2674,7 +2680,7 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <div class="paragraph"><p><span class="monospaced">RoomAbove</span> and <span class="monospaced">RoomBelow</span> values indicate what neighboring rooms are in these directions&#8201;&#8212;&#8201;the number of the room below this one and the number of the room above this one. If <span class="monospaced">RoomAbove</span> is not <em>none</em>, then the ceiling is a <em>collisional portal</em> to that room, while if <span class="monospaced">RoomBelow</span> is not <em>none</em>, then the floor is a <em>collisional portal</em> to that room.</p></div>
 <div class="paragraph"><p>Also, <span class="monospaced">RoomBelow</span> value is extensively used by engine to determine actual sector data and triggers in so-called <em>stacked room setups</em>, when one room is placed above another through collisional portal. The thing is, engine uses sector data and triggers <em>only for the lowest sector</em> of the stacked room setup, so it recursively scans for a lowest room to determine which sector to use.</p></div>
 <div class="paragraph"><p><span class="monospaced">FDindex</span> is a pointer to specific entry in <a href="#FloorData">[FloorData]</a> array, which keeps all the information about sector flags, triggers and other parameters. While it is implied that one <span class="monospaced">FDindex</span> entry may be shared between several sectors, it is usually not the case with original Tomb Raider levels built with <em>TRLE</em>. However, <em>Dxtre3d</em> takes advantage of this feature and may optimize similar sectors to share same FDindex pointer.</p></div>
-<div class="paragraph"><p><span class="monospaced">BoxIndex</span> is a pointer to special <a href="#Boxes">[Boxes]</a> array entry, which is basically a subset of sectors with same height configuration. It is primarily used for AI pathfinding (see <a href="#Non-player character behaviour">[Non-player character behaviour]</a> chapter for more details).</p></div>
+<div class="paragraph"><p><span class="monospaced">BoxIndex</span> is a pointer to special <a href="#Boxes">[Boxes]</a> array entry, which is basically a subset of sectors with same height configuration. It is primarily used for AI pathfinding (see the <a href="#non-player-character-behaviour">Non-player character behaviour</a> chapter for more details).</p></div>
 <div class="paragraph"><p><strong>TR3-5 ONLY:</strong> In these games, <span class="monospaced">BoxIndex</span> field is more complicated, and actually contains <em>two packed values</em>. Bits 4-14 contain the <em>actual box index</em>, and bits 0-3 contain <em>material index</em>, which is used to produce specific footstep sound, when Lara is walking or running in this sector. On PlayStation game versions, this index was also used to determine if footprint textures should be applied to this particular place.</p></div>
 <div class="paragraph"><p>Majority of <em>material index</em> values are the same across game versions, but some of them exist only in particular game. Here is the description:</p></div>
 <div class="ulist"><ul>
@@ -2970,6 +2976,7 @@ LightDirectionVectorZ = $\cos(X) * \cos(Y)$
 flares, flame emitters and gunflashes. Room ambient lights and point sources are ignored.</p></div>
 <div class="paragraph"><p>As TR3 introduced colored lighting, room vertex structure drastically changed. It changed once again in TR5, when floating-point numbers were introduced. So we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p></div>
 <div class="listingblock">
+<a id="tr_room_vertex"></a>
 <div class="title">TR1-2 Room Vertex structure</div>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
@@ -2981,6 +2988,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <div class="paragraph"><p><span class="monospaced">Lighting1</span> ranges from 0 (bright) to 0x1FFF (dark). This value is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range.</p></div>
 <div class="paragraph"><p>TR2 uses an extended version of the structure:</p></div>
 <div class="listingblock">
+<a id="tr2_room_vertex"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
@@ -3003,7 +3011,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bits 0-4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room structure">[tr_room structure]</a>. See below.
+<em>Bits 0-4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room">[tr_room]</a> structure. See below.
 </p>
 </li>
 </ul></div>
@@ -3062,6 +3070,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </ul></div>
 <div class="paragraph"><div class="title">TR5 Room Vertex structure</div><p>In TR5, room vertex structure was almost completely changed. Coordinates were converted to floats, and normal was added:</p></div>
 <div class="listingblock">
+<a id="tr5_room_vertex"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_vertex</span>  <span class="c1">// 28 bytes</span>
 <span class="p">{</span>
     <span class="n">tr5_vertex</span> <span class="n">Vertex</span><span class="p">;</span>     <span class="c1">// Vertex is now floating-point</span>
@@ -3095,7 +3104,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them. Also <span class="monospaced">tr_room_vertex</span> could be replaced by any other version-specific room vertex type (<span class="monospaced">tr3_room_vertex</span>, etc.). '</p></div>
+<div class="paragraph"><p>'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them. Also <a href="#tr_room_vertex">[tr_room_vertex]</a> could be replaced by any other version-specific room vertex type (<span class="monospaced">tr3_room_vertex</span>, etc.). '</p></div>
 </td>
 </tr></table>
 </div>
@@ -3106,10 +3115,10 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
     <span class="n">tr2_room_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// List of vertices (relative coordinates)</span>
 
     <span class="kt">int16_t</span> <span class="n">NumRectangles</span><span class="p">;</span>                 <span class="c1">// Number of textured rectangles</span>
-    <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span>   <span class="c1">// List of textured rectangles</span>
+    <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span>   <span class="c1">// List of textured rectangles</span>
 
     <span class="kt">int16_t</span> <span class="n">NumTriangles</span><span class="p">;</span>                  <span class="c1">// Number of textured triangles</span>
-    <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span>     <span class="c1">// List of textured triangles</span>
+    <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span>     <span class="c1">// List of textured triangles</span>
 
     <span class="kt">int16_t</span> <span class="n">NumSprites</span><span class="p">;</span>                    <span class="c1">// Number of sprites</span>
     <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span>   <span class="c1">// List of sprites</span>
@@ -3121,7 +3130,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the <a href="#tr2_item">[tr2_item]</a> structure, except that static meshes have no animations and are confined to a single room.</p></div>
 <div class="listingblock">
 <div class="title">TR1 Room Static Mesh structure</div>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3130,11 +3139,13 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (bright) to 0x1FFF (dark).</p></div>
-<div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (0xC000) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting is needed, as you can simply interpret it using this formula:</p></div>
-<div class="paragraph"><p>` float Real_Rotation = (float)Rotation / 16384.0f * -90; `</p></div>
+<div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (<span class="monospaced">0xC000</span>) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting is needed, as you can simply interpret it using this formula:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="kt">float</span> <span class="n">Real_Rotation</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="n">Rotation</span> <span class="o">/</span> <span class="mf">16384.0f</span> <span class="o">*</span> <span class="o">-</span><span class="mi">90</span><span class="p">;</span>
+</pre></div></div></div>
 <div class="paragraph"><p>TR2 again uses an extended version:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3215,12 +3226,13 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="sect2">
 <h3 id="_the_whole_room_structure">2.5. The whole Room structure</h3>
 <div class="paragraph"><p>Here&#8217;s where all the room data come together.</p></div>
-<div class="paragraph"><p>Room structure differs drastically across different game versions (especially in TR5). For this reason, we will define each version of Room structure independently, to avoid confusion. Also, version-specific fields will be described in each version&#8217;s section in a ``backwards-compatible`` manner, while common fields with version-specific variations, such as <span class="monospaced">Flags</span>, will be described afterwards in separate section.</p></div>
+<div class="paragraph"><p>Room structure differs drastically across different game versions (especially in TR5). For this reason, we will define each version of Room structure independently, to avoid confusion. Also, version-specific fields will be described in each version&#8217;s section in a &#8220;backwards-compatible&#8221; manner, while common fields with version-specific variations, such as <span class="monospaced">Flags</span>, will be described afterwards in separate section.</p></div>
 <div class="paragraph"><p><em>These are not &#8220;real&#8221; C/C++ structures, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them.</em></p></div>
 <div class="sect3">
 <h4 id="_tr1_room_structure">2.5.1. TR1 Room structure</h4>
 <div class="paragraph"><p>As it&#8217;s stored in the file, the <a href="#tr_room_info">[tr_room_info]</a> structure comes first, followed by a <span class="monospaced">uint32_t NumDataWords</span>, which specifies the number of 16-bit words to follow.  Those data words must be parsed in order to interpret and construct the variable-length arrays of vertices, meshes, doors, and sectors. Such setup is also applicable to all variations of room structures, <em>except</em> <span class="monospaced">tr5_room</span>, which will be described independently.</p></div>
 <div class="listingblock">
+<a id="tr_room"></a>
 <div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
@@ -3383,7 +3395,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">RoomColour</span> replaces <span class="monospaced">AmbientIntensity</span> and <span class="monospaced">AmbientIntensity2</span> values from <span class="monospaced">tr2_room</span> structure. Note it&#8217;s <em>not in <span class="monospaced">tr_colour4</span> format</em>, because colour order is reversed. It should be treated as ARGB, where A is unused.</p></div>
-<div class="paragraph"><p><span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve long-existing engine limitation, which flipped <em>all alternate rooms at once</em> (see <em>flipmap</em> trigger function description in <a href="#Trigger Functions">[Trigger Functions]</a> section). Since TR4, engine only flips rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field and trigger operand.</p></div>
+<div class="paragraph"><p><span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve long-existing engine limitation, which flipped <em>all alternate rooms at once</em> (see <em>flipmap</em> trigger function description in <a href="#trigger-functions">Trigger Functions</a> section). Since TR4, engine only flips rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field and trigger operand.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_tr5_room_structure">2.5.5. TR5 Room Structure</h4>
@@ -3502,11 +3514,11 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="paragraph"><p><span class="monospaced">NumRoomTriangles</span> and <span class="monospaced">NumRoomRectangles</span> are respectively the numbers of triangular and rectangular faces in a given room. <strong>NOTE:</strong> If room is <em>null room</em>, each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">LightDataSize</span> is the size of the light data in bytes (<em>not</em> in <span class="monospaced">tr5_room_light</span> units).</p></div>
 <div class="paragraph"><p><span class="monospaced">Unknown6</span> could probably be a copy of <span class="monospaced">ReverbInfo</span> (see further), as its value usually ranges from 0 to 3.</p></div>
-<div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <span class="monospaced">tr_room_info</span> structure. If room is a <em>null room</em>, both of these values are <span class="monospaced">0xCDCDCDCD</span>.</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <a href="#tr_room_info">[tr_room_info]</a> structure. If room is a <em>null room</em>, both of these values are <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">NumLayers</span> is a number of layers (volumes) in this room.</p></div>
 <div class="paragraph"><p><span class="monospaced">LayerOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the layer data.</p></div>
 <div class="paragraph"><p><span class="monospaced">VerticesOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the verex data.</p></div>
-<div class="paragraph"><p><span class="monospaced">PolyOffset</span>: this number `+ 216`will give you an offset from the start of the room data to the start of the rectangle/triangle data.</p></div>
+<div class="paragraph"><p><span class="monospaced">PolyOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the rectangle/triangle data.</p></div>
 <div class="paragraph"><p><span class="monospaced">VerticesSize</span> is the size of vertex data block in bytes. Therefore, it <em>must</em> be a multiple of <span class="monospaced">tr5_room_vertex</span> size, else it means the block size is wrong.</p></div>
 <div class="paragraph"><p><span class="monospaced">Faces</span> is a sequential data array for the room polygons (both <span class="monospaced">tr_face4</span> and <span class="monospaced">tr_face3</span>),</p></div>
 <div class="admonitionblock">
@@ -3605,7 +3617,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_floordata">3. FloorData</h2>
+<h2 id="FloorData">3. FloorData</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The <em>FloorData</em> defines special sector attributes such as floor and ceiling slopes, collisional portals to other rooms, climbability of walls, and all the
 various types of triggering. It is referenced by the sectors as an array of 16-bit unsigned integers, e.g. the current sector is calculated as <span class="monospaced">(((CurrentX -
@@ -3981,7 +3993,7 @@ Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="m
 <div class="paragraph"><div class="title">Function <span class="monospaced">0x13</span></div><p>Has subfunction 0x00 and no operand. Unknown, but is possibly monkey-swingability of the ceiling.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_trigger_functions">3.2. Trigger functions</h3>
+<h3 id="trigger-functions">3.2. Trigger functions</h3>
 <div class="ulist"><div class="title">FDfunction <span class="monospaced">0x00</span>&#8201;&#8212;&#8201;Activate or deactivate item</div><ul>
 <li>
 <p>
@@ -4122,7 +4134,7 @@ information.</p></div>
 <div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR2 (as well as a few parts of the landscape) are specified as <em>meshes</em>.  A <em>mesh</em> is simply a
 list of vertices and how they&#8217;re arranged.  The TR2 mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed
 anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both Textured and
-Coloured.  The elements of each <a href="#tr2_face4">[tr2_face4]</a> or <a href="#tr2_face3">[tr2_face3]</a> structure (Rectangles and Triangles) contain an offset
+Coloured.  The elements of each <a href="#tr_face4">[tr_face4]</a> or <a href="#tr_face3">[tr_face3]</a> structure (Rectangles and Triangles) contain an offset
 into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array
 <span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
 </div>
@@ -4154,13 +4166,13 @@ the mesh.</p></div>
     <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (if NumNormals is positive)</span>
     <span class="kt">int16_t</span> <span class="n">Lights</span><span class="p">[</span><span class="o">-</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of light values (if NumNormals is negative)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles in this mesh</span>
-    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles in this mesh</span>
-    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles in this mesh</span>
-    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles</span>
+    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles in this mesh</span>
-    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles</span>
+    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
@@ -4218,6 +4230,7 @@ the mesh.</p></div>
 array. Multiple instances are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID
 is used to locate the appropriate sprite sequence or movable for the item.</p></div>
 <div class="listingblock">
+<a id="tr2_item"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_item</span>
 <span class="p">{</span>
     <span class="c1">// 24 bytes [TR1: 22 bytes]</span>
@@ -4671,7 +4684,7 @@ etc.
 </div>
 </div>
 <div class="sect1">
-<h2 id="_non_player_character_behaviour">6. Non-Player Character Behaviour</h2>
+<h2 id="non-player-character-behaviour">6. Non-Player Character Behaviour</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview_5">6.1. Overview</h3>
@@ -4699,7 +4712,7 @@ chains of zone-ID-sharing boxes, with their overlaps pointing to the next boxes 
 <div class="sect2">
 <h3 id="_data_structures_2">6.2. Data Structures</h3>
 <div class="sect3">
-<h4 id="_boxes">6.2.1. Boxes</h4>
+<h4 id="Boxes">6.2.1. Boxes</h4>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_box</span>
 <span class="p">{</span>
@@ -4887,7 +4900,7 @@ Here are the known (observed) values for the version header:</p></div>
 </div>
 <div class="sect2">
 <h3 id="_palette">8.2. Palette</h3>
-<div class="paragraph"><p>This consists of 256 <a href="#tr2_colour">[tr2_colour]</a> structs, one for each palette entry. However, the individual colour values range from 0 to 63; they
+<div class="paragraph"><p>This consists of 256 <a href="#tr_colour">[tr_colour]</a> structs, one for each palette entry. However, the individual colour values range from 0 to 63; they
 must be multiplied by 4 to get the correct values.</p></div>
 <div class="paragraph"><p>This used for all 8-bit colour, such as 8-bit textures.</p></div>
 </div>
@@ -4911,6 +4924,7 @@ must be multiplied by 4 to get the correct values.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="listingblock">
+<a id="tr2_object_texture"></a>
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
 <span class="cm"> * Object texture structure.</span>
 <span class="cm"> * These, thee contents of ObjectTextures[], are used for specifying texture</span>
@@ -5054,9 +5068,9 @@ brightness and greater values being darker.</p></div>
         <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
         <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 8 bytes [TR1 version])</span>
         <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
-        <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
-        <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
         <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
@@ -5085,13 +5099,13 @@ brightness and greater values being darker.</p></div>
     <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
     <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
 <span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
@@ -5131,7 +5145,7 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
 <span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 22 bytes [TR1 version])</span>
 <span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
-<span class="n">tr2_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
+<span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
 <span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumDemoData</span><span class="p">;</span> <span class="c1">// number of demo data records to follow (2 bytes)</span>
@@ -5158,8 +5172,8 @@ brightness and greater values being darker.</p></div>
 </div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
-<span class="n">tr2_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
-<span class="n">tr2_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
+<span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
+<span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
 <span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
 <span class="n">tr2_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes)</span>
@@ -5174,9 +5188,9 @@ brightness and greater values being darker.</p></div>
         <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
         <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 12 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
-        <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
-        <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
         <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
@@ -5207,13 +5221,13 @@ brightness and greater values being darker.</p></div>
     <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
     <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
 <span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
@@ -5278,8 +5292,8 @@ brightness and greater values being darker.</p></div>
 </div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
-<span class="n">tr2_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
-<span class="n">tr2_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
+<span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
+<span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
 <span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
 <span class="n">tr2_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes) (absent from TR1)</span>
@@ -5294,9 +5308,9 @@ brightness and greater values being darker.</p></div>
         <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
         <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 12 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
-        <span class="n">tr2_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
-        <span class="n">tr2_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
         <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
@@ -5312,7 +5326,7 @@ brightness and greater values being darker.</p></div>
         <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 20 bytes)</span>
         <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
         <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
-        <span class="n">tr2_colour</span> <span class="n">RoomLightColour</span> <span class="c1">// 3 bytes</span>
+        <span class="n">tr_colour</span> <span class="n">RoomLightColour</span> <span class="c1">// 3 bytes</span>
     <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
 <span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
 <span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
@@ -5327,13 +5341,13 @@ brightness and greater values being darker.</p></div>
     <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
     <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
-    <span class="n">tr2_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
     <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
-    <span class="n">tr2_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
 <span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
@@ -6167,7 +6181,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-19 17:37:08 MSK
+Last updated 2015-07-19 21:00:39 CEST
 </div>
 </div>
 </body>
