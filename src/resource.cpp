@@ -3853,6 +3853,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             }
             world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
             lara->genEntityRigidBody();
+            lara->createGhosts();
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
 

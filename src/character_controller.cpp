@@ -33,8 +33,6 @@ Character::Character(uint32_t id)
     m_heightInfo.ccb = m_convexCb;
 
     m_dirFlag = ENT_STAY;
-
-    createGhosts();
 }
 
 Character::~Character() {
