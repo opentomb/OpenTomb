@@ -1036,19 +1036,19 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar angle = btDegrees( btAtan2(floorNormal[0], -floorNormal[1]) );       // from -180 deg to +180 deg
+            const btScalar zAngle = btDegrees( btAtan2(floorNormal[0], floorNormal[1]) );       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0] + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
                 m_response.slide = CHARACTER_SLIDE_FRONT;
-                m_angles[0] = angle;
+                m_angles[0] = zAngle + 180;
                 // front forward slide down
             }
             else
             {
                 m_response.slide = CHARACTER_SLIDE_BACK;
-                m_angles[0] = angle+180;
+                m_angles[0] = zAngle;
                 // back forward slide down
             }
             updateTransform();

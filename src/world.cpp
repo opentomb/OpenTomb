@@ -142,7 +142,7 @@ void Room::addToNearRoomsList(std::shared_ptr<Room> r)
 }
 
 
-bool Room::isInNearRoomsList(const Room& r1)
+bool Room::isInNearRoomsList(const Room& r1) const
 {
     if(id == r1.id)
     {
