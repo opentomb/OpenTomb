@@ -419,7 +419,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     moveEntityLocal(id, 512.0, 0.0, 0.0);  -- Fix position
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((not getEntityActivity(object_id)) then enableEntity(object_id) else disableEntity(object_id) end;
+        if(not getEntityActivity(object_id)) then enableEntity(object_id) else disableEntity(object_id) end;
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;

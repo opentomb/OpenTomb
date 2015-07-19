@@ -12,6 +12,7 @@
 #include "system.h"
 #include "render.h"
 #include "strings.h"
+#include "helpers.h"
 
 #include <SDL2/SDL.h>
 
@@ -382,21 +383,14 @@ void AudioSource::SetLooping(ALboolean is_looping)
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
-    // Clamp gain value.
-    gain_value = (gain_value > 1.0)?(1.0):(gain_value);
-    gain_value = (gain_value < 0.0)?(0.0):(gain_value);
-
-    alSourcef(source_index, AL_GAIN, gain_value * audio_settings.sound_volume);
+    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0, 1.0) * audio_settings.sound_volume);
 }
 
 
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
-    pitch_value = (pitch_value < 0.1)?(0.1):(pitch_value);
-    pitch_value = (pitch_value > 2.0)?(2.0):(pitch_value);
-
-    alSourcef(source_index, AL_PITCH, pitch_value);
+    alSourcef(source_index, AL_PITCH, Clamp(pitch_value, 0.1, 2.0));
 }
 
 
@@ -572,6 +566,41 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
     }
 }
 
+bool StreamTrack::Unload()
+{
+    bool result = false;
+
+    if(alIsSource(source))  // Stop and unlink all associated buffers.
+    {
+        int queued;
+        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+
+        while(queued--)
+        {
+            ALuint buffer;
+            alSourceUnqueueBuffers(source, 1, &buffer);
+        }
+    }
+
+    if(snd_file)
+    {
+        sf_close(snd_file);
+        snd_file = nullptr;
+        result = true;
+    }
+
+    if(wad_file)
+    {
+        fclose(wad_file);
+        wad_file = nullptr;
+        result = true;
+    }
+
+    Sys_DebugLog(LOG_FILENAME, "Closed file: %d", result);
+
+    return result;
+}
+
 bool StreamTrack::Load_Track(const char *path)
 {
     if(!(snd_file = sf_open(path, SFM_READ, &sf_info)))
@@ -585,9 +614,9 @@ bool StreamTrack::Load_Track(const char *path)
                sf_info.channels, sf_info.samplerate);
 
     if(sf_info.channels == 1)
-        format = AL_FORMAT_MONO16;
+        format = AL_FORMAT_MONO_FLOAT32;
     else
-        format = AL_FORMAT_STEREO16;
+        format = AL_FORMAT_STEREO_FLOAT32;
 
     rate = sf_info.samplerate;
 
@@ -637,9 +666,9 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
             }
 
             if(sf_info.channels == 1)
-                format = AL_FORMAT_MONO16;
+                format = AL_FORMAT_MONO_FLOAT32;
             else
-                format = AL_FORMAT_STEREO16;
+                format = AL_FORMAT_STEREO_FLOAT32;
 
             rate = sf_info.samplerate;
 
@@ -720,29 +749,7 @@ void StreamTrack::Stop()    // Immediately stop track.
 {
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
-        if(IsPlaying())
-            alSourceStop(source);
-
-        int queued;
-        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-
-        while(queued--)
-        {
-            ALuint buffer;
-            alSourceUnqueueBuffers(source, 1, &buffer);
-        }
-    }
-
-    if(snd_file)
-    {
-        sf_close(snd_file);
-        snd_file = nullptr;
-    }
-
-    if(wad_file)
-    {
-        fclose(wad_file);
-        wad_file = nullptr;
+        if(IsPlaying()) alSourceStop(source);
     }
 }
 
@@ -756,6 +763,7 @@ bool StreamTrack::Update()
 
     if(!IsPlaying())
     {
+       Unload();
        active = false;
        return true;
     }
@@ -771,7 +779,7 @@ bool StreamTrack::Update()
             damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL)?(TR_AUDIO_STREAM_DAMP_LEVEL):(damped_volume);
+            damped_volume = Clamp(damped_volume, 0.0, TR_AUDIO_STREAM_DAMP_LEVEL);
             change_gain   = true;
         }
         else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
@@ -779,7 +787,7 @@ bool StreamTrack::Update()
             damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume < 0.0)?(0.0):(damped_volume);
+            damped_volume = Clamp(damped_volume, 0.0, TR_AUDIO_STREAM_DAMP_LEVEL);
             change_gain   = true;
         }
     }
@@ -833,7 +841,7 @@ bool StreamTrack::Update()
             }
 
             // Clamp volume.
-            current_volume = (current_volume > 1.0)?(1.0):(current_volume);
+            current_volume = Clamp(current_volume, 0.0, 1.0);
             change_gain    = true;
         }
     }
@@ -889,7 +897,7 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
         alGetSourcei(source, AL_SOURCE_STATE, &state);
 
         // Paused state and existing file pointers also counts as playing.
-        return ((state == AL_PLAYING) || (state == AL_PAUSED) || (wad_file) || (snd_file));
+        return ((state == AL_PLAYING) || (state == AL_PAUSED));
     }
     else
     {
@@ -900,19 +908,19 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
 bool StreamTrack::Stream(ALuint buffer)
 {
     assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
-    std::vector<short> pcm(audio_settings.stream_buffer_size);
+    std::vector<float> pcm(audio_settings.stream_buffer_size);
     size_t size = 0;
 
     // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
     while(size < pcm.size() - sf_info.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sf_info.channels * sf_info.channels;
-        const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead) * sf_info.channels;
+        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(float);
+        const sf_count_t samplesRead = sf_read_float(snd_file, pcm.data() + size, samplesToRead);
 
         if(samplesRead > 0)
         {
-            size += samplesRead;
+            size += samplesRead * sizeof(float);
         }
         else
         {
@@ -1776,6 +1784,10 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
         uncomp_sample_size = real_size;
     }
 
+    // We need to change buffer size, as we're using floats here.
+
+    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(float);
+
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
@@ -1798,7 +1810,7 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
         return -1;
     }
 
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(uint16_t), &sfInfo);
+    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(float), &sfInfo);
 
     sf_close(file);
 
@@ -1813,10 +1825,10 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
         return false;
     }
 
-    std::vector<int16_t> frames( buffer_size / sizeof(int16_t));
-    const sf_count_t samplesRead = sf_readf_short(wavFile, frames.data(), frames.size());
+    std::vector<float> frames( buffer_size / sizeof(float));
+    const sf_count_t samplesRead = sf_readf_float(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), buffer_size, sfInfo->samplerate);
     Audio_LogALError(0);
     return true;
 }

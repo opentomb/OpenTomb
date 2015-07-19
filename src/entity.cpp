@@ -18,6 +18,7 @@
 #include "strings.h"
 #include "ragdoll.h"
 #include "hair.h"
+#include "helpers.h"
 
 #include <lua.hpp>
 #include "LuaState.h"
@@ -650,6 +651,10 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateTransform()
 {
+    m_angles[0] = WrapAngle(m_angles[0]);
+    m_angles[1] = WrapAngle(m_angles[1]);
+    m_angles[2] = WrapAngle(m_angles[2]);
+
     m_transform.getBasis().setEulerZYX(btRadians(m_angles[1]), btRadians(m_angles[2]), btRadians(m_angles[0]));
 
     fixPenetrations(nullptr);

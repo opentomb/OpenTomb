@@ -393,6 +393,7 @@ public:
     // differs for TR1-2, TR3 and TR4-5.
 
     bool Load(const char *path, const int index, const int type, const int load_method);
+    bool Unload();
 
     bool Play(bool fade_in = false);     // Begins to play track.
     void Pause();                        // Pauses track, preserving position.
