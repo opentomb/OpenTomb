@@ -85,7 +85,7 @@ void Engine_Init_Post()
 {
     lua_CallVoidFunc(engine_lua, "loadscript_post", true);
 
-    Con_InitFont(glf_manager_get_font(con_font_manager, FONT_CONSOLE));
+    Con_InitFont();
 
     Gui_Init();
 

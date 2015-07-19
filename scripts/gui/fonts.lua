@@ -9,9 +9,9 @@
 
 -- This is pre-defined font index.
 
-FONT_PRIMARY    = 0;
-FONT_SECONDARY  = 1;
-FONT_CONSOLE    = 2;
+FONT_CONSOLE    = 0;
+FONT_PRIMARY    = 1;
+FONT_SECONDARY  = 2;
 
 --------------------------------------------------------------------------------
 

@@ -51,8 +51,6 @@ enum font_Style
 
 typedef struct console_info_s
 {
-    struct gl_tex_font_s       *font;                       // Texture font renderer
-    
     GLfloat                     background_color[4];
 
     uint16_t                    log_lines_count;            // Amount of log lines to use
@@ -84,7 +82,7 @@ extern console_info_t           con_base;
 extern gl_font_manager_p        con_font_manager;
 
 void Con_Init();
-void Con_InitFont(struct gl_tex_font_s *font);
+void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();
 

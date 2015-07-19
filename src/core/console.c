@@ -21,8 +21,6 @@ void Con_Init()
     con_base.inited = 0;
     con_base.log_pos = 0;
 
-    con_base.font = NULL;
-
     // lines count check
     if(con_base.line_count < CON_MIN_LOG)
     {
@@ -93,10 +91,16 @@ void Con_Init()
     con_base.inited = 1;
 }
 
-void Con_InitFont(struct gl_tex_font_s *font)
+void Con_InitFont()
 {
-    con_base.font = font;
-    Con_SetLineInterval(con_base.spacing);
+    if(con_font_manager->fonts[0].gl_font == NULL)
+    {
+        glf_manager_add_font(con_font_manager, 0, 12, "resource/fonts/DroidSansMono.ttf");
+    }
+    if(con_font_manager->fonts[0].gl_font)
+    {
+        Con_SetLineInterval(con_base.spacing);
+    }
 }
 
 void Con_InitGlobals()
@@ -151,7 +155,7 @@ void Con_Destroy()
 
 void Con_SetLineInterval(float interval)
 {
-    if((con_base.inited == 0) || (con_base.font == NULL) ||
+    if((con_font_manager == NULL) || (con_font_manager->fonts[0].gl_font == NULL) ||
        (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
@@ -160,7 +164,7 @@ void Con_SetLineInterval(float interval)
     con_base.inited = 0;
     con_base.spacing = interval;
     // con_base.font->font_size has absolute size (after scaling)
-    con_base.line_height = (1.0 + con_base.spacing) * con_base.font->font_size;
+    con_base.line_height = (1.0 + con_base.spacing) * con_font_manager->fonts[0].gl_font->font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -308,9 +312,9 @@ void Con_Edit(int key)
 
 void Con_CalcCursorPosition()
 {
-    if(con_base.font)
+    if(con_font_manager && (con_font_manager->fonts[0].gl_font))
     {
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_base.font, con_base.line_text[0], con_base.cursor_pos);
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_font_manager->fonts[0].gl_font, con_base.line_text[0], con_base.cursor_pos);
     }
 }
 

@@ -2497,7 +2497,7 @@ void gui_ItemNotifier::SetRotateTime(float time)
  */
 void Con_Draw()
 {
-    if(con_font_manager && con_base.inited && con_base.show)
+    if(con_font_manager && con_font_manager->fonts[0].gl_font && con_base.show)
     {
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
@@ -2524,8 +2524,8 @@ void Con_Draw()
         {
             GLfloat *col = glf_manager_get_style(con_font_manager, con_base.line_style_id[i])->real_color;
             y += con_base.line_height;
-            vec4_copy(con_base.font->gl_font_color, col);
-            glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
+            vec4_copy(con_font_manager->fonts[0].gl_font->gl_font_color, col);
+            glf_render_str(con_font_manager->fonts[0].gl_font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
         glPopClientAttrib();
     }

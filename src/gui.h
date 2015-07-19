@@ -37,9 +37,9 @@
 
 enum font_Type
 {
+    FONT_CONSOLE = 0,
     FONT_PRIMARY,
-    FONT_SECONDARY,
-    FONT_CONSOLE
+    FONT_SECONDARY
 };
 
 #define GUI_MIN_FONT_SIZE 1

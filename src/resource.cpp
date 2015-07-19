@@ -1977,7 +1977,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Generate entity functions.
 
-    Res_GenEntityFunctions(world->entity_tree->root);
+    if(world->entity_tree->root)
+    {
+        Res_GenEntityFunctions(world->entity_tree->root);
+    }
     Gui_DrawLoadScreen(910);
 
     // Load entity collision flags and ID overrides from script.
