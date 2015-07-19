@@ -2194,6 +2194,11 @@ Clarify, what&#8217;s the purpose of <span class="monospaced">Normal</span> fiel
 Whole <span class="monospaced">tr5_room</span> structure needs detailed analysis with all its extra <em>Unknown</em> fields.
 </p>
 </li>
+<li>
+<p>
+Clarify fog bulb values which affect its radius.
+</p>
+</li>
 </ol></div>
 </div>
 <div class="sect2">
@@ -2817,7 +2822,7 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><strong><span class="quote">UNKNOWN</span></strong>&#8201;&#8212;&#8201;needs additional description!</p></div>
-<div class="paragraph"><p><span class="monospaced">LightType</span> is somewhat similar to D3D light type, but here are light descriptions anyway.</p></div>
+<div class="paragraph"><p><span class="monospaced">LightType</span> is somewhat similar to D3D light type, but there are some differences.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2839,7 +2844,77 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <strong>3</strong>&#8201;&#8212;&#8201;Shadow
 </p>
 </li>
+<li>
+<p>
+<strong>4</strong>&#8201;&#8212;&#8201;Fog bulb
+</p>
+</li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p><em>Fog bulb</em> is a special case of room light, which actually don&#8217;t work as usual light. It serves as a point in space, where a kind of <em>volumetric fog</em> effect is generated. It works only if user has enabled corresponding option in game setup.</p></div>
+<div class="paragraph"><p>Fog bulbs don&#8217;t use <span class="monospaced">Colour</span> field to define its colour. However, <span class="monospaced">Red</span> field of a <span class="monospaced">Colour</span> structure is used to define fog density. Colour itself can be only changed with special <em>flipeffect #28</em> trigger function, which takes a value from the <em>timer field</em> of the trigger to index into hardcoded RGB table of pre-defined colours. The table consists of 28 RGB values:</p></div>
+</td>
+</tr></table>
+</div>
+<table class="tableblock frame-all grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:75%;
+">
+<col style="width:25%;">
+<col style="width:25%;">
+<col style="width:25%;">
+<col style="width:25%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">0 = 0,0,0</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">7 = 0,64,192</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">14 = 111,255,223</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">21 = 0,30,016</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">1 = 245,200,60</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">8 = 0,128,0</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">15 = 244,216,152</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">22 = 250,222,167</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">2 = 120,196,112</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">9 = 150,172,157</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">16 = 248,192,60</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">23 = 218,175,117</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">3 = 202,204,230</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">10 = 128,128,128</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">17 = 252,0,0</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">24 = 225,191,78</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">4 = 128,64,0</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">11 = 204,163,123</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">18 = 198,95,87</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">25 = 77,140,141</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">5 = 64,64,64</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">12 = 177,162,140</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">19 = 226,151,118</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">26 = 4,181,154</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">6 = 243,232,236</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">13 = 0,223,191</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">20 = 248,235,206</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">27 = 255,174,0</p></td>
+</tr>
+</tbody>
+</table>
 <div class="listingblock">
 <div class="title">TR5 Room Lighting</div>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_light</span>   <span class="c1">// 88 bytes</span>
@@ -6092,7 +6167,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-19 16:28:42 MSK
+Last updated 2015-07-19 17:37:08 MSK
 </div>
 </div>
 </body>
