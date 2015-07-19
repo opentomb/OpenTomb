@@ -343,22 +343,23 @@ void Engine_InitAL()
             {
                 Sys_DebugLog(LOG_FILENAME, " EFX supported!");
                 al_device = dev;
-                break;
+                al_context = alcCreateContext(al_device, paramList);
+                // fails e.g. with Rapture3D, where EFX is supported
+                if(al_context)
+                {
+                    break;
+                }
             }
-            else
-            {
-                alcCloseDevice(dev);
-                devlist += std::strlen(devlist)+1;
-            }
+            alcCloseDevice(dev);
+            devlist += std::strlen(devlist)+1;
         }
         else
         {
             al_device = dev;
+            al_context = alcCreateContext(al_device, paramList);
             break;
         }
     }
-
-    al_context = alcCreateContext(al_device, paramList);
 
     if(!al_context)
     {
