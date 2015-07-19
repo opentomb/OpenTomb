@@ -60,7 +60,7 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     -- This weird setup means that activity lock only takes action if current trigger itself is NOT
     -- one-shot, else it has bigger priority than entity lock, and activation continues.
     
-    if(lock and trigger_lock) then return end;
+    if(lock and not trigger_lock) then return end;
     
     -- Apply trigger mask to entity mask.
 
