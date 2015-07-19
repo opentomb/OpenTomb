@@ -179,7 +179,7 @@ public:
     bool createRagdoll(RDSetup* setup);
     bool deleteRagdoll();
 
-    virtual void fixPenetrations(btVector3* move);
+    virtual void fixPenetrations(const btVector3* move);
     virtual btVector3 getRoomPos() const
     {
         btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;

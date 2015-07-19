@@ -354,7 +354,7 @@ struct Character : public Entity
 
     void doWeaponFrame(btScalar time);
 
-    void fixPenetrations(btVector3* move) override;
+    void fixPenetrations(const btVector3* move) override;
     btVector3 getRoomPos() const override
     {
         btVector3 pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
@@ -389,7 +389,7 @@ struct Character : public Entity
 
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
     int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
-    int hasStopSlant(HeightInfo* next_fc);
+    bool hasStopSlant(const HeightInfo &next_fc);
     ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();
 

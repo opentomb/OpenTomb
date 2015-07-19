@@ -388,7 +388,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
 }
 
 
-void Entity::fixPenetrations(btVector3* move)
+void Entity::fixPenetrations(const btVector3* move)
 {
     if(m_bt.ghostObjects.empty())
         return;

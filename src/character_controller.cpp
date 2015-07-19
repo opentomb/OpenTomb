@@ -440,17 +440,15 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 }
 
 /**
- *
- * @param ent - entity
- * @param next_fc - next step floor / ceiling information
- * @return 1 if character can't run / walk next; in other cases returns 0
+ * @param next_fc  next step floor / ceiling information
+ * @retval true if character can't run / walk next; in other cases returns 0
  */
-int Character::hasStopSlant(HeightInfo *next_fc)
+bool Character::hasStopSlant(const HeightInfo& next_fc)
 {
     const auto& pos = m_transform.getOrigin();
     const auto& v1 = m_transform.getBasis().getColumn(1);
-    const auto& v2 = next_fc->floor_normale;
-    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < m_criticalSlantZComponent) &&
+    const auto& v2 = next_fc.floor_normale;
+    return (next_fc.floor_point[2] > pos[2]) && (next_fc.floor_normale[2] < m_criticalSlantZComponent) &&
            (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
 }
 
@@ -987,14 +985,10 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
 }
 
 /*
- * MOVE IN DIFFERENCE CONDITIONS
+ * MOVE IN DIFFERENT CONDITIONS
  */
 int Character::moveOnFloor()
 {
-    btVector3 tv, norm_move_xy, move, spd(0.0, 0.0, 0.0);
-    btScalar norm_move_xy_len, t, ang;
-    auto& pos = m_transform.getOrigin();
-
     /*
      * init height info structure
      */
@@ -1018,12 +1012,15 @@ int Character::moveOnFloor()
         }
     }
 
+    btVector3& position = m_transform.getOrigin();
+    btVector3 speed(0.0, 0.0, 0.0);
+
     /*
      * check move type
      */
     if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight < pos[2])
+        if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
             m_moveType = MOVE_FREE_FALLING;
             m_speed[2] = 0.0;
@@ -1034,24 +1031,24 @@ int Character::moveOnFloor()
             m_response.vertical_collide |= 0x01;
         }
 
-        tv = m_heightInfo.floor_normale;
-        if(tv[2] > 0.02 && tv[2] < m_criticalSlantZComponent)
+        btVector3 floorNormal = m_heightInfo.floor_normale;
+        if(floorNormal[2] > 0.02 && floorNormal[2] < m_criticalSlantZComponent)
         {
-            tv[2] = -tv[2];
-            spd = tv * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;       // from -180 deg to +180 deg
+            floorNormal[2] = -floorNormal[2];
+            speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            const btScalar angle = btDegrees( btAtan2(floorNormal[0], -floorNormal[1]) );       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
-            t = tv[0] * m_transform.getBasis().getColumn(0)[1] + tv[1] * m_transform.getBasis().getColumn(1)[1];
+            btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0] + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
                 m_response.slide = CHARACTER_SLIDE_FRONT;
-                m_angles[0] = ang + 180.0;
+                m_angles[0] = angle;
                 // front forward slide down
             }
             else
             {
                 m_response.slide = CHARACTER_SLIDE_BACK;
-                m_angles[0] = ang;
+                m_angles[0] = angle+180;
                 // back forward slide down
             }
             updateTransform();
@@ -1059,7 +1056,7 @@ int Character::moveOnFloor()
         }
         else    // no slide - free to walk
         {
-            t = m_currentSpeed * m_speedMult;
+            const btScalar fullSpeed = m_currentSpeed * m_speedMult;
             m_response.vertical_collide |= 0x01;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
@@ -1068,19 +1065,19 @@ int Character::moveOnFloor()
 
             if(m_dirFlag & ENT_MOVE_FORWARD)
             {
-                spd = m_transform.getBasis().getColumn(1) * t;
+                speed = m_transform.getBasis().getColumn(1) * fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_BACKWARD)
             {
-                spd = m_transform.getBasis().getColumn(1) * -t;
+                speed = m_transform.getBasis().getColumn(1) * -fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_LEFT)
             {
-                spd = m_transform.getBasis().getColumn(0) * -t;
+                speed = m_transform.getBasis().getColumn(0) * -fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_RIGHT)
             {
-                spd = m_transform.getBasis().getColumn(0) * t;
+                speed = m_transform.getBasis().getColumn(0) * fullSpeed;
             }
             else
             {
@@ -1101,15 +1098,13 @@ int Character::moveOnFloor()
     /*
      * now move normally
      */
-    m_speed = spd;
-    move = spd * engine_frame_time;
-    t = move.length();
+    m_speed = speed;
+    btVector3 positionDelta = speed * engine_frame_time;
+    const btScalar distance = positionDelta.length();
 
-    norm_move_xy[0] = move[0];
-    norm_move_xy[1] = move[1];
-    norm_move_xy[2] = 0.0;
-    norm_move_xy_len = norm_move_xy.length();
-    if(norm_move_xy_len > 0.2 * t)
+    btVector3 norm_move_xy(positionDelta[0], positionDelta[1], 0.0);
+    btScalar norm_move_xy_len = norm_move_xy.length();
+    if(norm_move_xy_len > 0.2 * distance)
     {
         norm_move_xy /= norm_move_xy_len;
     }
@@ -1120,21 +1115,21 @@ int Character::moveOnFloor()
     }
 
     ghostUpdate();
-    pos += move;
-    fixPenetrations(&move);
+    position += positionDelta;
+    fixPenetrations(&positionDelta);
     if(m_heightInfo.floor_hit)
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight > pos[2])
+        if(m_heightInfo.floor_point[2] + m_fallDownHeight > position[2])
         {
             btScalar dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
-            if(pos[2] > m_heightInfo.floor_point[2] + dz_to_land)
+            if(position[2] > m_heightInfo.floor_point[2] + dz_to_land)
             {
-                pos[2] -= dz_to_land;
+                position[2] -= dz_to_land;
                 fixPenetrations(nullptr);
             }
-            else if(pos[2] > m_heightInfo.floor_point[2])
+            else if(position[2] > m_heightInfo.floor_point[2])
             {
-                pos[2] = m_heightInfo.floor_point[2];
+                position[2] = m_heightInfo.floor_point[2];
                 fixPenetrations(nullptr);
             }
         }
@@ -1145,9 +1140,9 @@ int Character::moveOnFloor()
             updateRoomPos();
             return 2;
         }
-        if((pos[2] < m_heightInfo.floor_point[2]) && !m_bt.no_fix_all)
+        if((position[2] < m_heightInfo.floor_point[2]) && !m_bt.no_fix_all)
         {
-            pos[2] = m_heightInfo.floor_point[2];
+            position[2] = m_heightInfo.floor_point[2];
             fixPenetrations(nullptr);
             m_response.vertical_collide |= 0x01;
         }
@@ -2132,7 +2127,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
     return 0;
 }
 
-void Character::fixPenetrations(btVector3* move)
+void Character::fixPenetrations(const btVector3* move)
 {
     if(m_bt.ghostObjects.empty())
         return;
@@ -2199,11 +2194,9 @@ void Character::fixPenetrations(btVector3* move)
 }
 
 /**
- * we check walls and other collision objects reaction. if reaction more then critacal
+ * we check walls and other collision objects reaction. if reaction more than critical
  * then cmd->horizontal_collide |= 0x01;
- * @param ent - cheked entity
- * @param cmd - here we fill cmd->horizontal_collide field
- * @param move - absolute 3d move vector
+ * @param move absolute 3d move vector
  */
 int Character::checkNextPenetration(const btVector3& move)
 {

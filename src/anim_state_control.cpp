@@ -120,8 +120,8 @@ void ent_set_cmd_slide(Character* ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
-        ent->m_response.slide = 0x01;
-        ss_anim->onFrame = NULL;
+        ent->m_response.slide = CHARACTER_SLIDE_BACK;
+        ss_anim->onFrame = nullptr;
     }
 }
 
@@ -391,7 +391,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     global_offset = character->m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
                     global_offset[2] += character->m_bf.bb_max[2];
                     character->checkNextStep(global_offset, &next_fc);
-                    if(((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00)) && (!character->hasStopSlant(&next_fc)))
+                    if(((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00)) && !character->hasStopSlant(next_fc))
                     {
                         character->m_moveType = MOVE_ON_FLOOR;
                         character->m_dirFlag = ENT_MOVE_FORWARD;
@@ -812,7 +812,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
                 character->m_dirFlag = ENT_MOVE_BACKWARD;
             }
-            else if(character->hasStopSlant(&next_fc))
+            else if(character->hasStopSlant(next_fc))
             {
                 character->m_dirFlag = ENT_STAY;
                 character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
