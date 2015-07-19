@@ -411,7 +411,11 @@ struct Character : public Entity
     int moveOnWater();
 
     int findTraverse();
-    int checkTraverse(Entity *obj);
+    int checkTraverse(const Entity &obj);
+
+    static constexpr const int TraverseNone = 0x00;
+    static constexpr const int TraverseForward = 0x01;
+    static constexpr const int TraverseBackward = 0x02;
 
     void applyCommands();
     void updateParams();
