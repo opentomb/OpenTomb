@@ -2053,7 +2053,7 @@ else
 /*]]>*/
 </script>
 </head>
-<body class="book">
+<body class="book" style="max-width:100%">
 <div id="header">
 <h1>Tomb Raider Data Formats (TRosettaStone)</h1>
 <div id="toc">
@@ -2189,6 +2189,11 @@ Clarify the meaning of <em>Bit 4</em> in <a href="#tr2_room_vertex">[tr2_room_ve
 Clarify, what&#8217;s the purpose of <span class="monospaced">Normal</span> field in <a href="#tr5_room_vertex">[tr5_room_vertex]</a> structure, and if really <span class="monospaced">Attributes</span> field was removed.
 </p>
 </li>
+<li>
+<p>
+Whole <span class="monospaced">tr5_room</span> structure needs detailed analysis with all its extra <em>Unknown</em> fields.
+</p>
+</li>
 </ol></div>
 </div>
 <div class="sect2">
@@ -2215,6 +2220,27 @@ Clarify, what&#8217;s the purpose of <span class="monospaced">Normal</span> fiel
 <div class="sect4">
 <h5 id="_the_level_files">The level files</h5>
 <div class="paragraph"><p>The level files, <span class="monospaced">{level-name}.PHD/TUB/TR2/TR4/TRC</span>, contain everything about the level, including the geographical geometry, the geometry (meshes) of all animate and inanimate objects in the level, all the textures and colour data, all animation data, index information (and, in TR1, TR4 and TR5&#8201;&#8212;&#8201;also the <em>actual sound sample data</em>) for all sounds, accessibility maps&#8201;&#8212;&#8201;everything necessary to run the game. For whatever reason, Core has included everything in one file instead of breaking it up into logical groupings; this means that every level contains all the meshes, textures, sound information, and animation data for Lara and all of her weapons. There are a fair number of other redundancies, too.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>Since TR4, level file is divided <em>in several chunks</em>, each of them being compressed using <em>zlib</em>. Usually, each chunk of compressed data is preceded by two values defining <em>uncompressed size</em> of the chunk and <em>compressed size</em> of the chunk. Therefore, engine at first allocates a memory block equal to <em>uncompressed size</em>, and decompresses a chunk with <em>compressed size</em> into allocated memory.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Another type of compression is used for <em>sound samples</em>&#8201;&#8212;&#8201;they are kept in <em>MS-ADPCM</em> wave format, preceiding with <em>uncompressed size</em> and <em>compressed size</em> of the sample.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>While <em>compressed size</em> defines the whole size of embedded <span class="monospaced">.WAV</span> file, <em>uncompressed size</em> defines the size of raw PCM data size in <em>16-bit, 22050 kHz, mono</em> format. However, <em>uncompressed size</em> does not necessarily equal to a value derived from <em>compressed size</em> by wave type conversion, because MS-ADPCM codec tends to leave a bit of silence in the end of the file (which produces audible interruption in looped samples).</p></div>
+</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>It&#8217;s good to note the origins of level file extension. While it is obvious that TR2/TR4/TRC extensions specify game version, <span class="monospaced">.PHD</span> is actually abbreviation for one of the key developers of Tomb Raider 1: <em>Phil H. Daniels</em>. Looks like that this programmer contributed a lot of the code to early version of Tomb Raider, because phd also became a prefix for several helper functions in source code, like <span class="monospaced">phd_sin</span>, <span class="monospaced">phd_cos</span>, and so on. Most likely, he was responsible for developing level file structure of Tomb Raider.</p></div>
 </div>
 <div class="sect4">
@@ -2225,13 +2251,24 @@ Clarify, what&#8217;s the purpose of <span class="monospaced">Normal</span> fiel
 </div>
 <div class="sect4">
 <h5 id="_sound_files_8201_8212_8201_audio_tracks">Sound files&#8201;&#8212;&#8201;audio tracks</h5>
-<div class="paragraph"><p>TR1 1 and TR2 used <em>CD-Audio</em> tracks for in-game music, and therefore, they needed auxilary CD-audio fed into the soundcard. That&#8217;s the reason why most contemporary PCs have issues with audiotrack playback in these games - such setup is no longer supported in modern CD/DVD/BD drives, and digital pipeline is not always giving the same result. Currently, various modernized game repacks (such as <em>Steam</em> or <em>GOG</em> releases) officially features no-cd patches with embedded <em>MP3 player</em>, which takes place of deprecated CD-Audio player.</p></div>
+<div class="paragraph"><p>TR1 and TR2 used <em>CD-Audio</em> tracks for in-game music, and therefore, they needed auxilary CD-audio fed into the soundcard. That&#8217;s the reason why most contemporary PCs have issues with audiotrack playback in these games - such setup is no longer supported in modern CD/DVD/BD drives, and digital pipeline is not always giving the same result. Currently, various modernized game repacks (such as <em>Steam</em> or <em>GOG</em> releases) officially features no-cd patches with embedded <em>MP3 player</em>, which takes place of deprecated CD-Audio player.</p></div>
 <div class="paragraph"><p>In TR3, we have somewhat special audiotrack setup. Audio format was indeed changed to simple <em>WAV (MS-ADPCM codec)</em>, but all tracks were embedded into <span class="monospaced">CDAUDIO.WAD</span> file, which also contained a header with a list of all tracks and their durations. So, when game requests an audiotrack to play, it takes info on needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then goes straight to an offset for this track into it.</p></div>
 <div class="paragraph"><p>In TR4-5, track format remained the same (MS-ADPCM), but tracks were no longer embedded into <span class="monospaced">CDAUDIO.WAD</span>. Instead, each track was saved as simple <span class="monospaced">.WAV</span> file, and file names themselves were embedded into executable. Hence, when TR4-5 plays an audiotracks, it refers to internal filename table, and then loads an audiotrack with corresponding name.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>Audio tracks can be <em>looped</em> or <em>one-shot</em>. Looped tracks are usually contain background ambience (these creepy sounds heard in the beginning of <em>Caves</em>, and so on), but occasionally they can use music (e. g., <em>Jeep theme</em> from TR4). One-shot tracks are used for musical pieces which are usually triggered on certain event, and also for &#8220;voice chatting`` (e. g. approaching the monk from ``Diving Area&#8221; in TR2).</p></div>
+<div class="paragraph"><p>As both <em>looped</em> and <em>one-shot</em> tracks use the same audio playing routine, there&#8217;s no chance both <em>looped</em> and <em>one-shot</em> tracks could be played simultaneously. This is the reason why background ambience stops and restarts every time another (one-shot) track is triggered. However, this limitation was lifted in <em>TREP</em> and <em>TRNG</em>.</p></div>
+</td>
+</tr></table>
+</div>
 </div>
 <div class="sect4">
 <h5 id="_sound_files_8201_8212_8201_samples">Sound files&#8201;&#8212;&#8201;samples</h5>
-<div class="paragraph"><p>TR2 and TR3 also featured external sound sample files, which allowed to share samples between all level files. This sound file is called <span class="monospaced">MAIN.SFX</span>, and usually placed in <span class="monospaced">DATA</span> subfolder. Hence, engine loads sound samples not from level files (as it&#8217;s done in TR1, TR4 and TR5), but rather from this <span class="monospaced">MAIN.SFX</span> file.</p></div>
+<div class="paragraph"><p>TR2 and TR3 also featured external sound sample files, which allowed to share samples between all level files. This sound file is called <span class="monospaced">MAIN.SFX</span>, and usually placed in <span class="monospaced">DATA</span> subfolder. Hence, engine loads sound samples not from level files (as it&#8217;s done in TR1, TR4 and TR5&#8201;&#8212;&#8201;see above), but rather from this <span class="monospaced">MAIN.SFX</span> file.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_cut_sequence_packs">Cut sequence packs</h5>
@@ -2311,8 +2348,7 @@ explained below. Mesh coordinates are relative and are specified using `int16_t`
 </div>
 <div class="sect3">
 <h4 id="_colours">2.1.4. Colours</h4>
-<div class="paragraph"><p>All colours in TR are specified either explicitly (using either the <a href="#tr_colour">[tr_colour]</a> structure, described below, or the 16-bit
-ARGB structure) or implicitly, by indexing one of the palettes. However, it is only applicable to TR1-3&#8201;&#8212;&#8201;there is no palette in TR4 and TR5.</p></div>
+<div class="paragraph"><p>All colours in TR are specified either explicitly (using either the <a href="#tr_colour">[tr_colour]</a> structure, described below, 16-bit structures or 32-bit structures) or implicitly, by indexing one of the palettes. However, it is only applicable to TR1-3&#8201;&#8212;&#8201;there is no palette in TR4 and TR5.</p></div>
 <div class="paragraph"><p>In TR1-3, mesh surfaces could be either <em>coloured</em> or <em>textured</em>. <em>Coloured</em> surfaces are &#8220;painted&#8221; with a single colour that is either specified explicitly or using an index into the palette.</p></div>
 <div class="paragraph"><p>Beginning from TR4, coloured faces feature was removed, so each face must have a texture attached to it.</p></div>
 </div>
@@ -2347,9 +2383,7 @@ matching <span class="monospaced">ObjectID</span> is found.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_animated_textures">Animated textures</h5>
-<div class="paragraph"><p><strong>Classic frames:</strong> These are simply a list of textures that are cycled through in an endless loop; they are normally used as geographic elements of the levels (e.g. water surface, bubbling lava, Atlantean flesh walls), but practically, Tomb Raider engines are capable of applying animated textures to mesh geometry. This feature is primarily used in custom levels.</p></div>
-<div class="paragraph"><p><strong>UV Rotate:</strong> Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76.</p></div>
-<div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument. If such command is found (and argument is not zero&#8201;&#8212;&#8201;for example, <span class="monospaced">UVRotate = 4</span>), engine uses special variable value kept in level file, <span class="monospaced">animated_textures_uv_count</span>, to determine if animation range belongs to UVRotate mode or classic frames mode. Then, if it belongs to UVRotate mode, each frame of this range is treated as individual rotating texture.</p></div>
+<div class="paragraph"><p>These are either a list of textures cycled through in endless loop, or (in TR4-5) a single texture with shifting coordinates, creating an illusion of ``rolling`` image.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_mesh_animations">Mesh animations</h5>
@@ -2549,14 +2583,16 @@ by the larger structures that are built using the smaller structures.</p></div>
 <h5 id="_room_header">Room header</h5>
 <div class="paragraph"><p>$X / Z$ indicate the base position of the room mesh in world coordinates ($Y$ is always zero-relative)</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes (in TR5 - 20 bytes)</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
+    <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>             <span class="c1">// Y-offset of room (world coordinates) - only in TR5</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>             <span class="c1">// Z-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">yBottom</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">y</span> value exists only in TR5, and usually is 0.</p></div>
 <div class="paragraph"><p><span class="monospaced">yBottom</span> is actually largest value, but indicates <em>lowest</em> point in the room.
 <span class="monospaced">yTop</span> is actually smallest value, but indicates <em>highest</em> point in the room.</p></div>
 </div>
@@ -2568,7 +2604,7 @@ portal structure below defines <em>only visibility portals</em>, not an actual m
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_portal</span>  <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint16_t</span>   <span class="n">AdjoiningRoom</span><span class="p">;</span> <span class="c1">// Which room this portal leads to</span>
+    <span class="kt">uint16_t</span>  <span class="n">AdjoiningRoom</span><span class="p">;</span> <span class="c1">// Which room this portal leads to</span>
     <span class="n">tr_vertex</span> <span class="n">Normal</span><span class="p">;</span>
     <span class="n">tr_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
 <span class="p">};</span>
@@ -2861,7 +2897,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
        <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>  <span class="c1">// Value is ignored!</span>
       <span class="kt">uint16_t</span> <span class="n">Attributes</span><span class="p">;</span> <span class="c1">// A set of flags for special rendering effects</span>
-       <span class="kt">int16_t</span> <span class="n">Colour</span><span class="p">;</span>     <span class="c1">// 15-bit colour</span>
+      <span class="kt">uint16_t</span> <span class="n">Colour</span><span class="p">;</span>     <span class="c1">// 15-bit colour</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Lighting1</span> value is ignored by the engine, as now each vertex has its own defined 15-bit colour (see below).</p></div>
@@ -2966,26 +3002,56 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <h5 id="_room_static_mesh_structure">Room Static Mesh structure</h5>
 <div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the <a href="#tr2_item">[tr2_item]</a> structure, except that static meshes have no animations and are confined to a single room.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes (20 bytes in TR2-5)</span>
+<div class="title">TR1-2 Room Static Mesh structure</div>
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes (20 bytes in TR2)</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span> <span class="c1">// Constant lighting; -1 means use mesh lighting</span>
-    <span class="kt">uint16_t</span> <span class="n">Intensity2</span><span class="p">;</span> <span class="c1">// Almost always the same as Intensity1 (absent in TR1)</span>
+    <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Intensity2</span><span class="p">;</span> <span class="c1">// Absent in TR1</span>
     <span class="kt">uint16_t</span> <span class="n">MeshID</span><span class="p">;</span>     <span class="c1">// Which StaticMesh item to draw</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (bright) to 0x1FFF (dark).</p></div>
-<div class="paragraph"><p><strong>TR2-5 ONLY:</strong> <span class="monospaced">Intensity2</span> is seemingly not used, as changing this value does nothing.</p></div>
+<div class="paragraph"><p><span class="monospaced">Intensity2</span> is seemingly not used, as changing this value does nothing.</p></div>
 <div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (0xC000) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting is needed, as you can simply interpret it using this formula:</p></div>
 <div class="paragraph"><p>` float Real_Rotation = (float)Rotation / 16384.0f * -90; `</p></div>
+<div class="listingblock">
+<div class="title">TR3-5 Room Static Mesh structure</div>
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
+    <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Colour</span><span class="p">;</span>     <span class="c1">// 15-bit colour</span>
+    <span class="kt">uint16_t</span> <span class="n">Unused</span><span class="p">;</span>     <span class="c1">// Not used!</span>
+    <span class="kt">uint16_t</span> <span class="n">MeshID</span><span class="p">;</span>     <span class="c1">// Which StaticMesh item to draw</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Colour</span> value specifies vertex colour in 15-bit format (each colour occupies 5 bits): 0x0[red]RRRRR[green]GGGGG[blue]BBBBB. Therefore, each colour value&#8217;s maximum is <em>31</em>. You can use this code to get each colour:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>Red:</em> <span class="monospaced">((Colour &amp; 0x7C00) &gt;&gt; 10)</span>
+</p>
+</li>
+<li>
+<p>
+<em>Green:</em> <span class="monospaced">((Colour &amp; 0x03E0) &gt;&gt; 5)</span>
+</p>
+</li>
+<li>
+<p>
+<em>Blue:</em> <span class="monospaced">(Colour &amp; 0x001F)</span>
+</p>
+</li>
+</ul></div>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_tr5_specific_room_structures">2.4. TR5-specific room structures</h3>
-<div class="paragraph"><p>In TR5 the room format was drastically changed. The room itself is made up of <em>sections</em>. These sections encompass a 3x3 sector grid (actually 3069x3069 pixels). Historically, these sections are referred as <em>layers</em>, however, more proper name for them is <em>volumes</em>. The purpose of <em>layers</em> was presumably optimizing rendering by some kind of space partitioning.</p></div>
-<div class="paragraph"><p>Another thing to note is that some <em>rooms</em> in TR5 do not actually contain visible mesh data. We will refer to these rooms as <em>null rooms</em>.</p></div>
+<h3 id="_tr5_specific_room_structure_changes">2.4. TR5-specific room structure changes</h3>
+<div class="paragraph"><p>In TR5 the room format was drastically changed. The room itself is made up of <em>sections</em>. These sections encompass a 3x3 sector grid (actually 3069x3069 pixels). Historically, these sections are referred as <em>layers</em>, however, more proper name for them is <em>volumes</em>. Layers are organized in a quadtree-like structure, and their purpose was presumably optimizing rendering by some kind of space partitioning and culling invisible volumes.</p></div>
+<div class="paragraph"><p>Another thing to note is that some <em>rooms</em> in TR5 do not actually contain visible mesh data. If concerned, we will refer to these rooms as <em>null rooms</em>.</p></div>
 <div class="sect3">
 <h4 id="_tr5_room_layer_structure">2.4.1. TR5 Room Layer structure</h4>
 <div class="listingblock">
@@ -3020,11 +3086,12 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </div>
 <div class="sect2">
 <h3 id="_the_whole_room_structure">2.5. The whole Room structure</h3>
-<div class="paragraph"><p>Here&#8217;s where all the room data come together.  As it&#8217;s stored in the file, the <a href="#tr_room_info">[tr_room_info]</a> structure comes first, followed by a <span class="monospaced">uint32_t NumDataWords</span>, which specifies the number of 16-bit words to follow.  Those data words must be parsed in order to interpret and construct the variable-length arrays of vertices, meshes, doors, and sectors.</p></div>
-<div class="paragraph"><p>Room structure differs drastically across different game versions. For this reason, we will define each versions of Room structure, and then describe each controversial field from this structure.</p></div>
-<div class="paragraph"><p><strong>NOTE:</strong> <em>These are not &#8220;real&#8221; C/C++ structures, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them.</em></p></div>
+<div class="paragraph"><p>Here&#8217;s where all the room data come together.</p></div>
+<div class="paragraph"><p>Room structure differs drastically across different game versions (especially in TR5). For this reason, we will define each version of Room structure independently, to avoid confusion. Also, version-specific fields will be described in each version&#8217;s section in a ``backwards-compatible`` manner, while common fields with version-specific variations, such as <span class="monospaced">Flags</span>, will be described afterwards in separate section.</p></div>
+<div class="paragraph"><p><em>These are not &#8220;real&#8221; C/C++ structures, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them.</em></p></div>
 <div class="sect3">
 <h4 id="_tr1_room_structure">2.5.1. TR1 Room structure</h4>
+<div class="paragraph"><p>As it&#8217;s stored in the file, the <a href="#tr_room_info">[tr_room_info]</a> structure comes first, followed by a <span class="monospaced">uint32_t NumDataWords</span>, which specifies the number of 16-bit words to follow.  Those data words must be parsed in order to interpret and construct the variable-length arrays of vertices, meshes, doors, and sectors. Such setup is also applicable to all variations of room structures, <em>except</em> <span class="monospaced">tr5_room</span>, which will be described independently.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
@@ -3040,12 +3107,12 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 
     <span class="kt">uint16_t</span> <span class="n">NumZsectors</span><span class="p">;</span>                                  <span class="c1">// ``Width&#39;&#39; of sector list</span>
     <span class="kt">uint16_t</span> <span class="n">NumXsectors</span><span class="p">;</span>                                  <span class="c1">// ``Height&#39;&#39; of sector list</span>
-    <span class="n">tr2_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span> <span class="c1">// List of sectors in this room</span>
+    <span class="n">tr_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span>  <span class="c1">// List of sectors in this room</span>
 
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity</span><span class="p">;</span>
 
-    <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
-    <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
+    <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of lights in this room</span>
+    <span class="n">tr_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>    <span class="c1">// List of lights</span>
 
     <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span>                            <span class="c1">// Number of static meshes</span>
     <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>   <span class="c1">// List of static meshes</span>
@@ -3054,10 +3121,13 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
     <span class="kt">int16_t</span> <span class="n">Flags</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="sect4">
-<h5 id="_tr2_room_structure">TR2 Room structure</h5>
+<div class="paragraph"><p><span class="monospaced">AmbientIntensity</span> is a brightness value which affects only <em>externally-lit</em> objects. It ranges from 0 (bright) to 0x1FFF (dark).</p></div>
+<div class="paragraph"><p><span class="monospaced">AlternateRoom</span> (or, as it is called in TRLE terms, <em>flipped room</em>) is the number of the room that this room can <em>flip</em> with. In the terms of the gameplay, <em>flipped</em> room is a state change of the same room&#8201;&#8212;&#8201;for example, empty or flooded with water, filled with sand or debris. Alternate room usually has the same boundaries as original room, but altered geometry and/or texturing. Detailed description of <em>alternate rooms</em> will be provided in a separate section.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_tr2_room_structure">2.5.2. TR2 Room structure</h4>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room</span>  <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr2_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
 
@@ -3071,25 +3141,24 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 
     <span class="kt">uint16_t</span> <span class="n">NumZsectors</span><span class="p">;</span>                                  <span class="c1">// ``Width&#39;&#39; of sector list</span>
     <span class="kt">uint16_t</span> <span class="n">NumXsectors</span><span class="p">;</span>                                  <span class="c1">// ``Height&#39;&#39; of sector list</span>
-    <span class="n">tr2_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span> <span class="c1">// List of sectors in this room</span>
+    <span class="n">tr_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span>  <span class="c1">// List of sectors in this room</span>
 
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity1</span>
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity</span>
     <span class="kt">int16_t</span> <span class="n">LightMode</span><span class="p">;</span>
 
     <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
-    <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
+    <span class="n">tr_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>    <span class="c1">// List of point lights</span>
 
     <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span>                            <span class="c1">// Number of static meshes</span>
-    <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>   <span class="c1">// List of static meshes</span>
+    <span class="n">tr_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>   <span class="c1">// List of static meshes</span>
 
     <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Flags</span><span class="p">;</span>
-
-    <span class="n">tr2_colour</span> <span class="n">RoomLightColour</span><span class="p">;</span> <span class="c1">// Present in TR3 only; absent from TR1/TR2.</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><strong>ONLY IN TR2:</strong> <span class="monospaced">LightMode</span> specifies lighting mode special effect, which is applied to all room vertices <em>in conjunction with 5 lowest bits of <span class="monospaced">Attributes</span> field belonging to <a href="#tr_room_vertex">[tr_room_vertex]</a> structure. Here we will refer these 5 bits</em> value to as <em>effect_value:</em></p></div>
+<div class="paragraph"><p><span class="monospaced">AmbientIntensity2</span> value is usually equal to <span class="monospaced">AmbientIntensity</span> value. Seems it&#8217;s not used.</p></div>
+<div class="paragraph"><p><span class="monospaced">LightMode</span> specifies lighting mode special effect, which is applied to all room vertices <em>in conjunction with 5 lowest bits of <span class="monospaced">Attributes</span> field belonging to <a href="#tr_room_vertex">[tr_room_vertex]</a> structure. Here we will refer these 5 bits</em> value to as <em>effect_value:</em></p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3107,8 +3176,224 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><span class="monospaced">AlternateRoom</span> (or, as it is called in TRLE terms, <em>flipped room</em>) is the number of the room that this room can <em>flip</em> with. In the terms of the gameplay, <em>flipped</em> room is a state change of the same room&#8201;&#8212;&#8201;for example, empty or flooded with water, filled with sand or debris. Alternate room usually has the same boundaries as original room, but altered geometry and/or texturing. Detailed description of <em>alternate rooms</em> will be provided in a separate section.</p></div>
-<div class="paragraph"><p><strong>ONLY IN TR4-5:</strong> <span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve an engine limitation, which flipped all alternate rooms at once. Since TR4, engine will only flip rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field and trigger operand.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_tr3_room_structure">2.5.3. TR3 Room Structure</h4>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room</span>  <span class="c1">// (variable length)</span>
+<span class="p">{</span>
+    <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
+
+    <span class="kt">uint32_t</span> <span class="n">NumDataWords</span><span class="p">;</span>       <span class="c1">// Number of data words (uint16_t&#39;s)</span>
+    <span class="kt">uint16_t</span> <span class="n">Data</span><span class="p">[</span><span class="n">NumDataWords</span><span class="p">];</span> <span class="c1">// The raw data from which the rest of this is derived</span>
+
+    <span class="n">tr_room_data</span> <span class="n">RoomData</span><span class="p">;</span>       <span class="c1">// The room mesh</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumPortals</span><span class="p">;</span>                 <span class="c1">// Number of visibility portals to other rooms</span>
+    <span class="n">tr_room_portal</span> <span class="n">Portals</span><span class="p">[</span><span class="n">NumPortals</span><span class="p">];</span>  <span class="c1">// List of visibility portals</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumZsectors</span><span class="p">;</span>                                  <span class="c1">// ``Width&#39;&#39; of sector list</span>
+    <span class="kt">uint16_t</span> <span class="n">NumXsectors</span><span class="p">;</span>                                  <span class="c1">// ``Height&#39;&#39; of sector list</span>
+    <span class="n">tr_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span>  <span class="c1">// List of sectors in this room</span>
+
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity1</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
+    <span class="n">tr3_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span>                            <span class="c1">// Number of static meshes</span>
+    <span class="n">tr_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>    <span class="c1">// List of static meshes</span>
+
+    <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">Flags</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span> <span class="n">WaterScheme</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">ReverbInfo</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span> <span class="n">Filler</span><span class="p">;</span>  <span class="c1">// Unused.</span>
+<span class="p">};</span>
+</pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_tr4_room_structure">2.5.4. TR4 Room Structure</h4>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_room</span>  <span class="c1">// (variable length)</span>
+<span class="p">{</span>
+    <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
+
+    <span class="kt">uint32_t</span> <span class="n">NumDataWords</span><span class="p">;</span>       <span class="c1">// Number of data words (uint16_t&#39;s)</span>
+    <span class="kt">uint16_t</span> <span class="n">Data</span><span class="p">[</span><span class="n">NumDataWords</span><span class="p">];</span> <span class="c1">// The raw data from which the rest of this is derived</span>
+
+    <span class="n">tr_room_data</span> <span class="n">RoomData</span><span class="p">;</span>       <span class="c1">// The room mesh</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumPortals</span><span class="p">;</span>                 <span class="c1">// Number of visibility portals to other rooms</span>
+    <span class="n">tr_room_portal</span> <span class="n">Portals</span><span class="p">[</span><span class="n">NumPortals</span><span class="p">];</span>  <span class="c1">// List of visibility portals</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumZsectors</span><span class="p">;</span>                                  <span class="c1">// ``Width&#39;&#39; of sector list</span>
+    <span class="kt">uint16_t</span> <span class="n">NumXsectors</span><span class="p">;</span>                                  <span class="c1">// ``Height&#39;&#39; of sector list</span>
+    <span class="n">tr2_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span> <span class="c1">// List of sectors in this room</span>
+
+    <span class="kt">uint32_t</span> <span class="n">RoomColour</span><span class="p">;</span>        <span class="c1">// In ARGB format!</span>
+
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
+    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity1</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
+    <span class="n">tr4_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span>                           <span class="c1">// Number of static meshes</span>
+    <span class="n">tr_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>   <span class="c1">// List of static meshes</span>
+
+    <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">Flags</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span> <span class="n">WaterScheme</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">ReverbInfo</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span> <span class="n">AlternateGroup</span><span class="p">;</span>  <span class="c1">// Replaces Filler from TR3</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">RoomColour</span> replaces <span class="monospaced">AmbientIntensity</span> and <span class="monospaced">AmbientIntensity2</span> values from <span class="monospaced">tr2_room</span> structure. Note it&#8217;s <em>not in <span class="monospaced">tr_colour4</span> format</em>, because colour order is reversed. It should be treated as ARGB, where A is unused.</p></div>
+<div class="paragraph"><p><span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve long-existing engine limitation, which flipped <em>all alternate rooms at once</em> (see <em>flipmap</em> trigger function description in <a href="#Trigger Functions">[Trigger Functions]</a> section). Since TR4, engine only flips rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field and trigger operand.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_tr5_room_structure">2.5.5. TR5 Room Structure</h4>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>As it was mentioned before, TR5 room structure was almost completely changed, when compared to previous versions. For example, TR5 completely throws out a concept of <span class="monospaced">tr_room_data</span> structure, shuffles numerous values and structures in almost chaotic manner, and introduces a bunch of completely new parameters (mostly to deal with <em>layers</em>). Also, there is vast amount of <em>fillers</em> and <em>separators</em>, which contain no specific data.</p></div>
+<div class="paragraph"><p>The one possible reason for such ridiculous structure change is an attempt to <em>crypt file format</em>, so it won&#8217;t be accessed by unofficial level editing tools, which received major development by that time. Another possible reason is whole TR5 development process was rushed, as the team developed <em>Tomb Raider: Angel of Darkness</em> at the very same time.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr5_room</span> <span class="c1">// (variable length)</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="n">XELA</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>           <span class="c1">// So-called &quot;XELA landmark&quot;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">RoomDataSize</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Seperator</span><span class="p">;</span>     <span class="c1">// 0xCDCDCDCD (4 bytes)</span>
+
+    <span class="kt">uint32_t</span> <span class="n">EndSDOffset</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">StartSDOffset</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">;</span>     <span class="c1">// Either 0 or 0xCDCDCDCD</span>
+
+    <span class="kt">uint32_t</span> <span class="n">EndPortalOffset</span><span class="p">;</span>
+
+    <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumZSectors</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">NumXSectors</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">RoomColour</span><span class="p">;</span>   <span class="c1">// In ARGB format!</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span>  <span class="n">ReverbInfo</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>  <span class="n">AlternateGroup</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">WaterScheme</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Filler</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>    <span class="c1">// Both always 0x00007FFF</span>
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span> <span class="c1">// Both always 0xCDCDCDCD</span>
+    <span class="kt">uint32_t</span> <span class="n">Filler</span><span class="p">;</span>       <span class="c1">// Always 0xFFFFFFFF</span>
+
+    <span class="kt">uint16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Unknown1</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">Unknown2</span><span class="p">;</span>     <span class="c1">// Always 0</span>
+    <span class="kt">uint32_t</span> <span class="n">Unknown3</span><span class="p">;</span>     <span class="c1">// Always 0</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">;</span>    <span class="c1">// 0xCDCDCDCD</span>
+
+    <span class="kt">uint16_t</span> <span class="n">Unknown4</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Unknown5</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="n">RoomX</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="n">RoomY</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="n">RoomZ</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// Always 0xCDCDCDCD</span>
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">;</span>    <span class="c1">// 0 for normal rooms and 0xCDCDCDCD for null rooms</span>
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">;</span>    <span class="c1">// Always 0xCDCDCDCD</span>
+
+    <span class="kt">uint32_t</span> <span class="n">NumRoomTriangles</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">NumRoomRectangles</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">;</span>     <span class="c1">// Always 0</span>
+
+    <span class="kt">uint32_t</span> <span class="n">LightDataSize</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">NumLights2</span><span class="p">;</span>    <span class="c1">// Always same as NumLights</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Unknown6</span><span class="p">;</span>
+
+    <span class="kt">int32_t</span> <span class="n">RoomYTop</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">RoomYBottom</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">NumLayers</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">LayerOffset</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">VerticesOffset</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">PolyOffset</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">PolyOffset2</span><span class="p">;</span>   <span class="c1">// Same as PolyOffset</span>
+
+    <span class="kt">uint32_t</span> <span class="n">NumVertices</span><span class="p">;</span>
+
+    <span class="kt">uint32_t</span> <span class="n">Separator</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>  <span class="c1">// Always 0xCDCDCDCD</span>
+
+    <span class="n">tr5_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>    <span class="c1">// Data for the lights (88 bytes * NumRoomLights)</span>
+    <span class="n">tr2_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXSectors</span> <span class="o">*</span> <span class="n">NumZSectors</span><span class="p">];</span> <span class="c1">// List of sectors in this room</span>
+
+    <span class="kt">uint16_t</span> <span class="n">NumPortals</span><span class="p">;</span>                 <span class="c1">// Number of visibility portals to other rooms</span>
+    <span class="n">tr_room_portal</span> <span class="n">Portals</span><span class="p">[</span><span class="n">NumPortals</span><span class="p">];</span>  <span class="c1">// List of visibility portals</span>
+
+    <span class="kt">uint16_t</span> <span class="n">Separator</span><span class="p">;</span>  <span class="c1">// Always 0xCDCD</span>
+
+    <span class="n">tr3_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span>   <span class="c1">// List of static meshes</span>
+
+    <span class="n">tr5_room_layer</span><span class="p">[</span><span class="n">NumLayers</span><span class="p">];</span> <span class="c1">// Data for the room layers (volumes) (56 bytes * NumLayers)</span>
+
+    <span class="kt">uint8_t</span> <span class="n">Faces</span><span class="p">[(</span><span class="n">NumRoomRectangles</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">tr_face4</span><span class="p">)</span> <span class="o">+</span> <span class="n">NumRoomTriangles</span> <span class="o">*</span> <span class="p">(</span><span class="n">tr_face3</span><span class="p">)];</span>
+
+    <span class="n">tr5_room_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">XELA</span> landmark seemingly serves as a header for room structure. It is clear that <em>XELA</em> is a reversed <em>ALEX</em>, which is most likely the name of TR5 programmer, <em>Alex Davis</em>. It probably indicates that Alex Davis is responsible for changes in room structures.</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomDataSize</span> is a handy value determining the size of the following data. You can use this value to quickly <em>parse thru</em> to the next room.</p></div>
+<div class="paragraph"><p><span class="monospaced">EndSDOffset</span>: usually this number <span class="monospaced">+ 216</span> will give you the offset from the start of the room data to the end of the <span class="monospaced">SectorData</span> section. However, it is known that this uint32_t could be equal to <span class="monospaced">0xFFFFFFFF</span>, so to calculate the end of <span class="monospaced">SectorData</span>, it is better to use the following value <span class="monospaced">StartSDOffset + 216 + ((NumXSectors * NumZSectors)*8)</span>, if you need to obtain this information.</p></div>
+<div class="paragraph"><p><span class="monospaced">StartSDOffset</span>: This number <span class="monospaced">+ 216</span> will give you the offset from the start of the room to the start of the <span class="monospaced">SectorData</span> section.</p></div>
+<div class="paragraph"><p><span class="monospaced">EndPortalOffset</span>: this number <span class="monospaced">+ 216</span> will give you the offset from the start of the room to the end of the portal data.</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomX</span>, <span class="monospaced">RoomY</span> and <span class="monospaced">RoomZ</span> values are positions of room in world coordinates. <strong>NOTE:</strong> If room is <em>null room</em>, then each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
+<div class="paragraph"><p><span class="monospaced">NumRoomTriangles</span> and <span class="monospaced">NumRoomRectangles</span> are respectively the numbers of triangular and rectangular faces in a given room. <strong>NOTE:</strong> If room is <em>null room</em>, each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
+<div class="paragraph"><p><span class="monospaced">LightDataSize</span> is the size of the light data in bytes (<em>not</em> in <span class="monospaced">tr5_room_light</span> units).</p></div>
+<div class="paragraph"><p><span class="monospaced">Unknown6</span> could probably be a copy of <span class="monospaced">ReverbInfo</span> (see further), as its value usually ranges from 0 to 3.</p></div>
+<div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <span class="monospaced">tr_room_info</span> structure. If room is a <em>null room</em>, both of these values are `0xCDCDCDCD.</p></div>
+<div class="paragraph"><p><span class="monospaced">NumLayers</span> is a number of layers (volumes) in this room.</p></div>
+<div class="paragraph"><p><span class="monospaced">LayerOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the layer data.</p></div>
+<div class="paragraph"><p><span class="monospaced">VerticesOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the verex data.</p></div>
+<div class="paragraph"><p><span class="monospaced">PolyOffset</span>: this number `+ 216`will give you an offset from the start of the room data to the start of the rectangle/triangle data.</p></div>
+<div class="paragraph"><p><span class="monospaced">VerticesSize</span> is the size of vertex data block in bytes. Therefore, it <em>must</em> be a multiple of <span class="monospaced">tr5_room_vertex</span> size, else it means the block size is wrong.</p></div>
+<div class="paragraph"><p><span class="monospaced">Faces</span> is a sequential data array for the room polygons (both <span class="monospaced">tr_face4</span> and <span class="monospaced">tr_face3</span>),</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p><span class="monospaced">Faces</span> array is strictly linked with <span class="monospaced">NumLayers</span> value. The data is sequentially structured for each layer&#8201;&#8212;&#8201;at first it lists first layer&#8217;s rectangles then triangles, followed by the second layer&#8217;s rectangles and triangles, and so on, until all layers are done.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_common_fields_of_a_room_structure">2.5.6. Common fields of a room structure</h4>
 <div class="paragraph"><p><span class="monospaced">Flags</span> is an array of various flag bits, which meaning is as follows:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -3190,11 +3475,10 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </div>
 </div>
 </div>
-</div>
 <div class="sect1">
 <h2 id="_floordata">3. FloorData</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>The <span class="monospaced">FloorData</span> defines special sector attributes such as floor and ceiling slopes, collisional portals to other rooms, climbability of walls, and all the
+<div class="paragraph"><p>The <em>FloorData</em> defines special sector attributes such as floor and ceiling slopes, collisional portals to other rooms, climbability of walls, and all the
 various types of triggering. It is referenced by the sectors as an array of 16-bit unsigned integers, e.g. the current sector is calculated as <span class="monospaced">(((CurrentX -
 tr2_room_info.x) / 1024) * tr2_room.NumZsectors) + ((CurrentZ - tr2_room_info.z) / 1024)</span>, which is then used as an offset into <span class="monospaced">tr2_room::SectorList[]</span>;
 <span class="monospaced">tr2_room_sector::FDindex</span> is an offset into the <span class="monospaced">FloorData[]</span> array.</p></div>
@@ -4531,8 +4815,28 @@ must be multiplied by 4 to get the correct values.</p></div>
     <span class="kt">int16_t</span> <span class="n">TextureIDs</span><span class="p">[</span><span class="n">NumTextureIDs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span> <span class="c1">// offsets into ObjectTextures[], in animation order.</span>
 <span class="p">}</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span>
 </pre></div></div></div>
-<div class="paragraph"><p>If a texture belongs to an animated-texture group, it will automatically be animated by the engine. The animation framerate is hardcoded for <em>classic frames</em> mode and for <em>UVRotate</em> applied to specific entities, usually called <em>waterfalls</em>. In case of waterfall entities, it&#8217;s worth mentioning that the only texture to be rotated is a texture applied to the first face in the first mesh of the model&#8201;&#8212;&#8201;if any other textures are applied to other faces, they won&#8217;t scroll.</p></div>
-<div class="paragraph"><p>Room faces that have <em>UVRotate</em> assigned to them are scrolled with the speed specified in <span class="monospaced">UVRotate</span> script command.</p></div>
+<div class="paragraph"><p>If a texture belongs to an animated-texture group, it will automatically be animated by the engine.</p></div>
+<div class="paragraph"><p>There are two types of animated textures&#8201;&#8212;&#8201;<em>classic frames</em> and <em>UVRotate</em>:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<strong>Classic frames:</strong> These are ordinary animated textures, and the only type displayed prior to TR4. It is simply a list of textures that are cycled through in an endless loop; they are normally used as geographic elements of the levels (e.g. water surface, bubbling lava, Atlantean flesh walls), but practically, Tomb Raider engines are capable of applying animated textures to mesh geometry (this feature is primarily used in custom levels). The speed (interval) of animation is hardcoded, and varies from version to version. While in TR1-2 textures were animated relatively slowly, in TR3 onwards they were sped up.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><strong>UV Rotate:</strong> Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76.</p></div>
+<div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument. If such command is found (and argument is not zero&#8201;&#8212;&#8201;for example, <span class="monospaced">UVRotate = 4</span>), engine uses special variable value kept in level file, <span class="monospaced">animated_textures_uv_count</span>, to determine if animation range belongs to UVRotate mode or classic frames mode. Then, if it belongs to UVRotate mode, each frame of this range is treated as individual rotating texture.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>There is also special case when UVRotate texture mode is engaged. When a texture is applied to a model with specific ID (so-called <em>waterfall objects</em>), then it is also considered UVRotate animated texture, even if it doesn&#8217;t belong to animated texture range, <em>but only if it is a texture applied to a first face in the first mesh of the model</em>. If there are other textures applied to other faces of a waterfall object, they won&#8217;t be considered as UVRotate.</p></div>
+<div class="paragraph"><p>The speed of animation for waterfall objects is not affected by <span class="monospaced">UVRotate</span> script command. Instead, it is hardcoded value of 7.</p></div>
+</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_cameras">8.5. Cameras</h3>
@@ -4550,7 +4854,10 @@ long to switch, and whether to do so only once.</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_cinematic_frames">8.6. Cinematic Frames</h3>
+<h3 id="_flyby_cameras">8.6. Flyby Cameras</h3>
+</div>
+<div class="sect2">
+<h3 id="_cinematic_frames">8.7. Cinematic Frames</h3>
 <div class="paragraph"><p>These are camera positionings for cutscenes. All the entity animations are specified separately, and it is not clear where there is any syncing between these
 frames and any of the animations.</p></div>
 <div class="listingblock">
@@ -4570,7 +4877,7 @@ frames and any of the animations.</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_lightmap">8.7. LightMap</h3>
+<h3 id="_lightmap">8.8. LightMap</h3>
 <div class="paragraph"><p>A 32*256 array of <span class="monospaced">uint8_t</span> which is apparently for applying light to 8-bit colour, in some documentation called <span class="monospaced">ColourMap</span>. The current
 palette index and lighting value are used to calcuate an index to this table, which is a table of palette indices.</p></div>
 <div class="paragraph"><p>The Tomb Raider series' software rendering, like that of most real-time-3D games, uses 8-bit colour for speed and low bulk; however, there is the serious
@@ -5731,7 +6038,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-18 14:13:54 MSK
+Last updated 2015-07-19 04:20:55 MSK
 </div>
 </div>
 </body>
