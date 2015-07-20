@@ -217,23 +217,23 @@ struct HeightInfo
     std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
-    int8_t                                      ceiling_climb;
-    int8_t                                      walls_climb;
-    int8_t                                      walls_climb_dir;
+    bool                                        ceiling_climb = false;
+    bool                                        walls_climb = false;
+    int8_t                                      walls_climb_dir = 0;
 
-    btVector3                                   floor_normale;
+    btVector3                                   floor_normale = {0,0,0};
     btVector3                                   floor_point = {0,0,0};
-    int16_t                                     floor_hit = 0;
+    bool                                        floor_hit = false;
     btCollisionObject                          *floor_obj;
 
     btVector3                                   ceiling_normale;
     btVector3                                   ceiling_point;
-    int16_t                                     ceiling_hit = 0;
+    bool                                        ceiling_hit = false;
     btCollisionObject                          *ceiling_obj;
 
     btScalar                                    transition_level;
-    int16_t                                     water = 0;
-    int16_t                                     quicksand;
+    bool                                        water = false;
+    int                                         quicksand = 0;
 };
 
 struct CharacterCommand

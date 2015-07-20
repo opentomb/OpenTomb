@@ -704,7 +704,7 @@ void Game_UpdateAI()
 }
 
 
-void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& entities)
+void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> >& entities)
 {
     for(const auto& entPair : entities) {
         std::shared_ptr<Character> ent = std::dynamic_pointer_cast<Character>(entPair.second);

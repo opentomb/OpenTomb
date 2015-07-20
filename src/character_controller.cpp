@@ -233,9 +233,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     Room* r = (cb->m_container)?(cb->m_container->room):(NULL);
     RoomSector* rs;
 
-    fc->floor_hit = 0x00;
-    fc->ceiling_hit = 0x00;
-    fc->water = 0x00;
+    fc->floor_hit = false;
+    fc->ceiling_hit = false;
+    fc->water = false;
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
 
@@ -253,7 +253,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
-                    fc->water = 0x01;
+                    fc->water = true;
                     break;
                 }
             }
@@ -286,7 +286,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (btScalar)rs->ceiling;
-                    fc->water = 0x01;
+                    fc->water = true;
                     break;
                 }
                 else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
@@ -315,7 +315,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = NULL;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    fc->floor_hit = (int)cb->hasHit();
+    fc->floor_hit = cb->hasHit();
     if(fc->floor_hit)
     {
         fc->floor_normale = cb->m_hitNormalWorld;
@@ -329,7 +329,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     cb->m_collisionObject = NULL;
     //cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    fc->ceiling_hit = (int)cb->hasHit();
+    fc->ceiling_hit = cb->hasHit();
     if(fc->ceiling_hit)
     {
         fc->ceiling_normale = cb->m_hitNormalWorld;
@@ -449,7 +449,7 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
     const auto& v1 = m_transform.getBasis().getColumn(1);
     const auto& v2 = next_fc.floor_normale;
     return (next_fc.floor_point[2] > pos[2]) && (next_fc.floor_normale[2] < m_criticalSlantZComponent) &&
-           (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
+           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
 }
 
 /**
@@ -679,7 +679,7 @@ ClimbInfo Character::checkWallsClimbability()
     ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
     ret.point = m_climb.point;
 
-    if(m_heightInfo.walls_climb == 0x00)
+    if(!m_heightInfo.walls_climb)
     {
         return ret;
     }
@@ -1036,9 +1036,10 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar zAngle = btDegrees( btAtan2(floorNormal[0], floorNormal[1]) );       // from -180 deg to +180 deg
+            const btScalar zAngle = btDegrees( btAtan2(floorNormal[0], -floorNormal[1]) );       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
-            btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0] + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
+            btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
+                       + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
                 m_response.slide = CHARACTER_SLIDE_FRONT;
@@ -1360,7 +1361,7 @@ int Character::wallsClimbing()
     m_climb = *climb;
     if(!(climb->wall_hit))
     {
-        m_heightInfo.walls_climb = 0x00;
+        m_heightInfo.walls_climb = false;
         return 2;
     }
 
@@ -2318,11 +2319,11 @@ void Character::processSectorImpl() {
                                                             SECTOR_FLAG_CLIMB_SOUTH );
 
     m_heightInfo.walls_climb     = (m_heightInfo.walls_climb_dir > 0);
-    m_heightInfo.ceiling_climb   = 0x00;
+    m_heightInfo.ceiling_climb   = false;
 
     if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
     {
-        m_heightInfo.ceiling_climb = 0x01;
+        m_heightInfo.ceiling_climb = true;
     }
 
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)

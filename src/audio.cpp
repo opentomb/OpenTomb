@@ -613,10 +613,17 @@ bool StreamTrack::Load_Track(const char *path)
     ConsoleInfo::instance().notify(SYSNOTE_TRACK_OPENED, path,
                sf_info.channels, sf_info.samplerate);
 
+#ifdef AUDIO_OPENAL_FLOAT
     if(sf_info.channels == 1)
         format = AL_FORMAT_MONO_FLOAT32;
     else
         format = AL_FORMAT_STEREO_FLOAT32;
+#else
+    if(sf_info.channels == 1)
+        format = AL_FORMAT_MONO16;
+    else
+        format = AL_FORMAT_STEREO16;
+#endif
 
     rate = sf_info.samplerate;
 
@@ -666,10 +673,17 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
                             sf_info.channels, sf_info.samplerate);
             }
 
+#ifdef AUDIO_OPENAL_FLOAT
             if(sf_info.channels == 1)
                 format = AL_FORMAT_MONO_FLOAT32;
             else
                 format = AL_FORMAT_STEREO_FLOAT32;
+#else
+            if(sf_info.channels == 1)
+                format = AL_FORMAT_MONO16;
+            else
+                format = AL_FORMAT_STEREO16;
+#endif
 
             rate = sf_info.samplerate;
 
@@ -909,19 +923,32 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
 bool StreamTrack::Stream(ALuint buffer)
 {
     assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
-    std::vector<float> pcm(audio_settings.stream_buffer_size);
+#ifdef AUDIO_OPENAL_FLOAT
+    std::vector<ALfloat> pcm(audio_settings.stream_buffer_size);
+#else
+    std::vector<ALshort> pcm(audio_settings.stream_buffer_size);
+#endif
     size_t size = 0;
 
     // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
     while(size < pcm.size() - sf_info.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(float);
+#ifdef AUDIO_OPENAL_FLOAT
+        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALfloat);
         const sf_count_t samplesRead = sf_read_float(snd_file, pcm.data() + size, samplesToRead);
+#else
+        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALshort);
+        const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead);
+#endif
 
         if(samplesRead > 0)
         {
-            size += samplesRead * sizeof(float);
+#ifdef AUDIO_OPENAL_FLOAT
+            size += samplesRead * sizeof(ALfloat);
+#else
+            size += samplesRead * sizeof(ALshort);
+#endif
         }
         else
         {
@@ -1787,7 +1814,11 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
 
     // We need to change buffer size, as we're using floats here.
 
-    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(float);
+#ifdef AUDIO_OPENAL_FLOAT
+    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(ALfloat);
+#else
+    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(ALshort);
+#endif
 
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
@@ -1811,7 +1842,11 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
         return -1;
     }
 
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(float), &sfInfo);
+#ifdef AUDIO_OPENAL_FLOAT
+    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALfloat), &sfInfo);
+#else
+    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALshort), &sfInfo);
+#endif
 
     sf_close(file);
 
@@ -1826,10 +1861,17 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
         return false;
     }
 
-    std::vector<float> frames( buffer_size / sizeof(float));
+#ifdef AUDIO_OPENAL_FLOAT
+    std::vector<ALfloat> frames( buffer_size / sizeof(ALfloat));
     /*const sf_count_t samplesRead =*/ sf_readf_float(wavFile, frames.data(), frames.size());
 
     alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), buffer_size, sfInfo->samplerate);
+#else
+    std::vector<ALshort> frames( buffer_size / sizeof(ALshort));
+    /*const sf_count_t samplesRead =*/ sf_readf_short(wavFile, frames.data(), frames.size());
+
+    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
+#endif
     Audio_LogALError(0);
     return true;
 }

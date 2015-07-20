@@ -1324,7 +1324,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
         return;
     }
     //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
-    for(uint16_t anim = 0;anim < model->animations.size();anim++)
+    for(size_t anim = 0; anim < model->animations.size(); anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
         {
@@ -1332,25 +1332,33 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
         }
 
         AnimationFrame* af  = &model->animations[anim];
-        int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
+        if(af->num_anim_commands == 0)
+            continue;
+
+        assert( af->anim_command < engine_world.anim_commands.size() );
+        int16_t *pointer    = &engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
         {
-            switch(*pointer)
+            const auto command = *pointer;
+            ++pointer;
+            switch(command)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames.size()-1].move[0] = (btScalar)(*++pointer);                          // x = x;
-                    af->frames[af->frames.size()-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
-                    af->frames[af->frames.size()-1].move[1] = (btScalar)(*++pointer);                          // y = z
+                    af->frames[af->frames.size()-1].move[0] = (btScalar)pointer[0];                          // x = x;
+                    af->frames[af->frames.size()-1].move[2] =-(btScalar)pointer[1];                          // z =-y
+                    af->frames[af->frames.size()-1].move[1] = (btScalar)pointer[2];                          // y = z
                     af->frames[af->frames.size()-1].command |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
+                    pointer += 3;
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames.size()-1].v_Vertical   = *++pointer;
-                    af->frames[af->frames.size()-1].v_Horizontal = *++pointer;
+                    af->frames[af->frames.size()-1].v_Vertical   = pointer[0];
+                    af->frames[af->frames.size()-1].v_Horizontal = pointer[1];
                     af->frames[af->frames.size()-1].command |= ANIM_CMD_JUMP;
+                    pointer += 2;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -1360,22 +1368,19 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     break;
 
                 case TR_ANIMCOMMAND_PLAYSOUND:
-                    ++pointer;
-                    ++pointer;
+                    pointer += 2;
                     break;
 
                 case TR_ANIMCOMMAND_PLAYEFFECT:
+                    switch(pointer[1] & 0x3FFF)
                     {
-                        int frame = *++pointer;
-                        switch(*++pointer & 0x3FFF)
-                        {
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames.size());
-                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames.size());
-                                break;
-                        }
+                        case TR_EFFECT_CHANGEDIRECTION:
+                            af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
+                            ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, pointer[0], af->frames.size());
+                            //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames.size());
+                            break;
                     }
+                    pointer += 2;
                     break;
             }
         }
@@ -1796,6 +1801,7 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 void Res_GenRBTrees(World *world)
 {
     world->entity_tree.clear();
+    world->next_entity_id = 0;
     world->items_tree.clear();
 }
 
@@ -3211,6 +3217,7 @@ void TR_GenAnimCommands(World *world, class VT_Level *tr)
 {
     world->anim_commands.assign( tr->anim_commands+0, tr->anim_commands+tr->anim_commands_count );
     free(tr->anim_commands);
+    tr->anim_commands = nullptr;
     tr->anim_commands_count = 0;
 }
 
@@ -3354,17 +3361,20 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
         {
             // Calculate current animation anim command block offset.
+            assert( anim->anim_command < world->anim_commands.size() );
             int16_t *pointer = &world->anim_commands[ anim->anim_command ];
 
-            for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
+            for(uint32_t count = 0; count < anim->num_anim_commands; count++)
             {
-                switch(*pointer)
+                const auto command = *pointer;
+                ++pointer;
+                switch(command)
                 {
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                     case TR_ANIMCOMMAND_PLAYSOUND:
                         // Recalculate absolute frame number to relative.
                         ///@FIXED: was unpredictable behavior.
-                        *(pointer + 1) -= tr_animation->frame_start;
+                        pointer[0] -= tr_animation->frame_start;
                         pointer += 2;
                         break;
 

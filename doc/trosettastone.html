@@ -510,9 +510,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -5249,9 +5246,16 @@ as 32-byte zero-padded C strings with no extra contents.</p></div>
     <span class="c1">// 8 bytes</span>
     <span class="kt">int16_t</span> <span class="n">Sample</span><span class="p">;</span> <span class="c1">// (index into SampleIndices)</span>
     <span class="kt">int16_t</span> <span class="n">Volume</span><span class="p">;</span>
-    <span class="kt">int16_t</span> <span class="n">Unknown1</span><span class="p">;</span> <span class="c1">// sound range? (distance at which this sound can be heard?)</span>
-    <span class="kt">int16_t</span> <span class="n">Unknown2</span><span class="p">;</span> <span class="c1">// Bits 8-15: priority?, Bits 2-7: number of sound</span>
-                           <span class="c1">// samples in this group, Bits 0-1: channel number?</span>
+    <span class="kt">int16_t</span> <span class="n">SkipProbability</span><span class="p">;</span> <span class="c1">// If !=0 and ((rand()&amp;0x7fff) &gt; SkipProbability), this sound is not played</span>
+    <span class="kt">int16_t</span> <span class="n">Characteristics</span><span class="p">;</span> <span class="c1">// Bits 2-7: number of sound</span>
+                             <span class="c1">// samples in this group, Bits 0-1: channel number?</span>
+    <span class="c1">// if Characteristics&amp;0x8000: ???</span>
+    <span class="c1">// if Characteristics&amp;0x4000: play with Volume - ((rand()&amp;0x7fff)&gt;&gt;3)</span>
+    <span class="c1">// if Characteristics&amp;0x2000: ???</span>
+    <span class="c1">// if Characteristics&amp;0x2000: ???</span>
+    <span class="c1">// if Characteristics&amp;0x1000: ???</span>
+    <span class="c1">// if Characteristics&amp;0x0ff0: ???</span>
+    <span class="c1">// if ((Characteristics&gt;&gt;2)&amp;0x0c) &gt; 1: play (Sample + ((((Characteristics&gt;&gt;2)&amp;0x0f) * (rand()&amp;0x7fff))&gt;&gt;15))</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
