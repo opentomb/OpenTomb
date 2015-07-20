@@ -74,7 +74,7 @@ function keyhole_init(id)    -- Key and puzzle holes
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or getEntityActivity(object_id) >= 1 or canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0) ~= 1) then
+        if(object_id == nil or getEntityActivity(object_id) >= 1 or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
             return;
         end
         
@@ -90,7 +90,7 @@ function switch_init(id)     -- Ordinary switches
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0) ~= 1) then
+        if(object_id == nil or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
             return;
         end
         

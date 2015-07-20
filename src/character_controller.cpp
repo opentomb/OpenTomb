@@ -62,7 +62,7 @@ void Character_Create(struct entity_s *ent)
     ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
     ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
     ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
-    ret->fall_down_height = DEFAULT_FALL_DAWN_HEIGHT;
+    ret->fall_down_height = DEFAULT_FALL_DOWN_HEIGHT;
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
@@ -633,7 +633,7 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
     btScalar *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = (btScalar*)next_fc->floor_normale.m_floats;
 
     return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale.m_floats[2] < ent->character->critical_slant_z_component) &&
-           (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
+           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
 }
 
 /**
@@ -1229,10 +1229,10 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if(tv.m_floats[2] > 0.02 && tv.m_floats[2] < ent->character->critical_slant_z_component)
         {
             tv.m_floats[2] = -tv.m_floats[2];
-            spd = tv * ent->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            spd = tv * ent->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;    // slide down direction
             ang = 180.0 * atan2f(tv.m_floats[0], -tv.m_floats[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
-            t = tv.m_floats[0] * ent->transform[4] + tv.m_floats[1] * ent->transform[5];
+            t = tv.m_floats[0] * ent->transform[4 + 0] + tv.m_floats[1] * ent->transform[4 + 1];
             if(t >= 0.0)
             {
                 ent->character->resp.slide = CHARACTER_SLIDE_FRONT;

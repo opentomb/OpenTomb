@@ -2515,10 +2515,10 @@ void Con_Draw()
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         GLfloat screenSize[2] = {
-            static_cast<GLfloat>(screen_info.w),
-            static_cast<GLfloat>(screen_info.h)
+            (GLfloat)screen_info.w,
+            (GLfloat)screen_info.h
         };
-        glUniform2fvARB(shader->screenSize, 2, screenSize);
+        glUniform2fvARB(shader->screenSize, 1, screenSize);
 
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {

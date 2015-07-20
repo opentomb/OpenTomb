@@ -424,20 +424,23 @@ int lua_SameRoom(lua_State *lua)
         return 1;
     }
 
-    return 0;
+    lua_pushboolean(lua, 0);
+    return 1;
 }
 
 int lua_NewSector(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1) return 0;   // No argument specified - return.
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-
-    if(ent)
+    if(lua_gettop(lua) > 0)
     {
-        lua_pushinteger(lua, ent->current_sector == ent->last_sector);
-        return 1;
+        entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+        if(ent)
+        {
+            lua_pushboolean(lua, ent->current_sector == ent->last_sector);
+            return 1;
+        }
     }
-    return 0;
+
+    return 0;   // No argument specified - return.
 }
 
 
@@ -1773,7 +1776,7 @@ int lua_SetEntityAngles(lua_State * lua)
             ent->angles[1] = lua_tonumber(lua, 3);
             ent->angles[2] = lua_tonumber(lua, 4);
         }
-        
+
         Entity_UpdateTransform(ent);
     }
 
@@ -2192,7 +2195,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 
     if(top < 2)
     {
-        lua_pushinteger(lua, 0);
+        lua_pushboolean(lua, 0);
         return 1;
     }
 
@@ -2200,7 +2203,7 @@ int lua_CanTriggerEntity(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL || !e1->character || !e1->character->cmd.action)
     {
-        lua_pushinteger(lua, 0);
+        lua_pushboolean(lua, 0);
         return 1;
     }
 
@@ -2208,7 +2211,7 @@ int lua_CanTriggerEntity(lua_State * lua)
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if((e2 == NULL) || (e1 == e2))
     {
-        lua_pushinteger(lua, 0);
+        lua_pushboolean(lua, 0);
         return 1;
     }
 
@@ -2230,11 +2233,11 @@ int lua_CanTriggerEntity(lua_State * lua)
     if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
        (vec3_dist_sq(e1->transform+12, pos) < r))
     {
-        lua_pushinteger(lua, 1);
+        lua_pushboolean(lua, 1);
         return 1;
     }
 
-    lua_pushinteger(lua, 0);
+    lua_pushboolean(lua, 0);
     return 1;
 }
 
