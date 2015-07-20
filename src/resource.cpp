@@ -1796,6 +1796,7 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 void Res_GenRBTrees(World *world)
 {
     world->entity_tree.clear();
+    world->next_entity_id = 0;
     world->items_tree.clear();
 }
 

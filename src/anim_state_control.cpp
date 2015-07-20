@@ -1208,7 +1208,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
             }
-            else if((cmd->move[0] == -1) && ((cmd->shift) || (character->m_heightInfo.quicksand)))
+            else if((cmd->move[0] == -1) && (cmd->shift || character->m_heightInfo.quicksand))
             {
                 character->m_dirFlag = ENT_MOVE_BACKWARD;
                 ss_anim->next_state = TR_STATE_LARA_WALK_BACK;
@@ -1660,7 +1660,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->updateTransform();
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
-            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
+            else if((cmd->action == 1) && curr_fc->ceiling_climb && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 ss_anim->onFrame = ent_to_monkey_swing;
@@ -1720,7 +1720,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 }
             }
 
-            if(((character->m_moveType != MOVE_ON_FLOOR)) && (cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
+            if(((character->m_moveType != MOVE_ON_FLOOR)) && (cmd->action == 1) && curr_fc->ceiling_climb && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 ss_anim->onFrame = ent_to_monkey_swing;
@@ -1899,7 +1899,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     character->m_speed.setZero();
                 }
             }
-            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
+            else if((cmd->action == 1) && curr_fc->ceiling_climb && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 ss_anim->onFrame = ent_to_monkey_swing;
@@ -2886,7 +2886,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] = 0.0;
             character->m_dirFlag = ENT_STAY;
             ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150
-            if((cmd->action == 1) && (character->m_moveType != MOVE_MONKEYSWING) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 96.0))
+            if((cmd->action == 1) && (character->m_moveType != MOVE_MONKEYSWING) && curr_fc->ceiling_climb && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 96.0))
             {
                 character->m_moveType = MOVE_MONKEYSWING;
                 character->setAnimation(TR_ANIMATION_LARA_MONKEY_IDLE, 0);

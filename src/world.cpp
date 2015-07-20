@@ -502,11 +502,11 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
     {
         if(std::shared_ptr<Entity> ent = getEntityByID(id))
         {
-            if(pos != NULL)
+            if(pos != nullptr)
             {
                 ent->m_transform.getOrigin() = *pos;
             }
-            if(ang != NULL)
+            if(ang != nullptr)
             {
                 ent->m_angles = *ang;
                 ent->updateTransform();
@@ -518,7 +518,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             }
             else
             {
-                ent->m_self->room = NULL;
+                ent->m_self->room = nullptr;
             }
 
             return ent->id();
@@ -528,19 +528,20 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         std::shared_ptr<Entity> ent;
         if(id < 0)
         {
-            ent = std::make_shared<Entity>(entity_tree.size());
-            entity_tree[ent->id()] = ent;
+            ent = std::make_shared<Entity>(next_entity_id);
+            entity_tree[next_entity_id] = ent;
+            ++next_entity_id;
         }
         else
         {
             ent = std::make_shared<Entity>(id);
         }
 
-        if(pos != NULL)
+        if(pos != nullptr)
         {
             ent->m_transform.getOrigin() = *pos;
         }
-        if(ang != NULL)
+        if(ang != nullptr)
         {
             ent->m_angles = *ang;
             ent->updateTransform();
@@ -552,7 +553,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         else
         {
-            ent->m_self->room = NULL;
+            ent->m_self->room = nullptr;
         }
 
         ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
@@ -574,7 +575,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         ent->genEntityRigidBody();
 
         ent->rebuildBV();
-        if(ent->m_self->room != NULL)
+        if(ent->m_self->room != nullptr)
         {
             ent->m_self->room->addEntity(ent.get());
         }

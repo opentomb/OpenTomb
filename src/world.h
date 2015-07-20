@@ -380,7 +380,8 @@ struct World
     std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
     SkeletalModel    *sky_box = nullptr;                // global skybox
 
-    std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
+    std::map<uint32_t, std::shared_ptr<Entity>   > entity_tree;            // tree of world active objects
+    uint32_t                                       next_entity_id = 0;
     std::map<uint32_t, std::shared_ptr<BaseItem> > items_tree;             // tree of world items
 
     uint32_t                    type = 0;
