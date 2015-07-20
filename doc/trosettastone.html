@@ -510,6 +510,9 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
+th.tableblock.grid-none, td.tableblock.grid-none {
+  border-style: hidden;
+}
 
 /*
  * manpage specific
@@ -2988,7 +2991,7 @@ width:75%;
         <span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
         <span class="kt">float</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>       <span class="c1">// Colour of the light</span>
 
-       <span class="kt">uint32_t</span> <span class="n">Separator</span>    <span class="c1">// Dummy value = 0xCDCDCDCD (CD = Core Design?)</span>
+       <span class="kt">uint32_t</span> <span class="n">Separator</span>    <span class="c1">// Dummy value = 0xCDCDCDCD</span>
 
         <span class="kt">float</span> <span class="n">In</span><span class="p">;</span>            <span class="c1">// Cosine of the IN value for light / size of IN value</span>
         <span class="kt">float</span> <span class="n">Out</span><span class="p">;</span>           <span class="c1">// Cosine of the OUT value for light / size of OUT value</span>
@@ -3028,7 +3031,6 @@ $\mathnormal{LightDirectionVectorZ} = \cos(X) * \cos(Y)$
 </li>
 </ul></div>
 <div class="paragraph"><p><span class="monospaced">x2</span>, <span class="monospaced">y2</span>, <span class="monospaced">z2</span>, <span class="monospaced">dx2</span>, <span class="monospaced">dy2</span> and <span class="monospaced">dz2</span> values repeat previous corresponding information in long data types instead of floats.</p></div>
-<div class="paragraph"><p><span class="monospaced">Separator</span> and <span class="monospaced">Filler</span> value (0xCD) is very common in TR5 format, presumably it&#8217;s a programmer&#8217;s joke abbreviating studio&#8217;s name (Core Design = CD).</p></div>
 </div>
 <div class="sect4">
 <h5 id="_room_vertex_structure">Room Vertex structure</h5>
@@ -3781,7 +3783,7 @@ width:100%;
 </span></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Collisional portal layout. Here, blue sectors are wall sectors around each room. Green sector is a two-way collisional portal, which is placed on both rooms</em> overlapped sectors.'</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Collisional portal layout. Here, blue sectors are wall sectors around each room. Green sector is a two-way collisional portal, which is placed on both rooms.</em></p></td>
 </tr>
 </tbody>
 </table>
@@ -6608,7 +6610,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 02:37:32 MSK
+Last updated 2015-07-21 02:51:52 MSK
 </div>
 </div>
 </body>
