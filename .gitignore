@@ -7,7 +7,7 @@
 *.dll
 *.bak
 *.log
-*.png
+screen_*.*
 *.bmarks
 *.cbp
 *.cscope_file_list
