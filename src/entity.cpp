@@ -806,13 +806,16 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
     AnimationFrame* af  = &ss_anim->model->animations[ss_anim->current_animation];
     if(af->num_anim_commands <= 255)
     {
-        uint32_t count        = af->num_anim_commands;
+        assert(af->anim_command < engine_world.anim_commands.size());
         int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
         int8_t   random_value = 0;
 
-        for(uint32_t i = 0; i < count; i++, pointer++)
+        for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
-            switch(*pointer)
+            assert( pointer < &engine_world.anim_commands.back() );
+            const auto command = *pointer;
+            ++pointer;
+            switch(command)
             {
             case TR_ANIMCOMMAND_SETPOSITION:
                 // This command executes ONLY at the end of animation.
@@ -830,7 +833,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
 
             case TR_ANIMCOMMAND_KILL:
                 // This command executes ONLY at the end of animation.
-                if(ss_anim->current_frame == static_cast<int>(af->frames.size() - 1))
+                if(ss_anim->current_frame == static_cast<int>(af->frames.size()) - 1)
                 {
                     kill();
                 }
@@ -838,11 +841,9 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                 break;
 
             case TR_ANIMCOMMAND_PLAYSOUND:
-                int16_t sound_index;
-
-                if(ss_anim->current_frame == *++pointer)
+                if(ss_anim->current_frame == pointer[0])
                 {
-                    sound_index = *++pointer & 0x3FFF;
+                    int16_t sound_index = pointer[1] & 0x3FFF;
 
                     // Quick workaround for TR3 quicksand.
                     if((getSubstanceState() == Substance::QuicksandConsumed) ||
@@ -851,12 +852,12 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                         sound_index = 18;
                     }
 
-                    if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                    if(pointer[1] & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         if(getSubstanceState() == Substance::WaterShallow)
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
-                    else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                    else if(pointer[1] & TR_ANIMCOMMAND_CONDITION_LAND)
                     {
                         if(getSubstanceState() != Substance::WaterShallow)
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
@@ -869,7 +870,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                 }
                 else
                 {
-                    pointer++;
+                    pointer += 2;
                 }
                 break;
 
@@ -877,9 +878,9 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                 // Effects (flipeffects) are various non-typical actions which vary
                 // across different TR game engine versions. There are common ones,
                 // however, and currently only these are supported.
-                if(ss_anim->current_frame == *++pointer)
+                if(ss_anim->current_frame == pointer[0])
                 {
-                    switch(*++pointer & 0x3FFF)
+                    switch(pointer[1] & 0x3FFF)
                     {
                     case TR_EFFECT_SHAKESCREEN:
                         if(engine_world.character)
