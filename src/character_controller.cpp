@@ -449,7 +449,7 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
     const auto& v1 = m_transform.getBasis().getColumn(1);
     const auto& v2 = next_fc.floor_normale;
     return (next_fc.floor_point[2] > pos[2]) && (next_fc.floor_normale[2] < m_criticalSlantZComponent) &&
-           (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
+           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
 }
 
 /**
