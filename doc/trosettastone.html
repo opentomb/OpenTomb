@@ -2096,7 +2096,7 @@ width:100%;
 <div class="attribution">
 </div></div>
 <div class="paragraph"><p>The purpose of <em>TRosettaStone 3</em> is to replace original document and serve as the comprehensive source of information for anyone willing to participate in classic-era Tomb Raider software development. We will use original TRosettaStone as a basis, heavily borrowing from E. Popov revision. Also, this document will widely borrow information from TREP user&#8217;s manual, NGLE manual, and a bunch of forum threads and messages concerning internal game engine structures.</p></div>
-<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily at simply exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created by and as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will sometimes explore not only game file formats, but also internal game logic, procedures and other related aspects. It will be updated synchronously with development of <em>OpenTomb</em>, one of such reimplementation projects, which has received lots of feedback from the community.</p></div>
+<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily at exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created by and as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will sometimes explore not only game file formats, but also internal game logic, procedures and other related aspects. It will be updated synchronously with development of <em>OpenTomb</em>, one of such reimplementation projects, which has received lots of feedback from the community.</p></div>
 <div class="sect2">
 <h3 id="_description">1.1. Description</h3>
 <div class="paragraph"><p>This document contains detailed descriptions of the classic-era Tomb Raider data file formats. It is assumed that the reader has knowledge and experience programming in C or C++ and has at least a passing familiarity with graphics programming. This document is self-contained; all hyperlinks refer only to itself. All information in this document was derived independently, without the aid or assistance of anyone at Core Design or Eidos. As such, the information in this document may contain errors or omissions, and many structure and variable names were deduced from the interpretation of the data (and therefore could be misleading or completely wrong). However, we re-use certain variable and function names from original Tomb Raider debug builds and mappings/symbols from the leaked Tomb Raider Chronicles PSX SDK. All the information in this document was tested and is therefore plausible, but could also be a misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is a spare-time project that set out to document the Tomb Raider file formats.</p></div>
@@ -2174,7 +2174,7 @@ width:100%;
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>When there is some version-specific info about certain structures or methods, this information will be marked as <strong>TRx ONLY</strong>, where <strong>x</strong> means game version(s). Additionally, if the information is specific to TR2 onwards, it is highlighted in <strong><span class="red">RED</span></strong>. Likewise, information specific to TR3 is highlighted in <strong><span class="green">GREEN</span></strong>. Information specific to Tomb Raider IV(TR4) is highlighted in <strong><span class="blue">BLUE</span></strong>, and Tomb Raider Chronicles info is highlighted in <strong><span class="purple">PURPLE</span></strong>.</p></div>
+<div class="paragraph"><p>When there is version-specific info about certain structures or methods, this information will be marked as <strong>TRx ONLY</strong>, where <strong>x</strong> means the game version(s). Additionally, if the information is specific to TR2 onwards, it is highlighted in <strong><span class="red">RED</span></strong>. Likewise, information specific to TR3 is highlighted in <strong><span class="green">GREEN</span></strong>. Information specific to Tomb Raider IV(TR4) is highlighted in <strong><span class="blue">BLUE</span></strong>, and Tomb Raider Chronicles info is highlighted in <strong><span class="purple">PURPLE</span></strong>.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_current_unknowns">1.3. Current unknowns</h3>
@@ -2227,29 +2227,20 @@ Clarify fog bulb values which affect its radius.
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview">2.1. Overview</h3>
-<div class="paragraph"><p>In this section, we&#8217;ll try to describe basic file types of Tomb Raider, as well as basic data types used in structures.</p></div>
+<div class="paragraph"><p>In this section, we&#8217;ll try to describe basic file types of Tomb Raider, as well as data types used in the structures.</p></div>
 <div class="sect3">
 <h4 id="_file_types">2.1.1. File types</h4>
 <div class="paragraph"><p>Tomb Raider is driven by various sets of files&#8201;&#8212;&#8201;level files, script files, FMVs, audio tracks and sound files. In TR4 and TR5, there is also specific file type which contains cutscene data&#8201;&#8212;&#8201;<em>cutseq pack</em>.</p></div>
 <div class="sect4">
 <h5 id="_the_script_files">The script files</h5>
 <div class="paragraph"><p>The script file structure differs from version to version.</p></div>
-<div class="paragraph"><p>In TR1, all script info was embedded into executable (<span class="monospaced">tomb.exe</span>). TR2 and TR3 had unified <span class="monospaced">TOMBPC.DAT</span> file, which contains all the text strings describing the various elements in the game (e.g. the game engine knows about <em>&#8220;Key 1&#8221;</em>; it looks in <span class="monospaced">TOMBPC.DAT</span> to determine the name to be displayed in Lara&#8217;s inventory, such as <em>&#8220;Rusty Key&#8221;</em> or <em>&#8220;Taste rostige&#8221;</em> or <em>&#8220;Cle Rouillee&#8221;</em>), the level and cut-scene filenames (e.g. <span class="monospaced">WALL.TR2</span>, <span class="monospaced">CUT3.TR2</span>), the order in which they are to be played, and various per-level and per-game configuration options (e.g. what weapons and objects Lara starts the level with, whether or not the "cheat" codes work, etc.).</p></div>
-<div class="paragraph"><p>TR4 and TR5 introduced other script structure, where actual script defining gameflow was separated from text strings used in game&#8201;&#8212;&#8201;hence, both TR4 and TR5 have two <span class="monospaced">.DAT</span> files&#8201;&#8212;&#8201;<span class="monospaced">SCRIPT.DAT</span> and <span class="monospaced">LANGUAGE.DAT</span>, where <span class="monospaced">LANGUAGE</span> differs depending on regional origin of the game&#8201;&#8212;&#8201;<span class="monospaced">US.DAT</span>, <span class="monospaced">FRENCH.DAT</span>, <span class="monospaced">JAPANESE.DAT</span>, and so on.</p></div>
+<div class="paragraph"><p>In TR1, all script info was embedded into executable (<span class="monospaced">tomb.exe</span>) and thus is <em>hardcoded</em>. TR2 and TR3 had unified <span class="monospaced">TOMBPC.DAT</span> file, which contains all the text strings describing the various elements in the game (e.g. the game engine knows about <em>&#8220;Key 1&#8221;</em>; it looks in <span class="monospaced">TOMBPC.DAT</span> to determine the name to be displayed in Lara&#8217;s inventory, such as <em>&#8220;Rusty Key&#8221;</em> or <em>&#8220;Taste rostige&#8221;</em> or <em>&#8220;Cle Rouillee&#8221;</em>), the level and cut-scene filenames (e.g. <span class="monospaced">WALL.TR2</span>, <span class="monospaced">CUT3.TR2</span>), the order in which they are to be played, and various per-level and per-game configuration options (e.g. what weapons and objects Lara starts the level with, whether or not the &#8220;cheat&#8221; codes work, etc.).</p></div>
+<div class="paragraph"><p>TR4 and TR5 introduced a new script format, where the actual script defining the gameflow was separated from text strings used in game&#8201;&#8212;&#8201;hence, both TR4 and TR5 have two <span class="monospaced">.DAT</span> files&#8201;&#8212;&#8201;<span class="monospaced">SCRIPT.DAT</span> and <span class="monospaced">LANGUAGE.DAT</span>, where <span class="monospaced">LANGUAGE</span> differs depending on regional origin of the game&#8201;&#8212;&#8201;<span class="monospaced">US.DAT</span>, <span class="monospaced">FRENCH.DAT</span>, <span class="monospaced">JAPANESE.DAT</span>, and so on.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_the_level_files">The level files</h5>
 <div class="paragraph"><p>The level files, <span class="monospaced">{level-name}.PHD/TUB/TR2/TR4/TRC</span>, contain everything about the level, including the geographical geometry, the geometry (meshes) of all animate and inanimate objects in the level, all the textures and colour data, all animation data, index information (and, in TR1, TR4 and TR5&#8201;&#8212;&#8201;also the <em>actual sound sample data</em>) for all sounds, accessibility maps&#8201;&#8212;&#8201;everything necessary to run the game. For whatever reason, Core has included everything in one file instead of breaking it up into logical groupings; this means that every level contains all the meshes, textures, sound information, and animation data for Lara and all of her weapons. There are a fair number of other redundancies, too.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">
-<div class="paragraph"><p>Since TR4, level file is divided <em>in several chunks</em>, each of them being compressed using <em>zlib</em>. Usually, each chunk of compressed data is preceded by two values defining <em>uncompressed size</em> of the chunk and <em>compressed size</em> of the chunk. Therefore, engine at first allocates a memory block equal to <em>uncompressed size</em>, and decompresses a chunk with <em>compressed size</em> into allocated memory.</p></div>
-</td>
-</tr></table>
-</div>
+<div class="paragraph"><p>Since TR4, the level file is divided into <em>several chunks</em>, each of them being compressed with <em>zlib</em>. Usually, each chunk of compressed data is preceded by two 32-bit unsigned integers defining the <em>uncompressed size</em> of the chunk and the <em>compressed size</em> of the chunk. Therefore, the engine allocates an empty buffer equal to the <em>uncompressed size</em> of a specific chunk, and another buffer equal to the <em>compressed size</em>. The compressed data is loaded directly within it based on the <em>compressed size</em>. The compressed data is then decompressed into the result buffer and the buffer containing the compressed data is destroyed.</p></div>
 <div class="paragraph"><p>Another type of compression is used for <em>sound samples</em>&#8201;&#8212;&#8201;they are kept in <em>MS-ADPCM</em> wave format, preceiding with <em>uncompressed size</em> and <em>compressed size</em> of the sample.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -4328,7 +4319,7 @@ TrigAction <span class="monospaced">0x03</span>: <strong>Flip Map</strong>
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>From TR1 to TR3, <span class="monospaced">FlipMap</span> array was merely used as a &#8220;hint table&#8221; to tell the engine if it should flip <em>all rooms at once``. That is, to check and apply another FlipMap entry, alternate rooms should have been reverted to previous state before&#8201;&#8212;&#8201;that&#8217;s the purpose of next two listed trigger actions. However, in TR4 algorithm was changed&#8201;&#8212;&#8201;each &#8220;flippable&#8221; room now bears additional parameter called &#8220;alternate group&#8221;, which strictly tells an engine to flip it 'only when room alternate group is equal to FlipMap <span class="monospaced">Parameter</span> value</em>. This change in algorithm made next two trigger actions unnecessary in TR4-5 (however, they are still available).</p></div>
+<div class="paragraph"><p>From TR1 to TR3, <span class="monospaced">FlipMap</span> array was merely used as a &#8220;hint table&#8221; to tell the engine if it should flip <em>all rooms at once</em>. That is, to check and apply another FlipMap entry, alternate rooms should have been reverted to previous state before&#8201;&#8212;&#8201;that&#8217;s the purpose of next two listed trigger actions. However, in TR4 algorithm was changed&#8201;&#8212;&#8201;each &#8220;flippable&#8221; room now bears additional parameter called &#8220;alternate group&#8221;, which strictly tells an engine to flip it <em>only when room alternate group is equal to FlipMap <span class="monospaced">Parameter</span> value</em>. This change in algorithm made next two trigger actions unnecessary in TR4-5 (however, they are still available).</p></div>
 </td>
 </tr></table>
 </div>
@@ -6493,7 +6484,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-20 17:38:10 MSK
+Last updated 2015-07-20 17:50:09 MSK
 </div>
 </div>
 </body>
