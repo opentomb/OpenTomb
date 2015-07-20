@@ -2507,13 +2507,61 @@ textured rectangle will have its vertices mapped onto all 4 vertices of an objec
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bit 0:</em> if set, face has <em>additive alpha blending</em> (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr2_object_texture">[tr2_object_texture]</a> is 2).
+<em>Bit 0:</em> if set, face has <em>additive alpha blending</em> (same meaning that when the <span class="monospaced">Attribute</span> field of <a href="#tr2_object_texture">[tr2_object_texture]</a> is 2, but this flag overrides it).
 </p>
 </li>
+</ul></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:80%;
+">
+<col style="width:50%;">
+<col style="width:50%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/face_blend.jpg" alt="illustrations/face_blend.jpg" title="Bit 0 set">
+</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/face_noblend.jpg" alt="illustrations/face_noblend.jpg" title="Bit 0 not set">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Bit 0 set, blending enabled</em></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Bit 0 not set, blending disabled</em></p></td>
+</tr>
+</tbody>
+</table>
+<div class="ulist"><ul>
 <li>
 <p>
 <em>Bits 1-7:</em> strength of <em>environment mapping</em> effect (so-called &#8220;shiny effect&#8221; in TRLE community). Environment map is derived from special pre-rendered texture. The bigger the value is, the more visible the effect is.
 </p>
+</li>
+</ul></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:40%;
+">
+<col style="width:50%;">
+<col style="width:50%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/shine-on.jpg" alt="illustrations/shine-on.jpg" title="Bit 0 set">
+</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/shine-off.jpg" alt="illustrations/shine-off.jpg" title="Bit 0 not set">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Shiny effect at max</em></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>No shiny effect</em></p></td>
+</tr>
+</tbody>
+</table>
 <div class="olist arabic"><ol class="arabic">
 <li>
 <p>
@@ -2526,8 +2574,6 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 </p>
 </li>
 </ol></div>
-</li>
-</ul></div>
 </div>
 <div class="sect3">
 <h4 id="_triangular_face_definition">2.2.4. Triangular face definition</h4>
@@ -3674,6 +3720,16 @@ width:30%;
 </tbody>
 </table>
 <div class="paragraph"><p><span class="monospaced">Function</span> defines the type of action that must be done with current FloorData entry, and <span class="monospaced">SubFunction</span> is usually used in that action&#8217;s conditions and case switches (if there are any). If there are no any special conditions for a given <span class="monospaced">Function</span>, then <span class="monospaced">SubFunction</span> <em>is not used</em>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>When parsing <span class="monospaced">FDSetup</span> for TR3, use only the lower 5 bits (0..4) to find the <span class="monospaced">Function</span> value, because some of TR3 <em>triangulation functions</em> use the upper 3 bits of the lower byte for other purpose. However, this will also work correctly in TR1 and TR2.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>If <span class="monospaced">EndData</span> is set, there should be no more <em>similar</em> FloorData entries (after the current one) in the <span class="monospaced">FloorData[]</span> array&#8201;&#8212;&#8201;so further parsing must be stopped.  Otherwise, the following <span class="monospaced">uint16_t</span> should be interpreted after the current one in the same manner.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -3713,15 +3769,31 @@ information.</p></div>
 <h4 id="_function_span_class_monospaced_0x01_span_8201_8212_8201_portal_sector">3.4.1. Function <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;Portal Sector</h4>
 <div class="paragraph"><p><em>SubFunction is not used</em></p></div>
 <div class="paragraph"><p>The <em>next</em> <span class="monospaced">FloorData</span> entry is the number of the room that this sector is a collisional portal to.
-An entity that arrives in a sector with this function present will gets its room membership changed to this function&#8217;s operand, without any change in position.</p></div>
-<div class="paragraph"><p><strong>EDITOR NOTE:</strong> add illustration here!</p></div>
+An entity that arrives in a sector with this function present will gets its room membership changed to provided room number, without any change in position.</p></div>
+<div class="paragraph"><p>To understand what exactly happens when room membership is changed, you must understand how collisional portals work in Tomb Raider&#8217;s 4D space. When two rooms are connected with portal, it means that they also <em>overlap</em> within a distance of one sector (because this sector contains two-way portal in both of the connected rooms). This way, when room is changed, it remains unnoticed by the player, cause portal sectors are interconnected:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/doors.png" alt="illustrations/doors.png" title="Floor sector triangulation types">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Collisional portal layout. Here, blue sectors are wall sectors around each room. Green sector is a two-way collisional portal, which is placed on both rooms</em> overlapped sectors.'</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect3">
 <h4 id="_function_span_class_monospaced_0x02_span_8201_8212_8201_floor_slant">3.4.2. Function <span class="monospaced">0x02</span>&#8201;&#8212;&#8201;Floor Slant</h4>
 <div class="paragraph"><p><em>SubFunction is not used</em></p></div>
 <div class="paragraph"><p>The next <span class="monospaced">FloorData</span> entry contains two <span class="monospaced">uint8_t</span> <em>slant values</em> for the <em>floor</em> of this sector.
 Slant values are specified in increments of 256 units (so-called <em>clicks</em> in TRLE terms). The high byte is the <em>Z slope</em>, while the low byte is the <em>X slope</em>. If the X slope is greater than zero, then its value is added to the floor heights of corners <span class="monospaced">00</span> and <span class="monospaced">01</span>. If it is less than zero, then its value is subtracted from the floor heights of corners <span class="monospaced">10</span> and <span class="monospaced">11</span>. If the Z slope is greater than zero, then its value is added to the floor heights of corners <span class="monospaced">00</span> and <span class="monospaced">10</span>. If it is less than zero, then its value is subtracted from the floor heights of corners <span class="monospaced">01</span> and <span class="monospaced">11</span>.</p></div>
-<div class="paragraph"><p><strong>EDITOR NOTE:</strong> add illustration here!</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -3738,7 +3810,6 @@ Slant values are specified in increments of 256 units (so-called <em>clicks</em>
 <div class="paragraph"><p><em>SubFunction is not used</em></p></div>
 <div class="paragraph"><p>The next <span class="monospaced">FloorData</span> entry contains two <span class="monospaced">uint8_t</span> <em>slant values</em> for the <em>ceiling</em> of this sector.
 Slant values are specified in increments of 256 units. The high byte is the <em>Z slope</em>, while the low byte is the <em>X slope</em>. If the X slope is greater than zero, then its value is subtracted from the ceiling heights of corners <span class="monospaced">10</span> and <span class="monospaced">11</span>. If it is less than zero, then its value is added to the ceiling heights of corners <span class="monospaced">00</span> and <span class="monospaced">01</span>. If the Z slope is greater than zero, then its value is subtracted from the ceiling heights of corners <span class="monospaced">00</span> and <span class="monospaced">10</span>. If it is less than zero, then its value is added to the ceiling heights of corners <span class="monospaced">01</span> and <span class="monospaced">11</span>.</p></div>
-<div class="paragraph"><p><strong>EDITOR NOTE:</strong> add illustration here!</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -3835,212 +3906,205 @@ width:30%;
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>Similarly to <em>slant</em> functions, <em>triangulation</em> functions define the floor and ceiling slopes, but besides, they also specify <em>dividing up the floors and ceilings into triangles along either of the two diagonals</em>. Also, one of the triangles may be a collisional portal to the room above (if in the ceiling) or to the room below (if in the floor).</p></div>
-<div class="paragraph"><p><strong><span class="big red">Old TRosettaStone text ahead&#8201;&#8212;&#8201;current progress is above this bookmark.</span></strong></p></div>
-<div class="paragraph"><p>Each triangulation function word must be parsed as follows:</p></div>
+<div class="paragraph"><p>Similarly to <em>slant</em> functions, <em>triangulation</em> functions define the floor and ceiling corner heights, but besides, they also specify <em>dividing up the floors and ceilings into triangles along either of the two diagonals</em>. Also, one of the triangles may be a collisional portal to the room above (if in the ceiling) or to the room below (if in the floor).</p></div>
+<div class="paragraph"><p>Each triangulation function <span class="monospaced">uint16_t</span> must be parsed 'differently, not like ordinary <span class="monospaced">FDSetup</span> entry:</p></div>
 <table class="tableblock frame-all grid-all"
 style="
+margin-left:auto; margin-right:auto;
 width:40%;
 ">
 <col style="width:33%;">
 <col style="width:66%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-4</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Function value</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Function</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0..4 (<span class="monospaced">0x001F</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 5-9</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t00</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$H_{\triangle1}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 5..9 (<span class="monospaced">0x03E0</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 10-14</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t01</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$H_{\triangle2}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 10..14 (<span class="monospaced">0x7C00</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bit 15</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Continuation bit</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">EndData</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bit 15 (<span class="monospaced">0x8000</span>)</p></td>
 </tr>
 </tbody>
 </table>
-<div class="paragraph"><p>where t00 and t01 are signed.</p></div>
-<div class="paragraph"><p>It is followed by <em>one extra</em> <span class="monospaced">uint16_t</span> to be parsed as follows:</p></div>
+<div class="paragraph"><p>$H_{\triangle1}$ and $H_{\triangle2}$ are signed values, and replace <span class="monospaced">FDSetup</span>'s <span class="monospaced">SubFunction</span> field.</p></div>
+<div class="paragraph"><p>Own triangulation function&#8217;s <span class="monospaced">uint16_t</span> is followed by <em>one extra</em> <span class="monospaced">uint16_t</span> to be parsed as follows:</p></div>
 <table class="tableblock frame-all grid-all"
 style="
-width:30%;
+margin-left:auto; margin-right:auto;
+width:40%;
+">
+<col style="width:33%;">
+<col style="width:66%;">
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$\DeltaC_{10}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0..3 (<span class="monospaced">0x000F</span>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$\DeltaC_{00}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 4..7 (<span class="monospaced">0x00F0</span>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$\DeltaC_{01}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 8..11 (<span class="monospaced">0x0F00</span>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">$\DeltaC_{11}$</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 12..15 (<span class="monospaced">0xF000</span>)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>All four values here are unsigned.</p></div>
+<div class="sect4">
+<h5 id="_the_triangulation_formula">The Triangulation Formula</h5>
+<div class="paragraph"><p>The idea behind this set up is dividing each sector rectangle into <em>two independent triangles</em>, and adjust each triangle height by combination of <em>corner</em> and <em>triangle</em> heights.  To get each triangle&#8217;s individual corner height, you should use this formula:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><div><div class="paragraph"><p>$H_{\angle} = H_{floor} + (\max(\DeltaC_{10}, \DeltaC_{00}, \DeltaC_{01}, \DeltaC_{11}) - \DeltaC_{n} \times 1024 )$</p></div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>&#8230;where $H_{\angle}$ is <em>absolute floor height</em> specified in <span class="monospaced">tr_room_sector</span>'s <span class="monospaced">Floor</span> field, and $\DeltaC_{n}$ is triangle&#8217;s individual corner height.</p></div>
+<div class="paragraph"><p>While four corner height values are shared by both triangles, <em>triangle height values specify additional overall height of individual triangle</em>. Therefore, sector corner heights may or may not be shared between two triangles:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:80%;
 ">
 <col style="width:50%;">
 <col style="width:50%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-3</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t10</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/tri-notshared.png" alt="illustrations/tri-notshared.png" title="Corner heights are not shared">
+</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/tri-shared.png" alt="illustrations/tri-shared.png" title="Corner heights are shared">
+</span></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 4-7</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t11</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 8-11</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t12</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 12-15</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t13</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Corner heights are not shared</em></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Corner heights are shared</em></p></td>
 </tr>
 </tbody>
 </table>
-<div class="paragraph"><p>where <span class="monospaced">t10</span>, <span class="monospaced">t11</span>, <span class="monospaced">t12</span>, and <span class="monospaced">t13</span> are unsigned.</p></div>
-<div class="paragraph"><p>Here are the triangulations and vertex adjustments; for some of the functions, one of the triangles is a portal to another room:</p></div>
+<div class="paragraph"><p>The way engine interprets <em>triangle height values</em> $H_{\triangle1}$ and $H_{\triangle2}$ is not exactly known&#8201;&#8212;&#8201;however, <em>meta2tr</em> understands them and uses them to create so-called <em>diagonal steps</em>, example of which is pictured on the left side. There is no case of diagonal steps in original games, but they may exist in levels edited with <em>meta2tr</em>.</p></div>
+<div class="paragraph"><p>Overall, there are 12 different triangulation functions, which can be divided into two pairs of groups&#8201;&#8212;&#8201;one pair of groups is for floor, and another pair is for ceiling. Each pair is categorized by <em>split direction</em>, and each group is categorized if it&#8217;s floor or ceiling. In each group, there are three functions&#8201;&#8212;&#8201;first function denotes that <em>both</em> triangles in sector are solid, second and third functions denote that <em>one of triangles is a collisional vertical portal</em>. When function denotes a vertical portal, target room of a portal is taken from <span class="monospaced">tr_room_sector</span> structure&#8201;&#8212;&#8201;<span class="monospaced">RoomBelow</span> for floor functions, and <span class="monospaced">RoomAbove</span> for ceiling functions.</p></div>
+<div class="paragraph"><p>Here is an example illustration depicting sectors with all possible floor triangulation functions. Ceiling triangulation happens in similar manner.</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/tri-types.png" alt="illustrations/tri-types.png" title="Floor sector triangulation types">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Floor sector triangulation types.</em>
+<em>Black triangles depict vertical collisional portal to different room.</em></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p><span class="monospaced">X</span> axis in world coordinates also may be considered <em>north</em> for more simple reference (because you can always check compass direction in actual game engines, at least in TR1 and TR4).</p></div>
+</div>
 <div class="sect4">
-<h5 id="_functions_span_class_monospaced_0x07_span_span_class_monospaced_0x0b_span_span_class_monospaced_0x0c_span">Functions <span class="monospaced">0x07</span>, <span class="monospaced">0x0b</span>, <span class="monospaced">0x0c</span></h5>
+<h5 id="_functions_span_class_monospaced_0x07_span_span_class_monospaced_0x0b_span_span_class_monospaced_0x0c_span">Functions <span class="monospaced">0x07</span>, <span class="monospaced">0x0B</span>, <span class="monospaced">0x0C</span></h5>
+<div class="paragraph"><p>These functions define <em>floor</em> triangles split in the <em>northwest-southeast</em> direction.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x0b</span>: is a portal)
+<span class="monospaced">0x07</span>&#8201;&#8212;&#8201;Both triangles are solid.
 </p>
 </li>
 <li>
 <p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0c</span>: is a portal)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t00 + t01 + t10 + t12</span></p></div>
-<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+<span class="monospaced">0x0B</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>southwest</em> is a <em>collisional portal</em>.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+<span class="monospaced">0x0C</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>northeast</em> is a <em>collisional portal</em>.
 </p>
 </li>
 </ul></div>
 </div>
 <div class="sect4">
-<h5 id="_functions_span_class_monospaced_0x08_span_span_class_monospaced_0x0d_span_span_class_monospaced_0x0e_span">Functions <span class="monospaced">0x08</span>, <span class="monospaced">0x0d</span>, <span class="monospaced">0x0e</span></h5>
+<h5 id="_functions_span_class_monospaced_0x08_span_span_class_monospaced_0x0d_span_span_class_monospaced_0x0e_span">Functions <span class="monospaced">0x08</span>, <span class="monospaced">0x0D</span>, <span class="monospaced">0x0E</span></h5>
+<div class="paragraph"><p>These functions define <em>floor</em> triangles split in the <em>northeast-southwest</em> direction.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x0d</span>: is a portal) <br>
+<span class="monospaced">0x08</span>&#8201;&#8212;&#8201;Both triangles are solid.
 </p>
 </li>
 <li>
 <p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x0e</span>: is a portal)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Overall adjustment: adj = t00 + t01 + t11 + t13</p></div>
-<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+<span class="monospaced">0x0D</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>southwest</em> is a <em>collisional portal</em>.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+<span class="monospaced">0x0E</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>northwest</em> is a <em>collisional portal</em>.
 </p>
 </li>
 </ul></div>
 </div>
 <div class="sect4">
-<h5 id="_functions_span_class_monospaced_0x09_span_span_class_monospaced_0x0f_span_span_class_monospaced_0x10_span">Functions <span class="monospaced">0x09</span>, <span class="monospaced">0x0f</span>, <span class="monospaced">0x10</span></h5>
+<h5 id="_functions_span_class_monospaced_0x09_span_span_class_monospaced_0x0f_span_span_class_monospaced_0x10_span">Functions <span class="monospaced">0x09</span>, <span class="monospaced">0x0F</span>, <span class="monospaced">0x10</span></h5>
+<div class="paragraph"><p>These functions define <em>ceiling</em> triangles split in the <em>northwest</em> direction.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0f</span>: is a portal)
+<span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Both triangles are solid.
 </p>
 </li>
 <li>
 <p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x10</span>: is a portal)
+<span class="monospaced">0x0F</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>southwest</em> is a <em>collisional portal</em>.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">0x10</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>northeast</em> is a <em>collisional portal</em>.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t10 + t12</span></p></div>
-<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
+</div>
+<div class="sect4">
+<h5 id="_functions_span_class_monospaced_0x0a_span_span_class_monospaced_0x11_span_span_class_monospaced_0x12_span">Functions <span class="monospaced">0x0A</span>, <span class="monospaced">0x11</span>, <span class="monospaced">0x12</span></h5>
+<div class="paragraph"><p>These functions define <em>ceiling</em> triangles split in the <em>northeast</em> direction.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+<span class="monospaced">0x0A</span>&#8201;&#8212;&#8201;Both triangles are solid.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+<span class="monospaced">0x11</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>northwest</em> is a <em>collisional portal</em>.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">Functions <span class="monospaced">0x0a</span>, <span class="monospaced">0x10</span>, <span class="monospaced">0x11</span></div><ul>
-<li>
-<p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x11</span>: is a portal)
-</p>
-</li>
-<li>
-<p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x12</span>: is a portal)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t11 + t13</span></p></div>
-<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
+<span class="monospaced">0x12</span>&#8201;&#8212;&#8201;Triangle pointing its right angle to the <em>southeast</em> is a <em>collisional portal</em>.
 </p>
 </li>
 </ul></div>
@@ -4052,10 +4116,46 @@ Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="m
 <div class="paragraph"><p>Sets monkey-swingability of the ceiling in specified sector.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_function_span_class_monospaced_0x14_span_8201_8212_8201_minecart_left_in_tr3_or_trigger_triggerer_mark_tr4_5">3.4.9. Function <span class="monospaced">0x14</span>&#8201;&#8212;&#8201;Minecart Left (in TR3) or Trigger Triggerer mark (TR4-5)</h4>
+<h4 id="_function_span_class_monospaced_0x14_span">3.4.9. Function <span class="monospaced">0x14</span></h4>
+<div class="paragraph"><p>This function has a different meaning in TR3 and TR4/5.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+In TR3, if Lara approaches sector with this FloorData function inside <em>minecart</em> vehicle, it will turn <em>left</em> 90 degrees, with a circle radius around 4 sectors (4096 units in world coordinates).
+</p>
+</li>
+<li>
+<p>
+In TR4 and TR5, this function is used together with special entity called <em>Trigger Triggerer</em>. The purpose of this entity is to perform <em>deferred triggering</em>. That is, if <em>trigger</em> FloorData function is placed in the same sector with function <span class="monospaced">0x14</span>, trigger won&#8217;t be activated until there&#8217;s an activated <em>Trigger Triggerer</em> object in the same sector. This allows to create setups where player can cross trigger sector without activating it, until some other event occurs later in level.
+</p>
+</li>
+</ul></div>
 </div>
 <div class="sect3">
-<h4 id="_function_span_class_monospaced_0x15_span_8201_8212_8201_minecart_right_in_tr3_or_beetle_waypoint_tr4">3.4.10. Function <span class="monospaced">0x15</span>&#8201;&#8212;&#8201;Minecart Right (in TR3) or Beetle waypoint (TR4)</h4>
+<h4 id="_function_span_class_monospaced_0x15_span">3.4.10. Function <span class="monospaced">0x15</span></h4>
+<div class="paragraph"><p>This function has a different meaning in TR3 and TR4.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+In TR3, if Lara approaches sector with this FloorData function inside <em>minecart</em> vehicle, it will turn <em>right</em> 90 degrees, with a circle radius around 4 sectors (4096 units in world coordinates).
+</p>
+</li>
+<li>
+<p>
+In TR4, this function is used together with special entity called <em>Mapper</em>. If <em>Mechanical Beetle</em> is placed in sector with function <span class="monospaced">0x15</span> and inactive <em>Mapper</em> entity, it rotates in the same direction <em>Mapper</em> is pointing to, activates it, and then rolls forward, until next sector with function 0x14 is reached. Then it waits until Lara picks it up.
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>If Lara places beetle at the very same sector where beetle was already used, it will shake and explode. It happens because beetle checks if <em>Mapper</em> entity is active or not, and if it was already activated, it explodes instead of rolling.</p></div>
+</td>
+</tr></table>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -4424,7 +4524,7 @@ TrigAction <span class="monospaced">0x0C</span>: <strong>Flyby</strong>
 <p>
 TrigAction <span class="monospaced">0x0D</span>: <strong>Cutscene</strong>
 </p>
-<div class="paragraph"><p>It is also a feature implemented in TR4. Engages a cutscene pre-defined in script file. &#8216;Parameter` is taken as cutscene ID. In turn, script file refers to <span class="monospaced">CUTSEQ.PAK</span> (TR4) or <span class="monospaced">CUTSEQ.BIN</span> (TR5) file to get all the data for a cutscene, such as <em>'actor positions and animations</em>&#8217;, <em>'camera movement</em>', <em>'soundtrack</em>' and many more. There will be a special section describing particular <span class="monospaced">CUTSEQ.PAK</span> file format.</p></div>
+<div class="paragraph"><p>It is also a feature implemented in TR4. Engages a cutscene pre-defined in script file. <span class="monospaced">Parameter</span> is taken as cutscene ID. In turn, script file refers to <span class="monospaced">CUTSEQ.PAK</span> (TR4) or <span class="monospaced">CUTSEQ.BIN</span> (TR5) file to get all the data for a cutscene, such as <em>actor positions and animations</em>, <em>camera movement</em>, <em>soundtrack</em> and many more. There will be a special section describing particular <span class="monospaced">CUTSEQ.PAK</span> file format.</p></div>
 </li>
 </ul></div>
 <div class="paragraph"><p>This concludes the description of <em>Trigger</em> FloorData function <em>action types</em>.</p></div>
@@ -5272,7 +5372,25 @@ must be multiplied by 4 to get the correct values.</p></div>
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><strong>UV Rotate:</strong> Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76.</p></div>
+<div class="paragraph"><p><strong>UV Rotate:</strong> Beginning from TR4, there is a new scheme for animated textures, called <em>UVRotate</em>. According to its name, it continuously shifts vertical texture coordinate while preserving texture size, which creates an effect of moving texture. For example, you can see it in action in TR4&#8217;s <span class="monospaced">angkor1.tr4</span>, room #76:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/uvrotate.jpg" alt="illustrations/uvrotate.jpg" title="UVRotate texture animation in action">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>In foreground, you can see alpha-blended waterfall object animated with UVRotate.
+In background, UVRotate animation is also applied to room mesh.</em></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument. If such command is found (and argument is not zero&#8201;&#8212;&#8201;for example, <span class="monospaced">UVRotate = 4</span>), engine uses special variable value kept in level file, <span class="monospaced">animated_textures_uv_count</span>, to determine if animation range belongs to UVRotate mode or classic frames mode. Then, if it belongs to UVRotate mode, each frame of this range is treated as individual rotating texture.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -6486,7 +6604,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-20 18:07:08 MSK
+Last updated 2015-07-21 02:37:32 MSK
 </div>
 </div>
 </body>

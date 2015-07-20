@@ -633,6 +633,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
     else
     {
         wad_file = fopen(filename, "rb");
+        setbuf(wad_file, NULL);
 
         if(!wad_file)
         {

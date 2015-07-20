@@ -30,11 +30,11 @@ extern EngineContainer* last_cont;
 void Controls_Key(int32_t button, int state)
 {
     // Fill script-driven debug keyboard input.
-    
+
     lua_AddKey(engine_lua, button, state);
-    
+
     // Compare ALL mapped buttons.
-    
+
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
         if((button == control_mapper.action_map[i].primary) ||
@@ -460,20 +460,9 @@ void Controls_PollSDLInput()
 {
     SDL_Event event;
     static int mouse_setup = 0;
-    static bool windowHasFocus = true;
-    
+
     while(SDL_PollEvent(&event))
     {
-        if(event.type == SDL_WINDOWEVENT) {
-            if(event.window.event == SDL_WINDOWEVENT_ENTER || event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
-                windowHasFocus = true;
-            else if(event.window.event == SDL_WINDOWEVENT_LEAVE || event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
-                windowHasFocus = false;
-        }
-
-        if(!windowHasFocus)
-            continue;
-
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
