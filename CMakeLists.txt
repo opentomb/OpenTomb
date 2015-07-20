@@ -154,6 +154,7 @@ else()
     )
 endif()
 
+add_definitions(-DAUDIO_OPENAL_FLOAT)
 
 add_executable(
     ${PROJECT_NAME}
