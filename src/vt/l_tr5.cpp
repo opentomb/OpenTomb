@@ -669,23 +669,23 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     this->flyby_cameras = (tr4_flyby_camera_t*)malloc(this->flyby_cameras_count * sizeof(tr4_flyby_camera_t));
     for (i = 0; i < this->flyby_cameras_count; i++)
     {
-        this->flyby_cameras[i].cam_x = read_bit32(newsrc);
-        this->flyby_cameras[i].cam_y = read_bit32(newsrc);
-        this->flyby_cameras[i].cam_z = read_bit32(newsrc);
-        this->flyby_cameras[i].target_x = read_bit32(newsrc);
-        this->flyby_cameras[i].target_y = read_bit32(newsrc);
-        this->flyby_cameras[i].target_z = read_bit32(newsrc);
+        this->flyby_cameras[i].cam_x = read_bit32(src);
+        this->flyby_cameras[i].cam_y = read_bit32(src);
+        this->flyby_cameras[i].cam_z = read_bit32(src);
+        this->flyby_cameras[i].target_x = read_bit32(src);
+        this->flyby_cameras[i].target_y = read_bit32(src);
+        this->flyby_cameras[i].target_z = read_bit32(src);
 
-        this->flyby_cameras[i].sequence = read_bit8(newsrc);
-        this->flyby_cameras[i].index    = read_bit8(newsrc);
+        this->flyby_cameras[i].sequence = read_bit8(src);
+        this->flyby_cameras[i].index    = read_bit8(src);
 
-        this->flyby_cameras[i].fov   = read_bitu16(newsrc);
-        this->flyby_cameras[i].roll  = read_bitu16(newsrc);
-        this->flyby_cameras[i].timer = read_bitu16(newsrc);
-        this->flyby_cameras[i].speed = read_bitu16(newsrc);
-        this->flyby_cameras[i].flags = read_bitu16(newsrc);
+        this->flyby_cameras[i].fov   = read_bitu16(src);
+        this->flyby_cameras[i].roll  = read_bitu16(src);
+        this->flyby_cameras[i].timer = read_bitu16(src);
+        this->flyby_cameras[i].speed = read_bitu16(src);
+        this->flyby_cameras[i].flags = read_bitu16(src);
 
-        this->flyby_cameras[i].room_id = read_bitu32(newsrc);
+        this->flyby_cameras[i].room_id = read_bitu32(src);
     }
 
     this->sound_sources_count = read_bitu32(src);
