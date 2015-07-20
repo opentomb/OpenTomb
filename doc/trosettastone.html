@@ -510,6 +510,9 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
+th.tableblock.grid-none, td.tableblock.grid-none {
+  border-style: hidden;
+}
 
 /*
  * manpage specific
@@ -2064,24 +2067,36 @@ else
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph"><p>Document Version 3.00 (150716)</p></div>
-<div class="paragraph"><p><strong>Tomb Raider I-V Data File Format</strong></p></div>
-<div class="paragraph"><p>(Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available. Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.)</p></div>
+<table class="tableblock frame-none grid-none"
+style="
+width:100%;
+">
+<col style="width:99%;">
+<col style="width:1%;">
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.00 (150716)</strong></p></div>
+<div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
+<div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
+<td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
+<img src="images/logo/trosej-mid.png" alt="logo/trosej-mid.png">
+</span></p></div></div></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_foreword">1. Foreword</h2>
+<h2 id="_introduction">1. Introduction</h2>
 <div class="sectionbody">
+<div class="paragraph"><p>Until now the Tomb Raider community, especially programmers and resource hacking enthusiasts, referenced a document called <em>TRosettaStone</em>, which hadn&#8217;t been updated since 1999, and its revised version (we can call it <em>TRosettaStone 2</em>), which was done by E. Popov in 2000 or 2001. Both of these documents served well for their time, but they were plagued by many errors and inaccuracies.</p></div>
+<div class="paragraph"><p>Many people noted these errors and inaccuracies, but nobody of them revised existing documentation, keeping all their knowledge just in their head. It is widely known that original document lacks some info here and there, and something is wrongly described&#8201;&#8212;&#8201;but it&#8217;s <em>not mentioned anywhere</em> (except some lost forum posts). So when a newbie programmer comes to community, he has to come through all the same trials and errors as everyone else once came.</p></div>
 <div class="quoteblock">
-<div class="content">The Rosetta Stone was the key that unlocked the mysteries of Egyptian hieroglyphics. It contains an inscription praising King Ptolemy V, which is repeated
-three times&#8201;&#8212;&#8201;once in hieroglyphic, once in demotic, and once in Greek. By translating the Greek, comparisons could be made with the demotic and hieroglyphic
-versions, providing an invaluable lexicon with which to translate other hieroglyphic works. The efforts that went into making the document you are now reading
-could be likened to a form of digital archæology, and hopefully this document will provide sufficient information for others to decipher and create their own
-&#8220;TR-hieroglyphic&#8221; works.</div>
+<div class="content">&#8220;It shouldn&#8217;t happen like that.&#8221;</div>
 <div class="attribution">
 </div></div>
-<div class="paragraph"><p>Since 2003 the Tomb Raider community, especially programmers and resource hacking enthusiasts used an outdated document called TRosettaStone, which hadn&#8217;t been updated since 1999. There was an updated version available, which was done by E. Popov&#8201;&#8212;&#8201;that&#8217;s the one which we will use as basis for this document. Also, this document will widely borrow information from TREP user&#8217;s manual, NGLE manual, and a bunch of TRF threads about internal game engine structures. Maybe other documents will be used as well, but in any case, you will get a reference and a link at the end of this text.</p></div>
-<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily at simply exploring already existing game assets, such as levels, sound files, scripts, etc. This document is being created as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will explore not only game file formats, but also internal game logic, procedures and other related aspects. It will be updated synchronously with development of OpenTomb, one of such reimplementation projects, which has received lots of feedback from the community.</p></div>
+<div class="paragraph"><p>The purpose of <em>TRosettaStone 3</em> is to replace original document and serve as the comprehensive source of information for anyone willing to participate in classic-era Tomb Raider software development. We will use original TRosettaStone as a basis, heavily borrowing from E. Popov revision. Also, this document will widely borrow information from TREP user&#8217;s manual, NGLE manual, and a bunch of forum threads and messages concerning internal game engine structures.</p></div>
+<div class="paragraph"><p>However, while original TRosettaStone and update by Popov were aimed primarily at simply exploring already existing game assets, such as levels, sound files, scripts, etc., this document is being created by and as a reference for programmers who are creating open-source reimplementations of original game engines. Because of this, we will sometimes explore not only game file formats, but also internal game logic, procedures and other related aspects. It will be updated synchronously with development of <em>OpenTomb</em>, one of such reimplementation projects, which has received lots of feedback from the community.</p></div>
 <div class="sect2">
 <h3 id="_description">1.1. Description</h3>
 <div class="paragraph"><p>This document contains detailed descriptions of the classic-era Tomb Raider data file formats. It is assumed that the reader has knowledge and experience programming in C or C++ and has at least a passing familiarity with graphics programming. This document is self-contained; all hyperlinks refer only to itself. All information in this document was derived independently, without the aid or assistance of anyone at Core Design or Eidos. As such, the information in this document may contain errors or omissions, and many structure and variable names were deduced from the interpretation of the data (and therefore could be misleading or completely wrong). However, we re-use certain variable and function names from original Tomb Raider debug builds and mappings/symbols from the leaked Tomb Raider Chronicles PSX SDK. All the information in this document was tested and is therefore plausible, but could also be a misinterpretation. All information herein is provided as is — you get what you pay for, and this one’s free. This is a spare-time project that set out to document the Tomb Raider file formats.</p></div>
@@ -2745,22 +2760,22 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 </li>
 <li>
 <p>
-<strong>10</strong>&#8201;&#8212;&#8201;Grass
+<strong>10</strong>&#8201;&#8212;&#8201;Grass <em>(same sound effect as sand)</em>
 </p>
 </li>
 <li>
 <p>
-<strong>11</strong>&#8201;&#8212;&#8201;Concrete
+<strong>11</strong>&#8201;&#8212;&#8201;Concrete <em>(same sound effect as stone, hence unused)</em>
 </p>
 </li>
 <li>
 <p>
-<strong>12</strong>&#8201;&#8212;&#8201;Old wood
+<strong>12</strong>&#8201;&#8212;&#8201;Old wood <em>(same sound effect as wood)</em>
 </p>
 </li>
 <li>
 <p>
-<strong>13</strong>&#8201;&#8212;&#8201;Old metal
+<strong>13</strong>&#8201;&#8212;&#8201;Old metal <em>(same sound effect as metal)</em>
 </p>
 </li>
 </ul></div>
@@ -3154,7 +3169,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </pre></div></div></div>
 <div class="paragraph"><p>TR2 again uses an extended version:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3408,13 +3423,13 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </div>
 <div class="sect3">
 <h4 id="_tr5_room_structure">2.5.5. TR5 Room Structure</h4>
+<div class="paragraph"><p>As it was mentioned before, TR5 room structure was almost completely changed, when compared to previous versions. For example, TR5 completely throws out a concept of <span class="monospaced">tr_room_data</span> structure, shuffles numerous values and structures in almost chaotic manner, and introduces a bunch of completely new parameters (mostly to deal with <em>layers</em>). Also, there is vast amount of <em>fillers</em> and <em>separators</em>, which contain no specific data.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>As it was mentioned before, TR5 room structure was almost completely changed, when compared to previous versions. For example, TR5 completely throws out a concept of <span class="monospaced">tr_room_data</span> structure, shuffles numerous values and structures in almost chaotic manner, and introduces a bunch of completely new parameters (mostly to deal with <em>layers</em>). Also, there is vast amount of <em>fillers</em> and <em>separators</em>, which contain no specific data.</p></div>
 <div class="paragraph"><p>The one possible reason for such ridiculous structure change is an attempt to <em>crypt file format</em>, so it won&#8217;t be accessed by unofficial level editing tools, which received major development by that time. Another possible reason is whole TR5 development process was rushed, as the team developed <em>Tomb Raider: Angel of Darkness</em> at the very same time.</p></div>
 </td>
 </tr></table>
@@ -3641,8 +3656,8 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="paragraph"><p>As mentioned above, The FloorData consists of solely <span class="monospaced">uint16_t</span> entries without general structure&#8201;&#8212;&#8201;the way engine treats specific entry depends on the sequence order and type of previously parsed entries. While it&#8217;s a bit difficult to understand it at first, you should get used to it. Main thing to remember is the FloorData should be read sequentially.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_understanding_functions_and_subfunctions">3.3. Understanding functions and subfunctions</h3>
-<div class="paragraph"><p><em>First order</em> of FloorData entries has a common &#8220;bitwise&#8221; structure, which could be divided into three fields:</p></div>
+<h3 id="_understanding_the_setup">3.3. Understanding The Setup</h3>
+<div class="paragraph"><p><em>First order</em> of FloorData entries has a common &#8220;bitwise&#8221; structure, which we will call <span class="monospaced">FDSetup</span>. The structure could be divided into three fields:</p></div>
 <table class="tableblock frame-all grid-all"
 style="
 margin-left:auto; margin-right:auto;
@@ -3768,6 +3783,7 @@ width:30%;
 </tbody>
 </table>
 <div class="paragraph"><p><span class="monospaced">Timer</span> is a value generally used for making <em>timed triggers</em> of certain entities&#8201;&#8212;&#8201;for example, the door which opens only for a few seconds and then closes, or a fire which extinguishes and then burns again. In such case, engine <em>copies timer value in corresponding field of each triggered entity</em>. Then each entity&#8217;s timer begins to count time back, and when it reaches zero, entity deactivates.</p></div>
+<div class="paragraph"><p>However, it&#8217;s not the only purpose of <span class="monospaced">Timer</span> field. As trigger may not specifically activate entities but do some other actions, <span class="monospaced">Timer</span> field may be re-used as a general-purpose numerical field to specify particular trigger behaviour. We will mention it separately for such trigger actions.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -3778,7 +3794,6 @@ width:30%;
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>However, it&#8217;s not the only purpose of <span class="monospaced">Timer</span> field. As trigger may not specifically activate entities but do some other actions, <span class="monospaced">Timer</span> field may be re-used as a general-purpose numerical field to specify particular trigger behaviour. We will mention it separately for such trigger actions.</p></div>
 <div class="paragraph"><p><span class="monospaced">Mask</span>: The five bits at <span class="monospaced">0x3E00</span> are the so-called <em>Trigger Mask</em>. The purpose of trigger mask is to create puzzle set-ups which require a combination of activated triggers to achieve certain result. A good example of trigger mask use is the multiple-switch room of &#8220;Palace Midas&#8221; in TR1.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -3802,10 +3817,258 @@ width:30%;
 </td>
 </tr></table>
 </div>
+<div class="paragraph"><p><em>Trigger types</em> and <em>trigger actions</em> will be described separately right after listing all FloorData functions.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_function_span_class_monospaced_0x05_span_8201_8212_8201_kill_lara">3.4.5. Function <span class="monospaced">0x05</span>&#8201;&#8212;&#8201;Kill Lara</h4>
+<div class="paragraph"><p><em>SubFunction not used</em></p></div>
+<div class="paragraph"><p>Instantly kills Lara. Usually she is simply set on fire, however, there is one special case in TR3. If current level index is 7 (&#8220;Madubu Gorge&#8221;), then instead of catching fire, Lara will play drowning animation.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_function_span_class_monospaced_0x06_span_8201_8212_8201_climbable_walls">3.4.6. Function <span class="monospaced">0x06</span>&#8201;&#8212;&#8201;Climbable Walls</h4>
+<div class="paragraph"><p>The <span class="monospaced">SubFunction</span> indicates climbability of walls; its value is the bitwise <span class="monospaced">OR</span> of the values associated with all the climbable-wall directions (<span class="monospaced">0x01</span> =
++Z, <span class="monospaced">0x02</span> = +X, <span class="monospaced">0x04</span> = -Z, <span class="monospaced">0x08</span> = -X), e.g. SubFunction <span class="monospaced">0x09</span> indicates that the walls on both the +Z and -X sides of this sector are climbable.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_triangulation_functions_span_class_monospaced_0x07_span_to_span_class_monospaced_0x12_span_only_in_tr3_5">3.4.7. Triangulation functions <span class="monospaced">0x07</span> to <span class="monospaced">0x12</span> (only in TR3-5)</h4>
+<div class="paragraph"><p>Beginning with TR3, geometry layout of each sector was significantly changed. Engine introduced <em>triangles</em> as a minimal collisional unit, compared with <em>rectangles only</em> in TR1 and TR2. This advantage allowed to create much more organic and natural terrain (albeit still limited by minimal sector width and depth of 1024 units), but also complicated things a lot, introducing the whole new set of different FloorData collisional functions.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p><em>Triangulation</em> functions are never combined with <em>slant</em> functions present in TR1 and TR2. Each sector has either <em>slant</em> or <em>triangulation</em> function assigned to it, and <em>never both of them</em>. If there ever will be a paradoxical case of combination, most likely, only <em>older</em> function (i.e. <em>slant</em>) will be considered for collision calculation.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Similarly to <em>slant</em> functions, <em>triangulation</em> functions define the floor and ceiling slopes, but besides, they also specify <em>dividing up the floors and ceilings into triangles along either of the two diagonals</em>. Also, one of the triangles may be a collisional portal to the room above (if in the ceiling) or to the room below (if in the floor).</p></div>
+<div class="paragraph"><p><strong><span class="big red">Old TRosettaStone text ahead&#8201;&#8212;&#8201;current progress is above this bookmark.</span></strong></p></div>
+<div class="paragraph"><p>Each triangulation function word must be parsed as follows:</p></div>
+<table class="tableblock frame-all grid-all"
+style="
+width:40%;
+">
+<col style="width:33%;">
+<col style="width:66%;">
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-4</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Function value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 5-9</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t00</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 10-14</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t01</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bit 15</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Continuation bit</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>where t00 and t01 are signed.</p></div>
+<div class="paragraph"><p>It is followed by <em>one extra</em> <span class="monospaced">uint16_t</span> to be parsed as follows:</p></div>
+<table class="tableblock frame-all grid-all"
+style="
+width:30%;
+">
+<col style="width:50%;">
+<col style="width:50%;">
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-3</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t10</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 4-7</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t11</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 8-11</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t12</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 12-15</p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t13</span></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>where <span class="monospaced">t10</span>, <span class="monospaced">t11</span>, <span class="monospaced">t12</span>, and <span class="monospaced">t13</span> are unsigned.</p></div>
+<div class="paragraph"><p>Here are the triangulations and vertex adjustments; for some of the functions, one of the triangles is a portal to another room:</p></div>
 <div class="sect4">
-<h5 id="_trigger_types">Trigger types</h5>
-<div class="paragraph"><p>A <em>trigger type</em> specifies the condition of a given trigger to be activated. Condition may be a type of activator (Lara or some other entity), a specific state of activator, specific trigger action (activate or deactivate), and so on.</p></div>
-<div class="paragraph"><p>Trigger type <em>is placed in <span class="monospaced">SubFunction</span> field</em>, so we will refer to trigger types as <em>SubFunctions</em>.</p></div>
+<h5 id="_functions_span_class_monospaced_0x07_span_span_class_monospaced_0x0b_span_span_class_monospaced_0x0c_span">Functions <span class="monospaced">0x07</span>, <span class="monospaced">0x0b</span>, <span class="monospaced">0x0c</span></h5>
+<div class="ulist"><ul>
+<li>
+<p>
+Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x0b</span>: is a portal)
+</p>
+</li>
+<li>
+<p>
+Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0c</span>: is a portal)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t00 + t01 + t10 + t12</span></p></div>
+<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect4">
+<h5 id="_functions_span_class_monospaced_0x08_span_span_class_monospaced_0x0d_span_span_class_monospaced_0x0e_span">Functions <span class="monospaced">0x08</span>, <span class="monospaced">0x0d</span>, <span class="monospaced">0x0e</span></h5>
+<div class="ulist"><ul>
+<li>
+<p>
+Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x0d</span>: is a portal) <br>
+</p>
+</li>
+<li>
+<p>
+Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x0e</span>: is a portal)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Overall adjustment: adj = t00 + t01 + t11 + t13</p></div>
+<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect4">
+<h5 id="_functions_span_class_monospaced_0x09_span_span_class_monospaced_0x0f_span_span_class_monospaced_0x10_span">Functions <span class="monospaced">0x09</span>, <span class="monospaced">0x0f</span>, <span class="monospaced">0x10</span></h5>
+<div class="ulist"><ul>
+<li>
+<p>
+Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0f</span>: is a portal)
+</p>
+</li>
+<li>
+<p>
+Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x10</span>: is a portal)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t10 + t12</span></p></div>
+<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
+</p>
+</li>
+</ul></div>
+<div class="ulist"><div class="title">Functions <span class="monospaced">0x0a</span>, <span class="monospaced">0x10</span>, <span class="monospaced">0x11</span></div><ul>
+<li>
+<p>
+Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x11</span>: is a portal)
+</p>
+</li>
+<li>
+<p>
+Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x12</span>: is a portal)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t11 + t13</span></p></div>
+<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_function_span_class_monospaced_0x13_span_8201_8212_8201_monkeyswing_only_in_tr3_5">3.4.8. Function <span class="monospaced">0x13</span>&#8201;&#8212;&#8201;Monkeyswing (only in TR3-5)</h4>
+<div class="paragraph"><p><em>SubFunction is not used</em></p></div>
+<div class="paragraph"><p>Sets monkey-swingability of the ceiling in specified sector.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_function_span_class_monospaced_0x14_span_8201_8212_8201_minecart_left_in_tr3_or_trigger_triggerer_mark_tr4_5">3.4.9. Function <span class="monospaced">0x14</span>&#8201;&#8212;&#8201;Minecart Left (in TR3) or Trigger Triggerer mark (TR4-5)</h4>
+</div>
+<div class="sect3">
+<h4 id="_function_span_class_monospaced_0x15_span_8201_8212_8201_minecart_right_in_tr3_or_beetle_waypoint_tr4">3.4.10. Function <span class="monospaced">0x15</span>&#8201;&#8212;&#8201;Minecart Right (in TR3) or Beetle waypoint (TR4)</h4>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_trigger_types">3.5. Trigger types</h3>
+<div class="paragraph"><p>A <em>trigger type</em> specifies the condition of a given <em>trigger function</em> to be activated. Condition may be a type of activator (Lara or some other entity), a specific state of activator, specific trigger action (activate or deactivate), and so on.</p></div>
+<div class="paragraph"><p>Trigger type <em>is placed in <span class="monospaced">SubFunction</span> field</em> of <span class="monospaced">FDSetup</span> structure, so we will refer to trigger types as <em>SubFunctions</em>.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -3925,9 +4188,10 @@ SubFunction <span class="monospaced">0x10</span>: <strong>Climb</strong> (TR5 on
 <div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>climbing on a wall</em>.</p></div>
 </li>
 </ul></div>
+<div class="paragraph"><p>This concludes the description of <em>Trigger</em> FloorData function <em>trigger types</em>.</p></div>
 </div>
-<div class="sect4">
-<h5 id="_trigger_actions">Trigger actions</h5>
+<div class="sect2">
+<h3 id="_trigger_actions">3.6. Trigger actions</h3>
 <div class="paragraph"><p>Trigger function references an additional list of FloorData entries called <span class="monospaced">ActionList</span>, which is a &#8220;chain&#8221; of entries that immediately follows <span class="monospaced">TriggerSetup</span> entry. As you maybe already guessed, the <span class="monospaced">ActionList</span> contains the list of actions to be performed for a specified trigger.</p></div>
 <div class="paragraph"><p><span class="monospaced">ActionList</span> entry format is:</p></div>
 <table class="tableblock frame-all grid-all"
@@ -3954,7 +4218,7 @@ width:50%;
 </table>
 <div class="paragraph"><p><span class="monospaced">TrigAction</span> is a type of action to be performed. These will be listed seperately.</p></div>
 <div class="paragraph"><p><span class="monospaced">Parameter</span> is used with certain trigger actions which need a certain numerical argument provided to them.</p></div>
-<div class="paragraph"><p><span class="monospaced">ContBit</span> flag meaning is similar to <span class="monospaced">EndData</span> flag described in the beginning of previous paragraph. It indicates if there is another <span class="monospaced">ActionList</span> entry after current one. If <span class="monospaced">ContBit</span> is not set, it means we have reached the end of <span class="monospaced">ActionList</span>, and there&#8217;s nothing more to do for a given trigger.</p></div>
+<div class="paragraph"><p><span class="monospaced">ContBit</span> flag meaning is similar to <span class="monospaced">EndData</span> flag described for <span class="monospaced">FDSetup</span> structure. It indicates if there is another <span class="monospaced">ActionList</span> entry after current one. If <span class="monospaced">ContBit</span> is not set, it means we have reached the end of <span class="monospaced">ActionList</span>, and there&#8217;s nothing more to do for a given trigger.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4034,7 +4298,8 @@ width:30%;
 <p>
 TrigAction <span class="monospaced">0x02</span>: <strong>Underwater Current</strong>
 </p>
-<div class="paragraph"><p>Continuously moves Lara to specifed <em>sink</em>. <span class="monospaced">Parameter</span> serves as index into <span class="monospaced">Cameras[]</span> array.</p></div>
+<div class="paragraph"><p>Continuously moves Lara to specifed <em>sink</em>. <span class="monospaced">Parameter</span> serves as index into <span class="monospaced">Cameras[]</span> array.
+If sink is placed 'lower than current sector absolute floor height or upper than current sector absolute ceiling height, $Y$ coordinate will be ignored when dragging Lara to sink. Since TR3, sink also prevents Lara from surfacing the water.</p></div>
 </li>
 </ul></div>
 <div class="admonitionblock">
@@ -4052,331 +4317,124 @@ TrigAction <span class="monospaced">0x02</span>: <strong>Underwater Current</str
 <p>
 TrigAction <span class="monospaced">0x03</span>: <strong>Flip Map</strong>
 </p>
-<div class="paragraph"><p><em>FlipMap</em> is an internal engine array of <span class="monospaced">uint8_t`s which is used to determine if alternate rooms should be turned on or off. It uses 'trigger mask' in the same manner as for 'Object' activation and deactivation, but in this case, alternate rooms are activated if given `FlipMap</span> entry mask is set (<span class="monospaced">0x1F</span>), and deactivated, if <span class="monospaced">FlipMap</span> entry is not set (not <span class="monospaced">0x1F</span>).</p></div>
+<div class="paragraph"><p><em>FlipMap</em> is an internal engine array of <span class="monospaced">uint8_t`s which is used to determine if alternate rooms should be turned on or off (in TRLE terms, 'flipped'). It uses 'trigger mask' in the same manner as for 'Object' activation and deactivation, but in this case, alternate rooms are activated if given `FlipMap</span> entry mask is set (<span class="monospaced">0x1F</span>), and deactivated, if <span class="monospaced">FlipMap</span> entry is not set (not <span class="monospaced">0x1F</span>).</p></div>
+<div class="paragraph"><p>This trigger action at first applies <em>trigger mask</em> to a given <span class="monospaced">FlipMap</span> entry using <span class="monospaced">OR</span> bitwise operation and then immediately checks if it&#8217;s already set or not. If FlipMap entry is set, then it immediately switches rooms to alternate mode.</p></div>
 <div class="paragraph"><p><span class="monospaced">Parameter</span> defines which <span class="monospaced">FlipMap</span> entry engine should refer to decide should it switch alternate rooms on or off. The size of <span class="monospaced">FlipMap</span> array is around 10 (judging by the number of unused <span class="monospaced">FLIP_MAPn</span> <em>effect</em> entries), but in original levels, number usually never tops 2 or 3.</p></div>
 </li>
 </ul></div>
-<div class="paragraph"><p><strong><span class="big red">Old TRosettaStone text ahead&#8201;&#8212;&#8201;current progress is above this bookmark.</span></strong></p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x04</span>:  *Flip On"
-</p>
-<div class="paragraph"><p>Tries to turn alternate rooms on, judging on current value of a given <span class="monospaced">FlipMap</span> entry (entry index is specified by <span class="monospaced">Parameter</span>).</p></div>
-</li>
-</ul></div>
-<div class="paragraph"><p>Operand&#8201;&#8212;&#8201;not sure, range 0-5</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x05</span>:  Alter Room Flags
-This affects (enhances/negates) roomflags (always paired with <span class="monospaced">0x04</span>)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Operand&#8201;&#8212;&#8201;not sure, range 0-5</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x06</span>:  Look at Item
-(if a camera change is also desired, this should come first)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Operand (bits 0..9 (<span class="monospaced">0x3ff</span>))&#8201;&#8212;&#8201;Item index</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x07</span>:  End Level
-</p>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x08</span>:  Play CD Track
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Operand (bits 0..9 (<span class="monospaced">0x3ff</span>))&#8201;&#8212;&#8201;CD track ID (TR1: Internal Sound Index)</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x09</span>: Assault Course Clock Control
-</p>
-<div class="literalblock">
-<div class="content monospaced">
-<pre>Operand (bits 0..9 (`0x3ff`))
- ** `0x1c` ::= clear clock
- ** `0x1d` ::= stop clock
- ** `0x1e` ::= clock reset and displayed +
-    This opcode is also associated with switches; other values of its operand appear to indicate switch sounds.</pre>
-</div></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0A</span>:  Play &#8220;Found Secret&#8221; Sound
- Operand (bits 0..9 (<span class="monospaced">0x3ff</span>))  Which secret (0..NumSecrets-1)
-</p>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0B</span>: Clear bodies
-</p>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0C</span>: Flyby
-</p>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0D</span>: Cutscene
-</p>
-</li>
-</ul></div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_function_span_class_monospaced_0x05_span_8201_8212_8201_kill_lara">3.4.5. Function <span class="monospaced">0x05</span>&#8201;&#8212;&#8201;Kill Lara</h4>
-<div class="paragraph"><p><em>SubFunction not used</em></p></div>
-<div class="paragraph"><p>Instantly kills Lara. Usually she is simply set on fire, however, there is one special case in TR3. If current level index is 7 (&#8220;Madubu Gorge&#8221;), then instead of catching fire, Lara will play drowning animation.</p></div>
-</div>
-<div class="sect3">
-<h4 id="_function_span_class_monospaced_0x06_span_8201_8212_8201_climbable_walls">3.4.6. Function <span class="monospaced">0x06</span>&#8201;&#8212;&#8201;Climbable Walls</h4>
-<div class="paragraph"><p>The <span class="monospaced">SubFunction</span> indicates climbability of walls; its value is the bitwise <span class="monospaced">OR</span> of the values associated with all the climbable-wall directions (<span class="monospaced">0x01</span> =
-+Z, <span class="monospaced">0x02</span> = +X, <span class="monospaced">0x04</span> = -Z, <span class="monospaced">0x08</span> = -X), e.g. SubFunction <span class="monospaced">0x09</span> indicates that the walls on both the +Z and -X sides of this sector are climbable.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
-<td class="content"><span class="green">The following functions are only relevant for TR3, this <strong>all these functions are virtually colored green</strong>.</span></td>
+<td class="content">
+<div class="paragraph"><p>From TR1 to TR3, <span class="monospaced">FlipMap</span> array was merely used as a &#8220;hint table&#8221; to tell the engine if it should flip <em>all rooms at once``. That is, to check and apply another FlipMap entry, alternate rooms should have been reverted to previous state before&#8201;&#8212;&#8201;that&#8217;s the purpose of next two listed trigger actions. However, in TR4 algorithm was changed&#8201;&#8212;&#8201;each &#8220;flippable&#8221; room now bears additional parameter called &#8220;alternate group&#8221;, which strictly tells an engine to flip it 'only when room alternate group is equal to FlipMap <span class="monospaced">Parameter</span> value</em>. This change in algorithm made next two trigger actions unnecessary in TR4-5 (however, they are still available).</p></div>
+</td>
 </tr></table>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_functions_span_class_monospaced_0x07_span_to_span_class_monospaced_0x12_span_only_in_tr3_5">3.4.7. Functions <span class="monospaced">0x07</span> to <span class="monospaced">0x12</span> (only in TR3-5)</h4>
-<div class="paragraph"><p>These specify the floor and ceiling slopes, which are more complicated here, since these functions specify dividing
-up the floors and ceilings into triangles along either of the two diagonals. Also, one of the triangles may be a collisional portal to the room above (if in the
-ceiling) or to the room below (if in the floor). The function word must be parsed as follows:</p></div>
-<table class="tableblock frame-all grid-all"
-style="
-width:40%;
-">
-<col style="width:33%;">
-<col style="width:66%;">
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bit 15</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Continuation bit</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 10-14</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t01</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 5-9</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t00</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-4</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">function value</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph"><p>where t00 and t01 are signed.</p></div>
-<div class="paragraph"><p>It is followed by one operand, to be parsed as follows:</p></div>
-<table class="tableblock frame-all grid-all"
-style="
-width:30%;
-">
-<col style="width:50%;">
-<col style="width:50%;">
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 12-15</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t13</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 8-11</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t12</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 4-7</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t11</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">Bits 0-3</p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">value <span class="monospaced">t10</span></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph"><p>where <span class="monospaced">t10</span>, <span class="monospaced">t11</span>, <span class="monospaced">t12</span>, and <span class="monospaced">t13</span> are unsigned.</p></div>
-<div class="paragraph"><p>Here are the triangulations and vertex adjustments; for some of the functions, one of the triangles is a portal to another room:</p></div>
-</div>
-<div class="sect3">
-<h4 id="_functions_span_class_monospaced_0x07_span_span_class_monospaced_0x0b_span_span_class_monospaced_0x0c_span_only_in_tr3_5">3.4.8. Functions <span class="monospaced">0x07</span>, <span class="monospaced">0x0b</span>, <span class="monospaced">0x0c</span> (only in TR3-5)</h4>
 <div class="ulist"><ul>
 <li>
 <p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x0b</span>: is a portal)
+TrigAction <span class="monospaced">0x04</span>:  <strong>Flip On</strong>
 </p>
+<div class="paragraph"><p>Tries to turn alternate rooms <em>on</em>, judging on current value of a given <span class="monospaced">FlipMap</span> entry (entry index is specified by <span class="monospaced">Parameter</span>). If corresponding FlipMap is not set (i.e. the value is not <span class="monospaced">0x1F</span>), rooms won&#8217;t be flipped. <span class="monospaced">Parameter</span> defines a <span class="monospaced">FlipMap</span> entry to work with.</p></div>
 </li>
 <li>
 <p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0c</span>: is a portal)
+TrigAction <span class="monospaced">0x05</span>:  <strong>Flip Off</strong>
 </p>
+<div class="paragraph"><p>Tries to turn alternate rooms <em>off</em>, judging on current value of a given <span class="monospaced">FlipMap</span> entry (entry index is specified by <span class="monospaced">Parameter</span>). If corresponding FlipMap is not set (i.e. the value is not <span class="monospaced">0x1F</span>), rooms won&#8217;t be flipped. <span class="monospaced">Parameter</span> defines a <span class="monospaced">FlipMap</span> entry to work with.</p></div>
+</li>
+<li>
+<p>
+TrigAction <span class="monospaced">0x06</span>:  <strong>Look at Item</strong>
+</p>
+<div class="paragraph"><p>Specifies an entity which current camera should look at. If current camera is &#8220;ordinary&#8221; one following Lara, then it will also rotate Lara model in a target direction, creating an illusion of Lara looking at it. If current camera is changed to &#8220;triggered&#8221; one (by trigger action <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;see above), then this camera&#8217;s orientation will be changed to a given entity. Note that if such camera change is desired, 'this action should come first, not the <strong>Camera</strong> one.</p></div>
+<div class="paragraph"><p><span class="monospaced">Parameter</span> specifies an entity index to look at.</p></div>
+</li>
+<li>
+<p>
+TrigAction <span class="monospaced">0x07</span>:  <strong>End Level</strong>
+</p>
+<div class="paragraph"><p>Immediately loads next level. In TR1-3 and TR5, <span class="monospaced">Parameter</span> field is not used, i.e. engine just loads next level specified in script. In TR4, so called &#8220;hub system&#8221; was implemented, which allows Lara to jump between levels back and forth. For this reason, <em>End Level</em> trigger action must also explicitly specify level index to jump.</p></div>
+</li>
+<li>
+<p>
+TrigAction <span class="monospaced">0x08</span>: <strong>Play Soundtrack</strong>
+</p>
+<div class="paragraph"><p>Triggers a playback of a soundtrack specified in <span class="monospaced">Parameter</span> field. Type of soundtrack (<em>looped</em> or <em>one-shot</em>) is hardcoded and assigned automatically.</p></div>
+<div class="paragraph"><p>This trigger action makes use of <em>trigger mask</em> <strong>and</strong> <em>one-shot trigger flag</em> to mark if this track was already played with a given <em>trigger mask</em> or not in a special internal <em>soundtrack map</em>. That is, if it is called with <em>trigger mask</em> set to, say, <span class="monospaced">0x01</span>, then all further calls from triggers with same <em>trigger mask</em> will be ignored. However, if same track playback is called with <em>trigger mask</em> value of <span class="monospaced">0x02</span>, it will play again, as it&#8217;s another byte in <em>trigger mask</em>. Effectively, it allows to play specified track <em>six times</em> (five bits of <em>activation mask</em> plus one bit of <em>one-shot flag</em>). Comparison is done via bitwise <span class="monospaced">AND</span> operation, so if playback is called with <em>trigger mask + one-shot</em> value of <span class="monospaced">(0x1F + 0x20 = 0x3F)</span>, then any other playback call to that track will be blocked.</p></div>
 </li>
 </ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t00 + t01 + t10 + t12</span></p></div>
-<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>In TR1, soundtrack playback is more complicated. For some reason, in PC version programmers completely disabled playback for majority of soundtracks, leaving only five or six most significant ones to play (like title theme or cutscene audio). <em>Looped</em> soundtracks were also completely ignored&#8201;&#8212;&#8201;instead, background ambience is explicitly specified by script entry, rather than trigger action (that&#8217;s the reason why PC version has four different ambience types when compared to PSX version).</p></div>
+<div class="paragraph"><p>To overcome this issue and enable complete soundtrack functionality, several patches were created by the community. However, PC version is missing <em>soundtrack map</em> structure, which potentially produces bugs when single track could be played independently by both triggers in the same level, although mostly this bug comes unnoticed, as majority of TR1 soundtracks are engaged only once in a level.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="ulist"><ul>
 <li>
 <p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+TrigAction <span class="monospaced">0x09</span>: <strong>Effect</strong>
 </p>
-</li>
-<li>
-<p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
+<div class="paragraph"><p><em>Effect</em> does not necessarily mean &#8220;special effect&#8221; or so. By the name of &#8220;effect&#8221; comes <em>any non-trivial or special trigger action which should be seperately defined</em>. This workaround was implemented because TR engines lack any scripting language to program arbitrary trigger, so you can consider an <em>effect</em> as a call to some &#8220;pre-compiled&#8221; scripted function.</p></div>
+<div class="paragraph"><p>For example, in TR1 &#8220;Lara&#8217;s Home&#8221;, there is a need to play soundtrack <em>&#8220;&#8230;Now I&#8217;d better take these wet clothes&#8221;</em> and then return to title screen after a few seconds. This is done with <em>effect</em> trigger, which checks if Lara already plunged in water, and if yes, it plays corresponding soundtrack, waits for a few seconds and returns to title screen.</p></div>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>The list of <em>effects</em> differs across game versions. These will be listed in a seperate section noting changes from version to version.</p></div>
+</td>
+</tr></table>
 </div>
-<div class="sect3">
-<h4 id="_functions_span_class_monospaced_0x08_span_span_class_monospaced_0x0d_span_span_class_monospaced_0x0e_span_only_in_tr3_5">3.4.9. Functions <span class="monospaced">0x08</span>, <span class="monospaced">0x0d</span>, <span class="monospaced">0x0e</span> (only in TR3-5)</h4>
 <div class="ulist"><ul>
 <li>
 <p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x0d</span>: is a portal) <br>
+TrigAction <span class="monospaced">0x0A</span>:  <strong>Secret Found</strong>
 </p>
+<div class="paragraph"><p>Plays &#8220;secret&#8221; soundtrack theme and marks a secret number specified in &#8216;Parameter` field as found. For finding each secret, another `Parameter&#8217; value must be specified, or else secret won&#8217;t be counted as found.</p></div>
 </li>
 <li>
 <p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x0e</span>: is a portal)
+TrigAction <span class="monospaced">0x0B</span>: <strong>Clear bodies</strong>
 </p>
+<div class="paragraph"><p>Removes dead bodies of enemies from a level to conserve memory usage. This action has effect only on entities which had <em>clear body</em> flag specified in their parameters (see further). <span class="monospaced">Parameter</span> field is unused. <em>Feature was disabled in TR4 and TR5.</em></p></div>
 </li>
 </ul></div>
-<div class="paragraph"><p>Overall adjustment: adj = t00 + t01 + t11 + t13</p></div>
-<div class="paragraph"><p>Add these quantities to these vertex floor heights:</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>This trigger action caused significant confusion in TRLE community. In level editor, action is called <em>BODYBAG</em>, and makes no visible effect in game, so various speculations were made regarding action&#8217;s true purpose. Some people thought it is used to attach a backpack to Lara in &#8220;Angkor Wat&#8221; cutscene, another people thought it is used for lipsync or dragging SAS troop body in &#8220;City of the Dead&#8221;. All this speculation was proven wrong.</p></div>
+</td>
+</tr></table>
+</div>
 <div class="ulist"><ul>
 <li>
 <p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
+TrigAction <span class="monospaced">0x0C</span>: <strong>Flyby</strong>
 </p>
+<div class="paragraph"><p>Engages a <em>flyby camera sequence</em> specified in <span class="monospaced">Parameter</span> field. The feature was added in TR4 and enables to play cinematographic interludes with camera continuously &#8220;flying&#8221; from one point to another. Such <em>sequences</em>, their <em>points</em>, properties and order are defined in a level editor, and engine moves camera across them using <em>spline function</em>.</p></div>
 </li>
 <li>
 <p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
+TrigAction <span class="monospaced">0x0D</span>: <strong>Cutscene</strong>
 </p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
+<div class="paragraph"><p>It is also a feature implemented in TR4. Engages a cutscene pre-defined in script file. &#8216;Parameter` is taken as cutscene ID. In turn, script file refers to <span class="monospaced">CUTSEQ.PAK</span> (TR4) or <span class="monospaced">CUTSEQ.BIN</span> (TR5) file to get all the data for a cutscene, such as <em>'actor positions and animations</em>&#8217;, <em>'camera movement</em>', <em>'soundtrack</em>' and many more. There will be a special section describing particular <span class="monospaced">CUTSEQ.PAK</span> file format.</p></div>
 </li>
 </ul></div>
-</div>
-<div class="sect3">
-<h4 id="_functions_span_class_monospaced_0x09_span_span_class_monospaced_0x0f_span_span_class_monospaced_0x10_span_only_in_tr3_5">3.4.10. Functions <span class="monospaced">0x09</span>, <span class="monospaced">0x0f</span>, <span class="monospaced">0x10</span> (only in TR3-5)</h4>
-<div class="ulist"><ul>
-<li>
-<p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">00</span>-<span class="monospaced">10</span>-<span class="monospaced">01</span> (function <span class="monospaced">0x0f</span>: is a portal)
-</p>
-</li>
-<li>
-<p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">11</span>-<span class="monospaced">01</span>-<span class="monospaced">10</span> (function <span class="monospaced">0x10</span>: is a portal)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t10 + t12</span></p></div>
-<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">Functions <span class="monospaced">0x0a</span>, <span class="monospaced">0x10</span>, <span class="monospaced">0x11</span></div><ul>
-<li>
-<p>
-Triangle 1&#8201;&#8212;&#8201;<span class="monospaced">01</span>-<span class="monospaced">00</span>-<span class="monospaced">11</span> (function <span class="monospaced">0x11</span>: is a portal)
-</p>
-</li>
-<li>
-<p>
-Triangle 2&#8201;&#8212;&#8201;<span class="monospaced">10</span>-<span class="monospaced">11</span>-<span class="monospaced">00</span> (function <span class="monospaced">0x12</span>: is a portal)
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Overall adjustment: <span class="monospaced">adj = t11 + t13</span></p></div>
-<div class="paragraph"><p>Subtract these quantities from these vertex ceiling heights:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<span class="monospaced">00</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t12)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">01</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t11)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">10</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t13)</span>
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">11</span>&#8201;&#8212;&#8201;<span class="monospaced">(adj - t10)</span>
-</p>
-</li>
-</ul></div>
-</div>
-<div class="sect3">
-<h4 id="_function_span_class_monospaced_0x13_span_8201_8212_8201_monkeyswing_only_in_tr3_5">3.4.11. Function <span class="monospaced">0x13</span>&#8201;&#8212;&#8201;Monkeyswing (only in TR3-5)</h4>
-<div class="paragraph"><p><em>SubFunction is not used</em></p></div>
-<div class="paragraph"><p>Sets monkey-swingability of the ceiling in specified sector.</p></div>
-</div>
-<div class="sect3">
-<h4 id="_function_span_class_monospaced_0x14_span_8201_8212_8201_minecart_left_in_tr3_or_trigger_triggerer_mark_tr4_5">3.4.12. Function <span class="monospaced">0x14</span>&#8201;&#8212;&#8201;Minecart Left (in TR3) or Trigger Triggerer mark (TR4-5)</h4>
-</div>
-<div class="sect3">
-<h4 id="_function_span_class_monospaced_0x15_span_8201_8212_8201_minecart_right_in_tr3_or_beetle_waypoint_tr4">3.4.13. Function <span class="monospaced">0x15</span>&#8201;&#8212;&#8201;Minecart Right (in TR3) or Beetle waypoint (TR4)</h4>
-</div>
+<div class="paragraph"><p>This concludes the description of <em>Trigger</em> FloorData function <em>action types</em>.</p></div>
 </div>
 </div>
 </div>
@@ -6435,7 +6493,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-20 06:28:45 MSK
+Last updated 2015-07-20 17:38:10 MSK
 </div>
 </div>
 </body>
