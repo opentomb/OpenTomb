@@ -971,6 +971,8 @@ void World::addEntity(std::shared_ptr<Entity> entity)
     if(entity_tree.find(entity->id()) != entity_tree.end())
         return;
     entity_tree[entity->id()] = entity;
+    if(entity->id()+1 > next_entity_id)
+        next_entity_id = entity->id()+1;
 }
 
 
