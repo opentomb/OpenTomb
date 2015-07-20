@@ -648,6 +648,7 @@ gui_InventoryManager::gui_InventoryManager()
     mVerticalOffset             = 0.0;
 
     mItemRotatePeriod           = 4.0;
+    mItemTime                   = 0.0;
     mItemAngle                  = 0.0;
 
     mInventory                  = NULL;
