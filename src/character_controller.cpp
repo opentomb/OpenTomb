@@ -1036,19 +1036,19 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar angle = btDegrees( btAtan2(floorNormal[0], -floorNormal[1]) );       // from -180 deg to +180 deg
+            const btScalar zAngle = btDegrees( btAtan2(floorNormal[0], floorNormal[1]) );       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0] + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
                 m_response.slide = CHARACTER_SLIDE_FRONT;
-                m_angles[0] = angle;
+                m_angles[0] = zAngle + 180;
                 // front forward slide down
             }
             else
             {
                 m_response.slide = CHARACTER_SLIDE_BACK;
-                m_angles[0] = angle+180;
+                m_angles[0] = zAngle;
                 // back forward slide down
             }
             updateTransform();
@@ -1713,16 +1713,13 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
 
 /**
  *
- * @param ch: character pointer
- * @param obj: traversed object pointer
- * @return: 0x01 if can traverse forvard; 0x02 if can traverse backvard; 0x03 can traverse in both directions; 0x00 - can't traverse
+ * @param obj Traversed object pointer
+ * @see TraverseNone TraverseForward TraverseBackward
  */
-int Character::checkTraverse(Entity* obj)
+int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s, *obj_s;
-
-    ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
-    obj_s = obj->m_self->room->getSectorRaw(obj->m_transform.getOrigin());
+    RoomSector* ch_s  =     m_self->room->getSectorRaw(    m_transform.getOrigin());
+    RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
@@ -1748,16 +1745,16 @@ int Character::checkTraverse(Entity* obj)
 
     if((ch_s == NULL) || (obj_s == NULL))
     {
-        return 0x00;
+        return TraverseNone;
     }
 
     btScalar floor = m_transform.getOrigin()[2];
-    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, m_self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj->m_self) == 0x00))
+    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, m_self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj.m_self) == 0x00))
     {
-        return 0x00;
+        return TraverseNone;
     }
 
-    BtEngineClosestRayResultCallback cb(obj->m_self);
+    BtEngineClosestRayResultCallback cb(obj.m_self);
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
@@ -1769,12 +1766,12 @@ int Character::checkTraverse(Entity* obj)
         EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
-            return 0x00;
+            return TraverseNone;
         }
     }
 
-    int ret = 0x00;
-    RoomSector* next_s = NULL;
+    int ret = TraverseNone;
+    RoomSector* next_s = nullptr;
 
     /*
      * PUSH MOVE CHECK
@@ -1798,33 +1795,33 @@ int Character::checkTraverse(Entity* obj)
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
-    next_s = next_s->checkPortalPointer();
-    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if(next_s)
+        next_s = next_s->checkPortalPointer();
+
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(obj->m_self);
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
-        btVector3 v;
-        btTransform from, to;
-        v[0] = obj_s->pos[0];
-        v[1] = obj_s->pos[1];
-        v[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        btTransform from;
         from.setIdentity();
-        from.setOrigin(v);
-        v[0] = next_s->pos[0];
-        v[1] = next_s->pos[1];
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btTransform to;
         to.setIdentity();
-        to.setOrigin(v);
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        BtEngineClosestConvexResultCallback ccb(m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+
         if(!ccb.hasHit())
         {
-            ret |= 0x01;                                                        // can traverse forvard
+            ret |= TraverseForward;
         }
     }
 
     /*
      * PULL MOVE CHECK
      */
-    next_s = NULL;
+    next_s = nullptr;
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
@@ -1844,26 +1841,26 @@ int Character::checkTraverse(Entity* obj)
         next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
-    next_s = next_s->checkPortalPointer();
-    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if(next_s)
+        next_s = next_s->checkPortalPointer();
+
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(m_self);
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
-        btVector3 v;
-        btTransform from, to;
-        v[0] = ch_s->pos[0];
-        v[1] = ch_s->pos[1];
-        v[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        btTransform from;
         from.setIdentity();
-        from.setOrigin(v);
-        v[0] = next_s->pos[0];
-        v[1] = next_s->pos[1];
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btTransform to;
         to.setIdentity();
-        to.setOrigin(v);
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        BtEngineClosestConvexResultCallback ccb(m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+
         if(!ccb.hasHit())
         {
-            ret |= 0x02;                                                        // can traverse backvard
+            ret |= TraverseBackward;
         }
     }
 

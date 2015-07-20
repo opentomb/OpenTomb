@@ -1371,17 +1371,17 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(cmd->action == 1)//If Lara is grabbing the block
             {
-                int tf = character->checkTraverse(character->m_traversedObject);
+                int tf = character->checkTraverse(*character->m_traversedObject);
                 character->m_dirFlag = ENT_STAY;
                 ss_anim->anim_flags = ANIM_LOOP_LAST_FRAME;                     //We hold it (loop last frame)
 
-                if((cmd->move[0] == 1) && (tf & 0x01))                          //If player press up push
+                if((cmd->move[0] == 1) && (tf & Character::TraverseForward))                          //If player press up push
                 {
                     character->m_dirFlag = ENT_MOVE_FORWARD;
                     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
                     ss_anim->next_state = TR_STATE_LARA_PUSHABLE_PUSH;
                 }
-                else if((cmd->move[0] == -1) && (tf & 0x02))                    //If player press down pull
+                else if((cmd->move[0] == -1) && (tf & Character::TraverseBackward))                    //If player press down pull
                 {
                     character->m_dirFlag = ENT_MOVE_BACKWARD;
                     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
@@ -1403,7 +1403,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             character->m_camFollowCenter = 64;
             i = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-            if((cmd->action == 0) || !(0x01 & character->checkTraverse(character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
+            if((cmd->action == 0) || !(Character::TraverseForward & character->checkTraverse(*character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
@@ -1490,7 +1490,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             character->m_camFollowCenter = 64;
             i = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-            if((cmd->action == 0) || !(0x02 & character->checkTraverse(character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
+            if((cmd->action == 0) || !(Character::TraverseBackward & character->checkTraverse(*character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }

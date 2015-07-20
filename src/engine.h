@@ -149,17 +149,18 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    BtEngineClosestRayResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestRayResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false)
+        : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+        , m_container(cont)
+        , m_skip_ghost(skipGhost)
     {
-        m_container = cont;
-        m_skip_ghost = skipGhost;
     }
 
-    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
-        Room* r0 = m_container ? m_container->room : nullptr;
-        EngineContainer* c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
-        Room* r1 = c1 ? c1->room : nullptr;
+        const Room* r0 = m_container ? m_container->room : nullptr;
+        const EngineContainer* c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
+        const Room* r1 = c1 ? c1->room : nullptr;
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
@@ -187,7 +188,7 @@ public:
     }
 
     std::shared_ptr<EngineContainer> m_container;
-    bool               m_skip_ghost;
+    bool                             m_skip_ghost;
 };
 
 
