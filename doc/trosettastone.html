@@ -3289,7 +3289,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </div>
 </div>
 <div class="sect2">
-<h3 id="_tr5_specific_room_structure_changes">2.4. TR5-specific room structure changes</h3>
+<h3 id="_tr5_room_structure_changes">2.4. TR5 room structure changes</h3>
 <div class="paragraph"><p>In TR5 the room format was drastically changed. The room itself is made up of <em>sections</em>. These sections encompass a 3x3 sector grid (actually 3069x3069 pixels). Historically, these sections are referred as <em>layers</em>, however, more proper name for them is <em>volumes</em>. Layers are organized in a quadtree-like structure, and their purpose was presumably optimizing rendering by some kind of space partitioning and culling invisible volumes.</p></div>
 <div class="paragraph"><p>Another thing to note is that some <em>rooms</em> in TR5 do not actually contain visible mesh data. If concerned, we will refer to these rooms as <em>null rooms</em>.</p></div>
 <div class="sect3">
@@ -3781,8 +3781,20 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <div class="sect2">
 <h3 id="_the_concept">3.2. The Concept</h3>
 <div class="paragraph"><p>The <em>FloorData</em> defines special sector attributes such as individual floor and ceiling <em>corner heights</em> (slopes), <em>collisional</em> portals to other rooms, <em>climbability</em> of walls, and, most important of all, <em>the various types of triggering</em>. Each room sector (see <a href="#tr_room_sector">[tr_room_sector]</a> structure) points to the FloorData using <span class="monospaced">FDIndex</span> variable. It is referenced as an array of <em>16-bit unsigned integers</em> (`uint16`s).</p></div>
-<div class="paragraph"><p>Therefore, the <em>current sector</em> (not yet the FloorData pointer itself!) is calculated using this formula:</p></div>
-<div class="paragraph"><p>$SectorOffset = (((CurrentX - tr_room_info.x) / 1024) * tr_room.NumZsectors) + ((CurrentZ - tr_room_info.z) / 1024)$</p></div>
+<div class="paragraph"><p>Therefore, the <em>current <span class="monospaced">tr_room_sector</span> offset</em> (not yet the FloorData pointer itself!) is calculated using this formula:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><div><div class="paragraph"><p>$S_{Offset} = (((X_{current} - X_{room}) / 1024) \times n_{Zsectors}) + ((Z_{current} - Z_{room}) / 1024)$</p></div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>&#8230;where $X_{current}$ and $Z_{current}$ are current player positions, $X_{room}$ and $Z_{room}$ are corresponding <span class="monospaced">tr_room_info.x</span> and <span class="monospaced">tr_room_info.z</span> fields, and $n_{Zsectors}$ is <span class="monospaced">tr_room.NumZsectors</span> value.</p></div>
 <div class="paragraph"><p>Then, the <em>current FloorData pointer</em> is derived from calculated <span class="monospaced">tr_room_sector</span> structure&#8217;s <span class="monospaced">FDIndex</span> field. In other words, <span class="monospaced">FDindex</span> is an offset into the <span class="monospaced">FloorData[]</span> array.</p></div>
 <div class="paragraph"><p>As mentioned above, The FloorData consists of solely <span class="monospaced">uint16_t</span> entries without general structure&#8201;&#8212;&#8201;the way engine treats specific entry depends on the sequence order and type of previously parsed entries. While it&#8217;s a bit difficult to understand it at first, you should get used to it. Main thing to remember is the FloorData should be read sequentially.</p></div>
 </div>
@@ -6696,7 +6708,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 05:30:39 MSK
+Last updated 2015-07-21 05:47:52 MSK
 </div>
 </div>
 </body>
