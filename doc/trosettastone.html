@@ -2139,11 +2139,22 @@ width:100%;
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>When level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em> (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released by Eidos / Core, along with TR5.</p></div>
+<div class="paragraph"><p>As level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em> (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released by Eidos / Core, along with TR5.</p></div>
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>Also, if external programs and utilities are concerned, here&#8217;s abbreviations for them:</p></div>
+<div class="paragraph"><p>When we provide some version-specific info about certain structures or methods, this information will be marked with special bullet images, defining engine versions for which this info is applicable: <span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span> is for TR1, <span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span> is for TR2, <span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> is for TR3, <span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> is for TR4, and <span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> is for TR5. Version-specific information will continue up to the next paragraph or list entry, until otherwise noted.</p></div>
+<div class="paragraph"><p>Also, if external programs and utilities are involved, here are abbreviations for them:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2176,17 +2187,6 @@ width:100%;
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>When there is version-specific info about certain structures or methods, this information will be marked with special bullet images, defining engine versions for which this info is applicable: <span class="image">
-<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
-</span> is for TR1, <span class="image">
-<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
-</span> is for TR2, <span class="image">
-<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
-</span> is for TR3, <span class="image">
-<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
-</span> is for TR4, and <span class="image">
-<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> is for TR5. Version-specific information will continue up to the next paragraph or list entry, until otherwise noted.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_current_unknowns">1.3. Current unknowns</h3>
@@ -2305,7 +2305,7 @@ Clarify fog bulb values which affect its radius.
 <table class="tableblock frame-all grid-all"
 style="
 margin-left:auto; margin-right:auto;
-width:50%;
+width:70%;
 ">
 <col style="width:16%;">
 <col style="width:83%;">
@@ -2338,16 +2338,44 @@ width:50%;
 <td class="tableblock halign-right valign-top" ><p class="tableblock"><span class="monospaced">float</span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">specifies a 32-bit IEEE-754 floating-point number</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-right valign-top" ><p class="tableblock"><span class="monospaced">mix_float</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">specifies non-trivial 32-bit &#8220;hybrid&#8221; float&#8201;&#8212;&#8201;see further</p></td>
+</tr>
 </tbody>
 </table>
-<div class="paragraph"><p>There are also specific Tomb Raider data types (packed or hybrid), which will be mentioned specially.</p></div>
-<div class="paragraph"><p>All multi-byte integers (<span class="monospaced">{u}int16_t</span>, <span class="monospaced">{u}int32_t</span>) are stored in little-endian (Intel-x86, etc.) format, with the least significant byte stored first and the
-most significant byte stored last. When using this data in platforms with big-endian (PowerPC, etc.) number format, be sure to reverse the order of bytes.</p></div>
-<div class="paragraph"><p>Data alignment is something one has to be careful about. When some entity gets an address that is a multiple of $n$, it is said to be $n$-byte aligned. The reason
-it is important here is that some systems prefer multibyte alignment for multibyte quantities, and compilers for such systems may pad the data to get the
-&#8220;correct&#8221; alignments, thus making the in-memory structures out of sync with their file counterparts. However, a compiler may be commanded to use a lower level
-of alignment, one that will not cause padding. And for TR&#8217;s data structures, 2-byte alignment should be successful in nearly all cases, with exceptions noted
-below.</p></div>
+<div class="paragraph"><p>All multi-byte integers (<span class="monospaced">{u}int16_t</span>, <span class="monospaced">{u}int32_t</span>) are stored in little-endian (Intel-x86, etc.) format, with the least significant byte stored first and the most significant byte stored last. When using this data in platforms with big-endian (PowerPC, etc.) number format, be sure to reverse the order of bytes.</p></div>
+<div class="sect4">
+<h5 id="_mixed_float_data_type">Mixed float data type</h5>
+<div class="paragraph"><p>This very specific data type mimics floating-point behaviour, <em>while remaining integer</em>. It is done by splitting floating-point value into whole and fractional parts, and keeping each part as <span class="monospaced">int16_t</span> and <span class="monospaced">uint16_t</span> correspondingly. Whole part is kept as it is, while fractional part is multiplied by 65536, and then kept as unsigned integer. So, the formula to calculate floating-point from mixed float is:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">$F_{real} = P_{whole} + ( P_{frac} \div 65536 )$</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p>&#8230;where $P_{whole}$ is whole part of mixed float (signed), and $P_{frac}$ is fractional part of mixed float.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>The reason why such complicated setup was invented is to avoid using floating-point numbers. In 90% of all cases, Tomb Raider engines use integer numbers, even for geometry calculations and animation interpolations. The root of this setup lies in multi-platform nature of the code, which was simultaneously written for PC and PlayStation. While PCs had enough computational power to deal with floats at that time, PlayStation relied only on integers.</p></div>
+<div class="paragraph"><p>However, some internal variables and constants (like drawing distance, fog distance constants and some light properties) are PC-specific and stored in floating point numbers. Also, last game in series, TR5, extensively used floating-point numbers for certain data types&#8201;&#8212;&#8201;like colours, vertices and coordinates.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_data_alignment">Data alignment</h5>
+<div class="paragraph"><p>Data alignment is something one has to be careful about. When some entity gets an address that is a multiple of $n$, it is said to be $n$-byte aligned. The reason it is important here is that some systems prefer multibyte alignment for multibyte quantities, and compilers for such systems may pad the data to get the &#8220;correct&#8221; alignments, thus making the in-memory structures out of sync with their file counterparts. However, a compiler may be commanded to use a lower level of alignment, one that will not cause padding. And for TR&#8217;s data structures, 2-byte alignment should be successful in nearly all cases, with exceptions noted below.</p></div>
 <div class="paragraph"><p>To set single-byte alignment in any recent compiler, use the following compiler directive:</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(push, 1)</span>
@@ -2356,16 +2384,6 @@ below.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(pop)</span>
 </pre></div></div></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">
-<div class="paragraph"><p>In 90% of all cases, Tomb Raider engines use integer numbers, even for geometry calculations and animation interpolations. The root of this setup lies in multi-platform nature of the code, which was simultaneously written for PC and PlayStation. While PCs had enough computational power to deal with floats at that time, PlayStation relied only on integers.</p></div>
-<div class="paragraph"><p>However, some internal variables and constants (like drawing distance and fog distance constants) are PC-specific and stored in floating point numbers. Also, last game in series, TR5, extensively used floating-point numbers for certain data types&#8201;&#8212;&#8201;like colours, vertices, lights and some coordinates.</p></div>
-</td>
-</tr></table>
 </div>
 </div>
 <div class="sect3">
@@ -4646,16 +4664,7 @@ into the <span class="monospaced">Vertices[]</span> array for the mesh. Other ar
 <h3 id="_meshes">4.2. Meshes</h3>
 <div class="paragraph"><p>The sign of the number of normals specifies which sort of lighting to use. If the sign is positive, then external vertex lighting is used, with the lighting calculated from the room&#8217;s ambient and point-source lighting values. The latter appears to use a simple Lambert law for directionality: intensity is proportional to $\max(\langle (\mathrm{normal direction}), (\mathrm{direction to source}) \rangle, 0)$. If the sign is negative, then internal vertex lighting is used, using the data included with
 the mesh.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
-</td>
-<td class="content">
-<div class="paragraph"><p>This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them.</p></div>
-</td>
-</tr></table>
-</div>
+<div class="paragraph"><p><em>'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the &#8216;NumXXX` elements that precede them.</em>&#8217;</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr2_mesh</span>
 <span class="p">{</span>
@@ -4680,62 +4689,64 @@ the mesh.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_static_meshes">4.3. Static Meshes</h3>
+<div class="paragraph"><p>As the name tells, static meshes are meshes that don&#8217;t move (e.g. skeletons lying on the floor, spiderwebs, trees, statues, etc.) Usually it implies that static mesh is completely non-interactive, i.e. all it does is sitting there in place serving as an ornament.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content"><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Since TR4, certain static meshes became <em>destroyable</em> (either by shooting or exploding them), and even gained ability to activate <em>heavy triggers</em>. Such static meshes are called <em>shatters</em>. Engine tells shatter statics from ordinary ones judging by their IDs, i.e. shatter static mesh must be in a specific slot. This behaviour is hardcoded.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>StaticMeshes have two bounding boxes. First one serves as visibililty box, and other is the collisional box. The former is being used for visibility testing, and the latter is used for collision testing.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * StaticMesh structure. This defines meshes that don&#39;t move (e.g. skeletons</span>
-<span class="cm"> * lying on the floor, spiderwebs, trees, statues, etc.)</span>
-<span class="cm"> * StaticMeshes have two bounding boxes; it is not clear why they have more than</span>
-<span class="cm"> * one. One could be the visibililty box, and one could be the collisional</span>
-<span class="cm"> * box, for instance; the former being used for visibility testing, and the</span>
-<span class="cm"> * latter for collision testing.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_staticmesh</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_staticmesh</span>   <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 32 bytes</span>
-    <span class="kt">uint32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Items[])</span>
-    <span class="kt">uint16_t</span> <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// mesh (offset into MeshPointers[])</span>
-    <span class="n">tr2_vertex</span> <span class="n">BoundingBox</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">];</span> <span class="c1">// First index is which one; second index is opposite corners</span>
-    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// Meaning uncertain; it is usually 2, and is 3 for objects Lara can travel through,</span>
-                      <span class="c1">// like TR2&#39;s skeletons and underwater vegetation</span>
+    <span class="kt">uint32_t</span>   <span class="n">ID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Items[])</span>
+    <span class="kt">uint16_t</span>   <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// mesh (offset into MeshPointers[])</span>
+    <span class="n">tr2_vertex</span> <span class="n">VisibilityBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="n">tr2_vertex</span> <span class="n">CollisionBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+    <span class="kt">uint16_t</span>   <span class="n">Flags</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p>For <span class="monospaced">VisibilityBox</span> and <span class="monospaced">CollisionBox</span>, dimensions are specified using two vectors, first being the <span class="monospaced">bounding box minimum</span>, and second being the <span class="monospaced">bounding box maximum</span>.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span> <span class="monospaced">Flags</span> value is usually 2, and is 3 for static meshes <em>without collision</em>, like plants and lying skeletons. Since TR3, value is ignored, and no-collision mode is obtained using degenerate collision box (with all-zero or all-one coordinates).</p></div>
 </div>
 <div class="sect2">
-<h3 id="_moveables">4.4. Moveables</h3>
+<h3 id="_entities_2">4.4. Entities</h3>
+<div class="paragraph"><p>This defines a list of contiguous meshes that comprise one object, which is called <em>entity</em> or <em>moveable</em>. This structure also points to the hierarchy and offsets of the meshes (<span class="monospaced">MeshTree</span>), and also to the animations used (<span class="monospaced">Animation</span>); these will be described in detail below. If the Animation index is -1, that means that there are no predefined animations, and entity&#8217;s movement is all generated by the engine; an example is Lara&#8217;s ponytail or rolling balls from TR4 and TR5.</p></div>
+<div class="paragraph"><p>Some entities are really stationary, such as locks and the skybox, and some are not rendered at all, such as &#8220;camera target&#8221; points to aim the camera at, flame emitters, AI objects and other service entities. Such invisible moveables are frequently called <em>nullmeshes</em>, because usually they have no valid mesh index specified for them.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * Moveable structure. This defines a list of contiguous meshes that</span>
-<span class="cm"> * comprise one object.</span>
-<span class="cm"> * This structure also points to the hierarchy and offsets of the meshes</span>
-<span class="cm"> * (MeshTree), and also to the animations used (Animation); these will be</span>
-<span class="cm"> * described in detail below. If the Animation index is -1, that means that</span>
-<span class="cm"> * the entity&#39;s animations are all generated by the engine; an example is</span>
-<span class="cm"> * Lara&#39;s ponytail. Some movables are really stationary, such as locks and</span>
-<span class="cm"> * the sky, and some are not rendered, such as ``look at me&#39;&#39; points to aim</span>
-<span class="cm"> * the camera at.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_moveable</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_entity</span>  <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 18 bytes</span>
-    <span class="kt">uint32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Item Identifier (matched in Items[])</span>
-    <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span> <span class="c1">// number of meshes in this object</span>
+    <span class="kt">uint32_t</span> <span class="n">ID</span><span class="p">;</span>           <span class="c1">// Entity Identifier (matched in Items[])</span>
+    <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span>    <span class="c1">// number of meshes in this object</span>
     <span class="kt">uint16_t</span> <span class="n">StartingMesh</span><span class="p">;</span> <span class="c1">// stating mesh (offset into MeshPointers[])</span>
-    <span class="kt">uint32_t</span> <span class="n">MeshTree</span><span class="p">;</span> <span class="c1">// offset into MeshTree[]</span>
-    <span class="kt">uint32_t</span> <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// byte offset into Frames[] (divide by 2 for Frames[i])</span>
-    <span class="kt">uint16_t</span> <span class="n">Animation</span><span class="p">;</span> <span class="c1">// offset into Animations[]</span>
+    <span class="kt">uint32_t</span> <span class="n">MeshTree</span><span class="p">;</span>     <span class="c1">// offset into MeshTree[]</span>
+    <span class="kt">uint32_t</span> <span class="n">FrameOffset</span><span class="p">;</span>  <span class="c1">// byte offset into Frames[] (divide by 2 for Frames[i])</span>
+    <span class="kt">uint16_t</span> <span class="n">Animation</span><span class="p">;</span>    <span class="c1">// offset into Animations[]</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> There is an extra <span class="monospaced">uint16_t</span> at the end of <span class="monospaced">tr_moveable</span> structure, which is used for alignment. Consider it while parsing.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_items">4.5. Items</h3>
-<div class="paragraph"><p>Items are instances of objects, which can be sprite sequences or movables. For an object to appear in a level, it must be referenced in the <span class="monospaced">Items[]</span>
-array. Multiple instances are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID
-is used to locate the appropriate sprite sequence or movable for the item.</p></div>
+<div class="paragraph"><p>Items are instances of entities, which can be sprite sequences or movables. For an object to appear in a level, it must be referenced in the <span class="monospaced">Items[]</span>
+array. Multiple instances are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID is used to locate the appropriate sprite sequence or movable for the item.</p></div>
 <div class="listingblock">
 <a id="tr2_item"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_item</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_item</span>     <span class="c1">// 24 bytes [TR1: 22 bytes]</span>
 <span class="p">{</span>
-    <span class="c1">// 24 bytes [TR1: 22 bytes]</span>
     <span class="kt">int16_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span> <span class="c1">// which room contains this item</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// item position in world coordinates</span>
@@ -4756,9 +4767,8 @@ is used to locate the appropriate sprite sequence or movable for the item.</p></
 they are also used for some scenery objects and pickup items, though this use gets less as one goes from TR1 to TR3. The various &#8220;Sides&#8221; below are the
 positions of the sprite sides relative to the sprite&#8217;s overall position, measured in TR&#8217;s world-coordinate units.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_sprite_texture</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_sprite_texture</span>   <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 16 bytes</span>
     <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">y</span><span class="p">;</span>
@@ -4773,12 +4783,10 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
 </div>
 <div class="sect2">
 <h3 id="_sprite_sequences">4.7. Sprite Sequences</h3>
-<div class="paragraph"><p>These are collections of sprites that are referred to as a group. The members of this group can be cycled through (animated sprites such as flames) or selected
-in other ways (text). Some sequences have only one member; this is done so as to access all the sprites in the same way.</p></div>
+<div class="paragraph"><p>These are collections of sprites that are referred to as a group. The members of this group can be cycled through (animated sprites such as flames) or selected in other ways (text). Some sequences have only one member; this is done so as to access all the sprites in the same way.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_sprite_sequence</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_sprite_sequence</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 8 bytes</span>
     <span class="kt">int32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Item identifier (matched in Items[])</span>
     <span class="kt">int16_t</span> <span class="n">NegativeLength</span><span class="p">;</span> <span class="c1">// negative of ``how many sprites are in this sequence&#39;&#39;</span>
     <span class="kt">int16_t</span> <span class="n">Offset</span><span class="p">;</span> <span class="c1">// where (in sprite texture list) this sequence starts</span>
@@ -4798,104 +4806,23 @@ describes which meshes to be used (a contiguous set of them referred to in <span
 <div class="paragraph"><p>The hierarchy used is a branching one, with the meshes being at the nodes, and with the first mesh being the root node. The <span class="monospaced">MeshTree[]</span> values, called &#8220;Bone2&#8221;
 in some documentation, are applied to each of the child meshes in sequence; they are sets of four <span class="monospaced">int32_t</span>'s, the first being a hierarchy
 operator, and the remaining three being the coordinates in the parent mesh&#8217;s system. A hierarchy example is that for the Lara meshes:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-Hips
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left thigh
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left shin
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left foot
-</p>
-</li>
-</ul></div>
-</li>
-</ul></div>
-</li>
-<li>
-<p>
-Right thigh
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Right shin
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Right foot
-</p>
-</li>
-</ul></div>
-</li>
-</ul></div>
-</li>
-<li>
-<p>
-Torso
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left inner arm
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left outer arm
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Left hand
-</p>
-</li>
-</ul></div>
-</li>
-</ul></div>
-</li>
-<li>
-<p>
-Right inner arm
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Right outer arm
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-Right hand
-</p>
-</li>
-</ul></div>
-</li>
-</ul></div>
-</li>
-<li>
-<p>
-Head
-</p>
-</li>
-</ul></div>
-</li>
-</ul></div>
-</li>
-</ul></div>
-<div class="paragraph"><p>(Ponytail is a separate object)</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:70%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
+<img src="images/illustrations/meshtree.png" alt="illustrations/meshtree.png" width="450" height="446" title="Lara&#8217;s MeshTree">
+</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Top-down hierarchy of Lara&#8217;s MeshTree. Hips is a root mesh. Ponytail is not listed, as it is a separate object.</em></p></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph"><p>This is implemented by using a stack of meshes and &#8220;push&#8221; and &#8220;pop&#8221; operations in <span class="monospaced">MeshTree[]</span>. Normally, each mesh&#8217;s parent is the previous mesh in series.
 But such meshes can be &#8220;remembered&#8221; by adding them to a stack of meshes with a &#8220;push&#8221; operation. This remembered mesh can then be used as the parent mesh
 with a &#8220;pop&#8221; operation. It is not clear what the maximum stack depth is; most TR mesh stacks do not extend beyond 2 or 3 meshes.</p></div>
@@ -4932,127 +4859,159 @@ standing animation borrow their other animations from the fully-animated ones.</
 </div>
 <div class="sect2">
 <h3 id="_data_structures">5.2. Data Structures</h3>
+<div class="sect3">
+<h4 id="_mesh_tree_structure">5.2.1. Mesh Tree structure</h4>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * MeshTree structure</span>
-<span class="cm"> *</span>
-<span class="cm"> * MeshTree[] is actually groups of four uint32_t&#39;s. The first one is a</span>
-<span class="cm"> * ``flags&#39;&#39; word;</span>
-<span class="cm"> *    bit 1 (0x0002) indicates ``put the parent mesh on the mesh stack&#39;&#39;;</span>
-<span class="cm"> *    bit 0 (0x0001) indicates ``take the top mesh off of the mesh stack and use as the parent mesh&#39;&#39;</span>
-<span class="cm"> * when set, otherwise ``use the previous mesh are the parent mesh&#39;&#39;.</span>
-<span class="cm"> * When both are present, the bit-0 operation is always done before the bit-1 operation; in effect, read the stack but do not change it.</span>
-<span class="cm"> * The next three uint32_t&#39;s are X, Y, Z offsets of the mesh&#39;s origin from the parent mesh&#39;s origin.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_meshtree</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_meshtree_node</span> <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 4 bytes</span>
-    <span class="kt">int32_t</span> <span class="n">Coord</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">Flags</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">Offset_X</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">Offset_Y</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">Offset_Z</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">MeshTree[]</span> array consists of meshtree nodes.</p></div>
+<div class="paragraph"><p>In <span class="monospaced">Flags</span> field, two bytes are used:
+* Bit 0 (<span class="monospaced">0x0001</span>) indicates <em>&#8220;take the top mesh off of the mesh stack and use as the parent mesh&#8221; when set</em>, otherwise <em>&#8220;use the previous mesh are the parent mesh&#8221;</em>.
+* Bit 1 (<span class="monospaced">0x0002</span>) indicates &#8220;put the parent mesh on the mesh stack&#8221;.</p></div>
+<div class="paragraph"><p>When both bits are set, the <em>Bit 0</em> operation is always done before the <em>Bit 1</em> operation. In effect, <em>read the stack but do not change it</em>.</p></div>
+<div class="paragraph"><p><span class="monospaced">Offset_X</span>, <span class="monospaced">Offset_Y</span> and <span class="monospaced">Offset_Z</span> are offsets of the mesh&#8217;s origin from the parent mesh&#8217;s origin.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_animation_structure">5.2.2. Animation structure</h4>
+<div class="paragraph"><p>This describes each individual animation. These may be looped by specifying the next animation to be itself. In TR2 and TR3, one must be careful when parsing frames using the FrameSize value as the size of each frame, since an animation&#8217;s frame range may extend into the next animation&#8217;s frame range, and that may have a different FrameSize value.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * Animation structure.</span>
-<span class="cm"> * This describes each individual animation; these may be looped by specifying</span>
-<span class="cm"> * the next animation to be itself. In TR2 and TR3, one must be careful when</span>
-<span class="cm"> * parsing frames using the FrameSize value as the size of each frame, since</span>
-<span class="cm"> * an animation&#39;s frame range may extend into the next animation&#39;s frame range,</span>
-<span class="cm"> * and that may have a different FrameSize value.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_animation</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_animation</span> <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 32 bytes</span>
-    <span class="kt">uint32_t</span> <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// byte offset into Frames[] (divide by 2 for Frames[i])</span>
-    <span class="kt">uint8_t</span> <span class="n">FrameRate</span><span class="p">;</span>    <span class="c1">// Engine ticks per frame</span>
-    <span class="kt">uint8_t</span> <span class="n">FrameSize</span><span class="p">;</span> <span class="c1">// number of int16_t&#39;s in Frames[] used by this animation</span>
-    <span class="kt">uint16_t</span> <span class="n">StateID</span><span class="p">;</span>
-    <span class="kt">uint8_t</span> <span class="n">Unknown2</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
-    <span class="kt">uint16_t</span> <span class="n">FrameStart</span><span class="p">;</span> <span class="c1">// first frame in this animation</span>
-    <span class="kt">uint16_t</span> <span class="n">FrameEnd</span><span class="p">;</span> <span class="c1">// last frame in this animation (numframes = (End - Start) + 1)</span>
-    <span class="kt">uint16_t</span> <span class="n">NextAnimation</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">NextFrame</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">NumStateChanges</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">StateChangeOffset</span><span class="p">;</span> <span class="c1">// offset into StateChanges[]</span>
-    <span class="kt">uint16_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// How many of them to use.</span>
-    <span class="kt">uint16_t</span> <span class="n">AnimCommand</span><span class="p">;</span> <span class="c1">// offset into AnimCommand[]</span>
+    <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// B</span>
+    <span class="kt">uint8_t</span>   <span class="n">FrameRate</span><span class="p">;</span>   <span class="c1">// Engine ticks per frame</span>
+    <span class="kt">uint8_t</span>   <span class="n">FrameSize</span><span class="p">;</span>   <span class="c1">// Number of int16_t&#39;s in Frames[] used by this animation</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">State_ID</span><span class="p">;</span>
+
+    <span class="n">mix_float</span> <span class="n">Speed</span><span class="p">;</span>
+    <span class="n">mix_float</span> <span class="n">Accel</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">FrameStart</span><span class="p">;</span> <span class="c1">// first frame in this animation</span>
+    <span class="kt">uint16_t</span>  <span class="n">FrameEnd</span><span class="p">;</span> <span class="c1">// last frame in this animation (numframes = (End - Start) + 1)</span>
+    <span class="kt">uint16_t</span>  <span class="n">NextAnimation</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">NextFrame</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">NumStateChanges</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">StateChangeOffset</span><span class="p">;</span> <span class="c1">// offset into StateChanges[]</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// How many of them to use.</span>
+    <span class="kt">uint16_t</span>  <span class="n">AnimCommand</span><span class="p">;</span> <span class="c1">// offset into AnimCommand[]</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">FrameOffset</span> is a byte offset into Frames[] (divide by 2 for Frames[i]).</p></div>
+<div class="paragraph"><p>For TR4 and TR5, extended version of <span class="monospaced">tr_animation</span> is used:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * State Change structure</span>
-<span class="cm"> * Each one contains the state to change to and which animation dispatches</span>
-<span class="cm"> * to use; there may be more than one, with each separate one covering a different</span>
-<span class="cm"> * range of frames.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_state_change</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_animation</span> <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 6 bytes</span>
+    <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// Byte offset into Frames[] (divide by 2 for Frames[i])</span>
+    <span class="kt">uint8_t</span>   <span class="n">FrameRate</span><span class="p">;</span>   <span class="c1">// Engine ticks per frame</span>
+    <span class="kt">uint8_t</span>   <span class="n">FrameSize</span><span class="p">;</span>   <span class="c1">// Number of int16_t&#39;s in Frames[] used by this animation</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">State_ID</span><span class="p">;</span>
+
+    <span class="n">mix_float</span> <span class="n">Speed</span><span class="p">;</span>
+    <span class="n">mix_float</span> <span class="n">Accel</span><span class="p">;</span>
+    <span class="n">mix_float</span> <span class="n">SpeedLateral</span><span class="p">;</span>
+    <span class="n">mix_float</span> <span class="n">AccelLateral</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">FrameStart</span><span class="p">;</span> <span class="c1">// first frame in this animation</span>
+    <span class="kt">uint16_t</span>  <span class="n">FrameEnd</span><span class="p">;</span>   <span class="c1">// last frame in this animation (numframes = (End - Start) + 1)</span>
+    <span class="kt">uint16_t</span>  <span class="n">NextAnimation</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">NextFrame</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">NumStateChanges</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">StateChangeOffset</span><span class="p">;</span> <span class="c1">// offset into StateChanges[]</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// How many of them to use.</span>
+    <span class="kt">uint16_t</span>  <span class="n">AnimCommand</span><span class="p">;</span>     <span class="c1">// offset into AnimCommand[]</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> <span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> In addition to <span class="monospaced">Speed</span> and <span class="monospaced">Accel</span> values, TR4 introduced <span class="monospaced">LateralSpeed</span> and <span class="monospaced">LateralAccel</span> values, which are used to move entity to the sides, rather than forward or backward. However, these values are only used for <em>any entity but Lara</em>&#8201;&#8212;&#8201;engine ignores them in such case.</p></div>
+<div class="paragraph"><p>Lateral speed and acceleration primarily used for &#8220;start-up&#8221; animations of NPCs&#8201;&#8212;&#8201;for example, armed baddies in TR4 can roll or jump aside.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_state_change_structure">5.2.3. State Change structure</h4>
+<div class="paragraph"><p>Each state change entry contains the state to change to and which animation dispatches to use; there may be more than one, with each separate one covering a different range of frames.</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_state_change</span> <span class="c1">// 6 bytes</span>
+<span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">StateID</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of ranges (seems to always be 1..5)</span>
-    <span class="kt">uint16_t</span> <span class="n">AnimDispatch</span><span class="p">;</span> <span class="c1">// Offset into AnimDispatches[]</span>
+    <span class="kt">uint16_t</span> <span class="n">AnimDispatch</span><span class="p">;</span>      <span class="c1">// Offset into AnimDispatches[]</span>
 <span class="p">};</span>
 </pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_animation_dispatch_structure">5.2.4. Animation Dispatch structure</h4>
+<div class="paragraph"><p>This specifies the next animation and frame to use; these are associated with some range of frames. This makes possible such specificity as one animation for left foot forward and another animation for right foot forward.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * Animation Dispatch structure</span>
-<span class="cm"> * This specifies the next animation and frame to use; these are associated</span>
-<span class="cm"> * with some range of frames. This makes possible such specificity as one</span>
-<span class="cm"> * animation for left foot forward and another animation for right foot forward.</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_anim_dispatch</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_anim_dispatch</span>    <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 8 bytes</span>
-    <span class="kt">int16_t</span> <span class="n">Low</span><span class="p">;</span>                        <span class="c1">// Lowest frame that uses this range</span>
-    <span class="kt">int16_t</span> <span class="n">High</span><span class="p">;</span>                       <span class="c1">// Highest frame (+1?) that uses this range</span>
-    <span class="kt">int16_t</span> <span class="n">NextAnimation</span><span class="p">;</span>      <span class="c1">// Animation to dispatch to</span>
-    <span class="kt">int16_t</span> <span class="n">NextFrame</span><span class="p">;</span>            <span class="c1">// Frame offset to dispatch to</span>
+    <span class="kt">int16_t</span> <span class="n">Low</span><span class="p">;</span>           <span class="c1">// Lowest frame that uses this range</span>
+    <span class="kt">int16_t</span> <span class="n">High</span><span class="p">;</span>          <span class="c1">// Highest frame (+1?) that uses this range</span>
+    <span class="kt">int16_t</span> <span class="n">NextAnimation</span><span class="p">;</span> <span class="c1">// Animation to dispatch to</span>
+    <span class="kt">int16_t</span> <span class="n">NextFrame</span><span class="p">;</span>     <span class="c1">// Frame offset to dispatch to</span>
 <span class="p">};</span>
 </pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_animcommand_structure">5.2.5. AnimCommand structure</h4>
+<div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of `int16_t`s packed into an array. As the <em>FloorData</em>, AnimCommands must be parsed sequentially, one by one.</p></div>
+<div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which determines how operand int16_t&#8217;s follow it. Some of them refer to the whole animation (jump and grab points, etc.), while others of them are associated with specific frames (sound, bubbles, etc.).</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * AnimCommand structure</span>
-<span class="cm"> * These are various commands associated with each animation; they are</span>
-<span class="cm"> * called ``Bone1&#39;&#39; in some documentation. They are varying numbers of int16_t&#39;s</span>
-<span class="cm"> * packed into an array; the first of each set is the opcode, which determines</span>
-<span class="cm"> * how operand int16_t&#39;s follow it. Some of them refer to the whole animation</span>
-<span class="cm"> * (jump and grab points, etc.), while others of them are associated with</span>
-<span class="cm"> * specific frames (sound, bubbles, etc.).</span>
-<span class="cm"> */</span>
-<span class="k">struct</span> <span class="n">tr2_anim_command</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_anim_command</span> <span class="c1">// 2 bytes</span>
 <span class="p">{</span>
-    <span class="c1">// 2 bytes</span>
     <span class="kt">int16_t</span> <span class="n">Value</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Here are all the <span class="monospaced">AnimCommand</span> opcodes and their operands.</p></div>
+<div class="paragraph"><p>Here are all the <span class="monospaced">AnimCommand</span> types and their arguments.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-1&#8201;&#8212;&#8201;3 operands. Position reference: (x,y,z); found in grab and block-move animations
+1&#8201;&#8212;&#8201;<strong>Set Position</strong> (3 arguments). Sets relative entity position (x, y, z); found in grab and block-move animations.
 </p>
 </li>
 <li>
 <p>
-2&#8201;&#8212;&#8201;2 operands. Position reference on surface for jumping: (x,z) for horizontal and (y,z) for vertical surfaces(?)
+2&#8201;&#8212;&#8201;<strong>Jump Distance</strong> (2 arguments). Vertical and horizontal speed for jumping.
 </p>
 </li>
 <li>
 <p>
-3&#8201;&#8212;&#8201;No operands. Not clear; occurs in animations that are &#8220;slaved&#8221; to other animations, such as Lara throwing switches or moving blocks.
+3&#8201;&#8212;&#8201;<strong>Empty Hands</strong> (No arguments). This command is performed in the end of animation of Lara pulling a switch, inserting a key, grabbing a pushable block, and so on. It is needed because engine &#8220;locks&#8221; Lara&#8217;s ability to draw weapons or ignite a flare when such action is performed, and only way to unlock it is to call this command.
 </p>
 </li>
 <li>
 <p>
-4&#8201;&#8212;&#8201;No operands. Not clear; occurs in some death and settling-down animations, but not all.
+4&#8201;&#8212;&#8201;<strong>Kill</strong> (No arguments). Kill entity. This effectively disables entity and removes it from the world.
 </p>
 </li>
 <li>
 <p>
-5&#8201;&#8212;&#8201;2 operands. The first one is a frame number, and the second one is the ID of the sound to play at that frame (internal sound index).
+5&#8201;&#8212;&#8201;<strong>Play Sound</strong> (2 arguments). The first argument is a frame number, and the second one is the ID of the sound to play at that frame (internal sound index).
 </p>
-</li>
-</ul></div>
-<div class="paragraph"><p>In TR2 and TR3, one of the sound indices two highest bits may be set; when they are, their meanings are:</p></div>
+<div class="openblock">
+<div class="content">
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Besides Sound ID, second argument may contain two &#8220;packed&#8221; bit flags. Their meanings are:</p></div>
+</div></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -5064,100 +5023,20 @@ standing animation borrow their other animations from the fully-animated ones.</
 <span class="monospaced">0x8000</span>&#8201;&#8212;&#8201;play this sound when in water (example: running through shallow water)
 </p>
 </li>
-<li>
-<p>
-6&#8201;&#8212;&#8201;2 operands. The first one is a frame number, and the second one is some miscellaneous action.
-</p>
-<div class="ulist"><ul>
-<li>
-<p>
-0&#8201;&#8212;&#8201;Occurs in flipping-over animations; freeze camera at current position until end of animation?
-</p>
-</li>
-<li>
-<p>
-3&#8201;&#8212;&#8201;Make bubble
-</p>
-</li>
-<li>
-<p>
-12&#8201;&#8212;&#8201;Temporarily stop responding to controls?
-</p>
-</li>
-<li>
-<p>
-etc.
-</p>
-</li>
 </ul></div>
 </li>
 <li>
 <p>
-14 and 15&#8201;&#8212;&#8201;Some kind of camera control?
-</p>
-</li>
-<li>
-<p>
-18&#8201;&#8212;&#8201;? <br>
-</p>
-</li>
-<li>
-<p>
-19&#8201;&#8212;&#8201;?
-</p>
-</li>
-<li>
-<p>
-20&#8201;&#8212;&#8201;Lara changing clothes (using a different Lara model)
-</p>
-</li>
-<li>
-<p>
-21&#8201;&#8212;&#8201;?
-</p>
-</li>
-<li>
-<p>
-22&#8201;&#8212;&#8201;?
-</p>
-</li>
-<li>
-<p>
-23&#8201;&#8212;&#8201;Hide object
-</p>
-</li>
-<li>
-<p>
-24&#8201;&#8212;&#8201;Show object
-</p>
-</li>
-<li>
-<p>
-26&#8201;&#8212;&#8201;Some kind of camera control?
+6&#8201;&#8212;&#8201;<strong>Effect</strong> (2 operands). The first one is a frame number, and the second one is effect number. Note that <em>effect</em> here is the very same kind of effect used in <em>trigger action</em> with the same name. Effect meaning will be listed separately.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>TR3 has additional ones, such as</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
--32736 = 0x8000 + 32
-</p>
-</li>
-<li>
-<p>
-32
-</p>
-</li>
-<li>
-<p>
-16416 = 0x4000 + 32
-</p>
-</li>
-</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_frame_structure">5.2.6. Frame structure</h4>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cm">/*</span>
-<span class="cm"> * Frame structure.</span>
+<span class="cm"> *</span>
 <span class="cm"> *</span>
 <span class="cm"> * Frames indicate how composite meshes are positioned and rotated. They work</span>
 <span class="cm"> * in conjunction with Animations[] and MeshTree[]. A given frame has the following</span>
@@ -5182,6 +5061,7 @@ etc.
 <span class="cm"> * sets in TR2/3, EXCEPT that the word order is reversed.</span>
 <span class="cm"> */</span>
 </pre></div></div></div>
+</div>
 </div>
 </div>
 </div>
@@ -6708,7 +6588,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 05:47:52 MSK
+Last updated 2015-07-21 10:26:06 MSK
 </div>
 </div>
 </body>
