@@ -15,7 +15,5 @@ out vec4 color;
 void main(void)
 {
     vec4 texColor = texture(color_map, varying_texCoord);
-    if(texColor.r < 0.5)
-        discard;
     color = vec4(varying_color.rgb, texColor.r);
 }
