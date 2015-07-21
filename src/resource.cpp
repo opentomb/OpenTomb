@@ -1338,7 +1338,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
         assert( af->anim_command < engine_world.anim_commands.size() );
         int16_t *pointer    = &engine_world.anim_commands[af->anim_command];
 
-        for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
+        for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
             const auto command = *pointer;
             ++pointer;

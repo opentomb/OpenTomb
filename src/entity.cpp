@@ -868,10 +868,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                     }
 
                 }
-                else
-                {
-                    pointer += 2;
-                }
+                pointer += 2;
                 break;
 
             case TR_ANIMCOMMAND_PLAYEFFECT:
@@ -998,10 +995,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                         break;
                     }
                 }
-                else
-                {
-                    pointer++;
-                }
+                pointer++;
                 break;
             }
         }
