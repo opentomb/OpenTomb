@@ -3608,18 +3608,18 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">XELA</span> landmark seemingly serves as a header for room structure. It is clear that <em>XELA</em> is a reversed <em>ALEX</em>, which is most likely the name of TR5 programmer, <em>Alex Davis</em>. It probably indicates that Alex Davis is responsible for changes in room structures.</p></div>
 <div class="paragraph"><p><span class="monospaced">RoomDataSize</span> is a handy value determining the size of the following data. You can use this value to quickly <em>parse thru</em> to the next room.</p></div>
-<div class="paragraph"><p><span class="monospaced">EndSDOffset</span>: usually this number <span class="monospaced">+ 216</span> will give you the offset from the start of the room data to the end of the <span class="monospaced">SectorData</span> section. However, it is known that this uint32_t could be equal to <span class="monospaced">0xFFFFFFFF</span>, so to calculate the end of <span class="monospaced">SectorData</span>, it is better to use the following value <span class="monospaced">StartSDOffset + 216 + ((NumXSectors * NumZSectors)*8)</span>, if you need to obtain this information.</p></div>
-<div class="paragraph"><p><span class="monospaced">StartSDOffset</span>: This number <span class="monospaced">+ 216</span> will give you the offset from the start of the room to the start of the <span class="monospaced">SectorData</span> section.</p></div>
-<div class="paragraph"><p><span class="monospaced">EndPortalOffset</span>: this number <span class="monospaced">+ 216</span> will give you the offset from the start of the room to the end of the portal data.</p></div>
+<div class="paragraph"><p><span class="monospaced">EndSDOffset</span>: usually this number <span class="monospaced">+216</span> will give you the offset from the start of the room data to the end of the <span class="monospaced">SectorData</span> section. However, it is known that this uint32_t could be equal to <span class="monospaced">0xFFFFFFFF</span>, so to calculate the end of <span class="monospaced">SectorData</span>, it is better to use the following value <span class="monospaced">StartSDOffset + 216 + ((NumXSectors * NumZSectors)*8)</span>, if you need to obtain this information.</p></div>
+<div class="paragraph"><p><span class="monospaced">StartSDOffset</span>: This number <span class="monospaced">+216</span> will give you the offset from the start of the room to the start of the <span class="monospaced">SectorData</span> section.</p></div>
+<div class="paragraph"><p><span class="monospaced">EndPortalOffset</span>: this number <span class="monospaced">+216</span> will give you the offset from the start of the room to the end of the portal data.</p></div>
 <div class="paragraph"><p><span class="monospaced">RoomX</span>, <span class="monospaced">RoomY</span> and <span class="monospaced">RoomZ</span> values are positions of room in world coordinates. <strong>NOTE:</strong> If room is <em>null room</em>, then each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">NumRoomTriangles</span> and <span class="monospaced">NumRoomRectangles</span> are respectively the numbers of triangular and rectangular faces in a given room. <strong>NOTE:</strong> If room is <em>null room</em>, each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">LightDataSize</span> is the size of the light data in bytes (<em>not</em> in <span class="monospaced">tr5_room_light</span> units).</p></div>
 <div class="paragraph"><p><span class="monospaced">Unknown6</span> could probably be a copy of <span class="monospaced">ReverbInfo</span> (see further), as its value usually ranges from 0 to 3.</p></div>
 <div class="paragraph"><p><span class="monospaced">RoomYTop</span> and <span class="monospaced">RoomYBottom</span> are equal to <span class="monospaced">yTop</span> and <span class="monospaced">yBottom</span> values in <a href="#tr_room_info">[tr_room_info]</a> structure. If room is a <em>null room</em>, both of these values are <span class="monospaced">0xCDCDCDCD</span>.</p></div>
 <div class="paragraph"><p><span class="monospaced">NumLayers</span> is a number of layers (volumes) in this room.</p></div>
-<div class="paragraph"><p><span class="monospaced">LayerOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the layer data.</p></div>
-<div class="paragraph"><p><span class="monospaced">VerticesOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the verex data.</p></div>
-<div class="paragraph"><p><span class="monospaced">PolyOffset</span>: this number <span class="monospaced">+ 216</span> will give you an offset from the start of the room data to the start of the rectangle/triangle data.</p></div>
+<div class="paragraph"><p><span class="monospaced">LayerOffset</span>: this number <span class="monospaced">+216</span> will give you an offset from the start of the room data to the start of the layer data.</p></div>
+<div class="paragraph"><p><span class="monospaced">VerticesOffset</span>: this number <span class="monospaced">+216</span> will give you an offset from the start of the room data to the start of the verex data.</p></div>
+<div class="paragraph"><p><span class="monospaced">PolyOffset</span>: this number <span class="monospaced">+216</span> will give you an offset from the start of the room data to the start of the rectangle/triangle data.</p></div>
 <div class="paragraph"><p><span class="monospaced">VerticesSize</span> is the size of vertex data block in bytes. Therefore, it <em>must</em> be a multiple of <span class="monospaced">tr5_room_vertex</span> size, else it means the block size is wrong.</p></div>
 <div class="paragraph"><p><span class="monospaced">Faces</span> is a sequential data array for the room polygons (both <span class="monospaced">tr_face4</span> and <span class="monospaced">tr_face3</span>),</p></div>
 <div class="admonitionblock">
@@ -3644,22 +3644,50 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </li>
 <li>
 <p>
-<em>Bit 3</em>&#8201;&#8212;&#8201;<strong>ONLY IN TR2-5:</strong> Set if the <em>skybox</em> can be seen from this room. Used to speed things up: if no rendered room has this bit set, then the sky can never been seen, so it is not rendered. Else, if at least one visible room has this bit set, then the sky must be drawn because it is (could be) visible.
+<em>Bit 3</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Set if the <em>skybox</em> can be seen from this room. Used to speed things up: if no rendered room has this bit set, then the sky can never been seen, so it is not rendered. Else, if at least one visible room has this bit set, then the sky must be drawn because it is (could be) visible.
 </p>
 </li>
 <li>
 <p>
-<em>Bit 5</em>&#8201;&#8212;&#8201;<strong>ONLY IN TR2-5:</strong> Lara&#8217;s ponytail gets blown by the wind. Beginning with TR3, some particle types are also be blown, if they end up in such room (particle type is specified by certain particle flag).
+<em>Bit 5</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Lara&#8217;s ponytail gets blown by the wind. Beginning with TR3, some particle types are also be blown, if they end up in such room (particle type is specified by certain particle flag).
 </p>
 </li>
 <li>
 <p>
-<em>Bit 6</em>&#8201;&#8212;&#8201;<strong>ONLY IN TR3-5:</strong> Unknown. A lot of rooms have this bit set but it seems it does nothing&#8230;
+<em>Bit 6</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Unknown. A lot of rooms have this bit set but it seems it does nothing&#8230;
 </p>
 </li>
 <li>
 <p>
-<em>Bit 7</em>&#8201;&#8212;&#8201;<strong>ONLY IN TR3-5:</strong> Different meaning in TR3 and TR4/5. In TR3, it means that room is filled with quicksand, while in TR4/5 it presumably blocks <em>global lens flare</em> from appearing in that room (in TRLE, checkbox which sets this flag is named <em>NL</em>).
+<em>Bit 7</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Different meaning in TR3 and TR4/5. In TR3, it means that room is filled with quicksand, while in TR4/5 it presumably blocks <em>global lens flare</em> from appearing in that room (in TRLE, checkbox which sets this flag is named <em>NL</em>).
 </p>
 </li>
 <li>
@@ -3669,22 +3697,48 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </li>
 <li>
 <p>
-<em>Bit 9</em>&#8201;&#8212;&#8201;<strong>ONLY IN TR3-5:</strong> The room has some <em>water reflectivity</em>. TRLE sets this bit when the R (<em>reflectivity</em>) option is used (in the same time, the amount of reflectivity typed by the user + 5 is put in the <span class="monospaced">water_scheme</span> byte). When the flag is set for normal room and there is water room below it, game engine creates &#8220;reflection effect&#8221; above the water surface&#8201;&#8212;&#8201;effectively it means that all the vertices at the bottom of the room receive caustics effect described well above.
+<em>Bit 9</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> The room has some <em>water reflectivity</em>. TRLE sets this bit when the R (<em>reflectivity</em>) option is used (in the same time, the amount of reflectivity typed by the user + 5 is put in the <span class="monospaced">water_scheme</span> byte). When the flag is set for normal room and there is water room below it, game engine creates &#8220;reflection effect&#8221; above the water surface&#8201;&#8212;&#8201;effectively it means that all the vertices at the bottom of the room receive caustics effect described well above.
 </p>
 </li>
 <li>
 <p>
-<em>Bit 11</em>&#8201;&#8212;&#8201;Not found in any original TR levels, but when the <em>D</em> flag is set in the TRLE, this bit is set. Was re-used in NGLE as a flag specifying <em>Damage room</em>.
+<em>Bit 11</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Not found in any original TR levels, but when the <em>D</em> flag is set in the TRLE, this bit is set. Was re-used in NGLE as a flag specifying <em>Damage room</em>.
 </p>
 </li>
 <li>
 <p>
-<em>Bit 12</em>&#8201;&#8212;&#8201;Not found in any original TR levels, but when the <em>P</em> flag is set in the TRLE, this bit is set. Was also re-used in NGLE as a flag specifying <em>Poisonous room</em>.
+<em>Bit 12</em>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Not found in any original TR levels, but when the <em>P</em> flag is set in the TRLE, this bit is set. Was also re-used in NGLE as a flag specifying <em>Poisonous room</em>.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><strong>ONLY IN TR3-5:</strong> <span class="monospaced">WaterScheme</span> is used for different purposes. If room is a water room, then it specifies underwater caustics patterns (maximum value is 15). If it is set for normal room <em>placed above the water room</em>, then it controls <em>wave strength</em> effect applied to the faces adjoining water room&#8201;&#8212;&#8201;but only if there is a special light, which radius reaches the vertices of this particular room.</p></div>
-<div class="paragraph"><p><strong>ONLY IN TR3-5:</strong> <span class="monospaced">ReverbInfo</span> defines <em>room reverberation type</em>. It affects sound postprocessing, if listener position belongs to that room. This feature was present <em>only in PlayStation versions</em> of the game, but not on PC. Nevertheless, the info is preserved in PC level files. Here are the types of reverberation:</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> <span class="monospaced">WaterScheme</span> is used for different purposes. If room is a water room, then it specifies underwater caustics patterns (maximum value is 15). If it is set for normal room <em>placed above the water room</em>, then it controls <em>wave strength</em> effect applied to the faces adjoining water room&#8201;&#8212;&#8201;but only if there is a special light, which radius reaches the vertices of this particular room.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> <span class="monospaced">ReverbInfo</span> defines <em>room reverberation type</em>. It affects sound postprocessing, if listener position belongs to that room. This feature was present <em>only in PlayStation versions</em> of the game, but not on PC. Nevertheless, the info is preserved in PC level files. Here are the types of reverberation:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3761,7 +3815,7 @@ width:30%;
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="./images/icons/tip.png" alt="Tip">
 </td>
 <td class="content">
 <div class="paragraph"><p>When parsing <span class="monospaced">FDSetup</span> for TR3, use only the lower 5 bits (0..4) to find the <span class="monospaced">Function</span> value, because some of TR3 <em>triangulation functions</em> use the upper 3 bits of the lower byte for other purpose. However, this will also work correctly in TR1 and TR2.</p></div>
@@ -3928,12 +3982,26 @@ width:30%;
 </div>
 <div class="sect3">
 <h4 id="_function_span_class_monospaced_0x06_span_8201_8212_8201_climbable_walls">3.4.6. Function <span class="monospaced">0x06</span>&#8201;&#8212;&#8201;Climbable Walls</h4>
-<div class="paragraph"><p>The <span class="monospaced">SubFunction</span> indicates climbability of walls; its value is the bitwise <span class="monospaced">OR</span> of the values associated with all the climbable-wall directions (<span class="monospaced">0x01</span> =
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> The <span class="monospaced">SubFunction</span> indicates climbability of walls; its value is the bitwise <span class="monospaced">OR</span> of the values associated with all the climbable-wall directions (<span class="monospaced">0x01</span> =
 +Z, <span class="monospaced">0x02</span> = +X, <span class="monospaced">0x04</span> = -Z, <span class="monospaced">0x08</span> = -X), e.g. SubFunction <span class="monospaced">0x09</span> indicates that the walls on both the +Z and -X sides of this sector are climbable.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_triangulation_functions_span_class_monospaced_0x07_span_to_span_class_monospaced_0x12_span_only_in_tr3_5">3.4.7. Triangulation functions <span class="monospaced">0x07</span> to <span class="monospaced">0x12</span> (only in TR3-5)</h4>
-<div class="paragraph"><p>Beginning with TR3, geometry layout of each sector was significantly changed. Engine introduced <em>triangles</em> as a minimal collisional unit, compared with <em>rectangles only</em> in TR1 and TR2. This advantage allowed to create much more organic and natural terrain (albeit still limited by minimal sector width and depth of 1024 units), but also complicated things a lot, introducing the whole new set of different FloorData collisional functions.</p></div>
+<h4 id="_functions_span_class_monospaced_0x07_span_to_span_class_monospaced_0x12_span_8201_8212_8201_triangulation">3.4.7. Functions <span class="monospaced">0x07</span> to <span class="monospaced">0x12</span>&#8201;&#8212;&#8201;Triangulation</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Beginning with TR3, geometry layout of each sector was significantly changed. Engine introduced <em>triangles</em> as a minimal collisional unit, compared with <em>rectangles only</em> in TR1 and TR2. This advantage allowed to create much more organic and natural terrain (albeit still limited by minimal sector width and depth of 1024 units), but also complicated things a lot, introducing the whole new set of different FloorData collisional functions.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4151,11 +4219,23 @@ width:100%;
 <div class="sect3">
 <h4 id="_function_span_class_monospaced_0x13_span_8201_8212_8201_monkeyswing_only_in_tr3_5">3.4.8. Function <span class="monospaced">0x13</span>&#8201;&#8212;&#8201;Monkeyswing (only in TR3-5)</h4>
 <div class="paragraph"><p><em>SubFunction is not used</em></p></div>
-<div class="paragraph"><p>Sets monkey-swingability of the ceiling in specified sector.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Sets monkey-swingability of the ceiling in specified sector.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_function_span_class_monospaced_0x14_span">3.4.9. Function <span class="monospaced">0x14</span></h4>
-<div class="paragraph"><p>This function has a different meaning in TR3 and TR4/5.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> This function has a different meaning in TR3 and TR4/5.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -4171,7 +4251,11 @@ In TR4 and TR5, this function is used together with special entity called <em>Tr
 </div>
 <div class="sect3">
 <h4 id="_function_span_class_monospaced_0x15_span">3.4.10. Function <span class="monospaced">0x15</span></h4>
-<div class="paragraph"><p>This function has a different meaning in TR3 and TR4.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> This function has a different meaning in TR3 and TR4.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -4210,116 +4294,100 @@ In TR4, this function is used together with special entity called <em>Mapper</em
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-SubFunction <span class="monospaced">0x00</span>: <strong>Trigger</strong>
-</p>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x00_span_8201_8212_8201_trigger">3.5.1. SubFunction <span class="monospaced">0x00</span>&#8201;&#8212;&#8201;Trigger</h4>
 <div class="paragraph"><p>Activated by Lara whenever she enters a given sector&#8201;&#8212;&#8201;either steps, climbs, jumps over it, and so on.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x01</span>: <strong>Pad</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x01_span_8201_8212_8201_pad">3.5.2. SubFunction <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;Pad</h4>
 <div class="paragraph"><p>Activated by Lara <em>only</em> if she steps or lands on a given sector.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x02</span>: <strong>Switch</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x02_span_8201_8212_8201_switch">3.5.3. SubFunction <span class="monospaced">0x02</span>&#8201;&#8212;&#8201;Switch</h4>
 <div class="paragraph"><p>This particular type of trigger takes first <span class="monospaced">ActionList</span> entry&#8217;s <span class="monospaced">Parameter</span> field <em>as a reference to specific switch entity in level</em>. It activates <em>every time the switch state is changed</em>. For <em>Object</em> trigger actions, <em>activation</em> means <em>performing <span class="monospaced">XOR</span> operation</em> on these object&#8217;s (entities) activation masks. (See next section for description of <em>Object</em> trigger action and <span class="monospaced">Parameter</span> field.)</p></div>
 <div class="paragraph"><p>Please note that this trigger type (as well as <em>any other trigger types</em>) always perform all trigger actions except <em>Object</em> in the same manner! Meaning, if there is a <em>Camera</em> or <em>Effect</em> trigger action, it will be performed every time the switch is flipped on or off.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x03</span>: <strong>Key</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x03_span_8201_8212_8201_key">3.5.4. SubFunction <span class="monospaced">0x03</span>&#8201;&#8212;&#8201;Key</h4>
 <div class="paragraph"><p>Similar to previous trigger type, it works only if there is a <em>keyhole entity</em> listed in the first <span class="monospaced">ActionList</span> entry&#8217;s <span class="monospaced">Parameter</span> field. It activates only if a key was inserted into that particular keyhole.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x04</span>: <strong>Pickup</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x04_span_8201_8212_8201_pickup">3.5.5. SubFunction <span class="monospaced">0x04</span>&#8201;&#8212;&#8201;Pickup</h4>
 <div class="paragraph"><p>As above, this type of trigger works only if there is a <em>pick-up entity</em> listed in the first <span class="monospaced">ActionList</span> entry&#8217;s <span class="monospaced">Parameter</span> field. It activates only if this item was picked up by Lara.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x05</span>: <strong>Heavytrigger</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x05_span_8201_8212_8201_heavytrigger">3.5.6. SubFunction <span class="monospaced">0x05</span>&#8201;&#8212;&#8201;Heavytrigger</h4>
 <div class="paragraph"><p>Activated by <em>specific entity type</em> (activator) wherever it enters a specified sector. Entity types which are able to activate <em>heavytriggers</em> are hardcoded, and usually include <em>NPCs (enemies), rolling balls and pushable objects</em>. Since TR4, heavytriggers may also be activated by destroying <em>shatter static mesh</em> which is placed in a given sector.</p></div>
 <div class="paragraph"><p>Note that heavytrigger <em>does not perform deactivation action</em>, if activator leaves trigger sector.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x06</span>: <strong>Antipad</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x06_span_8201_8212_8201_antipad">3.5.7. SubFunction <span class="monospaced">0x06</span>&#8201;&#8212;&#8201;Antipad</h4>
 <div class="paragraph"><p>Same as <em>Pad</em>&#8201;&#8212;&#8201;activates only if Lara has landed or stepped onto a given sector. The difference is, <em>Antipad</em> performs <em>deactivation</em> for each case of <em>Object</em> trigger action. What <em>deactivation</em> specifically means is it resets entity activation mask to zero (trigger mask is ignored), thus flipping entity activation procedure.</p></div>
 <div class="paragraph"><p>As it was mentioned for <em>Switch</em> trigger type, any other trigger actions beside <em>Object</em> will perform exactly in the same manner as with normal trigger types. So you shouldn&#8217;t expect soundtrack to stop, if you have placed <em>PlayTrack</em> trigger action for antipad.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x07</span>: <strong>Combat</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x07_span_8201_8212_8201_combat">3.5.8. SubFunction <span class="monospaced">0x07</span>&#8201;&#8212;&#8201;Combat</h4>
 <div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>with her weapons drawn</em>. This trigger type was (presumably) never used in original games.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x08</span>: <strong>Dummy</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x08_span_8201_8212_8201_dummy">3.5.9. SubFunction <span class="monospaced">0x08</span>&#8201;&#8212;&#8201;Dummy</h4>
 <div class="paragraph"><p>This type doesn&#8217;t perform <em>any trigger action</em> listed for it except <em>Object</em> type&#8201;&#8212;&#8201;for these trigger actions, it <em>applies standable collision for Lara on a given entities</em>, if such entities are in this trigger sector. For particular entity types, it works even if entity is deactivated (e.g. collapsing floor), but for other types it works only if entity was activated (e.g. trapdoors). Selected behaviour is most likely hardcoded.</p></div>
 <div class="paragraph"><p>It&#8217;s worth noting that <em>any</em> trigger type will apply standable collision on such entity types, if they are in the same sector. It&#8217;s not a bug, rather a way TR engines process FloorData.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x09</span>: <strong>Antitrigger</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x09_span_8201_8212_8201_antitrigger">3.5.10. SubFunction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Antitrigger</h4>
 <div class="paragraph"><p>Same as <em>Trigger</em>, but performs <em>deactivation</em> for each case of <em>Object</em> trigger action.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0A</span>: <strong>Heavy switch</strong> (TR4-5 only)
-</p>
-<div class="paragraph"><p>Don&#8217;t be fooled by the name of this trigger type. It is not literally a <em>switch</em>, as only similarity between it <em>switch</em> type is XOR operation with activation mask. In fact, this trigger performs action when <em>specific entity type</em> (activator) enters a given trigger sector, but <em>only if trigger mask is equal to activator&#8217;s activation mask</em>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0a_span_8201_8212_8201_heavy_switch">3.5.11. SubFunction <span class="monospaced">0x0A</span>&#8201;&#8212;&#8201;Heavy switch</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Don&#8217;t be fooled by the name of this trigger type. It is not literally a <em>switch</em>, as only similarity between it <em>switch</em> type is XOR operation with activation mask. In fact, this trigger performs action when <em>specific entity type</em> (activator) enters a given trigger sector, but <em>only if trigger mask is equal to activator&#8217;s activation mask</em>.</p></div>
 <div class="paragraph"><p>The best example of heavy switch setup is <em>Planetarium</em> in &#8220;The Lost Library&#8221;. Trigger mask is only applied to raising block if pushable in trigger sector has a similar activation mask.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0B</span>: <strong>Heavy antitrigger</strong> (TR4-5 only)
-</p>
-<div class="paragraph"><p>Same as <em>Antitrigger</em>, but performs <em>deactivation</em> for each case of <em>Object</em> trigger action.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0C</span>: <strong>Monkey</strong> (TR4-5 only)
-</p>
-<div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>in monkeyswing state</em>. Best example is locust swarm attacking Lara when she monkeyswings across the street in &#8220;Trenches&#8221;.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0D</span>: <strong>Skeleton</strong> (TR5 only)
-</p>
-<div class="paragraph"><p>This trigger type temporarily replaces Lara model with a combination of models #25 (Lara skeleton), #26 (see-through body) and #27 (see-through joints). See-through body and joints are applied on top of the skeleton model with additive blending.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0E</span>: <strong>Tightrope</strong> (TR5 only)
-</p>
-<div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>walking on a tightrope</em>.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x0F</span>: <strong>Crawl / duck</strong> (TR5 only)
-</p>
-<div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>crawling or crouching</em>.</p></div>
-</li>
-<li>
-<p>
-SubFunction <span class="monospaced">0x10</span>: <strong>Climb</strong> (TR5 only)
-</p>
-<div class="paragraph"><p>Activated by Lara whenever she enters a given sector <em>climbing on a wall</em>.</p></div>
-</li>
-</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0b_span_8201_8212_8201_heavy_antitrigger">3.5.12. SubFunction <span class="monospaced">0x0B</span>&#8201;&#8212;&#8201;Heavy antitrigger</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Same as <em>Antitrigger</em>, but performs <em>deactivation</em> for each case of <em>Object</em> trigger action.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0c_span_8201_8212_8201_monkey">3.5.13. SubFunction <span class="monospaced">0x0C</span>&#8201;&#8212;&#8201;Monkey</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Activated by Lara whenever she enters a given sector <em>in monkeyswing state</em>. Best example is locust swarm attacking Lara when she monkeyswings across the street in &#8220;Trenches&#8221;.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0d_span_8201_8212_8201_skeleton">3.5.14. SubFunction <span class="monospaced">0x0D</span>&#8201;&#8212;&#8201;Skeleton</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> This trigger type temporarily replaces Lara model with a combination of models #25 (Lara skeleton), #26 (see-through body) and #27 (see-through joints). See-through body and joints are applied on top of the skeleton model with additive blending.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0e_span_8201_8212_8201_tightrope">3.5.15. SubFunction <span class="monospaced">0x0E</span>&#8201;&#8212;&#8201;Tightrope</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Activated by Lara whenever she enters a given sector <em>walking on a tightrope</em>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x0f_span_8201_8212_8201_crawl">3.5.16. SubFunction <span class="monospaced">0x0F</span>&#8201;&#8212;&#8201;Crawl</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Activated by Lara whenever she enters a given sector <em>crawling or crouching</em>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_subfunction_span_class_monospaced_0x10_span_8201_8212_8201_climb">3.5.17. SubFunction <span class="monospaced">0x10</span>&#8201;&#8212;&#8201;Climb</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Activated by Lara whenever she enters a given sector <em>climbing on a wall</em>.</p></div>
 <div class="paragraph"><p>This concludes the description of <em>Trigger</em> FloorData function <em>trigger types</em>.</p></div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_trigger_actions">3.6. Trigger actions</h3>
@@ -4370,21 +4438,14 @@ width:50%;
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x00</span>: <strong>Object</strong>
-</p>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x00_span_8201_8212_8201_object">3.6.1. TrigAction <span class="monospaced">0x00</span>&#8201;&#8212;&#8201;Object</h4>
 <div class="paragraph"><p>Activate or deactivate entity (object) with index specified in <span class="monospaced">Parameter</span>.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x01</span>: <strong>Camera</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x01_span_8201_8212_8201_camera">3.6.2. TrigAction <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;Camera</h4>
 <div class="paragraph"><p>Switches to camera. <span class="monospaced">Parameter</span> (bits 0..6 used) serves as index into <span class="monospaced">Cameras[]</span> array.</p></div>
 <div class="paragraph"><p><strong>NOTE:</strong> Camera trigger action <em>uses one extra <span class="monospaced">uint16_t</span> entry</em> after its own entry! Its format is:</p></div>
-</li>
-</ul></div>
 <table class="tableblock frame-all grid-all"
 style="
 margin-left:auto; margin-right:auto;
@@ -4424,15 +4485,11 @@ width:30%;
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x02</span>: <strong>Underwater Current</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x02_span_8201_8212_8201_underwater_current">3.6.3. TrigAction <span class="monospaced">0x02</span>&#8201;&#8212;&#8201;Underwater Current</h4>
 <div class="paragraph"><p>Continuously moves Lara to specifed <em>sink</em>. <span class="monospaced">Parameter</span> serves as index into <span class="monospaced">Cameras[]</span> array.
 If sink is placed 'lower than current sector absolute floor height or upper than current sector absolute ceiling height, $Y$ coordinate will be ignored when dragging Lara to sink. Since TR3, sink also prevents Lara from surfacing the water.</p></div>
-</li>
-</ul></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4443,16 +4500,14 @@ If sink is placed 'lower than current sector absolute floor height or upper than
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x03</span>: <strong>Flip Map</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x03_span_flip_map">3.6.4. TrigAction <span class="monospaced">0x03</span>: Flip Map</h4>
 <div class="paragraph"><p><em>FlipMap</em> is an internal engine array of <span class="monospaced">uint8_t`s which is used to determine if alternate rooms should be turned on or off (in TRLE terms, 'flipped'). It uses 'trigger mask' in the same manner as for 'Object' activation and deactivation, but in this case, alternate rooms are activated if given `FlipMap</span> entry mask is set (<span class="monospaced">0x1F</span>), and deactivated, if <span class="monospaced">FlipMap</span> entry is not set (not <span class="monospaced">0x1F</span>).</p></div>
-<div class="paragraph"><p>This trigger action at first applies <em>trigger mask</em> to a given <span class="monospaced">FlipMap</span> entry using <span class="monospaced">OR</span> bitwise operation and then immediately checks if it&#8217;s already set or not. If FlipMap entry is set, then it immediately switches rooms to alternate mode.</p></div>
-<div class="paragraph"><p><span class="monospaced">Parameter</span> defines which <span class="monospaced">FlipMap</span> entry engine should refer to decide should it switch alternate rooms on or off. The size of <span class="monospaced">FlipMap</span> array is around 10 (judging by the number of unused <span class="monospaced">FLIP_MAPn</span> <em>effect</em> entries), but in original levels, number usually never tops 2 or 3.</p></div>
-</li>
-</ul></div>
+<div class="paragraph"><p>+
+This trigger action at first applies <em>trigger mask</em> to a given <span class="monospaced">FlipMap</span> entry using <span class="monospaced">OR</span> bitwise operation and then immediately checks if it&#8217;s already set or not. If FlipMap entry is set, then it immediately switches rooms to alternate mode.</p></div>
+<div class="paragraph"><p>+
+<span class="monospaced">Parameter</span> defines which <span class="monospaced">FlipMap</span> entry engine should refer to decide should it switch alternate rooms on or off. The size of <span class="monospaced">FlipMap</span> array is around 10 (judging by the number of unused <span class="monospaced">FLIP_MAPn</span> <em>effect</em> entries), but in original levels, number usually never tops 2 or 3.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4463,40 +4518,28 @@ TrigAction <span class="monospaced">0x03</span>: <strong>Flip Map</strong>
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x04</span>:  <strong>Flip On</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x04_span_8201_8212_8201_flip_on">3.6.5. TrigAction <span class="monospaced">0x04</span>&#8201;&#8212;&#8201; Flip On</h4>
 <div class="paragraph"><p>Tries to turn alternate rooms <em>on</em>, judging on current value of a given <span class="monospaced">FlipMap</span> entry (entry index is specified by <span class="monospaced">Parameter</span>). If corresponding FlipMap is not set (i.e. the value is not <span class="monospaced">0x1F</span>), rooms won&#8217;t be flipped. <span class="monospaced">Parameter</span> defines a <span class="monospaced">FlipMap</span> entry to work with.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x05</span>:  <strong>Flip Off</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x05_span_8201_8212_8201_flip_off">3.6.6. TrigAction <span class="monospaced">0x05</span>:&#8201;&#8212;&#8201;Flip Off</h4>
 <div class="paragraph"><p>Tries to turn alternate rooms <em>off</em>, judging on current value of a given <span class="monospaced">FlipMap</span> entry (entry index is specified by <span class="monospaced">Parameter</span>). If corresponding FlipMap is not set (i.e. the value is not <span class="monospaced">0x1F</span>), rooms won&#8217;t be flipped. <span class="monospaced">Parameter</span> defines a <span class="monospaced">FlipMap</span> entry to work with.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x06</span>:  <strong>Look at Item</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x06_span_8201_8212_8201_look_at_item">3.6.7. TrigAction <span class="monospaced">0x06</span>&#8201;&#8212;&#8201;Look at Item</h4>
 <div class="paragraph"><p>Specifies an entity which current camera should look at. If current camera is &#8220;ordinary&#8221; one following Lara, then it will also rotate Lara model in a target direction, creating an illusion of Lara looking at it. If current camera is changed to &#8220;triggered&#8221; one (by trigger action <span class="monospaced">0x01</span>&#8201;&#8212;&#8201;see above), then this camera&#8217;s orientation will be changed to a given entity. Note that if such camera change is desired, 'this action should come first, not the <strong>Camera</strong> one.</p></div>
 <div class="paragraph"><p><span class="monospaced">Parameter</span> specifies an entity index to look at.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x07</span>:  <strong>End Level</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x07_span_8201_8212_8201_end_level">3.6.8. TrigAction <span class="monospaced">0x07</span>&#8201;&#8212;&#8201; End Level</h4>
 <div class="paragraph"><p>Immediately loads next level. In TR1-3 and TR5, <span class="monospaced">Parameter</span> field is not used, i.e. engine just loads next level specified in script. In TR4, so called &#8220;hub system&#8221; was implemented, which allows Lara to jump between levels back and forth. For this reason, <em>End Level</em> trigger action must also explicitly specify level index to jump.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x08</span>: <strong>Play Soundtrack</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x08_span_8201_8212_8201_play_soundtrack">3.6.9. TrigAction <span class="monospaced">0x08</span>&#8201;&#8212;&#8201;Play Soundtrack</h4>
 <div class="paragraph"><p>Triggers a playback of a soundtrack specified in <span class="monospaced">Parameter</span> field. Type of soundtrack (<em>looped</em> or <em>one-shot</em>) is hardcoded and assigned automatically.</p></div>
 <div class="paragraph"><p>This trigger action makes use of <em>trigger mask</em> <strong>and</strong> <em>one-shot trigger flag</em> to mark if this track was already played with a given <em>trigger mask</em> or not in a special internal <em>soundtrack map</em>. That is, if it is called with <em>trigger mask</em> set to, say, <span class="monospaced">0x01</span>, then all further calls from triggers with same <em>trigger mask</em> will be ignored. However, if same track playback is called with <em>trigger mask</em> value of <span class="monospaced">0x02</span>, it will play again, as it&#8217;s another byte in <em>trigger mask</em>. Effectively, it allows to play specified track <em>six times</em> (five bits of <em>activation mask</em> plus one bit of <em>one-shot flag</em>). Comparison is done via bitwise <span class="monospaced">AND</span> operation, so if playback is called with <em>trigger mask + one-shot</em> value of <span class="monospaced">(0x1F + 0x20 = 0x3F)</span>, then any other playback call to that track will be blocked.</p></div>
-</li>
-</ul></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4508,15 +4551,11 @@ TrigAction <span class="monospaced">0x08</span>: <strong>Play Soundtrack</strong
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x09</span>: <strong>Effect</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x09_span_8201_8212_8201_effect">3.6.10. TrigAction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Effect</h4>
 <div class="paragraph"><p><em>Effect</em> does not necessarily mean &#8220;special effect&#8221; or so. By the name of &#8220;effect&#8221; comes <em>any non-trivial or special trigger action which should be seperately defined</em>. This workaround was implemented because TR engines lack any scripting language to program arbitrary trigger, so you can consider an <em>effect</em> as a call to some &#8220;pre-compiled&#8221; scripted function.</p></div>
 <div class="paragraph"><p>For example, in TR1 &#8220;Lara&#8217;s Home&#8221;, there is a need to play soundtrack <em>&#8220;&#8230;Now I&#8217;d better take these wet clothes&#8221;</em> and then return to title screen after a few seconds. This is done with <em>effect</em> trigger, which checks if Lara already plunged in water, and if yes, it plays corresponding soundtrack, waits for a few seconds and returns to title screen.</p></div>
-</li>
-</ul></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4527,20 +4566,20 @@ TrigAction <span class="monospaced">0x09</span>: <strong>Effect</strong>
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0A</span>:  <strong>Secret Found</strong>
-</p>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x0a_span_8201_8212_8201_secret_found">3.6.11. TrigAction <span class="monospaced">0x0A</span>&#8201;&#8212;&#8201;Secret Found</h4>
 <div class="paragraph"><p>Plays &#8220;secret&#8221; soundtrack theme and marks a secret number specified in &#8216;Parameter` field as found. For finding each secret, another `Parameter&#8217; value must be specified, or else secret won&#8217;t be counted as found.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0B</span>: <strong>Clear bodies</strong>
-</p>
-<div class="paragraph"><p>Removes dead bodies of enemies from a level to conserve memory usage. This action has effect only on entities which had <em>clear body</em> flag specified in their parameters (see further). <span class="monospaced">Parameter</span> field is unused. <em>Feature was disabled in TR4 and TR5.</em></p></div>
-</li>
-</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x0b_span_8201_8212_8201_clear_bodies">3.6.12. TrigAction <span class="monospaced">0x0B</span>&#8201;&#8212;&#8201;Clear bodies</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> Removes dead bodies of enemies from a level to conserve memory usage. This action has effect only on entities which had <em>clear body</em> flag specified in their parameters (see further). <span class="monospaced">Parameter</span> field is unused.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4551,21 +4590,24 @@ TrigAction <span class="monospaced">0x0B</span>: <strong>Clear bodies</strong>
 </td>
 </tr></table>
 </div>
-<div class="ulist"><ul>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0C</span>: <strong>Flyby</strong>
-</p>
-<div class="paragraph"><p>Engages a <em>flyby camera sequence</em> specified in <span class="monospaced">Parameter</span> field. The feature was added in TR4 and enables to play cinematographic interludes with camera continuously &#8220;flying&#8221; from one point to another. Such <em>sequences</em>, their <em>points</em>, properties and order are defined in a level editor, and engine moves camera across them using <em>spline function</em>.</p></div>
-</li>
-<li>
-<p>
-TrigAction <span class="monospaced">0x0D</span>: <strong>Cutscene</strong>
-</p>
-<div class="paragraph"><p>It is also a feature implemented in TR4. Engages a cutscene pre-defined in script file. <span class="monospaced">Parameter</span> is taken as cutscene ID. In turn, script file refers to <span class="monospaced">CUTSEQ.PAK</span> (TR4) or <span class="monospaced">CUTSEQ.BIN</span> (TR5) file to get all the data for a cutscene, such as <em>actor positions and animations</em>, <em>camera movement</em>, <em>soundtrack</em> and many more. There will be a special section describing particular <span class="monospaced">CUTSEQ.PAK</span> file format.</p></div>
-</li>
-</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x0c_span_8201_8212_8201_flyby">3.6.13. TrigAction <span class="monospaced">0x0C</span>&#8201;&#8212;&#8201;Flyby</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Engages a <em>flyby camera sequence</em> specified in <span class="monospaced">Parameter</span> field. The feature was added in TR4 and enables to play cinematographic interludes with camera continuously &#8220;flying&#8221; from one point to another. Such <em>sequences</em>, their <em>points</em>, properties and order are defined in a level editor, and engine moves camera across them using <em>spline function</em>.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_trigaction_span_class_monospaced_0x0d_span_8201_8212_8201_cutscene">3.6.14. TrigAction <span class="monospaced">0x0D</span>&#8201;&#8212;&#8201;Cutscene</h4>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Engages a cutscene pre-defined in script file. <span class="monospaced">Parameter</span> is taken as cutscene ID. In turn, script file refers to <span class="monospaced">CUTSEQ.PAK</span> (TR4) or <span class="monospaced">CUTSEQ.BIN</span> (TR5) file to get all the data for a cutscene, such as <em>actor positions and animations</em>, <em>camera movement</em>, <em>soundtrack</em> and many more. There will be a special section describing particular <span class="monospaced">CUTSEQ.PAK</span> file format.</p></div>
 <div class="paragraph"><p>This concludes the description of <em>Trigger</em> FloorData function <em>action types</em>.</p></div>
+</div>
 </div>
 </div>
 </div>
@@ -4574,18 +4616,23 @@ TrigAction <span class="monospaced">0x0D</span>: <strong>Cutscene</strong>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview_4">4.1. Overview</h3>
-<div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR2 (as well as a few parts of the landscape) are specified as <em>meshes</em>.  A <em>mesh</em> is simply a
-list of vertices and how they&#8217;re arranged.  The TR2 mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed
-anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both Textured and
+<div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR (as well as a few parts of the landscape) consist of as meshes.  A <em>mesh</em> is simply a list of vertices and how they&#8217;re arranged.  The mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both Textured and
 Coloured.  The elements of each <a href="#tr_face4">[tr_face4]</a> or <a href="#tr_face3">[tr_face3]</a> structure (Rectangles and Triangles) contain an offset
-into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array
-<span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
+into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array <span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>Pointer indexing system allows engine to share same mesh for numerous different models.</p></div>
+</td>
+</tr></table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_meshes">4.2. Meshes</h3>
-<div class="paragraph"><p>The sign of the number of normals specifies which sort of lighting to use. If the sign is positive, then external vertex lighting is used, with the
-lighting calculated from the room&#8217;s ambient and point-source lighting values. The latter appears to use a simple Lambert law for directionality: intensity is
-proportional to $\max(\langle (\mathrm{normal direction}), (\mathrm{direction to source}) \rangle, 0)$. If the sign is negative, then internal vertex lighting is used, using the data included with
+<div class="paragraph"><p>The sign of the number of normals specifies which sort of lighting to use. If the sign is positive, then external vertex lighting is used, with the lighting calculated from the room&#8217;s ambient and point-source lighting values. The latter appears to use a simple Lambert law for directionality: intensity is proportional to $\max(\langle (\mathrm{normal direction}), (\mathrm{direction to source}) \rangle, 0)$. If the sign is negative, then internal vertex lighting is used, using the data included with
 the mesh.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -6649,7 +6696,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 04:54:17 MSK
+Last updated 2015-07-21 05:30:39 MSK
 </div>
 </div>
 </body>
