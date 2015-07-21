@@ -510,9 +510,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -3829,20 +3826,20 @@ style="
 margin-left:auto; margin-right:auto;
 width:30%;
 ">
-<col style="width:33%;">
-<col style="width:66%;">
+<col style="width:50%;">
+<col style="width:50%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">Function</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">bits 0..4 (<span class="monospaced">0x001F</span>)</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="monospaced">Function</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">bits 0..4 (<span class="monospaced">0x001F</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">SubFunction</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">bits 8..14 (<span class="monospaced">0x7F00</span>)</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="monospaced">SubFunction</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">bits 8..14 (<span class="monospaced">0x7F00</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">EndData</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">bit 15 (<span class="monospaced">0x8000</span>)</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="monospaced">EndData</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">bit 15 (<span class="monospaced">0x8000</span>)</p></td>
 </tr>
 </tbody>
 </table>
@@ -6054,29 +6051,56 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
 <h3 id="_overview_8">10.1. Overview</h3>
 <div class="paragraph"><p>The flow of the game, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene
 files, all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled using a file called <span class="monospaced">TOMBPC.DAT</span>. This file is
-normally compiled using a utility called <span class="monospaced">GAMEFLOW.EXE</span>, which was (apparently) accidentally distributed by Eidos in the German distribution of Tomb Raider II
+normally compiled using a utility called <span class="monospaced">GAMEFLOW.EXE</span>, which was (apparently) accidentally distributed by Eidos in the German release of Tomb Raider II
 Gold. TR2 and TR3 use this file, and use essentially the same format of it, but TR1 has this file&#8217;s contents embedded in the app, which explains why there are
 separate TR1 and Unfinished Business apps. What follows is a description of the contents of the binary TOMBPC.DAT file.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>                      <span class="c1">// seems to be 3 for TR2</span>
-<span class="kt">uint8_t</span> <span class="n">Info</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>                     <span class="c1">// null-terminated string describing this game, copyright info, etc.  NOT ENCRYPTED</span>
-<span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>                 <span class="c1">// Level to go to when that happens (0x500 is exit-to-title) ??? when WHAT happens?</span>
-<span class="kt">int32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>               <span class="c1">//  Level to go to when that happens (-1 is NONE) ??? when WHAT happens?</span>
-<span class="kt">int32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span> <span class="c1">// Level to go to when Lara dies during demo mode (0x500 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>        <span class="c1">// Level to go to when Lara dies during the game (0 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">DemoTime</span><span class="p">;</span>                 <span class="c1">// time in game ticks (1/30th of a second?) to wait before starting a demo</span>
-<span class="kt">int32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>       <span class="c1">// Level to go to when demo mode is interrupted (0x500 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>              <span class="c1">// Level to go to when the demo ends (0x500 is exit-to-title)</span>
-<span class="kt">uint8_t</span> <span class="n">Unused1</span><span class="p">[</span><span class="mi">36</span><span class="p">];</span>               <span class="c1">// filler</span>
-<span class="kt">int16_t</span> <span class="n">NumLevels</span><span class="p">;</span>                 <span class="c1">// number of levels in the game (some level files are used more than once for some reason)</span>
-<span class="kt">int16_t</span> <span class="n">NumChapterScreens</span><span class="p">;</span> <span class="c1">// chapter screens (Present in TR2, first used in TR3)</span>
-<span class="kt">int16_t</span> <span class="n">NumTitles</span><span class="p">;</span>                   <span class="c1">// only one, TITLE.TR2</span>
-<span class="kt">int16_t</span> <span class="n">NumRPLs</span><span class="p">;</span>                  <span class="c1">// number of FMV cutscenes (*.RPL)</span>
-<span class="kt">int16_t</span> <span class="n">NumCutScenes</span><span class="p">;</span>         <span class="c1">// number of in-game (engine-rendered) cutscenes (CUT*.TR2)</span>
-<span class="kt">int16_t</span> <span class="n">NumDemoLevels</span><span class="p">;</span>      <span class="c1">// Number of demo levels</span>
-<span class="kt">int16_t</span> <span class="n">TitleSoundID</span><span class="p">;</span>             <span class="c1">// ID of title soundtrack</span>
-<span class="kt">int16_t</span> <span class="n">SingleLevel</span><span class="p">;</span>                <span class="c1">// If doing only a single level</span>
-<span class="kt">uint8_t</span> <span class="n">Unused2</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>              <span class="c1">// filler</span>
+<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>                     <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
+<span class="kt">uint8_t</span> <span class="n">Description</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>             <span class="c1">// Null-terminated string describing the script copyright info etc. Not encrypted.</span>
+<span class="kt">uint16_t</span> <span class="n">Unknown1</span><span class="p">;</span>                    <span class="c1">// ?</span>
+<span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>                  <span class="c1">// Level to go to when that happens (0x500 is exit-to-title) ??? when WHAT happens?</span>
+<span class="kt">int32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>                 <span class="c1">// Level to go to when that happens (-1 is NONE) ??? when WHAT happens?</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span>              <span class="c1">// Level to go to when Lara dies during demo mode (0x500 is exit-to-title)</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>                <span class="c1">// Level to go to when Lara dies during the game (0 is exit-to-title)</span>
+<span class="kt">int32_t</span> <span class="n">DemoTime</span><span class="p">;</span>                     <span class="c1">// Time in game ticks (1/30th of a second?) to wait before starting a demo</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>              <span class="c1">// Level to go to when demo mode is interrupted (0x500 is exit-to-title)</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>                    <span class="c1">// Level to go to when the demo ends (0x500 is exit-to-title)</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown2</span><span class="p">[</span><span class="mi">36</span><span class="p">];</span>                 <span class="c1">// Filler</span>
+<span class="kt">int16_t</span> <span class="n">NumLevels</span><span class="p">;</span>                    <span class="c1">// Number of levels in the game.</span>
+<span class="kt">int16_t</span> <span class="n">NumChapterScreens</span><span class="p">;</span>            <span class="c1">// Chapter screens (Present in TR2, first used in TR3)</span>
+<span class="kt">int16_t</span> <span class="n">NumTitles</span><span class="p">;</span>                    <span class="c1">// Only one, TITLE.TR2</span>
+<span class="kt">int16_t</span> <span class="n">NumFMVs</span><span class="p">;</span>                      <span class="c1">// Number of FMV cutscenes PC - (*.RPL), PSX - (*STR)</span>
+<span class="kt">int16_t</span> <span class="n">NumCutscenes</span><span class="p">;</span>                 <span class="c1">// Number of in-game (engine-rendered) cutscenes (CUT*.TR2)</span>
+<span class="kt">int16_t</span> <span class="n">NumDemoLevels</span><span class="p">;</span>                <span class="c1">// Number of demo levels</span>
+<span class="kt">int16_t</span> <span class="n">TitleSoundID</span><span class="p">;</span>                 <span class="c1">// ID of title soundtrack</span>
+<span class="kt">int16_t</span> <span class="n">SingleLevel</span><span class="p">;</span>                  <span class="c1">// If doing only a single level</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown3</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>                 <span class="c1">// Filler</span>
+<span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>                       <span class="c1">// Various flags see below</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown4</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>                  <span class="c1">// Filler</span>
+<span class="kt">uint8_t</span> <span class="n">XORKey</span><span class="p">;</span>                       <span class="c1">// Key used to encrypt/decrypt strings</span>
+<span class="kt">uint8_t</span> <span class="n">LanguageID</span><span class="p">;</span>                   <span class="c1">// Script Language ID see below</span>
+<span class="kt">int16_t</span> <span class="n">SecretSoundID</span><span class="p">;</span>                <span class="c1">// ID of soundtrack to play when a secret is found</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown5</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>                  <span class="c1">// Filler</span>
+
+<span class="c1">//1. Offset to each string is end offset of &#39;*StringOffsets&#39; + *StringOffsets[i]</span>
+<span class="c1">//2. String length is calculated by (*StringOffsets[i+1]-*StringOffsets[i])</span>
+<span class="c1">//3. If Flags &amp; UseXor true each character must be ^ XorKey to decrypt the string.</span>
+
+<span class="kt">uint16_t</span> <span class="n">LevelStringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                 <span class="c1">//Relative offset to level name strings</span>
+<span class="n">StringArray</span> <span class="n">LevelStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
+<span class="kt">uint16_t</span> <span class="n">ChapterScreenStringOffsets</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to chapter screen strings</span>
+<span class="n">StringArray</span> <span class="n">ChapterScreenStrings</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="p">];</span>
+<span class="kt">uint16_t</span> <span class="n">TitleStringOffsets</span><span class="p">[</span><span class="n">NumTitles</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                 <span class="c1">//Relative offset to title strings</span>
+<span class="n">StringArray</span> <span class="n">TitleStrings</span><span class="p">[</span><span class="n">NumTitles</span><span class="p">];</span>
+<span class="kt">uint16_t</span> <span class="n">FMVStringOffsets</span><span class="p">[</span><span class="n">NumFMVs</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                     <span class="c1">//Relative offset to fmv path strings</span>
+<span class="n">StringArray</span> <span class="n">FMVStrings</span><span class="p">[</span><span class="n">NumFMVs</span><span class="p">];</span>
+<span class="kt">uint16_t</span> <span class="n">LevelPathStringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>             <span class="c1">//Relative offset to level path strings</span>
+<span class="n">StringArray</span> <span class="n">LevelPathStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
+<span class="kt">uint16_t</span> <span class="n">CutscenePathStringOffsets</span><span class="p">[</span><span class="n">NumCutscenes</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>       <span class="c1">//Relative offset to cutscene path strings</span>
+<span class="n">StringArray</span> <span class="n">CutscenePathStrings</span><span class="p">[</span><span class="n">NumCutscenes</span><span class="p">];</span>
+
+
+
 <span class="c1">//</span>
 <span class="c1">// The Flags word below uses the following bit assignments:</span>
 <span class="c1">//    0x0001:    DemoVersion                         (1 ::= demo, 0 ::= normal game)</span>
@@ -6095,32 +6119,13 @@ separate TR1 and Unfinished Business apps. What follows is a description of the 
 <span class="c1">//    0x0400:    SelectAnyLevel                      (1 ::= allow player to select any level, 0 ::= no</span>
 <span class="c1">// level selection)</span>
 <span class="c1">//</span>
-<span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>                         <span class="c1">// Various flags (see above)</span>
-<span class="kt">uint8_t</span> <span class="n">Unused3</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>                 <span class="c1">// filler</span>
-<span class="kt">uint8_t</span> <span class="n">XORbyte</span><span class="p">;</span>                    <span class="c1">// For encryption (``cipher code&#39;&#39;)</span>
-<span class="kt">uint8_t</span> <span class="n">Unused4</span><span class="p">;</span>                     <span class="c1">// High byte of a short?</span>
-<span class="kt">int16_t</span> <span class="n">SecretSoundID</span><span class="p">;</span>           <span class="c1">// ID of ``found a secret&#39;&#39; soundtrack</span>
-<span class="kt">uint8_t</span> <span class="n">Unused5</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>                 <span class="c1">// filler</span>
 <span class="c1">//</span>
-<span class="c1">// The sections that follow contain String Arrays.  These are of the following pseudo-structure:</span>
-<span class="c1">// virtual struct</span>
-<span class="c1">// {</span>
-<span class="c1">//     uint16_t StringOffsets[NumStrings];      // offsets (into StringData[]) of each string</span>
-<span class="c1">//     uint16_t StringDataSize;                 // number of bytes of raw string data to follow</span>
-<span class="c1">//     uint8_t   StringData[StringDataSize];    // if Flags &amp; 0x0100, this entire array is XORed with</span>
-<span class="c1">//                                            // XORbyte</span>
-<span class="c1">// } StringArray;</span>
+
 <span class="c1">//</span>
 <span class="c1">// While it is not correct C/C++, the following are specified as StringArray[NumStrings],</span>
 <span class="c1">// where _NumStrings_ indicates the number of StringOffsets in the structure.</span>
 <span class="c1">//</span>
-<span class="n">StringArray</span> <span class="n">LevelDisplayNames</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">ChapterScreens</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">TitleFileNames</span><span class="p">[</span><span class="n">NumTitles</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">RPLFileNames</span><span class="p">[</span><span class="n">NumRPLs</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">LevelFileNames</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">CutSceneFileNames</span><span class="p">[</span><span class="n">NumCutScenes</span><span class="p">];</span>
-<span class="c1">//</span>
+
 <span class="c1">// The LevelScript contains interpreted data (opcodes and operands) that specify</span>
 <span class="c1">// actions to take for each level (e.g. play cut scene, take away weapons, etc).  The</span>
 <span class="c1">// details of this data are discussed below, after the structure descriptions.</span>
@@ -6166,103 +6171,73 @@ separate TR1 and Unfinished Business apps. What follows is a description of the 
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_levelscript_description">10.2. LevelScript Description</h3>
+<h3 id="_script_flags">10.2. Script Flags</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptFlags</span>
+<span class="p">{</span>
+    <span class="n">DemoVersion</span> <span class="o">=</span>              <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">TitleDisabled</span> <span class="o">=</span>            <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">CheatModeCheckDisabled</span> <span class="o">=</span>   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">NoInputTimeout</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="n">LoadSaveDisabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="n">ScreenSizingDisabled</span> <span class="o">=</span>     <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="n">LockoutOptionRing</span> <span class="o">=</span>        <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="n">DozyCheatEnabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="n">UseXor</span> <span class="o">=</span>                   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">),</span>
+    <span class="n">GymEnabled</span> <span class="o">=</span>               <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">9</span><span class="p">),</span>
+    <span class="n">SelectAnyLevel</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">10</span><span class="p">),</span>
+    <span class="n">EnableCheatCode</span> <span class="o">=</span>          <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_script_language">10.3. Script Language</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptLanguage</span>
+<span class="p">{</span>
+    <span class="n">LANG_ENGLISH</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">LANG_FRENCH</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">LANG_GERMAN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">LANG_AMERICAN</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="n">LANG_JAPANESE</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="p">}</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_levelscript_description">10.4. LevelScript Description</h3>
 <div class="paragraph"><p>In LevelScript, Opcodes and Operands are all <span class="monospaced">uint16_t</span>.  Note that if a level is a demo level, its level ID will be 1024 higher than a &#8220;normal&#8221;
 level ID.</p></div>
-<div class="ulist"><div class="title">Opcodes</div><ul>
-<li>
-<p>
-3&#8201;&#8212;&#8201;Play FMV (prerendered cutscene): operand is RPL ID
-</p>
-</li>
-<li>
-<p>
-4&#8201;&#8212;&#8201;Play (interactive) game level: operand is level&#8217;s ID
-</p>
-</li>
-<li>
-<p>
-5&#8201;&#8212;&#8201;Play engine-rendered cutscene: operand is cutscene ID
-</p>
-</li>
-<li>
-<p>
-6&#8201;&#8212;&#8201;Do level-completion display (no operands)
-</p>
-</li>
-<li>
-<p>
-7&#8201;&#8212;&#8201;Play demo level: operand is level ID
-</p>
-</li>
-<li>
-<p>
-9&#8201;&#8212;&#8201;End of set (no operands)
-</p>
-</li>
-<li>
-<p>
-10&#8201;&#8212;&#8201;Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)
-</p>
-</li>
-<li>
-<p>
-11&#8201;&#8212;&#8201;(Lara starts out in motorboat?&#8201;&#8212;&#8201;TR2, &#8220;Bartoli&#8217;s Hideout&#8221;) (no operands?)
-</p>
-</li>
-<li>
-<p>
-12&#8201;&#8212;&#8201;Chapter screen: operand is chapter ID
-</p>
-</li>
-<li>
-<p>
-14&#8201;&#8212;&#8201;Lose your weapons (no operands)
-</p>
-</li>
-<li>
-<p>
-15&#8201;&#8212;&#8201;End of game (no operands)
-</p>
-</li>
-<li>
-<p>
-16&#8201;&#8212;&#8201;Associated with cutscenes; a viewpoint control? (one operand?)
-</p>
-</li>
-<li>
-<p>
-17&#8201;&#8212;&#8201;(one operand?)
-</p>
-</li>
-<li>
-<p>
-18&#8201;&#8212;&#8201;Give item; operand is item type (see below)
-</p>
-</li>
-<li>
-<p>
-19&#8201;&#8212;&#8201;Item-type 12 state to start level in: operand is state number
-</p>
-</li>
-<li>
-<p>
-20&#8201;&#8212;&#8201;Number of secrets (overrides engine&#8217;s hardcoded count of them?): operand is that number
-</p>
-</li>
-<li>
-<p>
-21&#8201;&#8212;&#8201;(no operands?)
-</p>
-</li>
-<li>
-<p>
-22&#8201;&#8212;&#8201;Lose your ammo and medipacks? (no operands?)
-</p>
-</li>
-</ul></div>
+<div class="listingblock">
+<div class="title">Opcodes</div>
+<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptOpcodes</span>
+<span class="p">{</span>
+    <span class="n">OP_PICTURE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>            <span class="c1">// ?</span>
+    <span class="n">OP_LISTSTART</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>          <span class="c1">// ?</span>
+    <span class="n">OP_LISTEND</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>            <span class="c1">// ?</span>
+    <span class="n">OP_STARTFMV</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>           <span class="c1">// Play FMV, operand is FMV ID</span>
+    <span class="n">OP_STARTLEVEL</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>         <span class="c1">// Play (interactive) level, operand is level ID</span>
+    <span class="n">OP_STARTCINE</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>          <span class="c1">// Play Cutscene, operand is cutscene ID</span>
+    <span class="n">OP_LEVELCOMPLETE</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>      <span class="c1">// Do level-completion display (no operands)</span>
+    <span class="n">OP_STARTDEMO</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>          <span class="c1">// Play demo level: operand is level ID</span>
+    <span class="n">OP_JUMPTOSEQUENCE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>     <span class="c1">// Jumps to specified sequence?</span>
+    <span class="n">OP_ENDSEQUENCE</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>        <span class="c1">// End of sequence (no operands)</span>
+    <span class="n">OP_SETTRACK</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>          <span class="c1">// Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)</span>
+    <span class="n">OP_SUNSETENABLED</span> <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>     <span class="c1">// Bartoli&#39;s Hideous</span>
+    <span class="n">OP_LOADINGPIC</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>        <span class="c1">//  Chapter screen: operand is chapter ID</span>
+    <span class="n">OP_DEADLYWATER</span> <span class="o">=</span> <span class="mi">13</span><span class="p">,</span>       <span class="c1">// Temple of Xian? Kills Lara when she touches water?</span>
+    <span class="n">OP_REMOVEWEAPONS</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>     <span class="c1">// Lose your weapons (no operands)</span>
+    <span class="n">OP_GAMECOMPLETE</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>      <span class="c1">// End of game (no operands)</span>
+    <span class="n">OP_CUTANGLE</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>          <span class="c1">// Associated with cutscenes; a viewpoint control? (one operand?)</span>
+    <span class="n">OP_NOFLOOR</span> <span class="o">=</span> <span class="mi">17</span><span class="p">,</span>           <span class="c1">// For Floating Islands/Thames Wharf? (one operand?)</span>
+    <span class="n">OP_ADDTOINVENTORY</span> <span class="o">=</span> <span class="mi">18</span><span class="p">,</span>    <span class="c1">// Give item; operand is item type (see below)</span>
+    <span class="n">OP_LARASTARTANIMATION</span> <span class="o">=</span> <span class="mi">19</span><span class="p">,</span><span class="c1">// Item-type 12 state to start level in: operand is state number</span>
+    <span class="n">OP_NUMSECRETS</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>        <span class="c1">// Number of secrets (overrides engine&#39;s hardcoded count of them?): operand is that number</span>
+    <span class="n">OP_KILLTOCOMPLETE</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>    <span class="c1">// Probably for Ice Palace boss (no operands)</span>
+    <span class="n">OP_REMOVEAMMO</span> <span class="o">=</span> <span class="mi">22</span>         <span class="c1">// Lose your ammo and medipacks? (no operands?)</span>
+<span class="p">};</span>
+</pre></div></div></div>
 <div class="sect3">
-<h4 id="_opcode_18_stuff_to_give">10.2.1. Opcode-18 stuff to give</h4>
+<h4 id="_opcode_18_stuff_to_give">10.4.1. Opcode-18 stuff to give</h4>
 <div class="paragraph"><p>(repeat means give another)</p></div>
 <div class="ulist"><div class="title">After finding all the secrets in a level (Tomb Raider 2)</div><ul>
 <li>
@@ -6540,7 +6515,7 @@ level ID.</p></div>
 </ul></div>
 </div>
 <div class="sect3">
-<h4 id="_tomb_raider_2_identifications">10.2.2. Tomb Raider 2 identifications</h4>
+<h4 id="_tomb_raider_2_identifications">10.4.2. Tomb Raider 2 identifications</h4>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -6695,7 +6670,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 18:17:45 MSK
+Last updated 2015-07-21 19:14:04 CEST
 </div>
 </div>
 </body>
