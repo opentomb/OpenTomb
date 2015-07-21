@@ -154,7 +154,9 @@ else()
     )
 endif()
 
-add_definitions(-DAUDIO_OPENAL_FLOAT)
+if(NOT MINGW)
+    add_definitions(-DAUDIO_OPENAL_FLOAT)
+endif()
 
 add_executable(
     ${PROJECT_NAME}

@@ -346,9 +346,9 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
 
     for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++,btag++)
     {
-        float transforms[32];
+        GLfloat transforms[32];
         matrix4 mvTransforms = mvMatrix * btag->full_transform;
-        memcpy(transforms, mvTransforms.c_ptr(), sizeof(float [16]));
+        std::copy_n(mvTransforms.c_ptr(), 16, &transforms[0]);
 
         // Calculate parent transform
         const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
@@ -359,7 +359,7 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
         btTransform secondTransform = *parentTransform * translate;
 
         matrix4 mvTransforms2 = mvMatrix * secondTransform;
-        memcpy(&transforms[16], mvTransforms2.c_ptr(), sizeof(float [16]));
+        std::copy_n(mvTransforms2.c_ptr(), 16, &transforms[16]);
         glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
         if(btag->mesh_skin)
@@ -402,9 +402,9 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
         matrix4 secondTransform = tr1 * translate;
         mvTransforms[1] = mvMatrix * secondTransform;
 
-        float transforms[32];
-        memcpy(&transforms[0], mvTransforms[0].c_ptr(), sizeof(float[16]));
-        memcpy(&transforms[16], mvTransforms[1].c_ptr(), sizeof(float[16]));
+        GLfloat transforms[32];
+        std::copy_n(mvTransforms[0].c_ptr(), 16, &transforms[0]);
+        std::copy_n(mvTransforms[1].c_ptr(), 16, &transforms[16]);
 
         glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
@@ -579,12 +579,13 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
 
         static constexpr int MatrixCount = 10;
 
-        float hairModelToGlobalMatrices[MatrixCount][16];
-        memcpy(&hairModelToGlobalMatrices[0], (modelViewMatrix * globalAttachment).c_ptr(), sizeof(float[16]));
+        GLfloat hairModelToGlobalMatrices[MatrixCount][16];
+        std::copy_n((modelViewMatrix * globalAttachment).c_ptr(), 16, &hairModelToGlobalMatrices[0][0]);
 
         // Then: Individual hair pieces
         for(size_t i=0; i<entity->m_hairs[h]->m_elements.size(); i++)
         {
+            assert(i+1 < MatrixCount);
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
              * (translated)
@@ -603,20 +604,17 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
              * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
              */
 
-
             btTransform invOriginToHairModel;
             invOriginToHairModel.setIdentity();
             // Simplification: Always translation matrix, no invert needed
             invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
 
-            const btTransform &bt_tr = entity->m_hairs[h]->m_elements[i].body->getWorldTransform();
+            matrix4 globalFromHair = entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel;
 
-            matrix4 globalFromHair = bt_tr * invOriginToHairModel;
-
-            memcpy(&hairModelToGlobalMatrices[(i+1) * 16], (modelViewMatrix * globalFromHair).c_ptr(), sizeof(float[16]));
+            std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i+1][0]);
         }
 
-        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
+        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, &hairModelToGlobalMatrices[0][0]);
 
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projection.c_ptr());
 

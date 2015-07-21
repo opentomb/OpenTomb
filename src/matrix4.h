@@ -594,7 +594,7 @@ struct matrix4
 	matrix4 operator*(const matrix4 &other) const
 	{
 		return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
-	};
+    }
     /*!
      * Allow multiplication with btTransform.
      *
