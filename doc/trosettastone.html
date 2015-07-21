@@ -2226,6 +2226,11 @@ Whole <span class="monospaced">tr5_room</span> structure needs detailed analysis
 Clarify fog bulb values which affect its radius.
 </p>
 </li>
+<li>
+<p>
+Solve the purpose of &#8220;flag/zone&#8221; field in <span class="monospaced">tr_camera</span> structure.
+</p>
+</li>
 </ol></div>
 </div>
 <div class="sect2">
@@ -2339,15 +2344,15 @@ width:70%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">specifies a 32-bit IEEE-754 floating-point number</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-right valign-top" ><p class="tableblock"><span class="monospaced">mix_float</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">specifies non-trivial 32-bit &#8220;hybrid&#8221; float&#8201;&#8212;&#8201;see further</p></td>
+<td class="tableblock halign-right valign-top" ><p class="tableblock"><span class="monospaced">fixed</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">specifies a 32.bit non-trivial 16.16 fixed point value&#8201;&#8212;&#8201;see further</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph"><p>All multi-byte integers (<span class="monospaced">{u}int16_t</span>, <span class="monospaced">{u}int32_t</span>) are stored in little-endian (Intel-x86, etc.) format, with the least significant byte stored first and the most significant byte stored last. When using this data in platforms with big-endian (PowerPC, etc.) number format, be sure to reverse the order of bytes.</p></div>
 <div class="sect4">
-<h5 id="_mixed_float_data_type">Mixed float data type</h5>
-<div class="paragraph"><p>This very specific data type mimics floating-point behaviour, <em>while remaining integer</em>. It is done by splitting floating-point value into whole and fractional parts, and keeping each part as <span class="monospaced">int16_t</span> and <span class="monospaced">uint16_t</span> correspondingly. Whole part is kept as it is, while fractional part is multiplied by 65536, and then kept as unsigned integer. So, the formula to calculate floating-point from mixed float is:</p></div>
+<h5 id="_16_16_fixed_point_data_type">16.16 fixed point data type</h5>
+<div class="paragraph"><p>This very specific 32-bit data type mimics floating-point behaviour, <em>while remaining integer</em>. It is done by splitting floating-point value into whole and fractional parts, and keeping each part as <span class="monospaced">int16_t</span> and <span class="monospaced">uint16_t</span> correspondingly. Whole part is kept as it is, while fractional part is multiplied by 65536, and then kept as unsigned integer. So, the formula to calculate floating-point from mixed float is:</p></div>
 <table class="tableblock frame-none grid-all"
 style="
 margin-left:auto; margin-right:auto;
@@ -2586,7 +2591,7 @@ width:80%;
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bits 1-7:</em> strength of <em>environment mapping</em> effect (so-called &#8220;shiny effect&#8221; in TRLE community). Environment map is derived from special pre-rendered texture. The bigger the value is, the more visible the effect is.
+<em>Bits 1..7:</em> strength of <em>environment mapping</em> effect (so-called &#8220;shiny effect&#8221; in TRLE community). Environment map is derived from special pre-rendered texture. The bigger the value is, the more visible the effect is.
 </p>
 </li>
 </ul></div>
@@ -2800,7 +2805,7 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> In these games, <span class="monospaced">BoxIndex</span> field is more complicated, and actually contains <em>two packed values</em>. Bits 4-14 contain the <em>actual box index</em>, and bits 0-3 contain <em>material index</em>, which is used to produce specific footstep sound, when Lara is walking or running in this sector. On PlayStation game versions, this index was also used to determine if footprint textures should be applied to this particular place.</p></div>
+</span> In these games, <span class="monospaced">BoxIndex</span> field is more complicated, and actually contains <em>two packed values</em>. Bits 4..14 contain the <em>actual box index</em>, and bits 0..3 contain <em>material index</em>, which is used to produce specific footstep sound, when Lara is walking or running in this sector. On PlayStation game versions, this index was also used to determine if footprint textures should be applied to this particular place.</p></div>
 <div class="paragraph"><p>Majority of <em>material index</em> values are the same across game versions, but some of them exist only in particular game. Here is the description:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -3117,7 +3122,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bits 0-4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room">[tr_room]</a> structure. See below.
+<em>Bits 0..4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room">[tr_room]</a> structure. See below.
 </p>
 </li>
 <li>
@@ -3859,7 +3864,7 @@ width:30%;
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>Even if <span class="monospaced">EndData</span> is set, it doesn&#8217;t specifically mean that there are no <span class="monospaced">uint16_t`s following the current one at all. As we will see, some FloorData functions and subfunctions require to parse additional entries with their own rules. In programming terms, `EndData</span> just indicates that parsing loop must be broken&#8201;&#8212;&#8201;however, there may be following code which reads additional entries.</p></div>
+<div class="paragraph"><p>Even if <span class="monospaced">EndData</span> is set, it doesn&#8217;t specifically mean that there are no more <span class="monospaced">uint16_t</span> following the current one at all. As we will see, some FloorData functions and subfunctions require to parse additional entries with their own rules. In programming terms, <span class="monospaced">EndData</span> just indicates that parsing loop must be broken&#8201;&#8212;&#8201;however, there may be following code which reads additional entries.</p></div>
 </td>
 </tr></table>
 </div>
@@ -3896,7 +3901,7 @@ An entity that arrives in a sector with this function present will gets its room
 <table class="tableblock frame-none grid-all"
 style="
 margin-left:auto; margin-right:auto;
-width:100%;
+width:70%;
 ">
 <col style="width:100%;">
 <tbody>
@@ -4642,20 +4647,19 @@ This trigger action at first applies <em>trigger mask</em> to a given <span clas
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mesh_geometry">4. Mesh Geometry</h2>
+<h2 id="_meshes_and_models">4. Meshes and Models</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview_4">4.1. Overview</h3>
-<div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR (as well as a few parts of the landscape) consist of as meshes.  A <em>mesh</em> is simply a list of vertices and how they&#8217;re arranged.  The mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both Textured and
-Coloured.  The elements of each <a href="#tr_face4">[tr_face4]</a> or <a href="#tr_face3">[tr_face3]</a> structure (Rectangles and Triangles) contain an offset
-into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array <span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
+<div class="paragraph"><p>Nearly all of the non-geographic visual elements in TR (as well as a few parts of the landscape) consist of as meshes.  A <em>mesh</em> is simply a list of vertices and how they&#8217;re arranged.  The mesh structure includes a list of vertices as relative coordinates (which allows meshes to easily be placed anywhere in the world geometry), a list of normals (to indicate which side of each face is visible), and lists of Rectangles and Triangles, both textured and coloured.  The elements of each <a href="#tr_face4">[tr_face4]</a> or <a href="#tr_face3">[tr_face3]</a> (or same version-specific) structure (Rectangles and Triangles) contain an offset into the <span class="monospaced">Vertices[]</span> array for the mesh. Other arrays (<span class="monospaced">Moveables[]</span>, <span class="monospaced">StaticMeshes[]</span>) do not reference the array <span class="monospaced">Meshes[]</span> directly, but instead reference the array <span class="monospaced">MeshPointers[]</span>, which points to locations inside of <span class="monospaced">Meshes[]</span>, inside of which the meshes are stored in packed fashion.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="./images/icons/tip.png" alt="Tip">
 </td>
 <td class="content">
-<div class="paragraph"><p>Pointer indexing system allows engine to share same mesh for numerous different models.</p></div>
+<div class="paragraph"><p>Pointer indexing system allows engine to share same mesh for numerous different models, and also easily implement a feature called <em>meshswap</em>&#8201;&#8212;&#8201;used when a puzzle is inserted into a hole, when Lara draws pistols, and so on.</p></div>
+<div class="paragraph"><p>While it may be not obvious, but every time you see mesh look is changed, it means that <em>meshswap</em> happened. There was never any other way to modify mesh looks in classic TRs.</p></div>
 </td>
 </tr></table>
 </div>
@@ -4666,24 +4670,62 @@ into the <span class="monospaced">Vertices[]</span> array for the mesh. Other ar
 the mesh.</p></div>
 <div class="paragraph"><p><em>'This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the &#8216;NumXXX` elements that precede them.</em>&#8217;</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr2_mesh</span>
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_mesh</span>
 <span class="p">{</span>
-    <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// This is usually close to the mesh&#39;s centroid, and appears to be the center of a sphere used for collision testing.</span>
-    <span class="kt">int32_t</span> <span class="n">CollisionSize</span><span class="p">;</span> <span class="c1">// This appears to be the radius of that aforementioned collisional sphere.</span>
-    <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices in this mesh</span>
-    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (relative coordinates)</span>
-    <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// If positive, number of normals in this mesh.</span>
-                                    <span class="c1">// If negative, number of vertex lighting elements (* (-1))</span>
-    <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (if NumNormals is positive)</span>
-    <span class="kt">int16_t</span> <span class="n">Lights</span><span class="p">[</span><span class="o">-</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of light values (if NumNormals is negative)</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles in this mesh</span>
+    <span class="n">tr_vertex</span> <span class="n">Centre</span><span class="p">;</span>
+      <span class="kt">int32_t</span> <span class="n">CollRadius</span><span class="p">;</span>
+
+      <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span>           <span class="c1">// Number of vertices in this mesh</span>
+    <span class="n">tr_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// List of vertices (relative coordinates)</span>
+
+      <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span>
+
+  <span class="k">if</span><span class="p">(</span><span class="n">NumNormals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">tr_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span>
+  <span class="k">else</span>
+      <span class="kt">int16_t</span> <span class="n">Lights</span><span class="p">[</span><span class="n">abs</span><span class="p">(</span><span class="n">NumNormals</span><span class="p">)];</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles in this mesh</span>
     <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles in this mesh</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span>  <span class="c1">// number of textured triangles in this mesh</span>
     <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles in this mesh</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles in this mesh</span>
     <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles in this mesh</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles in this mesh</span>
     <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Centre</span> is usually close to the mesh&#8217;s centroid, and appears to be the center of a sphere used for certain kinds of collision testing.</p></div>
+<div class="paragraph"><p><span class="monospaced">CollRadius</span> appears to be the radius of that aforementioned collisional sphere.</p></div>
+<div class="paragraph"><p><span class="monospaced">NumNormals</span>: If positive, it is a number of normals in this mesh. If negative, it is a number of vertex lighting elements (<span class="monospaced">abs</span> value).</p></div>
+<div class="paragraph"><p>Depending on a value of <span class="monospaced">NumNormals</span>, next data block is interpreted either as <span class="monospaced">Normals[]</span> array (in <span class="monospaced">tr_vertex</span> format) or <span class="monospaced">Lights</span> array (just standard <span class="monospaced">int16_t</span> values).</p></div>
+<div class="paragraph"><p><span class="monospaced">NumTexturedTriangles</span> and <span class="monospaced">NumTexturedRectangles</span> are respectively the number of triangular and rectangular faces in this mesh. Corresponding <span class="monospaced">TexturedTriangles</span> and <span class="monospaced">TexturedRectangles</span> array contain textured triangles and rectangles themselves.</p></div>
+<div class="paragraph"><p><span class="monospaced">NumColoredTriangles</span> and <span class="monospaced">NumColoredRectangles</span> are respectively the number of triangular and rectangular faces in this mesh. Corresponding <span class="monospaced">ColoredTriangles</span> and <span class="monospaced">ColoredRectangles</span> array contain colored triangles and rectangles themselves.</p></div>
+<div class="paragraph"><p>As coloured faces feature was removed since TR4, <span class="monospaced">tr_mesh</span> structure was changed, and contain no data for coloured faces anymore:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_mesh</span>
+<span class="p">{</span>
+    <span class="n">tr_vertex</span> <span class="n">Centre</span><span class="p">;</span>
+      <span class="kt">int32_t</span> <span class="n">CollRadius</span><span class="p">;</span>
+
+      <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span>           <span class="c1">// Number of vertices in this mesh</span>
+    <span class="n">tr_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// List of vertices (relative coordinates)</span>
+
+      <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span>
+
+  <span class="k">if</span><span class="p">(</span><span class="n">NumNormals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">tr_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span>
+  <span class="k">else</span>
+      <span class="kt">int16_t</span> <span class="n">Lights</span><span class="p">[</span><span class="n">abs</span><span class="p">(</span><span class="n">NumNormals</span><span class="p">)];</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles in this mesh</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles</span>
+
+     <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span>  <span class="c1">// number of textured triangles in this mesh</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
@@ -4702,12 +4744,12 @@ the mesh.</p></div>
 </span> Since TR4, certain static meshes became <em>destroyable</em> (either by shooting or exploding them), and even gained ability to activate <em>heavy triggers</em>. Such static meshes are called <em>shatters</em>. Engine tells shatter statics from ordinary ones judging by their IDs, i.e. shatter static mesh must be in a specific slot. This behaviour is hardcoded.</td>
 </tr></table>
 </div>
-<div class="paragraph"><p>StaticMeshes have two bounding boxes. First one serves as visibililty box, and other is the collisional box. The former is being used for visibility testing, and the latter is used for collision testing.</p></div>
+<div class="paragraph"><p>StaticMeshes have two <em>bounding boxes</em>. First one serves as visibililty box, and other is the collisional box. The former is being used for visibility testing, and the latter is used for collision testing.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_staticmesh</span>   <span class="c1">// 32 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_staticmesh</span>   <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint32_t</span>   <span class="n">ID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Items[])</span>
-    <span class="kt">uint16_t</span>   <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// mesh (offset into MeshPointers[])</span>
+    <span class="kt">uint32_t</span>   <span class="n">ID</span><span class="p">;</span>   <span class="c1">// Object Identifier (matched in Items[])</span>
+    <span class="kt">uint16_t</span>   <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// Mesh (offset into MeshPointers[])</span>
     <span class="n">tr2_vertex</span> <span class="n">VisibilityBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
     <span class="n">tr2_vertex</span> <span class="n">CollisionBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
     <span class="kt">uint16_t</span>   <span class="n">Flags</span><span class="p">;</span>
@@ -4721,45 +4763,86 @@ the mesh.</p></div>
 </span> <span class="monospaced">Flags</span> value is usually 2, and is 3 for static meshes <em>without collision</em>, like plants and lying skeletons. Since TR3, value is ignored, and no-collision mode is obtained using degenerate collision box (with all-zero or all-one coordinates).</p></div>
 </div>
 <div class="sect2">
-<h3 id="_entities_2">4.4. Entities</h3>
-<div class="paragraph"><p>This defines a list of contiguous meshes that comprise one object, which is called <em>entity</em> or <em>moveable</em>. This structure also points to the hierarchy and offsets of the meshes (<span class="monospaced">MeshTree</span>), and also to the animations used (<span class="monospaced">Animation</span>); these will be described in detail below. If the Animation index is -1, that means that there are no predefined animations, and entity&#8217;s movement is all generated by the engine; an example is Lara&#8217;s ponytail or rolling balls from TR4 and TR5.</p></div>
+<h3 id="_models_2">4.4. Models</h3>
+<div class="paragraph"><p>This defines a list of contiguous meshes that comprise one object, which is called a <em>model</em>. This structure also points to the hierarchy and offsets of the meshes (<span class="monospaced">MeshTree</span>), and also to the animations used (<span class="monospaced">Animation</span>); these will be described in detail below. If the Animation index is -1, that means that there are no predefined animations, and entity&#8217;s movement is all generated by the engine; an example is Lara&#8217;s ponytail or rolling balls from TR4 and TR5.</p></div>
 <div class="paragraph"><p>Some entities are really stationary, such as locks and the skybox, and some are not rendered at all, such as &#8220;camera target&#8221; points to aim the camera at, flame emitters, AI objects and other service entities. Such invisible moveables are frequently called <em>nullmeshes</em>, because usually they have no valid mesh index specified for them.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_entity</span>  <span class="c1">// 18 bytes</span>
+<a id="tr_model"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_model</span>  <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint32_t</span> <span class="n">ID</span><span class="p">;</span>           <span class="c1">// Entity Identifier (matched in Items[])</span>
-    <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span>    <span class="c1">// number of meshes in this object</span>
-    <span class="kt">uint16_t</span> <span class="n">StartingMesh</span><span class="p">;</span> <span class="c1">// stating mesh (offset into MeshPointers[])</span>
-    <span class="kt">uint32_t</span> <span class="n">MeshTree</span><span class="p">;</span>     <span class="c1">// offset into MeshTree[]</span>
-    <span class="kt">uint32_t</span> <span class="n">FrameOffset</span><span class="p">;</span>  <span class="c1">// byte offset into Frames[] (divide by 2 for Frames[i])</span>
-    <span class="kt">uint16_t</span> <span class="n">Animation</span><span class="p">;</span>    <span class="c1">// offset into Animations[]</span>
+    <span class="kt">uint32_t</span> <span class="n">ID</span><span class="p">;</span>           <span class="c1">// Model Identifier (matched in Items[])</span>
+    <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span>    <span class="c1">// Number of meshes in this object</span>
+    <span class="kt">uint16_t</span> <span class="n">StartingMesh</span><span class="p">;</span> <span class="c1">// Stating mesh (offset into MeshPointers[])</span>
+    <span class="kt">uint32_t</span> <span class="n">MeshTree</span><span class="p">;</span>     <span class="c1">// Offset into MeshTree[]</span>
+    <span class="kt">uint32_t</span> <span class="n">FrameOffset</span><span class="p">;</span>  <span class="c1">// Byte offset into Frames[] (divide by 2 for Frames[i])</span>
+    <span class="kt">uint16_t</span> <span class="n">Animation</span><span class="p">;</span>    <span class="c1">// Offset into Animations[]</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> There is an extra <span class="monospaced">uint16_t</span> at the end of <span class="monospaced">tr_moveable</span> structure, which is used for alignment. Consider it while parsing.</p></div>
+</span> There is an extra <span class="monospaced">uint16_t</span> at the end of <span class="monospaced">tr_moveable</span> structure, which is always <span class="monospaced">0xFFEF</span> and used for alignment. Consider it while parsing.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_items">4.5. Items</h3>
-<div class="paragraph"><p>Items are instances of entities, which can be sprite sequences or movables. For an object to appear in a level, it must be referenced in the <span class="monospaced">Items[]</span>
-array. Multiple instances are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID is used to locate the appropriate sprite sequence or movable for the item.</p></div>
+<h3 id="_entities_2">4.5. Entities</h3>
+<div class="paragraph"><p>Entities are the actual instances of either <em>models</em> or <em>sprites</em> (with the latter existing in TR1-2 only). For an entity to appear in a level, it must be referenced in the <span class="monospaced">Items[]</span> array. Multiple instances of the same model are possible (e.g. two identical tigers in different rooms are represented using two entries in <span class="monospaced">Items[]</span>, one for each). The object ID is used to locate the appropriate sprite sequence or model for the item.</p></div>
 <div class="listingblock">
-<a id="tr2_item"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_item</span>     <span class="c1">// 24 bytes [TR1: 22 bytes]</span>
+<a id="tr_entity"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_entity</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)</span>
-    <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span> <span class="c1">// which room contains this item</span>
-    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// item position in world coordinates</span>
+    <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>        <span class="c1">// Item position in world coordinates</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
-    <span class="kt">int16_t</span> <span class="n">Angle</span><span class="p">;</span> <span class="c1">// ((0xc000 &gt;&gt; 14) * 90) degrees</span>
-    <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span> <span class="c1">// (constant lighting; -1 means use mesh lighting)</span>
+    <span class="kt">int16_t</span> <span class="n">Angle</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Intensity2</span><span class="p">;</span> <span class="c1">// Like Intensity1, and almost always with the same value. [absent from TR1 data files]</span>
-    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// 0x0100 indicates ``initially invisible&#39;&#39;, 0x3e00 is Activation Mask</span>
-                            <span class="c1">// 0x3e00 indicates ``open&#39;&#39; or ``activated&#39;&#39;;  these can be XORed with</span>
-                           <span class="c1">// related FloorData::FDlist fields (e.g. for switches)</span>
+    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Room</span> is a room ID to which this particular entity belongs to. If <em>room</em> value was modified incorrectly, entity will glitch and, most likely, won&#8217;t appear in engine. That is, you can&#8217;t change entity position without complementary edit or <span class="monospaced">Room</span> field.</p></div>
+<div class="paragraph"><p><span class="monospaced">Angle</span> is an <em>Euler Yaw angle</em> (i.e. &#8220;horizontal&#8221; rotation) stored in a special manner. To convert it to ordinary degrees, use this formula:</p></div>
+<table class="tableblock frame-none grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:100%;">
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top" ><p class="tableblock">$\angle^\circle = (Angle \div 16384) \times -90$</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span> <span class="monospaced">Intensity2</span> field is missing in this game version, so the structure size is 2 bytes less.</p></div>
+<div class="paragraph"><p><span class="monospaced">Intensity1</span>: If not -1, it is a value of constant lighting. -1 means &#8220;use mesh lighting&#8221;.</p></div>
+<div class="paragraph"><p><span class="monospaced">Flags</span> value contain packed list of several parameters:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>Bit 7</em> (<span class="monospaced">0x0080</span>)&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> <em>Clear Body</em> flag. It is used together with <em>Clear Bodies</em> trigger action to remove the body of dead enemy from the level to conserve resources.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 8</em> (<span class="monospaced">0x0100</span>)&#8201;&#8212;&#8201;<em>Invisible</em> flag. If entity has this flag set, it will be invisible on start-up. However, it only works for specific types of entities. It is primarily used with pick-ups or other entities which should appear at certain point only after activation, but are visible by default.
+</p>
+</li>
+<li>
+<p>
+<em>Bits 9..13</em> (<span class="monospaced">0x3E00</span>)&#8201;&#8212;&#8201;<em>Activation Mask</em> for this entity. As you already learned in <em>Trigger Actions</em> chapter, entity is only activated when <em>activation mask is all set</em> (i.e. all 5 bits are set, and value is <span class="monospaced">0x1F</span>). However, activation mask doesn&#8217;t strictly required to be set by trigger&#8201;&#8212;&#8201;level editor allows to <em>pre-define</em> activation mask, so entity will bear specific activation mask layout on level start-up.
+</p>
+<div class="paragraph"><p>If activation mask was pre-set to <span class="monospaced">0x1F</span> (all set), entity will activate <em>immediately after level loading</em>, and engine will also <em>reset activation mask to zero</em> and <em>mark entity as inactive</em>, effectively swapping &#8220;inactive&#8221; state with &#8220;active&#8221;. That is, when player will activate such pre-activated entity with a trigger, it will actually &#8220;deactivate&#8221;, et cetera. Most prominent example of this behaviour is pre-opened grated door in Tomb of Qualopec.</p></div>
+</li>
+</ul></div>
 </div>
 <div class="sect2">
 <h3 id="_sprites">4.6. Sprites</h3>
@@ -5360,7 +5443,7 @@ must be multiplied by 4 to get the correct values.</p></div>
 <table class="tableblock frame-none grid-all"
 style="
 margin-left:auto; margin-right:auto;
-width:100%;
+width:70%;
 ">
 <col style="width:100%;">
 <tbody>
@@ -5389,22 +5472,46 @@ In background, UVRotate animation is also applied to room mesh.</em></p></td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_cameras">8.5. Cameras</h3>
-<div class="paragraph"><p>These are positions to switch the camera to; the camera gets switched to one of these as specified in the floordata, which also specify what to look at, how
-long to switch, and whether to do so only once.</p></div>
+<h3 id="_cameras_and_sinks">8.5. Cameras and sinks</h3>
+<div class="paragraph"><p>This data block serves for two different purposes, albeit keeping the same structure for both. First purpose is to provide positions to switch the camera to using <em>Camera</em> trigger action, and the second purpose is to <em>move Lara to specified position</em> when she is underwater, and <em>Underwater Current</em> trigger action was used.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_camera</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_camera</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">Unknown1</span><span class="p">;</span> <span class="c1">// correlates to Boxes[]? Zones[]?</span>
+    <span class="kt">uint16_t</span> <span class="n">Flag</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">X</span>, <span class="monospaced">Y</span> and <span class="monospaced">Z</span> values are coordinates of a given camera or sink. When used with camera, it is an origin point of a camera. When used with sink, it is a point, towards which Lara is pushed.</p></div>
+<div class="paragraph"><p>&#8216;Room` value specifies the room where camera is placed. For <em>sink</em> cases, this value is used to define `strength of the current&#8217; which moves Lara underwater.</p></div>
+<div class="paragraph"><p><span class="monospaced">Flag</span> value is unknown for both cameras and sinks. However, there is some info that <span class="monospaced">Flag</span> is re-used for sinks as a <span class="monospaced">Zone[]</span> reference.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_flyby_cameras">8.6. Flyby Cameras</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_flyby_camera</span>
+<span class="p">{</span>
+    <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">dx</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">dy</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">dz</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span> <span class="n">Sequence</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">Index</span><span class="p">;</span>
+
+   <span class="kt">uint16_t</span> <span class="n">FOV</span><span class="p">;</span>
+   <span class="kt">uint16_t</span> <span class="n">Roll</span><span class="p">;</span>
+   <span class="kt">uint16_t</span> <span class="n">Timer</span><span class="p">;</span>
+   <span class="kt">uint16_t</span> <span class="n">Speed</span><span class="p">;</span>
+   <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>
+
+   <span class="kt">uint16_t</span> <span class="n">Room_ID</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
 </div>
 <div class="sect2">
 <h3 id="_cinematic_frames">8.7. Cinematic Frames</h3>
@@ -6588,7 +6695,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 10:26:06 MSK
+Last updated 2015-07-21 18:17:45 MSK
 </div>
 </div>
 </body>
