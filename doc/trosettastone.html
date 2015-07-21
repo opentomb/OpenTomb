@@ -2356,10 +2356,16 @@ below.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(pop)</span>
 </pre></div></div></div>
-<div class="sect4">
-<h5 id="_note_about_float_phobic_nature_of_tomb_raider">Note about float-phobic nature of Tomb Raider</h5>
-<div class="paragraph"><p>In 90% of all cases, Tomb Raider engines use integer numbers, even for geometry calculations and animation interpolations. The root of this setup lies in multi-platform nature of the code, which was simultaneously written for PC and PlayStation. While PCs had enough computational power to deal with floats at that time, PlayStation relied primarily on integers.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>In 90% of all cases, Tomb Raider engines use integer numbers, even for geometry calculations and animation interpolations. The root of this setup lies in multi-platform nature of the code, which was simultaneously written for PC and PlayStation. While PCs had enough computational power to deal with floats at that time, PlayStation relied only on integers.</p></div>
 <div class="paragraph"><p>However, some internal variables and constants (like drawing distance and fog distance constants) are PC-specific and stored in floating point numbers. Also, last game in series, TR5, extensively used floating-point numbers for certain data types&#8201;&#8212;&#8201;like colours, vertices, lights and some coordinates.</p></div>
+</td>
+</tr></table>
 </div>
 </div>
 <div class="sect3">
@@ -2395,20 +2401,21 @@ explained below. Mesh coordinates are relative and are specified using <span cla
 </span> The 32-bit textile array, which contains <a href="#tr4_textile32">[tr4_textile32]</a> structures, specifies colours using 32-bit ARGB, where the highest byte is the alpha channel (255 means the texel is fully opaque, 0 the texel is fully transparent).  The next bytes specify (in this order) the red / green / blue channels. The 16 and 32-bit textile arrays depict the same graphics data, but of course the 32-bit array has a better colour resolution. It&#8217;s the one used if you select a 32 bits A8R8G8B8 texture format in the setup menu from TR4 and TR5.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_objects">2.1.6. Objects</h4>
-<div class="paragraph"><p>There are two basic types of objects in TR2&#8201;&#8212;&#8201;meshes and sprites.</p></div>
+<h4 id="_models">2.1.6. Models</h4>
+<div class="paragraph"><p>There are two basic types of models in TR2&#8201;&#8212;&#8201;meshes and sprites.</p></div>
 <div class="paragraph"><p><em>Meshes</em> are collections of textured or coloured polygons that are assembled to
-form a three-dimensional object (such as a tree, a tiger, or Lara herself). The &#8220;rooms&#8221; themselves are also composed of meshes. Mesh objects may contain more
-than one mesh; though these meshes are moved relative to each other, each mesh is rigid.</p></div>
-<div class="paragraph"><p><em>Sprites</em> are two-dimensional images that are inserted into
-three-dimensional space, such as the &#8220;secret&#8221; dragons, ammunition, medi-packs, etc. There are also animated sprite sequences, such as the fire at the end of
-&#8220;The Great Wall.&#8221; Core had presumably used this method to reduce CPU utilization on the PlayStation and/or the earlier PCs. Sprites become less and less
-abundant; TR2 has very few scenery sprites, and TR3&#8217;s pickups are models instead of sprites. Objects are referenced in one of two ways&#8201;&#8212;&#8201;as an offset into an
-array (e.g. <span class="monospaced">Moveables[i]</span>) or using an identifying tag (<span class="monospaced">ObjectID</span>). In the latter case, the related array (<span class="monospaced">Items[]</span>, <span class="monospaced">Moveables[]</span>, etc.) is searched until a
-matching <span class="monospaced">ObjectID</span> is found.</p></div>
+form a three-dimensional object (such as a tree, a tiger, or Lara herself). The &#8220;rooms&#8221; themselves are also composed of meshes. Mesh objects may contain more than one mesh; though these meshes are moved relative to each other, each mesh is rigid.</p></div>
+<div class="paragraph"><p><em>Sprites</em> are two-dimensional images that are inserted into three-dimensional space, such as the &#8220;secret&#8221; dragons, ammunition, medi-packs, etc. There are also animated sprite sequences, such as the fire at the end of &#8220;The Great Wall.&#8221; Core had presumably used this method to reduce CPU utilization on the PlayStation and/or the earlier PCs. Sprites become less and less abundant; TR2 has very few scenery sprites, and TR3&#8217;s pickups are models instead of sprites.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_animations">2.1.7. Animations</h4>
+<h4 id="_entities">2.1.7. Entities</h4>
+<div class="paragraph"><p>Each Tomb Raider game has an internal hardcoded set of <em>entity types</em>. Entity (or, in TRLE terms, a <em>moveable</em>) is an individual object with its own specific function and purpose. Almost every &#8220;moving&#8221; or &#8220;acting&#8221; thing you see is an entity&#8201;&#8212;&#8201;like enemies, doors, pick-up items, and even Lara herself.</p></div>
+<div class="paragraph"><p>A level can contain numerous instances of the same entity, e.g. ten crocodiles, five similar doors and switches, and so on.</p></div>
+<div class="paragraph"><p>Entities are referenced in one of two ways&#8201;&#8212;&#8201;as an offset into an array (e.g. <span class="monospaced">Moveables[i]</span>) or using an identifying tag (<span class="monospaced">EntityID</span>). In the latter case, the related array (<span class="monospaced">Items[]</span>, <span class="monospaced">Moveables[]</span>, etc.) is searched until a
+matching <span class="monospaced">EntityID</span> is found.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_animations">2.1.8. Animations</h4>
 <div class="paragraph"><p>There are three basic types of animations in TR, two corresponding with textures&#8201;&#8212;&#8201;sprite animations and animated textures&#8201;&#8212;&#8201;and one corresponding directly with meshes.</p></div>
 <div class="sect4">
 <h5 id="_sprite_animations">Sprite animations</h5>
@@ -2424,14 +2431,14 @@ matching <span class="monospaced">ObjectID</span> is found.</p></div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_lighting">2.1.8. Lighting</h4>
+<h4 id="_lighting">2.1.9. Lighting</h4>
 <div class="paragraph"><p>There are two main types of lighting in Tomb Raider, <em>constant</em> and <em>vertex</em>. Constant lighting means that all parts of an object have the same illumination, while in vertex lighting, each polygon vertex has its own light value, and the illumination of the polygon interiors is interpolated from the vertex values.</p></div>
 <div class="paragraph"><p>Furthermore, lighting can be either internal or external. Internal lighting is specified in an object’s data, external lighting is calculated using the room’s light sources (ambient light, point light sources, spotlights (TR4-5), dynamic lights).</p></div>
 <div class="paragraph"><p>When available, external lighting also uses the vertex normals to calculate the incoming light at each vertex. Light intensities are described either with a single value or with a 16 bits color value (you can see it more like a &#8220;color filter&#8221;), depending mainly on the TR version.</p></div>
 <div class="paragraph"><p>Light intensities are described with a single value in TR1 and a pair of values in TR2 and TR3; the paired values are almost always equal, and the pairing may reflect some feature that was only imperfectly implemented, such as off/on or minimum/maximum values. In TR1 and TR2, the light values go from 0 (maximum light) to 8192 (minimum light), while in TR3, the light values go from 0 (minimum light) to 32767 (maximum light).</p></div>
 </div>
 <div class="sect3">
-<h4 id="_sound_samples">2.1.9. Sound samples</h4>
+<h4 id="_sound_samples">2.1.10. Sound samples</h4>
 <div class="paragraph"><p>There are two ways for sound samples to play.</p></div>
 <div class="paragraph"><p>First one is basically sound emitter sitting at a static global position in level, and continuously emitting specified sound (such as waterfalls&#8201;&#8212;&#8201;these are in <span class="monospaced">SoundSources[]</span>). Second one is triggered sounds&#8201;&#8212;&#8201;these are sounds played when some event happens, such as at certain animation frames (footsteps and other Lara sounds), when doors open and close, and when weapons are fired.</p></div>
 <div class="paragraph"><p>Either way, each played sound is referred to using a three-layer indexing scheme, to provide a maximum amount of abstraction. An internal sound index references <span class="monospaced">SoundMap[]</span>, which points to a <span class="monospaced">SoundDetails[]</span> record, which in turn points to a <span class="monospaced">SampleIndices[]</span> entry, which in turn points to a sound sample. <span class="monospaced">SoundDetails[]</span>, contains such features as sound intensity, how many sound samples to choose from, among others. The sound samples themselves are in Microsoft WAVE format, and, as already mentioned, they are embedded either in the data files (TR1, TR4 and TR5) or in a separate file (<span class="monospaced">MAIN.SFX</span>) in TR2 and TR3.</p></div>
@@ -2921,7 +2928,6 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
           <span class="kt">float</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span><span class="p">;</span>    <span class="c1">// Direction - used only by sun and spot lights</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><strong><span class="quote">UNKNOWN</span></strong>&#8201;&#8212;&#8201;needs additional description!</p></div>
 <div class="paragraph"><p><span class="monospaced">LightType</span> is somewhat similar to D3D light type, but there are some differences.</p></div>
 <div class="ulist"><ul>
 <li>
@@ -3039,7 +3045,6 @@ width:75%;
       <span class="kt">uint8_t</span> <span class="n">Filler</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>     <span class="c1">// Dummy values = 3 x 0xCD</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><strong><span class="quote">UNKNOWN</span></strong>&#8201;&#8212;&#8201;needs additional description!</p></div>
 <div class="paragraph"><p><span class="monospaced">x,y,z</span> values shouldn&#8217;t be used by sun type light, but sun seems to have a large <span class="monospaced">x</span> value (9 million, give or take), a zero <span class="monospaced">y</span> value, and a small <span class="monospaced">z</span> value (4..20) in the original TR5 levels.</p></div>
 <div class="paragraph"><p><span class="monospaced">In</span> and <span class="monospaced">Out</span> values aren&#8217;t used by <em>sun</em> type. For the <em>spot</em> type, these are the <em>hotspot</em> and <em>falloff angle</em> cosines. For the <em>light</em> and <em>shadow</em> types, these are the TR units for the <em>hotspot / falloff</em> (1024 = 1 sector).</p></div>
 <div class="paragraph"><p><span class="monospaced">RadIn</span>, <span class="monospaced">RadOut</span> and <span class="monospaced">Range</span> are only used by the <em>spot</em> light type.</p></div>
@@ -3074,27 +3079,27 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
-       <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>
+       <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Vertex</span> is the coordinates of the vertex, relative to <a href="#tr_room_info">[tr_room_info]</a> <span class="monospaced">x</span> and <span class="monospaced">z</span> values.</p></div>
-<div class="paragraph"><p><span class="monospaced">Lighting1</span> ranges from 0 (bright) to 0x1FFF (dark). This value is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range.</p></div>
+<div class="paragraph"><p><span class="monospaced">Lighting</span> ranges from 0 (bright) to 0x1FFF (dark). This value is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range.</p></div>
 <div class="paragraph"><p>TR2 uses an extended version of the structure:</p></div>
 <div class="listingblock">
 <a id="tr2_room_vertex"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
-       <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>
-      <span class="kt">uint16_t</span> <span class="n">Attributes</span><span class="p">;</span> <span class="c1">// A set of flags for special rendering effects (absent from TR1)</span>
-       <span class="kt">int16_t</span> <span class="n">Lighting2</span><span class="p">;</span>  <span class="c1">// Almost always equal to Lighting1 (absent from TR1)</span>
+       <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>
+      <span class="kt">uint16_t</span> <span class="n">Attributes</span><span class="p">;</span> <span class="c1">// A set of flags for special rendering effects</span>
+       <span class="kt">int16_t</span> <span class="n">Lighting2</span><span class="p">;</span>  <span class="c1">// Almost always equal to Lighting1</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Attributes</span> field is a <em>set of flags</em>, and their meaning is:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bit 15:</em> When used in room filled with water, don&#8217;t move the vertices of the room when viewed from above (normally, when viewed from above, the vertices of a room filled with water moves to <em>simulate</em> the refraction of lights in water). Note that when viewed from inside the room filled with water, the vertices of the other rooms outside still moves.
+<em>Bits 0-4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room">[tr_room]</a> structure. See below.
 </p>
 </li>
 <li>
@@ -3104,34 +3109,29 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bits 0-4</em> are only used together in combination with the <span class="monospaced">LightMode</span> field of the <a href="#tr_room">[tr_room]</a> structure. See below.
+<em>Bit 15:</em> When used in room filled with water, don&#8217;t move the vertices of the room when viewed from above (normally, when viewed from above, the vertices of a room filled with water moves to <em>simulate</em> the refraction of lights in water). Note that when viewed from inside the room filled with water, the vertices of the other rooms outside still moves.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><span class="monospaced">Lighting2</span> field is also absent from TR1.</p></div>
+<div class="paragraph"><p><span class="monospaced">Lighting</span> field is ignored by TR2, and <span class="monospaced">Lighting2</span> is used instead with the same brightness range&#8201;&#8212;&#8201;from 0 (bright) to 0x1FFF (dark).</p></div>
 <div class="listingblock">
 <div class="title">TR3-4 Room Vertex structure</div>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
-       <span class="kt">int16_t</span> <span class="n">Lighting1</span><span class="p">;</span>  <span class="c1">// Value is ignored!</span>
+       <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>   <span class="c1">// Value is ignored!</span>
       <span class="kt">uint16_t</span> <span class="n">Attributes</span><span class="p">;</span> <span class="c1">// A set of flags for special rendering effects</span>
       <span class="kt">uint16_t</span> <span class="n">Colour</span><span class="p">;</span>     <span class="c1">// 15-bit colour</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">Lighting1</span> value is ignored by the engine, as now each vertex has its own defined 15-bit colour (see below).</p></div>
+<div class="paragraph"><p><span class="monospaced">Lighting</span> value is ignored by the engine, as now each vertex has its own defined 15-bit colour (see below).</p></div>
 <div class="paragraph"><p><span class="monospaced">Attributes</span> bit flags were extended. Here is the list:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<em>Bit 15:</em> <span class="image">
+<em>Bit 4:</em> <span class="image">
 <img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
-</p>
-</li>
-<li>
-<p>
-<em>Bit 14:</em> Simulates caustics by constantly shifting vertex colour brightness. Used mainly in underwater rooms, but can be used in rooms without water. In TR2, there was a similar effect, but it was assigned for all vertices in any water room.
 </p>
 </li>
 <li>
@@ -3141,13 +3141,18 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bit 4:</em> <span class="image">
+<em>Bit 14:</em> Simulates caustics by constantly shifting vertex colour brightness. Used mainly in underwater rooms, but can be used in rooms without water. In TR2, there was a similar effect, but it was assigned for all vertices in any water room.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 15:</em> <span class="image">
 <img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><span class="monospaced">Colour</span> value specifies vertex colour in 15-bit format (each colour occupies 5 bits): 0x0[red]RRRRR[green]GGGGG[blue]BBBBB. Therefore, each colour value&#8217;s maximum is <em>31</em>. You can use this code to get each colour:</p></div>
+<div class="paragraph"><p><span class="monospaced">Colour</span> value specifies vertex colour in 15-bit format (each colour occupies 5 bits). Therefore, each colour value&#8217;s maximum is <em>31</em>. You can use this code to get each colour:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3175,7 +3180,6 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
       <span class="kt">uint32_t</span> <span class="n">Colour</span><span class="p">;</span>     <span class="c1">// 32-bit colour</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><strong><span class="quote">UNKNOWN</span></strong>&#8201;&#8212;&#8201;needs additional description!</p></div>
 <div class="paragraph"><p>There is no more <span class="monospaced">Attributes</span> field in room vertex structure for TR5.</p></div>
 </div>
 <div class="sect4">
@@ -4629,7 +4633,7 @@ the mesh.</p></div>
 <span class="k">struct</span> <span class="n">tr2_staticmesh</span>
 <span class="p">{</span>
     <span class="c1">// 32 bytes</span>
-    <span class="kt">uint32_t</span> <span class="n">ObjectID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Items[])</span>
+    <span class="kt">uint32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Items[])</span>
     <span class="kt">uint16_t</span> <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// mesh (offset into MeshPointers[])</span>
     <span class="n">tr2_vertex</span> <span class="n">BoundingBox</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">2</span><span class="p">];</span> <span class="c1">// First index is which one; second index is opposite corners</span>
     <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// Meaning uncertain; it is usually 2, and is 3 for objects Lara can travel through,</span>
@@ -4654,7 +4658,7 @@ the mesh.</p></div>
 <span class="k">struct</span> <span class="n">tr2_moveable</span>
 <span class="p">{</span>
     <span class="c1">// 18 bytes</span>
-    <span class="kt">uint32_t</span> <span class="n">ObjectID</span><span class="p">;</span> <span class="c1">// Item Identifier (matched in Items[])</span>
+    <span class="kt">uint32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Item Identifier (matched in Items[])</span>
     <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span> <span class="c1">// number of meshes in this object</span>
     <span class="kt">uint16_t</span> <span class="n">StartingMesh</span><span class="p">;</span> <span class="c1">// stating mesh (offset into MeshPointers[])</span>
     <span class="kt">uint32_t</span> <span class="n">MeshTree</span><span class="p">;</span> <span class="c1">// offset into MeshTree[]</span>
@@ -4673,7 +4677,7 @@ is used to locate the appropriate sprite sequence or movable for the item.</p></
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_item</span>
 <span class="p">{</span>
     <span class="c1">// 24 bytes [TR1: 22 bytes]</span>
-    <span class="kt">int16_t</span> <span class="n">ObjectID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)</span>
+    <span class="kt">int16_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span> <span class="c1">// which room contains this item</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span> <span class="c1">// item position in world coordinates</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
@@ -4716,7 +4720,7 @@ in other ways (text). Some sequences have only one member; this is done so as to
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_sprite_sequence</span>
 <span class="p">{</span>
     <span class="c1">// 8 bytes</span>
-    <span class="kt">int32_t</span> <span class="n">ObjectID</span><span class="p">;</span> <span class="c1">// Item identifier (matched in Items[])</span>
+    <span class="kt">int32_t</span> <span class="n">EntityID</span><span class="p">;</span> <span class="c1">// Item identifier (matched in Items[])</span>
     <span class="kt">int16_t</span> <span class="n">NegativeLength</span><span class="p">;</span> <span class="c1">// negative of ``how many sprites are in this sequence&#39;&#39;</span>
     <span class="kt">int16_t</span> <span class="n">Offset</span><span class="p">;</span> <span class="c1">// where (in sprite texture list) this sequence starts</span>
 <span class="p">};</span>
@@ -6645,7 +6649,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 04:28:45 MSK
+Last updated 2015-07-21 04:54:17 MSK
 </div>
 </div>
 </body>
