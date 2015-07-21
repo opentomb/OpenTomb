@@ -2177,15 +2177,15 @@ width:100%;
 </li>
 </ul></div>
 <div class="paragraph"><p>When there is version-specific info about certain structures or methods, this information will be marked with special bullet images, defining engine versions for which this info is applicable: <span class="image">
-<img src="images/icons/tr1.png" alt="TR1" width="16" height="17">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
 </span> is for TR1, <span class="image">
-<img src="images/icons/tr2.png" alt="TR2" width="16" height="17">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span> is for TR2, <span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> is for TR3, <span class="image">
-<img src="images/icons/tr4.png" alt="TR4" width="16" height="17">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span> is for TR4, and <span class="image">
-<img src="images/icons/tr5.png" alt="TR5" width="16" height="17">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> is for TR5. Version-specific information will continue up to the next paragraph or list entry, until otherwise noted.</p></div>
 </div>
 <div class="sect2">
@@ -2381,17 +2381,17 @@ explained below. Mesh coordinates are relative and are specified using <span cla
 <div class="paragraph"><p>The 16-bit textile array, which contains <a href="#tr_textile16">[tr_textile16]</a> structures, specifies colours using 16-bit ARGB, where the highest bit
 (<span class="monospaced">0x8000</span>) is a crude alpha channel (really just simple transparency&#8201;&#8212;&#8201;<em>0 = transparent</em>, <em>1 = opaque</em>).  The next 5 bits (<span class="monospaced">0x7c00</span>) specify the red channel, the next 5 bits (<span class="monospaced">0x03e0</span>) specify the green channel, and the last 5 bits (<span class="monospaced">0x001f</span>) specify the blue channel, each on a scale from 0..31.</p></div>
 <div class="paragraph"><p><span class="image">
-<img src="images/icons/tr1.png" alt="TR1" width="16" height="17">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
 </span><span class="image">
-<img src="images/icons/tr2.png" alt="TR2" width="16" height="17">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span><span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> If, for some reason, 16-bit textures are turned off, all colours and textures use an 8-bit palette that is stored in the level file.  This palette consists of a 256-element array of <a href="#tr_colour">[tr_colour]</a> structures, each designating some colour;  textures and other elements that need to reference a colour specify an index (0..255) into the <span class="monospaced">Palette[]</span> array.  There is also a 16-bit palette, which is used for identifying colours of solid polygons.  The 16-bit palette contains up to 256 four-byte entries;  the first three bytes are a
 <a href="#tr_colour">[tr_colour]</a>, while the last byte is ignored (set to 0).</p></div>
 <div class="paragraph"><p><span class="image">
-<img src="images/icons/tr4.png" alt="TR4" width="16" height="17">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
-<img src="images/icons/tr5.png" alt="TR5" width="16" height="17">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> The 32-bit textile array, which contains <a href="#tr4_textile32">[tr4_textile32]</a> structures, specifies colours using 32-bit ARGB, where the highest byte is the alpha channel (255 means the texel is fully opaque, 0 the texel is fully transparent).  The next bytes specify (in this order) the red / green / blue channels. The 16 and 32-bit textile arrays depict the same graphics data, but of course the 32-bit array has a better colour resolution. It&#8217;s the one used if you select a 32 bits A8R8G8B8 texture format in the setup menu from TR4 and TR5.</p></div>
 </div>
 <div class="sect3">
@@ -2513,11 +2513,11 @@ textured rectangle will have its vertices mapped onto all 4 vertices of an objec
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Texture</span> field can have the bit 15 set: when it is, the face is <em>double-sided</em> (i.e. visible from both sides).</p></div>
 <div class="paragraph"><p><span class="image">
-<img src="images/icons/tr1.png" alt="TR1" width="16" height="17">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
 </span><span class="image">
-<img src="images/icons/tr2.png" alt="TR2" width="16" height="17">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span><span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> If the rectangle is a coloured polygon (not textured), the .Texture element contains two indices: the low byte (<span class="monospaced">Texture &amp; 0xFF</span>) is an index into the 256-colour palette, while the high byte (<span class="monospaced">Texture &gt;&gt; 8</span>) is in index into the 16-bit palette, when present.</p></div>
 <div class="paragraph"><p>TR4 and later introduced an extended version only used for meshes, not for triangles and quads making rooms:</p></div>
 <div class="listingblock">
@@ -2770,11 +2770,11 @@ up; steps larger than 7 (-2048..-32768) cannot be jumped up (too tall).</p></div
 <div class="paragraph"><p><span class="monospaced">FDindex</span> is a pointer to specific entry in <a href="#FloorData">[FloorData]</a> array, which keeps all the information about sector flags, triggers and other parameters. While it is implied that one <span class="monospaced">FDindex</span> entry may be shared between several sectors, it is usually not the case with original Tomb Raider levels built with <em>TRLE</em>. However, <em>Dxtre3d</em> takes advantage of this feature and may optimize similar sectors to share same FDindex pointer.</p></div>
 <div class="paragraph"><p><span class="monospaced">BoxIndex</span> is a pointer to special <a href="#Boxes">[Boxes]</a> array entry, which is basically a subset of sectors with same height configuration. It is primarily used for AI pathfinding (see the <a href="#non-player-character-behaviour">Non-player character behaviour</a> chapter for more details).</p></div>
 <div class="paragraph"><p><span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span><span class="image">
-<img src="images/icons/tr4.png" alt="TR4" width="16" height="17">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
-<img src="images/icons/tr5.png" alt="TR5" width="16" height="17">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> In these games, <span class="monospaced">BoxIndex</span> field is more complicated, and actually contains <em>two packed values</em>. Bits 4-14 contain the <em>actual box index</em>, and bits 0-3 contain <em>material index</em>, which is used to produce specific footstep sound, when Lara is walking or running in this sector. On PlayStation game versions, this index was also used to determine if footprint textures should be applied to this particular place.</p></div>
 <div class="paragraph"><p>Majority of <em>material index</em> values are the same across game versions, but some of them exist only in particular game. Here is the description:</p></div>
 <div class="ulist"><ul>
@@ -3125,7 +3125,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <li>
 <p>
 <em>Bit 15:</em> <span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
 </p>
 </li>
@@ -3142,7 +3142,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 <li>
 <p>
 <em>Bit 4:</em> <span class="image">
-<img src="images/icons/tr3.png" alt="TR3" width="16" height="17">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
 </p>
 </li>
@@ -6645,7 +6645,7 @@ level ID.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-21 04:21:27 MSK
+Last updated 2015-07-21 04:28:45 MSK
 </div>
 </div>
 </body>
