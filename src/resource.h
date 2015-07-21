@@ -74,7 +74,6 @@ struct world_s;
 struct room_s;
 struct room_sector_s;
 struct sector_tween_s;
-struct bordered_texture_atlas_s;
 
 // NOTE: Functions which take native TR level structures as argument will have
 // additional _TR_ prefix. Functions which doesn't use specific TR structures

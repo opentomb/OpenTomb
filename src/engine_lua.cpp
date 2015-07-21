@@ -2311,7 +2311,7 @@ int lua_GetEntityEnability(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ENABLED) != 0);
+    lua_pushboolean(lua, (ent->state_flags & ENTITY_STATE_ENABLED) != 0);
 
     return 1;
 }
@@ -2334,7 +2334,7 @@ int lua_GetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
+    lua_pushboolean(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
 
     return 1;
 }
@@ -2454,7 +2454,8 @@ int lua_SetEntityEvent(lua_State * lua)
     if(ent)
     {
         uint8_t trigger_layout = ent->trigger_layout;
-        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 5;   // event - 00100000
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);
+        trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 5;   // event - 00100000
         ent->trigger_layout = trigger_layout;
     }
     return 0;

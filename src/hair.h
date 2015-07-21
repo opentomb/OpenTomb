@@ -59,7 +59,6 @@ typedef struct hair_s
 
     entity_p                  owner_char;         // Entity who owns this hair.
     uint32_t                  owner_body;         // Owner entity's body ID.
-    //btScalar                  owner_body_transform[16]; // contains real hair base position and orientation
 
     uint8_t                   root_index;         // Index of "root" element.
     uint8_t                   tail_index;         // Index of "tail" element.

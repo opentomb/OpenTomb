@@ -262,7 +262,6 @@ typedef struct room_s
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
     struct sprite_buffer_s *sprite_buffer;               // Render data for sprites
 
     uint32_t                    static_mesh_count;
@@ -274,7 +273,7 @@ typedef struct room_s
 
     btScalar                    bb_min[3];                                      // room's bounding box
     btScalar                    bb_max[3];                                      // room's bounding box
-    btScalar                    transform[16];                                  // GL transformation matrix
+    btScalar                    transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
     uint32_t                    light_count;

@@ -144,7 +144,7 @@ typedef struct static_mesh_s
     btScalar                    cbb_min[3];                                     // collision bounding box
     btScalar                    cbb_max[3];
 
-    btScalar                    transform[16];                                  // gl transformation matrix
+    btScalar                    transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
     struct obb_s               *obb;
     struct engine_container_s  *self;
 
