@@ -173,8 +173,8 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            const btVector3& e1b = e1.m_transform.getBasis().getColumn(i);
-            const btVector3& e2b = e2.m_transform.getBasis().getColumn(k);
+            const btVector3 e1b = e1.m_transform.getBasis().getColumn(i);
+            const btVector3 e2b = e2.m_transform.getBasis().getColumn(k);
             R[i][k] = e1b.dot(e2b);
         }
     }

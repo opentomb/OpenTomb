@@ -412,7 +412,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT)  ||
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)) )
                 {
-                    t = character->m_forvardSize + LARA_TRY_HANG_WALL_OFFSET;
+                    t = character->m_forwardSize + LARA_TRY_HANG_WALL_OFFSET;
                     global_offset = character->m_transform.getBasis().getColumn(1) * t;
 
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
@@ -1311,11 +1311,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(resp->slide == 0)
+            else if(resp->slide == CHARACTER_SLIDE_NONE)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            else if(resp->slide != 0 && cmd->jump == 1)
+            else if(resp->slide != CHARACTER_SLIDE_NONE && cmd->jump == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;
             }
@@ -1338,7 +1338,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->m_speed[1] *= 0.2;
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(resp->slide == 0)
+            else if(resp->slide == CHARACTER_SLIDE_NONE)
             {
                 if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
                 {
@@ -1349,7 +1349,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                      ss_anim->next_state = TR_STATE_LARA_STOP;                  // stop
                 }
             }
-            else if(resp->slide != 0 && cmd->jump == 1)
+            else if(resp->slide != CHARACTER_SLIDE_NONE && cmd->jump == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;               // jump
             }
@@ -1715,8 +1715,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 // depending on the current angle.
                 if((character->m_dirFlag == ENT_MOVE_BACKWARD) && (character->m_moveType == MOVE_CLIMBING))
                 {
-                    pos[0] = climb->point[0] - character->m_transform.getBasis().getColumn(1)[0] * (character->m_forvardSize + 16.0);
-                    pos[1] = climb->point[1] - character->m_transform.getBasis().getColumn(1)[1] * (character->m_forvardSize + 16.0);
+                    pos[0] = climb->point[0] - character->m_transform.getBasis().getColumn(1)[0] * (character->m_forwardSize + 16.0);
+                    pos[1] = climb->point[1] - character->m_transform.getBasis().getColumn(1)[1] * (character->m_forwardSize + 16.0);
                 }
             }
 

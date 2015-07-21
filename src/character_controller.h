@@ -139,6 +139,7 @@
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
+#define CHARACTER_SLIDE_NONE                    (0x00)
 
 /*
  * Next step height information
@@ -221,15 +222,15 @@ struct HeightInfo
     bool                                        walls_climb = false;
     int8_t                                      walls_climb_dir = 0;
 
-    btVector3                                   floor_normale = {0,0,0};
+    btVector3                                   floor_normale = {0,0,1};
     btVector3                                   floor_point = {0,0,0};
     bool                                        floor_hit = false;
-    btCollisionObject                          *floor_obj;
+    const btCollisionObject                    *floor_obj = nullptr;
 
-    btVector3                                   ceiling_normale;
-    btVector3                                   ceiling_point;
+    btVector3                                   ceiling_normale = {0,0,-1};
+    btVector3                                   ceiling_point = {0,0,0};
     bool                                        ceiling_hit = false;
-    btCollisionObject                          *ceiling_obj;
+    const btCollisionObject                    *ceiling_obj = nullptr;
 
     btScalar                                    transition_level;
     bool                                        water = false;
@@ -258,7 +259,7 @@ struct CharacterResponse
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
-    int8_t      slide = 0;
+    int8_t      slide = CHARACTER_SLIDE_NONE;
 };
 
 struct CharacterParam
@@ -331,7 +332,7 @@ struct Character : public Entity
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
     btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
-    btScalar                     m_forvardSize = 48;           // offset for climbing calculation
+    btScalar                     m_forwardSize = 48;           // offset for climbing calculation
     btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
     btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
     btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim

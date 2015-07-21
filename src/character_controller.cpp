@@ -320,7 +320,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     {
         fc->floor_normale = cb->m_hitNormalWorld;
         fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
+        fc->floor_obj = cb->m_collisionObject;
     }
 
     to = from;
@@ -334,12 +334,12 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     {
         fc->ceiling_normale = cb->m_hitNormalWorld;
         fc->ceiling_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->ceiling_obj = (btCollisionObject*)cb->m_collisionObject;
+        fc->ceiling_obj = cb->m_collisionObject;
     }
 }
 
 /**
- * @function calculates next floor info + fantom filter + returns step info.
+ * Calculates next floor info + phantom filter + returns step info.
  * Current height info must be calculated!
  */
 int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
@@ -441,15 +441,17 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 
 /**
  * @param next_fc  next step floor / ceiling information
- * @retval true if character can't run / walk next; in other cases returns 0
+ * @retval @c true if character can't run / walk next; in other cases returns @c false
  */
 bool Character::hasStopSlant(const HeightInfo& next_fc)
 {
-    const auto& pos = m_transform.getOrigin();
-    const auto& v1 = m_transform.getBasis().getColumn(1);
-    const auto& v2 = next_fc.floor_normale;
-    return (next_fc.floor_point[2] > pos[2]) && (next_fc.floor_normale[2] < m_criticalSlantZComponent) &&
-           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
+    const btVector3& pos = m_transform.getOrigin();
+    const btVector3 forward = m_transform.getBasis().getColumn(1);
+    const btVector3& floor = next_fc.floor_normale;
+
+    return    next_fc.floor_point[2] > pos[2]
+           && next_fc.floor_normale[2] < m_criticalSlantZComponent
+           && (forward[0] * floor[0] + forward[1] * floor[1]) < 0.0;
 }
 
 /**
@@ -596,18 +598,18 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     }
 
     ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                                  n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                                  n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
+                        n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                        n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
     ret.edge_point[0] /= d;
 
     ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
-                                  n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
-                                  n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
+                        n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
+                        n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
     ret.edge_point[1] /= d;
 
     ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
-                                  n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
-                                  n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
+                        n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
+                        n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
     ret.edge_point[2] /= d;
     ret.point = ret.edge_point;
     std::copy(ret.point+0, ret.point+3, cast_ray+3);
@@ -665,10 +667,6 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
 
 ClimbInfo Character::checkWallsClimbability()
 {
-    btVector3 from, to;
-    btTransform tr1, tr2;
-    btScalar wn2[2], t, *pos = m_transform.getOrigin();
-    auto ccb = m_convexCb;
 
     ClimbInfo ret;
     ret.can_hang = 0x00;
@@ -684,38 +682,38 @@ ClimbInfo Character::checkWallsClimbability()
         return ret;
     }
 
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
+    ret.up = {0,0,1};
 
-    from[0] = pos[0] + m_transform.getBasis().getColumn(2)[0] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[0] * m_climbR;
-    from[1] = pos[1] + m_transform.getBasis().getColumn(2)[1] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[1] * m_climbR;
-    from[2] = pos[2] + m_transform.getBasis().getColumn(2)[2] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[2] * m_climbR;
-    to = from;
-    t = m_forvardSize + m_bf.bb_max[1];
-    to[0] += m_transform.getBasis().getColumn(1)[0] * t;
-    to[1] += m_transform.getBasis().getColumn(1)[1] * t;
-    to[2] += m_transform.getBasis().getColumn(1)[2] * t;
+    btVector3& pos = m_transform.getOrigin();
+    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    btVector3 to = from;
+    btScalar t = m_forwardSize + m_bf.bb_max[1];
+    to += m_transform.getBasis().getColumn(1) * t;
 
+    auto ccb = m_convexCb;
     ccb->m_closestHitFraction = 1.0;
-    ccb->m_hitCollisionObject = NULL;
+    ccb->m_hitCollisionObject = nullptr;
+
+    btTransform tr1;
     tr1.setIdentity();
     tr1.setOrigin(from);
+
+    btTransform tr2;
     tr2.setIdentity();
     tr2.setOrigin(to);
+
     bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
-    if(!(ccb->hasHit()))
+    if(!ccb->hasHit())
     {
         return ret;
     }
 
     ret.point = ccb->m_hitPointWorld;
     ret.n = ccb->m_hitNormalWorld;
-    wn2[0] = ret.n[0];
-    wn2[1] = ret.n[1];
+    btScalar wn2[2] = {ret.n[0], ret.n[1]};
     t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
     wn2[0] /= t;
-    wn2[0] /= t;
+    wn2[1] /= t;
 
     ret.t[0] =-wn2[1];
     ret.t[1] = wn2[0];
@@ -742,14 +740,10 @@ ClimbInfo Character::checkWallsClimbability()
     if(ret.wall_hit)
     {
         t = 0.67 * m_height;
-        from[0] -= m_transform.getBasis().getColumn(2)[0] * t;
-        from[1] -= m_transform.getBasis().getColumn(2)[1] * t;
-        from[2] -= m_transform.getBasis().getColumn(2)[2] * t;
+        from -= m_transform.getBasis().getColumn(2) * t;
         to = from;
-        t = m_forvardSize + m_bf.bb_max[1];
-        to[0] += m_transform.getBasis().getColumn(1)[0] * t;
-        to[1] += m_transform.getBasis().getColumn(1)[1] * t;
-        to[2] += m_transform.getBasis().getColumn(1)[2] * t;
+        t = m_forwardSize + m_bf.bb_max[1];
+        to += m_transform.getBasis().getColumn(1) * t;
 
         ccb->m_closestHitFraction = 1.0;
         ccb->m_hitCollisionObject = NULL;
@@ -813,7 +807,7 @@ void Character::setToJump(btScalar v_vertical, btScalar v_horizontal)
     }
 
     m_response.vertical_collide = 0x00;
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
@@ -1042,15 +1036,15 @@ int Character::moveOnFloor()
                        + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
+                // front forward slide down
                 m_response.slide = CHARACTER_SLIDE_FRONT;
                 m_angles[0] = zAngle + 180;
-                // front forward slide down
             }
             else
             {
+                // back forward slide down
                 m_response.slide = CHARACTER_SLIDE_BACK;
                 m_angles[0] = zAngle;
-                // back forward slide down
             }
             updateTransform();
             m_response.vertical_collide |= 0x01;
@@ -1084,12 +1078,12 @@ int Character::moveOnFloor()
             {
                 //dir_flag = ENT_MOVE_FORWARD;
             }
-            m_response.slide = 0x00;
+            m_response.slide = CHARACTER_SLIDE_NONE;
         }
     }
     else                                                                        // no hit to the floor
     {
-        m_response.slide = 0x00;
+        m_response.slide = CHARACTER_SLIDE_NONE;
         m_response.vertical_collide = 0x00;
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
@@ -1171,7 +1165,7 @@ int Character::freeFalling()
      * init height info structure
      */
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1283,7 +1277,7 @@ int Character::monkeyClimbing()
     auto& pos = m_transform.getOrigin();
 
     m_speed[2] = 0.0;
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1315,7 +1309,7 @@ int Character::monkeyClimbing()
     {
         //dir_flag = ENT_MOVE_FORWARD;
     }
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
 
     m_speed = spd;
     move = spd * engine_frame_time;
@@ -1352,7 +1346,7 @@ int Character::wallsClimbing()
     btScalar t;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1419,7 +1413,7 @@ int Character::climbing()
     auto& pos = m_transform.getOrigin();
     btScalar z = pos[2];
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1448,13 +1442,13 @@ int Character::climbing()
     }
     else
     {
-        m_response.slide = 0x00;
+        m_response.slide = CHARACTER_SLIDE_NONE;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_speed = spd;
     move = spd * engine_frame_time;
 
@@ -1486,7 +1480,7 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1545,7 +1539,7 @@ int Character::moveOnWater()
     btVector3 move, spd(0.0, 0.0, 0.0);
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 

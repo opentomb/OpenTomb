@@ -1296,9 +1296,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
         return;
     }
 
-    ent->m_transform.getOrigin()[0] += dx * ent->m_transform.getBasis().getColumn(0)[0] + dy * ent->m_transform.getBasis().getColumn(1)[0] + dz * ent->m_transform.getBasis().getColumn(2)[0];
-    ent->m_transform.getOrigin()[1] += dx * ent->m_transform.getBasis().getColumn(0)[1] + dy * ent->m_transform.getBasis().getColumn(1)[1] + dz * ent->m_transform.getBasis().getColumn(2)[1];
-    ent->m_transform.getOrigin()[2] += dx * ent->m_transform.getBasis().getColumn(0)[2] + dy * ent->m_transform.getBasis().getColumn(1)[2] + dz * ent->m_transform.getBasis().getColumn(2)[2];
+    ent->m_transform.getOrigin() += dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2);
 
     ent->updateRigidBody(true);
 }
