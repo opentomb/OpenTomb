@@ -730,7 +730,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
     btVector3 tr, cmd_tr;
     if(etr && (curr_bf->command & ANIM_CMD_MOVE))
     {
-        tr = *etr * curr_bf->move;
+        tr = etr->getBasis() * curr_bf->move;
         cmd_tr = tr * bf->animations.lerp;
     }
     else
@@ -1236,7 +1236,7 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
-            btVector3 tr = m_transform.getOrigin() * curr_bf->move;
+            btVector3 tr = m_transform.getBasis() * curr_bf->move;
             m_transform.getOrigin() += tr;
         }
     }
