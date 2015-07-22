@@ -995,7 +995,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                         break;
                     }
                 }
-                pointer++;
+                pointer += 2;
                 break;
             }
         }

@@ -242,13 +242,13 @@ struct CharacterCommand
     btVector3 rot;
     std::array<int8_t,3> move{{0,0,0}};
 
-    int8_t      roll;
-    int8_t      jump;
-    int8_t      crouch = 0;
-    int8_t      shift = 0;
-    int8_t      action = 0;
-    int8_t      ready_weapon;
-    int8_t      sprint;
+    bool        roll = false;
+    bool        jump = false;
+    bool        crouch = false;
+    bool        shift = false;
+    bool        action = false;
+    bool        ready_weapon = false;
+    bool        sprint = false;
 
     int8_t      flags = 0;
 };
@@ -400,7 +400,7 @@ struct Character : public Entity
 
     void setToJump(btScalar v_vertical, btScalar v_horizontal);
     void lean(CharacterCommand* cmd, btScalar max_lean);
-    btScalar inertiaLinear(btScalar max_speed, btScalar accel, int8_t command);
+    btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 
     int moveOnFloor();

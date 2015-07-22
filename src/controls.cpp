@@ -27,7 +27,7 @@ extern SDL_Window           *sdl_window;
 extern EngineContainer* last_cont;
 
 
-void Controls_Key(int32_t button, int state)
+void Controls_Key(int32_t button, bool state)
 {
     // Fill script-driven debug keyboard input.
 
@@ -228,13 +228,13 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
 
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
-                                control_states.move_left  = SDL_PRESSED;
-                                control_states.move_right = SDL_RELEASED;
+                                control_states.move_left  = true;
+                                control_states.move_right = false;
                             }
                             else
                             {
-                                control_states.move_left  = SDL_RELEASED;
-                                control_states.move_right = SDL_PRESSED;
+                                control_states.move_left  = false;
+                                control_states.move_right = true;
                             }
                         }
                         else
@@ -242,20 +242,20 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                             control_mapper.joy_move_x = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
-                                control_states.move_left  = SDL_RELEASED;
-                                control_states.move_right = SDL_PRESSED;
+                                control_states.move_left  = false;
+                                control_states.move_right = true;
                             }
                             else
                             {
-                                control_states.move_left  = SDL_PRESSED;
-                                control_states.move_right = SDL_RELEASED;
+                                control_states.move_left  = true;
+                                control_states.move_right = false;
                             }
                         }
                     }
                     else
                     {
-                        control_states.move_left  = SDL_RELEASED;
-                        control_states.move_right = SDL_RELEASED;
+                        control_states.move_left  = false;
+                        control_states.move_right = false;
                         control_mapper.joy_move_x = 0;
                     }
                     return;
@@ -269,13 +269,13 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                             control_mapper.joy_move_y = -(axisValue / (32767 / control_mapper.joy_move_sensitivity));
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
-                                control_states.move_forward  = SDL_PRESSED;
-                                control_states.move_backward = SDL_RELEASED;
+                                control_states.move_forward  = true;
+                                control_states.move_backward = false;
                             }
                             else
                             {
-                                control_states.move_forward  = SDL_RELEASED;
-                                control_states.move_backward = SDL_PRESSED;
+                                control_states.move_forward  = false;
+                                control_states.move_backward = true;
                             }
                         }
                         else
@@ -283,20 +283,20 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                             control_mapper.joy_move_y = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
-                                control_states.move_forward  = SDL_RELEASED;
-                                control_states.move_backward = SDL_PRESSED;
+                                control_states.move_forward  = false;
+                                control_states.move_backward = true;
                             }
                             else
                             {
-                                control_states.move_forward  = SDL_PRESSED;
-                                control_states.move_backward = SDL_RELEASED;
+                                control_states.move_forward  = true;
+                                control_states.move_backward = false;
                             }
                         }
                     }
                     else
                     {
-                        control_states.move_forward  = SDL_RELEASED;
-                        control_states.move_backward = SDL_RELEASED;
+                        control_states.move_forward  = false;
+                        control_states.move_backward = false;
                         control_mapper.joy_move_y = 0;
                     }
                     return;
@@ -314,22 +314,22 @@ void Controls_JoyHat(int value)
     // NOTE: Hat movements emulate keypresses
     // with HAT direction + JOY_HAT_MASK (1100) index.
 
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_RELEASED);     // Reset all directions.
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_RELEASED);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_RELEASED);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_RELEASED);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    false);     // Reset all directions.
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  false);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  false);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, false);
 
     if(value & SDL_HAT_UP)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    true);
     if(value & SDL_HAT_DOWN)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  true);
     if(value & SDL_HAT_LEFT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  true);
     if(value & SDL_HAT_RIGHT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, true);
 }
 
-void Controls_WrapGameControllerKey(int button, int state)
+void Controls_WrapGameControllerKey(int button, bool state)
 {
     // SDL2 Game Controller interface doesn't operate with HAT directions,
     // instead it treats them as button pushes. So, HAT doesn't return
@@ -370,11 +370,11 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     {
         if(value >= JOY_TRIGGER_DEADZONE)
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_PRESSED);
+            Controls_Key((axis + JOY_TRIGGER_MASK), true);
         }
         else
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_RELEASED);
+            Controls_Key((axis + JOY_TRIGGER_MASK), false);
         }
     }
     else
@@ -506,7 +506,7 @@ void Controls_PollSDLInput()
 
             case SDL_CONTROLLERBUTTONDOWN:
             case SDL_CONTROLLERBUTTONUP:
-                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state==SDL_PRESSED);
                 break;
 
             // Joystick events are still invoked, even if joystick is initialized as game
@@ -527,7 +527,7 @@ void Controls_PollSDLInput()
             case SDL_JOYBUTTONUP:
                 // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
                 if(sdl_joystick)
-                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state==SDL_PRESSED);
                 break;
 
             case SDL_TEXTINPUT:
@@ -571,7 +571,7 @@ void Controls_PollSDLInput()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    Controls_Key(event.key.keysym.sym, event.key.state==SDL_PRESSED);
                     // DEBUG KEYBOARD COMMANDS
                     Controls_DebugKeys(event.key.keysym.sym, event.key.state);
                 }

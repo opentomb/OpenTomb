@@ -82,48 +82,33 @@ struct EngineControlState
     btScalar look_axis_x = 0;                       // Unified look axis data.
     btScalar look_axis_y = 0;
 
-    int8_t   move_forward = 0;                      // Directional movement keys.
-    int8_t   move_backward = 0;
-    int8_t   move_left = 0;
-    int8_t   move_right = 0;
-    int8_t   move_up = 0;                           // These are not typically used.
-    int8_t   move_down = 0;
+    bool     move_forward = false;                      // Directional movement keys.
+    bool     move_backward = false;
+    bool     move_left = false;
+    bool     move_right = false;
+    bool     move_up = false;                           // These are not typically used.
+    bool     move_down = false;
 
-    int8_t   look_up = 0;                           // Look (camera) keys.
-    int8_t   look_down = 0;
-    int8_t   look_left = 0;
-    int8_t   look_right = 0;
-    int8_t   look_roll_left = 0;
-    int8_t   look_roll_right = 0;
+    bool     look_up = false;                           // Look (camera) keys.
+    bool     look_down = false;
+    bool     look_left = false;
+    bool     look_right = false;
+    bool     look_roll_left = false;
+    bool     look_roll_right = false;
 
-    int8_t   do_jump = 0;                              // Eventual actions.
-    int8_t   do_draw_weapon = 0;
-    int8_t   do_roll = 0;
+    bool     do_jump = false;                          // Eventual actions.
+    bool     do_draw_weapon = false;
+    bool     do_roll = false;
 
-    int8_t   state_action = 0;                         // Conditional actions.
-    int8_t   state_walk = 0;
-    int8_t   state_sprint = 0;
-    int8_t   state_crouch = 0;
-    int8_t   state_look = 0;
+    bool     state_action = false;                         // Conditional actions.
+    bool     state_walk = false;
+    bool     state_sprint = false;
+    bool     state_crouch = false;
 
-    int8_t   use_flare = 0;                            // Use item hotkeys.
-    int8_t   use_big_medi = 0;
-    int8_t   use_small_medi = 0;
+    bool     use_big_medi = false;
+    bool     use_small_medi = false;
 
-    int8_t   use_prev_weapon = 0;                      // Weapon hotkeys.
-    int8_t   use_next_weapon = 0;
-    int8_t   use_weapon1 = 0;
-    int8_t   use_weapon2 = 0;
-    int8_t   use_weapon3 = 0;
-    int8_t   use_weapon4 = 0;
-    int8_t   use_weapon5 = 0;
-    int8_t   use_weapon6 = 0;
-    int8_t   use_weapon7 = 0;
-    int8_t   use_weapon8 = 0;
-
-
-    int8_t   gui_pause = 0;                         // GUI keys - not sure if it must be here.
-    int8_t   gui_inventory = 0;
+    bool     gui_inventory = false;
 
 };
 

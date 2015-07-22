@@ -48,6 +48,6 @@ void lua_LoopEntity(lua::State& state, int object_id);
 void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator = -1);
 void lua_DoTasks(lua::State& state, btScalar time);
 
-void lua_AddKey(lua::State& lstate, int keycode, int state);
+void lua_AddKey(lua::State& lstate, int keycode, bool state);
 
 #endif

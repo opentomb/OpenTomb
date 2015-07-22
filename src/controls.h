@@ -119,8 +119,8 @@ void Controls_DebugKeys(int button, int state);
 void Controls_PrimaryMouseDown();
 void Controls_SecondaryMouseDown();
 
-void Controls_Key(int32_t button, int state);
-void Controls_WrapGameControllerKey(int button, int state);
+void Controls_Key(int32_t button, bool state);
+void Controls_WrapGameControllerKey(int button, bool state);
 void Controls_WrapGameControllerAxis(int axis, Sint16 value);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);

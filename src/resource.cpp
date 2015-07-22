@@ -3373,7 +3373,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                     case TR_ANIMCOMMAND_PLAYSOUND:
                         // Recalculate absolute frame number to relative.
-                        ///@FIXED: was unpredictable behavior.
                         pointer[0] -= tr_animation->frame_start;
                         pointer += 2;
                         break;

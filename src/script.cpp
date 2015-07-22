@@ -205,7 +205,7 @@ void lua_DoTasks(lua::State& state, btScalar time)
     state["clearKeys"]();
 }
 
-void lua_AddKey(lua::State& lstate, int keycode, int state)
+void lua_AddKey(lua::State& lstate, int keycode, bool state)
 {
     lstate["addKey"](keycode, state);
 }

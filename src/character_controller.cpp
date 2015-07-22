@@ -893,7 +893,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
  * Linear inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.
  */
-btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, int8_t command)
+btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool command)
 {
     if((accel == 0.0) || (accel >= max_speed))
     {
@@ -1550,7 +1550,7 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, (std::abs(m_command.move[0]) || std::abs(m_command.move[1])));
+    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, std::abs(m_command.move[0])!=0 || std::abs(m_command.move[1])!=0);
 
     if((m_dirFlag & ENT_MOVE_FORWARD) && (m_command.move[0] == 1))
     {
@@ -2409,7 +2409,7 @@ void Character::doWeaponFrame(btScalar time)
      * 3: hide weapon;
      * 4: idle to fire (targeted);
      */
-    if((m_command.ready_weapon != 0x00) && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
+    if(m_command.ready_weapon && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
     {
         setWeaponModel(m_currentWeapon, 1);
     }
