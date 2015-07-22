@@ -6213,152 +6213,465 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
     <span class="n">LANG_JAPANESE</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Script Sequencing &amp; Opcodes/Operands</p></div>
+</div>
+<div class="sect2">
+<h3 id="_script_sequencing_amp_opcodes_operands">10.5. Script Sequencing &amp; Opcodes/Operands</h3>
+<div class="paragraph"><p>Each script has "sequence information", Opcodes and Operands are all stored as <span class="monospaced">uint16_t</span>. Sequences contain a set of commands to execute where an additional value (operand) is usually passed as a parameter to the function the command needs to call. Note: that if a level is a demo level, its level ID will be 1024 higher than a <em>normal</em> level ID.</p></div>
 <div class="listingblock">
-<div class="content monospaced">
-<pre>Each script has "sequence information", Opcodes and Operands are all stored as `uint16_t`. Sequences contain a set of commands to execute where an additional value (operand) is usually passed as a parameter to the function the command needs to call. Note: that if a level is a demo level, its level ID will be 1024 higher than a 'normal' level ID.
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">SequenceInfo</span>
+<span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">Opcode</span><span class="p">;</span>   <span class="c1">//Command</span>
+    <span class="kt">uint16_t</span> <span class="n">Operand</span><span class="p">;</span>  <span class="c1">//Not always used, depends on the opcode</span>
+<span class="p">};</span>
 
-[source,cpp]
-----
-struct SequenceInfo
-{
-    uint16_t Opcode;   //Command
-    uint16_t Operand;  //Not always used, depends on the opcode
-};
-
-enum ScriptOpcodes
-{
-    OP_PICTURE = 0,            // ?
-    OP_LISTSTART = 1,          // ?
-    OP_LISTEND = 2,            // ?
-    OP_STARTFMV = 3,           // Play FMV, operand is FMV ID
-    OP_STARTLEVEL = 4,         // Play (interactive) level, operand is level ID
-    OP_STARTCINE = 5,          // Play Cutscene, operand is cutscene ID
-    OP_LEVELCOMPLETE = 6,      // Do level-completion display (no operands)
-    OP_STARTDEMO = 7,          // Play demo level: operand is level ID
-    OP_JUMPTOSEQUENCE = 8,     // Jumps to specified sequence?
-    OP_ENDSEQUENCE = 9,        // End of sequence (no operands)
-    OP_SETTRACK = 10,          // Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)
-    OP_SUNSETENABLED = 11,     // Bartoli's Hideous
-    OP_LOADINGPIC = 12,        // Chapter screen: operand is chapter ID
-    OP_DEADLYWATER = 13,       // Temple of Xian? Kills Lara when she touches water?
-    OP_REMOVEWEAPONS = 14,     // Lose your weapons (no operands)
-    OP_GAMECOMPLETE = 15,      // End of game (no operands)
-    OP_CUTANGLE = 16,          // Associated with cutscenes; a viewpoint control? (one operand?)
-    OP_NOFLOOR = 17,           // For Floating Islands/Thames Wharf? (one operand?)
-    OP_ADDTOINVENTORY = 18,    // Give item; operand is item type (see below)
-    OP_LARASTARTANIMATION = 19,// Item-type 12 state to start level in: operand is state number
-    OP_NUMSECRETS = 20,        // Number of secrets (overrides engine's hardcoded count of them?): operand is that number
-    OP_KILLTOCOMPLETE = 21,    // Probably for Ice Palace boss (no operands)
-    OP_REMOVEAMMO = 22         // Lose your ammo and medipacks? (no operands?)
-};
-----
-
-The correct way to parse Sequence Info is to first read a `uint16_t` opcode specifying what this command within the sequence does. In reference to the list above, certain commands MUST have an additional `uint16_t` read from the sequence data directly after the opcode that's the pairing operand to this opcode. Not all opcodes have an operand so this must be done correctly. The original games execute each sequence command 1 by 1 until it reaches `OP_ENDSEQUENCE`, where it then runs the next sequence.
-
-Opcode-18 `OP_ADDTOINVENTORY`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-(repeat means give another)
-
-.After finding all the secrets in a level (Tomb Raider 2)
-* 0 -- Pistols
-* 1 -- Shotgun
-* 2 -- Automatic pistols
-* 3 -- Uzis
-* 4 -- Harpoon gun
-* 5 -- M-16
-* 6 -- Grenade launcher
-* 7 -- Pistol clip
-* 8 -- Shotgun-shell box
-* 9 -- Automatic-pistol clip
-* 10 -- Uzi clip
-* 11 -- Harpoon bundle
-* 12 -- M-16 clip
-* 13 -- Grenade pack
-* 14 -- Flare box
-* 15 -- Small medipack
-* 16 -- Big medipack
-* 17 -- Pickup 1
-* 18 -- Pickup 2
-* 19 -- Puzzle 1
-* 20 -- Puzzle 2
-* 21 -- Puzzle 3
-* 22 -- Puzzle 4
-* 23 -- Key 1
-* 24 -- Key 2
-* 25 -- Key 3
-* 26 -- Key 4
-
-.When a level starts (Tomb Raider 2)
-* 1000 -- Pistols
-* 1001 -- Shotgun
-* 1002 -- Automatic pistols
-* 1003 -- Uzis
-* 1004 -- Harpoon gun
-* 1005 -- M16
-* 1006 -- Grenade launcher
-* 1007 -- Pistol clip
-* 1008 -- Shotgun-shell box
-* 1009 -- Automatic-pistol clip
-* 1010 -- Uzi clip
-* 1011 -- Harpoon bundle
-* 1012 -- M16 clip
-* 1013 -- Grenade pack
-* 1014 -- Flare box
-* 1015 -- Small medipack
-* 1016 -- Big medipack
-* 1017 -- Pickup 1
-* 1018 -- Pickup 2
-* 1019 -- Puzzle 1
-* 1020 -- Puzzle 2
-* 1021 -- Puzzle 3
-* 1022 -- Puzzle 4
-* 1023 -- Key 1
-* 1024 -- Key 2
-* 1025 -- Key 3
-* 1026 -- Key 4
-
-Tomb Raider 2 identifications
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-[NOTE]
-====
-[blue]#TR2 only information here. These lists are virtually colored blue.#
-====
-
-.FMV IDs
-* 0 -- LOGO (everybody's corporate logos)
-* 1 -- ANCIENT (monks vs. dragon)
-* 2 -- MODERN (Lara drops in from helicopter)
-* 3 -- LANDING (Seaplane lands at rig)
-* 4 -- MS (Lara hitchhikes on a minisub)
-* 5 -- CRASH (Lara goes to Tibet and has a rough landing there)
-* 6 -- JEEP (Lara steals it and outruns Bartoli's goons)
-* 7 -- END (Lara escaping the collapsing lair)
-
-.Cutscene IDs
-* 0 -- CUT1 (At the end of the Great Wall)
-* 1 -- CUT2 (Lara the stowaway)
-* 2 -- CUT3 (Bartoli vs. goon)
-* 3 -- CUT4 (Bartoli stabs himself)
-
-.Soundtrack IDs
-* 0 -- BLANK (no sound)
-* 3 -- CUT1 (``at the fancy door'' soundtrack)
-* 4 -- CUT2 (``Lara the stowaway'' soundtrack)
-* 5 -- CUT3 (``Bartoli vs. goon'' soundtrack)
-* 30 -- CUT4 (``Bartoli stabs himself'' soundtrack)
-* 31 -- DERELICT (eerie choppy/echo-y synths)
-* 32 -- WATER (dripping/pouring water sounds)
-* 33 -- WIND (Blowing wind)
-* 34 -- HEARTBT (musical embellishment of one)
-* 52 -- SHOWER (that infamous shower scene)
-* 58 -- MACHINES (in the offshore rig)
-* 59 -- FLOATING (wispy synths)
-
-Other script commands</pre>
-</div></div>
+<span class="k">enum</span> <span class="n">ScriptOpcodes</span>
+<span class="p">{</span>
+    <span class="n">OP_PICTURE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>            <span class="c1">// ?</span>
+    <span class="n">OP_LISTSTART</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>          <span class="c1">// ?</span>
+    <span class="n">OP_LISTEND</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>            <span class="c1">// ?</span>
+    <span class="n">OP_STARTFMV</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>           <span class="c1">// Play FMV, operand is FMV ID</span>
+    <span class="n">OP_STARTLEVEL</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>         <span class="c1">// Play (interactive) level, operand is level ID</span>
+    <span class="n">OP_STARTCINE</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>          <span class="c1">// Play Cutscene, operand is cutscene ID</span>
+    <span class="n">OP_LEVELCOMPLETE</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>      <span class="c1">// Do level-completion display (no operands)</span>
+    <span class="n">OP_STARTDEMO</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>          <span class="c1">// Play demo level: operand is level ID</span>
+    <span class="n">OP_JUMPTOSEQUENCE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>     <span class="c1">// Jumps to specified sequence?</span>
+    <span class="n">OP_ENDSEQUENCE</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>        <span class="c1">// End of sequence (no operands)</span>
+    <span class="n">OP_SETTRACK</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>          <span class="c1">// Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)</span>
+    <span class="n">OP_SUNSETENABLED</span> <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>     <span class="c1">// Bartoli&#39;s Hideous</span>
+    <span class="n">OP_LOADINGPIC</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>        <span class="c1">// Chapter screen: operand is chapter ID</span>
+    <span class="n">OP_DEADLYWATER</span> <span class="o">=</span> <span class="mi">13</span><span class="p">,</span>       <span class="c1">// Temple of Xian? Kills Lara when she touches water?</span>
+    <span class="n">OP_REMOVEWEAPONS</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>     <span class="c1">// Lose your weapons (no operands)</span>
+    <span class="n">OP_GAMECOMPLETE</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>      <span class="c1">// End of game (no operands)</span>
+    <span class="n">OP_CUTANGLE</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>          <span class="c1">// Associated with cutscenes; a viewpoint control? (one operand?)</span>
+    <span class="n">OP_NOFLOOR</span> <span class="o">=</span> <span class="mi">17</span><span class="p">,</span>           <span class="c1">// For Floating Islands/Thames Wharf? (one operand?)</span>
+    <span class="n">OP_ADDTOINVENTORY</span> <span class="o">=</span> <span class="mi">18</span><span class="p">,</span>    <span class="c1">// Give item; operand is item type (see below)</span>
+    <span class="n">OP_LARASTARTANIMATION</span> <span class="o">=</span> <span class="mi">19</span><span class="p">,</span><span class="c1">// Item-type 12 state to start level in: operand is state number</span>
+    <span class="n">OP_NUMSECRETS</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>        <span class="c1">// Number of secrets (overrides engine&#39;s hardcoded count of them?): operand is that number</span>
+    <span class="n">OP_KILLTOCOMPLETE</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>    <span class="c1">// Probably for Ice Palace boss (no operands)</span>
+    <span class="n">OP_REMOVEAMMO</span> <span class="o">=</span> <span class="mi">22</span>         <span class="c1">// Lose your ammo and medipacks? (no operands?)</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p>The correct way to parse Sequence Info is to first read a <span class="monospaced">uint16_t</span> opcode specifying what this command within the sequence does. In reference to the list above, certain commands MUST have an additional <span class="monospaced">uint16_t</span> read from the sequence data directly after the opcode that&#8217;s the pairing operand to this opcode. Not all opcodes have an operand so this must be done correctly. The original games execute each sequence command 1 by 1 until it reaches <span class="monospaced">OP_ENDSEQUENCE</span>, where it then runs the next sequence.</p></div>
+<div class="sect3">
+<h4 id="_opcode_18_span_class_monospaced_op_addtoinventory_span">10.5.1. Opcode-18 <span class="monospaced">OP_ADDTOINVENTORY</span></h4>
+<div class="paragraph"><p>(repeat means give another)</p></div>
+<div class="ulist"><div class="title">After finding all the secrets in a level (Tomb Raider 2)</div><ul>
+<li>
+<p>
+0&#8201;&#8212;&#8201;Pistols
+</p>
+</li>
+<li>
+<p>
+1&#8201;&#8212;&#8201;Shotgun
+</p>
+</li>
+<li>
+<p>
+2&#8201;&#8212;&#8201;Automatic pistols
+</p>
+</li>
+<li>
+<p>
+3&#8201;&#8212;&#8201;Uzis
+</p>
+</li>
+<li>
+<p>
+4&#8201;&#8212;&#8201;Harpoon gun
+</p>
+</li>
+<li>
+<p>
+5&#8201;&#8212;&#8201;M-16
+</p>
+</li>
+<li>
+<p>
+6&#8201;&#8212;&#8201;Grenade launcher
+</p>
+</li>
+<li>
+<p>
+7&#8201;&#8212;&#8201;Pistol clip
+</p>
+</li>
+<li>
+<p>
+8&#8201;&#8212;&#8201;Shotgun-shell box
+</p>
+</li>
+<li>
+<p>
+9&#8201;&#8212;&#8201;Automatic-pistol clip
+</p>
+</li>
+<li>
+<p>
+10&#8201;&#8212;&#8201;Uzi clip
+</p>
+</li>
+<li>
+<p>
+11&#8201;&#8212;&#8201;Harpoon bundle
+</p>
+</li>
+<li>
+<p>
+12&#8201;&#8212;&#8201;M-16 clip
+</p>
+</li>
+<li>
+<p>
+13&#8201;&#8212;&#8201;Grenade pack
+</p>
+</li>
+<li>
+<p>
+14&#8201;&#8212;&#8201;Flare box
+</p>
+</li>
+<li>
+<p>
+15&#8201;&#8212;&#8201;Small medipack
+</p>
+</li>
+<li>
+<p>
+16&#8201;&#8212;&#8201;Big medipack
+</p>
+</li>
+<li>
+<p>
+17&#8201;&#8212;&#8201;Pickup 1
+</p>
+</li>
+<li>
+<p>
+18&#8201;&#8212;&#8201;Pickup 2
+</p>
+</li>
+<li>
+<p>
+19&#8201;&#8212;&#8201;Puzzle 1
+</p>
+</li>
+<li>
+<p>
+20&#8201;&#8212;&#8201;Puzzle 2
+</p>
+</li>
+<li>
+<p>
+21&#8201;&#8212;&#8201;Puzzle 3
+</p>
+</li>
+<li>
+<p>
+22&#8201;&#8212;&#8201;Puzzle 4
+</p>
+</li>
+<li>
+<p>
+23&#8201;&#8212;&#8201;Key 1
+</p>
+</li>
+<li>
+<p>
+24&#8201;&#8212;&#8201;Key 2
+</p>
+</li>
+<li>
+<p>
+25&#8201;&#8212;&#8201;Key 3
+</p>
+</li>
+<li>
+<p>
+26&#8201;&#8212;&#8201;Key 4
+</p>
+</li>
+</ul></div>
+<div class="ulist"><div class="title">When a level starts (Tomb Raider 2)</div><ul>
+<li>
+<p>
+1000&#8201;&#8212;&#8201;Pistols
+</p>
+</li>
+<li>
+<p>
+1001&#8201;&#8212;&#8201;Shotgun
+</p>
+</li>
+<li>
+<p>
+1002&#8201;&#8212;&#8201;Automatic pistols
+</p>
+</li>
+<li>
+<p>
+1003&#8201;&#8212;&#8201;Uzis
+</p>
+</li>
+<li>
+<p>
+1004&#8201;&#8212;&#8201;Harpoon gun
+</p>
+</li>
+<li>
+<p>
+1005&#8201;&#8212;&#8201;M16
+</p>
+</li>
+<li>
+<p>
+1006&#8201;&#8212;&#8201;Grenade launcher
+</p>
+</li>
+<li>
+<p>
+1007&#8201;&#8212;&#8201;Pistol clip
+</p>
+</li>
+<li>
+<p>
+1008&#8201;&#8212;&#8201;Shotgun-shell box
+</p>
+</li>
+<li>
+<p>
+1009&#8201;&#8212;&#8201;Automatic-pistol clip
+</p>
+</li>
+<li>
+<p>
+1010&#8201;&#8212;&#8201;Uzi clip
+</p>
+</li>
+<li>
+<p>
+1011&#8201;&#8212;&#8201;Harpoon bundle
+</p>
+</li>
+<li>
+<p>
+1012&#8201;&#8212;&#8201;M16 clip
+</p>
+</li>
+<li>
+<p>
+1013&#8201;&#8212;&#8201;Grenade pack
+</p>
+</li>
+<li>
+<p>
+1014&#8201;&#8212;&#8201;Flare box
+</p>
+</li>
+<li>
+<p>
+1015&#8201;&#8212;&#8201;Small medipack
+</p>
+</li>
+<li>
+<p>
+1016&#8201;&#8212;&#8201;Big medipack
+</p>
+</li>
+<li>
+<p>
+1017&#8201;&#8212;&#8201;Pickup 1
+</p>
+</li>
+<li>
+<p>
+1018&#8201;&#8212;&#8201;Pickup 2
+</p>
+</li>
+<li>
+<p>
+1019&#8201;&#8212;&#8201;Puzzle 1
+</p>
+</li>
+<li>
+<p>
+1020&#8201;&#8212;&#8201;Puzzle 2
+</p>
+</li>
+<li>
+<p>
+1021&#8201;&#8212;&#8201;Puzzle 3
+</p>
+</li>
+<li>
+<p>
+1022&#8201;&#8212;&#8201;Puzzle 4
+</p>
+</li>
+<li>
+<p>
+1023&#8201;&#8212;&#8201;Key 1
+</p>
+</li>
+<li>
+<p>
+1024&#8201;&#8212;&#8201;Key 2
+</p>
+</li>
+<li>
+<p>
+1025&#8201;&#8212;&#8201;Key 3
+</p>
+</li>
+<li>
+<p>
+1026&#8201;&#8212;&#8201;Key 4
+</p>
+</li>
+</ul></div>
+</div>
+<div class="sect3">
+<h4 id="_tomb_raider_2_identifications">10.5.2. Tomb Raider 2 identifications</h4>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p><span class="blue">TR2 only information here. These lists are virtually colored blue.</span></p></div>
+</td>
+</tr></table>
+</div>
+<div class="ulist"><div class="title">FMV IDs</div><ul>
+<li>
+<p>
+0&#8201;&#8212;&#8201;LOGO (everybody&#8217;s corporate logos)
+</p>
+</li>
+<li>
+<p>
+1&#8201;&#8212;&#8201;ANCIENT (monks vs. dragon)
+</p>
+</li>
+<li>
+<p>
+2&#8201;&#8212;&#8201;MODERN (Lara drops in from helicopter)
+</p>
+</li>
+<li>
+<p>
+3&#8201;&#8212;&#8201;LANDING (Seaplane lands at rig)
+</p>
+</li>
+<li>
+<p>
+4&#8201;&#8212;&#8201;MS (Lara hitchhikes on a minisub)
+</p>
+</li>
+<li>
+<p>
+5&#8201;&#8212;&#8201;CRASH (Lara goes to Tibet and has a rough landing there)
+</p>
+</li>
+<li>
+<p>
+6&#8201;&#8212;&#8201;JEEP (Lara steals it and outruns Bartoli&#8217;s goons)
+</p>
+</li>
+<li>
+<p>
+7&#8201;&#8212;&#8201;END (Lara escaping the collapsing lair)
+</p>
+</li>
+</ul></div>
+<div class="ulist"><div class="title">Cutscene IDs</div><ul>
+<li>
+<p>
+0&#8201;&#8212;&#8201;CUT1 (At the end of the Great Wall)
+</p>
+</li>
+<li>
+<p>
+1&#8201;&#8212;&#8201;CUT2 (Lara the stowaway)
+</p>
+</li>
+<li>
+<p>
+2&#8201;&#8212;&#8201;CUT3 (Bartoli vs. goon)
+</p>
+</li>
+<li>
+<p>
+3&#8201;&#8212;&#8201;CUT4 (Bartoli stabs himself)
+</p>
+</li>
+</ul></div>
+<div class="ulist"><div class="title">Soundtrack IDs</div><ul>
+<li>
+<p>
+0&#8201;&#8212;&#8201;BLANK (no sound)
+</p>
+</li>
+<li>
+<p>
+3&#8201;&#8212;&#8201;CUT1 (&#8220;at the fancy door&#8221; soundtrack)
+</p>
+</li>
+<li>
+<p>
+4&#8201;&#8212;&#8201;CUT2 (&#8220;Lara the stowaway&#8221; soundtrack)
+</p>
+</li>
+<li>
+<p>
+5&#8201;&#8212;&#8201;CUT3 (&#8220;Bartoli vs. goon&#8221; soundtrack)
+</p>
+</li>
+<li>
+<p>
+30&#8201;&#8212;&#8201;CUT4 (&#8220;Bartoli stabs himself&#8221; soundtrack)
+</p>
+</li>
+<li>
+<p>
+31&#8201;&#8212;&#8201;DERELICT (eerie choppy/echo-y synths)
+</p>
+</li>
+<li>
+<p>
+32&#8201;&#8212;&#8201;WATER (dripping/pouring water sounds)
+</p>
+</li>
+<li>
+<p>
+33&#8201;&#8212;&#8201;WIND (Blowing wind)
+</p>
+</li>
+<li>
+<p>
+34&#8201;&#8212;&#8201;HEARTBT (musical embellishment of one)
+</p>
+</li>
+<li>
+<p>
+52&#8201;&#8212;&#8201;SHOWER (that infamous shower scene)
+</p>
+</li>
+<li>
+<p>
+58&#8201;&#8212;&#8201;MACHINES (in the offshore rig)
+</p>
+</li>
+<li>
+<p>
+59&#8201;&#8212;&#8201;FLOATING (wispy synths)
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_other_script_commands">10.6. Other script commands</h3>
 <div class="paragraph"><p>` FirstOption`, <span class="monospaced">TitleReplace</span>, <span class="monospaced">OnDeathDemoMode</span>, and <span class="monospaced">OnDeathInGame</span> can also be setup to perform specific actions. For example,  <span class="monospaced">OnDeathInGame</span> will be set to "0x500" which loads the title screen when Lara dies in-game. Some other commands are as follows:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -6788,7 +7101,7 @@ File=   5,US.TXT</pre>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-23 01:40:23 EEST
+Last updated 2015-07-23 01:51:56 EEST
 </div>
 </div>
 </body>
