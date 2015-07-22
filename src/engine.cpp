@@ -3111,9 +3111,9 @@ int Engine_GetPCLevelVersion(const std::string& name)
         if(!strncmp(ext, ".PHD", 4))                                            //
         {
             if(check[0] == 0x20 &&
-                    check[1] == 0x00 &&
-                    check[2] == 0x00 &&
-                    check[3] == 0x00)
+               check[1] == 0x00 &&
+               check[2] == 0x00 &&
+               check[3] == 0x00)
             {
                 ret = TR_I;                                                     // TR_I ? OR TR_I_DEMO
             }
@@ -3125,9 +3125,9 @@ int Engine_GetPCLevelVersion(const std::string& name)
         else if(!strncmp(ext, ".TUB", 4))
         {
             if(check[0] == 0x20 &&
-                    check[1] == 0x00 &&
-                    check[2] == 0x00 &&
-                    check[3] == 0x00)
+               check[1] == 0x00 &&
+               check[2] == 0x00 &&
+               check[3] == 0x00)
             {
                 ret = TR_I_UB;                                                  // TR_I_UB
             }
@@ -3139,9 +3139,9 @@ int Engine_GetPCLevelVersion(const std::string& name)
         else if(!strncmp(ext, ".TR2", 4))
         {
             if(check[0] == 0x2D &&
-                    check[1] == 0x00 &&
-                    check[2] == 0x00 &&
-                    check[3] == 0x00)
+               check[1] == 0x00 &&
+               check[2] == 0x00 &&
+               check[3] == 0x00)
             {
                 ret = TR_II;                                                    // TR_II
             }
@@ -3159,10 +3159,10 @@ int Engine_GetPCLevelVersion(const std::string& name)
         }
         else if(!strncmp(ext, ".TR4", 4))
         {
-            if(check[0] == 0x54 &&                                              // T
-                    check[1] == 0x52 &&                                              // R
-                    check[2] == 0x34 &&                                              // 4
-                    check[3] == 0x00)
+            if(check[0] == 0x54 &&                                         // T
+               check[1] == 0x52 &&                                         // R
+               check[2] == 0x34 &&                                         // 4
+               check[3] == 0x00)
             {
                 ret = TR_IV;                                                    // OR TR TR_IV_DEMO
             }
@@ -3188,9 +3188,9 @@ int Engine_GetPCLevelVersion(const std::string& name)
         else if(!strncmp(ext, ".TRC", 4))
         {
             if(check[0] == 0x54 &&                                              // T
-                    check[1] == 0x52 &&                                              // R
-                    check[2] == 0x34 &&                                              // 4
-                    check[3] == 0x00)
+               check[1] == 0x52 &&                                              // R
+               check[2] == 0x34 &&                                              // C
+               check[3] == 0x00)
             {
                 ret = TR_V;                                                     // TR_V
             }
