@@ -225,7 +225,6 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
         return 0;
     }
 
-    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
@@ -251,7 +250,6 @@ int lua_SetModelCollisionMap(lua_State * lua)
         return 0;
     }
 
-    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
@@ -959,7 +957,7 @@ int lua_AddFont(lua_State *lua)
         return 0;
     }
 
-    if(!glf_manager_add_font(con_font_manager, lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
+    if(!Con_AddFont(lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
     {
         Con_Warning("can't create font with id = %d", lua_tointeger(lua, 1));
     }
@@ -991,11 +989,11 @@ int lua_AddFontStyle(lua_State *lua)
     int         hide        = lua_toboolean(lua, 14);
 
 
-    if(!glf_manager_add_fontstyle(con_font_manager, style_index,
-                                  color_R, color_G, color_B, color_A,
-                                  shadowed, fading,
-                                  rect, rect_border, rect_R, rect_G, rect_B, rect_A,
-                                  hide))
+    if(!Con_AddFontStyle(style_index,
+                         color_R, color_G, color_B, color_A,
+                         shadowed, fading,
+                         rect, rect_border, rect_R, rect_G, rect_B, rect_A,
+                         hide))
     {
         Con_Warning("can't create fontstyle with id = %d", style_index);
     }
@@ -1003,7 +1001,7 @@ int lua_AddFontStyle(lua_State *lua)
     return 0;
 }
 
-int lua_DeleteFont(lua_State *lua)
+int lua_RemoveFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
@@ -1011,7 +1009,7 @@ int lua_DeleteFont(lua_State *lua)
         return 0;
     }
 
-    if(!glf_manager_remove_font(con_font_manager, lua_tointeger(lua, 1)))
+    if(!Con_RemoveFont(lua_tointeger(lua, 1)))
     {
         Con_Warning("can't remove font");
     }
@@ -1019,7 +1017,7 @@ int lua_DeleteFont(lua_State *lua)
     return 0;
 }
 
-int lua_DeleteFontStyle(lua_State *lua)
+int lua_RemoveFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
@@ -1027,7 +1025,7 @@ int lua_DeleteFontStyle(lua_State *lua)
         return 0;
     }
 
-    if(!glf_manager_remove_fontstyle(con_font_manager, lua_tointeger(lua, 1)))
+    if(!Con_RemoveFontStyle(lua_tointeger(lua, 1)))
     {
         Con_Warning("can't remove font style");
     }
@@ -4173,7 +4171,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "bind", lua_BindKey);
 
     lua_register(lua, "addFont", lua_AddFont);
-    lua_register(lua, "deleteFont", lua_DeleteFont);
+    lua_register(lua, "removeFont", lua_RemoveFont);
     lua_register(lua, "addFontStyle", lua_AddFontStyle);
-    lua_register(lua, "deleteFontStyle", lua_DeleteFontStyle);
+    lua_register(lua, "removeFontStyle", lua_RemoveFontStyle);
 }

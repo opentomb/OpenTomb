@@ -9,8 +9,8 @@
 #include "console.h"
 #include "system.h"
 
-console_info_t          con_base;
-gl_font_manager_p       con_font_manager = NULL;
+console_info_t                  con_base;
+static gl_font_manager_p        con_font_manager = NULL;
 
 int  Engine_ExecCmd(char *ch);
  
@@ -451,10 +451,94 @@ void Con_Notify(const char *fmt, ...)
 }
 
 
+int Con_AddFont(uint16_t index, uint16_t size, const char* path)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_add_font(con_font_manager, index, size, path);
+    }
+    return 0;
+}
+
+
+int Con_RemoveFont(uint16_t index)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_remove_font(con_font_manager, index);
+    }
+    return 0;
+}
+
+
+int Con_AddFontStyle(uint16_t index,
+                      GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                      uint8_t shadow, uint8_t fading,
+                      uint8_t rect, uint8_t rect_border,
+                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A,
+                      uint8_t hide)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_add_fontstyle(con_font_manager, index, R, G, B, A, 
+                                         shadow, fading, rect, rect_border, 
+                                         rect_R, rect_G, rect_B, rect_A, hide);
+    }
+    return 0;
+}
+
+
+int Con_RemoveFontStyle(uint16_t index)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_remove_fontstyle(con_font_manager, index);
+    }
+    return 0;
+}
+
+
+gl_tex_font_p  Con_GetFont(uint16_t index)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_get_font(con_font_manager, index);
+    }
+    return NULL;
+}
+
+
+gl_fontstyle_p Con_GetFontStyle(uint16_t index)
+{
+    if(con_font_manager)
+    {
+        return glf_manager_get_style(con_font_manager, index);
+    }
+    return NULL;
+}
+
+
+void Con_SetScaleFonts(float scale)
+{
+    if(con_font_manager)
+    {
+        glf_manager_resize(con_font_manager, scale);
+    }
+}
+
+
+void Con_UpdateFonts(float time)
+{
+    if(con_font_manager)
+    {
+        glf_manager_update(con_font_manager, time);
+    }
+}
+
+
 void Con_Clean()
 {
-    uint16_t i;
-    for(i=0;i<con_base.line_count;i++)
+    for(uint16_t i=0;i<con_base.line_count;i++)
     {
         con_base.line_text[i][0]  = 0;
         con_base.line_style_id[i] = FONTSTYLE_GENERIC;

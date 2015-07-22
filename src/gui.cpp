@@ -297,7 +297,7 @@ void Gui_MoveLine(gui_text_line_p line)
  */
 gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(con_font_manager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
+    if(temp_lines_used < GUI_MAX_TEMP_LINES - 1)
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
@@ -331,22 +331,17 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
 void Gui_Update()
 {
-    if(con_font_manager)
-    {
-        glf_manager_update(con_font_manager, engine_frame_time);
-    }
+    Con_UpdateFonts(engine_frame_time);
 }
 
 void Gui_Resize()
 {
     gui_text_line_p l = gui_base_lines;
 
-    while(l)
+    for(;l;l = l->next)
     {
         l->absXoffset = l->X * screen_info.scale_factor;
         l->absYoffset = l->Y * screen_info.scale_factor;
-
-        l = l->next;
     }
 
     l = gui_temp_lines;
@@ -361,10 +356,7 @@ void Gui_Resize()
         Bar[i].Resize();
     }
 
-    if(con_font_manager)
-    {
-        glf_manager_resize(con_font_manager, screen_info.scale_factor);
-    }
+    Con_SetScaleFonts(screen_info.scale_factor);
 
     /* let us update console too */
     Con_SetLineInterval(con_base.spacing);
@@ -402,13 +394,8 @@ void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
-    if(con_font_manager == NULL)
-    {
-        return;
-    }
-
-    gl_tex_font_p gl_font = glf_manager_get_font(con_font_manager, l->font_id);
-    gl_fontstyle_p style = glf_manager_get_style(con_font_manager, l->style_id);
+    gl_tex_font_p gl_font = Con_GetFont(l->font_id);
+    gl_fontstyle_p style = Con_GetFontStyle(l->style_id);
 
     if((gl_font == NULL) || (style == NULL) || (!l->show) || (style->hidden))
     {
@@ -480,43 +467,40 @@ void Gui_RenderStringLine(gui_text_line_p l)
 
 void Gui_RenderStrings()
 {
-    if(con_font_manager)
+    gui_text_line_p l = gui_base_lines;
+
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    const text_shader_description *shader = renderer.shader_manager->getTextShader();
+    glUseProgramObjectARB(shader->program);
+    GLfloat screenSize[2] = {
+        (GLfloat) screen_info.w,
+        (GLfloat) screen_info.h
+    };
+    glUniform2fvARB(shader->screenSize, 1, screenSize);
+    glUniform1iARB(shader->sampler, 0);
+
+    while(l)
     {
-        gui_text_line_p l = gui_base_lines;
+        Gui_RenderStringLine(l);
+        l = l->next;
+    }
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        const text_shader_description *shader = renderer.shader_manager->getTextShader();
-        glUseProgramObjectARB(shader->program);
-        GLfloat screenSize[2] = {
-            (GLfloat) screen_info.w,
-            (GLfloat) screen_info.h
-        };
-        glUniform2fvARB(shader->screenSize, 1, screenSize);
-        glUniform1iARB(shader->sampler, 0);
-
-        while(l)
+    l = gui_temp_lines;
+    for(uint16_t i=0;i<temp_lines_used;i++,l++)
+    {
+        if(l->show)
         {
             Gui_RenderStringLine(l);
-            l = l->next;
+            l->show = 0;
         }
-
-        l = gui_temp_lines;
-        for(uint16_t i=0;i<temp_lines_used;i++,l++)
-        {
-            if(l->show)
-            {
-                Gui_RenderStringLine(l);
-                l->show = 0;
-            }
-        }
-
-        glPopClientAttrib();
-        temp_lines_used = 0;
     }
+
+    glPopClientAttrib();
+    temp_lines_used = 0;
 }
 
 
@@ -1032,7 +1016,7 @@ void gui_InventoryManager::frame(float time)
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && con_font_manager)
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL))
     {
         int num = 0;
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
@@ -2497,7 +2481,8 @@ void gui_ItemNotifier::SetRotateTime(float time)
  */
 void Con_Draw()
 {
-    if(con_font_manager && con_font_manager->fonts[0].gl_font && con_base.show)
+    gl_tex_font_p glf = Con_GetFont(FONT_CONSOLE);
+    if(glf && con_base.show)
     {
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
@@ -2522,10 +2507,10 @@ void Con_Draw()
 
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
-            GLfloat *col = glf_manager_get_style(con_font_manager, con_base.line_style_id[i])->real_color;
+            GLfloat *col = Con_GetFontStyle(con_base.line_style_id[i])->real_color;
             y += con_base.line_height;
-            vec4_copy(con_font_manager->fonts[0].gl_font->gl_font_color, col);
-            glf_render_str(con_font_manager->fonts[0].gl_font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
+            vec4_copy(glf->gl_font_color, col);
+            glf_render_str(glf, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
         glPopClientAttrib();
     }
