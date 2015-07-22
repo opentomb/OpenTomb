@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="generator" content="AsciiDoc 8.6.9">
+<meta name="generator" content="AsciiDoc 8.6.8">
 <title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -93,9 +93,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -224,7 +222,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -510,9 +508,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -535,16 +530,19 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+/*
+  pygmentize filter
+*/
 .highlight .hll { background-color: #ffffcc }
-.highlight  { background: #f8f8f8; }
-.highlight .c { color: #408080; font-style: italic } /* Comment */
+.highlight  { background: #f4f4f4; }
+.highlight .c { color: #008800; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
-.highlight .k { color: #008000; font-weight: bold } /* Keyword */
+.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #408080; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #BC7A00 } /* Comment.Preproc */
-.highlight .c1 { color: #408080; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #408080; font-style: italic } /* Comment.Special */
+.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #008800 } /* Comment.Preproc */
+.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
@@ -555,48 +553,49 @@ body.manpage div.sectionbody {
 .highlight .gs { font-weight: bold } /* Generic.Strong */
 .highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
 .highlight .gt { color: #0040D0 } /* Generic.Traceback */
-.highlight .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.highlight .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.highlight .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.highlight .kp { color: #008000 } /* Keyword.Pseudo */
-.highlight .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.highlight .kt { color: #B00040 } /* Keyword.Type */
+.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
+.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
 .highlight .m { color: #666666 } /* Literal.Number */
-.highlight .s { color: #BA2121 } /* Literal.String */
-.highlight .na { color: #7D9029 } /* Name.Attribute */
-.highlight .nb { color: #008000 } /* Name.Builtin */
-.highlight .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.highlight .s { color: #BB4444 } /* Literal.String */
+.highlight .na { color: #BB4444 } /* Name.Attribute */
+.highlight .nb { color: #AA22FF } /* Name.Builtin */
+.highlight .nc { color: #0000FF } /* Name.Class */
 .highlight .no { color: #880000 } /* Name.Constant */
 .highlight .nd { color: #AA22FF } /* Name.Decorator */
 .highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
 .highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.highlight .nf { color: #0000FF } /* Name.Function */
+.highlight .nf { color: #00A000 } /* Name.Function */
 .highlight .nl { color: #A0A000 } /* Name.Label */
 .highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
 .highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.highlight .nv { color: #19177C } /* Name.Variable */
+.highlight .nv { color: #B8860B } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
-.highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
-.highlight .sc { color: #BA2121 } /* Literal.String.Char */
-.highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.highlight .s2 { color: #BA2121 } /* Literal.String.Double */
+.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
+.highlight .sc { color: #BB4444 } /* Literal.String.Char */
+.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.highlight .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
 .highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
 .highlight .sx { color: #008000 } /* Literal.String.Other */
 .highlight .sr { color: #BB6688 } /* Literal.String.Regex */
-.highlight .s1 { color: #BA2121 } /* Literal.String.Single */
-.highlight .ss { color: #19177C } /* Literal.String.Symbol */
-.highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
-.highlight .vc { color: #19177C } /* Name.Variable.Class */
-.highlight .vg { color: #19177C } /* Name.Variable.Global */
-.highlight .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
+.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
+.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #B8860B } /* Name.Variable.Class */
+.highlight .vg { color: #B8860B } /* Name.Variable.Global */
+.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
+
 
 
 @media screen {
@@ -6068,150 +6067,142 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_scripting_in_tr1_tr3">10. Scripting in TR1-TR3</h2>
+<h2 id="_scripting_in_tr2_tr3_for_pc_psx">10. Scripting in TR2/TR3 for PC/PSX</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview_8">10.1. Overview</h3>
-<div class="paragraph"><p>The flow of the game, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene files, all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled using a file called <span class="monospaced">TOMBPC.DAT</span>. This file is normally compiled using a utility called <span class="monospaced">GAMEFLOW.EXE</span>, which was (apparently) accidentally distributed by Eidos in the German release of Tomb Raider II Gold. TR2 and TR3 use this file, and use essentially the same format of it, but TR1 has this file&#8217;s contents embedded in the app, which explains why there are
-separate TR1 and Unfinished Business apps. What follows is a description of the contents of the binary <span class="monospaced">TOMBPC.DAT</span> file.</p></div>
+<div class="paragraph"><p>The internal gameflow, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene files, all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled by a script file called <span class="monospaced">TOMBPC.DAT</span>/<span class="monospaced">TOMBPSX.DAT</span>. The scripts were compiled using a utility known as <span class="monospaced">GAMEFLOW.EXE</span> which was distributed by Eidos in the German release of Tomb Raider II Gold. Both TR2 and TR3 use these script files. From both games the format remained unchanged. TR1&#8217;s gameflow is hardcoded thus there is no external file controlling this resulting in loss of flexibility.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>                     <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
-<span class="kt">uint8_t</span> <span class="n">Description</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>             <span class="c1">// Null-terminated string describing the script copyright info etc. Not encrypted.</span>
-<span class="kt">uint16_t</span> <span class="n">Unknown1</span><span class="p">;</span>                    <span class="c1">// ?</span>
-<span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>                  <span class="c1">// Level to go to when that happens (0x500 is exit-to-title) ??? when WHAT happens?</span>
-<span class="kt">int32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>                 <span class="c1">// Level to go to when that happens (-1 is NONE) ??? when WHAT happens?</span>
-<span class="kt">int32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span>              <span class="c1">// Level to go to when Lara dies during demo mode (0x500 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>                <span class="c1">// Level to go to when Lara dies during the game (0 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">DemoTime</span><span class="p">;</span>                     <span class="c1">// Time in game ticks (1/30th of a second?) to wait before starting a demo</span>
-<span class="kt">int32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>              <span class="c1">// Level to go to when demo mode is interrupted (0x500 is exit-to-title)</span>
-<span class="kt">int32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>                    <span class="c1">// Level to go to when the demo ends (0x500 is exit-to-title)</span>
-<span class="kt">uint8_t</span> <span class="n">Unknown2</span><span class="p">[</span><span class="mi">36</span><span class="p">];</span>                 <span class="c1">// Filler</span>
-<span class="kt">int16_t</span> <span class="n">NumLevels</span><span class="p">;</span>                    <span class="c1">// Number of levels in the game.</span>
-<span class="kt">int16_t</span> <span class="n">NumChapterScreens</span><span class="p">;</span>            <span class="c1">// Chapter screens (Present in TR2, first used in TR3)</span>
-<span class="kt">int16_t</span> <span class="n">NumTitles</span><span class="p">;</span>                    <span class="c1">// Only one, TITLE.TR2</span>
-<span class="kt">int16_t</span> <span class="n">NumFMVs</span><span class="p">;</span>                      <span class="c1">// Number of FMV cutscenes PC - (*.RPL), PSX - (*STR)</span>
-<span class="kt">int16_t</span> <span class="n">NumCutscenes</span><span class="p">;</span>                 <span class="c1">// Number of in-game (engine-rendered) cutscenes (CUT*.TR2)</span>
-<span class="kt">int16_t</span> <span class="n">NumDemoLevels</span><span class="p">;</span>                <span class="c1">// Number of demo levels</span>
-<span class="kt">int16_t</span> <span class="n">TitleSoundID</span><span class="p">;</span>                 <span class="c1">// ID of title soundtrack</span>
-<span class="kt">int16_t</span> <span class="n">SingleLevel</span><span class="p">;</span>                  <span class="c1">// If doing only a single level</span>
-<span class="kt">uint8_t</span> <span class="n">Unknown3</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>                 <span class="c1">// Filler</span>
-<span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>                       <span class="c1">// Various flags see below</span>
-<span class="kt">uint8_t</span> <span class="n">Unknown4</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>                  <span class="c1">// Filler</span>
-<span class="kt">uint8_t</span> <span class="n">XORKey</span><span class="p">;</span>                       <span class="c1">// Key used to encrypt/decrypt strings</span>
-<span class="kt">uint8_t</span> <span class="n">LanguageID</span><span class="p">;</span>                   <span class="c1">// Script Language ID see below</span>
-<span class="kt">int16_t</span> <span class="n">SecretSoundID</span><span class="p">;</span>                <span class="c1">// ID of soundtrack to play when a secret is found</span>
-<span class="kt">uint8_t</span> <span class="n">Unknown5</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>                  <span class="c1">// Filler</span>
+<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>             <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
+<span class="kt">uint8_t</span> <span class="n">Description</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>     <span class="c1">// Null-terminated string describing the script copyright info etc. Not encrypted.</span>
+<span class="kt">uint16_t</span> <span class="n">Unknown1</span><span class="p">;</span>            <span class="c1">// ?</span>
+<span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>          <span class="c1">// Level to go to when WHAT happens?</span>
+<span class="kt">int32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>         <span class="c1">// Level to go to when WHAT happens?</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span>      <span class="c1">// Level to go to when Lara dies during demo mode</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>        <span class="c1">// Level to go to when Lara dies during the game</span>
+<span class="kt">int32_t</span> <span class="n">DemoTime</span><span class="p">;</span>             <span class="c1">// Time in game ticks (1/30th of a second?) to wait before starting a demo</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>      <span class="c1">// Level to go to when demo mode is interrupted</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>            <span class="c1">// Level to go to when the demo ends</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown2</span><span class="p">[</span><span class="mi">36</span><span class="p">];</span>         <span class="c1">// Filler</span>
+<span class="kt">int16_t</span> <span class="n">NumLevels</span><span class="p">;</span>            <span class="c1">// Number of levels in the game.</span>
+<span class="kt">int16_t</span> <span class="n">NumChapterScreens</span><span class="p">;</span>    <span class="c1">// Chapter screens (Present in TR2, first used in TR3)</span>
+<span class="kt">int16_t</span> <span class="n">NumTitles</span><span class="p">;</span>            <span class="c1">// Only one, TITLE.TR2</span>
+<span class="kt">int16_t</span> <span class="n">NumFMVs</span><span class="p">;</span>              <span class="c1">// Number of FMV cutscenes PC - (*.RPL), PSX - (*STR)</span>
+<span class="kt">int16_t</span> <span class="n">NumCutscenes</span><span class="p">;</span>         <span class="c1">// Number of in-game (engine-rendered) cutscenes (CUT*.TR2)</span>
+<span class="kt">int16_t</span> <span class="n">NumDemoLevels</span><span class="p">;</span>        <span class="c1">// Number of demo levels</span>
+<span class="kt">int16_t</span> <span class="n">TitleSoundID</span><span class="p">;</span>         <span class="c1">// ID of title soundtrack</span>
+<span class="kt">int16_t</span> <span class="n">SingleLevel</span><span class="p">;</span>          <span class="c1">// If doing only a single level</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown3</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>         <span class="c1">// Filler</span>
+<span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>               <span class="c1">// Various flags see below</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown4</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>          <span class="c1">// Filler</span>
+<span class="kt">uint8_t</span> <span class="n">XORKey</span><span class="p">;</span>               <span class="c1">// Key used to encrypt/decrypt strings</span>
+<span class="kt">uint8_t</span> <span class="n">LanguageID</span><span class="p">;</span>           <span class="c1">// Script Language ID see below</span>
+<span class="kt">int16_t</span> <span class="n">SecretSoundID</span><span class="p">;</span>        <span class="c1">// ID of soundtrack to play when a secret is found</span>
+<span class="kt">uint8_t</span> <span class="n">Unknown5</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>          <span class="c1">// Filler</span>
 
 <span class="c1">//1. Offset to each string is end offset of &#39;*StringOffsets&#39; + *StringOffsets[i]</span>
 <span class="c1">//2. String length is calculated by (*StringOffsets[i+1]-*StringOffsets[i])</span>
 <span class="c1">//3. If Flags &amp; UseXor true each character must be ^ XorKey to decrypt the string.</span>
 
 <span class="kt">uint16_t</span> <span class="n">LevelStringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                 <span class="c1">//Relative offset to level name strings</span>
-<span class="n">StringArray</span> <span class="n">LevelStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">LevelStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>                      <span class="c1">//Usually Encrypted</span>
 <span class="kt">uint16_t</span> <span class="n">ChapterScreenStringOffsets</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to chapter screen strings</span>
-<span class="n">StringArray</span> <span class="n">ChapterScreenStrings</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">ChapterScreenStrings</span><span class="p">[</span><span class="n">NumChapterScreens</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
 <span class="kt">uint16_t</span> <span class="n">TitleStringOffsets</span><span class="p">[</span><span class="n">NumTitles</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                 <span class="c1">//Relative offset to title strings</span>
-<span class="n">StringArray</span> <span class="n">TitleStrings</span><span class="p">[</span><span class="n">NumTitles</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">TitleStrings</span><span class="p">[</span><span class="n">NumTitles</span><span class="p">];</span>                      <span class="c1">//Usually Encrypted</span>
 <span class="kt">uint16_t</span> <span class="n">FMVStringOffsets</span><span class="p">[</span><span class="n">NumFMVs</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>                     <span class="c1">//Relative offset to fmv path strings</span>
-<span class="n">StringArray</span> <span class="n">FMVStrings</span><span class="p">[</span><span class="n">NumFMVs</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">FMVStrings</span><span class="p">[</span><span class="n">NumFMVs</span><span class="p">];</span>                          <span class="c1">//Usually Encrypted</span>
 <span class="kt">uint16_t</span> <span class="n">LevelPathStringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>             <span class="c1">//Relative offset to level path strings</span>
-<span class="n">StringArray</span> <span class="n">LevelPathStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">LevelPathStrings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>                  <span class="c1">//Usually Encrypted</span>
 <span class="kt">uint16_t</span> <span class="n">CutscenePathStringOffsets</span><span class="p">[</span><span class="n">NumCutscenes</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>       <span class="c1">//Relative offset to cutscene path strings</span>
-<span class="n">StringArray</span> <span class="n">CutscenePathStrings</span><span class="p">[</span><span class="n">NumCutscenes</span><span class="p">];</span>
+<span class="n">StringArray</span> <span class="n">CutscenePathStrings</span><span class="p">[</span><span class="n">NumCutscenes</span><span class="p">];</span>            <span class="c1">//Usually Encrypted</span>
 
+<span class="kt">uint16_t</span> <span class="n">SequenceOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">2</span><span class="p">];</span> <span class="c1">//Relative offset to sequence info (maybe+2 because title needs sequence +numtitles?)</span>
+<span class="n">SequenceInfo</span> <span class="n">Sequences</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>   <span class="c1">//Sequence info see explanation below (SIZE is dependant on first opcode)</span>
 
+<span class="kt">uint16_t</span> <span class="n">DemoLevelIDs</span><span class="p">[</span><span class="n">NumDemoLevels</span><span class="p">];</span>
 
-<span class="c1">//</span>
-<span class="c1">// The Flags word below uses the following bit assignments:</span>
-<span class="c1">//    0x0001:    DemoVersion                         (1 ::= demo, 0 ::= normal game)</span>
-<span class="c1">//    0x0002:    Title_Disabled                       (1 ::= no title screen, 0 ::= normal title screen)</span>
-<span class="c1">//    0x0004:    CheatModeCheck_Disabled  (1 ::= no cheat mode, 0 ::= cheat mode enabled)</span>
-<span class="c1">//    0x0008:    NoInputTimeout                     (1 ::= wait forever if no input, 0 ::= enter demo</span>
-<span class="c1">// mode if no input timeout)</span>
-<span class="c1">//    0x0010:    LoadSave_Disabled              (1 ::= load/save game disabled, 0 ::= load/save</span>
-<span class="c1">// game enabled)</span>
-<span class="c1">//    0x0020:    ScreenSizing_Disabled         (1 ::= no screen re-sizing allowed, 0 ::= screen</span>
-<span class="c1">// re-sizing allowed)</span>
-<span class="c1">//    0x0040:    LockOutOptionRing              (1 ::= ???, 0 ::= normal option ring)</span>
-<span class="c1">//    0x0080:    DozyCheat_Enabled             (???)</span>
-<span class="c1">//    0x0100:    Use_Encryption                     (1 ::= XOR all StringData with XORbyte, 0 ::= leave</span>
-<span class="c1">// StringData as-is)</span>
-<span class="c1">//    0x0400:    SelectAnyLevel                      (1 ::= allow player to select any level, 0 ::= no</span>
-<span class="c1">// level selection)</span>
-<span class="c1">//</span>
-<span class="c1">//</span>
+<span class="cp">#if PSX </span><span class="c1">//PSX Only</span>
+    <span class="n">PSXFMVInfo</span><span class="p">[</span><span class="n">NumFMVs</span><span class="p">];</span><span class="c1">// Two uint32_t, flag? then length/lba related?</span>
+<span class="cp">#endif</span>
 
-<span class="c1">//</span>
-<span class="c1">// While it is not correct C/C++, the following are specified as StringArray[NumStrings],</span>
-<span class="c1">// where _NumStrings_ indicates the number of StringOffsets in the structure.</span>
-<span class="c1">//</span>
+<span class="kt">int16_t</span> <span class="n">NumGameStrings</span><span class="p">;</span>
+<span class="kt">uint16_t</span> <span class="n">GameStringOffsets</span><span class="p">[</span><span class="n">NumGameStrings</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>   <span class="c1">//Relative offset to game strings</span>
+<span class="n">StringArray</span> <span class="n">GameStrings</span><span class="p">[</span><span class="n">NumGameStrings</span><span class="p">];</span>        <span class="c1">//Usually Encrypted</span>
 
-<span class="c1">// The LevelScript contains interpreted data (opcodes and operands) that specify</span>
-<span class="c1">// actions to take for each level (e.g. play cut scene, take away weapons, etc).  The</span>
-<span class="c1">// details of this data are discussed below, after the structure descriptions.</span>
-<span class="c1">//</span>
-<span class="k">virtual</span> <span class="k">struct</span>
-<span class="p">{</span>
-    <span class="kt">uint16_t</span> <span class="n">LevelScriptOffsets</span><span class="p">[</span><span class="n">NumLevels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>    <span class="c1">// offsets (into LevelScriptData[])</span>
-                                                 <span class="c1">// of each level&#39;s script data</span>
-    <span class="kt">uint16_t</span> <span class="n">NumLevelScriptData</span><span class="p">;</span>
-    <span class="kt">uint8_t</span>   <span class="n">LevelScriptData</span><span class="p">[</span><span class="n">NumLevelScriptData</span><span class="p">];</span>
-<span class="p">}</span> <span class="n">LevelScript</span><span class="p">;</span>
-<span class="kt">uint16_t</span> <span class="n">DemoLevelList</span><span class="p">[</span><span class="n">NumDemoLevels</span><span class="p">];</span>
-<span class="c1">//</span>
-<span class="c1">// GameStrings 1 and 2 are the level-independent strings that are displayed when interacting</span>
-<span class="c1">// with the game menus (e.g. ``Inventory,&#39;&#39; ``Load Game,&#39;&#39; ``Jump&#39;&#39; (control setup), ``Shotgun&#39;&#39;</span>
-<span class="c1">// (weapon in inventory), etc.)</span>
-<span class="c1">//</span>
-<span class="kt">int16_t</span> <span class="n">NumGameStrings1</span><span class="p">;</span>
-<span class="n">StringArray</span> <span class="n">GameStrings1</span><span class="p">[</span><span class="n">NumGameStrings1</span><span class="p">];</span>
-<span class="n">StringArray</span> <span class="n">GameStrings2</span><span class="p">[</span><span class="mi">41</span><span class="p">];</span>
-<span class="c1">//</span>
-<span class="c1">// KeyStrings1..10 are the level-specific printable strings for the various pickups in each level,</span>
-<span class="c1">// not including level-independent pickups (e.g. Shotgun Shells, Medi Packs).  These pickups</span>
-<span class="c1">// are all ``active&#39;&#39; at some point, e.g. they are used as keys or are prerequisites for advancing</span>
-<span class="c1">// through the game.  Examples include ``Rusty Key,&#39;&#39; ``Green Pass Card,&#39;&#39; ``Circuit Breaker,&#39;&#39; &quot;The</span>
-<span class="c1">// Seraph,&quot; ``Talion,&#39;&#39; etc. Each level of TR2 can contain up to 10 pickups.  The following arrays</span>
-<span class="c1">// are arranged longitudinally, meaning that each array contains all of the Nth-pickup strings for</span>
-<span class="c1">// each level.  For example, KeyStrings1 contains the printable names for the ``first&#39;&#39; pickup in</span>
-<span class="c1">// each level, KeyStrings2 contains the names for the ``second&#39;&#39; pickup, etc.  Note that ``first&#39;&#39;</span>
-<span class="c1">// and ``second&#39;&#39; have nothing to do with the order these objects are encountered in the game;</span>
-<span class="c1">// they are simply indices used by the game engine (Key 1, Key 2, etc.)</span>
-<span class="c1">//</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings1</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Puzzle 1</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings2</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Puzzle 2</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings3</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Puzzle 3</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings4</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Puzzle 4</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings5</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Pickup 1</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings6</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Pickup 2</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings7</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Key 1</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings8</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Key 2</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings9</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Key 3</span>
-<span class="n">StringArray</span> <span class="n">KeyStrings10</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span> <span class="c1">// Key 4</span>
+<span class="cp">#if PSX</span><span class="c1">//If PSX</span>
+    <span class="kt">uint16_t</span> <span class="n">PSXStringOffsets</span><span class="p">[</span><span class="mi">80</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span><span class="c1">//Fixed at 80?</span>
+    <span class="n">StringArray</span> <span class="n">PSXStrings</span><span class="p">[</span><span class="mi">80</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span><span class="c1">//Fixed at 80? Usually Encrypted</span>
+<span class="cp">#else</span><span class="c1">//PC</span>
+    <span class="kt">uint16_t</span> <span class="n">PCStringOffsets</span><span class="p">[</span><span class="mi">80</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span><span class="c1">//Fixed at 80?</span>
+    <span class="n">StringArray</span> <span class="n">PCStrings</span><span class="p">[</span><span class="mi">80</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span><span class="c1">//Fixed at 80? Usually Encrypted</span>
+<span class="cp">#endif</span>
+
+<span class="kt">uint16_t</span> <span class="n">Puzzle1StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to puzzle1 strings</span>
+<span class="n">StringArray</span> <span class="n">Puzzle1Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Puzzle2StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to puzzle2 strings</span>
+<span class="n">StringArray</span> <span class="n">Puzzle2Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Puzzle3StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to puzzle3 strings</span>
+<span class="n">StringArray</span> <span class="n">Puzzle3Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Puzzle4StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to puzzle4 strings</span>
+<span class="n">StringArray</span> <span class="n">Puzzle4Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Pickup1StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to pickup1 strings</span>
+<span class="n">StringArray</span> <span class="n">Pickup1Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Pickup2StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span> <span class="c1">//Relative offset to pickup2 strings</span>
+<span class="n">StringArray</span> <span class="n">Pickup2Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>      <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Key1StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>    <span class="c1">//Relative offset to key1 strings</span>
+<span class="n">StringArray</span> <span class="n">Key1Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>         <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Key2StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>    <span class="c1">//Relative offset to key2 strings</span>
+<span class="n">StringArray</span> <span class="n">Key2Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>         <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Key3StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>    <span class="c1">//Relative offset to key3 strings</span>
+<span class="n">StringArray</span> <span class="n">Key3Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>         <span class="c1">//Usually Encrypted</span>
+
+<span class="kt">uint16_t</span> <span class="n">Key4StringOffsets</span><span class="p">[</span><span class="n">NumLevels</span><span class="o">+</span><span class="mi">1</span><span class="p">];</span>    <span class="c1">//Relative offset to key4 strings</span>
+<span class="n">StringArray</span> <span class="n">Key4Strings</span><span class="p">[</span><span class="n">NumLevels</span><span class="p">];</span>         <span class="c1">//Usually Encrypted</span>
 </pre></div></div></div>
 </div>
 <div class="sect2">
-<h3 id="_script_flags">10.2. Script Flags</h3>
+<h3 id="_psx_fmv_info">10.2. PSX FMV Info</h3>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">PSXFMVInfo</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">flags</span><span class="p">;</span>   <span class="c1">//? First FMV usually has this set as 1</span>
+    <span class="kt">uint32_t</span> <span class="n">unknown</span><span class="p">;</span> <span class="c1">//Possibly: size, lba or length can&#39;t remember which</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="paragraph"><p>This specific info is exclusive to <span class="monospaced">TOMBPSX.DAT</span>.</p></div>
+</div>
+<div class="sect2">
+<h3 id="_script_flags">10.3. Script Flags</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptFlags</span>
 <span class="p">{</span>
-    <span class="n">DemoVersion</span> <span class="o">=</span>              <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span>
-    <span class="n">TitleDisabled</span> <span class="o">=</span>            <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">),</span>
-    <span class="n">CheatModeCheckDisabled</span> <span class="o">=</span>   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">),</span>
-    <span class="n">NoInputTimeout</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">),</span>
-    <span class="n">LoadSaveDisabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">),</span>
-    <span class="n">ScreenSizingDisabled</span> <span class="o">=</span>     <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">),</span>
-    <span class="n">LockoutOptionRing</span> <span class="o">=</span>        <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">),</span>
-    <span class="n">DozyCheatEnabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span>
-    <span class="n">UseXor</span> <span class="o">=</span>                   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">),</span>
-    <span class="n">GymEnabled</span> <span class="o">=</span>               <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">9</span><span class="p">),</span>
-    <span class="n">SelectAnyLevel</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">10</span><span class="p">),</span>
-    <span class="n">EnableCheatCode</span> <span class="o">=</span>          <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">)</span>
-<span class="p">}</span>
+    <span class="n">DemoVersion</span> <span class="o">=</span>              <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span> <span class="c1">//(=1) Is this a demo version of the game</span>
+    <span class="n">TitleDisabled</span> <span class="o">=</span>            <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">),</span> <span class="c1">//(=1) Disables Title Screen</span>
+    <span class="n">CheatModeCheckDisabled</span> <span class="o">=</span>   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">),</span> <span class="c1">//(=1) Related to in-game cheats?</span>
+    <span class="n">NoInputTimeout</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">),</span> <span class="c1">//(=1) Disables input timeout for demo mode</span>
+    <span class="n">LoadSaveDisabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">),</span> <span class="c1">//(=1) Disables loading/saving</span>
+    <span class="n">ScreenSizingDisabled</span> <span class="o">=</span>     <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">),</span> <span class="c1">//(=1) Disables screen resizing PC only?</span>
+    <span class="n">LockoutOptionRing</span> <span class="o">=</span>        <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">),</span> <span class="c1">//(=1) Stops options ring from being selected</span>
+    <span class="n">DozyCheatEnabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span> <span class="c1">//(=1) Enable DOZY (sometimes they removed the internal code)</span>
+    <span class="n">UseXor</span> <span class="o">=</span>                   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">),</span> <span class="c1">//(=1) If true all string chars (except null termination) must be xor-ed by XorKey.</span>
+    <span class="n">GymEnabled</span> <span class="o">=</span>               <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">9</span><span class="p">),</span> <span class="c1">//(=1) Is Gym available on title screen.</span>
+    <span class="n">SelectAnyLevel</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">10</span><span class="p">),</span><span class="c1">//(=1) Unlocks all levels</span>
+    <span class="n">EnableCheatCode</span> <span class="o">=</span>          <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">)</span> <span class="c1">//(=1) Related to in-game cheats?</span>
+<span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p>These flags enable various in-game features if set.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_script_language">10.3. Script Language</h3>
+<h3 id="_script_language">10.4. Script Language</h3>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptLanguage</span>
 <span class="p">{</span>
@@ -6220,459 +6211,172 @@ separate TR1 and Unfinished Business apps. What follows is a description of the 
     <span class="n">LANG_GERMAN</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">LANG_AMERICAN</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
     <span class="n">LANG_JAPANESE</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="p">}</span>
-</pre></div></div></div>
-</div>
-<div class="sect2">
-<h3 id="_levelscript_description">10.4. LevelScript Description</h3>
-<div class="paragraph"><p>In LevelScript, Opcodes and Operands are all <span class="monospaced">uint16_t</span>.  Note that if a level is a demo level, its level ID will be 1024 higher than a &#8220;normal&#8221;
-level ID.</p></div>
-<div class="listingblock">
-<div class="title">Opcodes</div>
-<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptOpcodes</span>
-<span class="p">{</span>
-    <span class="n">OP_PICTURE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>            <span class="c1">// ?</span>
-    <span class="n">OP_LISTSTART</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>          <span class="c1">// ?</span>
-    <span class="n">OP_LISTEND</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>            <span class="c1">// ?</span>
-    <span class="n">OP_STARTFMV</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>           <span class="c1">// Play FMV, operand is FMV ID</span>
-    <span class="n">OP_STARTLEVEL</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>         <span class="c1">// Play (interactive) level, operand is level ID</span>
-    <span class="n">OP_STARTCINE</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>          <span class="c1">// Play Cutscene, operand is cutscene ID</span>
-    <span class="n">OP_LEVELCOMPLETE</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>      <span class="c1">// Do level-completion display (no operands)</span>
-    <span class="n">OP_STARTDEMO</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>          <span class="c1">// Play demo level: operand is level ID</span>
-    <span class="n">OP_JUMPTOSEQUENCE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>     <span class="c1">// Jumps to specified sequence?</span>
-    <span class="n">OP_ENDSEQUENCE</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>        <span class="c1">// End of sequence (no operands)</span>
-    <span class="n">OP_SETTRACK</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>          <span class="c1">// Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)</span>
-    <span class="n">OP_SUNSETENABLED</span> <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>     <span class="c1">// Bartoli&#39;s Hideous</span>
-    <span class="n">OP_LOADINGPIC</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>        <span class="c1">//  Chapter screen: operand is chapter ID</span>
-    <span class="n">OP_DEADLYWATER</span> <span class="o">=</span> <span class="mi">13</span><span class="p">,</span>       <span class="c1">// Temple of Xian? Kills Lara when she touches water?</span>
-    <span class="n">OP_REMOVEWEAPONS</span> <span class="o">=</span> <span class="mi">14</span><span class="p">,</span>     <span class="c1">// Lose your weapons (no operands)</span>
-    <span class="n">OP_GAMECOMPLETE</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>      <span class="c1">// End of game (no operands)</span>
-    <span class="n">OP_CUTANGLE</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>          <span class="c1">// Associated with cutscenes; a viewpoint control? (one operand?)</span>
-    <span class="n">OP_NOFLOOR</span> <span class="o">=</span> <span class="mi">17</span><span class="p">,</span>           <span class="c1">// For Floating Islands/Thames Wharf? (one operand?)</span>
-    <span class="n">OP_ADDTOINVENTORY</span> <span class="o">=</span> <span class="mi">18</span><span class="p">,</span>    <span class="c1">// Give item; operand is item type (see below)</span>
-    <span class="n">OP_LARASTARTANIMATION</span> <span class="o">=</span> <span class="mi">19</span><span class="p">,</span><span class="c1">// Item-type 12 state to start level in: operand is state number</span>
-    <span class="n">OP_NUMSECRETS</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>        <span class="c1">// Number of secrets (overrides engine&#39;s hardcoded count of them?): operand is that number</span>
-    <span class="n">OP_KILLTOCOMPLETE</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span>    <span class="c1">// Probably for Ice Palace boss (no operands)</span>
-    <span class="n">OP_REMOVEAMMO</span> <span class="o">=</span> <span class="mi">22</span>         <span class="c1">// Lose your ammo and medipacks? (no operands?)</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="sect3">
-<h4 id="_opcode_18_stuff_to_give">10.4.1. Opcode-18 stuff to give</h4>
-<div class="paragraph"><p>(repeat means give another)</p></div>
-<div class="ulist"><div class="title">After finding all the secrets in a level (Tomb Raider 2)</div><ul>
+<div class="paragraph"><p>Script Sequencing &amp; Opcodes/Operands</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>Each script has "sequence information", Opcodes and Operands are all stored as `uint16_t`. Sequences contain a set of commands to execute where an additional value (operand) is usually passed as a parameter to the function the command needs to call. Note: that if a level is a demo level, its level ID will be 1024 higher than a 'normal' level ID.
+
+[source,cpp]
+----
+struct SequenceInfo
+{
+    uint16_t Opcode;   //Command
+    uint16_t Operand;  //Not always used, depends on the opcode
+};
+
+enum ScriptOpcodes
+{
+    OP_PICTURE = 0,            // ?
+    OP_LISTSTART = 1,          // ?
+    OP_LISTEND = 2,            // ?
+    OP_STARTFMV = 3,           // Play FMV, operand is FMV ID
+    OP_STARTLEVEL = 4,         // Play (interactive) level, operand is level ID
+    OP_STARTCINE = 5,          // Play Cutscene, operand is cutscene ID
+    OP_LEVELCOMPLETE = 6,      // Do level-completion display (no operands)
+    OP_STARTDEMO = 7,          // Play demo level: operand is level ID
+    OP_JUMPTOSEQUENCE = 8,     // Jumps to specified sequence?
+    OP_ENDSEQUENCE = 9,        // End of sequence (no operands)
+    OP_SETTRACK = 10,          // Play soundtrack: operand is soundtrack ID (it precedes opcodes of associated levels)
+    OP_SUNSETENABLED = 11,     // Bartoli's Hideous
+    OP_LOADINGPIC = 12,        // Chapter screen: operand is chapter ID
+    OP_DEADLYWATER = 13,       // Temple of Xian? Kills Lara when she touches water?
+    OP_REMOVEWEAPONS = 14,     // Lose your weapons (no operands)
+    OP_GAMECOMPLETE = 15,      // End of game (no operands)
+    OP_CUTANGLE = 16,          // Associated with cutscenes; a viewpoint control? (one operand?)
+    OP_NOFLOOR = 17,           // For Floating Islands/Thames Wharf? (one operand?)
+    OP_ADDTOINVENTORY = 18,    // Give item; operand is item type (see below)
+    OP_LARASTARTANIMATION = 19,// Item-type 12 state to start level in: operand is state number
+    OP_NUMSECRETS = 20,        // Number of secrets (overrides engine's hardcoded count of them?): operand is that number
+    OP_KILLTOCOMPLETE = 21,    // Probably for Ice Palace boss (no operands)
+    OP_REMOVEAMMO = 22         // Lose your ammo and medipacks? (no operands?)
+};
+----
+
+The correct way to parse Sequence Info is to first read a `uint16_t` opcode specifying what this command within the sequence does. In reference to the list above, certain commands MUST have an additional `uint16_t` read from the sequence data directly after the opcode that's the pairing operand to this opcode. Not all opcodes have an operand so this must be done correctly. The original games execute each sequence command 1 by 1 until it reaches `OP_ENDSEQUENCE`, where it then runs the next sequence.
+
+Opcode-18 `OP_ADDTOINVENTORY`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+(repeat means give another)
+
+.After finding all the secrets in a level (Tomb Raider 2)
+* 0 -- Pistols
+* 1 -- Shotgun
+* 2 -- Automatic pistols
+* 3 -- Uzis
+* 4 -- Harpoon gun
+* 5 -- M-16
+* 6 -- Grenade launcher
+* 7 -- Pistol clip
+* 8 -- Shotgun-shell box
+* 9 -- Automatic-pistol clip
+* 10 -- Uzi clip
+* 11 -- Harpoon bundle
+* 12 -- M-16 clip
+* 13 -- Grenade pack
+* 14 -- Flare box
+* 15 -- Small medipack
+* 16 -- Big medipack
+* 17 -- Pickup 1
+* 18 -- Pickup 2
+* 19 -- Puzzle 1
+* 20 -- Puzzle 2
+* 21 -- Puzzle 3
+* 22 -- Puzzle 4
+* 23 -- Key 1
+* 24 -- Key 2
+* 25 -- Key 3
+* 26 -- Key 4
+
+.When a level starts (Tomb Raider 2)
+* 1000 -- Pistols
+* 1001 -- Shotgun
+* 1002 -- Automatic pistols
+* 1003 -- Uzis
+* 1004 -- Harpoon gun
+* 1005 -- M16
+* 1006 -- Grenade launcher
+* 1007 -- Pistol clip
+* 1008 -- Shotgun-shell box
+* 1009 -- Automatic-pistol clip
+* 1010 -- Uzi clip
+* 1011 -- Harpoon bundle
+* 1012 -- M16 clip
+* 1013 -- Grenade pack
+* 1014 -- Flare box
+* 1015 -- Small medipack
+* 1016 -- Big medipack
+* 1017 -- Pickup 1
+* 1018 -- Pickup 2
+* 1019 -- Puzzle 1
+* 1020 -- Puzzle 2
+* 1021 -- Puzzle 3
+* 1022 -- Puzzle 4
+* 1023 -- Key 1
+* 1024 -- Key 2
+* 1025 -- Key 3
+* 1026 -- Key 4
+
+Tomb Raider 2 identifications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[NOTE]
+====
+[blue]#TR2 only information here. These lists are virtually colored blue.#
+====
+
+.FMV IDs
+* 0 -- LOGO (everybody's corporate logos)
+* 1 -- ANCIENT (monks vs. dragon)
+* 2 -- MODERN (Lara drops in from helicopter)
+* 3 -- LANDING (Seaplane lands at rig)
+* 4 -- MS (Lara hitchhikes on a minisub)
+* 5 -- CRASH (Lara goes to Tibet and has a rough landing there)
+* 6 -- JEEP (Lara steals it and outruns Bartoli's goons)
+* 7 -- END (Lara escaping the collapsing lair)
+
+.Cutscene IDs
+* 0 -- CUT1 (At the end of the Great Wall)
+* 1 -- CUT2 (Lara the stowaway)
+* 2 -- CUT3 (Bartoli vs. goon)
+* 3 -- CUT4 (Bartoli stabs himself)
+
+.Soundtrack IDs
+* 0 -- BLANK (no sound)
+* 3 -- CUT1 (``at the fancy door'' soundtrack)
+* 4 -- CUT2 (``Lara the stowaway'' soundtrack)
+* 5 -- CUT3 (``Bartoli vs. goon'' soundtrack)
+* 30 -- CUT4 (``Bartoli stabs himself'' soundtrack)
+* 31 -- DERELICT (eerie choppy/echo-y synths)
+* 32 -- WATER (dripping/pouring water sounds)
+* 33 -- WIND (Blowing wind)
+* 34 -- HEARTBT (musical embellishment of one)
+* 52 -- SHOWER (that infamous shower scene)
+* 58 -- MACHINES (in the offshore rig)
+* 59 -- FLOATING (wispy synths)
+
+Other script commands</pre>
+</div></div>
+<div class="paragraph"><p>` FirstOption`, <span class="monospaced">TitleReplace</span>, <span class="monospaced">OnDeathDemoMode</span>, and <span class="monospaced">OnDeathInGame</span> can also be setup to perform specific actions. For example,  <span class="monospaced">OnDeathInGame</span> will be set to "0x500" which loads the title screen when Lara dies in-game. Some other commands are as follows:</p></div>
+<div class="ulist"><ul>
 <li>
 <p>
-0&#8201;&#8212;&#8201;Pistols
+<strong>ExitGame</strong> - <span class="monospaced">0x700</span> - Exit entire game?
 </p>
 </li>
 <li>
 <p>
-1&#8201;&#8212;&#8201;Shotgun
+<strong>ExitToTitle</strong> - <span class="monospaced">0x500</span> - Exit to Title Screen
 </p>
 </li>
 <li>
 <p>
-2&#8201;&#8212;&#8201;Automatic pistols
-</p>
-</li>
-<li>
-<p>
-3&#8201;&#8212;&#8201;Uzis
-</p>
-</li>
-<li>
-<p>
-4&#8201;&#8212;&#8201;Harpoon gun
-</p>
-</li>
-<li>
-<p>
-5&#8201;&#8212;&#8201;M-16
-</p>
-</li>
-<li>
-<p>
-6&#8201;&#8212;&#8201;Grenade launcher
-</p>
-</li>
-<li>
-<p>
-7&#8201;&#8212;&#8201;Pistol clip
-</p>
-</li>
-<li>
-<p>
-8&#8201;&#8212;&#8201;Shotgun-shell box
-</p>
-</li>
-<li>
-<p>
-9&#8201;&#8212;&#8201;Automatic-pistol clip
-</p>
-</li>
-<li>
-<p>
-10&#8201;&#8212;&#8201;Uzi clip
-</p>
-</li>
-<li>
-<p>
-11&#8201;&#8212;&#8201;Harpoon bundle
-</p>
-</li>
-<li>
-<p>
-12&#8201;&#8212;&#8201;M-16 clip
-</p>
-</li>
-<li>
-<p>
-13&#8201;&#8212;&#8201;Grenade pack
-</p>
-</li>
-<li>
-<p>
-14&#8201;&#8212;&#8201;Flare box
-</p>
-</li>
-<li>
-<p>
-15&#8201;&#8212;&#8201;Small medipack
-</p>
-</li>
-<li>
-<p>
-16&#8201;&#8212;&#8201;Big medipack
-</p>
-</li>
-<li>
-<p>
-17&#8201;&#8212;&#8201;Pickup 1
-</p>
-</li>
-<li>
-<p>
-18&#8201;&#8212;&#8201;Pickup 2
-</p>
-</li>
-<li>
-<p>
-19&#8201;&#8212;&#8201;Puzzle 1
-</p>
-</li>
-<li>
-<p>
-20&#8201;&#8212;&#8201;Puzzle 2
-</p>
-</li>
-<li>
-<p>
-21&#8201;&#8212;&#8201;Puzzle 3
-</p>
-</li>
-<li>
-<p>
-22&#8201;&#8212;&#8201;Puzzle 4
-</p>
-</li>
-<li>
-<p>
-23&#8201;&#8212;&#8201;Key 1
-</p>
-</li>
-<li>
-<p>
-24&#8201;&#8212;&#8201;Key 2
-</p>
-</li>
-<li>
-<p>
-25&#8201;&#8212;&#8201;Key 3
-</p>
-</li>
-<li>
-<p>
-26&#8201;&#8212;&#8201;Key 4
-</p>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">When a level starts (Tomb Raider 2)</div><ul>
-<li>
-<p>
-1000&#8201;&#8212;&#8201;Pistols
-</p>
-</li>
-<li>
-<p>
-1001&#8201;&#8212;&#8201;Shotgun
-</p>
-</li>
-<li>
-<p>
-1002&#8201;&#8212;&#8201;Automatic pistols
-</p>
-</li>
-<li>
-<p>
-1003&#8201;&#8212;&#8201;Uzis
-</p>
-</li>
-<li>
-<p>
-1004&#8201;&#8212;&#8201;Harpoon gun
-</p>
-</li>
-<li>
-<p>
-1005&#8201;&#8212;&#8201;M16
-</p>
-</li>
-<li>
-<p>
-1006&#8201;&#8212;&#8201;Grenade launcher
-</p>
-</li>
-<li>
-<p>
-1007&#8201;&#8212;&#8201;Pistol clip
-</p>
-</li>
-<li>
-<p>
-1008&#8201;&#8212;&#8201;Shotgun-shell box
-</p>
-</li>
-<li>
-<p>
-1009&#8201;&#8212;&#8201;Automatic-pistol clip
-</p>
-</li>
-<li>
-<p>
-1010&#8201;&#8212;&#8201;Uzi clip
-</p>
-</li>
-<li>
-<p>
-1011&#8201;&#8212;&#8201;Harpoon bundle
-</p>
-</li>
-<li>
-<p>
-1012&#8201;&#8212;&#8201;M16 clip
-</p>
-</li>
-<li>
-<p>
-1013&#8201;&#8212;&#8201;Grenade pack
-</p>
-</li>
-<li>
-<p>
-1014&#8201;&#8212;&#8201;Flare box
-</p>
-</li>
-<li>
-<p>
-1015&#8201;&#8212;&#8201;Small medipack
-</p>
-</li>
-<li>
-<p>
-1016&#8201;&#8212;&#8201;Big medipack
-</p>
-</li>
-<li>
-<p>
-1017&#8201;&#8212;&#8201;Pickup 1
-</p>
-</li>
-<li>
-<p>
-1018&#8201;&#8212;&#8201;Pickup 2
-</p>
-</li>
-<li>
-<p>
-1019&#8201;&#8212;&#8201;Puzzle 1
-</p>
-</li>
-<li>
-<p>
-1020&#8201;&#8212;&#8201;Puzzle 2
-</p>
-</li>
-<li>
-<p>
-1021&#8201;&#8212;&#8201;Puzzle 3
-</p>
-</li>
-<li>
-<p>
-1022&#8201;&#8212;&#8201;Puzzle 4
-</p>
-</li>
-<li>
-<p>
-1023&#8201;&#8212;&#8201;Key 1
-</p>
-</li>
-<li>
-<p>
-1024&#8201;&#8212;&#8201;Key 2
-</p>
-</li>
-<li>
-<p>
-1025&#8201;&#8212;&#8201;Key 3
-</p>
-</li>
-<li>
-<p>
-1026&#8201;&#8212;&#8201;Key 4
+<strong>Demo</strong> - <span class="monospaced">0x400</span> - Load Demo level
 </p>
 </li>
 </ul></div>
-</div>
-<div class="sect3">
-<h4 id="_tomb_raider_2_identifications">10.4.2. Tomb Raider 2 identifications</h4>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">
-<div class="paragraph"><p><span class="blue">TR2 only information here. These lists are virtually colored blue.</span></p></div>
-</td>
-</tr></table>
-</div>
-<div class="ulist"><div class="title">FMV IDs</div><ul>
-<li>
-<p>
-0&#8201;&#8212;&#8201;LOGO (everybody&#8217;s corporate logos)
-</p>
-</li>
-<li>
-<p>
-1&#8201;&#8212;&#8201;ANCIENT (monks vs. dragon)
-</p>
-</li>
-<li>
-<p>
-2&#8201;&#8212;&#8201;MODERN (Lara drops in from helicopter)
-</p>
-</li>
-<li>
-<p>
-3&#8201;&#8212;&#8201;LANDING (Seaplane lands at rig)
-</p>
-</li>
-<li>
-<p>
-4&#8201;&#8212;&#8201;MS (Lara hitchhikes on a minisub)
-</p>
-</li>
-<li>
-<p>
-5&#8201;&#8212;&#8201;CRASH (Lara goes to Tibet and has a rough landing there)
-</p>
-</li>
-<li>
-<p>
-6&#8201;&#8212;&#8201;JEEP (Lara steals it and outruns Bartoli&#8217;s goons)
-</p>
-</li>
-<li>
-<p>
-7&#8201;&#8212;&#8201;END (Lara escaping the collapsing lair)
-</p>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">Cutscene IDs</div><ul>
-<li>
-<p>
-0&#8201;&#8212;&#8201;CUT1 (At the end of the Great Wall)
-</p>
-</li>
-<li>
-<p>
-1&#8201;&#8212;&#8201;CUT2 (Lara the stowaway)
-</p>
-</li>
-<li>
-<p>
-2&#8201;&#8212;&#8201;CUT3 (Bartoli vs. goon)
-</p>
-</li>
-<li>
-<p>
-3&#8201;&#8212;&#8201;CUT4 (Bartoli stabs himself)
-</p>
-</li>
-</ul></div>
-<div class="ulist"><div class="title">Soundtrack IDs</div><ul>
-<li>
-<p>
-0&#8201;&#8212;&#8201;BLANK (no sound)
-</p>
-</li>
-<li>
-<p>
-3&#8201;&#8212;&#8201;CUT1 (&#8220;at the fancy door&#8221; soundtrack)
-</p>
-</li>
-<li>
-<p>
-4&#8201;&#8212;&#8201;CUT2 (&#8220;Lara the stowaway&#8221; soundtrack)
-</p>
-</li>
-<li>
-<p>
-5&#8201;&#8212;&#8201;CUT3 (&#8220;Bartoli vs. goon&#8221; soundtrack)
-</p>
-</li>
-<li>
-<p>
-30&#8201;&#8212;&#8201;CUT4 (&#8220;Bartoli stabs himself&#8221; soundtrack)
-</p>
-</li>
-<li>
-<p>
-31&#8201;&#8212;&#8201;DERELICT (eerie choppy/echo-y synths)
-</p>
-</li>
-<li>
-<p>
-32&#8201;&#8212;&#8201;WATER (dripping/pouring water sounds)
-</p>
-</li>
-<li>
-<p>
-33&#8201;&#8212;&#8201;WIND (Blowing wind)
-</p>
-</li>
-<li>
-<p>
-34&#8201;&#8212;&#8201;HEARTBT (musical embellishment of one)
-</p>
-</li>
-<li>
-<p>
-52&#8201;&#8212;&#8201;SHOWER (that infamous shower scene)
-</p>
-</li>
-<li>
-<p>
-58&#8201;&#8212;&#8201;MACHINES (in the offshore rig)
-</p>
-</li>
-<li>
-<p>
-59&#8201;&#8212;&#8201;FLOATING (wispy synths)
-</p>
-</li>
-</ul></div>
-</div>
 </div>
 </div>
 </div>
@@ -7084,7 +6788,7 @@ File=   5,US.TXT</pre>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-22 20:41:43 MSK
+Last updated 2015-07-23 01:40:23 EEST
 </div>
 </div>
 </body>
