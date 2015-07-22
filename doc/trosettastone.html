@@ -3127,11 +3127,6 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bit 4:</em> Vertex is <em>normal</em> (i.e. no effect)&#8201;&#8212;&#8201;it seems that 0x0000 gives the same result.
-</p>
-</li>
-<li>
-<p>
 <em>Bit 15:</em> When used in room filled with water, don&#8217;t move the vertices of the room when viewed from above (normally, when viewed from above, the vertices of a room filled with water moves to <em>simulate</em> the refraction of lights in water). Note that when viewed from inside the room filled with water, the vertices of the other rooms outside still moves.
 </p>
 </li>
@@ -3159,7 +3154,7 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bit 13:</em> Water / quicksand surface movement. Brightness is also shifting, if this flag is set. But it&#8217;s not the same type as with <em>Bit 14</em>, it&#8217;s much less noticeable.
+<em>Bit 13:</em> Water / quicksand surface &#8220;wave&#8221; movement. Brightness is also shifting, if this flag is set (but it&#8217;s not the same type as with <em>Bit 14</em>, it&#8217;s much less noticeable).
 </p>
 </li>
 <li>
@@ -3169,12 +3164,18 @@ flares, flame emitters and gunflashes. Room ambient lights and point sources are
 </li>
 <li>
 <p>
-<em>Bit 15:</em> <span class="image">
-<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
-</span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
+<em>Bit 15:</em> Same &#8220;wave&#8221; effect as with <em>Bit 13</em>, but without light effect (?).
 </p>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">The amplitude of the &#8220;wave&#8221; effect depends on <span class="monospaced">WaterScheme</span> value specified in room structure.</td>
+</tr></table>
+</div>
 <div class="paragraph"><p><span class="monospaced">Colour</span> value specifies vertex colour in 15-bit format (each colour occupies 5 bits). Therefore, each colour value&#8217;s maximum is <em>31</em>. You can use this code to get each colour:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -3431,7 +3432,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 </li>
 <li>
 <p>
-<strong>2</strong>&#8201;&#8212;&#8201;If <em>effect_value</em> is in 0-15 range, then vertex lighting is cyclically fading to more bright value. The lower the value is, the deeper the fade to full vertex lighting is. If <em>effect_value</em> is in 17-30 range (<em>not</em> 31!), then vertex lighting is cyclically fading to more dark value. The higher the value is, the deeper the fade to black is. If <em>effect_value</em> is 16, no effect is produced. So practically, <em>effect_value</em> serves as a multiplier to overall effect brightness.
+<strong>2</strong>&#8201;&#8212;&#8201;If <em>effect_value</em> is in 1-15 range, then vertex lighting is cyclically fading to more bright value. The lower the value is, the deeper the fade to full vertex lighting is. If <em>effect_value</em> is in 17-30 range (<em>not</em> 31!), then vertex lighting is cyclically fading to more dark value. The higher the value is, the deeper the fade to black is. If <em>effect_value</em> is 16 or 0, no effect is produced. So practically, <em>effect_value</em> serves as a multiplier to overall effect brightness.
 </p>
 </li>
 <li>
@@ -3754,7 +3755,7 @@ with (keyholes, moveable blocks, moveable doors, etc.), neither does it include 
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> <span class="monospaced">WaterScheme</span> is used for different purposes. If room is a water room, then it specifies underwater caustics patterns (maximum value is 15). If it is set for normal room <em>placed above the water room</em>, then it controls <em>wave strength</em> effect applied to the faces adjoining water room&#8201;&#8212;&#8201;but only if there is a special light, which radius reaches the vertices of this particular room.</p></div>
+</span> <span class="monospaced">WaterScheme</span> is used for different purposes. If room is a water room, then it specifies underwater caustics patterns. If it is set for normal room <em>placed above the water room</em>, then it controls <em>wave strength</em> effect applied to the faces adjoining water room. Maximum value in both cases is 15.</p></div>
 <div class="paragraph"><p><span class="image">
 <img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
 </span><span class="image">
@@ -3897,7 +3898,7 @@ information.</p></div>
 <div class="paragraph"><p><em>SubFunction is not used</em></p></div>
 <div class="paragraph"><p>The <em>next</em> <span class="monospaced">FloorData</span> entry is the number of the room that this sector is a collisional portal to.
 An entity that arrives in a sector with this function present will gets its room membership changed to provided room number, without any change in position.</p></div>
-<div class="paragraph"><p>To understand what exactly happens when room membership is changed, you must understand how collisional portals work in Tomb Raider&#8217;s 4D space. When two rooms are connected with portal, it means that they also <em>overlap</em> within a distance of one sector (because this sector contains two-way portal in both of the connected rooms). This way, when room is changed, it remains unnoticed by the player, cause portal sectors are interconnected:</p></div>
+<div class="paragraph"><p>To understand what exactly happens when room membership is changed, you must understand how collisional portals work in Tomb Raider&#8217;s 4D space. When two rooms are connected with portal, it means that they also <em>overlap</em> within a distance of two sectors (because these sectors contain portal in each of the connected rooms). This way, when room is changed, it remains unnoticed by the player, cause portal sectors are interconnected:</p></div>
 <table class="tableblock frame-none grid-all"
 style="
 margin-left:auto; margin-right:auto;
@@ -3911,7 +3912,7 @@ width:70%;
 </span></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Collisional portal layout. Here, blue sectors are wall sectors around each room. Green sector is a two-way collisional portal, which is placed on both rooms.</em></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Collisional portal layout. Blue sectors are walls around each room. Green sector is Room 2&#8217;s collisional portal to Room 1, and dark blue sector is Room 1&#8217;s collisional portal to Room 2</em></p></td>
 </tr>
 </tbody>
 </table>
@@ -6680,7 +6681,7 @@ level ID.</p></div>
 <div class="sectionbody">
 <div class="paragraph"><p>In this chapter we will describe full gameflow script specification for TR4 <em>script file</em> (usually called <span class="monospaced">SCRIPT.DAT</span>) and <em>language file</em>, which contains all the strings used in game for specific language (e.g., <span class="monospaced">ENGLISH.DAT</span>, <span class="monospaced">FRENCH.DAT</span>, and so on).</p></div>
 <div class="sect2">
-<h3 id="_the_script_file_script_dat">11.1. The Script File (SCRIPT.DAT)</h3>
+<h3 id="_the_script_file">11.1. The Script File</h3>
 <div class="paragraph"><p>The script is divided into several blocks (or <em>headers</em>), some of them are global (applicable to whole game instance), and some are per-level only.</p></div>
 <div class="sect3">
 <h4 id="_global_header">11.1.1. Global Header</h4>
@@ -7083,7 +7084,7 @@ File=   5,US.TXT</pre>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-22 06:32:33 MSK
+Last updated 2015-07-22 20:41:43 MSK
 </div>
 </div>
 </body>
