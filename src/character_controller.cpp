@@ -1030,7 +1030,7 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar zAngle = btDegrees( btAtan2(floorNormal[0], -floorNormal[1]) );       // from -180 deg to +180 deg
+            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * 180/M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
                        + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
