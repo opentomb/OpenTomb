@@ -11,6 +11,10 @@
 #include "object.h"
 #include "mesh.h"
 
+#define ENTITY_ANIM_NONE     0x00
+#define ENTITY_ANIM_NEWFRAME 0x01
+#define ENTITY_ANIM_NEWANIM  0x02
+
 
 class btCollisionShape;
 class btRigidBody;

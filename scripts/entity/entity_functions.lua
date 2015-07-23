@@ -639,6 +639,7 @@ function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
+    setEntityAnimFlag(id, ANIM_LOCK);
     setEntityActivity(id, false);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)

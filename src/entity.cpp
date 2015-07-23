@@ -701,7 +701,7 @@ void Entity::addOverrideAnim(int model_id)
         SSAnimation* ss_anim = new SSAnimation();
 
         ss_anim->model = sm;
-        ss_anim->onFrame = NULL;
+        ss_anim->onFrame = nullptr;
         ss_anim->next = m_bf.animations.next;
         m_bf.animations.next = ss_anim;
 
@@ -1243,19 +1243,19 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 ///@TODO: rewrite as a cycle through all bf.animations list
 int Entity::frame(btScalar time)
 {
-    int16_t frame, anim, ret = 0x00;
+    int16_t frame, anim, ret = ENTITY_ANIM_NONE;
     long int t;
     btScalar dt;
     StateChange* stc;
     SSAnimation* ss_anim;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
-            (m_bf.animations.model == NULL) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
+       (m_bf.animations.model == NULL) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
-        return 0;
+        return ENTITY_ANIM_NONE;
     }
 
-    if(m_bf.animations.anim_flags & ANIM_LOCK) return 1;                  // penetration fix will be applyed in Character_Move... functions
+    if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
 
     ss_anim = &m_bf.animations;
 
@@ -1268,7 +1268,7 @@ int Entity::frame(btScalar time)
     {
         m_bf.animations.last_animation = m_bf.animations.current_animation;
 
-        ret = 0x02;
+        ret = ENTITY_ANIM_NEWANIM;
         doAnimCommands(&m_bf.animations, ret);
         doAnimMove(&anim, &frame);
 
@@ -1282,7 +1282,7 @@ int Entity::frame(btScalar time)
             m_bf.animations.last_animation = m_bf.animations.current_animation;
         }
 
-        ret = 0x01;
+        ret = ENTITY_ANIM_NEWFRAME;
         doAnimCommands(&m_bf.animations, ret);
         doAnimMove(&anim, &frame);
     }
@@ -1395,7 +1395,7 @@ Entity::Entity(uint32_t id)
     m_bt.last_collisions.clear();
 
     m_bf.animations.model = NULL;
-    m_bf.animations.onFrame = NULL;
+    m_bf.animations.onFrame = nullptr;
     m_bf.animations.frame_time = 0.0;
     m_bf.animations.last_state = 0;
     m_bf.animations.next_state = 0;

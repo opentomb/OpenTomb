@@ -996,6 +996,15 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 break;
 
                             case TR_FD_TRIGFUNC_PLAYTRACK:
+                                // Override for looped BGM tracks in TR1: if there are any sectors
+                                // triggering looped tracks, ignore it, as BGM is always set in script.
+                                if(engine_world.version < TR_II)
+                                {
+                                    int looped;
+                                    lua_GetSoundtrack(engine_lua, operands, nullptr, nullptr, &looped);
+                                    if(looped == TR_AUDIO_STREAM_TYPE_BACKGROUND) break;
+                                }
+
                                 snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
                                 strcat(single_events, buf);
                                 break;

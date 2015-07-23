@@ -165,8 +165,12 @@ bool lua_GetOverridedSample(lua::State& state, int sound_id, int *first_sample_n
 bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     const char* realPath;
-    lua::tie(realPath, *stream_type, *load_method) = state["getTrackInfo"](engine_world.version, track_index);
-    strcpy(file_path, realPath);
+    int _load_method, _stream_type;
+
+    lua::tie(realPath, _stream_type, _load_method) = state["getTrackInfo"](engine_world.version, track_index);
+    if(file_path) strcpy(file_path, realPath);
+    if(load_method) *load_method = _load_method;
+    if(stream_type) *stream_type = _stream_type;
     return *stream_type != -1;
 }
 

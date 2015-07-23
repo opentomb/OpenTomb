@@ -1649,7 +1649,8 @@ void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua:
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= lock.to<bool>() << 6;   // lock  - 01000000
         ent->m_triggerLayout = trigger_layout;
     }
-    else {
+    else
+    {
         ent->m_triggerLayout = eventOrLayout.to<int>();
     }
 }

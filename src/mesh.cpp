@@ -165,7 +165,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     animations = SSAnimation();
 
     animations.next = NULL;
-    animations.onFrame = NULL;
+    animations.onFrame = nullptr;
     animations.model = model;
     bone_tags.resize(model->mesh_count);
 
