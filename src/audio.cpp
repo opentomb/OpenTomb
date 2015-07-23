@@ -657,7 +657,6 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
     else
     {
         wad_file = fopen(filename, "rb");
-        setbuf(wad_file, NULL);
 
         if(!wad_file)
         {
@@ -670,6 +669,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
             uint32_t offset = 0;
             uint32_t length = 0;
 
+            setbuf(wad_file, NULL);
             fseek(wad_file, (index * TR_AUDIO_STREAM_WAD_STRIDE), 0);
             fread((void*)track_name, TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, wad_file);
             fread((void*)&length, sizeof(uint32_t), 1, wad_file);
