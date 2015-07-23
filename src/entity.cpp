@@ -804,7 +804,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
     }
 
     AnimationFrame* af  = &ss_anim->model->animations[ss_anim->current_animation];
-    if(af->num_anim_commands <= 255)
+    if(af->num_anim_commands > 0 && af->num_anim_commands <= 255)
     {
         assert(af->anim_command < engine_world.anim_commands.size());
         int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
