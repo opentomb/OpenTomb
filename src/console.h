@@ -37,7 +37,9 @@ private:
     
     GLfloat m_backgroundColor[4];
 
-    size_t m_historyPos = 0;                    // Current log position
+    //! Current log position plus one
+    //! @note It's off-by-one, because line 0 is a virtual empty line.
+    size_t m_historyPos = 0;
     size_t m_historySize;
     //! The most recent entry is at the front.
     std::vector<std::string> m_historyLines;

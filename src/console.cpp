@@ -17,7 +17,6 @@
 
 ConsoleInfo::ConsoleInfo()
 {
-    m_historyLines.emplace_back();
 }
 
 void ConsoleInfo::init()
@@ -187,11 +186,14 @@ void ConsoleInfo::edit(int key) {
         if( m_historyLines.empty() )
             break;
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-        if( key==SDLK_UP && m_historyPos < m_historyLines.size()-1 )
+        if( key==SDLK_UP && m_historyPos < m_historyLines.size() )
             ++m_historyPos;
         else if( key==SDLK_DOWN && m_historyPos > 0 )
             --m_historyPos;
-        m_editingLine = m_historyLines[m_historyPos];
+        if(m_historyPos > 0)
+            m_editingLine = m_historyLines[m_historyPos-1];
+        else
+            m_editingLine.clear();
         m_cursorPos = utf8_strlen(m_editingLine.c_str());
         break;
 
