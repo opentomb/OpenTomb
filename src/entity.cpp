@@ -46,7 +46,7 @@ void Entity::createGhosts()
 
         m_bt.ghostObjects.emplace_back( new btPairCachingGhostObject() );
 
-#pragma message("FIXME: Code has been removed due to missing API feature: bt.ghostObjects[i]->setIgnoreCollisionCheck(bt.bt_body[i], true)")
+        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.ghostObjects.back().get(), true);
 
         btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;
         gltr.setOrigin( gltr * m_bf.bone_tags[i].mesh_base->m_center );
