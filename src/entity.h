@@ -186,7 +186,9 @@ public:
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t /*frame*/, int /*state*/) {
+    virtual void frameImpl(btScalar /*time*/, int16_t frame, int /*state*/)
+    {
+        m_bf.animations.current_frame = frame;
     }
 
     virtual void processSectorImpl() {
