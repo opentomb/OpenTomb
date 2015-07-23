@@ -115,11 +115,13 @@ public:
         m_isVisible = !m_isVisible;
     }
 
-    int spacing() const {
+    float spacing() const {
         return m_spacing;
     }
 
     void setSpacing(float val) {
+        if(val < CON_MIN_LINE_INTERVAL || val > CON_MAX_LINE_INTERVAL)
+            return;
         m_spacing = val;
     }
 
