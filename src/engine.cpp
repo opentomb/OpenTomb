@@ -1290,13 +1290,13 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if(ent == NULL)
+    if(!ent)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
-    ent->m_transform.getOrigin() += dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2);
+    ent->m_transform.getOrigin() += btVector3(dx,dy,dz) * ent->m_transform.getBasis();
 
     ent->updateRigidBody(true);
 }
