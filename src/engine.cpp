@@ -1296,7 +1296,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
         return;
     }
 
-    ent->m_transform.getOrigin() += ent->m_transform.getBasis() * btVector3(dx,-dz,dy);
+    ent->m_transform.getOrigin() += ent->m_transform.getBasis() * btVector3(dx, dy, dz);
 
     ent->updateRigidBody(true);
 }

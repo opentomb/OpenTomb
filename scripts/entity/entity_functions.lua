@@ -241,6 +241,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     setEntityVisibility(id, false);
     
     entity_funcs[id].distance_passed = 0;
+    entity_funcs[id].distance_to_pass = 30720.0;
+    entity_funcs[id].speed = 40.0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
@@ -255,9 +257,9 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + 40.0;
-        moveEntityLocal(object_id, 0.0, 40.0, 0.0);
-        if(entity_funcs[object_id].distance_passed > 30720) then
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + entity_funcs[object_id].speed;
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
+        if(entity_funcs[object_id].distance_passed > entity_funcs[object_id].distance_to_pass) then
             stopSound(297, object_id);
             disableEntity(object_id);
         end;
@@ -265,6 +267,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
+        entity_funcs[object_id].distance_to_pass = nil;
+        entity_funcs[object_id].speed = nil;
     end
     
     prepareEntity(id);
