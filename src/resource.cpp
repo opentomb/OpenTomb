@@ -1304,6 +1304,11 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
     }
     while(!end_bit && entry < end_p);
 
+    return ret;
+}
+
+void Res_Sector_FixHeights(RoomSector* sector)
+{
     if(sector->floor == TR_METERING_WALLHEIGHT)
     {
         sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
@@ -1313,7 +1318,13 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
         sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
     }
 
-    return ret;
+    // Fix non-material crevices
+
+    for(size_t i = 0; i < 4; i++)
+    {
+        if(sector->ceiling_corners[i].m_floats[2] == sector->floor_corners[i].m_floats[2])
+            sector->ceiling_corners[i].m_floats[2] += LARA_HANG_VERTICAL_EPSILON;
+    }
 }
 
 
@@ -2311,6 +2322,7 @@ void TR_GenRoomProperties(World *world, class VT_Level *tr)
         for(RoomSector& sector : r->sectors)
         {
             TR_Sector_TranslateFloorData(&sector, tr);
+            Res_Sector_FixHeights(&sector);
         }
 
         // Generate links to the near rooms.

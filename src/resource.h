@@ -93,6 +93,7 @@ uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v
 void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
 int      Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
+void     Res_Sector_FixHeights(RoomSector* sector);
 
 bool     Res_Poly_SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, World *world);
 

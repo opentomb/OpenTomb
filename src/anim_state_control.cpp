@@ -1757,7 +1757,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             /*other code here prevents to UGLY Lara's move in end of "climb on", do not loose ent_set_on_floor_after_climb callback here!*/
         case TR_STATE_LARA_HANDSTAND:
-        case TR_STATE_LARA_GRABBING:
+        case TR_STATE_LARA_CLIMBING:
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             character->m_bt.no_fix_all = true;
@@ -1843,8 +1843,9 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                     else if(climb->edge_hit && (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON))
                     {
+                        Sys_DebugLog(LOG_FILENAME, "Zspace = %f", climb->next_z_space);
                         climb->point = climb->edge_point;
-                        ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING);               // climb up
+                        ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_CLIMBING);               // climb up
                     }
                     else
                     {
@@ -1918,7 +1919,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             character->m_camFollowCenter = 64;
             if(character->m_moveType == MOVE_CLIMBING)
             {
-                ss_anim->next_state = TR_STATE_LARA_GRABBING;
+                ss_anim->next_state = TR_STATE_LARA_CLIMBING;
                 break;
             }
             if(!cmd->action)
@@ -1940,7 +1941,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     character->m_moveType = MOVE_CLIMBING;
-                    ss_anim->next_state = TR_STATE_LARA_GRABBING;
+                    ss_anim->next_state = TR_STATE_LARA_CLIMBING;
                 }
                 else if((!curr_fc->ceiling_hit) || (pos[2] + character->m_bf.bb_max[2] < curr_fc->ceiling_point[2]))
                 {

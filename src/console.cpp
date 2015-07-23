@@ -60,7 +60,7 @@ void ConsoleInfo::initGlobals() {
 
 void ConsoleInfo::setLineInterval(float interval) {
     if(!inited || !FontManager ||
-            (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
+       (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
     }
