@@ -517,6 +517,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     std::copy(to+0, to+3, cast_ray+3);
     cast_ray[5] -= d;
     btVector3 n0, n1;
+    btScalar n0d, n1d;
     do
     {
         t1.setOrigin(from);
@@ -530,12 +531,12 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             {
                 up_founded = 1;
                 n0 = nfc->ccb->m_hitNormalWorld;
-                n0[3] = -n0.dot(nfc->ccb->m_hitPointWorld);
+                n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
             if(up_founded && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
             {
                 n1 = nfc->ccb->m_hitNormalWorld;
-                n1[3] = -n1.dot(nfc->ccb->m_hitPointWorld);
+                n1d = -n1.dot(nfc->ccb->m_hitPointWorld);
                 m_climb.edge_obj = (btCollisionObject*)nfc->ccb->m_hitCollisionObject;
                 up_founded = 2;
                 break;
@@ -556,8 +557,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
-                auto n0 = nfc->ccb->m_hitNormalWorld;
-                n0[3] = -n0.dot(nfc->ccb->m_hitPointWorld);
+                n0 = nfc->ccb->m_hitNormalWorld;
+                n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
             else
             {
@@ -580,8 +581,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     }
 
     // get the character plane equation
-    auto n2 = m_transform.getBasis().getColumn(0);
-    n2[3] = -n2.dot(pos);
+    btVector3 n2 = m_transform.getBasis().getColumn(0);
+    btScalar n2d = -n2.dot(pos);
 
     /*
      * Solve system of the linear equations by Kramer method!
@@ -597,19 +598,19 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         return ret;
     }
 
-    ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                        n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                        n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
+    ret.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
+                        n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                        n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
     ret.edge_point[0] /= d;
 
-    ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
-                        n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
-                        n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
+    ret.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
+                        n1[0] * (n0d * n2[2] - n0[2] * n2d) +
+                        n2[0] * (n0d * n1[2] - n0[2] * n1d);
     ret.edge_point[1] /= d;
 
-    ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
-                        n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
-                        n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
+    ret.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
+                        n1[0] * (n0[1] * n2d - n0d * n2[1]) +
+                        n2[0] * (n0[1] * n1d - n0d * n1[1]);
     ret.edge_point[2] /= d;
     ret.point = ret.edge_point;
     std::copy(ret.point+0, ret.point+3, cast_ray+3);
@@ -773,49 +774,6 @@ ClimbInfo Character::checkWallsClimbability()
     }*/
 
     return ret;
-}
-
-
-void Character::setToJump(btScalar v_vertical, btScalar v_horizontal)
-{
-    btScalar t;
-    btVector3 spd(0.0, 0.0, 0.0);
-
-    // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * m_speedMult;
-
-    // Calculate the direction of jump by vector multiplication.
-    if(m_dirFlag & ENT_MOVE_FORWARD)
-    {
-        spd = m_transform.getBasis().getColumn(1) * t;
-    }
-    else if(m_dirFlag & ENT_MOVE_BACKWARD)
-    {
-        spd = m_transform.getBasis().getColumn(1) * -t;
-    }
-    else if(m_dirFlag & ENT_MOVE_LEFT)
-    {
-        spd = m_transform.getBasis().getColumn(0) * -t;
-    }
-    else if(m_dirFlag & ENT_MOVE_RIGHT)
-    {
-        spd = m_transform.getBasis().getColumn(0) * t;
-    }
-    else
-    {
-        m_dirFlag = ENT_MOVE_FORWARD;
-    }
-
-    m_response.vertical_collide = 0x00;
-    m_response.slide = CHARACTER_SLIDE_NONE;
-
-    // Jump speed should NOT be added to current speed, as native engine
-    // fully replaces current speed with jump speed by anim command.
-    m_speed = spd;
-
-    // Apply vertical speed.
-    m_speed[2] = v_vertical * m_speedMult;
-    m_moveType = MOVE_FREE_FALLING;
 }
 
 
@@ -2334,8 +2292,45 @@ void Character::processSectorImpl() {
     }
 }
 
-void Character::jump(btScalar vert, btScalar hor) {
-    setToJump(vert, hor);
+void Character::jump(btScalar v_vertical, btScalar v_horizontal) {
+    btScalar t;
+    btVector3 spd(0.0, 0.0, 0.0);
+
+    // Jump length is a speed value multiplied by global speed coefficient.
+    t = v_horizontal * m_speedMult;
+
+    // Calculate the direction of jump by vector multiplication.
+    if(m_dirFlag & ENT_MOVE_FORWARD)
+    {
+        spd = m_transform.getBasis().getColumn(1) * t;
+    }
+    else if(m_dirFlag & ENT_MOVE_BACKWARD)
+    {
+        spd = m_transform.getBasis().getColumn(1) * -t;
+    }
+    else if(m_dirFlag & ENT_MOVE_LEFT)
+    {
+        spd = m_transform.getBasis().getColumn(0) * -t;
+    }
+    else if(m_dirFlag & ENT_MOVE_RIGHT)
+    {
+        spd = m_transform.getBasis().getColumn(0) * t;
+    }
+    else
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+    }
+
+    m_response.vertical_collide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
+
+    // Jump speed should NOT be added to current speed, as native engine
+    // fully replaces current speed with jump speed by anim command.
+    m_speed = spd;
+
+    // Apply vertical speed.
+    m_speed[2] = v_vertical * m_speedMult;
+    m_moveType = MOVE_FREE_FALLING;
 }
 
 Substance Character::getSubstanceState() const {

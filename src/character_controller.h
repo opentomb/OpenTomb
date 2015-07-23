@@ -368,7 +368,7 @@ struct Character : public Entity
     void updateHair() override;
     void frameImpl(btScalar time, int16_t frame, int state) override;
     void processSectorImpl() override;
-    void jump(btScalar vert, btScalar hor) override;
+    void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override {
         m_response.kill = 1;
     }
@@ -398,7 +398,6 @@ struct Character : public Entity
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void setToJump(btScalar v_vertical, btScalar v_horizontal);
     void lean(CharacterCommand* cmd, btScalar max_lean);
     btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
