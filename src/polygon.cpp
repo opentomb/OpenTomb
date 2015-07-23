@@ -103,7 +103,7 @@ void Polygon::vTransform(Polygon* src, const btTransform& tr)
     plane.normal = tr.getBasis() * src->plane.normal;
     for(size_t i=0; i<src->vertices.size(); i++)
     {
-        vertices[i].position = tr * src->vertices[i].position;
+        vertices[i].position = tr.getBasis() * src->vertices[i].position;
     }
 
     plane.moveTo(vertices[0].position);
