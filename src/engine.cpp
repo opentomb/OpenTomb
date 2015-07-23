@@ -2188,10 +2188,10 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
 
     if(!ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t = ent->m_angles[0] * M_PI / 180.0;
+        btScalar t = ent->m_angles[0] * RadPerDeg;
 
-        btScalar ang1 = sinf(t);
-        btScalar ang2 = cosf(t);
+        btScalar ang1 = std::sin(t);
+        btScalar ang2 = std::cos(t);
 
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
 
@@ -2298,9 +2298,9 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
     if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t    = ent->m_angles[0] * M_PI / 180.0;
-        btScalar ang1 = sinf(t);
-        btScalar ang2 = cosf(t);
+        btScalar t    = ent->m_angles[0] * RadPerDeg;
+        btScalar ang1 = std::sin(t);
+        btScalar ang2 = std::cos(t);
         btScalar ang3 = 1.0;
 
         if(vfactor.is<lua::Number>())

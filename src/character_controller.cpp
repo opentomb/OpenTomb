@@ -356,7 +356,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     if(fc->floor_hit && nfc->floor_hit)
     {
         delta = nfc->floor_point[2] - fc->floor_point[2];
-        if(fabs(delta) < SPLIT_EPSILON)
+        if(std::abs(delta) < SPLIT_EPSILON)
         {
             from[2] = fc->floor_point[2];
             ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
@@ -592,7 +592,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
         n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-    if(fabs(d) < 0.005)
+    if(std::abs(d) < 0.005)
     {
         return ret;
     }
@@ -643,7 +643,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     ret.up[0] = 0.0;
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
-    ret.edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
+    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
     ret.edge_tan_xy[0] = -n2[1];
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
@@ -975,7 +975,7 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
         }
     }
 
-    return fabs(m_inertiaAngular[axis]) * m_command.rot[axis];
+    return std::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
 }
 
 /*
@@ -1030,7 +1030,7 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * 180/M_PI;       // from -180 deg to +180 deg
+            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * DegPerRad;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
                        + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
@@ -1180,7 +1180,7 @@ int Character::freeFalling()
     move *= engine_frame_time;
     m_speed += grav * engine_frame_time;
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(m_speed[2]);
-    m_speed = m_speed.rotate({0,0,1}, rot * M_PI/180);
+    m_speed = m_speed.rotate({0,0,1}, rot * RadPerDeg);
 
     updateCurrentHeight();
 
@@ -1359,7 +1359,7 @@ int Character::wallsClimbing()
         return 2;
     }
 
-    m_angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
+    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * DegPerRad;
     updateTransform();
     pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
     pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
@@ -1647,7 +1647,7 @@ int Character::findTraverse()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (fabs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     int oz = (m_angles[0] + 45.0) / 90.0;
                     m_angles[0] = oz * 90.0;
@@ -1677,7 +1677,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
         return 0x00;
     }
 
-    if((fabs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
+    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
     {
         return 0x01;
     }
@@ -1693,7 +1693,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
     {
         btVector3 v;
         v.setInterpolate3(from, to, cb.m_closestHitFraction);
-        if(fabs(v[2] - floor) < 1.1)
+        if(std::abs(v[2] - floor) < 1.1)
         {
             EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
             if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))

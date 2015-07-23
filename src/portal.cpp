@@ -32,7 +32,7 @@ void Portal::move(const btVector3& mv)
  */
 bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
 {
-    if(std::fabs(normal.normal.dot(ray)) < SPLIT_EPSILON)
+    if(std::abs(normal.normal.dot(ray)) < SPLIT_EPSILON)
     {
         // the plane is nearly parallel to the ray
         return false;

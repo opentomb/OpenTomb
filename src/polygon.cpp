@@ -113,7 +113,7 @@ void Polygon::vTransform(Polygon* src, const btTransform& tr)
 bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScalar* lambda) const
 {
     btScalar u = plane.normal.dot(rayDir);
-    if(std::fabs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
+    if(std::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
         return false;                                                               // plane is parallel to the ray - no intersection
     }
@@ -230,9 +230,9 @@ bool Polygon::intersectPolygon(Polygon* p2)
     }
 
     auto dir = plane.normal.cross(p2->plane.normal);                                      // vector of two planes intersection line
-    btScalar t = std::fabs(dir[0]);
-    dist0 = std::fabs(dir[1]);
-    btScalar dist1 = std::fabs(dir[2]);
+    btScalar t = std::abs(dir[0]);
+    dist0 = std::abs(dir[1]);
+    btScalar dist1 = std::abs(dir[2]);
     btScalar dist2 = 0;
     int pn = PLANE_X;
     if(t < dist0)

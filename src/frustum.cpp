@@ -263,7 +263,7 @@ bool Frustum::isPolyVisible(const Polygon *p)
         {
             btScalar dist1 = currentPlane->distance(currentVertex->position);
             // the split point in the plane
-            if(std::fabs(dist0) < SPLIT_EPSILON)
+            if(std::abs(dist0) < SPLIT_EPSILON)
             {
                 if((prevPlane->distance(prevVertex->position) > -SPLIT_EPSILON) &&
                    (nextPlane->distance(prevVertex->position) > -SPLIT_EPSILON) &&
@@ -275,7 +275,7 @@ bool Frustum::isPolyVisible(const Polygon *p)
             }
 
             // vertices from different sides of the plane (or on it)
-            if((dist0 * dist1 < 0) && std::fabs(dist1) >= SPLIT_EPSILON)
+            if((dist0 * dist1 < 0) && std::abs(dist1) >= SPLIT_EPSILON)
             {
                 // vector connecting vertices
                 dir = currentVertex->position - prevVertex->position;

@@ -9,10 +9,6 @@
 #include "polygon.h"
 #include "frustum.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 void Camera::apply()
 {
     m_glProjMat[0][0] = m_f / m_aspect;
@@ -63,7 +59,7 @@ void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
 {
     m_fov = fov;
     m_aspect = aspect;
-    m_f = tanf(M_PI * m_fov / 360.0);
+    m_f = std::tan(m_fov * RadPerDeg / 2);
     m_height = 2.0 * m_distNear * m_f;
     m_width = m_height * aspect;
     m_f = 1.0 / m_f;
@@ -161,7 +157,7 @@ void Camera::recalcClipPlanes()
 
 Camera::Camera()
 {
-    m_f = 1.0 / std::tan(M_PI * m_fov / 360.0);
+    m_f = 1.0 / std::tan(m_fov * RadPerDeg / 2);
     m_height = 2.0 * m_distNear / m_f;
     m_width = m_height * m_aspect;
 

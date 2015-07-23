@@ -6,6 +6,7 @@
  */
 
 #include "matrix4.h"
+#include "vmath.h"
 
 #include <iostream>
 
@@ -18,7 +19,7 @@ bool float4::isOnTriangle(const float4 *points) const
 	const float4 p0p2(points[2] - points[0]);
 	
 	const float4 normal(p0p1.cross(p0p2));
-	if (fabsf((normal * *this) - (normal * points[0])) >= 0.001f)
+    if (std::abs((normal * *this) - (normal * points[0])) >= 0.001f)
 		return false;
 	
 	const float4 p0hp(*this - points[0]);
@@ -133,7 +134,7 @@ matrix4 matrix4::rotation(float4 axis, float angle)
 
 matrix4 matrix4::frustum(float angle, float aspect, float near, float far)
 {
-    float ymax = near * tanf(angle * M_PI / 180.0f) * 0.5;
+    float ymax = near * std::tan(angle * RadPerDeg) * 0.5;
 	float xmax = ymax * aspect;
 	
 	matrix4 result;
@@ -152,7 +153,7 @@ matrix4 matrix4::frustum(float angle, float aspect, float near, float far)
 
 matrix4 matrix4::inverseFrustum(float angle, float aspect, float near, float far)
 {
-	float ymax = near * tanf(angle * float(M_PI) / 360.0f);
+    float ymax = near * std::tan(2 * angle * RadPerDeg);
 	float xmax = ymax * aspect;
 	
 	matrix4 result;

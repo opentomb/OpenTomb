@@ -836,8 +836,8 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, S
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
                 {
-                    btScalar t = fabs((tweens[i].ceiling_corners[2][2] - tweens[i].ceiling_corners[3][2]) /
-                                      (tweens[i].ceiling_corners[0][2] - tweens[i].ceiling_corners[1][2]));
+                    btScalar t = std::abs((tweens[i].ceiling_corners[2][2] - tweens[i].ceiling_corners[3][2]) /
+                                          (tweens[i].ceiling_corners[0][2] - tweens[i].ceiling_corners[1][2]));
                     t = 1.0 / (1.0 + t);
                     btVector3 o;
                     o.setInterpolate3(tweens[i].ceiling_corners[0], tweens[i].ceiling_corners[2], t);
@@ -884,8 +884,8 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, S
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
                 {
-                    btScalar t = fabs((tweens[i].floor_corners[2][2] - tweens[i].floor_corners[3][2]) /
-                                      (tweens[i].floor_corners[0][2] - tweens[i].floor_corners[1][2]));
+                    btScalar t = std::abs((tweens[i].floor_corners[2][2] - tweens[i].floor_corners[3][2]) /
+                                          (tweens[i].floor_corners[0][2] - tweens[i].floor_corners[1][2]));
                     t = 1.0 / (1.0 + t);
                     btVector3 o;
                     o.setInterpolate3(tweens[i].floor_corners[0], tweens[i].floor_corners[2], t);

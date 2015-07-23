@@ -15,6 +15,15 @@
 #define PLANE_Y        2
 #define PLANE_Z        3
 
+namespace
+{
+constexpr const float DegPerRad = 180 / M_PI;
+constexpr const float RadPerDeg = M_PI / 180;
+constexpr const float Rad90 = 0.5*M_PI;
+constexpr const float Rad180 = M_PI;
+constexpr const float Rad360 = 2*M_PI;
+}
+
 /**
  * A simple Hesse normal form plane
  */

@@ -1401,7 +1401,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
 
 bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
 {
-    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.normal.normal[1]) > 0.99))
+    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (std::abs(p.normal.normal[1]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_x = min_x = p.vertices.front().x();
@@ -1432,7 +1432,7 @@ bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p
             return true;
         }
     }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p.normal.normal[0]) > 0.99))
+    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (std::abs(p.normal.normal[0]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_y = min_y = p.vertices.front().y();

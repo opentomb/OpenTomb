@@ -435,7 +435,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveVertical(dist * move_logic[2]);
         renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
 
-        ent->m_angles[0] = 180.0 * cam_angles[0] / M_PI;
+        ent->m_angles[0] = cam_angles[0] * DegPerRad;
         pos = renderer.camera()->m_pos + renderer.camera()->m_viewDir * control_states.cam_distance;
         pos[2] -= 512.0;
         ent->m_transform.getOrigin() = pos;
@@ -481,20 +481,20 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
-            ch->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
+            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ch->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * (btScalar)move_logic[1];
         }
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            ch->m_command.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
+            ch->m_command.rot[1] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ch->m_command.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
+            ch->m_command.rot[1] = 2 * DegPerRad * engine_frame_time * (btScalar)move_logic[0];
         }
 
         ch->m_command.move = move_logic;
@@ -527,8 +527,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(!control_states.mouse_look)//If mouse look is off
     {
-        float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
-        float targetAngle  = ent->m_angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
+        float currentAngle = cam_angles[0] * RadPerDeg;  //Current is the current cam angle
+        float targetAngle  = ent->m_angles[0] * RadPerDeg; //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
 
         ///@FIXME
@@ -539,8 +539,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
             {
                 btVector3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
-                cam_pos2[0] += sinf((ent->m_angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cam_pos2[1] -= cosf((ent->m_angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
+                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
                 cameraTo.setOrigin(cam_pos2);
 
                 //If collided we want to go right otherwise stay left
@@ -548,8 +548,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2[0] += sinf((ent->m_angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cam_pos2[1] -= cosf((ent->m_angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
@@ -579,32 +579,32 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
             switch(cam->m_targetDir)
             {
             case TR_CAM_TARG_BACK:
-                targetAngle = (ent->m_angles[0]) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0]) * RadPerDeg;
                 break;
             case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->m_angles[0] - 180.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] - 180.0) * RadPerDeg;
                 break;
             case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->m_angles[0] - 75.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] - 75.0) * RadPerDeg;
                 break;
             case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->m_angles[0] + 75.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] + 75.0) * RadPerDeg;
                 break;
             default:
-                targetAngle = (ent->m_angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
+                targetAngle = (ent->m_angles[0]) * RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
                 break;
             }
 
             float d_angle = cam_angles[0] - targetAngle;
-            if(d_angle > M_PI / 2.0)
+            if(d_angle > Rad90)
             {
-                d_angle -= M_PI/180.0;
+                d_angle -= 1 * RadPerDeg;
             }
-            if(d_angle < -M_PI / 2.0)
+            if(d_angle < -Rad90)
             {
-                d_angle += M_PI/180.0;
+                d_angle += 1 * RadPerDeg;
             }
-            cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
+            cam_angles[0] = std::fmod(cam_angles[0] + std::atan2(std::sin(currentAngle - d_angle), std::cos(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), Rad360); //Update camera's angle
         }
     }
 
@@ -640,8 +640,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
         }
 
         cameraFrom.setOrigin(cam_pos);
-        cam_pos[0] += sinf(cam_angles[0]) * control_states.cam_distance;
-        cam_pos[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
+        cam_pos[0] += std::sin(cam_angles[0]) * control_states.cam_distance;
+        cam_pos[1] -= std::cos(cam_angles[0]) * control_states.cam_distance;
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {

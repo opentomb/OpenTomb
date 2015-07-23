@@ -3,20 +3,16 @@
 #include <cstring>
 #include "vmath.h"
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
 {
     btQuaternion qZ;
-    qZ.setRotation({0,0,1}, M_PI * rot[2] / 180.0);
+    qZ.setRotation({0,0,1}, rot[2] * RadPerDeg);
 
     btQuaternion qX;
-    qX.setRotation({1,0,0}, M_PI * rot[0] / 180.0);
+    qX.setRotation({1,0,0}, rot[0] * RadPerDeg);
 
     btQuaternion qY;
-    qY.setRotation({0,1,0}, M_PI * rot[1] / 180.0);
+    qY.setRotation({0,1,0}, rot[1] * RadPerDeg);
 
     v = qZ * qX * qY;
 }
@@ -39,9 +35,9 @@ void Mat4_Scale(btTransform& mat, btScalar x, btScalar y, btScalar z)
 
 void Mat4_RotateX(btTransform& mat, btScalar ang)
 {
-    btScalar tmp = ang * M_PI / 180.0;
-    btScalar sina = sin(tmp);
-    btScalar cosa = cos(tmp);
+    btScalar tmp = ang * RadPerDeg;
+    btScalar sina = std::sin(tmp);
+    btScalar cosa = std::cos(tmp);
 
     auto m = mat.getBasis().transpose();
     m[1] = mat.getBasis().getColumn(1) * cosa + mat.getBasis().getColumn(2) * sina;
@@ -52,9 +48,9 @@ void Mat4_RotateX(btTransform& mat, btScalar ang)
 
 void Mat4_RotateY(btTransform& mat, btScalar ang)
 {
-    btScalar tmp = ang * M_PI / 180.0;
-    btScalar sina = sin(tmp);
-    btScalar cosa = cos(tmp);
+    btScalar tmp = ang * RadPerDeg;
+    btScalar sina = std::sin(tmp);
+    btScalar cosa = std::cos(tmp);
 
     auto m = mat.getBasis().transpose();
     m[0] = mat.getBasis().getColumn(0) * cosa - mat.getBasis().getColumn(2) * sina;
@@ -65,9 +61,9 @@ void Mat4_RotateY(btTransform& mat, btScalar ang)
 
 void Mat4_RotateZ(btTransform& mat, btScalar ang)
 {
-    btScalar tmp = ang * M_PI / 180.0;
-    btScalar sina = sin(tmp);
-    btScalar cosa = cos(tmp);
+    btScalar tmp = ang * RadPerDeg;
+    btScalar sina = std::sin(tmp);
+    btScalar cosa = std::cos(tmp);
 
     auto m = mat.getBasis().transpose();
     m[0] = mat.getBasis().getColumn(0) * cosa + mat.getBasis().getColumn(1) * sina;

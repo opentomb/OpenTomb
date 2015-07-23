@@ -485,8 +485,8 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
         }
         else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
         {
-            innerRadiuses[current_light_number] = std::fabs(current_light->inner);
-            outerRadiuses[current_light_number] = std::fabs(current_light->outer);
+            innerRadiuses[current_light_number] = std::abs(current_light->inner);
+            outerRadiuses[current_light_number] = std::abs(current_light->outer);
             current_light_number++;
         }
     }

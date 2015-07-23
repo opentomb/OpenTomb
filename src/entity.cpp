@@ -656,7 +656,7 @@ void Entity::updateTransform()
     m_angles[1] = WrapAngle(m_angles[1]);
     m_angles[2] = WrapAngle(m_angles[2]);
 
-    m_transform.getBasis().setEulerZYX(btRadians(m_angles[1]), btRadians(m_angles[2]), btRadians(m_angles[0]));
+    m_transform.getBasis().setEulerZYX(m_angles[1]*RadPerDeg, m_angles[2]*RadPerDeg, m_angles[0]*RadPerDeg);
 
     fixPenetrations(nullptr);
 }

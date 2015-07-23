@@ -49,10 +49,6 @@ static inline int _finite(float a)
 }
 #endif
 
-#ifndef M_PI
-#define M_PI 3.1415926536
-#endif
-
 union float4;
 struct matrix4;
 
@@ -324,7 +320,7 @@ union float4
 		// bit then gets set to 0). Trick found in Apple sample code.
 		return (__m128) _mm_srli_epi32( _mm_slli_epi32( (__m128i) v, 1 ), 1 );
 #else
-		return float4(std::fabs(x), std::fabs(y), std::fabs(z), std::fabs(w));
+        return float4(std::abs(x), std::abs(y), std::abs(z), std::abs(w));
 #endif
 	}
 	
