@@ -46,9 +46,9 @@ struct Camera
     btVector3 m_rightDir{1,0,0};           // strafe vector
     btVector3 m_ang;                 // camera orientation
 
-    matrix4 m_glViewMat;
-    matrix4 m_glProjMat;
-    matrix4 m_glViewProjMat;
+    matrix4 m_glViewMat = matrix4();
+    matrix4 m_glProjMat = matrix4();
+    matrix4 m_glViewProjMat = matrix4();
 
     Plane m_clipPlanes[4];        // frustum side clip planes
     std::shared_ptr<Frustum> frustum;               // camera frustum structure

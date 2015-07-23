@@ -38,7 +38,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
 
-matrix4 guiProjectionMatrix;
+matrix4 guiProjectionMatrix = matrix4();
 
 void Gui_Init()
 {
