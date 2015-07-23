@@ -226,7 +226,7 @@ bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
  */
 bool Frustum::isPolyVisible(const Polygon *p)
 {
-    if(p->plane.distance(*cam_pos) < 0.0)
+    if((!p->double_side) && (p->plane.distance(*cam_pos) < 0.0))
     {
         return false;
     }
