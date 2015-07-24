@@ -1755,7 +1755,7 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
         btTransform to;
         to.setIdentity();
@@ -1778,20 +1778,20 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
     if(next_s)
