@@ -1100,7 +1100,7 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix = glm::mat4{};                                        // identity matrix
+        guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
         guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
         guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
         guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);

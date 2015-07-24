@@ -380,7 +380,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
         glm::mat4 mvTransforms[2];
 
         glm::mat4 tr0 = fromBullet(ent->m_bt.bt_body[i]->getWorldTransform());
-        glm::mat4 tr1;
+        glm::mat4 tr1(1.0f);
 
         mvTransforms[0] = mvMatrix * tr0;
 
