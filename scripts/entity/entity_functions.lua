@@ -650,12 +650,8 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     createEntityGhosts(id);
     
     entity_funcs[id].speed       = 100.0;
-    entity_funcs[id].damage      = 100.0;
+    entity_funcs[id].damage      = 50.0;
     entity_funcs[id].coll_sound  = SOUND_RICOCHET;
-    
-    entity_funcs[id].onLoop = function(object_id)
-        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
-    end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
@@ -667,6 +663,11 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     entity_funcs[id].onRoomCollide = function(object_id, activator_id)
         playSound(entity_funcs[object_id].coll_sound, object_id);
         removeEntity(object_id);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
+        if(not isInRoom(object_id)) then entity_funcs[object_id].onRoomCollide(object_id) end;   -- Penetration fix
     end
     
     entity_funcs[id].onDelete = function(object_id)

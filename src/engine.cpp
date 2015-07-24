@@ -1046,7 +1046,18 @@ uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, floa
 
 bool lua_DeleteEntity(int id)
 {
-    return engine_world.deleteEntity(id);
+    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+
+    if(ent != nullptr)
+    {
+        if(ent->m_self->room) ent->m_self->room->removeEntity(ent.get());
+        engine_world.deleteEntity(id);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /*
@@ -1109,6 +1120,27 @@ float lua_GetEntityDirDot(int id1, int id2)
     }
 
     return e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1));
+}
+
+bool lua_IsInRoom(int id)
+{
+    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+
+    if((ent) && (ent->m_self->room))
+    {
+        if(ent->m_currentSector)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 
 std::tuple<float,float,float,float,float,float,uint32_t> lua_GetEntityPosition(int id)
@@ -2833,6 +2865,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     lua_registerc(state, "enableEntity", lua_EnableEntity);
     lua_registerc(state, "disableEntity", lua_DisableEntity);
 
+    lua_registerc(state, "isInRoom", lua_IsInRoom);
     lua_registerc(state, "sameRoom", lua_SameRoom);
     lua_registerc(state, "newSector", lua_NewSector);
     lua_registerc(state, "similarSector", lua_SimilarSector);

@@ -532,7 +532,12 @@ void Entity::updateRoomPos()
     btVector3 pos = getRoomPos();
     auto new_room = Room_FindPosCogerrence(pos, m_self->room);
     if(!new_room)
+    {
+        m_self->room->removeEntity(this);
+        m_currentSector = nullptr;
         return;
+    }
+
 
     auto new_sector = new_room->getSectorXYZ(pos);
     if(new_room != new_sector->owner_room.get())
