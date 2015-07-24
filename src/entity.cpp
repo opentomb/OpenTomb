@@ -865,16 +865,16 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                     if(pointer[1] & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         if(getSubstanceState() == Substance::WaterShallow)
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                            engine_world.audio_manager.send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
                     else if(pointer[1] & TR_ANIMCOMMAND_CONDITION_LAND)
                     {
                         if(getSubstanceState() != Substance::WaterShallow)
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                            engine_world.audio_manager.send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
                     else
                     {
-                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                        engine_world.audio_manager.send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
 
                 }
@@ -924,28 +924,28 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                             switch(m_currentSector->material)
                             {
                             case SECTOR_MATERIAL_MUD:
-                                Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(288, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
                                 if(engine_world.version != TR_IV)
                                 {
-                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                    engine_world.audio_manager.send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 }
                                 break;
 
                             case SECTOR_MATERIAL_SAND:  // Same as grass
-                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_GRAVEL:
-                                Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(290, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
                                 if(engine_world.version != TR_IV)
                                 {
-                                    Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                    engine_world.audio_manager.send(289, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 }
                                 break;
 
@@ -958,34 +958,34 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                                 break;
 
                             case SECTOR_MATERIAL_WOOD:
-                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_METAL:
-                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_MARBLE:    // TR4 only
                                 if(engine_world.version == TR_IV)
                                 {
-                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                    engine_world.audio_manager.send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 }
                                 break;
 
                             case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(-1, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
 
                             case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                engine_world.audio_manager.send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
                                 break;
                             }
                         }
@@ -996,7 +996,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                         random_value = rand() % 100;
                         if(random_value > 60)
                         {
-                            Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, m_id);
+                            engine_world.audio_manager.send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, m_id);
                         }
                         break;
 

@@ -516,7 +516,7 @@ struct matrix4
 	matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
 	matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
 	matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
-    matrix4(const matrix4 &other) = default;
+    matrix4(const matrix4&) = default;
     
     /*!
      * Create a matrix4 from a btTransform. Note that the reverse is not

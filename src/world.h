@@ -390,14 +390,7 @@ struct World
 
     std::vector<int16_t> anim_commands;
 
-    std::vector<AudioEmitter> audio_emitters;         // Audio emitters.
-    std::vector<int16_t> audio_map;              // Effect indexes.
-    std::vector<AudioEffect> audio_effects;          // Effects and their parameters.
-
-    std::vector<ALuint> audio_buffers;          // Samples.
-    std::vector<AudioSource> audio_sources;          // Channels.
-    std::vector<StreamTrack> stream_tracks;          // Stream tracks.
-    std::vector<uint8_t> stream_track_map;       // Stream track flag map.
+    AudioManager audio_manager;
 
     void updateAnimTextures();
     void calculateWaterTint(float* tint, bool fixed_colour);

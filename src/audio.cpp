@@ -60,7 +60,7 @@ LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv = nullptr;
 
 }
 
-void Audio_LoadALExtFunctions(ALCdevice* device)
+void AudioManager::loadALExtFunctions(ALCdevice* device)
 {
     static bool isLoaded = false;
     if(isLoaded)
@@ -106,7 +106,7 @@ void Audio_LoadALExtFunctions(ALCdevice* device)
     isLoaded = true;
 }
 #else
-void Audio_LoadALExtFunctions(ALCdevice* device)
+void AudioManager::loadALExtFunctions(ALCdevice* device)
 {
     // we have the functions already provided by native extensions
 }
@@ -189,39 +189,34 @@ private:
 };
 
 btVector3 listener_position;
-struct AudioFxManager    fxManager;
 
 bool                        StreamTrack::damp_active = false;
 
 // ======== AUDIOSOURCE CLASS IMPLEMENTATION ========
 
-AudioSource::AudioSource()
+AudioSource::AudioSource(AudioManager* manager)
+    : m_manager(manager)
 {
-    active = false;
-    emitter_ID =  -1;
-    emitter_type = TR_AUDIO_EMITTER_ENTITY;
-    effect_index = 0;
-    sample_index = 0;
-    sample_count = 0;
-    is_water     = false;
+    assert(manager != nullptr);
+
     alGenSources(1, &source_index);
 
-    if(alIsSource(source_index))
-    {
-        alSourcef(source_index, AL_MIN_GAIN, 0.0);
-        alSourcef(source_index, AL_MAX_GAIN, 1.0);
+    if(!alIsSource(source_index))
+        return;
 
-        if(audio_settings.use_effects)
-        {
-            alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
-            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1);
-        }
-        else
-        {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
-        }
+    alSourcef(source_index, AL_MIN_GAIN, 0.0);
+    alSourcef(source_index, AL_MAX_GAIN, 1.0);
+
+    if(manager->audio_settings.use_effects)
+    {
+        alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+        alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
+        alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+        alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1);
+    }
+    else
+    {
+        alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
     }
 }
 
@@ -236,12 +231,12 @@ AudioSource::~AudioSource()
 }
 
 
-bool AudioSource::IsActive()
+bool AudioSource::IsActive() const
 {
     return active;
 }
 
-bool AudioSource::IsLooping()
+bool AudioSource::IsLooping() const
 {
     if(alIsSource(source_index))
     {
@@ -255,7 +250,7 @@ bool AudioSource::IsLooping()
     }
 }
 
-bool AudioSource::IsPlaying()
+bool AudioSource::IsPlaying() const
 {
     if(alIsSource(source_index))
     {
@@ -282,7 +277,7 @@ void AudioSource::Play()
             alSource3f(source_index, AL_POSITION, 0.0f, 0.0f, 0.0f);
             alSource3f(source_index, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
-            if(audio_settings.use_effects)
+            if(m_manager->audio_settings.use_effects)
             {
                 UnsetFX();
             }
@@ -292,7 +287,7 @@ void AudioSource::Play()
             alSourcei(source_index, AL_SOURCE_RELATIVE, AL_FALSE);
             LinkEmitter();
 
-            if(audio_settings.use_effects)
+            if(m_manager->audio_settings.use_effects)
             {
                 SetFX();
                 SetUnderwater();
@@ -346,11 +341,11 @@ void AudioSource::Update()
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(Audio_IsInRange(emitter_type, emitter_ID, range, gain))
+    if(m_manager->isInRange(emitter_type, emitter_ID, range, gain))
     {
         LinkEmitter();
 
-        if( (audio_settings.use_effects) && (is_water != fxManager.water_state) )
+        if( (m_manager->audio_settings.use_effects) && (is_water != m_manager->fxManager.water_state) )
         {
             SetUnderwater();
         }
@@ -368,11 +363,11 @@ void AudioSource::Update()
 
 void AudioSource::SetBuffer(ALint buffer)
 {
-    ALint buffer_index = engine_world.audio_buffers[buffer];
+    AudioBuffer buffer_index = m_manager->audio_buffers[buffer];
 
-    if(alIsSource(source_index) && alIsBuffer(buffer_index))
+    if(alIsSource(source_index) && alIsBuffer(buffer_index.handle))
     {
-        alSourcei(source_index, AL_BUFFER, buffer_index);
+        alSourcei(source_index, AL_BUFFER, buffer_index.handle);
 
         // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
         // so there's extra debug info - maybe it'll help some day.
@@ -401,7 +396,7 @@ void AudioSource::SetLooping(ALboolean is_looping)
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
-    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0, 1.0) * audio_settings.sound_volume);
+    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0, 1.0) * m_manager->audio_settings.sound_volume);
 }
 
 
@@ -442,13 +437,13 @@ void AudioSource::SetFX()
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    if(m_manager->fxManager.current_room_type != m_manager->fxManager.last_room_type)  // Switch audio send.
     {
-        fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(fxManager.current_slot);
+        m_manager->fxManager.last_room_type = m_manager->fxManager.current_room_type;
+        m_manager->fxManager.current_slot   = (++m_manager->fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(m_manager->fxManager.current_slot);
 
-        effect = fxManager.al_effect[fxManager.current_room_type];
-        slot   = fxManager.al_slot[fxManager.current_slot];
+        effect = m_manager->fxManager.al_effect[m_manager->fxManager.current_room_type];
+        slot   = m_manager->fxManager.al_slot[m_manager->fxManager.current_slot];
 
         assert( alIsAuxiliaryEffectSlot != nullptr );
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
@@ -458,7 +453,7 @@ void AudioSource::SetFX()
     }
     else    // Do not switch audio send.
     {
-        slot = fxManager.al_slot[fxManager.current_slot];
+        slot = m_manager->fxManager.al_slot[m_manager->fxManager.current_slot];
     }
 
     // Assign global reverb FX to channel.
@@ -481,9 +476,9 @@ void AudioSource::SetUnderwater()
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
 
-    if(fxManager.water_state)
+    if(m_manager->fxManager.water_state)
     {
-        alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
+        alSourcei(source_index, AL_DIRECT_FILTER, m_manager->fxManager.al_filter);
         is_water = true;
     }
     else
@@ -506,46 +501,32 @@ void AudioSource::LinkEmitter()
             return;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            SetPosition(engine_world.audio_emitters[emitter_ID].position);
+            SetPosition(m_manager->audio_emitters[emitter_ID].position);
             return;
     }
 }
 
 // ======== STREAMTRACK CLASS IMPLEMENTATION ========
 
-StreamTrack::StreamTrack()
+StreamTrack::StreamTrack(AudioManager *manager)
+    : m_manager(manager)
 {
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
     alGenSources(1, &source);
-    format     = 0x00;
-    rate       = 0;
-    dampable   = false;
 
-    wad_file   = nullptr;
-    snd_file   = nullptr;
+    if(!alIsSource(source))
+        return;
 
-    if(alIsSource(source))
-    {
-        alSource3f(source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
-        alSource3f(source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
-        alSource3f(source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
-        alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
-        alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
-        alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
+    alSource3f(source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
+    alSource3f(source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
+    alSource3f(source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
+    alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
+    alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
+    alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
 
-        current_track  = -1;
-        current_volume =  0.0f;
-        damped_volume  =  0.0f;
-        active         =  false;
-        ending         =  false;
-        stream_type    =  TR_AUDIO_STREAM_TYPE_ONESHOT;
-
-        // Setting method to -1 at init is required to prevent accidental
-        // ov_clear call, which results in crash, if no vorbis file was
-        // associated with given vorbis file structure.
-
-        method         = -1;
-    }
+    // Setting method to -1 at init is required to prevent accidental
+    // ov_clear call, which results in crash, if no vorbis file was
+    // associated with given vorbis file structure.
 }
 
 
@@ -744,7 +725,7 @@ bool StreamTrack::Play(bool fade_in)
         current_volume = 1.0;
     }
 
-    if(audio_settings.use_effects)
+    if(m_manager->audio_settings.use_effects)
     {
         if(stream_type == TR_AUDIO_STREAM_TYPE_CHAT)
         {
@@ -756,7 +737,7 @@ bool StreamTrack::Play(bool fade_in)
         }
     }
 
-    alSourcef(source, AL_GAIN, current_volume * audio_settings.music_volume);
+    alSourcef(source, AL_GAIN, current_volume * m_manager->audio_settings.music_volume);
     alSourceQueueBuffers(source, buffers_to_play, buffers);
     alSourcePlay(source);
 
@@ -881,7 +862,7 @@ bool StreamTrack::Update()
     {
         alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
                                    (1.0 - damped_volume)       *  // Damp volume.
-                                   audio_settings.music_volume);  // Global music volume setting.
+                                   m_manager->audio_settings.music_volume);  // Global music volume setting.
     }
 
     // Check if any track buffers were already processed.
@@ -938,11 +919,11 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
 
 bool StreamTrack::Stream(ALuint buffer)
 {
-    assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
+    assert(m_manager->audio_settings.stream_buffer_size >= sf_info.channels - 1);
 #ifdef AUDIO_OPENAL_FLOAT
-    std::vector<ALfloat> pcm(audio_settings.stream_buffer_size);
+    std::vector<ALfloat> pcm(m_manager->audio_settings.stream_buffer_size);
 #else
-    std::vector<ALshort> pcm(audio_settings.stream_buffer_size);
+    std::vector<ALshort> pcm(m_manager->audio_settings.stream_buffer_size);
 #endif
     size_t size = 0;
 
@@ -951,10 +932,10 @@ bool StreamTrack::Stream(ALuint buffer)
     {
         // we need to read a multiple of sf_info.channels here
 #ifdef AUDIO_OPENAL_FLOAT
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALfloat);
+        const size_t samplesToRead = (m_manager->audio_settings.stream_buffer_size - size) / sizeof(ALfloat);
         const sf_count_t samplesRead = sf_read_float(snd_file, pcm.data() + size, samplesToRead);
 #else
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALshort);
+        const size_t samplesToRead = (m_manager->audio_settings.stream_buffer_size - size) / sizeof(ALshort);
         const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead);
 #endif
 
@@ -971,7 +952,7 @@ bool StreamTrack::Stream(ALuint buffer)
             int error = sf_error(snd_file);
             if(error != SF_ERR_NO_ERROR)
             {
-                Audio_LogSndfileError( error );
+                AudioManager::logSndfileError( error );
             }
             else
             {
@@ -1004,13 +985,13 @@ void StreamTrack::SetFX()
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    if(m_manager->fxManager.current_room_type != m_manager->fxManager.last_room_type)  // Switch audio send.
     {
-        fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(fxManager.current_slot);
+        m_manager->fxManager.last_room_type = m_manager->fxManager.current_room_type;
+        m_manager->fxManager.current_slot   = (++m_manager->fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(m_manager->fxManager.current_slot);
 
-        effect = fxManager.al_effect[fxManager.current_room_type];
-        slot   = fxManager.al_slot[fxManager.current_slot];
+        effect = m_manager->fxManager.al_effect[m_manager->fxManager.current_room_type];
+        slot   = m_manager->fxManager.al_slot[m_manager->fxManager.current_slot];
 
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
@@ -1019,7 +1000,7 @@ void StreamTrack::SetFX()
     }
     else    // Do not switch audio send.
     {
-        slot = fxManager.al_slot[fxManager.current_slot];
+        slot = m_manager->fxManager.al_slot[m_manager->fxManager.current_slot];
     }
 
     // Assign global reverb FX to channel.
@@ -1042,7 +1023,7 @@ void StreamTrack::UnsetFX()
 // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
 // call this one.
 
-int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
+int AudioManager::streamPlay(const uint32_t track_index, const uint8_t mask)
 {
     int    target_stream = -1;
     bool   do_fade_in    =  false;
@@ -1054,7 +1035,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
 
-    if(track_index >= engine_world.stream_track_map.size())
+    if(track_index >= stream_track_map.size())
     {
         ConsoleInfo::instance().addLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
@@ -1063,7 +1044,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't play track, if it is already playing.
     // This should become useless option, once proper one-shot trigger functionality is implemented.
 
-    if(Audio_IsTrackPlaying(track_index))
+    if(isTrackPlaying(track_index))
     {
         ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
@@ -1087,19 +1068,19 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // in any way.
 
     if((stream_type != TR_AUDIO_STREAM_TYPE_BACKGROUND) &&
-        Audio_TrackAlreadyPlayed(track_index, mask))
+        trackAlreadyPlayed(track_index, mask))
     {
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
     // Entry found, now process to actual track loading.
 
-    target_stream = Audio_GetFreeStream();            // At first, we need to get free stream.
+    target_stream = getFreeStream();            // At first, we need to get free stream.
 
     if(target_stream == -1)
     {
-        do_fade_in = Audio_StopStreams(stream_type);  // If no free track found, hardly stop all tracks.
-        target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
+        do_fade_in = stopStreams(stream_type);  // If no free track found, hardly stop all tracks.
+        target_stream = getFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
         {
@@ -1109,7 +1090,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     }
     else
     {
-        do_fade_in = Audio_EndStreams(stream_type);   // End all streams of this type with fadeout.
+        do_fade_in = endStreams(stream_type);   // End all streams of this type with fadeout.
 
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.
@@ -1119,7 +1100,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Finally - load our track.
 
-    if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
+    if(!stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
         ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
@@ -1127,7 +1108,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
+    if(!stream_tracks[target_stream].Play(do_fade_in))
     {
         ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
@@ -1140,7 +1121,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 // General damping update procedure. Constantly checks if damp condition exists, and
 // if so, it lowers the volume of tracks which are dampable.
 
-void Audio_UpdateStreamsDamping()
+void AudioManager::updateStreamsDamping()
 {
     StreamTrack::damp_active = false;   // Reset damp activity flag.
 
@@ -1148,11 +1129,11 @@ void Audio_UpdateStreamsDamping()
     // NOT background. So we simply check this condition and set damp activity flag
     // if condition is met.
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < stream_tracks.size(); i++)
     {
-        if(engine_world.stream_tracks[i].IsPlaying())
+        if(stream_tracks[i].IsPlaying())
         {
-            if(!engine_world.stream_tracks[i].IsType(TR_AUDIO_STREAM_TYPE_BACKGROUND))
+            if(!stream_tracks[i].IsType(TR_AUDIO_STREAM_TYPE_BACKGROUND))
             {
                 StreamTrack::damp_active = true;
                 return; // No need to check more, we found at least one condition.
@@ -1164,22 +1145,22 @@ void Audio_UpdateStreamsDamping()
 
 // Update routine for all streams. Should be placed into main loop.
 
-void Audio_UpdateStreams()
+void AudioManager::updateStreams()
 {
-    Audio_UpdateStreamsDamping();
+    updateStreamsDamping();
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(StreamTrack& track : stream_tracks)
     {
-        engine_world.stream_tracks[i].Update();
+        track.Update();
     }
 }
 
-bool Audio_IsTrackPlaying(int32_t track_index)
+bool AudioManager::isTrackPlaying(int32_t track_index)
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(StreamTrack& track : stream_tracks)
     {
-        if( ((track_index == -1) || (engine_world.stream_tracks[i].IsTrack(track_index))) &&
-            engine_world.stream_tracks[i].IsPlaying() )
+        if( (track_index == -1 || track.IsTrack(track_index)) &&
+            track.IsPlaying() )
         {
             return true;
         }
@@ -1188,14 +1169,14 @@ bool Audio_IsTrackPlaying(int32_t track_index)
     return false;
 }
 
-bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
+bool AudioManager::trackAlreadyPlayed(uint32_t track_index, int8_t mask)
 {
     if(!mask)
     {
         return false;   // No mask, play in any case.
     }
 
-    if(track_index >= engine_world.stream_track_map.size())
+    if(track_index >= stream_track_map.size())
     {
         return true;    // No such track, hence "already" played.
     }
@@ -1203,32 +1184,32 @@ bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
     {
         mask &= 0x3F;   // Clamp mask just in case.
 
-        if(engine_world.stream_track_map[track_index] == mask)
+        if(stream_track_map[track_index] == mask)
         {
             return true;    // Immediately return true, if flags are directly equal.
         }
         else
         {
-            int8_t played = engine_world.stream_track_map[track_index] & mask;
+            int8_t played = stream_track_map[track_index] & mask;
             if(played == mask)
             {
                 return true;    // Bits were set, hence already played.
             }
             else
             {
-                engine_world.stream_track_map[track_index] |= mask;
+                stream_track_map[track_index] |= mask;
                 return false;   // Not yet played, set bits and return false.
             }
         }
     }
 }
 
-int Audio_GetFreeStream()
+int AudioManager::getFreeStream()
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(size_t i = 0; i < stream_tracks.size(); i++)
     {
-        if( (!engine_world.stream_tracks[i].IsPlaying()) &&
-            (!engine_world.stream_tracks[i].IsActive())   )
+        if( (!stream_tracks[i].IsPlaying()) &&
+            (!stream_tracks[i].IsActive())   )
         {
             return i;
         }
@@ -1237,36 +1218,34 @@ int Audio_GetFreeStream()
     return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // If no free source, return error.
 }
 
-bool Audio_StopStreams(int stream_type)
+bool AudioManager::stopStreams(int stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(StreamTrack& track : stream_tracks)
     {
-        if(engine_world.stream_tracks[i].IsPlaying()          &&
-           (engine_world.stream_tracks[i].IsType(stream_type) ||
-            stream_type == -1)) // Stop ALL streams at once.
+        if( track.IsPlaying() &&
+           (track.IsType(stream_type) || stream_type == -1)) // Stop ALL streams at once.
         {
             result = true;
-            engine_world.stream_tracks[i].Stop();
+            track.Stop();
         }
     }
 
     return result;
 }
 
-bool Audio_EndStreams(int stream_type)
+bool AudioManager::endStreams(int stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(StreamTrack& track : stream_tracks)
     {
         if( (stream_type == -1) ||                              // End ALL streams at once.
-            ((engine_world.stream_tracks[i].IsPlaying()) &&
-             (engine_world.stream_tracks[i].IsType(stream_type))) )
+            (track.IsPlaying() && track.IsType(stream_type)) )
         {
             result = true;
-            engine_world.stream_tracks[i].End();
+            track.End();
         }
     }
 
@@ -1275,7 +1254,7 @@ bool Audio_EndStreams(int stream_type)
 
 // ======== Audio source global methods ========
 
-bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
+bool AudioManager::isInRange(int entity_type, int entity_ID, float range, float gain)
 {
     btVector3 vec{0,0,0};
 
@@ -1293,11 +1272,11 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            if((uint32_t)entity_ID + 1 > engine_world.audio_emitters.size())
+            if((uint32_t)entity_ID > audio_emitters.size())
             {
                 return false;
             }
-            vec = engine_world.audio_emitters[entity_ID].position;
+            vec = audio_emitters[entity_ID].position;
             break;
 
         case TR_AUDIO_EMITTER_GLOBAL:
@@ -1307,7 +1286,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             return false;
     }
 
-    auto dist = (listener_position - vec).length2();
+    auto dist = listener_position.distance2(vec);
 
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
@@ -1318,63 +1297,64 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 }
 
 
-void Audio_UpdateSources()
+void AudioManager::updateSources()
 {
-    if(engine_world.audio_sources.size() < 1)
+    if(audio_sources.empty())
     {
         return;
     }
 
     alGetListenerfv(AL_POSITION, listener_position);
 
-    for(uint32_t i = 0; i < engine_world.audio_emitters.size(); i++)
+    for(size_t i = 0; i < audio_emitters.size(); i++)
     {
-        Audio_Send(engine_world.audio_emitters[i].sound_index, TR_AUDIO_EMITTER_SOUNDSOURCE, i);
+        send(audio_emitters[i].sound_index, TR_AUDIO_EMITTER_SOUNDSOURCE, i);
     }
 
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(size_t i = 0; i < audio_sources.size(); i++)
     {
-        engine_world.audio_sources[i].Update();
+        audio_sources[i].Update();
     }
 }
 
 
-void Audio_PauseAllSources()
+void AudioManager::pauseAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(AudioSource& source : audio_sources)
     {
-        if(engine_world.audio_sources[i].IsActive())
+        if(source.IsActive())
         {
-            engine_world.audio_sources[i].Pause();
+            source.Pause();
         }
     }
 }
 
-void Audio_StopAllSources()
+void AudioManager::stopAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(AudioSource& source : audio_sources)
     {
-        engine_world.audio_sources[i].Stop();
+        source.Stop();
     }
 }
 
-void Audio_ResumeAllSources()
+void AudioManager::resumeAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(AudioSource& source : audio_sources)
     {
-        if(engine_world.audio_sources[i].IsActive())
+        if(source.IsActive())
         {
-            engine_world.audio_sources[i].Play();
+            source.Play();
         }
     }
 }
 
 
-int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
+/// @fixme Add condition (compare max_dist with new source dist)
+int AudioManager::getFreeSource() const
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(size_t i = 0; i < audio_sources.size(); i++)
     {
-        if(!engine_world.audio_sources[i].IsActive())
+        if(!audio_sources[i].IsActive())
         {
             return i;
         }
@@ -1384,23 +1364,26 @@ int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new 
 }
 
 
-int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
+int AudioManager::findPlayingSource(int effect_ID, int entity_type, int entity_ID)
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    int i;
+    for(const AudioSource& source : audio_sources)
     {
-        if( ((entity_type == -1) || (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type)) &&
-            ((entity_ID   == -1) || (engine_world.audio_sources[i].emitter_ID   == ( int32_t)entity_ID  )) &&
-            ((effect_ID   == -1) || (engine_world.audio_sources[i].effect_index == (uint32_t)effect_ID  ))  )
+        if( ((entity_type == -1) || (source.emitter_type == (uint32_t)entity_type)) &&
+            ((entity_ID   == -1) || (source.emitter_ID   == ( int32_t)entity_ID  )) &&
+            ((effect_ID   == -1) || (source.effect_index == (uint32_t)effect_ID  ))  )
         {
-            if(engine_world.audio_sources[i].IsPlaying()) return i;
+            if(source.IsPlaying())
+                return i;
         }
+        ++i;
     }
 
     return -1;
 }
 
 
-int Audio_Send(int effect_ID, int entity_type, int entity_ID)
+int AudioManager::send(int effect_ID, int entity_type, int entity_ID)
 {
     int32_t         source_number;
     uint16_t        random_value;
@@ -1410,26 +1393,26 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers.empty() || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
+    if(audio_buffers.empty() || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
-    if((uint32_t)effect_ID >= engine_world.audio_map.size())
+    if((uint32_t)effect_ID >= audio_map.size())
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
 
-    int real_ID = (int)engine_world.audio_map[effect_ID];
+    int16_t real_ID = audio_map[effect_ID];
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
-    if(real_ID == -1)
+    if(real_ID<0 || real_ID>static_cast<int>(audio_effects.size()))
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
     else
     {
-        effect = &engine_world.audio_effects[real_ID];
+        effect = &audio_effects[real_ID];
     }
 
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
@@ -1449,7 +1432,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     // If it's not, bypass audio send (cause we don't want it to occupy channel, if it's not
     // heard).
 
-    if(Audio_IsInRange(entity_type, entity_ID, effect->range, effect->gain ) == false)
+    if(isInRange(entity_type, entity_ID, effect->range, effect->gain ) == false)
     {
         return TR_AUDIO_SEND_IGNORED;
     }
@@ -1459,13 +1442,13 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
 
-    source_number = Audio_IsEffectPlaying(effect_ID, entity_type, entity_ID);
+    source_number = findPlayingSource(effect_ID, entity_type, entity_ID);
 
     if(source_number != -1)
     {
         if(effect->loop == TR_AUDIO_LOOP_REWIND)
         {
-            engine_world.audio_sources[source_number].Stop();
+            audio_sources[source_number].Stop();
         }
         else if(effect->loop) // Any other looping case (Wait / Loop).
         {
@@ -1474,7 +1457,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     }
     else
     {
-        source_number = Audio_GetFreeSource();  // Get free source.
+        source_number = getFreeSource();  // Get free source.
     }
 
     if(source_number != -1)  // Everything is OK, we're sending audio to channel.
@@ -1495,7 +1478,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
             buffer_index = effect->sample_index;
         }
 
-        source = &engine_world.audio_sources[source_number];
+        source = &audio_sources[source_number];
 
         source->SetBuffer(buffer_index);
 
@@ -1553,13 +1536,13 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 }
 
 
-int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
+int AudioManager::kill(int effect_ID, int entity_type, int entity_ID)
 {
-    int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_type, entity_ID);
+    int playing_sound = findPlayingSource(effect_ID, entity_type, entity_ID);
 
     if(playing_sound != -1)
     {
-        engine_world.audio_sources[playing_sound].Stop();
+        audio_sources[playing_sound].Stop();
         return TR_AUDIO_SEND_PROCESSED;
     }
 
@@ -1578,9 +1561,9 @@ void Audio_LoadOverridedSamples(struct World *world)
     {
         int buffer_counter = 0;
 
-        for(uint32_t i = 0; i < world->audio_buffers.size(); i++)
+        for(uint32_t i = 0; i < world->audio_manager.audio_buffers.size(); i++)
         {
-            if(world->audio_map[i] != -1)
+            if(world->audio_manager.audio_map[i] != -1)
             {
                 if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
                 {
@@ -1589,29 +1572,20 @@ void Audio_LoadOverridedSamples(struct World *world)
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
                         if(Engine_FileFound(sample_name))
                         {
-                            Audio_LoadALbufferFromFile(world->audio_buffers[buffer_counter], sample_name);
+                            world->audio_manager.audio_buffers[buffer_counter].loadFromFile(sample_name);
                         }
                     }
                 }
                 else
                 {
-                    buffer_counter += world->audio_effects[(world->audio_map[i])].sample_count;
+                    buffer_counter += world->audio_manager.audio_effects[world->audio_manager.audio_map[i]].sample_count;
                 }
             }
         }
     }
 }
 
-void Audio_InitGlobals()
-{
-    audio_settings.music_volume = 0.7;
-    audio_settings.sound_volume = 0.8;
-    audio_settings.use_effects  = true;
-    audio_settings.listener_is_player = false;
-    audio_settings.stream_buffer_size = 32;
-}
-
-void Audio_InitFX()
+void AudioManager::initFX()
 {
     if( audio_settings.effects_initialized )
         return;
@@ -1631,29 +1605,29 @@ void Audio_InitFX()
     // Fill up effects with reverb presets.
 
     EFXEAXREVERBPROPERTIES reverb1 = EFX_REVERB_PRESET_CITY;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_OUTSIDE, &reverb1);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_OUTSIDE, &reverb1);
 
     EFXEAXREVERBPROPERTIES reverb2 = EFX_REVERB_PRESET_LIVINGROOM;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_SMALLROOM, &reverb2);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_SMALLROOM, &reverb2);
 
     EFXEAXREVERBPROPERTIES reverb3 = EFX_REVERB_PRESET_WOODEN_LONGPASSAGE;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_MEDIUMROOM, &reverb3);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_MEDIUMROOM, &reverb3);
 
     EFXEAXREVERBPROPERTIES reverb4 = EFX_REVERB_PRESET_DOME_TOMB;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_LARGEROOM, &reverb4);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_LARGEROOM, &reverb4);
 
     EFXEAXREVERBPROPERTIES reverb5 = EFX_REVERB_PRESET_PIPE_LARGE;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_PIPE, &reverb5);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_PIPE, &reverb5);
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
+    fxManager.loadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
 
     audio_settings.effects_initialized = true;
 }
 
-int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
+bool AudioFxManager::loadReverbToFX(int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    ALuint effect = fxManager.al_effect[effect_index];
+    ALuint effect = al_effect[effect_index];
 
     if(alIsEffect(effect))
     {
@@ -1676,50 +1650,54 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
     else
     {
         Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
-        return 0;
+        return false;
     }
 
-    return 1;
+    return true;
 }
 
-void Audio_Init(uint32_t num_Sources)
+void AudioManager::init(size_t num_Sources)
 {
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
-    if(audio_settings.use_effects) Audio_InitFX();
+    if(audio_settings.use_effects)
+        initFX();
 
     // Generate new source array.
-
     num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
-    engine_world.audio_sources.resize(num_Sources);
+
+    // loops are necessary because we don't have a default constructor
+
+    assert( audio_sources.empty() );
+    for(size_t i=0; i<num_Sources; ++i)
+        audio_sources.emplace_back( this );
 
     // Generate stream tracks array.
 
-    engine_world.stream_tracks.resize( TR_AUDIO_STREAM_NUMSOURCES );
-
-    // Reset last room type used for assigning reverb.
+    assert( stream_tracks.empty() );
+    for(size_t i=0; i<TR_AUDIO_STREAM_NUMSOURCES; ++i)
+        stream_tracks.emplace_back( this );
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
 }
 
-int Audio_DeInit()
+void AudioManager::deinit()
 {
-    Audio_StopAllSources();
-    Audio_StopStreams();
+    stopAllSources();
+    stopStreams();
 
-    Audio_DeInitDelay();
+    deInitDelay();
 
-    engine_world.audio_sources.clear();
-    engine_world.stream_tracks.clear();
-    engine_world.stream_track_map.clear();
+    audio_sources.clear();
+    stream_tracks.clear();
+    stream_track_map.clear();
 
     ///@CRITICAL: You must delete all sources before deleting buffers!
 
-    alDeleteBuffers(engine_world.audio_buffers.size(), engine_world.audio_buffers.data());
-    engine_world.audio_buffers.clear();
+    audio_buffers.clear();
 
-    engine_world.audio_effects.clear();
-    engine_world.audio_map.clear();
+    audio_effects.clear();
+    audio_map.clear();
 
     if(audio_settings.effects_initialized)
     {
@@ -1737,16 +1715,14 @@ int Audio_DeInit()
         alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
         audio_settings.effects_initialized = false;
     }
-
-    return 1;
 }
 
-bool Audio_DeInitDelay()
+bool AudioManager::deInitDelay()
 {
     float begin_time   = Sys_FloatTime();
     float curr_time    = 0.0;
 
-    while( (Audio_IsTrackPlaying()) || (Audio_IsEffectPlaying() >= 0) )
+    while( isTrackPlaying() || findPlayingSource() >= 0 )
     {
         curr_time = Sys_FloatTime() - begin_time;
 
@@ -1761,7 +1737,7 @@ bool Audio_DeInitDelay()
 }
 
 
-bool Audio_LogALError(int error_marker)
+bool AudioManager::logALError(int error_marker)
 {
     ALenum err = alGetError();
     if(err != AL_NO_ERROR)
@@ -1773,36 +1749,12 @@ bool Audio_LogALError(int error_marker)
 }
 
 
-void Audio_LogSndfileError(int code)
+void AudioManager::logSndfileError(int code)
 {
     Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
 }
 
-float Audio_GetByteDepth(SF_INFO sfInfo)
-{
-    switch(sfInfo.format & SF_FORMAT_SUBMASK)
-    {
-        case SF_FORMAT_PCM_S8:
-        case SF_FORMAT_PCM_U8:
-            return 1;
-        case SF_FORMAT_PCM_16:
-            return 2;
-        case SF_FORMAT_PCM_24:
-            return 3;
-            break;
-        case SF_FORMAT_PCM_32:
-        case SF_FORMAT_FLOAT:
-            return 4;
-        case SF_FORMAT_DOUBLE:
-            return 8;
-        case SF_FORMAT_MS_ADPCM:
-            return 0.5;
-        default:
-            return 1;
-    }
-}
-
-int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
+int AudioBuffer::loadFromMem(uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     MemBufferFileIo wavMem(sample_pointer, sample_size);
     SF_INFO sfInfo;
@@ -1810,7 +1762,7 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
 
     if(!sample)
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", handle);
         return -1;
     }
 
@@ -1841,7 +1793,7 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, sample, uncomp_sample_size, &sfInfo);
+    bool result = fill(sample, uncomp_sample_size, &sfInfo);
 
     sf_close(sample);
 
@@ -1849,7 +1801,7 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
 }
 
 
-int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
+int AudioBuffer::loadFromFile(const char *fname)
 {
     SF_INFO sfInfo;
     SNDFILE* file = sf_open(fname, SFM_READ, &sfInfo);
@@ -1861,9 +1813,9 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
     }
 
 #ifdef AUDIO_OPENAL_FLOAT
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALfloat), &sfInfo);
+    bool result = fill(file, sfInfo.frames * sizeof(ALfloat), &sfInfo);
 #else
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALshort), &sfInfo);
+    bool result = fill(file, sfInfo.frames * sizeof(ALshort), &sfInfo);
 #endif
 
     sf_close(file);
@@ -1871,11 +1823,11 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
     return (result)?(0):(-3);   // Zero means success.
 }
 
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
+bool AudioBuffer::fill(SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
 {
     if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
+        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", handle);
         return false;
     }
 
@@ -1883,14 +1835,14 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
     std::vector<ALfloat> frames( buffer_size / sizeof(ALfloat));
     /*const sf_count_t samplesRead =*/ sf_readf_float(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), buffer_size, sfInfo->samplerate);
+    alBufferData(handle, AL_FORMAT_MONO_FLOAT32, &frames.front(), buffer_size, sfInfo->samplerate);
 #else
     std::vector<ALshort> frames( buffer_size / sizeof(ALshort));
     /*const sf_count_t samplesRead =*/ sf_readf_short(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
+    alBufferData(handle, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
 #endif
-    Audio_LogALError(0);
+    AudioManager::logALError(0);
     return true;
 }
 
@@ -1900,7 +1852,7 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void Audio_UpdateListenerByCamera(struct Camera *cam)
+void AudioManager::updateListenerByCamera(struct Camera *cam)
 {
     ALfloat v[6] = {
         cam->m_viewDir[0], cam->m_viewDir[1], cam->m_viewDir[2],
@@ -1934,32 +1886,50 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
 
             if(fxManager.water_state)
             {
-                Audio_Send(TR_AUDIO_SOUND_UNDERWATER);
+                send(TR_AUDIO_SOUND_UNDERWATER);
             }
             else
             {
-                Audio_Kill(TR_AUDIO_SOUND_UNDERWATER);
+                kill(TR_AUDIO_SOUND_UNDERWATER);
             }
         }
     }
 }
 
-void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> /*ent*/)
+void AudioManager::updateListenerByEntity(std::shared_ptr<Entity> /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }
 
-void Audio_Update()
+void AudioManager::update()
 {
-    Audio_UpdateSources();
-    Audio_UpdateStreams();
+    updateSources();
+    updateStreams();
 
     if(audio_settings.listener_is_player)
     {
-        Audio_UpdateListenerByEntity(engine_world.character);
+        updateListenerByEntity(engine_world.character);
     }
     else
     {
-        Audio_UpdateListenerByCamera(renderer.camera());
+        updateListenerByCamera(renderer.camera());
+    }
+}
+
+void AudioManager::initEmitters(const tr_sound_source_t* sources, size_t count)
+{
+    // Cycle through sound emitters and
+    // parse them to native OpenTomb sound emitters structure.
+
+    for(size_t i = 0; i < count; i++)
+    {
+        audio_emitters.emplace_back();
+        AudioEmitter& emitter = audio_emitters.back();
+        emitter.emitter_index = i;
+        emitter.sound_index   =  sources[i].sound_id;
+        emitter.position[0]   =  sources[i].x;
+        emitter.position[1]   =  sources[i].z;
+        emitter.position[2]   = -sources[i].y;
+        emitter.flags         =  sources[i].flags;
     }
 }

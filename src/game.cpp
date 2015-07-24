@@ -461,7 +461,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(PARAM_HEALTH, 250))
             {
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                engine_world.audio_manager.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_small_medi = !control_states.use_small_medi;
@@ -473,7 +473,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
                ch->changeParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
             {
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                engine_world.audio_manager.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_big_medi = !control_states.use_big_medi;
@@ -791,7 +791,7 @@ void Game_Frame(btScalar time)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
-            Audio_Update();
+            engine_world.audio_manager.update();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -806,7 +806,7 @@ void Game_Frame(btScalar time)
         btScalar dt = Game_Tick(&game_logic_time);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
-        Audio_Update();
+        engine_world.audio_manager.update();
 
         if(is_character)
         {
@@ -901,5 +901,5 @@ void Game_LevelTransition(uint16_t level_index)
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    Audio_EndStreams();
+    engine_world.audio_manager.endStreams();
 }
