@@ -11,6 +11,9 @@
 #include <bullet/LinearMath/btQuaternion.h>
 #include <bullet/LinearMath/btTransform.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
@@ -93,5 +96,17 @@ void Mat4_Scale(btTransform &mat, btScalar x, btScalar y, btScalar z);
 void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
+
+inline glm::mat4 fromBullet(const btTransform& tr)
+{
+    glm::mat4 result;
+    tr.getOpenGLMatrix(glm::value_ptr(result));
+    return result;
+}
+
+inline glm::vec4 fromBullet(const btVector3& vec, glm::float_t w = 1)
+{
+    return {vec.x(), vec.y(), vec.z(), w};
+}
 
 #endif  // VMATH_H

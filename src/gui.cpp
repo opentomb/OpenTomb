@@ -38,7 +38,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
 
-matrix4 guiProjectionMatrix = matrix4();
+glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
 
 void Gui_Init()
 {
@@ -612,17 +612,17 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
-        matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        glm::mat4 scaledMvMatrix = fromBullet(mvMatrix * scaledMatrix);
+        glm::mat4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, fromBullet(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
-        matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        glm::mat4 mvpMatrix = guiProjectionMatrix * fromBullet(mvMatrix);
+        renderer.renderSkeletalModel(shader, bf, fromBullet(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -1100,7 +1100,7 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix = matrix4{};                                        // identity matrix
+        guiProjectionMatrix = glm::mat4{};                                        // identity matrix
         guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
         guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
         guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
