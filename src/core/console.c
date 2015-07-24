@@ -8,16 +8,17 @@
 #include "gl_font.h"
 #include "console.h"
 #include "system.h"
+#include "vmath.h"
 
 console_info_t                  con_base;
 static gl_font_manager_p        con_font_manager = NULL;
 
 int  Engine_ExecCmd(char *ch);
- 
+
 void Con_Init()
 {
     uint16_t i;
-            
+
     con_base.inited = 0;
     con_base.log_pos = 0;
 
@@ -85,9 +86,9 @@ void Con_Init()
     {
         con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
     }
-    
+
     con_font_manager = glf_create_manager(GUI_MAX_FONTS, GUI_MAX_FONTSTYLES);
-    
+
     con_base.inited = 1;
 }
 
@@ -128,7 +129,7 @@ void Con_Destroy()
     if(con_base.inited)
     {
         uint16_t i;
-                
+
         for(i=0;i<con_base.line_count;i++)
         {
             free(con_base.line_text[i]);
@@ -145,7 +146,7 @@ void Con_Destroy()
 
         con_base.inited = 0;
     }
-    
+
     if(con_font_manager)
     {
         glf_free_manager(con_font_manager);
@@ -355,7 +356,7 @@ void Con_AddLine(const char *text, uint16_t font_style)
         {
             char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
             uint16_t i;
-            
+
             len = strlen(text);
             for(i=con_base.line_count-1;i>1;i--)                                // shift log
             {
@@ -472,17 +473,15 @@ int Con_RemoveFont(uint16_t index)
 
 
 int Con_AddFontStyle(uint16_t index,
-                      GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                      uint8_t shadow, uint8_t fading,
-                      uint8_t rect, uint8_t rect_border,
-                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A,
-                      uint8_t hide)
+                     GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                     uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                     GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A)
 {
     if(con_font_manager)
     {
-        return glf_manager_add_fontstyle(con_font_manager, index, R, G, B, A, 
-                                         shadow, fading, rect, rect_border, 
-                                         rect_R, rect_G, rect_B, rect_A, hide);
+        return glf_manager_add_fontstyle(con_font_manager, index, R, G, B, A,
+                                         shadow, rect, rect_border,
+                                         rect_R, rect_G, rect_B, rect_A);
     }
     return 0;
 }
@@ -527,15 +526,6 @@ void Con_SetScaleFonts(float scale)
 }
 
 
-void Con_UpdateFonts(float time)
-{
-    if(con_font_manager)
-    {
-        glf_manager_update(con_font_manager, time);
-    }
-}
-
-
 void Con_Clean()
 {
     for(uint16_t i=0;i<con_base.line_count;i++)
@@ -545,4 +535,98 @@ void Con_Clean()
     }
 }
 
+/*
+ * CONSOLE DRAW FUNCTIONS
+ */
+void Con_Draw(float time)
+{
+    gl_tex_font_p glf = Con_GetFont(0);
+    if(glf && con_base.show)
+    {
+        int x = 8;
+        int y = con_base.cursor_y;
+        
+        con_base.cursor_time += time;
+        Con_DrawBackground();
+        Con_DrawCursor();
+        
+        for(uint16_t i=0;i<con_base.showing_lines;i++)
+        {
+            GLfloat *col = Con_GetFontStyle(con_base.line_style_id[i])->font_color;
+            y += con_base.line_height;
+            vec4_copy(glf->gl_font_color, col);
+            glf_render_str(glf, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
+        }
+    }
+}
 
+void Con_DrawBackground()
+{
+    /*
+     * Draw console background to see the text
+     */
+    GLfloat x0 = 0.0;
+    GLfloat y0 = con_base.cursor_y + con_base.line_height - 8;
+    GLfloat x1 = screen_info.w;
+    GLfloat y1 = screen_info.h;
+    GLfloat *v, backgroundArray[32];
+    
+    v = backgroundArray;
+   *v++ = x0; *v++ = y0;
+    vec4_copy(v, con_base.background_color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+   
+   *v++ = x1; *v++ = y0;
+    vec4_copy(v, con_base.background_color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+   
+   *v++ = x1; *v++ = y1;
+    vec4_copy(v, con_base.background_color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+   
+   *v++ = x0; *v++ = y1;
+    vec4_copy(v, con_base.background_color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+    
+    glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
+    glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
+    glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
+void Con_DrawCursor()
+{
+    GLint y = con_base.cursor_y + con_base.line_height;
+
+    if(con_base.show_cursor_period)
+    {
+        if(con_base.cursor_time > con_base.show_cursor_period)
+        {
+            con_base.cursor_time = 0.0;
+            con_base.show_cursor = !con_base.show_cursor;
+        }
+    }
+
+    if(con_base.show_cursor)
+    {
+        GLfloat *v, cursor_array[16];
+        v = cursor_array;
+        
+       *v++ = (GLfloat)con_base.cursor_x;                      
+       *v++ = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
+        v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;             v += 4;
+        v[0] = 0.0; v[1] = 0.0;                                     v += 2;
+       *v++ = (GLfloat)con_base.cursor_x;
+       *v++ = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
+        v[0] = 0.0; v[1] = 0.0;
+        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array);
+        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array + 2);
+        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array + 6);
+        glDrawArrays(GL_LINES, 0, 2);
+    }
+}

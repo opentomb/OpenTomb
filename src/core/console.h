@@ -56,17 +56,17 @@ typedef struct console_info_s
     uint16_t                    log_lines_count;            // Amount of log lines to use
     uint16_t                    log_pos;                    // Current log position
     char                      **log_lines;                  // Console lines
-    
+
     uint16_t                    line_count;                 // Amount of shown lines
     uint16_t                   *line_style_id;
     char                      **line_text;                  // Console text
-    
+
     uint16_t                    line_size;                  // Console line size
     int16_t                     line_height;                // Height, including spacing
-    
+
     uint16_t                    showing_lines;              // Amount of visible lines
     float                       spacing;                    // Line spacing
-    
+
     int16_t                     cursor_pos;                 // Current cursor position, in symbols
     int16_t                     cursor_x;                   // Cursor position in pixels
     int16_t                     cursor_y;
@@ -99,19 +99,20 @@ void Con_Notify(const char *fmt, ...);
 
 int  Con_AddFont(uint16_t index, uint16_t size, const char* path);
 int  Con_RemoveFont(uint16_t index);
-int  Con_AddFontStyle(uint16_t index,
-                      GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                      uint8_t shadow, uint8_t fading,
-                      uint8_t rect, uint8_t rect_border,
-                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A,
-                      uint8_t hide);
+int Con_AddFontStyle(uint16_t index,
+                     GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                     uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                     GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
 int  Con_RemoveFontStyle(uint16_t index);
 gl_tex_font_p  Con_GetFont(uint16_t index);
 gl_fontstyle_p Con_GetFontStyle(uint16_t index);
 void Con_SetScaleFonts(float scale);
-void Con_UpdateFonts(float time);
 
 void Con_Clean();
+
+void Con_Draw(float time);
+void Con_DrawBackground();
+void Con_DrawCursor();
 
 #ifdef	__cplusplus
 }

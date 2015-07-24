@@ -765,11 +765,8 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                     v[0] = v[1] = 0.0;                              v+=2;
                 }
 
-                if(active_texture != renderer.world->textures[renderer.world->tex_count-1])
-                {
-                    active_texture = renderer.world->textures[renderer.world->tex_count-1];
-                    glBindTexture(GL_TEXTURE_2D, active_texture);
-                }
+                active_texture = 0;
+                BindWhiteTexture();
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
                 glVertexPointer(3, GL_FLOAT, elem_size, buf+0);
                 glNormalPointer(GL_FLOAT, elem_size, buf+3);
@@ -1193,11 +1190,8 @@ void Render_DrawList_DebugLines()
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        if(active_texture != renderer.world->textures[renderer.world->tex_count-1])
-        {
-            active_texture = renderer.world->textures[renderer.world->tex_count-1];
-            glBindTexture(GL_TEXTURE_2D, active_texture);
-        }
+        active_texture = 0;
+        BindWhiteTexture();
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );

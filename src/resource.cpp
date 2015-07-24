@@ -2680,18 +2680,12 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
                                                   tr->sprite_textures_count,
                                                   tr->sprite_textures);
 
-    world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
+    world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages();
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    world->tex_atlas->createTextures(world->textures, 1);
-
-    // white texture data for coloured polygons and debug lines.
-    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    world->tex_atlas->createTextures(world->textures, 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
@@ -2724,16 +2718,6 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
 
     // Read lod bias
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
-
-
-    glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
-
 }
 
 void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)

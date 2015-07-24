@@ -68,15 +68,12 @@ typedef struct gl_font_cont_s
 // Font style management is done via font manager.
 typedef struct gl_fontstyle_s
 {
-    GLfloat                     color[4];
-    GLfloat                     real_color[4];
+    GLfloat                     font_color[4];
     GLfloat                     rect_color[4];
     GLfloat                     rect_border;
 
     uint8_t                     shadowed;
     uint8_t                     rect;
-    uint8_t                     fading;
-    uint8_t                     hidden;
 } gl_fontstyle_t, *gl_fontstyle_p;
 
 #define GUI_FONT_FADE_SPEED             1.0                 // Global fading style speed.
@@ -89,15 +86,12 @@ typedef struct gl_fontstyle_s
 
 typedef struct gl_font_manager_s
 {
-    GLfloat                 fade_value;            // Multiplier used with font RGB values to animate fade.
-    uint8_t                 fade_direction;
-
     uint16_t                max_styles;
     struct gl_fontstyle_s  *styles;
 
     uint16_t                max_fonts;
     struct gl_font_cont_s  *fonts;
-    
+
     FT_Library              font_library;  // GLF font library unit.
 }gl_font_manager_t, *gl_font_manager_p;
 
@@ -131,13 +125,10 @@ gl_fontstyle_p glf_manager_get_style(gl_font_manager_p manager, uint16_t index);
 int glf_manager_add_font(gl_font_manager_p manager, uint16_t index, uint16_t size, const char* path);
 int glf_manager_add_fontstyle(gl_font_manager_p manager, uint16_t index,
                               GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                              uint8_t shadow, uint8_t fading,
-                              uint8_t rect, uint8_t rect_border,
-                              GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A,
-                              uint8_t hide);
+                              uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                              GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
 int glf_manager_remove_font(gl_font_manager_p manager, uint16_t index);
 int glf_manager_remove_fontstyle(gl_font_manager_p manager, uint16_t index);
-void glf_manager_update(gl_font_manager_p manager, float time);
 void glf_manager_resize(gl_font_manager_p manager, float scale);
 
 

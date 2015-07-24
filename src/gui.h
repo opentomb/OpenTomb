@@ -672,8 +672,4 @@ void Gui_DrawNotifier();
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
 
-void Con_Draw();
-void Con_DrawBackground();
-void Con_DrawCursor();
-
 #endif

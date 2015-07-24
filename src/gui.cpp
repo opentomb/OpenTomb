@@ -33,6 +33,8 @@ GLuint crosshairBuffer;
 
 GLfloat guiProjectionMatrix[16];
 
+static GLfloat screenSize[2];
+
 void Gui_Init()
 {
     Gui_InitBars();
@@ -331,7 +333,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
 void Gui_Update()
 {
-    Con_UpdateFonts(engine_frame_time);
+
 }
 
 void Gui_Resize()
@@ -365,6 +367,8 @@ void Gui_Resize()
 
 void Gui_Render()
 {
+    screenSize[0] = screen_info.w;
+    screenSize[1] = screen_info.h;
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
@@ -382,8 +386,18 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
+
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     Gui_RenderStrings();
-    Con_Draw();
+    BindWhiteTexture();
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    const text_shader_description *shader = renderer.shader_manager->getTextShader();
+    glUseProgramObjectARB(shader->program);
+    glUniform1iARB(shader->sampler, 0);
+
+    glUniform2fvARB(shader->screenSize, 1, screenSize);
+    Con_Draw(engine_frame_time);
+    glUseProgramObjectARB(0);
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -397,7 +411,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
     gl_tex_font_p gl_font = Con_GetFont(l->font_id);
     gl_fontstyle_p style = Con_GetFontStyle(l->style_id);
 
-    if((gl_font == NULL) || (style == NULL) || (!l->show) || (style->hidden))
+    if((gl_font == NULL) || (style == NULL) || (!l->show))
     {
         return;
     }
@@ -454,14 +468,14 @@ void Gui_RenderStringLine(gui_text_line_p l)
         gl_font->gl_font_color[0] = 0.0f;
         gl_font->gl_font_color[1] = 0.0f;
         gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = (float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
+        gl_font->gl_font_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
         glf_render_str(gl_font,
                        (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
                        (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
                        l->text);
     }
 
-    vec4_copy(gl_font->gl_font_color, style->real_color);
+    vec4_copy(gl_font->gl_font_color, style->font_color);
     glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
@@ -470,16 +484,10 @@ void Gui_RenderStrings()
     gui_text_line_p l = gui_base_lines;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     const text_shader_description *shader = renderer.shader_manager->getTextShader();
     glUseProgramObjectARB(shader->program);
-    GLfloat screenSize[2] = {
-        (GLfloat) screen_info.w,
-        (GLfloat) screen_info.h
-    };
     glUniform2fvARB(shader->screenSize, 1, screenSize);
     glUniform1iARB(shader->sampler, 0);
 
@@ -499,7 +507,6 @@ void Gui_RenderStrings()
         }
     }
 
-    glPopClientAttrib();
     temp_lines_used = 0;
 }
 
@@ -2474,101 +2481,4 @@ void gui_ItemNotifier::SetSize(float size)
 void gui_ItemNotifier::SetRotateTime(float time)
 {
     mRotateTime = (1000.0 / time) * 360.0;
-}
-
-/*
- * CONSOLE DRAW FUNCTIONS
- */
-void Con_Draw()
-{
-    gl_tex_font_p glf = Con_GetFont(FONT_CONSOLE);
-    if(glf && con_base.show)
-    {
-        int x, y;
-        glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        Con_DrawBackground();
-        Con_DrawCursor();
-
-        x = 8;
-        y = con_base.cursor_y;
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-        const text_shader_description *shader = renderer.shader_manager->getTextShader();
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
-        GLfloat screenSize[2] = {
-            (GLfloat)screen_info.w,
-            (GLfloat)screen_info.h
-        };
-        glUniform2fvARB(shader->screenSize, 1, screenSize);
-
-        for(uint16_t i=0;i<con_base.showing_lines;i++)
-        {
-            GLfloat *col = Con_GetFontStyle(con_base.line_style_id[i])->real_color;
-            y += con_base.line_height;
-            vec4_copy(glf->gl_font_color, col);
-            glf_render_str(glf, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
-        }
-        glPopClientAttrib();
-    }
-}
-
-void Con_DrawBackground()
-{
-    /*
-     * Draw console background to see the text
-     */
-    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, screen_info.h, con_base.background_color, con_base.background_color, con_base.background_color, con_base.background_color, BM_SCREEN);
-
-    /*
-     * Draw finalise line
-     */
-    GLfloat lineCoords[4] = {
-        0.0f, 0.0,
-        1.0, 0.0
-    };
-    GLfloat lineColors[8] = {
-        1.0f, 1.0f, 1.0f, 0.7,
-        1.0f, 1.0f, 1.0f, 0.7
-    };
-    glVertexPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), lineCoords);
-    glColorPointer(4, GL_FLOAT, 4 * sizeof(GLfloat), lineColors);
-    glDrawArrays(GL_LINES, 0, 2);
-}
-
-void Con_DrawCursor()
-{
-    GLint y = con_base.cursor_y;
-
-    if(con_base.show_cursor_period)
-    {
-        con_base.cursor_time += engine_frame_time;
-        if(con_base.cursor_time > con_base.show_cursor_period)
-        {
-            con_base.cursor_time = 0.0;
-            con_base.show_cursor = !con_base.show_cursor;
-        }
-    }
-
-    if(con_base.show_cursor)
-    {
-        GLfloat *v, cursor_array[12];
-        v = cursor_array;
-        *v = (GLfloat)con_base.cursor_x;
-        *v /= (GLfloat)screen_info.w;                               v++;
-        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
-        *v /= (GLfloat)screen_info.h;                               v++;
-        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
-        *v = (GLfloat)con_base.cursor_x;
-        *v /= (GLfloat)screen_info.w;                               v++;
-        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
-        *v /= (GLfloat)screen_info.h;                               v++;
-        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;
-        glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array);
-        glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array + 2);
-        glDrawArrays(GL_LINES, 0, 2);
-    }
 }

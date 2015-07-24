@@ -136,17 +136,32 @@ PFNGLISVERTEXARRAYPROC                  glIsVertexArray =                       
 PFNGLGENERATEMIPMAPEXTPROC              glGenerateMipmap =                      NULL;
 #endif
 
-char *engine_gl_ext_str = NULL;
+static char *engine_gl_ext_str = NULL;
+static GLuint whiteTexture = 0;
 
 /**
  * Get addresses of GL functions and initialise engine_gl_ext_str string.
  */
 void InitGLExtFuncs()
 {
-    const char* buf = (const char*)glGetString(GL_EXTENSIONS);                  ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
+    ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
+    const char* buf = (const char*)glGetString(GL_EXTENSIONS);                  
     engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
+    // white texture data for coloured polygons and debug lines.
+    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    
+    glGenTextures(1, &whiteTexture);
+    glBindTexture(GL_TEXTURE_2D, whiteTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
     strcpy(engine_gl_ext_str, buf);
-
 #ifndef GL_GLEXT_PROTOTYPES
     /// VBO funcs
     if(IsGLExtensionSupported("GL_ARB_vertex_buffer_object"))
@@ -440,4 +455,9 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char 
     printInfoLog(ShaderObj);
 
     return compileStatus != 0;
+}
+
+void BindWhiteTexture()
+{
+    glBindTexture(GL_TEXTURE_2D, whiteTexture);
 }

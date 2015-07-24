@@ -147,6 +147,8 @@ void printInfoLog (GLhandleARB object);
 int loadShaderFromBuff(GLhandleARB ShaderObj, char * source);
 int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines);
 
+void BindWhiteTexture();
+
 #ifdef	__cplusplus
 }
 #endif
