@@ -47,6 +47,11 @@ else()
     include_directories(${OPENAL_INCLUDE_DIR})
 endif()
 
+option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
+
+if(USE_OPENAL_FLOAT)
+    add_definitions(-DAUDIO_OPENAL_FLOAT)
+endif(USE_OPENAL_FLOAT)
 
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
@@ -152,10 +157,6 @@ else()
         src/*.h*
         src/vt/*.h
     )
-endif()
-
-if(NOT MINGW)
-    add_definitions(-DAUDIO_OPENAL_FLOAT)
 endif()
 
 add_executable(

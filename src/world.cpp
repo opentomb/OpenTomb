@@ -861,6 +861,7 @@ void Room::enable()
         }
     }
 
+    /*
     for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
         switch(cont->object_type)
@@ -870,6 +871,7 @@ void Room::enable()
                 break;
         }
     }
+    */
 
     active = true;
 }
@@ -895,6 +897,7 @@ void Room::disable()
         }
     }
 
+    /*
     for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
         switch(cont->object_type)
@@ -904,6 +907,7 @@ void Room::disable()
                 break;
         }
     }
+    */
 
     active = false;
 }
