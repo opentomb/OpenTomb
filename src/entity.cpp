@@ -533,7 +533,6 @@ void Entity::updateRoomPos()
     auto new_room = Room_FindPosCogerrence(pos, m_self->room);
     if(!new_room)
     {
-        m_self->room->removeEntity(this);
         m_currentSector = nullptr;
         return;
     }

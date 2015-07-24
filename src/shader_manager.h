@@ -15,15 +15,15 @@
  */
 class ShaderManager {
 private:
-    UnlitTintedShaderDescription *m_roomShaders[2][2];
-    UnlitTintedShaderDescription *m_staticMeshShader;
-    UnlitShaderDescription *m_stencil;
-    UnlitShaderDescription *m_debugline;
-    LitShaderDescription *m_entityShader[MAX_NUM_LIGHTS+1][2];
-    GuiShaderDescription *m_gui;
-    GuiShaderDescription *m_guiTextured;
-    TextShaderDescription *m_text;
-    SpriteShaderDescription *m_sprites;
+    UnlitTintedShaderDescription    *m_roomShaders[2][2];
+    UnlitTintedShaderDescription    *m_staticMeshShader;
+    UnlitShaderDescription          *m_stencil;
+    UnlitShaderDescription          *m_debugline;
+    LitShaderDescription            *m_entityShader[MAX_NUM_LIGHTS+1][2];
+    GuiShaderDescription            *m_gui;
+    GuiShaderDescription            *m_guiTextured;
+    TextShaderDescription           *m_text;
+    SpriteShaderDescription         *m_sprites;
 
 public:
     ShaderManager();
@@ -34,19 +34,19 @@ public:
      * shaders get destroyed by OpenGL.
      */
     ~ShaderManager() = default;
-    
+
     LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const {
         assert(numberOfLights <= MAX_NUM_LIGHTS);
 
         return m_entityShader[numberOfLights][skin ? 1 : 0];
     }
-    
+
     UnlitTintedShaderDescription *getStaticMeshShader() const { return m_staticMeshShader; }
-    
+
     UnlitShaderDescription *getStencilShader() const { return m_stencil; }
-    
+
     UnlitShaderDescription *getDebugLineShader() const { return m_debugline; }
-    
+
     UnlitTintedShaderDescription *getRoomShader(bool isFlickering, bool isWater) const
     {
         return m_roomShaders[isWater ? 1 : 0][isFlickering ? 1 : 0];
