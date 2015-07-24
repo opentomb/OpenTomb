@@ -650,7 +650,7 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     
     entity_funcs[id].speed       = 100.0;
     entity_funcs[id].damage      = 50.0;
-    entity_funcs[id].coll_sound  = SOUND_RICOCHET;
+    entity_funcs[id].coll_sound  = -1;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
@@ -740,7 +740,6 @@ end;
 function dart_tr3_init(id)
     dart_init(id);
     entity_funcs[id].speed      = 150.0;
-    entity_funcs[id].coll_sound = -1;
 end;
 
 function pickup_init(id, item_id)    -- Pick-ups

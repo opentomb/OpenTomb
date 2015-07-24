@@ -273,7 +273,7 @@ tr2_entity_tbl[54] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 
 -- TRAPS --
 
-tr2_entity_tbl[55] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Collapsible floor
+tr2_entity_tbl[55] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"}; -- Collapsible floor
 tr2_entity_tbl[57] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Loose boards
 tr2_entity_tbl[58] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging sandbag / spiky ball
 tr2_entity_tbl[59] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
@@ -503,7 +503,7 @@ tr3_entity_tbl[82] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_B
 
 -- TRAPS & DOORS --
 
-tr3_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"};                 -- Collapsible floor
+tr3_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"};                 -- Collapsible floor
 tr3_entity_tbl[86] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Swinging thing
 tr3_entity_tbl[87] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                 -- Boulder / Barrel
@@ -838,8 +838,8 @@ tr4_entity_tbl[116] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 -- DESTROYABLE / MOVABLE TERRAIN
 
 tr4_entity_tbl[117] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Falling ceiling
-tr4_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Falling block
-tr4_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Falling block2
+tr4_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"}; -- Falling block
+tr4_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"}; -- Falling block2
 tr4_entity_tbl[120] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Smashable bike wall
 tr4_entity_tbl[121] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Smashable bike floor
 tr4_entity_tbl[122] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"}; -- Trapdoor 1
@@ -1319,8 +1319,8 @@ tr5_entity_tbl[101] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 -- DESTROYABLE / MOVABLE TERRAIN
 
 tr5_entity_tbl[102] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Falling Ceiling
-tr5_entity_tbl[103] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Falling Block 1
-tr5_entity_tbl[104] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Falling Block 2
+tr5_entity_tbl[103] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"}; -- Falling Block 1
+tr5_entity_tbl[104] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"}; -- Falling Block 2
 tr5_entity_tbl[105] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Crumbling Floor
 tr5_entity_tbl[106] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"}; -- Trapdoor 1
 tr5_entity_tbl[107] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"}; -- Trapdoor 2
