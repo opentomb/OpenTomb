@@ -216,7 +216,7 @@ void lua_AddKey(lua::State& lstate, int keycode, bool state)
 
 void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator)
 {
-    if(id_activator>0)
+    if(id_activator >= 0)
         state["execEntity"](id_callback, id_object, id_activator);
     else
         state["execEntity"](id_callback, id_object);
