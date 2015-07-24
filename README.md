@@ -144,7 +144,16 @@ To compile OpenTomb, primarily you need libs and defines for these external libr
 We recommend compiling using CMake. There is a CMakeLists.txt file provided with source code.
 You can automatically generate Visual Studio, Eclipse and Code::Blocks projects with CMake as well.
 
-On Linux, just download the source code and run in terminal:
+On Linux, there is an easy way to compile engine just in three steps. First of all, install all the
+necessary libraries with this command:
+
+    sudo apt-get install libbullet-dev libfreetype6-dev libglu1-mesa-dev libglew-dev liblua5.2-dev libopenal-dev libogg-dev libvorbis-dev libsndfile1-dev libsdl2-dev libsdl2-image-dev
+    
+Then, download the code with all third-party submodules:
+
+    git clone --recursive https://github.com/opentomb/OpenTomb.git
+    
+And then, compile it:
 
     cmake . && make
 
