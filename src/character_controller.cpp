@@ -1762,7 +1762,7 @@ int Character::checkTraverse(const Entity& obj)
         to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
-        BtEngineClosestConvexResultCallback ccb(m_self);
+        BtEngineClosestConvexResultCallback ccb(obj.m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
