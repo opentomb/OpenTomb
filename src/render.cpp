@@ -354,6 +354,7 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
         const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
 
         btTransform translate;
+        translate.setIdentity();
         translate.getOrigin() += btag->offset;
 
         btTransform secondTransform = *parentTransform * translate;
