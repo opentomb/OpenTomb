@@ -2459,8 +2459,10 @@ void lua_StopStreams()
     Audio_StopStreams();
 }
 
-void lua_PlaySound(uint32_t id, lua::Value ent_id)
+void lua_PlaySound(int id, lua::Value ent_id)
 {
+    if(id < 0) return;
+
     if(id >= engine_world.audio_map.size())
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());

@@ -649,26 +649,30 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     
     createEntityGhosts(id);
     
-    entity_funcs[id].speed  = 100.0;
-    entity_funcs[id].damage = 100.0;
+    entity_funcs[id].speed       = 100.0;
+    entity_funcs[id].damage      = 100.0;
+    entity_funcs[id].coll_sound  = SOUND_RICOCHET;
     
     entity_funcs[id].onLoop = function(object_id)
         moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
-        removeEntity(object_id);
+        if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+            removeEntity(object_id);
+        end;
     end
     
     entity_funcs[id].onRoomCollide = function(object_id, activator_id)
-        playSound(SOUND_RICOCHET, object_id);
+        playSound(entity_funcs[object_id].coll_sound, object_id);
         removeEntity(object_id);
     end
     
     entity_funcs[id].onDelete = function(object_id)
-        entity_funcs[object_id].damage = nil;
-        entity_funcs[object_id].speed = nil;
+        entity_funcs[object_id].damage      = nil;
+        entity_funcs[object_id].speed       = nil;
+        entity_funcs[object_id].coll_sound  = nil;
     end
 end
 
@@ -712,6 +716,32 @@ function dartgun_init(id)  -- TR1 dartgun
         entity_funcs[object_id].current_time   = nil;
     end
 end
+
+function discgun_init(id)
+    dartgun_init(id);
+    entity_funcs[id].dart_model  = 61;
+    entity_funcs[id].shoot_sound = 254;
+end;
+
+function disc_init(id)
+    dart_init(id);
+    entity_funcs[id].coll_sound = 258;
+end;
+
+function dartgun_tr3_init(id)
+    dartgun_init(id);
+    rotateEntity(id, 180.0);    -- In TR3, dartguns must be inverted.
+    moveEntityLocal(id, 0,-256,0);
+    entity_funcs[id].dart_model  = 90;
+    entity_funcs[id].shoot_sound = 325;
+    entity_funcs[id].shoot_interval = 0.8;
+end;
+
+function dart_tr3_init(id)
+    dart_init(id);
+    entity_funcs[id].speed      = 150.0;
+    entity_funcs[id].coll_sound = -1;
+end;
 
 function pickup_init(id, item_id)    -- Pick-ups
 
