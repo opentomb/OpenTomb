@@ -101,7 +101,7 @@ public:
     uint32_t                            m_callbackFlags = 0;     // information about scripts callbacks
     uint16_t                            m_typeFlags = ENTITY_TYPE_GENERIC;
     bool m_enabled = true;
-    bool m_active = true;
+    bool m_active  = true;
     bool m_visible = true;
 
     uint8_t                             m_dirFlag = 0;           // (move direction)

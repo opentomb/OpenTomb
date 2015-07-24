@@ -487,7 +487,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     }
 
     btVector3 g = bt_engine_dynamicsWorld->getGravity();
-    btVector3 move = ent->m_speed * time;;
+    btVector3 move = ent->m_speed * time;
     move += g * 0.5 * time * time;
     ent->m_speed += g * time;
 
@@ -496,7 +496,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     from = ent->m_transform * ent->m_bf.centre;
     from[2] = ent->m_transform.getOrigin()[2];
     to = from + move;
-    to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
+    //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
     bt_engine_dynamicsWorld->rayTest(from, to, cb);
 
     if(cb.hasHit())

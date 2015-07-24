@@ -3891,12 +3891,13 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         }
 
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
+
+        Res_SetEntityModelProperties(entity);
+        entity->rebuildBV();
         entity->genEntityRigidBody();
 
-        entity->rebuildBV();
         entity->m_self->room->addEntity(entity.get());
         world->addEntity(entity);
-        Res_SetEntityModelProperties(entity);
 
         if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();

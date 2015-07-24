@@ -634,7 +634,6 @@ function boulder_init(id)
             end;
         end;
     end
-
 end
 
 function dart_init(id)  -- TR1 dart / TR2 flying disks

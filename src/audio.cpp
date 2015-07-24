@@ -614,8 +614,6 @@ bool StreamTrack::Unload()
         result = true;
     }
 
-    Sys_DebugLog(LOG_FILENAME, "Closed file: %d", result);
-
     return result;
 }
 
