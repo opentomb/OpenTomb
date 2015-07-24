@@ -9,7 +9,8 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/LinearMath/btIDebugDraw.h>
 
-#include "matrix4.h"
+#include <glm/glm.hpp>
+
 #include "vertex_array.h"
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
@@ -236,26 +237,26 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
-    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const matrix4 &mvMatrix, const matrix4 &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
-    void renderHair(std::shared_ptr<Character> entity, const matrix4 &modelViewMatrix, const matrix4 & modelViewProjectionMatrix);
-    void renderSkyBox(const matrix4& matrix);
+    void renderEntity(Entity *entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection);
+    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const glm::mat4 &mvMatrix, const glm::mat4 &pMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const glm::mat4 &mvMatrix, const glm::mat4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const glm::mat4 &mvMatrix, const glm::mat4 &pMatrix);
+    void renderHair(std::shared_ptr<Character> entity, const glm::mat4 &modelViewMatrix, const glm::mat4 & modelViewProjectionMatrix);
+    void renderSkyBox(const glm::mat4& matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
     void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);
     void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
     void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderRoom(const Room *room, const matrix4 &matrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
-    void renderRoomSprites(const Room *room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix);
+    void renderRoom(const Room *room, const glm::mat4 &matrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection);
+    void renderRoomSprites(const Room *room, const glm::mat4 &modelViewMatrix, const glm::mat4 &projectionMatrix);
 
     int haveFrustumParent(Room *room, Frustum *frus);
     int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
     void renderSkyBoxDebugLines();
 
 private:
-    const LitShaderDescription *setupEntityLight(Entity *entity, const matrix4 &modelViewMatrix, bool skin);
+    const LitShaderDescription *setupEntityLight(Entity *entity, const glm::mat4 &modelViewMatrix, bool skin);
 };
 
 extern Render renderer;

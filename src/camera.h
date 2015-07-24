@@ -5,9 +5,9 @@
 #include <cmath>
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #include "vmath.h"
-#include "matrix4.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0
@@ -46,9 +46,9 @@ struct Camera
     btVector3 m_rightDir{1,0,0};           // strafe vector
     btVector3 m_ang;                 // camera orientation
 
-    matrix4 m_glViewMat = matrix4();
-    matrix4 m_glProjMat = matrix4();
-    matrix4 m_glViewProjMat = matrix4();
+    glm::mat4 m_glViewMat = glm::mat4(1.0f);
+    glm::mat4 m_glProjMat = glm::mat4(1.0f);
+    glm::mat4 m_glViewProjMat = glm::mat4(1.0f);
 
     Plane m_clipPlanes[4];        // frustum side clip planes
     std::shared_ptr<Frustum> frustum;               // camera frustum structure
