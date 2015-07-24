@@ -706,6 +706,7 @@ function dartgun_init(id)  -- TR1 dartgun
         if(tickEntity(object_id) == TICK_STOPPED) then 
             swapEntityActivity(object_id);
             swapEntityEvent(object_id);
+            entity_funcs[object_id].current_time = entity_funcs[object_id].shoot_interval;
         end;
     end
     
