@@ -100,6 +100,10 @@ function execEntity(callback_id, object_id, activator_id)
         if((bit32.band(callback_id, ENTITY_CALLBACK_HIT) ~= 0) and (entity_funcs[object_id].onHit ~= nil)) then
             entity_funcs[object_id].onHit(object_id, activator_id);
         end;
+        
+        if((bit32.band(callback_id, ENTITY_CALLBACK_ROOMCOLLISION) ~= 0) and (entity_funcs[object_id].onRoomCollide ~= nil)) then
+            entity_funcs[object_id].onRoomCollide(object_id, activator_id);
+        end;
     end;
 end
 

@@ -495,6 +495,21 @@ void World::empty()
     anim_sequences.clear();
 }
 
+bool World::deleteEntity(uint32_t id)
+{
+    if(character->id() == id) return false;
+
+    auto it = entity_tree.find(id);
+    if(it==entity_tree.end())
+    {
+        return false;
+    }
+    else
+    {
+        entity_tree.erase(it);
+        return true;
+    }
+}
 
 uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
@@ -560,11 +575,11 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
 
         ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
         ent->m_active = ent->m_enabled = ent->m_visible = true;
-        ent->m_triggerLayout = 0x00;
+        ent->m_triggerLayout  = 0x00;
         ent->m_OCB            = 0x00;
         ent->m_timer          = 0.0;
 
-        ent->m_self->collision_type = COLLISION_NONE;
+        ent->m_self->collision_type  = COLLISION_NONE;
         ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
         ent->m_moveType          = 0x0000;
         ent->m_inertiaLinear     = 0.0;
@@ -573,6 +588,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         ent->m_moveType          = 0;
 
         ent->m_bf.fromModel(model);
+
         ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
         ent->genEntityRigidBody();
 
@@ -582,6 +598,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             ent->m_self->room->addEntity(ent.get());
         }
         addEntity(ent);
+        Res_SetEntityFunction(ent);
 
         return ent->id();
     }

@@ -36,3 +36,12 @@ function swapEntityEnability(object_id)
     local current_enability = getEntityEnability(object_id);
     if(current_enability) then disableEntity(object_id) else enableEntity(object_id) end;
 end;
+
+function removeEntity(object_id)
+    disableEntity(object_id);
+    addTask(
+    function()
+        entfuncs_EraseEntity(object_id);
+        deleteEntity(object_id);
+    end);
+end;

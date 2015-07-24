@@ -456,6 +456,12 @@ void Entity::checkCollisionCallbacks()
                 ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
+        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) &&
+                (type == OBJECT_ROOM_BASE))
+        {
+            Room* activator = static_cast<Room*>(cont->object);
+            lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
+        }
     }
 }
 

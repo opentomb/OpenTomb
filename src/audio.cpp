@@ -241,6 +241,19 @@ bool AudioSource::IsActive()
     return active;
 }
 
+bool AudioSource::IsLooping()
+{
+    if(alIsSource(source_index))
+    {
+        ALint looping;
+        alGetSourcei(source_index, AL_LOOPING, &looping);
+        return (looping != AL_FALSE);
+    }
+    else
+    {
+        return false;
+    }
+}
 
 bool AudioSource::IsPlaying()
 {
@@ -332,6 +345,7 @@ void AudioSource::Update()
 
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
+
     if(Audio_IsInRange(emitter_type, emitter_ID, range, gain))
     {
         LinkEmitter();
@@ -343,7 +357,11 @@ void AudioSource::Update()
     }
     else
     {
-        Stop();
+        // Immediately stop source only if track is looped. It allows sounds which
+        // were activated for already destroyed entities to finish (e.g. grenade
+        // explosions, ricochets, and so on).
+
+        if(IsLooping()) Stop();
     }
 }
 
@@ -1266,10 +1284,12 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_ID)) {
+            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_ID))
+            {
                 vec = ent->m_transform.getOrigin();
             }
-            else {
+            else
+            {
                 return false;
             }
             break;

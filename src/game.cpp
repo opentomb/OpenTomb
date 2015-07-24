@@ -234,9 +234,9 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
         uint32_t room_id = (ent->m_self->room)?(ent->m_self->room->id):(0xFFFFFFFF);
-        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->m_bf.animations.model->id, room_id,
+        fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->id());
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->id());
     }
     else
     {
@@ -675,6 +675,9 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
         {
             entity->processSector();
             lua_LoopEntity(engine_lua, entity->id());
+
+            if(entity->m_typeFlags & ENTITY_TYPE_COLLCHECK)
+                entity->checkCollisionCallbacks();
         }
     }
 }

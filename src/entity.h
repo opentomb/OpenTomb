@@ -36,6 +36,7 @@ struct RDSetup;
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0020)    // Can be walked upon.
 #define ENTITY_TYPE_DYNAMIC                         (0x0040)    // Acts as a physical dynamic object.
 #define ENTITY_TYPE_ACTOR                           (0x0080)    // Is actor.
+#define ENTITY_TYPE_COLLCHECK                       (0x0100)    // Does collision checks for itself.
 
 #define ENTITY_TYPE_SPAWNED                         (0x8000)    // Was spawned.
 
@@ -45,6 +46,7 @@ struct RDSetup;
 #define ENTITY_CALLBACK_COLLISION                   (0x00000004)
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
+#define ENTITY_CALLBACK_ROOMCOLLISION               (0x00000020)
 
 enum class Substance {
     None,

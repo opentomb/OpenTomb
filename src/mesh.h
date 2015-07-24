@@ -389,16 +389,18 @@ struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    lua::Boolean hide;                                           // do not render
-    btVector3 bbox_min;                                    // bbox info
-    btVector3 bbox_max;
-    btVector3 centre;                                      // the centre of model
+    lua::Boolean                hide;                                           // do not render
+
+    btVector3                   bbox_min;                                    // bbox info
+    btVector3                   bbox_max;
+    btVector3                   centre;                                      // the centre of model
 
     std::vector<AnimationFrame> animations;                                     // animations data
 
     uint16_t                    mesh_count;                                     // number of model meshes
-    std::vector<MeshTreeTag> mesh_tree;                                      // base mesh tree.
-    std::vector<uint16_t> collision_map;
+    std::vector<MeshTreeTag>    mesh_tree;                                      // base mesh tree.
+
+    std::vector<uint16_t>       collision_map;
 
     void clear();
     void fillTransparency();

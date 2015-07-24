@@ -410,8 +410,11 @@ struct World
 
     void prepare();
     void empty();
+
     uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
-    std::shared_ptr<Entity> getEntityByID(uint32_t id);
+    bool     deleteEntity(uint32_t id);
+
+    std::shared_ptr<Entity>    getEntityByID(uint32_t id);
     std::shared_ptr<Character> getCharacterByID(uint32_t id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);

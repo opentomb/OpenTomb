@@ -1029,7 +1029,7 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
         model->animations[anim].frames[frame].move = {dx,dy,dz};
 }
 
-uint32_t lua_SpawnEntity(int model_id, int room_id, float x, float y, float z, float ax, float ay, float az, lua::Value ov_id)
+uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
     btVector3 pos{x,y,z}, ang{ax,ay,az};
 
@@ -1042,6 +1042,11 @@ uint32_t lua_SpawnEntity(int model_id, int room_id, float x, float y, float z, f
     {
         return id;
     }
+}
+
+bool lua_DeleteEntity(int id)
+{
+    return engine_world.deleteEntity(id);
 }
 
 /*
@@ -1106,7 +1111,7 @@ float lua_GetEntityDirDot(int id1, int id2)
     return e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1));
 }
 
-std::tuple<float,float,float,float,float,float> lua_GetEntityPosition(int id)
+std::tuple<float,float,float,float,float,float,uint32_t> lua_GetEntityPosition(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == NULL)
@@ -1115,14 +1120,15 @@ std::tuple<float,float,float,float,float,float> lua_GetEntityPosition(int id)
         return {};
     }
 
-    return std::tuple<float,float,float,float,float,float>
+    return std::tuple<float,float,float,float,float,float,uint32_t>
     {
         ent->m_transform.getOrigin()[0],
         ent->m_transform.getOrigin()[1],
         ent->m_transform.getOrigin()[2],
         ent->m_angles[0],
         ent->m_angles[1],
-        ent->m_angles[2]
+        ent->m_angles[2],
+        ent->m_self->room->id
     };
 }
 
@@ -1283,7 +1289,9 @@ void lua_MoveEntityGlobal(int id, float x, float y, float z)
     ent->m_transform.getOrigin()[0] += x;
     ent->m_transform.getOrigin()[1] += y;
     ent->m_transform.getOrigin()[2] += z;
+
     ent->updateRigidBody(true);
+    ent->ghostUpdate();
 }
 
 void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
@@ -1299,6 +1307,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
     ent->m_transform.getOrigin() += ent->m_transform.getBasis() * btVector3(dx, dy, dz);
 
     ent->updateRigidBody(true);
+    ent->ghostUpdate();
 }
 
 void lua_MoveEntityToSink(int id, int sink_index)
@@ -1335,6 +1344,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
     ent->m_transform.getOrigin()[2] += speed[2] * 16.0;
 
     ent->updateRigidBody(true);
+    ent->ghostUpdate();
 }
 
 void lua_MoveEntityToEntity(int id1, int id2, float speed_mult, lua::Value ignore_z)
@@ -2183,11 +2193,21 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     }
 }
 
+void lua_CreateEntityGhosts(int id)
+{
+    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+
+    if(ent && (ent->m_bf.bone_tags.size() > 0))
+    {
+        ent->createGhosts();
+    }
+}
+
 void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_force, bool resetFlag)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if(!ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t = ent->m_angles[0] * RadPerDeg;
 
@@ -2807,6 +2827,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
 
     lua_registerc(state, "canTriggerEntity", lua_CanTriggerEntity);
     lua_registerc(state, "spawnEntity", lua_SpawnEntity);
+    lua_registerc(state, "deleteEntity", lua_DeleteEntity);
     lua_registerc(state, "enableEntity", lua_EnableEntity);
     lua_registerc(state, "disableEntity", lua_DisableEntity);
 
@@ -2873,6 +2894,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     lua_registerc(state, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
     lua_registerc(state, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
+    lua_registerc(state, "createEntityGhosts", lua_CreateEntityGhosts);
     lua_registerc(state, "setEntityBodyMass", lua_SetEntityBodyMass);
     lua_registerc(state, "pushEntityBody", lua_PushEntityBody);
     lua_registerc(state, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);

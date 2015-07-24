@@ -355,6 +355,7 @@ public:
     void UnsetFX();                         // Remove any reverb FX from source.
     void SetUnderwater();                   // Apply low-pass underwater filter.
 
+    bool IsLooping();           // Check if source is looping;
     bool IsPlaying();           // Check if source is currently playing.
     bool IsActive();            // Check if source is active.
 

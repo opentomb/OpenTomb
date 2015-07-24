@@ -83,8 +83,8 @@ tr1_entity_tbl[35] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr1_entity_tbl[36] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
 tr1_entity_tbl[37] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
 tr1_entity_tbl[38] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                      -- Boulder
-tr1_entity_tbl[39] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
-tr1_entity_tbl[40] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
+tr1_entity_tbl[39] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "dart"};                      -- Dart
+tr1_entity_tbl[40] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "dartgun"};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Lifting door
 tr1_entity_tbl[42] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};       -- Slamming sawtooth doors
 tr1_entity_tbl[43] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                      -- Sword of Damocles
