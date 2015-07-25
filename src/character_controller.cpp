@@ -22,7 +22,6 @@
 Character::Character(uint32_t id)
     : Entity(id)
 {
-    m_climbSensor.reset( new btSphereShape(m_climbR) );
 
     m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -182,7 +181,7 @@ void Character::updatePlatformPostStep()
             break;
 
         case MOVE_CLIMBING:
-            if(character->climb.edge_hit)
+            if(character->climb.edge_hit != ClimbInfo::NoClimb)
             {
                 character->platform = character->climb.edge_obj;
             }
@@ -331,12 +330,12 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
  * Calculates next floor info + phantom filter + returns step info.
  * Current height info must be calculated!
  */
-int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
+NextStepInfo Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 {
     btScalar delta;
     HeightInfo* fc = &m_heightInfo;
     btVector3 from, to;
-    int ret = CHARACTER_STEP_HORIZONTAL;
+    NextStepInfo ret = NextStepInfo::Horizontal;
     ///penetration test?
 
     auto pos = m_transform.getOrigin() + offset;
@@ -348,7 +347,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
         if(std::abs(delta) < SPLIT_EPSILON)
         {
             from[2] = fc->floor_point[2];
-            ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
+            ret = NextStepInfo::Horizontal;                                    // horizontal
         }
         else if(delta < 0.0)                                                    // down way
         {
@@ -356,19 +355,19 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
             from[2] = fc->floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_LITTLE;
+                ret = NextStepInfo::DownLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_BIG;
+                ret = NextStepInfo::DownBig;
             }
             else if(delta <= m_height)
             {
-                ret = CHARACTER_STEP_DOWN_DROP;
+                ret = NextStepInfo::DownDrop;
             }
             else
             {
-                ret = CHARACTER_STEP_DOWN_CAN_HANG;
+                ret = NextStepInfo::DownCanHang;
             }
         }
         else                                                                    // up way
@@ -376,36 +375,36 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
             from[2] = nfc->floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_LITTLE;
+                ret = NextStepInfo::UpLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_BIG;
+                ret = NextStepInfo::UpBig;
             }
             else if(delta <= m_maxClimbHeight)
             {
-                ret = CHARACTER_STEP_UP_CLIMB;
+                ret = NextStepInfo::UpClimb;
             }
             else
             {
-                ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+                ret = NextStepInfo::UpImpossible;
             }
         }
     }
     else if(!fc->floor_hit && !nfc->floor_hit)
     {
         from[2] = pos[2];
-        ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
+        ret = NextStepInfo::Horizontal;                                        // horizontal? yes no maybe...
     }
     else if(!fc->floor_hit && nfc->floor_hit)                                   // strange case
     {
         from[2] = nfc->floor_point[2];
-        ret = 0x00;
+        ret = NextStepInfo::Horizontal;
     }
     else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless
     {
         from[2] = fc->floor_point[2];
-        ret = CHARACTER_STEP_DOWN_CAN_HANG;
+        ret = NextStepInfo::DownCanHang;
     }
 
     /*
@@ -422,7 +421,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     bt_engine_dynamicsWorld->rayTest(from, to, *fc->cb);
     if(fc->cb->hasHit())
     {
-        ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+        ret = NextStepInfo::UpImpossible;
     }
 
     return ret;
@@ -449,71 +448,68 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc, btScalar test_height)
+ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInfo *nfc, btScalar test_height)
 {
-    btVector3 from, to;
-    btScalar d;
-    const auto& pos = m_transform.getOrigin();
-    btTransform t1, t2;
-    char up_founded;
+    const btVector3 entityPos = m_transform.getOrigin();
     extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
     nfc->cb = m_rayCb;
     nfc->ccb = m_convexCb;
-    auto tmp = pos + offset;                                        // tmp = native offset point
-    offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
+    btVector3 to = entityPos + offset; // native offset point
 
-    ClimbInfo ret;
-    ret.height_info = checkNextStep(offset, nfc);
-    offset[2] -= 128.0;
-    ret.can_hang = 0;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
-    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
+    ClimbInfo result;
+    result.height_info = checkNextStep(offset + btVector3{0, 0, 128.0}, nfc);
+    result.floor_limit = m_heightInfo.floor_hit
+                       ? m_heightInfo.floor_point[2]
+                       : -9E10;
+    result.ceiling_limit = m_heightInfo.ceiling_hit
+                         ? m_heightInfo.ceiling_point[2]
+                         : 9E10;
+
+    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < result.ceiling_limit))
     {
-        ret.ceiling_limit = nfc->ceiling_point[2];
+        result.ceiling_limit = nfc->ceiling_point[2];
     }
-    ret.point = m_climb.point;
+
+    result.point = m_climb.point;
     /*
      * check max height
      */
-    if(m_heightInfo.ceiling_hit && (tmp[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
+    if(m_heightInfo.ceiling_hit && (to[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
     {
-        tmp[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0;
+        to[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0;
     }
 
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
-    from[1] = pos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
-    from[2] = tmp[2];
-    to = tmp;
+    btVector3 from;
+    from[0] = entityPos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
+    from[1] = entityPos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
+    from[2] = to[2];
 
-    //vec3_copy(cast_ray, from);
-    //vec3_copy(cast_ray+3, to);
+    btTransform fromTransform;
+    fromTransform.setIdentity();
 
-    t1.setIdentity();
-    t2.setIdentity();
-    up_founded = 0;
-    test_height = (test_height >= m_maxStepUpHeight)?(test_height):(m_maxStepUpHeight);
-    d = pos[2] + m_bf.bb_max[2] - test_height;
-    std::copy(to+0, to+3, cast_ray+0);
-    std::copy(to+0, to+3, cast_ray+3);
+    btTransform toTransform;
+    toTransform.setIdentity();
+
+    btScalar d = entityPos[2] + m_bf.bb_max[2] - std::max(test_height, m_maxStepUpHeight);
+    std::copy(&to[0], &to[3], cast_ray+0);
+    std::copy(&to[0], &to[3], cast_ray+3);
     cast_ray[5] -= d;
     btVector3 n0, n1;
     btScalar n0d, n1d;
+    int up_founded = 0;
     do
     {
-        t1.setOrigin(from);
-        t2.setOrigin(to);
+        fromTransform.setOrigin(from);
+        toTransform.setOrigin(to);
         nfc->ccb->m_closestHitFraction = 1.0;
-        nfc->ccb->m_hitCollisionObject = NULL;
-        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+        nfc->ccb->m_hitCollisionObject = nullptr;
+        bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
             if(nfc->ccb->m_hitNormalWorld[2] >= 0.1)
@@ -522,7 +518,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
                 n0 = nfc->ccb->m_hitNormalWorld;
                 n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
-            if(up_founded && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
+            if(up_founded!=0 && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
             {
                 n1 = nfc->ccb->m_hitNormalWorld;
                 n1d = -n1.dot(nfc->ccb->m_hitPointWorld);
@@ -533,16 +529,11 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         }
         else
         {
-            tmp[0] = to[0];
-            tmp[1] = to[1];
-            tmp[2] = d;
-            t1.setOrigin(to);
-            t2.setOrigin(tmp);
-            //vec3_copy(cast_ray, to);
-            //vec3_copy(cast_ray+3, tmp);
+            fromTransform.setOrigin(to);
+            toTransform.setOrigin({to[0], to[1], d});
             nfc->ccb->m_closestHitFraction = 1.0;
             nfc->ccb->m_hitCollisionObject = NULL;
-            bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+            bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
@@ -551,7 +542,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             }
             else
             {
-                return ret;
+                return result;
             }
         }
 
@@ -561,17 +552,16 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         // close to 0.5 - middle speed, good precision
         from[2] -= 0.66 * m_climbR;
         to[2] -= 0.66 * m_climbR;
-    }
-    while(to[2] >= d);                                                 // we can't climb under floor!
+    } while(to[2] >= d);                                                 // we can't climb under floor!
 
     if(up_founded != 2)
     {
-        return ret;
+        return result;
     }
 
     // get the character plane equation
     btVector3 n2 = m_transform.getBasis().getColumn(0);
-    btScalar n2d = -n2.dot(pos);
+    btScalar n2d = -n2.dot(entityPos);
 
     /*
      * Solve system of the linear equations by Kramer method!
@@ -584,41 +574,43 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
 
     if(std::abs(d) < 0.005)
     {
-        return ret;
+        return result;
     }
 
-    ret.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                        n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                        n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
-    ret.edge_point[0] /= d;
+    result.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
+                           n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                           n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
+    result.edge_point[0] /= d;
 
-    ret.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
-                        n1[0] * (n0d * n2[2] - n0[2] * n2d) +
-                        n2[0] * (n0d * n1[2] - n0[2] * n1d);
-    ret.edge_point[1] /= d;
+    result.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
+                           n1[0] * (n0d * n2[2] - n0[2] * n2d) +
+                           n2[0] * (n0d * n1[2] - n0[2] * n1d);
+    result.edge_point[1] /= d;
 
-    ret.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
-                        n1[0] * (n0[1] * n2d - n0d * n2[1]) +
-                        n2[0] * (n0[1] * n1d - n0d * n1[1]);
-    ret.edge_point[2] /= d;
-    ret.point = ret.edge_point;
-    std::copy(ret.point+0, ret.point+3, cast_ray+3);
+    result.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
+                           n1[0] * (n0[1] * n2d - n0d * n2[1]) +
+                           n2[0] * (n0[1] * n1d - n0d * n1[1]);
+    result.edge_point[2] /= d;
+
+    result.point = result.edge_point;
+    std::copy(result.point+0, result.point+3, cast_ray+3);
     /*
      * unclimbable edge slant %)
      */
     n2 = n0.cross(n1);
     d = m_criticalSlantZComponent;
-    d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
+    d *= d * n2.length2();
     if(n2[2] * n2[2] > d)
     {
-        return ret;
+        return result;
     }
 
     /*
      * Now, let us calculate z_angle
      */
-    ret.edge_hit = 0x01;
+    result.edge_hit = ClimbType::HandsOnly;
 
+    // $0,$1,$2 => $1,-$0,0.0
     n2[2] = n2[0];
     n2[0] = n2[1];
     n2[1] =-n2[2];
@@ -629,122 +621,109 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         n2[1] = -n2[1];
     }
 
-    ret.n = n2;
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
-    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
-    ret.edge_tan_xy[0] = -n2[1];
-    ret.edge_tan_xy[1] = n2[0];
-    ret.edge_tan_xy[2] = 0.0;
-    ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
-    ret.t = ret.edge_tan_xy;
+    result.n = n2;
+    result.up_dir = {0,0,1};
+    result.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
+    result.edge_tan_xy = {-n2[1], n2[0], 0.0};
+    result.edge_tan_xy.normalize();
+    result.right_dir = result.edge_tan_xy;
 
-    if(!m_heightInfo.floor_hit || (ret.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
+    if(!m_heightInfo.floor_hit || (result.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
     {
-        ret.can_hang = 1;
+        result.can_hang = true;
     }
 
-    ret.next_z_space = 2.0 * m_height;
+    result.next_z_space = 2.0 * m_height;
     if(nfc->floor_hit && nfc->ceiling_hit)
     {
-        ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+        result.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
     }
 
-    return ret;
+    return result;
 }
 
 
 ClimbInfo Character::checkWallsClimbability()
 {
 
-    ClimbInfo ret;
-    ret.can_hang = 0x00;
-    ret.wall_hit = 0x00;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
-    ret.point = m_climb.point;
+    ClimbInfo result;
+    if(m_heightInfo.floor_hit)
+        result.floor_limit = m_heightInfo.floor_point[2];
+    if(m_heightInfo.ceiling_hit)
+        result.ceiling_limit = m_heightInfo.ceiling_point[2];
+    result.point = m_climb.point;
 
     if(!m_heightInfo.walls_climb)
     {
-        return ret;
+        return result;
     }
 
-    ret.up = {0,0,1};
+    result.up_dir = {0,0,1};
 
-    btVector3& pos = m_transform.getOrigin();
-    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    const btVector3 entityPosition = m_transform.getOrigin();
+    btVector3 from = entityPosition + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
     btVector3 to = from;
-    btScalar t = m_forwardSize + m_bf.bb_max[1];
-    to += m_transform.getBasis().getColumn(1) * t;
+    to += m_transform.getBasis().getColumn(1) * (m_forwardSize + m_bf.bb_max[1]);
 
     auto ccb = m_convexCb;
     ccb->m_closestHitFraction = 1.0;
     ccb->m_hitCollisionObject = nullptr;
 
-    btTransform tr1;
-    tr1.setIdentity();
-    tr1.setOrigin(from);
+    btTransform fromTransform;
+    fromTransform.setIdentity();
+    fromTransform.setOrigin(from);
 
-    btTransform tr2;
-    tr2.setIdentity();
-    tr2.setOrigin(to);
+    btTransform toTransform;
+    toTransform.setIdentity();
+    toTransform.setOrigin(to);
 
-    bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+    bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *ccb);
     if(!ccb->hasHit())
     {
-        return ret;
+        return result;
     }
 
-    ret.point = ccb->m_hitPointWorld;
-    ret.n = ccb->m_hitNormalWorld;
-    btScalar wn2[2] = {ret.n[0], ret.n[1]};
-    t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
-    wn2[0] /= t;
-    wn2[1] /= t;
+    result.point = ccb->m_hitPointWorld;
+    result.n = ccb->m_hitNormalWorld;
+    btVector3 wn2 = {result.n[0], result.n[1], 0};
+    wn2.normalize();
 
-    ret.t[0] =-wn2[1];
-    ret.t[1] = wn2[0];
-    ret.t[2] = 0.0;
+    result.right_dir = {-wn2[1], wn2[0], 0.0};
     // now we have wall normale in XOY plane. Let us check all flags
 
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, -1, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (0, -1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (-1, 0, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, 1, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (0, 1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (1, 0, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (1, 0, 0);
     }
 
-    if(ret.wall_hit)
+    if(result.wall_hit != ClimbType::NoClimb)
     {
-        t = 0.67 * m_height;
-        from -= m_transform.getBasis().getColumn(2) * t;
+        from -= m_transform.getBasis().getColumn(2) * (0.67 * m_height);
         to = from;
-        t = m_forwardSize + m_bf.bb_max[1];
-        to += m_transform.getBasis().getColumn(1) * t;
+        to += m_transform.getBasis().getColumn(1) * (m_forwardSize + m_bf.bb_max[1]);
 
         ccb->m_closestHitFraction = 1.0;
         ccb->m_hitCollisionObject = NULL;
-        tr1.setIdentity();
-        tr1.setOrigin(from);
-        tr2.setIdentity();
-        tr2.setOrigin(to);
-        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+        fromTransform.setIdentity();
+        fromTransform.setOrigin(from);
+        toTransform.setIdentity();
+        toTransform.setOrigin(to);
+        bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *ccb);
         if(ccb->hasHit())
         {
-            ret.wall_hit = 0x02;
+            result.wall_hit = ClimbType::FullClimb;
         }
     }
 
@@ -762,7 +741,7 @@ ClimbInfo Character::checkWallsClimbability()
         ret.ceiling_limit = (ret.ceiling_limit > point[2])?(point[2]):(ret.ceiling_limit);
     }*/
 
-    return ret;
+    return result;
 }
 
 
@@ -1300,7 +1279,7 @@ int Character::wallsClimbing()
     spd={0,0,0};
     *climb = checkWallsClimbability();
     m_climb = *climb;
-    if(!(climb->wall_hit))
+    if(climb->wall_hit == ClimbType::NoClimb)
     {
         m_heightInfo.walls_climb = false;
         return 2;
@@ -1313,19 +1292,19 @@ int Character::wallsClimbing()
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
-        spd += climb->up;
+        spd += climb->up_dir;
     }
     else if(m_dirFlag == ENT_MOVE_BACKWARD)
     {
-        spd -= climb->up;
+        spd -= climb->up_dir;
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd += climb->t;
+        spd += climb->right_dir;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd -= climb->t;
+        spd -= climb->right_dir;
     }
     t = spd.length();
     if(t > 0.01)
@@ -1355,37 +1334,33 @@ int Character::wallsClimbing()
  */
 int Character::climbing()
 {
-    btVector3 move, spd(0.0, 0.0, 0.0);
-    btScalar t;
-    auto& pos = m_transform.getOrigin();
-    btScalar z = pos[2];
-
     m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    t = m_currentSpeed * m_speedMult;
+    const btScalar fullSpeed = m_currentSpeed * m_speedMult;
     m_response.vertical_collide |= 0x01;
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
 
+    btVector3 spd(0.0, 0.0, 0.0);
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
-        spd = m_transform.getBasis().getColumn(1) * t;
+        spd = m_transform.getBasis().getColumn(1) * fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_BACKWARD)
     {
-        spd = m_transform.getBasis().getColumn(1) * -t;
+        spd = m_transform.getBasis().getColumn(1) * -fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd = m_transform.getBasis().getColumn(0) * -t;
+        spd = m_transform.getBasis().getColumn(0) * -fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd = m_transform.getBasis().getColumn(0) * t;
+        spd = m_transform.getBasis().getColumn(0) * fullSpeed;
     }
     else
     {
@@ -1397,13 +1372,14 @@ int Character::climbing()
 
     m_response.slide = CHARACTER_SLIDE_NONE;
     m_speed = spd;
-    move = spd * engine_frame_time;
+    btVector3 move = spd * engine_frame_time;
 
     ghostUpdate();
-    pos += move;
+    const btScalar origZ = m_transform.getOrigin()[2];
+    m_transform.getOrigin() += move;
     fixPenetrations(&move);                              // get horizontal collide
     updateRoomPos();
-    pos[2] = z;
+    m_transform.getOrigin()[2] = origZ;
 
     return 1;
 }

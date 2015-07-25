@@ -144,20 +144,18 @@
 /*
  * Next step height information
  */
-#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
-#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
-#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
-#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
-#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
-#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
-#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
-#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
-#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
-
-#define CLIMB_ABSENT                            (0x00)
-#define CLIMB_HANG_ONLY                         (0x01)
-#define CLIMB_ALT_HEIGHT                        (0x02)
-#define CLIMB_FULL_HEIGHT                       (0x03)
+enum class NextStepInfo
+{
+    DownCanHang, //!< enough height to hang here
+    DownDrop,    //!< big height, cannot walk next, drop only
+    DownBig,     //!< enough height change, step down is needed
+    DownLittle,  //!< too little height change, step down is not needed
+    Horizontal,  //!< horizontal plane
+    UpLittle,    //!< too little height change, step up is not needed
+    UpBig,       //!< enough height change, step up is needed
+    UpClimb,     //!< big height, cannot walk next, climb only
+    UpImpossible //!< too big height, no one ways here, or phantom case
+};
 
 // CHARACTER PARAMETERS TYPES
 
@@ -190,25 +188,31 @@ class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
+enum class ClimbType
+{
+    NoClimb,   //!< No climability at all
+    HandsOnly, //!< Hands only climbability
+    FullClimb  //!< Full body climbability (hands and feet)
+};
+
 struct ClimbInfo
 {
-    int8_t                         height_info = 0;
-    int8_t                         can_hang = 0;
+    NextStepInfo                   height_info = NextStepInfo::Horizontal;
+    bool                           can_hang = false;
 
     btVector3 point;
     btVector3 n;
-    btVector3 t;
-    btVector3 up;
-    btScalar                       floor_limit;
-    btScalar                       ceiling_limit;
-    btScalar                       next_z_space = 0;
+    btVector3                      right_dir = {0,0,0}; //!< Where to climb to when climbing "right"
+    btVector3                      up_dir = {0,0,0};    //!< Where to climb to when climbing "up"
+    btScalar                       floor_limit   = -9e10;
+    btScalar                       ceiling_limit = +9e10;
+    btScalar                       next_z_space  = 0;
 
-    int8_t                         wall_hit = 0;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit = 0;
-    btVector3                      edge_point;
-    btVector3                      edge_normale;
-    btVector3                      edge_tan_xy;
-    btScalar                       edge_z_ang;
+    ClimbType                      wall_hit = ClimbType::NoClimb;
+    ClimbType                      edge_hit = ClimbType::NoClimb;
+    btVector3                      edge_point;  //!< The point we're grabbing the edge
+    btVector3                      edge_tan_xy; //!< The edge's normalized direction, excluding vertical component
+    btScalar                       edge_z_ang;  //!< Z Angle of the edge we're hanging on
     btCollisionObject             *edge_obj = nullptr;
 };
 
@@ -331,14 +335,14 @@ struct Character : public Entity
     btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
     btScalar                     m_forwardSize = 48;           // offset for climbing calculation
     btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
     btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
     btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
 
     std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
-    std::unique_ptr<btSphereShape> m_climbSensor;
+    btScalar      m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    btSphereShape m_climbSensor{DEFAULT_CHARACTER_CLIMB_R};
 
     HeightInfo         m_heightInfo{};
     ClimbInfo          m_climb{};
@@ -389,9 +393,9 @@ struct Character : public Entity
     int32_t getItemsCount(uint32_t item_id);                // returns items count
 
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-    int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
+    NextStepInfo checkNextStep(const btVector3 &offset, HeightInfo *nfc);
     bool hasStopSlant(const HeightInfo &next_fc);
-    ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkClimbability(const btVector3 &offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();
 
     void updateCurrentHeight();
