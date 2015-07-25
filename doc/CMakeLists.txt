@@ -7,7 +7,6 @@ if(PYGMENTIZE AND ASCIIDOC AND COMPILE_TROSETTASTONE)
     add_custom_target(
       trosettastone
       COMMAND ${ASCIIDOC} -b html5 -a max-width=100% trosettastone.asc
-      DEPENDS trosettastone.asc
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       COMMENT "Running asciidoc on trosettastone.asc"
     )
