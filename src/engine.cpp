@@ -1625,7 +1625,7 @@ bool lua_GetEntityEnability(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if(ent)
+    if(ent == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
