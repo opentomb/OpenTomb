@@ -15,8 +15,8 @@
 
 #include <lua.hpp>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include "vt/vt_level.h"
 
 #include "obb.h"

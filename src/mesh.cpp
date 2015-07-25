@@ -1,7 +1,7 @@
 
 #include <cstdlib>
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 #include "mesh.h"
 #include "polygon.h"

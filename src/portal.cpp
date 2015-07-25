@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "polygon.h"
 #include "portal.h"

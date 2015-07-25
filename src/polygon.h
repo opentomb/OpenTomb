@@ -7,7 +7,7 @@
 #include <array>
 
 #include <GL/glew.h>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "vmath.h"
 

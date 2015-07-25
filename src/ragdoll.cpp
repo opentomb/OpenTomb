@@ -3,9 +3,9 @@
 #include <cmath>
 #include <assert.h>
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <LinearMath/btScalar.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <btBulletDynamicsCommon.h>
 
 #include "vmath.h"
 #include "character_controller.h"

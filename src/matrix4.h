@@ -21,7 +21,7 @@
 #endif
 #endif
 
-#include <bullet/LinearMath/btTransform.h>
+#include <LinearMath/btTransform.h>
 
 #if defined(_MSC_VER)
 // Microsoft Visual C++

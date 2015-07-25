@@ -5,11 +5,11 @@
 #include <cmath>
 #include <array>
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/LinearMath/btMatrix3x3.h>
-#include <bullet/LinearMath/btQuaternion.h>
-#include <bullet/LinearMath/btTransform.h>
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btMatrix3x3.h>
+#include <LinearMath/btQuaternion.h>
+#include <LinearMath/btTransform.h>
 
 #define PLANE_X        1
 #define PLANE_Y        2

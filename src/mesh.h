@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <vector>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "vertex_array.h"
 #include "object.h"

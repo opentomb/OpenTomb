@@ -1,7 +1,7 @@
 
 #include <cmath>
 #include <cstdlib>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "vmath.h"
 #include "obb.h"

@@ -5,9 +5,9 @@
 #include <memory>
 #include <vector>
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/LinearMath/btIDebugDraw.h>
+#include <LinearMath/btScalar.h>
+#include <btBulletDynamicsCommon.h>
+#include <LinearMath/btIDebugDraw.h>
 
 #include "matrix4.h"
 #include "vertex_array.h"

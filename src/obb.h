@@ -10,7 +10,7 @@
 
 #include <cstdint>
 #include <memory>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "polygon.h"
 

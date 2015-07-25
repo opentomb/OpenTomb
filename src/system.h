@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "gl_util.h"
 

@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
 
 #include <lua.hpp>
 
