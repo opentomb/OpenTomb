@@ -5408,6 +5408,7 @@ int Character::stateControlLara(SSAnimation* ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_LEFT:
+        case TR_STATE_LARA_JUMP_RIGHT:
             stateLaraJumpLeftRight(ss_anim);
             break;
 
