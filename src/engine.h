@@ -116,8 +116,6 @@ struct EngineControlState
 extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
 
-extern AudioSettings                  audio_settings;
-
 extern btScalar                                 engine_frame_time;
 extern Camera                          engine_camera;
 extern World                           engine_world;

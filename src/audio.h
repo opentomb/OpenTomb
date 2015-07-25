@@ -46,8 +46,8 @@
 // Also, underwater environment can be considered as additional
 // reverb flag, so overall amount is 6.
 
-enum TR_AUDIO_FX {
-
+enum TR_AUDIO_FX
+{
     TR_AUDIO_FX_OUTSIDE,         // EFX_REVERB_PRESET_CITY
     TR_AUDIO_FX_SMALLROOM,       // EFX_REVERB_PRESET_LIVINGROOM
     TR_AUDIO_FX_MEDIUMROOM,      // EFX_REVERB_PRESET_WOODEN_LONGPASSAGE
@@ -265,12 +265,12 @@ struct Entity;
 
 struct AudioSettings
 {
-    ALfloat     music_volume = 0;
-    ALfloat     sound_volume = 0;
-    bool        use_effects = false;
+    ALfloat     music_volume = 0.7;
+    ALfloat     sound_volume = 0.8;
+    bool        use_effects = true;
     bool        effects_initialized = false;
     bool        listener_is_player = false; // RESERVED FOR FUTURE USE
-    int         stream_buffer_size = 0;
+    int         stream_buffer_size = 32;
 };
 
 // FX manager structure.
@@ -285,6 +285,8 @@ struct AudioFxManager
     ALuint      current_room_type;
     ALuint      last_room_type;
     int8_t      water_state;    // If listener is underwater, all samples will damp.
+
+    bool loadReverbToFX(int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 };
 
 // Effect structure.
@@ -335,10 +337,15 @@ struct AudioEmitter
 // Number of simultaneously existing sound sources is fixed, and can't be more than
 // MAX_CHANNELS global constant.
 
+struct AudioManager;
+
 class AudioSource
 {
+    AudioSource(const AudioSource&) = delete;
+    AudioSource& operator=(const AudioSource&) = delete;
 public:
-    AudioSource();  // Audio source constructor.
+    explicit AudioSource(AudioManager *manager);  // Audio source constructor.
+    AudioSource(AudioSource&&) = default;
    ~AudioSource();  // Audio source destructor.
 
     void Play();    // Make source active and play it.
@@ -355,22 +362,24 @@ public:
     void UnsetFX();                         // Remove any reverb FX from source.
     void SetUnderwater();                   // Apply low-pass underwater filter.
 
-    bool IsLooping();           // Check if source is looping;
-    bool IsPlaying();           // Check if source is currently playing.
-    bool IsActive();            // Check if source is active.
+    bool IsLooping() const;           // Check if source is looping;
+    bool IsPlaying() const;           // Check if source is currently playing.
+    bool IsActive() const;            // Check if source is active.
 
-    int32_t     emitter_ID;     // Entity of origin. -1 means no entity (hence - empty source).
-    uint32_t    emitter_type;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
-    uint32_t    effect_index;   // Effect index. Used to associate effect with entity for R/W flags.
-    uint32_t    sample_index;   // OpenAL sample (buffer) index. May be the same for different sources.
-    uint32_t    sample_count;   // How many buffers to use, beginning with sample_index.
+    int32_t     emitter_ID = -1;     // Entity of origin. -1 means no entity (hence - empty source).
+    uint32_t    emitter_type = TR_AUDIO_EMITTER_ENTITY;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
+    uint32_t    effect_index = 0;   // Effect index. Used to associate effect with entity for R/W flags.
+    uint32_t    sample_index = 0;   // OpenAL sample (buffer) index. May be the same for different sources.
+    uint32_t    sample_count = 0;   // How many buffers to use, beginning with sample_index.
 
     friend int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID);
 
 private:
-    bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
-    bool        is_water;       // Marker to define if sample is in underwater state or not.
+    bool        active = false;         // Source gets autostopped and destroyed on next frame, if it's not set.
+    bool        is_water= false;       // Marker to define if sample is in underwater state or not.
     ALuint      source_index;   // Source index. Should be unique for each source.
+
+    AudioManager* m_manager;
 
     void LinkEmitter();                             // Link source to parent emitter.
     void SetPosition(const ALfloat pos_vector[]);   // Set source position.
@@ -385,8 +394,11 @@ private:
 
 class StreamTrack
 {
+    StreamTrack(const StreamTrack&) = delete;
+    StreamTrack& operator=(const StreamTrack&) = delete;
 public:
-    StreamTrack();      // Stream track constructor.
+    explicit StreamTrack(AudioManager* manager);      // Stream track constructor.
+    StreamTrack(StreamTrack&&) = default;
    ~StreamTrack();      // Stream track destructor.
 
     // Load routine prepares track for playing. Arguments are track index,
@@ -419,84 +431,113 @@ private:
 
     bool Stream(ALuint buffer);          // General stream routine.
 
-    FILE*           wad_file;   // General handle for opened wad file.
-    SNDFILE*        snd_file;   // Sndfile file reader needs its own handle.
+    FILE*           wad_file = nullptr;   // General handle for opened wad file.
+    SNDFILE*        snd_file = nullptr;   // Sndfile file reader needs its own handle.
     SF_INFO         sf_info;
 
     // General OpenAL fields
 
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
-    ALenum          format;
-    ALsizei         rate;
-    ALfloat         current_volume;     // Stream volume, considering fades.
-    ALfloat         damped_volume;      // Additional damp volume multiplier.
+    ALenum          format = 0x00;
+    ALsizei         rate = 0;
+    ALfloat         current_volume = 0;     // Stream volume, considering fades.
+    ALfloat         damped_volume = 0;      // Additional damp volume multiplier.
 
-    bool            active;             // If track is active or not.
-    bool            ending;             // Used when track is being faded by other one.
-    bool            dampable;           // Specifies if track can be damped by others.
-    int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
-    int             current_track;      // Needed to prevent same track sending.
-    int             method;             // TRACK (TR1-2/4-5) or WAD (TR3).
+    bool            active = false;             // If track is active or not.
+    bool            ending = false;             // Used when track is being faded by other one.
+    bool            dampable = false;           // Specifies if track can be damped by others.
+    int             stream_type = TR_AUDIO_STREAM_TYPE_ONESHOT;        // Either BACKGROUND, ONESHOT or CHAT.
+    int             current_track = -1;      // Needed to prevent same track sending.
+    int             method = -1;             // TRACK (TR1-2/4-5) or WAD (TR3).
+
+    AudioManager* m_manager;
 };
 
 // General audio routines.
 
-void Audio_InitGlobals();
-void Audio_InitFX();
+struct AudioBuffer
+{
+    ALuint handle = 0;
 
-void Audio_Init(uint32_t num_Sources = TR_AUDIO_MAX_CHANNELS);
-int  Audio_DeInit();
-void Audio_Update();
+    AudioBuffer()
+    {
+        alGenBuffers(1, &handle);
+    }
+
+    ~AudioBuffer()
+    {
+        alDeleteBuffers(1, &handle);
+    }
+
+    bool fill(SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
+    int  loadFromMem(uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
+    int  loadFromFile(const char *fname);
+};
+
+struct AudioManager
+{
+    AudioSettings audio_settings;
+    AudioFxManager fxManager;
+
+    std::vector<AudioEmitter> audio_emitters;       //!< Audio emitters.
+    std::vector<int16_t> audio_map;                 //!< Effect indexes.
+    std::vector<AudioEffect> audio_effects;         //!< Effects and their parameters.
+
+    std::vector<AudioBuffer> audio_buffers;              //!< Samples.
+    std::vector<AudioSource> audio_sources;         //!< Channels.
+    std::vector<uint8_t> stream_track_map;          //!< Stream track flag map.
+    std::vector<StreamTrack> stream_tracks;         //!< Stream tracks.
+
+    void clear()
+    {
+        audio_sources.clear();
+        audio_buffers.clear();
+        audio_effects.clear();
+        stream_tracks.clear();
+        stream_track_map.clear();
+    }
+
+    void init(size_t num_Sources = TR_AUDIO_MAX_CHANNELS);
+    void initFX();
+    void deinit();
+
+    void initEmitters(const tr_sound_source_t* sources, size_t count);
+    void updateSources();
+    void pauseAllSources();    // Used to pause all effects currently playing.
+    void stopAllSources();     // Used in audio deinit.
+    void resumeAllSources();   // Used to resume all effects currently paused.
+    void updateListenerByCamera(Camera *cam);
+    void updateListenerByEntity(std::shared_ptr<Entity> ent);
+    void updateStreams();                          // Update all streams.
+    void update();
+
+    int getFreeSource() const;
+    int getFreeStream();                          // Get free (stopped) stream.
+
+    bool isInRange(int entity_type, int entity_ID, float range, float gain);
+    int  findPlayingSource(int effect_ID = -1, int entity_type = -1, int entity_ID = -1);
+    int  send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // Send to play effect with given parameters.
+    int  kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.
+    bool isTrackPlaying(int32_t track_index = -1); // See if track is already playing.
+    bool trackAlreadyPlayed(uint32_t track_index,
+                                  int8_t mask = 0);      // Check if track played with given activation mask.
+    void updateStreamsDamping();                   // See if there any damping tracks playing.
+    bool endStreams(int stream_type = -1);         // End ALL streams (with crossfade).
+    bool stopStreams(int stream_type = -1);        // Immediately stop ALL streams.
+    // Generally, you need only this function to trigger any track.
+    int streamPlay(const uint32_t track_index, const uint8_t mask = 0);
+    bool deInitDelay();
+
+    static void loadALExtFunctions(ALCdevice* device);
+    // Error handling routines.
+    static bool logALError(int error_marker = 0);    // AL-specific error handler.
+    static void logSndfileError(int code);           // Sndfile-specific error handler.
+};
+
 
 // Audio source (samples) routines.
 
-int  Audio_GetFreeSource();
-bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain);
-int  Audio_IsEffectPlaying(int effect_ID = -1, int entity_type = -1, int entity_ID = -1);
-
-int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // Send to play effect with given parameters.
-int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.
-
-void Audio_PauseAllSources();    // Used to pause all effects currently playing.
-void Audio_StopAllSources();     // Used in audio deinit.
-void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
-void Audio_UpdateSources();      // Main sound loop.
-void Audio_UpdateListenerByCamera(Camera *cam);
-void Audio_UpdateListenerByEntity(std::shared_ptr<Entity> ent);
-
-bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
-int  Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
-int  Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples(World *world);
-
-int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
-
-// Stream tracks (music / BGM) routines.
-
-int  Audio_GetFreeStream();                          // Get free (stopped) stream.
-bool Audio_IsTrackPlaying(int32_t track_index = -1); // See if track is already playing.
-bool Audio_TrackAlreadyPlayed(uint32_t track_index,
-                              int8_t mask = 0);      // Check if track played with given activation mask.
-void Audio_UpdateStreams();                          // Update all streams.
-void Audio_UpdateStreamsDamping();                   // See if there any damping tracks playing.
-void Audio_PauseStreams(int stream_type = -1);       // Pause ALL streams (of specified type).
-void Audio_ResumeStreams(int stream_type = -1);      // Resume ALL streams.
-bool Audio_EndStreams(int stream_type = -1);         // End ALL streams (with crossfade).
-bool Audio_StopStreams(int stream_type = -1);        // Immediately stop ALL streams.
-
-// Generally, you need only this function to trigger any track.
-int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
-
-// Error handling routines.
-
-bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
-void Audio_LogSndfileError(int code);           // Sndfile-specific error handler.
-
-// Helper functions.
-
-float   Audio_GetByteDepth(SF_INFO sfInfo);
-void    Audio_LoadALExtFunctions(ALCdevice* device);
-bool    Audio_DeInitDelay();
 
 #endif // AUDIO_H

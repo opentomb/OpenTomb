@@ -337,7 +337,7 @@ void Engine_InitAL()
         Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
         ALCdevice* dev = alcOpenDevice(devlist);
 
-        if(audio_settings.use_effects)
+        if(engine_world.audio_manager.audio_settings.use_effects)
         {
             if( alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE )
             {
@@ -371,7 +371,7 @@ void Engine_InitAL()
 
     alcMakeContextCurrent(al_context);
 
-    Audio_LoadALExtFunctions(al_device);
+    AudioManager::loadALExtFunctions(al_device);
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);

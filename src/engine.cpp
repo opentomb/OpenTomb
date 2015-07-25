@@ -57,10 +57,9 @@ extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
 extern ALCcontext             *al_context;
 
-EngineControlState           control_states{};
-ControlSettings               control_mapper{};
-AudioSettings                 audio_settings{};
-btScalar                                engine_frame_time = 0.0;
+EngineControlState             control_states{};
+ControlSettings                control_mapper{};
+btScalar                       engine_frame_time = 0.0;
 
 Camera                         engine_camera;
 World                          engine_world;
@@ -153,7 +152,7 @@ void Engine_InitDefaultGlobals()
     Controls_InitGlobals();
     Game_InitGlobals();
     renderer.initGlobals();
-    Audio_InitGlobals();
+    engine_world.audio_manager = AudioManager();
 }
 
 // First stage of initialization.
@@ -2478,26 +2477,26 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        Audio_StreamPlay(id, mask.to<int>());
+        engine_world.audio_manager.streamPlay(id, mask.to<int>());
     }
     else
     {
-        Audio_StreamPlay(id);
+        engine_world.audio_manager.streamPlay(id);
     }
 }
 
 void lua_StopStreams()
 {
-    Audio_StopStreams();
+    engine_world.audio_manager.stopStreams();
 }
 
 void lua_PlaySound(int id, lua::Value ent_id)
 {
     if(id < 0) return;
 
-    if(id >= engine_world.audio_map.size())
+    if(static_cast<size_t>(id) >= engine_world.audio_manager.audio_map.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_manager.audio_map.size());
         return;
     }
 
@@ -2511,11 +2510,11 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
     if(eid >= 0)
     {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, eid);
+        result = engine_world.audio_manager.send(id, TR_AUDIO_EMITTER_ENTITY, eid);
     }
     else
     {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
+        result = engine_world.audio_manager.send(id, TR_AUDIO_EMITTER_GLOBAL);
     }
 
     if(result < 0)
@@ -2535,9 +2534,9 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
 void lua_StopSound(uint32_t id, lua::Value ent_id)
 {
-    if(id >= engine_world.audio_map.size())
+    if(id >= engine_world.audio_manager.audio_map.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_manager.audio_map.size());
         return;
     }
 
@@ -2551,11 +2550,11 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 
     if(eid == -1)
     {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
+        result = engine_world.audio_manager.kill(id, TR_AUDIO_EMITTER_GLOBAL);
     }
     else
     {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, eid);
+        result = engine_world.audio_manager.kill(id, TR_AUDIO_EMITTER_ENTITY, eid);
     }
 
     if(result < 0)
@@ -3373,7 +3372,7 @@ int Engine_LoadMap(const std::string& name)
 
     lua_Clean(engine_lua);
 
-    Audio_Init();
+    engine_world.audio_manager.init();
 
     Gui_DrawLoadScreen(100);
 
@@ -3669,7 +3668,7 @@ void Engine_InitConfig(const char *filename)
 
         lua_ParseScreen(state, &screen_info);
         lua_ParseRender(state, &renderer.settings());
-        lua_ParseAudio(state, &audio_settings);
+        lua_ParseAudio(state, &engine_world.audio_manager.audio_settings);
         lua_ParseConsole(state, &ConsoleInfo::instance());
         lua_ParseControls(state, &control_mapper);
     }

@@ -391,12 +391,8 @@ void World::prepare()
     items_tree.clear();
     character.reset();
 
-    audio_sources.clear();
-    audio_buffers.clear();
-    audio_effects.clear();
+    audio_manager.clear();
     anim_sequences.clear();
-    stream_tracks.clear();
-    stream_track_map.clear();
 
     room_boxes.clear();
     cameras_sinks.clear();
@@ -413,7 +409,7 @@ void World::empty()
     last_cont = NULL;
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
-    Audio_DeInit();
+    engine_world.audio_manager.deinit();
 
     if(main_inventory_manager != NULL)
     {
@@ -550,7 +546,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         else
         {
             ent = std::make_shared<Entity>(id);
-            if(id+1 > next_entity_id)
+            if(static_cast<uint32_t>(id+1) > next_entity_id)
               next_entity_id = id+1;
         }
 
