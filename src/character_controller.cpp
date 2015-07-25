@@ -77,44 +77,25 @@ int32_t Character::removeItem(uint32_t item_id, int32_t count) // returns items 
         return 0;
     }
 
-    auto pi = m_inventory.begin();
-    if(pi->id == item_id)
+    for(auto it = std::begin(m_inventory); it != std::end(m_inventory); ++it)
     {
-        if(pi->count > count)
+        if(it->id == item_id)
         {
-            pi->count -= count;
-            return pi->count;
-        }
-        else if(pi->count == count)
-        {
-            m_inventory.pop_front();
-            return 0;
-        }
-        else // count_to_remove > current_items_count
-        {
-            return (int32_t)pi->count - (int32_t)count;
-        }
-    }
-
-    auto i = std::next(pi);
-
-    while(i != m_inventory.end()) {
-        // i = pi+1
-        if(i->id == item_id) {
-            if(i->count > count) {
-                i->count -= count;
-                return i->count;
+            if(it->count > count)
+            {
+                it->count -= count;
+                return it->count;
             }
-            else if(i->count == count) {
-                m_inventory.erase(i);
+            else if(it->count == count)
+            {
+                m_inventory.erase(it);
                 return 0;
             }
-            else { // count_to_remove > current_items_count
-                return (int32_t)i->count - (int32_t)count;
+            else // count_to_remove > current_items_count
+            {
+                return it->count - count;
             }
         }
-        pi = i;
-        ++i;
     }
 
     return -count;
