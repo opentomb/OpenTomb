@@ -133,9 +133,17 @@ int32_t Character::removeAllItems()
 }
 
 
-int32_t Character::getItemsCount(uint32_t /*item_id*/)         // returns items count
+int32_t Character::getItemsCount(uint32_t item_id)         // returns items count
 {
-    return m_inventory.size();
+    for (const auto& item : m_inventory)
+    {
+        if (item.id == item_id)
+        {
+            return item.count;
+        }
+    }
+
+    return 0;
 }
 
 /**
