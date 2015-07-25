@@ -2495,7 +2495,7 @@ void lua_PlaySound(int id, lua::Value ent_id)
 {
     if(id < 0) return;
 
-    if(id >= engine_world.audio_map.size())
+    if(static_cast<size_t>(id) >= engine_world.audio_map.size())
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
         return;

@@ -550,7 +550,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         else
         {
             ent = std::make_shared<Entity>(id);
-            if(id+1 > next_entity_id)
+            if(static_cast<uint32_t>(id+1) > next_entity_id)
               next_entity_id = id+1;
         }
 
