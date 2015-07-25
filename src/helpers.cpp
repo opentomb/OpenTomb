@@ -1,6 +1,6 @@
 
 #include <cmath>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "helpers.h"
 

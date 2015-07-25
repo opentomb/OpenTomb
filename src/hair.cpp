@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cmath>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "hair.h"
 #include "mesh.h"

@@ -3,7 +3,7 @@
 #define HELPERS_H
 
 #include <cmath>
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #define Clamp(v,l,h) ((v<l)?l:((v>h)?h:v))
 

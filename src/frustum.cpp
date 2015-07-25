@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 
 #include "vmath.h"
 #include "camera.h"

@@ -3,11 +3,11 @@
 #include <cstdint>
 #include <memory>
 
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/BulletCollision/CollisionShapes/btCollisionShape.h>
-#include <bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+#include <LinearMath/btVector3.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include "object.h"
 #include "mesh.h"
 

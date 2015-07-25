@@ -23,10 +23,10 @@
 #include <lua.hpp>
 #include "LuaState.h"
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 
 void Entity::createGhosts()

@@ -1,7 +1,7 @@
 #include <cassert>
 #include <cstdint>
 
-#include <bullet/LinearMath/btScalar.h>
+#include <LinearMath/btScalar.h>
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"

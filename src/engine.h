@@ -4,8 +4,8 @@
 
 #include <SDL2/SDL.h>
 #include <cstdint>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include "world.h"
 #include "script.h"
 #include "controls.h"

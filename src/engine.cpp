@@ -9,9 +9,9 @@
 #include <cstring>
 #include <cctype>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <lua.hpp>
 

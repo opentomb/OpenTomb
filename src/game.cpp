@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 #include <lua.hpp>
 
 #include "vmath.h"
