@@ -3885,7 +3885,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->genEntityRigidBody();
             lara->createGhosts();
             lara->m_height = 768.0;
-            lara->state_func = State_Control_Lara;
+            lara->state_func = &Character::stateControlLara;
 
             continue;
         }

@@ -1,19 +1,4 @@
-
-#ifndef ANIM_STATE_CONTROL_H
-#define ANIM_STATE_CONTROL_H
-
-#include <memory>
-
-class VT_Level;
-struct Polygon;
-struct BaseMesh;
-struct Room;
-struct World;
-struct Camera;
-struct SSAnimation;
-struct Entity;
-struct RoomSector;
-struct CharacterCommand;
+#pragma once
 
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
@@ -769,9 +754,3 @@ struct CharacterCommand;
 #define TR_EFFECT_REMOVEWATERSKIN       44
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
-
-struct Character;
-int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
-
-#endif
-

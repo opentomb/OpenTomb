@@ -325,7 +325,7 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    int (Character::*state_func)(SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -402,7 +402,7 @@ struct Character : public Entity
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void lean(CharacterCommand* cmd, btScalar max_lean);
+    void lean(btScalar max_lean);
     btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 
@@ -430,6 +430,24 @@ struct Character : public Entity
     int   setParamMaximum(int parameter, float max_value);
 
     int   setWeaponModel(int weapon_model, int armed);
+
+    int stateControlLara(SSAnimation* ss_anim);
+
+private:
+    // Anim frame callbacks
+    void stopTraverse(SSAnimation* ss_anim, int state);
+    void setOnFloor(SSAnimation* ss_anim, int state);
+    void turnFast(SSAnimation* ss_anim, int state);
+    void setOnFloorAfterClimb(SSAnimation* ss_anim, int state);
+    void setUnderwater(SSAnimation* ss_anim, int state);
+    void setFreeFalling(SSAnimation* ss_anim, int state);
+    void setCmdSlide(SSAnimation* ss_anim, int state);
+    void correctDivingAngle(SSAnimation* ss_anim, int state);
+    void toOnWater(SSAnimation* ss_anim, int state);
+    void climbOutOfWater(SSAnimation* ss_anim, int state);
+    void toEdgeClimb(SSAnimation* ss_anim, int state);
+    void toMonkeySwing(SSAnimation* ss_anim, int state);
+    void crawlToClimb(SSAnimation* ss_anim, int state);
 };
 
 bool IsCharacter(std::shared_ptr<Entity> ent);
