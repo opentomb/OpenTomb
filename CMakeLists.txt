@@ -7,50 +7,114 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
+if(APPLE)
+    file(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+        src/mac/*.m
+        3rdparty/al/*.c
+        3rdparty/al/*/*.c
+        3rdparty/al/*/*/*.c
+    )
+    file(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+        src/mac/*.h
+        3rdparty/al/*.h
+        3rdparty/al/*/*.h
+        3rdparty/al/*/*/*.h
+    )
+else()
+    file(GLOB PRJ_SRC
+        src/*.c*
+        src/vt/*.cpp
+    )
+    file(GLOB PRJ_HDR
+        src/*.h*
+        src/vt/*.h
+    )
+endif()
+
+add_executable(
+    ${PROJECT_NAME}
+    ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}
+)
+
 # -std-gnu++11 is needed for picky fileno function in streaming track code.
 # I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wextra -msse3")
+    target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
 endif()
 
 if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
+    target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11 -Wall -Wextra -msse3)
 endif()
 
-find_package(Bullet REQUIRED)
-include_directories(${BULLET_INCLUDE_DIRS})
+find_package(Bullet)
+if(BULLET_INCLUDE_DIR)
+    add_library(Bullet INTERFACE)
+    target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
+    target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
+else()
+    set(BULLET_DIR 3rdparty/bullet/src)
+
+    file(GLOB BULLET_FILES
+        ${BULLET_DIR}/*.h
+        ${BULLET_DIR}/*/*.h
+        ${BULLET_DIR}/*/*/*.h
+        ${BULLET_DIR}/*.cpp
+        ${BULLET_DIR}/*/*.cpp
+        ${BULLET_DIR}/*/*/*.cpp
+    )
+
+    add_library(Bullet ${BULLET_FILES})
+    target_compile_options(Bullet PRIVATE -O2)
+    target_include_directories(Bullet PUBLIC ${BULLET_DIR})
+endif()
 
 find_package(Freetype REQUIRED)
-include_directories(${FREETYPE_INCLUDE_DIRS})
+add_library(Freetype INTERFACE)
+target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+target_link_libraries(Freetype INTERFACE ${FREETYPE_LIBRARIES})
 
 find_package(OpenGL REQUIRED)
-include_directories(${OPENGL_INCLUDE_DIR})
+add_library(OpenGL INTERFACE)
+target_include_directories(OpenGL INTERFACE ${OPENGL_INCLUDE_DIR})
+target_link_libraries(OpenGL INTERFACE ${OPENGL_LIBRARIES})
 
 find_package(GLEW REQUIRED)
-include_directories(${GLEW_INCLUDE_DIRS})
+add_library(GLEW INTERFACE)
+target_include_directories(GLEW INTERFACE ${GLEW_INCLUDE_DIRS})
+target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
 find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
+add_library(ZLIB INTERFACE)
+target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIRS})
+target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARIES})
 
 find_package(Lua REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
-add_definitions(-DLUA_COMPAT_APIINTCASTS)
+add_library(Lua INTERFACE)
+target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
+target_compile_definitions(Lua INTERFACE -DLUA_COMPAT_APIINTCASTS)
+target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 
-include_directories(3rdparty/LuaState/include)
+target_include_directories(${PROJECT_NAME} PRIVATE 3rdparty/LuaState/include)
 
 if(APPLE)
     # Don’t attempt to find AL anywhere, just use ours directly.
     include_directories(3rdparty/al/)
 else()
     find_package(OpenAL REQUIRED)
-    include_directories(${OPENAL_INCLUDE_DIR})
+    add_library(OpenAL INTERFACE)
+    target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
+    target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 endif()
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 
 if(USE_OPENAL_FLOAT)
-    add_definitions(-DAUDIO_OPENAL_FLOAT)
+    target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)
 
 function(trylinklib LIBNAME ATTRIBS)
@@ -124,58 +188,24 @@ else()
         set(SDL2_IMAGE_INCLUDE_DIRS "${SDL2IMAGE_INCLUDE_DIR};${SDL2_INCLUDE_DIR}/SDL2")
     endif()
     # disable glext prototypes
-    add_definitions("-DGL_GLEXT_PROTOTYPES")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
 endif()
 
-include_directories(${SDL2_INCLUDE_DIRS}
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS}
                     ${SDL2_IMAGE_INCLUDE_DIRS})
 
                     
-if(APPLE)
-    file(GLOB PRJ_SRC
-        src/*.c*
-        src/vt/*.cpp
-        src/mac/*.m
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
-    )
-    file(GLOB PRJ_HDR
-        src/*.h*
-        src/vt/*.h
-        src/mac/*.h
-        3rdparty/al/*.h
-        3rdparty/al/*/*.h
-        3rdparty/al/*/*/*.h
-    )
-else()
-    file(GLOB PRJ_SRC
-        src/*.c*
-        src/vt/*.cpp
-    )
-    file(GLOB PRJ_HDR
-        src/*.h*
-        src/vt/*.h
-    )
-endif()
-
-add_executable(
-    ${PROJECT_NAME}
-    ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}
-)
-
-
 target_link_libraries(
     ${PROJECT_NAME}
-    ${OPENGL_LIBRARIES}
-    ${GLEW_LIBRARIES}
+    OpenGL
+    Bullet
+    GLEW
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
-    ${ZLIB_LIBRARIES}
-    ${BULLET_LIBRARIES}
-    ${FREETYPE_LIBRARIES}
-    ${LUA_LIBRARIES}
-    ${OPENAL_LIBRARY}
+    ZLIB
+    Lua
+    Freetype
+    OpenAL
     ${ogg_LIB}
     ${vorbis_LIB}
     ${vorbisfile_LIB}
