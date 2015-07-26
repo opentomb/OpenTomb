@@ -275,7 +275,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_below)
             {
-                assert( rs->sector_above != nullptr );
+                assert( rs->sector_below != nullptr );
                 rs = rs->sector_below->checkFlip();
                 assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
