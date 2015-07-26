@@ -76,9 +76,8 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 
 void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int entity_id)
 {
-    char bufC[64] = "";
-    snprintf(bufC, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
-    state.doString(bufC);
+    if(state["entity_funcs"][entity_id].is<lua::Nil>())
+        state["entity_funcs"].set(entity_id, lua::Table());
     state[(func_name + "_init").c_str()](entity_id);
 }
 
@@ -716,14 +715,14 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGERS
                 {
-                    char header[128];               header[0]            = 0;   // Header condition
-                    char once_condition[128];       once_condition[0]    = 0;   // One-shot condition
-                    char cont_events[4096];         cont_events[0]       = 0;   // Continous trigger events
-                    char single_events[4096];       single_events[0]     = 0;   // One-shot trigger events
-                    char item_events[4096];         item_events[0]       = 0;   // Item activation events
-                    char anti_events[4096];         anti_events[0]       = 0;   // Item deactivation events, if needed
+                    std::string header;         // Header condition
+                    std::string once_condition; // One-shot condition
+                    std::string cont_events;    // Continous trigger events
+                    std::string single_events;  // One-shot trigger events
+                    std::string item_events;    // Item activation events
+                    std::string anti_events;    // Item deactivation events, if needed
 
-                    char script[8192];              script[0]            = 0;   // Final script compile
+                    std::string script;         // Final script compile
 
                     char buf[512];                  buf[0]  = 0;    // Stream buffer
                     char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
@@ -754,7 +753,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
                                          sector->trig_index, activator_type);
 
-                    strcat(script, buf);
+                    script += buf;
                     buf[0] = 0;     // Zero out buffer to prevent further trashing.
 
                     switch(sub_function)
@@ -831,7 +830,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             break;
                     }
 
-                    strcat(header, buf);    // Add condition to header.
+                    header += buf;    // Add condition to header.
 
                     uint16_t cont_bit = 0;
                     uint16_t argn = 0;
@@ -866,11 +865,11 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                                 // Ordinary type case (e.g. heavy switch).
                                                 snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
                                             }
-                                            strcat(script, buf);
+                                            script += buf;
 
                                             // Trigger activation mask is here filtered through activator's own mask.
                                             snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
-                                            strcat(script, buf);
+                                            script += buf;
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
@@ -890,7 +889,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             {
                                                 // Ordinary type case (e.g. heavy switch).
                                                 snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
-                                                strcat(item_events, buf);
+                                                item_events += buf;
                                                 snprintf(buf, 128, " if(not switch_sectorstatus) then \n   setEntitySectorStatus(entity_index, true) \n");
                                             }
                                             break;
@@ -904,7 +903,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             break;
                                     }
 
-                                    strcat(script, buf);
+                                    script += buf;
                                 }
                                 else
                                 {
@@ -921,16 +920,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                         if(activator == TR_ACTIVATOR_SWITCH)
                                         {
                                             snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
-                                            strcat(item_events, buf);
+                                            item_events += buf;
                                             snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once?"true":"false");
-                                            strcat(anti_events, buf);
+                                            anti_events += buf;
                                         }
                                         else
                                         {
                                             snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once?"true":"false", timer_field);
-                                            strcat(item_events, buf);
+                                            item_events += buf;
                                             snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
-                                            strcat(anti_events, buf);
+                                            anti_events += buf;
                                         }
                                     }
                                 }
@@ -947,13 +946,13 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                     cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
 
                                     snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
-                                    strcat(single_events, buf);
+                                    single_events += buf;
                                 }
                                 break;
 
                             case TR_FD_TRIGFUNC_UWCURRENT:
                                 snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
-                                strcat(cont_events, buf);
+                                cont_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPMAP:
@@ -962,12 +961,12 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 if(activator == TR_ACTIVATOR_SWITCH)
                                 {
                                     snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
-                                    strcat(single_events, buf);
+                                    single_events += buf;
                                 }
                                 else
                                 {
                                     snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, true); \n", operands, trigger_mask, operands);
-                                    strcat(single_events, buf);
+                                    single_events += buf;
                                 }
                                 break;
 
@@ -975,24 +974,24 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_ON trigger, room will remain flipped.
                                 snprintf(buf, 128, "   setFlipState(%d, true); \n", operands);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPOFF:
                                 // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_OFF trigger, room will remain unflipped.
                                 snprintf(buf, 128, "   setFlipState(%d, false); \n", operands);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_LOOKAT:
                                 snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_ENDLEVEL:
                                 snprintf(buf, 128, "   setLevel(%d); \n", operands);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_PLAYTRACK:
@@ -1006,22 +1005,22 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 }
 
                                 snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPEFFECT:
                                 snprintf(buf, 128, "   doEffect(%d, %d); \n", operands, timer_field);
-                                strcat(cont_events, buf);
+                                cont_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_SECRET:
                                 snprintf(buf, 128, "   findSecret(%d); \n", operands);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_CLEARBODIES:
                                 snprintf(buf, 128, "   clearBodies(); \n");
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             case TR_FD_TRIGFUNC_FLYBY:
@@ -1031,13 +1030,13 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                     cont_bit  = ((*entry) & 0x8000) >> 15;
 
                                     snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
-                                    strcat(cont_events, buf);
+                                    cont_events += buf;
                                 }
                                 break;
 
                             case TR_FD_TRIGFUNC_CUTSCENE:
                                 snprintf(buf, 128, "   playCutscene(%d); \n", operands);
-                                strcat(single_events, buf);
+                                single_events += buf;
                                 break;
 
                             default: // UNKNOWN!
@@ -1046,9 +1045,9 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     }
                     while(!cont_bit && entry < end_p);
 
-                    if(script[0])
+                    if(!script.empty())
                     {
-                        strcat(script, header);
+                        script += header;
 
                         // Heavy trigger and antitrigger item events are engaged ONLY
                         // once, when triggering item is approaching sector. Hence, we
@@ -1061,34 +1060,35 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                strcat(single_events, anti_events);
+                                single_events += anti_events;
                             }
                             else
                             {
-                                strcat(single_events, item_events);
+                                single_events += item_events;
                             }
 
-                            anti_events[0] = 0;
-                            item_events[0] = 0;
+                            anti_events.clear();
+                            item_events.clear();
                         }
 
                         if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
                         {
-                            if(single_events[0])
+                            if(!single_events.empty())
                             {
-                                if(condition) strcat(once_condition, " ");
-                                strcat(once_condition, " if(not getEntitySectorStatus(entity_index)) then \n");
-                                strcat(script, once_condition);
-                                strcat(script, single_events);
-                                strcat(script, "   setEntitySectorStatus(entity_index, true); \n");
+                                if(condition)
+                                    once_condition += " ";
+                                once_condition += " if(not getEntitySectorStatus(entity_index)) then \n";
+                                script += once_condition;
+                                script += single_events;
+                                script += "   setEntitySectorStatus(entity_index, true); \n";
 
                                 if(condition)
                                 {
-                                    strcat(script, "  end;\n"); // First ENDIF is tabbed for extra condition.
+                                    script += "  end;\n"; // First ENDIF is tabbed for extra condition.
                                 }
                                 else
                                 {
-                                    strcat(script, " end;\n");
+                                    script += " end;\n";
                                 }
                             }
 
@@ -1099,35 +1099,36 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                strcat(script, anti_events);
+                                script += anti_events;
                             }
                             else
                             {
-                                strcat(script, item_events);
+                                script += item_events;
                             }
 
-                            strcat(script, cont_events);
-                            if(condition) strcat(script, " end;\n"); // Additional ENDIF for extra condition.
+                            script += cont_events;
+                            if(condition)
+                                script += " end;\n"; // Additional ENDIF for extra condition.
                         }
                         else    // SWITCH, KEY and ITEM cases.
                         {
-                            strcat(script, single_events);
-                            strcat(script, item_events);
-                            strcat(script, cont_events);
+                            script += single_events;
+                            script += item_events;
+                            script += cont_events;
                             if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                             {
-                                strcat(script, buf2);
+                                script += buf2;
                                 if(!only_once)
                                 {
-                                    strcat(script, single_events);
-                                    strcat(script, anti_events);    // Single/continous events are engaged along with
-                                    strcat(script, cont_events);    // antitriggered items, as described above.
+                                    script += single_events;
+                                    script += anti_events;    // Single/continous events are engaged along with
+                                    script += cont_events;    // antitriggered items, as described above.
                                 }
                             }
-                            strcat(script, " end;\n");
+                            script += " end;\n";
                         }
 
-                        strcat(script, "return 1;\nend }\n");  // Finalize the entry.
+                        script += "return 1;\nend }\n";  // Finalize the entry.
                     }
 
                     if(action_type != TR_ACTIONTYPE_BYPASS)
@@ -4158,12 +4159,11 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                 if(ent->m_bf.animations.model->id != item->world_model_id)
                     continue;
 
-                char buf[64] = {0};
-                snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id(), ent->id());
-                engine_lua.doString(buf);
+                if(engine_lua["entity_funcs"][ent->id()].is<lua::Nil>())
+                    engine_lua["entity_funcs"].set(ent->id(), lua::Table());
 
-                snprintf(buf, 32, "pickup_init(%d, %d);", ent->id(), item->id);
-                engine_lua.doString(buf);
+                engine_lua["pickup_init"](ent->id(), item->id);
+
                 ent->disableCollision();
             }
         }
