@@ -4159,8 +4159,8 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                 if(ent->m_bf.animations.model->id != item->world_model_id)
                     continue;
 
-                if(engine_lua["entity_funcs"][ent->id()].is<lua::Nil>())
-                    engine_lua["entity_funcs"].set(ent->id(), lua::Table());
+                if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->id())].is<lua::Nil>())
+                    engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->id()), lua::Table());
 
                 engine_lua["pickup_init"](ent->id(), item->id);
 

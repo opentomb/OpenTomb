@@ -27,6 +27,8 @@ private:
 
 public:
     ShaderManager();
+    ShaderManager(const ShaderManager&) = delete;
+    ShaderManager& operator=(const ShaderManager&) = delete;
     /*!
      * Deletes the manager. Note: This destructor does nothing and
      * does not delete the shaders, as the manager will only get

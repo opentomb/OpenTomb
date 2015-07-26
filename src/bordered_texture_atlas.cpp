@@ -65,7 +65,7 @@ struct BorderedTextureAtlas::TextureSizeComparator
 {
     const BorderedTextureAtlas* const context;
 
-    TextureSizeComparator(const BorderedTextureAtlas* context_)
+    explicit TextureSizeComparator(const BorderedTextureAtlas* context_)
         : context(context_)
     {
     }

@@ -30,7 +30,7 @@ struct Portal
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
     unsigned int flag = 0;                                                          // хз, мб потом понадобится
 
-    Portal(size_t vcount = 0)
+    explicit Portal(size_t vcount = 0)
         : vertices(vcount)
     {
     }

@@ -345,7 +345,7 @@ void Super2xSaI(unsigned char *src, unsigned int src_pitch, int src_bytes_per_pi
             color[7] = *(sbp + 2);
             sbp = (unsigned short *)src_line[2];
             color[8] = *sbp;
-            color[9] = color[9];
+            color[9] = color[8];
             color[10] = *(sbp + 1);
             color[11] = *(sbp + 2);
             sbp = (unsigned short *)src_line[3];
@@ -368,7 +368,7 @@ void Super2xSaI(unsigned char *src, unsigned int src_pitch, int src_bytes_per_pi
             color[7] = *(lbp + 2);
             lbp = (unsigned long *)src_line[2];
             color[8] = *lbp;
-            color[9] = color[9];
+            color[9] = color[8];
             color[10] = *(lbp + 1);
             color[11] = *(lbp + 2);
             lbp = (unsigned long *)src_line[3];
