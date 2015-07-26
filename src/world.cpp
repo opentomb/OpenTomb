@@ -1253,9 +1253,9 @@ RoomSector* RoomSector::getLowestSector()
 {
     RoomSector* lowest_sector = this;
 
-    while(lowest_sector->sector_below != nullptr)
+    while(RoomSector* below = lowest_sector->sector_below)
     {
-        RoomSector* flipped = lowest_sector->checkFlip();
+        RoomSector* flipped = below->checkFlip();
         if(!flipped)
             break;
         lowest_sector = flipped;
@@ -1269,9 +1269,9 @@ RoomSector* RoomSector::getHighestSector()
 {
     RoomSector* highest_sector = this;
 
-    while(highest_sector->sector_above != nullptr)
+    while(RoomSector* above = highest_sector->sector_above)
     {
-        RoomSector* flipped = highest_sector->checkFlip();
+        RoomSector* flipped = above->checkFlip();
         if(!flipped)
             break;
         highest_sector = flipped;
