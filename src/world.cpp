@@ -785,6 +785,7 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
 
 RoomSector* RoomSector::checkFlip()
 {
+    if(this == NULL) return NULL;
     if(!owner_room->active)
     {
         if((owner_room->base_room != NULL) && (owner_room->base_room->active))
@@ -1249,10 +1250,10 @@ RoomSector* RoomSector::getLowestSector()
 {
     RoomSector* lowest_sector = this;
 
-    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_below)
+    for(RoomSector* rs=this->checkFlip();rs!=NULL;rs=rs->sector_below->checkFlip())
     { lowest_sector = rs; }
 
-    return lowest_sector;
+    return lowest_sector->checkFlip();
 }
 
 
@@ -1260,7 +1261,7 @@ RoomSector* RoomSector::getHighestSector()
 {
     RoomSector* highest_sector = this;
 
-    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_above)
+    for(RoomSector* rs=this->checkFlip();rs!=NULL;rs=rs->sector_above->checkFlip())
     { highest_sector = rs; }
 
     return highest_sector;
