@@ -1358,8 +1358,11 @@ void lua_MoveEntityToSink(int id, int sink_index)
     sink_pos[1] = sink->y;
     sink_pos[2] = sink->z + 256.0;
 
+    assert( ent->m_currentSector != nullptr );
     RoomSector* ls = ent->m_currentSector->getLowestSector();
+    assert( ls != nullptr );
     RoomSector* hs = ent->m_currentSector->getHighestSector();
+    assert( hs != nullptr );
     if((sink_pos[2] > hs->ceiling) ||
        (sink_pos[2] < ls->floor) )
     {

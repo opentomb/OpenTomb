@@ -335,6 +335,7 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
 
 btVector3 Sector_HighestFloorCorner(RoomSector* rs)
 {
+    assert( rs != nullptr );
     btVector3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
     btVector3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
 
@@ -343,6 +344,7 @@ btVector3 Sector_HighestFloorCorner(RoomSector* rs)
 
 btVector3 Sector_LowestCeilingCorner(RoomSector* rs)
 {
+    assert( rs != nullptr );
     btVector3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
     btVector3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
 
@@ -785,22 +787,23 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
 
 RoomSector* RoomSector::checkFlip()
 {
-    if(this == NULL) return NULL;
-    if(!owner_room->active)
-    {
-        if((owner_room->base_room != NULL) && (owner_room->base_room->active))
-        {
-            std::shared_ptr<Room> r = owner_room->base_room;
-            return &r->sectors[ index_x * r->sectors_y + index_y ];
-        }
-        else if((owner_room->alternate_room != NULL) && (owner_room->alternate_room->active))
-        {
-            std::shared_ptr<Room> r = owner_room->alternate_room;
-            return &r->sectors[ index_x * r->sectors_y + index_y ];
-        }
-    }
+    if(owner_room->active)
+        return this;
 
-    return this;
+    if(owner_room->base_room && owner_room->base_room->active)
+    {
+        std::shared_ptr<Room> r = owner_room->base_room;
+        return &r->sectors[ index_x * r->sectors_y + index_y ];
+    }
+    else if(owner_room->alternate_room && owner_room->alternate_room->active)
+    {
+        std::shared_ptr<Room> r = owner_room->alternate_room;
+        return &r->sectors[ index_x * r->sectors_y + index_y ];
+    }
+    else
+    {
+        return this;
+    }
 }
 
 
@@ -1250,8 +1253,13 @@ RoomSector* RoomSector::getLowestSector()
 {
     RoomSector* lowest_sector = this;
 
-    for(RoomSector* rs=this->checkFlip();rs!=NULL;rs=rs->sector_below->checkFlip())
-    { lowest_sector = rs; }
+    while(lowest_sector->sector_below != nullptr)
+    {
+        RoomSector* flipped = lowest_sector->checkFlip();
+        if(!flipped)
+            break;
+        lowest_sector = flipped;
+    }
 
     return lowest_sector->checkFlip();
 }
@@ -1261,8 +1269,13 @@ RoomSector* RoomSector::getHighestSector()
 {
     RoomSector* highest_sector = this;
 
-    for(RoomSector* rs=this->checkFlip();rs!=NULL;rs=rs->sector_above->checkFlip())
-    { highest_sector = rs; }
+    while(highest_sector->sector_above != nullptr)
+    {
+        RoomSector* flipped = highest_sector->checkFlip();
+        if(!flipped)
+            break;
+        highest_sector = flipped;
+    }
 
     return highest_sector;
 }

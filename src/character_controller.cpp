@@ -238,7 +238,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_above)
             {
+                assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -251,7 +253,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_above)
             {
+                assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
+                assert( rs != nullptr && rs->sector_above != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -271,7 +275,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_below)
             {
+                assert( rs->sector_above != nullptr );
                 rs = rs->sector_below->checkFlip();
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (btScalar)rs->ceiling;
@@ -2250,8 +2256,11 @@ void Character::frameImpl(btScalar time, int16_t frame, int state) {
 }
 
 void Character::processSectorImpl() {
+    assert( m_currentSector != nullptr );
     RoomSector* highest_sector = m_currentSector->getHighestSector();
+    assert( highest_sector != nullptr );
     RoomSector* lowest_sector  = m_currentSector->getLowestSector();
+    assert( lowest_sector != nullptr );
 
     m_heightInfo.walls_climb_dir  = 0;
     m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |

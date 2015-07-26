@@ -1023,7 +1023,9 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
+    assert( m_currentSector != nullptr );
     RoomSector* lowest_sector  = m_currentSector->getLowestSector();
+    assert( lowest_sector != nullptr );
 
     processSectorImpl();
 
