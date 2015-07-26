@@ -341,8 +341,8 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     poly->tex_index = canonical.new_page;
     for (size_t i = 0; i < poly->vertices.size(); i++)
     {
-        unsigned x_coord;
-        unsigned y_coord;
+        unsigned x_coord = 0;
+        unsigned y_coord = 0;
 
         switch (file_object_texture.corner_locations[i])
         {
@@ -373,7 +373,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
                 y_coord = canonical.new_y_with_border + m_borderWidth + canonical.height - shift;
                 break;
             default:
-                assert(0);
+                assert(false);
         }
 
         size_t index = reverse ? (poly->vertices.size() - i-1) : i;
