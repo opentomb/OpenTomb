@@ -189,12 +189,15 @@ int Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
 }
 
 ///@TODO: resolve floor >> ceiling case
-void Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween)
+std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
 {
+    std::vector<SectorTween> result;
     for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
         for(uint16_t w = 0; w < room->sectors_x-1; w++)
         {
+            result.emplace_back();
+            SectorTween* room_tween = &result.back();
             // Init X-plane tween [ | ]
 
             RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h) ];
@@ -382,7 +385,8 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween)
              ********************************   CENTRE  OF  THE  ALGORITHM   *************************************
              *****************************************************************************************************/
 
-            room_tween++;
+            result.emplace_back();
+            room_tween = &result.back();
             current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
             next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
             room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
@@ -563,9 +567,9 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween)
                     }
                 }
             }
-            room_tween++;
         }    ///END for
     }    ///END for
+    return result;
 }
 
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
@@ -2269,9 +2273,8 @@ void Res_GenRoomCollision(World *world)
     }
     */
 
-    for(uint32_t i=0; i<world->rooms.size(); i++)
+    for(std::shared_ptr<Room> room : world->rooms)
     {
-        auto r = world->rooms[i];
         // Inbetween polygons array is later filled by loop which scans adjacent
         // sector heightmaps and fills the gaps between them, thus creating inbetween
         // polygon. Inbetweens can be either quad (if all four corner heights are
@@ -2280,40 +2283,26 @@ void Res_GenRoomCollision(World *world)
         // two triangles are added to collisional trimesh, in case of triangle inbetween,
         // we add only one, and in case of ghost inbetween, we ignore it.
 
-        int num_heightmaps = (r->sectors_x * r->sectors_y);
-        int num_tweens = (num_heightmaps * 4);
-        SectorTween *room_tween   = new SectorTween[num_tweens];
-
-        // Clear tween array.
-
-        for(int j=0;j<num_tweens;j++)
-        {
-            room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
-        }
-
         // Most difficult task with converting floordata collision to trimesh collision is
         // building inbetween polygons which will block out gaps between sector heights.
-        Res_Sector_GenTweens(r, room_tween);
+        std::vector<SectorTween> room_tween = Res_Sector_GenTweens(room);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
 
-        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, room_tween, num_tweens, true, true);
+        btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room_tween, true, true);
 
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            btDefaultMotionState* motionState = new btDefaultMotionState(r->transform);
-            r->bt_body.reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
-            bt_engine_dynamicsWorld->addRigidBody(r->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-            r->bt_body->setUserPointer(r->self.get());
-            r->bt_body->setRestitution(1.0);
-            r->bt_body->setFriction(1.0);
-            r->self->collision_type = COLLISION_TYPE_STATIC;                    // meshtree
-            r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+            btDefaultMotionState* motionState = new btDefaultMotionState(room->transform);
+            room->bt_body.reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
+            bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            room->bt_body->setUserPointer(room->self.get());
+            room->bt_body->setRestitution(1.0);
+            room->bt_body->setFriction(1.0);
+            room->self->collision_type = COLLISION_TYPE_STATIC;                    // meshtree
+            room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
         }
-
-        delete[] room_tween;
     }
 }
 

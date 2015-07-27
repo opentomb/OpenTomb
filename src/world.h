@@ -248,14 +248,26 @@ struct RoomSector
     btVector3 getCeilingPoint();
 };
 
+// Tween is a short word for "inbeTWEEN vertical polygon", which is needed to fill
+// the gap between two sectors with different heights. If adjacent sector heights are
+// similar, it means that tween is degenerated (doesn't exist physically) - in that
+// case we use NONE type. If only one of two heights' pairs is similar, then tween is
+// either right or left pointed triangle (where "left" or "right" is derived by viewing
+// triangle from front side). If none of the heights are similar, we need quad tween.
+
+#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
+#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 struct SectorTween
 {
     btVector3                   floor_corners[4];
-    uint8_t                     floor_tween_type;
+    uint8_t                     floor_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
 
     btVector3                   ceiling_corners[4];
-    uint8_t                     ceiling_tween_type;
+    uint8_t                     ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
 };
 
 struct Sprite;

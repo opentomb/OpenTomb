@@ -1446,7 +1446,7 @@ Entity::~Entity() {
     if(!m_bt.bt_body.empty()) {
         for(const auto& body : m_bt.bt_body) {
             if(body) {
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
