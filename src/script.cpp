@@ -171,7 +171,7 @@ bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int 
     if(file_path) strcpy(file_path, realPath);
     if(load_method) *load_method = _load_method;
     if(stream_type) *stream_type = _stream_type;
-    return *stream_type != -1;
+    return _stream_type != -1;
 }
 
 

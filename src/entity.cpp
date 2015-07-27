@@ -1528,6 +1528,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         m_bt.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
         m_bt.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
         m_bt.bt_body[i]->setFriction(setup->body_setup[i].friction);
+
         m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
         if(!m_bf.bone_tags[i].parent) {
