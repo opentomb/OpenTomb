@@ -56,9 +56,16 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- TR2+ ONLY: If mask was already set and lock flag is set, bypass activation.
+    -- TR3 ONLY: If lock flag is set, bypass activation.
+    -- TR4-5 ONLY: If mask was already set and lock flag is set, bypass activation.
     
-    if((getLevelVersion() >= TR_II) and (lock == true) and (mask == 0x1F)) then return end;
+    local game_ver = getLevelVersion();
+    
+    if(game_ver == TR_III) then
+        if(lock) then return end;
+    else
+        if((lock) and (mask == 0x1F)) then return end;
+    end;
     
     -- Apply trigger mask to entity mask.
 
@@ -98,11 +105,11 @@ function deactivateEntity(object_id, activator_id, trigger_lock)
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- TR2+ ONLY: It seems that antitrigger event DOES NOT check lock state - however, it copies
+    -- TR3+ ONLY: It seems that antitrigger event DOES NOT check lock state - however, it copies
     -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
-    -- In TR1, antitriggers are ignored for locked entities.
+    -- In TR1-2, antitriggers are ignored for locked entities.
     
-    if((getLevelVersion() < TR_II) and (lock)) then return end;
+    if((getLevelVersion() < TR_III) and (lock)) then return end;
     
     lock = (lock or trigger_lock);
     

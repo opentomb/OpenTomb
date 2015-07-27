@@ -46,6 +46,7 @@ bool lua_GetSysNotify(lua::State& state, int string_index, size_t string_size, c
 
 void lua_LoopEntity(lua::State& state, int object_id);
 void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator = -1);
+void lua_ExecEffect(lua::State& state, int id, int caller = -1, int operand = -1);
 void lua_DoTasks(lua::State& state, btScalar time);
 
 void lua_AddKey(lua::State& lstate, int keycode, bool state);

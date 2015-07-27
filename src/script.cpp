@@ -230,6 +230,11 @@ void lua_LoopEntity(lua::State& state, int object_id)
     }
 }
 
+void lua_ExecEffect(lua::State& state, int id, int caller, int operand)
+{
+    state["execFlipeffect"](id, caller, operand);
+}
+
 /*
  * Game structures parse
  */
