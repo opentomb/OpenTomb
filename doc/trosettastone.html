@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="generator" content="AsciiDoc 8.6.9">
+<meta name="generator" content="AsciiDoc 8.6.8">
 <title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -93,9 +93,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -224,7 +222,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -510,9 +508,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -535,16 +530,19 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+/*
+  pygmentize filter
+*/
 .highlight .hll { background-color: #ffffcc }
-.highlight  { background: #f8f8f8; }
-.highlight .c { color: #408080; font-style: italic } /* Comment */
+.highlight  { background: #f4f4f4; }
+.highlight .c { color: #008800; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
-.highlight .k { color: #008000; font-weight: bold } /* Keyword */
+.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #408080; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #BC7A00 } /* Comment.Preproc */
-.highlight .c1 { color: #408080; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #408080; font-style: italic } /* Comment.Special */
+.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #008800 } /* Comment.Preproc */
+.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
@@ -555,48 +553,49 @@ body.manpage div.sectionbody {
 .highlight .gs { font-weight: bold } /* Generic.Strong */
 .highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
 .highlight .gt { color: #0040D0 } /* Generic.Traceback */
-.highlight .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.highlight .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.highlight .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.highlight .kp { color: #008000 } /* Keyword.Pseudo */
-.highlight .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.highlight .kt { color: #B00040 } /* Keyword.Type */
+.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
+.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
 .highlight .m { color: #666666 } /* Literal.Number */
-.highlight .s { color: #BA2121 } /* Literal.String */
-.highlight .na { color: #7D9029 } /* Name.Attribute */
-.highlight .nb { color: #008000 } /* Name.Builtin */
-.highlight .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.highlight .s { color: #BB4444 } /* Literal.String */
+.highlight .na { color: #BB4444 } /* Name.Attribute */
+.highlight .nb { color: #AA22FF } /* Name.Builtin */
+.highlight .nc { color: #0000FF } /* Name.Class */
 .highlight .no { color: #880000 } /* Name.Constant */
 .highlight .nd { color: #AA22FF } /* Name.Decorator */
 .highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
 .highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.highlight .nf { color: #0000FF } /* Name.Function */
+.highlight .nf { color: #00A000 } /* Name.Function */
 .highlight .nl { color: #A0A000 } /* Name.Label */
 .highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
 .highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.highlight .nv { color: #19177C } /* Name.Variable */
+.highlight .nv { color: #B8860B } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
-.highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
-.highlight .sc { color: #BA2121 } /* Literal.String.Char */
-.highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.highlight .s2 { color: #BA2121 } /* Literal.String.Double */
+.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
+.highlight .sc { color: #BB4444 } /* Literal.String.Char */
+.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.highlight .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
 .highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
 .highlight .sx { color: #008000 } /* Literal.String.Other */
 .highlight .sr { color: #BB6688 } /* Literal.String.Regex */
-.highlight .s1 { color: #BA2121 } /* Literal.String.Single */
-.highlight .ss { color: #19177C } /* Literal.String.Symbol */
-.highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
-.highlight .vc { color: #19177C } /* Name.Variable.Class */
-.highlight .vg { color: #19177C } /* Name.Variable.Global */
-.highlight .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
+.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
+.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #B8860B } /* Name.Variable.Class */
+.highlight .vg { color: #B8860B } /* Name.Variable.Global */
+.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
+
 
 
 @media screen {
@@ -2077,7 +2076,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 ()</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 (July 16, 2015)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2313,7 +2312,9 @@ Escape codec versions, but recent <em>ffmpeg</em> revisions feature fully functi
 </div>
 <div class="sect4">
 <h5 id="_sound_files_8201_8212_8201_audio_tracks">Sound files&#8201;&#8212;&#8201;audio tracks</h5>
-<div class="paragraph"><p>These are long sound files which occasionally play either on some in-game events (e.g. approaching certain important checkpoint in game, like big hall with ladder and two wolves in &#8220;Caves&#8221;&#8201;&#8212;&#8201;it triggers danger music theme) or in looped manner as background ambience. Audio tracks are stored differently across TR game versions&#8201;&#8212;&#8201;<em>CD-Audio</em> in TR1-TR2, single merged file <em>CDAUDIO.WAD</em> in TR3, and separate audio files in TR4 and TR5.</p></div>
+<div class="paragraph"><p>These are long sound files which occasionally play either on some in-game events (e.g. approaching certain important checkpoint in game, like big hall with
+ladder and two wolves in &#8220;Caves&#8221;&#8201;&#8212;&#8201;it triggers danger music theme) or in looped manner as background ambience. Audio tracks are stored differently across TR
+game versions&#8201;&#8212;&#8201;<em>CD-Audio</em> in TR1-TR2, single merged file <span class="monospaced">CDAUDIO.WAD</span> in TR3, and separate audio files in TR4 and TR5.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_sound_files_8201_8212_8201_samples">Sound files&#8201;&#8212;&#8201;samples</h5>
@@ -2992,7 +2993,7 @@ versions, this index was also used to determine if footprint textures should be 
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">TR engines always used static room lights only for processing lighting on entities (such as Lara, enemies, doors, and others). This is called <em>external
-lighting</em>. For room meshes, they used so-called <em>internal, or 'pre-baked</em> lighting, which is done on level building stage: lights are calculated and applied to
+lighting</em>. For room meshes, they used so-called internal, or <em>pre-baked</em> lighting, which is done on level building stage: lights are calculated and applied to
 room faces via vertex colours. There is no way to change room lighting when the level is compiled&#8201;&#8212;&#8201;meaning, any changes in light positions, intensities and
 colour won&#8217;t affect room faces.</td>
 </tr></table>
@@ -3552,8 +3553,8 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">AmbientIntensity2</span> value is usually equal to <span class="monospaced">AmbientIntensity</span> value. Seems it&#8217;s not used.</p></div>
-<div class="paragraph"><p><span class="monospaced">LightMode</span> specifies lighting mode special effect, which is applied to all room vertices <em>in conjunction with 5 lowest bits of <span class="monospaced">Attributes</span> field belonging to
-<a href="#tr_room_vertex">[tr_room_vertex]</a> structure. Here we will refer these 5 bits</em> value to as <em>effect_value:</em></p></div>
+<div class="paragraph"><p><span class="monospaced">LightMode</span> specifies lighting mode special effect, which is applied to all room vertices in conjunction with 5 lowest bits of <span class="monospaced">Attributes</span> field belonging to
+<a href="#tr_room_vertex">[tr_room_vertex]</a> structure. Here we will refer these 5 bits value to as <span class="monospaced">effect_value</span>:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -3562,15 +3563,15 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 </li>
 <li>
 <p>
-<strong>2</strong>&#8201;&#8212;&#8201;If <em>effect_value</em> is in 1-15 range, then vertex lighting is cyclically fading to more bright value. The lower the value is, the deeper the fade to full
-  vertex lighting is. If <em>effect_value</em> is in 17-30 range (<em>not</em> 31!), then vertex lighting is cyclically fading to more dark value. The higher the value is, the
-  deeper the fade to black is. If <em>effect_value</em> is 16 or 0, no effect is produced. So practically, <em>effect_value</em> serves as a multiplier to overall effect
+<strong>2</strong>&#8201;&#8212;&#8201;If <span class="monospaced">effect_value</span> is in 1-15 range, then vertex lighting is cyclically fading to more bright value. The lower the value is, the deeper the fade to full
+  vertex lighting is. If <span class="monospaced">effect_value</span> is in 17-30 range (<em>not</em> 31!), then vertex lighting is cyclically fading to more dark value. The higher the value is, the
+  deeper the fade to black is. If <span class="monospaced">effect_value</span> is 16 or 0, no effect is produced. So practically, <span class="monospaced">effect_value</span> serves as a multiplier to overall effect
   brightness.
 </p>
 </li>
 <li>
 <p>
-<strong>1</strong>&#8201;&#8212;&#8201;Produces flickering effect, with <em>effect_value</em> acting the same way&#8201;&#8212;&#8201;as intensity multiplier.
+<strong>1</strong>&#8201;&#8212;&#8201;Produces flickering effect, with <span class="monospaced">effect_value</span> acting the same way&#8201;&#8212;&#8201;as intensity multiplier.
 </p>
 </li>
 </ul></div>
@@ -3668,7 +3669,9 @@ concept of <span class="monospaced">tr_room_data</span> structure, shuffles nume
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
-<td class="content">The one possible reason for such ridiculous structure change is an attempt to <em>crypt file format</em>, so it won&#8217;t be accessed by unofficial level editing tools, which received major development by that time. Another possible reason is whole TR5 development process was rushed, as the team developed <em>Tomb Raider: Angel of Darkness</em> at the very same time.</td>
+<td class="content">The one possible reason for such ridiculous structure change is an attempt to <em>crypt file format</em>, so it won&#8217;t be accessed by unofficial level editing
+tools, which received major development by that time. Another possible reason is whole TR5 development process was rushed, as the team developed <em>Tomb Raider:
+Angel of Darkness</em> at the very same time.</td>
 </tr></table>
 </div>
 <div class="listingblock">
@@ -5200,10 +5203,10 @@ which state to change to. These bridge animations then lead to the animation wit
 animation as long as its state stays &#8220;closed&#8221;, but when its state becomes &#8220;open&#8221;, it will change to an opening-door bridge animation, which will end in a
 looped open-door animation. Likewise, closing a door will make it use a closing-door bridge animation. Some bridge animations are chosen with a finer grain of
 selectivity, however, such as using one for left foot forward and one for right foot forward.</p></div>
-<div class="paragraph"><p>Thus, each animation references a set of <span class="monospaced">StateChange</span> structures, each one of which references an <span class="monospaced">AnimDispatch</span> structure (called a &#8220;range&#8221; in some documentation). Each <span class="monospaced">StateChange</span> structure contains a new state and which <span class="monospaced">AnimDispatch</span> structures to
-use. When an entity goes into a new state, the <span class="monospaced">StateChange</span> structures are scanned for that state&#8217;s ID, and if one matches, then that <span class="monospaced">StateChange</span>'s
-<span class="monospaced">AnimDispatch</span> es are then scanned for a range of frames that contains the ID of the current frame. If such an <span class="monospaced">AnimDispatch</span> is found, the animation and the
-frame are changed to those listed in it.</p></div>
+<div class="paragraph"><p>Thus, each animation references a set of <span class="monospaced">StateChange</span> structures, each one of which references an <span class="monospaced">AnimDispatch</span> structure (called a &#8220;range&#8221; in some
+documentation). Each <span class="monospaced">StateChange</span> structure contains a new state and which <span class="monospaced">AnimDispatch</span> structures to use. When an entity goes into a new state, the
+<span class="monospaced">StateChange</span> structures are scanned for that state&#8217;s ID, and if one matches, then that <span class="monospaced">StateChange</span>'s <span class="monospaced">AnimDispatch</span> es are then scanned for a range of frames
+that contains the ID of the current frame. If such an <span class="monospaced">AnimDispatch</span> is found, the animation and the frame are changed to those listed in it.</p></div>
 <div class="paragraph"><p>The ultimate unit of animation is, of course, the frame, and each frame consists of a bounding box, the offset of the root mesh, and rotation angles for all the
 meshes with respect to their parent meshes. The root mesh is also rotated, but relative to the object&#8217;s overall coordinates. All rotations are performed around
 the meshes' origins, and are in order Y, X, Z (yaw, pitch, roll). The reason for the root mesh&#8217;s displacement is because entities traveling on solid surfaces
@@ -5214,9 +5217,10 @@ unique to each kind of entity, but not between entities; the first frame for eac
 animations, since the list of animation frames for each entity can be constructed separately. However, using these indices is fairly simple. Each Animation
 structure has a first-frame index; this index is subtracted from the index of the desired frame in order to find out its index relative to the animation&#8217;s first
 frame.</p></div>
-<div class="paragraph"><p>There are also some special <em>AnimCommands</em> for doing various additional things. Some of them are for moving entities in absolute coordinates, for example to position Lara at climb location, or specifying jump momentum. Some others define actions per frame, like playing
-sounds, emitting bubbles, and so forth.</p></div>
-<div class="paragraph"><p>Finally, some entities appear to have incomplete set of animations; their complete animations are &#8220;borrowed&#8221; from similar entities. Such setup is mostly used in TR2&#8217;s Venice levels&#8201;&#8212;&#8201;some of Venice goons them have a full set of animations, while some others have only the standing animation. The ones with only the
+<div class="paragraph"><p>There are also some special <em>AnimCommands</em> for doing various additional things. Some of them are for moving entities in absolute coordinates, for example to
+position Lara at climb location, or specifying jump momentum. Some others define actions per frame, like playing sounds, emitting bubbles, and so forth.</p></div>
+<div class="paragraph"><p>Finally, some entities appear to have incomplete set of animations; their complete animations are &#8220;borrowed&#8221; from similar entities. Such setup is mostly used
+in TR2&#8217;s Venice levels&#8201;&#8212;&#8201;some of Venice goons them have a full set of animations, while some others have only the standing animation. The ones with only the
 standing animation borrow their other animations from the fully-animated ones.</p></div>
 </div>
 <div class="sect2">
@@ -5233,9 +5237,9 @@ standing animation borrow their other animations from the fully-animated ones.</
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">MeshTree[]</span> array consists of meshtree nodes.</p></div>
-<div class="paragraph"><p>In <span class="monospaced">Flags</span> field, two bytes are used:
-* Bit 0 (<span class="monospaced">0x0001</span>) indicates <em>&#8220;take the top mesh off of the mesh stack and use as the parent mesh&#8221; when set</em>, otherwise <em>&#8220;use the previous mesh as the parent mesh&#8221;</em>.
-* Bit 1 (<span class="monospaced">0x0002</span>) indicates &#8220;put the parent mesh on the mesh stack&#8221;.</p></div>
+<div class="paragraph"><p>In &#8216;Flags` field, two bytes are used:
+* Bit 0 (<span class="monospaced">0x0001</span>) indicates <em>``take the top mesh off of the mesh stack and use as the parent mesh&#8217;' when set</em>, otherwise <em><span class="monospaced">&#8216;use the previous mesh as the parent mesh&#8217;'</em>.
+* Bit 1 (</span>0x0002`) indicates &#8220;put the parent mesh on the mesh stack&#8221;.</p></div>
 <div class="paragraph"><p>When both bits are set, the <em>Bit 0</em> operation is always done before the <em>Bit 1</em> operation. In effect, <em>read the stack but do not change it</em>.</p></div>
 <div class="paragraph"><p><span class="monospaced">Offset_X</span>, <span class="monospaced">Offset_Y</span> and <span class="monospaced">Offset_Z</span> are offsets of the mesh&#8217;s origin from the parent mesh&#8217;s origin.</p></div>
 </div>
@@ -5269,7 +5273,9 @@ a different FrameSize value.</p></div>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">FrameOffset</span> is a byte offset into Frames[] (divide by 2 for Frames[i]).</p></div>
-<div class="paragraph"><p><span class="monospaced">FrameRate</span> is a multiplier value which defines how many <em>game frames</em> will be spent for each actual animation frame. For example, if value is 1, then each animation frame belongs to single game frame. If value is 2, then each animation frame belongs to two game frames, and so on. In latter case, animation frames will be interpolated between game frames using <em>slerp</em> function.</p></div>
+<div class="paragraph"><p><span class="monospaced">FrameRate</span> is a multiplier value which defines how many <em>game frames</em> will be spent for each actual animation frame. For example, if value is 1, then each
+animation frame belongs to single game frame. If value is 2, then each animation frame belongs to two game frames, and so on. In latter case, animation frames
+will be interpolated between game frames using <em>slerp</em> function.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -5280,10 +5286,17 @@ a different FrameSize value.</p></div>
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p><span class="monospaced">State_ID</span> identifies current state type to be used with this animation. Engine uses current <span class="monospaced">State_ID</span> not only to solve state changes, but also to define current Lara behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls to be checked, health/air/sprint points to be drained, and so on.</p></div>
-<div class="paragraph"><p><span class="monospaced">Speed</span> and <span class="monospaced">Accel</span> values are used to set a specific momentum to a given entity. That is, entity will be accelerated with <span class="monospaced">Accel</span> value, until <span class="monospaced">Speed</span> value is reached. If <span class="monospaced">Accel</span> is negative, speed will be decreased to fit <span class="monospaced">Speed</span> value. The direction in which entity is moved using speed value is hardcoded, and mostly is forward.</p></div>
-<div class="paragraph"><p><span class="monospaced">NextAnimation</span> defines which animation should be played after current one is finished. When current animation ends, engine will switch it to <span class="monospaced">NextAnimation</span>, not regarding current <span class="monospaced">State_ID</span> value. If <span class="monospaced">NextAnimation</span> value is the same as animation number itself, it means animation will be looped until loop is broken by state change.</p></div>
-<div class="paragraph"><p><span class="monospaced">NextFrame</span> specifies the frame number to be used when switching to next animation. That is, if <span class="monospaced">NextFrame</span> is 5 and <span class="monospaced">NextAnimation</span> is 20, it basically means that at the end of current animation engine will switch right to frame 5 of animation 20. If animation is looped, <span class="monospaced">NextFrame</span> defines to which frame animation should be rewound. It allows to &#8220;eat up&#8221; certain start-up frames of some animations and re-use them as looped.</p></div>
+<div class="paragraph"><p><span class="monospaced">State_ID</span> identifies current state type to be used with this animation. Engine uses current <span class="monospaced">State_ID</span> not only to solve state changes, but also to define
+current Lara behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls to be checked, health/air/sprint points to be drained, and so on.</p></div>
+<div class="paragraph"><p><span class="monospaced">Speed</span> and <span class="monospaced">Accel</span> values are used to set a specific momentum to a given entity. That is, entity will be accelerated with <span class="monospaced">Accel</span> value, until <span class="monospaced">Speed</span> value is
+reached. If <span class="monospaced">Accel</span> is negative, speed will be decreased to fit <span class="monospaced">Speed</span> value. The direction in which entity is moved using speed value is hardcoded, and mostly
+is forward.</p></div>
+<div class="paragraph"><p><span class="monospaced">NextAnimation</span> defines which animation should be played after current one is finished. When current animation ends, engine will switch it to <span class="monospaced">NextAnimation</span>,
+not regarding current <span class="monospaced">State_ID</span> value. If <span class="monospaced">NextAnimation</span> value is the same as animation number itself, it means animation will be looped until loop is broken
+by state change.</p></div>
+<div class="paragraph"><p><span class="monospaced">NextFrame</span> specifies the frame number to be used when switching to next animation. That is, if <span class="monospaced">NextFrame</span> is 5 and <span class="monospaced">NextAnimation</span> is 20, it basically means
+that at the end of current animation engine will switch right to frame 5 of animation 20. If animation is looped, <span class="monospaced">NextFrame</span> defines to which frame animation
+should be rewound. It allows to &#8220;eat up&#8221; certain start-up frames of some animations and re-use them as looped.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_tr4_5_animation_structure">5.2.3. TR4-5 Animation Structure</h4>
@@ -5353,7 +5366,8 @@ left foot forward and another animation for right foot forward.</p></div>
 <h4 id="_animcommand_structure">5.2.6. AnimCommand structure</h4>
 <div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of `int16_t`s packed into an array. As the <em>FloorData</em>, AnimCommands must be
 parsed sequentially, one by one.</p></div>
-<div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be parsed after current one without switching to next AnimCommand). For a given animation, AnimCommands are parsed until <span class="monospaced">NumAnimCommands</span> value is reached.</p></div>
+<div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
+parsed after current one without switching to next AnimCommand). For a given animation, AnimCommands are parsed until <span class="monospaced">NumAnimCommands</span> value is reached.</p></div>
 <div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others of them are associated with specific frames (sound, bubbles, etc.).</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_command</span> <span class="c1">// 2 bytes</span>
@@ -5375,7 +5389,9 @@ parsed sequentially, one by one.</p></div>
 </li>
 <li>
 <p>
-3&#8201;&#8212;&#8201;<strong>Empty Hands</strong> (No arguments). This command is performed in the end of animation of Lara pulling a switch, inserting a key, grabbing a pushable block, and so on. It is needed because engine &#8220;locks&#8221; Lara&#8217;s ability to draw weapons or ignite a flare when such action is performed, and only way to unlock it is to call this command.
+3&#8201;&#8212;&#8201;<strong>Empty Hands</strong> (No arguments). This command is performed in the end of animation of Lara pulling a switch, inserting a key, grabbing a pushable block, and
+  so on. It is needed because engine &#8220;locks&#8221; Lara&#8217;s ability to draw weapons or ignite a flare when such action is performed, and only way to unlock it is to
+  call this command.
 </p>
 </li>
 <li>
@@ -5414,7 +5430,8 @@ parsed sequentially, one by one.</p></div>
 </li>
 <li>
 <p>
-6&#8201;&#8212;&#8201;<strong>Effect</strong> (2 operands). The first one is a frame number, and the second one is effect number. Note that <em>effect</em> here is the very same kind of effect used in <em>trigger action</em> with the same name. Effect meaning will be listed separately.
+6&#8201;&#8212;&#8201;<strong>Effect</strong> (2 operands). The first one is a frame number, and the second one is effect number. Note that <em>effect</em> here is the very same kind of effect used
+  in <em>trigger action</em> with the same name. Effect meaning will be listed separately.
 </p>
 </li>
 </ul></div>
@@ -5545,7 +5562,8 @@ have 4 ground zones.</p></div>
 <div class="sectionbody">
 <div class="paragraph"><p>As it was described in the beginning, all sound in TR engines can be separated into two distinctive sections&#8201;&#8212;&#8201;<em>audio tracks</em> and <em>sounds</em>.</p></div>
 <div class="paragraph"><p>Audio tracks are long separate files which are loaded by streaming, and usually they contain background ambience, music or voiceovers for cutscenes.</p></div>
-<div class="paragraph"><p>Sounds are short audio samples, which are frequently played on eventual basis. While engine can usually play one audio track at a time, it can play lots of sounds in the same time, and also play numerous copies of the same sound (for example, when two similar enemies are roaming around).</p></div>
+<div class="paragraph"><p>Sounds are short audio samples, which are frequently played on eventual basis. While engine can usually play one audio track at a time, it can play lots of
+sounds in the same time, and also play numerous copies of the same sound (for example, when two similar enemies are roaming around).</p></div>
 <div class="sect2">
 <h3 id="_audio_tracks">7.1. Audio Tracks</h3>
 <div class="paragraph"><p>Audio tracks can be <em>looped</em> or <em>one-shot</em>. Looped tracks are usually contain background ambience (these creepy sounds heard in the beginning of &#8220;Caves&#8221; and so
@@ -5583,13 +5601,15 @@ needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then g
     <span class="kt">int8_t</span> <span class="n">Name</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>         <span class="c1">// C string with track name</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>The number of header entries is always 120 (meaning the whole size of header should be <span class="monospaced">0x108 * 120</span>). Header is immediately followed by embedded audio files in <em>WAV</em> format.</p></div>
+<div class="paragraph"><p>The number of header entries is always 120 (meaning the whole size of header should be <span class="monospaced">0x108 * 120</span>). Header is immediately followed by embedded audio files in
+<em>WAV</em> format.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
-<td class="content">In the Macintosh version of TR3, these tracks are separate files in <em>WAV</em> format. The Macintosh version of TR3 contains an additional file, <span class="monospaced">CDAudio.db</span>, which contains the names of all the track files as 32-byte zero-padded C strings with no extra contents.</td>
+<td class="content">In the Macintosh version of TR3, these tracks are separate files in <em>WAV</em> format. The Macintosh version of TR3 contains an additional file, <span class="monospaced">CDAudio.db</span>, which
+contains the names of all the track files as 32-byte zero-padded C strings with no extra contents.</td>
 </tr></table>
 </div>
 </div>
@@ -5603,24 +5623,36 @@ audiotrack with corresponding name.</p></div>
 <div class="sect2">
 <h3 id="_sounds">7.2. Sounds</h3>
 <div class="paragraph"><p>In TR engines, sounds appear in a variety of contexts.</p></div>
-<div class="paragraph"><p>They can be either <em>continuous</em> or <em>triggered</em>. Continuous ones are usually produced by <em>sound source</em> object, which make sound in a range around some specific point (range appears to be hardcoded, and is equal to around 8 sectors). Likewise, triggered ones can be triggered by a variety of events. The triggering can be hardcoded in the engine (for example, gunshots) or by reaching some animation frame (footsteps, Lara&#8217;s somewhat unladylike sounds). <em>Flipeffects</em> can also be used to play certain sound sample in specific circumstances, and either called by triggers or from animations.</p></div>
-<div class="paragraph"><p>Sounds may be <em>looped</em> or <em>one shot</em>, with looped ones playing until specifically untriggered by some in-game event. For example, Uzi and M16 sounds are looped and will be played until Lara stops firing these weapons&#8201;&#8212;&#8201;in such case, engine sends a command to stop this particular sound.</p></div>
-<div class="paragraph"><p>Sounds are referred to by an <em>internal sound index</em>; this is translated into which sound sample with the help of three layers of indexing, to allow for a suitable degree of abstraction. Internal sound indices for various sounds are consistent across all the level files in a game; a gunshot or a passport opening in one level file will have the same internal sound index as in all the others. The highest level of these is the <span class="monospaced">SoundMap[]</span> array, which translates the internal sound index into an index into <span class="monospaced">SoundDetails[]</span>. Each <span class="monospaced">SoundDetails</span> record contains such details as the sound volume, pitch and volume randomization, looping configuration, how many samples to select from, and an index into <span class="monospaced">SampleIndices[]</span>. This allows for selecting among multiple
-samples to produce variety; that index is the index to the <span class="monospaced">SampleIndices[]</span> value of first of these, with the rest of them being having the next indices in
-series of that array. Thus, if the number of samples is 4, then the TR engine looks in <span class="monospaced">SampleIndices[]</span> locations <em>Index</em>, <em>Index+1</em>, <em>Index+2</em>, and <em>Index+3</em>.
-Finally, the <span class="monospaced">SampleIndices[]</span> array references some arrays of sound samples.</p></div>
+<div class="paragraph"><p>They can be either <em>continuous</em> or <em>triggered</em>. Continuous ones are usually produced by <em>sound source</em> object, which make sound in a range around some specific
+point (range appears to be hardcoded, and is equal to around 8 sectors). Likewise, triggered ones can be triggered by a variety of events. The triggering can be
+hardcoded in the engine (for example, gunshots) or by reaching some animation frame (footsteps, Lara&#8217;s somewhat unladylike sounds). <em>Flipeffects</em> can also be
+used to play certain sound sample in specific circumstances, and either called by triggers or from animations.</p></div>
+<div class="paragraph"><p>Sounds may be <em>looped</em> or <em>one shot</em>, with looped ones playing until specifically untriggered by some in-game event. For example, Uzi and M16 sounds are looped
+and will be played until Lara stops firing these weapons&#8201;&#8212;&#8201;in such case, engine sends a command to stop this particular sound.</p></div>
+<div class="paragraph"><p>Sounds are referred to by an <em>internal sound index</em>; this is translated into which sound sample with the help of three layers of indexing, to allow for a
+suitable degree of abstraction. Internal sound indices for various sounds are consistent across all the level files in a game; a gunshot or a passport opening
+in one level file will have the same internal sound index as in all the others. The highest level of these is the <span class="monospaced">SoundMap[]</span> array, which translates the
+internal sound index into an index into <span class="monospaced">SoundDetails[]</span>. Each <span class="monospaced">SoundDetails</span> record contains such details as the sound volume, pitch and volume randomization,
+looping configuration, how many samples to select from, and an index into <span class="monospaced">SampleIndices[]</span>. This allows for selecting among multiple samples to produce
+variety; that index is the index to the <span class="monospaced">SampleIndices[]</span> value of first of these, with the rest of them being having the next indices in series of that array.
+Thus, if the number of samples is 4, then the TR engine looks in <span class="monospaced">SampleIndices[]</span> locations <em>Index</em>, <em>Index+1</em>, <em>Index+2</em>, and <em>Index+3</em>. Finally, the
+<span class="monospaced">SampleIndices[]</span> array references some arrays of sound samples.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>Wave format used in TR1/TR2 and TR3/TR4/TR5 is different. While TR1 and TR2 used 8-bit 11 kHz data, TR3 onwards switched to 16-bit 22 kHz data. However, PlayStation versions of TR1 and TR2 used 16-bit samples as well, which generally made PlayStation version sound quality better, without dithering artifacts.</p></div>
-<div class="paragraph"><p>Additionally, TR4 and TR5 introduced usage of <em>MS-ADPCM</em> codec to store sample data, which was uncompressed and loaded into buffers on level loading. However, <em>TR4 engine version bundled with TRLE</em> used uncompressed wave data, as in TR1-TR3.</p></div>
+<div class="paragraph"><p>Wave format used in TR1/TR2 and TR3/TR4/TR5 is different. While TR1 and TR2 used 8-bit 11 kHz data, TR3 onwards switched to 16-bit 22 kHz data. However,
+PlayStation versions of TR1 and TR2 used 16-bit samples as well, which generally made PlayStation version sound quality better, without dithering artifacts.</p></div>
+<div class="paragraph"><p>Additionally, TR4 and TR5 introduced usage of <em>MS-ADPCM</em> codec to store sample data, which was uncompressed and loaded into buffers on level loading. However,
+<em>TR4 engine version bundled with TRLE</em> used uncompressed wave data, as in TR1-TR3.</p></div>
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>In TR1, TR4 and TR5 samples themselves are embedded in the level files. In TR1, <span class="monospaced">SampleIndices[]</span> array contains the displacements of each sample in bytes from the beginning of that embedded block. In TR4 and TR5, way to access sample data was changed&#8201;&#8212;&#8201;each sample data is preceded by <em>uncompressed size</em> and <em>compressed size</em> <span class="monospaced">uint32_t</span> values, which are used to extract given sample and load it into DirectSound buffer.</p></div>
+<div class="paragraph"><p>In TR1, TR4 and TR5 samples themselves are embedded in the level files. In TR1, <span class="monospaced">SampleIndices[]</span> array contains the displacements of each sample in bytes from
+the beginning of that embedded block. In TR4 and TR5, way to access sample data was changed&#8201;&#8212;&#8201;each sample data is preceded by <em>uncompressed size</em> and
+<em>compressed size</em> <span class="monospaced">uint32_t</span> values, which are used to extract given sample and load it into DirectSound buffer.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -5633,7 +5665,8 @@ to leave a bit of silence in the end of the file (which produces audible interru
 </td>
 </tr></table>
 </div>
-<div class="paragraph"><p>In TR2 and TR3, these samples are concatenated in the file <span class="monospaced">MAIN.SFX</span> with no additional information; <span class="monospaced">SampleIndices[]</span> contains sequence numbers (0, 1, 2, 3, &#8230;) in <span class="monospaced">MAIN.SFX</span>. Finally, the samples themselves are all in Microsoft WAVE format.</p></div>
+<div class="paragraph"><p>In TR2 and TR3, these samples are concatenated in the file <span class="monospaced">MAIN.SFX</span> with no additional information; <span class="monospaced">SampleIndices[]</span> contains sequence numbers (0, 1, 2, 3, &#8230;)
+in <span class="monospaced">MAIN.SFX</span>. Finally, the samples themselves are all in Microsoft WAVE format.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_sound_data_structures">7.3. Sound Data Structures</h3>
@@ -5654,7 +5687,8 @@ propagate omnidirectionally for about 8 horizontal-grid sizes without regard for
 </div>
 <div class="sect3">
 <h4 id="_soundmap">7.3.2. SoundMap</h4>
-<div class="paragraph"><p><span class="monospaced">SoundMap</span> is used for mapping from internal-sound index to <span class="monospaced">SoundDetails</span> index; it is 370 <span class="monospaced">int16_t</span> in TR2 and TR3 and 256 <span class="monospaced">int16_t</span> in TR1. A value of <span class="monospaced">-1 (0xFFFF)</span> indicates &#8220;none&#8221;, meaning the sample is not used in current level.</p></div>
+<div class="paragraph"><p><span class="monospaced">SoundMap</span> is used for mapping from internal-sound index to <span class="monospaced">SoundDetails</span> index; it is 370 <span class="monospaced">int16_t</span> in TR2 and TR3 and 256 <span class="monospaced">int16_t</span> in TR1. A value of <span class="monospaced">-1
+(0xFFFF)</span> indicates &#8220;none&#8221;, meaning the sample is not used in current level.</p></div>
 <div class="paragraph"><p>Each <span class="monospaced">SoundDetails</span> entry can be described as such:</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sound_details</span> <span class="c1">// 8 bytes</span>
@@ -5669,12 +5703,15 @@ propagate omnidirectionally for about 8 horizontal-grid sizes without regard for
 <div class="ulist"><ul>
 <li>
 <p>
-Bits 0-1: Looping behaviour: either normal playback (value <span class="monospaced">00</span>), <em>one-shot rewound</em> (<span class="monospaced">01</span> in TR1/TR2, <span class="monospaced">02</span> in other games), meaning the sound will be rewound if triggered again, or <em>looped</em> (value <span class="monospaced">10</span> in TR1, <span class="monospaced">11</span> in other games), meaning the sound will be looped until strictly stopped by an engine event. Since TR3, <em>one-shot wait</em> mode is introduced (value <span class="monospaced">10</span>), meaning the same sound will be ignored until current one stops.
+Bits 0-1: Looping behaviour: either normal playback (value <span class="monospaced">00</span>), <em>one-shot rewound</em> (<span class="monospaced">01</span> in TR1/TR2, <span class="monospaced">02</span> in other games), meaning the sound will be rewound
+  if triggered again, or <em>looped</em> (value <span class="monospaced">10</span> in TR1, <span class="monospaced">11</span> in other games), meaning the sound will be looped until strictly stopped by an engine event. Since
+  TR3, <em>one-shot wait</em> mode is introduced (value <span class="monospaced">10</span>), meaning the same sound will be ignored until current one stops.
 </p>
 </li>
 <li>
 <p>
-Bits 2-7: Number of sound samples in this group. If there are more than one samples, then engine will select one to play based on randomizer (for example, listen to Lara footstep sounds).
+Bits 2-7: Number of sound samples in this group. If there are more than one samples, then engine will select one to play based on randomizer (for example,
+  listen to Lara footstep sounds).
 </p>
 </li>
 <li>
@@ -5706,7 +5743,9 @@ Bit 14: Randomize gain. When this flag is set, sound volume (gain) will be sligh
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">Range</span> now defines radius (in sectors), on which this sound can be heard. Previously (in TR1 and TR2), each sound had a predefined range about 8 sectors.</p></div>
-<div class="paragraph"><p><span class="monospaced">Pitch</span> specifies <em>absolute</em> pitch volume for this sound (may be also varied by bit 13 of <em>Characteristics</em>). Mainly, this value was used to &#8220;speed-up&#8221; certain samples, thus allowing to keep high-quality samples with lower sample rate, or on contrary, &#8220;slow down&#8221; sample, making it sound longer than its native sample rate, thus conserving some memory.</p></div>
+<div class="paragraph"><p><span class="monospaced">Pitch</span> specifies <em>absolute</em> pitch volume for this sound (may be also varied by bit 13 of <em>Characteristics</em>). Mainly, this value was used to &#8220;speed-up&#8221;
+certain samples, thus allowing to keep high-quality samples with lower sample rate, or on contrary, &#8220;slow down&#8221; sample, making it sound longer than its native
+sample rate, thus conserving some memory.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -5720,7 +5759,8 @@ file itself is a set of concatenated sound files with no catalogue info present.
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>Sample indices are not used in TR4 and TR5, and this data block is missing from level file, replaced by six zero bytes, which finalize <em>zlib compressed level block</em> followed by embedded sound sample data.</p></div>
+<div class="paragraph"><p>Sample indices are not used in TR4 and TR5, and this data block is missing from level file, replaced by six zero bytes, which finalize <em>zlib compressed level
+block</em> followed by embedded sound sample data.</p></div>
 </td>
 </tr></table>
 </div>
@@ -5782,7 +5822,9 @@ to get the correct values.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_object_textures">8.3. Object Textures</h3>
-<div class="paragraph"><p>Object texture (or <em>texture details</em> in TRLE terms) keeps detailed information about each texture independently used in game. While it&#8217;s not texture image itself (these are kept inside <em>texture tiles</em>), it&#8217;s rather a reference to particular texture tile zone kept with all other necessary information to display this texture.</p></div>
+<div class="paragraph"><p>Object texture (or <em>texture details</em> in TRLE terms) keeps detailed information about each texture independently used in game. While it&#8217;s not texture image
+itself (these are kept inside <em>texture tiles</em>), it&#8217;s rather a reference to particular texture tile zone kept with all other necessary information to display
+this texture.</p></div>
 <div class="sect3">
 <h4 id="_object_texture_vertex_structure">8.3.1. Object texture vertex structure</h4>
 <div class="paragraph"><p>This sub-structure used by object textures specifies a vertex location in textile coordinates. The Xpixel and Ypixel are the actual coordinates of the vertex&#8217;s pixel.
@@ -5831,7 +5873,9 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 </li>
 <li>
 <p>
-<strong>1</strong>&#8201;&#8212;&#8201;Texture uses <em>alpha testing</em>, i.e. it may contain opaque and completely transparent regions. In 8-bit colour, index 0 is the transparent colour, while in 16-bit colour, the top bit (0x8000) is the alpha channel (1 = opaque, 0 = transparent). In 32-bit textures, transparency is specified by <em>full magenta colour value</em> (RGB = 255,0,255)&#8201;&#8212;&#8201;i.e. pixel has to be magenta to be transparent.
+<strong>1</strong>&#8201;&#8212;&#8201;Texture uses <em>alpha testing</em>, i.e. it may contain opaque and completely transparent regions. In 8-bit colour, index 0 is the transparent colour, while
+  in 16-bit colour, the top bit (0x8000) is the alpha channel (1 = opaque, 0 = transparent). In 32-bit textures, transparency is specified by <em>full magenta
+  colour value</em> (RGB = 255,0,255)&#8201;&#8212;&#8201;i.e. pixel has to be magenta to be transparent.
 </p>
 </li>
 <li>
@@ -5852,14 +5896,18 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>While blending modes 0, 1 and 2 were the only ones directly available for implementation in original level and animation editors, and therefore, only ones which can be encountered in object textures, there are actually several <em>internal blending modes</em>, which were primarily used for different sprite and particle types. These will be listed below:</p></div>
+<div class="paragraph"><p>While blending modes 0, 1 and 2 were the only ones directly available for implementation in original level and animation editors, and therefore, only ones which
+can be encountered in object textures, there are actually several <em>internal blending modes</em>, which were primarily used for different sprite and particle types.
+These will be listed below:</p></div>
 </td>
 </tr></table>
 </div>
 <div class="ulist"><ul>
 <li>
 <p>
-<strong>3</strong>&#8201;&#8212;&#8201;Not implemented properly in PC version, but on PlayStation this type produces alpha blending with <em>inversion operation</em>, thus converting all the bright zones to dark, and dark zones to bright. This blending mode was used for smooth textured shadows, footprints and black smoke sprites. There is a remnant of this blending mode in the form of entity type named <em>smoke emitter black</em>.
+<strong>3</strong>&#8201;&#8212;&#8201;Not implemented properly in PC version, but on PlayStation this type produces alpha blending with <em>inversion operation</em>, thus converting all the bright
+  zones to dark, and dark zones to bright. This blending mode was used for smooth textured shadows, footprints and black smoke sprites. There is a remnant of
+  this blending mode in the form of entity type named <em>smoke emitter black</em>.
 </p>
 </li>
 <li>
@@ -5883,7 +5931,8 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> Forced alpha value. It&#8217;s ordinary alpha-tested face, but alpha value for this face is overridden with global variable. Used to &#8220;fade out&#8221; specific meshes, like vanishing enemy bodies or Semerkhet ghost in &#8220;Tomb of Semerkhet&#8221; level.
+</span> Forced alpha value. It&#8217;s ordinary alpha-tested face, but alpha value for this face is overridden with global variable. Used to &#8220;fade out&#8221;
+  specific meshes, like vanishing enemy bodies or Semerkhet ghost in &#8220;Tomb of Semerkhet&#8221; level.
 </p>
 </li>
 </ul></div>
@@ -5891,7 +5940,9 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 <div class="sect3">
 <h4 id="_object_texture_structure_tr4_5">8.3.3. Object texture structure (TR4-5)</h4>
 <div class="paragraph"><p>The structure introduced many new fields in TR4, partly related to new <em>bump mapping feature</em>.</p></div>
-<div class="paragraph"><p>For <em>bump mapping</em>, TR4 used fairly simple approach, which was actually not a true bump mapping, but multitexturing with additive operation. Therefore, bump maps were not <em>normal maps</em> mainly used for bump-mapping nowadays, but simple monochrome <em>heightmaps</em> automatically generated by level editor. This is a test screenshot comparison demonstrating same scene with and without bump mapping:</p></div>
+<div class="paragraph"><p>For <em>bump mapping</em>, TR4 used fairly simple approach, which was actually not a true bump mapping, but multitexturing with additive operation. Therefore, bump
+maps were not <em>normal maps</em> mainly used for bump-mapping nowadays, but simple monochrome <em>heightmaps</em> automatically generated by level editor. This is a test
+screenshot comparison demonstrating same scene with and without bump mapping:</p></div>
 <table class="tableblock frame-none grid-all"
 style="
 margin-left:auto; margin-right:auto;
@@ -5914,8 +5965,12 @@ width:70%;
 </tr>
 </tbody>
 </table>
-<div class="paragraph"><p>Assignation of bump maps happened inside level editor, where each texture piece could be marked as either <em>level 1</em> or <em>level 2</em> degree of bump map effect. When level was converted, all texture pieces with bumpmaps were placed into separate texture tiles after all other texture tiles, following by the same amount of texture tiles with auto-generated bump maps arranged in the same manner as original texture tiles. Number of bumped texture tiles was kept in separate variable as well (see <a href="#TR4 Level Format">[TR4 Level Format]</a> section).</p></div>
-<div class="paragraph"><p>So, when engine rendered a face with texture marked as <em>bumped</em>, it rendered original texture at first, then it jumped to the texture tile <em>plus number of bumped texture tiles</em>, and rendered one more texture pass on this face using texture from resulting texture tile and the same UV coordinates.</p></div>
+<div class="paragraph"><p>Assignation of bump maps happened inside level editor, where each texture piece could be marked as either <em>level 1</em> or <em>level 2</em> degree of bump map effect. When
+level was converted, all texture pieces with bumpmaps were placed into separate texture tiles after all other texture tiles, following by the same amount of
+texture tiles with auto-generated bump maps arranged in the same manner as original texture tiles. Number of bumped texture tiles was kept in separate variable
+as well (see <a href="#TR4 Level Format">[TR4 Level Format]</a> section).</p></div>
+<div class="paragraph"><p>So, when engine rendered a face with texture marked as <em>bumped</em>, it rendered original texture at first, then it jumped to the texture tile <em>plus number of
+bumped texture tiles</em>, and rendered one more texture pass on this face using texture from resulting texture tile and the same UV coordinates.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_object_texture</span> <span class="c1">// 38 bytes</span>
 <span class="p">{</span>
@@ -5950,7 +6005,8 @@ width:70%;
 </li>
 </ul></div>
 <div class="paragraph"><p><span class="monospaced">Width</span> and <span class="monospaced">Height</span> are helper values which specify width and height for a given object texture.</p></div>
-<div class="paragraph"><p><span class="monospaced">OriginalU</span> and <span class="monospaced">OriginalV</span> are unused values, which seem to identify <em>original UV coordinates</em> of object texture in TRLE texture page listings. These coordinates are getting messed up when level is compiled, so one shouldn&#8217;t bother about parsing them correctly.</p></div>
+<div class="paragraph"><p><span class="monospaced">OriginalU</span> and <span class="monospaced">OriginalV</span> are unused values, which seem to identify <em>original UV coordinates</em> of object texture in TRLE texture page listings. These
+coordinates are getting messed up when level is compiled, so one shouldn&#8217;t bother about parsing them correctly.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -6047,9 +6103,12 @@ towards which Lara is pushed.</p></div>
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> Flyby cameras are cinematic interludes, in which camera flies from one point to another using spline trajectory. Each point in such sequence is a <em>single flyby camera</em>, and current camera properties (position, direction, roll, FOV, speed, and some more) are calculated by interpolating corresponding values from such flyby camera points&#8201;&#8212;&#8201;for example, if <em>camera 0</em> has speed value of 10, and <em>camera 1</em> has speed value of 5, then speed will gradually change from 10 to 5 when moving from one to another.</p></div>
+</span> Flyby cameras are cinematic interludes, in which camera flies from one point to another using spline trajectory. Each point in such sequence is a
+<em>single flyby camera</em>, and current camera properties (position, direction, roll, FOV, speed, and some more) are calculated by interpolating corresponding values
+from such flyby camera points&#8201;&#8212;&#8201;for example, if <em>camera 0</em> has speed value of 10, and <em>camera 1</em> has speed value of 5, then speed will gradually change from 10
+to 5 when moving from one to another.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_flyby_camera</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_flyby_camera</span>  <span class="c1">// 40 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>    <span class="c1">// Camera position</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
@@ -6067,14 +6126,17 @@ towards which Lara is pushed.</p></div>
    <span class="kt">uint16_t</span> <span class="n">Speed</span><span class="p">;</span>
    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>
 
-   <span class="kt">uint16_t</span> <span class="n">Room_ID</span><span class="p">;</span>
+   <span class="kt">uint32_t</span> <span class="n">Room_ID</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">Sequence</span> is a number of flyby camera &#8220;chain&#8221; this particular camera belongs to. Maximum amount of flyby sequences in single level is 8 (however, this limit was raised to 64 in <em>TREP</em>).</p></div>
-<div class="paragraph"><p><span class="monospaced">Index</span> specifies order of the cameras in this particular sequence. Camera with <span class="monospaced">index</span> 0 will be first one in sequence, <span class="monospaced">index</span> 1 means camera will be second in sequence, and so on.</p></div>
+<div class="paragraph"><p><span class="monospaced">Sequence</span> is a number of flyby camera &#8220;chain&#8221; this particular camera belongs to. Maximum amount of flyby sequences in single level is 8 (however, this limit
+was raised to 64 in <em>TREP</em>).</p></div>
+<div class="paragraph"><p><span class="monospaced">Index</span> specifies order of the cameras in this particular sequence. Camera with <span class="monospaced">index</span> 0 will be first one in sequence, <span class="monospaced">index</span> 1 means camera will be second
+in sequence, and so on.</p></div>
 <div class="paragraph"><p><span class="monospaced">Room_ID</span> should be valid for a given flyby camera, so it will display properly, as well as have the ability to activate <em>heavy triggers</em>.</p></div>
 <div class="paragraph"><p><span class="monospaced">FOV</span> changes this particular camera&#8217;s field of view.</p></div>
-<div class="paragraph"><p><span class="monospaced">Roll</span> changes roll factor of a particular camera. When this parameter is not zero, camera will rotate either left or right along roll axis, creating so-called &#8220;dutch angle&#8221;.</p></div>
+<div class="paragraph"><p><span class="monospaced">Roll</span> changes roll factor of a particular camera. When this parameter is not zero, camera will rotate either left or right along roll axis, creating so-called
+&#8220;dutch angle&#8221;.</p></div>
 <div class="paragraph"><p><span class="monospaced">Timer</span> field mainly used to stop camera movement for a given time (in game frames). As this parameter is temporal, it won&#8217;t be interpolated between two cameras.</p></div>
 <div class="paragraph"><p><span class="monospaced">Speed</span> specifies movement speed for this particular camera.</p></div>
 <div class="paragraph"><p><span class="monospaced">Flags</span> is an array of bit flags specifying different camera options:</p></div>
@@ -6096,7 +6158,8 @@ towards which Lara is pushed.</p></div>
 </li>
 <li>
 <p>
-<strong>Bit 3</strong>&#8201;&#8212;&#8201;<em>Used only with first camera in a sequence:</em> whole sequence is treated merely as a camera &#8220;rails&#8221;, and camera itself focuses on Lara, thus creating &#8220;tracking&#8221; camera. Best example is &#8220;tracking&#8221; view in <em>ALEXHUB2.TR4</em>, rooms #23 and #31.
+<strong>Bit 3</strong>&#8201;&#8212;&#8201;<em>Used only with first camera in a sequence:</em> whole sequence is treated merely as a camera &#8220;rails&#8221;, and camera itself focuses on Lara, thus
+  creating &#8220;tracking&#8221; camera. Best example is &#8220;tracking&#8221; view in <span class="monospaced">ALEXHUB2.TR4</span>, rooms #23 and #31.
 </p>
 </li>
 <li>
@@ -6731,7 +6794,7 @@ of flexibility.</p></div>
 <span class="kt">int16_t</span> <span class="n">SecretSoundID</span><span class="p">;</span>        <span class="c1">// ID of soundtrack to play when a secret is found</span>
 <span class="kt">uint8_t</span> <span class="n">Unknown5</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>          <span class="c1">// Filler</span>
 
-<span class="c1">// 1. Offset to each string is end offset of &#39;*StringOffsets&#39; + *StringOffsets[i]</span>
+<span class="c1">// 1. Offset to each string is end offset of *StringOffsets&#39; + *StringOffsets[i]</span>
 <span class="c1">// 2. String length is calculated by (*StringOffsets[i+1]-*StringOffsets[i])</span>
 <span class="c1">// 3. If Flags &amp; UseXor true each character must be ^ XorKey to decrypt the string.</span>
 
@@ -7424,7 +7487,7 @@ null-terminated.</p></div>
 starting byte address <span class="monospaced">(56 + NumTotalLevels * 2)</span>, while the level-data offsets are relative to the first level data&#8217;s starting byte address <span class="monospaced">(56 +
 NumTotalLevels * 2 + LevelpathStringLen + NumTotalLevels * 2)</span>.</p></div>
 <div class="paragraph"><p>It is also worth noting that the level-path strings in <span class="monospaced">SCRIPT.DAT</span> are ordered the same way they were ordered in corresponding <span class="monospaced">[Level]</span> blocks in uncompiled
-<em>SCRIPT.TXT</em>. For example, if the first <em>[Level]</em> in <em>SCRIPT.TXT</em> defines <span class="monospaced">Level=DATA\TEST1,101</span> and the second <span class="monospaced">Level=DATA\TEST2,101</span>&#8201;&#8212;&#8201;then there will be 2
+<em>SCRIPT.TXT</em>. For example, if the first <em>[Level]</em> in <span class="monospaced">SCRIPT.TXT</span> defines <span class="monospaced">Level=DATA\TEST1,101</span> and the second <span class="monospaced">Level=DATA\TEST2,101</span>&#8201;&#8212;&#8201;then there will be 2
 level-paths in <span class="monospaced">SCRIPT.DAT</span>, in the order such as this: <span class="monospaced">DATA\\TEST1.DATA\\TEST2;</span> where <span class="monospaced">.</span> is the null-terminator (<span class="monospaced">0x00</span>) byte.</p></div>
 <div class="paragraph"><p>To get to a certain level&#8217;s path within <span class="monospaced">SCRIPT.DAT</span> knowing only its number, just look-up at <span class="monospaced">OffsetsToLevelpathString[LevelNum]</span> and go to that offset
 (remember, it is <em>not relative</em> to file address <span class="monospaced">0</span>!).</p></div>
@@ -7438,7 +7501,7 @@ used for bool options (enabled/disabled; such as <em>Lightning</em> option) and 
 <div class="paragraph"><p>That is, preceding a certain type of data you usually find a byte. That is the <em>opcode byte</em>&#8201;&#8212;&#8201;depending on its value, it can be determined what kind and how
 many arguments follow that need parsing. For example, chunk <span class="monospaced">0x81</span> indicates the level description opcode; with that info, the parser knows that 4 arguments
 follows: the string index, etc. This structure is somewhat akin to the <em>AnimCommands</em> structure of level files (see description above). The chunk order <em>does</em>
-matter; the original <em>tomb4.exe</em> binary seems to crash if something is not ordered the way it should be.</p></div>
+matter; the original <span class="monospaced">tomb4.exe</span> binary seems to crash if something is not ordered the way it should be.</p></div>
 <div class="paragraph"><p>The title screen is special in that it uses the <span class="monospaced">0x82</span> opcode the indicate the level-name and audio track information and it, naturally, lacks the string index
 integer as the title level has no name associated with it.</p></div>
 <div class="listingblock">
@@ -7590,12 +7653,12 @@ description):</p></div>
 </li>
 <li>
 <p>
-<em>Bit 3</em> (<span class="monospaced">0x0008</span>)&#8201;&#8212;&#8201;Horizon (has to be paired with 3)
+<em>Bit 4</em> (<span class="monospaced">0x0010</span>)&#8201;&#8212;&#8201;Layer2 used (?)
 </p>
 </li>
 <li>
 <p>
-<em>Bit 4</em> (<span class="monospaced">0x0010</span>)&#8201;&#8212;&#8201;Layer2 used (?)
+<em>Bit 3</em> (<span class="monospaced">0x0008</span>)&#8201;&#8212;&#8201;Horizon (has to be paired with 3)
 </p>
 </li>
 <li>
@@ -7759,7 +7822,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 3.0<br>
-Last updated 2015-07-27 03:31:04 MSK
+Last updated 2015-07-27 07:20:09 CEST
 </div>
 </div>
 </body>
