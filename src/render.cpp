@@ -1202,18 +1202,21 @@ void RenderDebugDrawer::drawAxis(btScalar r, const btTransform &transform)
     std::array<GLfloat,3> origin{{ transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() }};
 
     btVector3 v = transform.getBasis().getColumn(0) * r;
+    v += transform.getOrigin();
     m_buffer.push_back(origin);
     m_buffer.push_back({{1.0, 0.0, 0.0}});
     m_buffer.push_back({{v.x(), v.y(), v.z()}});
     m_buffer.push_back({{1.0, 0.0, 0.0}});
 
     v = transform.getBasis().getColumn(1) * r;
+    v += transform.getOrigin();
     m_buffer.push_back(origin);
-    m_buffer.push_back({{0.0, 0.0, 1.0}});
+    m_buffer.push_back({{0.0, 1.0, 0.0}});
     m_buffer.push_back({{v.x(), v.y(), v.z()}});
-    m_buffer.push_back({{0.0, 0.0, 1.0}});
+    m_buffer.push_back({{0.0, 1.0, 0.0}});
 
     v = transform.getBasis().getColumn(2) * r;
+    v += transform.getOrigin();
     m_buffer.push_back(origin);
     m_buffer.push_back({{0.0, 0.0, 1.0}});
     m_buffer.push_back({{v.x(), v.y(), v.z()}});
