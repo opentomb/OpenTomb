@@ -255,7 +255,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
             {
                 assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
-                assert( rs != nullptr && rs->sector_above != nullptr );
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
