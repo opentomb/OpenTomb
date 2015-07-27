@@ -453,7 +453,7 @@ void Entity::checkCollisionCallbacks()
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
-                ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
+                //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) &&
