@@ -35,6 +35,7 @@
 #include "render.h"
 #include "bsp_tree.h"
 #include "shader_description.h"
+#include "helpers.h"
 
 #include <lua.hpp>
 #include "LuaState.h"
@@ -2427,9 +2428,8 @@ void Res_GenSpritesBuffer(World *world)
 
 void TR_GenTextures(World* world, class VT_Level *tr)
 {
-    int border_size = renderer.settings().texture_border;
-    border_size = (border_size < 0)?(0):(border_size);
-    border_size = (border_size > 128)?(128):(border_size);
+    int border_size = Clamp(renderer.settings().texture_border, 0, 64);
+
     world->tex_atlas.reset( new BorderedTextureAtlas(border_size,
                                                      renderer.settings().save_texture_memory,
                                                      tr->textile32,
@@ -4072,11 +4072,8 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
-                    case 0x02:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
                     case 0x01:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
                     case 0x03:
                         world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
