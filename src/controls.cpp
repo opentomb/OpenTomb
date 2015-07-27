@@ -650,20 +650,17 @@ void Controls_PrimaryMouseDown()
     btScalar dbgR = 128.0;
     btVector3 v = engine_camera.m_pos;
     btVector3 dir = engine_camera.m_viewDir;
-    btVector3 new_pos;
     btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-    btCollisionShape *cshape;
-    btRigidBody *body;
 
-    cshape = new btSphereShape(dbgR);
+    btCollisionShape* cshape = new btSphereShape(dbgR);
     //cshape = new btCapsuleShapeZ(50.0, 100.0);
+    btTransform startTransform;
     startTransform.setIdentity();
-    new_pos = v;
+    btVector3 new_pos = v;
     startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-    body = new btRigidBody(12.0, motionState, cshape, localInertia);
+    btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
     cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
@@ -676,11 +673,8 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    EngineContainer* c0;
-    btVector3 from, to, place;
-
-    from = engine_camera.m_pos;
-    to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
+    btVector3 from = engine_camera.m_pos;
+    btVector3 to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
 
     std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainer>();
     cam_cont->room = engine_camera.m_currentRoom;
@@ -692,13 +686,14 @@ void Controls_SecondaryMouseDown()
     {
         extern GLfloat cast_ray[6];
 
+        btVector3 place;
         place.setInterpolate3(from, to, cbc.m_closestHitFraction);
         std::copy(place+0, place+3, cast_ray);
         cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld[0];
         cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld[1];
         cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld[2];
 
-        if((c0 = (EngineContainer*)cbc.m_collisionObject->getUserPointer()))
+        if(EngineContainer* c0 = (EngineContainer*)cbc.m_collisionObject->getUserPointer())
         {
             if(c0->object_type == OBJECT_BULLET_MISC)
             {
@@ -715,10 +710,10 @@ void Controls_SecondaryMouseDown()
 
                 if (body)
                 {
-                    body->setUserPointer(NULL);
+                    body->setUserPointer(nullptr);
                 }
                 c0->room = NULL;
-                free(c0);
+                delete c0;
 
                 bt_engine_dynamicsWorld->removeCollisionObject(obj);
                 delete obj;

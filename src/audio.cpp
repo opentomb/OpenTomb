@@ -619,6 +619,7 @@ bool StreamTrack::Unload()
 
 bool StreamTrack::Load_Track(const char *path)
 {
+    memset(&sf_info, 0, sizeof(sf_info));
     if(!(snd_file = sf_open(path, SFM_READ, &sf_info)))
     {
         Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
@@ -1806,6 +1807,7 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
 {
     MemBufferFileIo wavMem(sample_pointer, sample_size);
     SF_INFO sfInfo;
+    memset(&sfInfo, 0, sizeof(sfInfo));
     SNDFILE* sample = sf_open_virtual(&wavMem, SFM_READ, &sfInfo, &wavMem);
 
     if(!sample)

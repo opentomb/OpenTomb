@@ -65,7 +65,7 @@ struct Camera
     GLfloat m_shakeValue = 0;
     GLfloat m_shakeTime = 0;
 
-    int8_t m_targetDir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
+    int8_t m_targetDir = 1;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
     Room* m_currentRoom = nullptr;
 

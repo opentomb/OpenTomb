@@ -41,7 +41,7 @@ void Room::empty()
         {
             if(btRigidBody* body = static_mesh[i]->bt_body)
             {
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
@@ -335,6 +335,7 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
 
 btVector3 Sector_HighestFloorCorner(RoomSector* rs)
 {
+    assert( rs != nullptr );
     btVector3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
     btVector3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
 
@@ -343,6 +344,7 @@ btVector3 Sector_HighestFloorCorner(RoomSector* rs)
 
 btVector3 Sector_LowestCeilingCorner(RoomSector* rs)
 {
+    assert( rs != nullptr );
     btVector3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
     btVector3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
 
@@ -433,14 +435,13 @@ void World::empty()
     /* Now we can delete bullet misc */
     if(bt_engine_dynamicsWorld != NULL)
     {
-        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; i>=0; i--)
         {
             btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-            btRigidBody* body = btRigidBody::upcast(obj);
-            if(body != NULL)
+            if(btRigidBody* body = btRigidBody::upcast(obj))
             {
                 EngineContainer* cont = (EngineContainer*)body->getUserPointer();
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
 
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
                 {
@@ -785,21 +786,23 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
 
 RoomSector* RoomSector::checkFlip()
 {
-    if(!owner_room->active)
-    {
-        if((owner_room->base_room != NULL) && (owner_room->base_room->active))
-        {
-            std::shared_ptr<Room> r = owner_room->base_room;
-            return &r->sectors[ index_x * r->sectors_y + index_y ];
-        }
-        else if((owner_room->alternate_room != NULL) && (owner_room->alternate_room->active))
-        {
-            std::shared_ptr<Room> r = owner_room->alternate_room;
-            return &r->sectors[ index_x * r->sectors_y + index_y ];
-        }
-    }
+    if(owner_room->active)
+        return this;
 
-    return this;
+    if(owner_room->base_room && owner_room->base_room->active)
+    {
+        std::shared_ptr<Room> r = owner_room->base_room;
+        return &r->sectors[ index_x * r->sectors_y + index_y ];
+    }
+    else if(owner_room->alternate_room && owner_room->alternate_room->active)
+    {
+        std::shared_ptr<Room> r = owner_room->alternate_room;
+        return &r->sectors[ index_x * r->sectors_y + index_y ];
+    }
+    else
+    {
+        return this;
+    }
 }
 
 
@@ -1249,10 +1252,15 @@ RoomSector* RoomSector::getLowestSector()
 {
     RoomSector* lowest_sector = this;
 
-    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
+    while(RoomSector* below = lowest_sector->sector_below)
+    {
+        RoomSector* flipped = below->checkFlip();
+        if(!flipped)
+            break;
+        lowest_sector = flipped;
+    }
 
-    return lowest_sector;
+    return lowest_sector->checkFlip();
 }
 
 
@@ -1260,8 +1268,13 @@ RoomSector* RoomSector::getHighestSector()
 {
     RoomSector* highest_sector = this;
 
-    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
+    while(RoomSector* above = highest_sector->sector_above)
+    {
+        RoomSector* flipped = above->checkFlip();
+        if(!flipped)
+            break;
+        highest_sector = flipped;
+    }
 
     return highest_sector;
 }

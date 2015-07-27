@@ -114,12 +114,10 @@ function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
-    disableEntity(id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         swapEntityState(object_id, 1, 0);
         swapEntityActivity(object_id);
-        swapEntityEnability(object_id);
     end    
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;

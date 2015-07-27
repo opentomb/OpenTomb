@@ -255,7 +255,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_above)
             {
+                assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -268,7 +270,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_above)
             {
+                assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
+                assert( rs != nullptr && rs->sector_above != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -288,7 +292,9 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_below)
             {
+                assert( rs->sector_below != nullptr );
                 rs = rs->sector_below->checkFlip();
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (btScalar)rs->ceiling;
@@ -518,9 +524,9 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     std::copy(&to[0], &to[3], cast_ray+0);
     std::copy(&to[0], &to[3], cast_ray+3);
     cast_ray[5] -= d;
-    btVector3 n0, n1;
-    btScalar n0d, n1d;
     int up_founded = 0;
+    btVector3 n0{0,0,0}, n1{0,0,0};
+    btScalar n0d{0}, n1d{0};
     do
     {
         fromTransform.setOrigin(from);
@@ -581,6 +587,9 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     btVector3 n2 = m_transform.getBasis().getColumn(0);
     btScalar n2d = -n2.dot(entityPos);
 
+    assert( !n0.fuzzyZero() );
+    assert( !n1.fuzzyZero() );
+    assert( !n2.fuzzyZero() );
     /*
      * Solve system of the linear equations by Kramer method!
      * I know - It may be slow, but it has a good precision!
@@ -2244,8 +2253,11 @@ void Character::frameImpl(btScalar time, int16_t frame, int state) {
 }
 
 void Character::processSectorImpl() {
+    assert( m_currentSector != nullptr );
     RoomSector* highest_sector = m_currentSector->getHighestSector();
+    assert( highest_sector != nullptr );
     RoomSector* lowest_sector  = m_currentSector->getLowestSector();
+    assert( lowest_sector != nullptr );
 
     m_heightInfo.walls_climb_dir  = 0;
     m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |

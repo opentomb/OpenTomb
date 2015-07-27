@@ -1358,8 +1358,11 @@ void lua_MoveEntityToSink(int id, int sink_index)
     sink_pos[1] = sink->y;
     sink_pos[2] = sink->z + 256.0;
 
+    assert( ent->m_currentSector != nullptr );
     RoomSector* ls = ent->m_currentSector->getLowestSector();
+    assert( ls != nullptr );
     RoomSector* hs = ent->m_currentSector->getHighestSector();
+    assert( hs != nullptr );
     if((sink_pos[2] > hs->ceiling) ||
        (sink_pos[2] < ls->floor) )
     {
@@ -1625,7 +1628,7 @@ bool lua_GetEntityEnability(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-    if(ent)
+    if(ent == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
@@ -2802,9 +2805,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     /*
      * register globals
      */
-    char cvar_init[64]; cvar_init[0] = 0;
-    strcat(cvar_init, CVAR_LUA_TABLE_NAME); strcat(cvar_init, " = {};");
-    state.doString(cvar_init);
+    state.set(CVAR_LUA_TABLE_NAME, lua::Table());
 
     Game_RegisterLuaFunctions(state);
 

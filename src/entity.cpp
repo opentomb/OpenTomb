@@ -453,7 +453,7 @@ void Entity::checkCollisionCallbacks()
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
-                ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
+                //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) &&
@@ -1023,7 +1023,9 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
+    assert( m_currentSector != nullptr );
     RoomSector* lowest_sector  = m_currentSector->getLowestSector();
+    assert( lowest_sector != nullptr );
 
     processSectorImpl();
 
@@ -1444,7 +1446,7 @@ Entity::~Entity() {
     if(!m_bt.bt_body.empty()) {
         for(const auto& body : m_bt.bt_body) {
             if(body) {
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
@@ -1526,6 +1528,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         m_bt.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
         m_bt.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
         m_bt.bt_body[i]->setFriction(setup->body_setup[i].friction);
+
         m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
         if(!m_bf.bone_tags[i].parent) {

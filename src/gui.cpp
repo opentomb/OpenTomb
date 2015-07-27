@@ -612,17 +612,17 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
+        matrix4 scaledMvMatrix( mvMatrix * scaledMatrix );
         matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 

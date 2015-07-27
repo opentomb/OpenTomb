@@ -39,11 +39,11 @@ bool RDSetup::getSetup(int ragdoll_index)
         body_setup[i].mass = rds["body"][i+1]["mass"];
         body_setup[i].restitution = rds["body"][i+1]["restitution"];
         body_setup[i].friction = rds["body"][i+1]["friction"];
-        if(rds["body"][i+1]["damping"].is<lua::Table>()) {
+        if(rds["body"][i+1]["damping"].is<lua::Table>())
+        {
             body_setup[i].damping[0] = rds["body"][i+1]["damping"][1];
             body_setup[i].damping[1] = rds["body"][i+1]["damping"][2];
         }
-        body_setup[i].friction = rds["body"][i+1]["damping"];
     }
 
     for(size_t i=0; i<joint_setup.size(); i++) {

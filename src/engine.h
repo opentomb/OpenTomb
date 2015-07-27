@@ -67,6 +67,13 @@ struct EngineContainer
     lua::Integer collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
+
+    bool is_valid = true;
+
+    ~EngineContainer()
+    {
+        is_valid = false;
+    }
 };
 
 //! @todo Use bools where appropriate.
@@ -143,14 +150,19 @@ public:
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
-        const Room* r0 = m_container ? m_container->room : nullptr;
-        const EngineContainer* c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
-        const Room* r1 = c1 ? c1->room : nullptr;
+        const EngineContainer* c1 = (const EngineContainer*)rayResult.m_collisionObject->getUserPointer();
+
+        if(!c1->is_valid) {
+            throw std::runtime_error("OOOOOOPS");
+        }
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
+
+        const Room* r0 = m_container ? m_container->room : nullptr;
+        const Room* r1 = c1 ? c1->room : nullptr;
 
         if(!r0 || !r1)
         {
@@ -172,27 +184,26 @@ public:
         return 1.0;
     }
 
-    std::shared_ptr<EngineContainer> m_container;
-    bool                             m_skip_ghost;
+    const std::shared_ptr<const EngineContainer> m_container;
+    const bool m_skip_ghost;
 };
 
 
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    BtEngineClosestConvexResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestConvexResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false)
+        : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+        , m_container(cont)
+        , m_skip_ghost(skipGhost)
     {
-        m_container = cont;
-        m_skip_ghost = skipGhost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
     {
-        EngineContainer* c1;
-
-        Room* r0 = m_container ? m_container->room : nullptr;
-        c1 = (EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
-        Room* r1 = c1 ? c1->room : nullptr;
+        const Room* r0 = m_container ? m_container->room : nullptr;
+        const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
+        const Room* r1 = c1 ? c1->room : nullptr;
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
@@ -220,8 +231,8 @@ public:
     }
 
 protected:
-    std::shared_ptr<EngineContainer> m_container;
-    bool               m_skip_ghost;
+    const std::shared_ptr<const EngineContainer> m_container;
+    const bool m_skip_ghost;
 };
 
 int engine_lua_fputs(const char *str, FILE *f);

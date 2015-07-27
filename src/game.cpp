@@ -506,7 +506,7 @@ bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTrans
 {
     btSphereShape cameraSphere(16.0);
     cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
+    cb->m_hitCollisionObject = nullptr;
     bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
     return cb->hasHit();
 }

@@ -30,9 +30,9 @@ constexpr const float Rad360 = 2*M_PI;
 struct Plane
 {
     //! The plane's normal
-    btVector3 normal;
+    btVector3 normal = {0,0,0};
     //! The plane's distance to the origin
-    btScalar dot;
+    btScalar dot = 0;
 
     /**
      * Calculates the normalized distance of an arbitrary point in terms of the normal

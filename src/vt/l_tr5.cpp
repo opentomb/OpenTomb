@@ -68,19 +68,11 @@ void TR_Level::read_tr5_room_layer(SDL_RWops * const src, tr5_room_layer_t & lay
 {
     layer.num_vertices = read_bitu16(src);
     layer.unknown_l1 = read_bitu16(src);
-    if (layer.unknown_l1 != 0)
-        layer.unknown_l1 = layer.unknown_l1;
     layer.unknown_l2 = read_bitu16(src);
-    if (layer.unknown_l2 != 0)
-        layer.unknown_l2 = layer.unknown_l2;
     layer.num_rectangles = read_bitu16(src);
     layer.num_triangles = read_bitu16(src);
     layer.unknown_l3 = read_bitu16(src);
-    if (layer.unknown_l3 != 0)
-        layer.unknown_l3 = layer.unknown_l3;
     layer.unknown_l4 = read_bitu16(src);
-    if (layer.unknown_l4 != 0)
-        layer.unknown_l4 = layer.unknown_l4;
     if (read_bitu16(src) != 0)
         Sys_extWarn("read_tr5_room_layer: filler2 has wrong value");
 
