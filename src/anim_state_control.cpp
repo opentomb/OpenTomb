@@ -81,23 +81,21 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
 
 void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    AnimationFrame* af = &ss_anim->model->animations[ ss_anim->current_animation ];
+
+    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
     {
-        AnimationFrame* af = &ss_anim->model->animations[ ss_anim->current_animation ];
-        if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
-        {
-            auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-            ent->setAnimation(af->next_anim->id, af->next_frame);
-            auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-            move -= p;
-            ent->m_transform.getOrigin() += move;
-            ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
-            Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
-            ent->updateRigidBody(false);
-            ent->ghostUpdate();
-            ent->m_moveType = MOVE_ON_FLOOR;
-            ss_anim->onFrame = nullptr;
-        }
+        auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
+        ent->setAnimation(af->next_anim->id, af->next_frame);
+        auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
+        move -= p;
+        ent->m_transform.getOrigin() += move;
+        ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
+        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
+        ent->updateRigidBody(false);
+        ent->ghostUpdate();
+        ent->m_moveType = MOVE_ON_FLOOR;
+        ss_anim->onFrame = nullptr;
     }
 }
 
@@ -453,8 +451,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     if(  climb->edge_hit                                                                &&
                         (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON)    &&
                         (pos[2] + character->m_maxStepUpHeight < next_fc.floor_point[2])          &&
-                        (pos[2] + 2944.0 >= next_fc.floor_point[2])                                     &&
-                        (next_fc.floor_normale[2] >= character->m_criticalSlantZComponent)  ) // trying to climb on
+                        (pos[2] + 2944.0 >= next_fc.floor_point[2])  ) // trying to climb on
                     {
                         if(pos[2] + 1920.0 >= next_fc.floor_point[2])
                         {
@@ -1764,7 +1761,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             character->m_bt.no_fix_all = true;
-            ss_anim->onFrame = ent_set_on_floor_after_climb;
+            //ss_anim->onFrame = ent_set_on_floor_after_climb; // @FIXME: BUGGY
             break;
 
         case TR_STATE_LARA_HANG:

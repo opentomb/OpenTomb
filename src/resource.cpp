@@ -879,7 +879,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             {
                                                 // Switch action type case.
                                                 snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                                if(only_once)
+                                                if((engine_world.version >= TR_II) && (only_once))
                                                 {
                                                     // Just lock out activator, no anti-action needed.
                                                     snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -933,7 +933,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                         {
                                             snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once?"true":"false", timer_field);
                                             item_events += buf;
-                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
+                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index, %s); \n", operands, only_once?"true":"false");
                                             anti_events += buf;
                                         }
                                     }
@@ -1123,7 +1123,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                             {
                                 script += buf2;
-                                if(!only_once)
+                                if((engine_world.version < TR_II) || (!only_once))
                                 {
                                     script += single_events;
                                     script += anti_events;    // Single/continous events are engaged along with

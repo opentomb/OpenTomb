@@ -252,9 +252,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     if(m_id == nil or m_id < 0) then
         return false;
     end
+    
     local on  = {};
     local off = {};
     local key = nil;
+
     if(getLevelVersion() < TR_II) then
         if(tr1_switches[m_id] ~= nil) then
             on       = tr1_switches[m_id].on;
@@ -364,10 +366,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
-    elseif(off.ready_anim == t and not getEntityLock(object_id)) then  -- Locked switches doesn't flip back!
+    -- Off case: Locked switches doesn't flip back, but only in TR2+
+    elseif(off.ready_anim == t and ((getLevelVersion() < TR_II) or (not getEntityLock(object_id)))) then
         setEntityAnim(object_id, off.trig_anim, 0);
         setEntityAnim(actor_id, off.actor_anim, 0);
-        --setEntityActivity(object_id, true);
+        setEntityActivity(object_id, true);
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id);
@@ -380,6 +383,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
+    else
+        return false;
     end
     
     return true;

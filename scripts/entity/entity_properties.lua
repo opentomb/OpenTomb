@@ -99,8 +99,8 @@ tr1_entity_tbl[51] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr1_entity_tbl[52] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "tallblock"};                      -- Moving block
 tr1_entity_tbl[53] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Sword of Damocles (unused?)
-tr1_entity_tbl[55] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Wall switch (lever)
-tr1_entity_tbl[56] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Underwater switch (lever)
+tr1_entity_tbl[55] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Wall switch (lever)
+tr1_entity_tbl[56] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Underwater switch (lever)
 
 -- DOORS --
 
@@ -524,7 +524,7 @@ tr3_entity_tbl[113] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr3_entity_tbl[114] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikewall"};                -- Spiky movable wall
 tr3_entity_tbl[116] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikeceiling"};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Valve wheel / Pulley
-tr3_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
+tr3_entity_tbl[118] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
 tr3_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                -- Underwater propeller / Diver sitting on block / Underwater rotating knives / Meteorite
 tr3_entity_tbl[120] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                -- Fan
 tr3_entity_tbl[121] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Heavy stamper / Grinding drum / Underwater rotating knives
@@ -532,9 +532,9 @@ tr3_entity_tbl[122] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr3_entity_tbl[123] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with medipack
 tr3_entity_tbl[124] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with key
 tr3_entity_tbl[127] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Zipline handle
-tr3_entity_tbl[128] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
-tr3_entity_tbl[129] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
-tr3_entity_tbl[130] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Underwater switch
+tr3_entity_tbl[128] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
+tr3_entity_tbl[129] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
+tr3_entity_tbl[130] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Underwater switch
 tr3_entity_tbl[131] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};                -- Door
 tr3_entity_tbl[132] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};                -- Door
 tr3_entity_tbl[133] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};                -- Door

@@ -1671,9 +1671,9 @@ std::tuple<int,bool,bool> lua_GetEntityTriggerLayout(int id)
 
     return std::tuple<int,bool,bool>
     {
-        ent->m_triggerLayout & ENTITY_TLAYOUT_MASK,          // mask
-        (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT),    // event
-        (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK)     // lock
+         ent->m_triggerLayout & ENTITY_TLAYOUT_MASK,   // mask
+        (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT), // event
+        (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK)   // lock
     };
 }
 

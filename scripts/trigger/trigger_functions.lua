@@ -56,11 +56,9 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- Ignore activation, if activity lock is set.
-    -- This weird setup means that activity lock only takes action if current trigger itself is NOT
-    -- one-shot, else it has bigger priority than entity lock, and activation continues.
+    -- TR2+ ONLY: If mask was already set and lock flag is set, bypass activation.
     
-    if(lock and not trigger_lock) then return end;
+    if((getLevelVersion() >= TR_II) and (lock == true) and (mask == 0x1F)) then return end;
     
     -- Apply trigger mask to entity mask.
 
@@ -70,13 +68,16 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
         mask = bit32.bor(mask, trigger_mask);    -- Other cases
     end;
     
+    -- Apply trigger lock to entity lock.
+    
+    lock = (lock or trigger_lock);
+    
     -- Full entity mask (11111) is always a reason to activate an entity.
     -- If mask is not full, entity won't activate - no exclusions.
-    
+        
     if((mask == 0x1F) and (not event)) then
         execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
         event = true;
-        lock = lock or trigger_lock;
     elseif((mask ~= 0x1F) and event) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         event = false;
@@ -91,16 +92,19 @@ end;
 
 -- Tries to deactivate entity. Doesn't work with certain kinds of entities (like enemies).
 
-function deactivateEntity(object_id, activator_id)
+function deactivateEntity(object_id, activator_id, trigger_lock)
 
     -- Get current trigger layout.
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- It seems that antitrigger event DOES NOT check lock state - however, it copies
+    -- TR2+ ONLY: It seems that antitrigger event DOES NOT check lock state - however, it copies
     -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
+    -- In TR1, antitriggers are ignored for locked entities.
     
-    -- if(lock) then return end;
+    if((getLevelVersion() < TR_II) and (lock)) then return end;
+    
+    lock = (lock or trigger_lock);
     
     -- Execute entity deactivation function, only if activation was previously set.
     
