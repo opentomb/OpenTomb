@@ -419,6 +419,6 @@ void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
-btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, SectorTween *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 
 #endif

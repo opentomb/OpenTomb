@@ -38,7 +38,7 @@ class vec3_t {
         return vec3_t (-x, -y, -z);
     }
 
-    const vec3_t &operator =(const vec3_t &v) {
+    vec3_t &operator =(const vec3_t &v) {
         x = v.x;
         y = v.y;
         z = v.z;

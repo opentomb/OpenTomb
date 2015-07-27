@@ -378,7 +378,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
     {
         matrix4 mvTransforms[2];
 
-        matrix4 tr0 = ent->m_bt.bt_body[i]->getWorldTransform();
+        matrix4 tr0( ent->m_bt.bt_body[i]->getWorldTransform() );
         matrix4 tr1;
 
         mvTransforms[0] = mvMatrix * tr0;
@@ -388,13 +388,13 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
         bool foundParentTransform = false;
         for (size_t j = 0; j < ent->m_bf.bone_tags.size(); j++) {
             if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
-                tr1 = ent->m_bt.bt_body[j]->getWorldTransform();
+                tr1 = matrix4(ent->m_bt.bt_body[j]->getWorldTransform());
                 foundParentTransform = true;
                 break;
             }
         }
         if (!foundParentTransform)
-            tr1 = ent->m_transform;
+            tr1 = matrix4(ent->m_transform);
 
         btTransform translate;
         translate.setIdentity();
@@ -527,7 +527,7 @@ void Render::renderEntity(Entity* entity, const matrix4 &modelViewMatrix, const 
         }
         else
         {
-            matrix4 scaledTransform = entity->m_transform;
+            matrix4 scaledTransform( entity->m_transform );
             scaledTransform *= matrix4::diagonal(float4(entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z()));
             matrix4 subModelView = modelViewMatrix * scaledTransform;
             matrix4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
@@ -546,7 +546,7 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* ent
 
     for(uint16_t i=0; i<entity->m_bf.bone_tags.size(); i++,btag++)
     {
-        matrix4 tr = entity->m_bt.bt_body[i]->getWorldTransform();
+        matrix4 tr( entity->m_bt.bt_body[i]->getWorldTransform() );
         matrix4 mvTransform = modelViewMatrix * tr;
 
         glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
@@ -575,7 +575,7 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
     for(size_t h=0; h<entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        matrix4 globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform;
+        matrix4 globalHead( entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform );
         matrix4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
@@ -610,7 +610,7 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
             // Simplification: Always translation matrix, no invert needed
             invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
 
-            matrix4 globalFromHair = entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel;
+            matrix4 globalFromHair( entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel );
 
             std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i+1][0]);
         }

@@ -511,8 +511,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     std::copy(to+0, to+3, cast_ray+0);
     std::copy(to+0, to+3, cast_ray+3);
     cast_ray[5] -= d;
-    btVector3 n0, n1;
-    btScalar n0d, n1d;
+    btVector3 n0{0,0,0}, n1{0,0,0};
+    btScalar n0d{0}, n1d{0};
     do
     {
         t1.setOrigin(from);
@@ -579,6 +579,9 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     btVector3 n2 = m_transform.getBasis().getColumn(0);
     btScalar n2d = -n2.dot(pos);
 
+    assert( !n0.fuzzyZero() );
+    assert( !n1.fuzzyZero() );
+    assert( !n2.fuzzyZero() );
     /*
      * Solve system of the linear equations by Kramer method!
      * I know - It may be slow, but it has a good precision!

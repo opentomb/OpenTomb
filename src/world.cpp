@@ -41,7 +41,7 @@ void Room::empty()
         {
             if(btRigidBody* body = static_mesh[i]->bt_body)
             {
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
                 if(body->getMotionState())
                 {
                     delete body->getMotionState();
@@ -435,14 +435,13 @@ void World::empty()
     /* Now we can delete bullet misc */
     if(bt_engine_dynamicsWorld != NULL)
     {
-        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; i>=0; i--)
         {
             btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-            btRigidBody* body = btRigidBody::upcast(obj);
-            if(body != NULL)
+            if(btRigidBody* body = btRigidBody::upcast(obj))
             {
                 EngineContainer* cont = (EngineContainer*)body->getUserPointer();
-                body->setUserPointer(NULL);
+                body->setUserPointer(nullptr);
 
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
                 {

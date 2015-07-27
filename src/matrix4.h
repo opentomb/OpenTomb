@@ -515,19 +515,20 @@ struct matrix4
 	
 	matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
 	matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
-	matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
+	explicit matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
     matrix4(const matrix4 &) = default;
+    matrix4& operator=(const matrix4&) = default;
     
     /*!
      * Create a matrix4 from a btTransform. Note that the reverse is not
      * possible in the general case, and hence not supported.
      */
-    matrix4(const btTransform &b) {
+    explicit matrix4(const btTransform &b) {
         b.getOpenGLMatrix(&x.x);
     }
 	
 	static matrix4 position(const float4 &position) { return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
-	static matrix4 rotation(const float4 vector, float angleInRadian);
+    static matrix4 rotation(float4 vector, float angleInRadian);
 	static matrix4 frustum(float angle, float aspect, float near, float far);
 	static matrix4 inverseFrustum(float angle, float aspect, float near, float far);
 	static matrix4 lookat(const float4 &eye, const float4 &center, const float4 &up);

@@ -2805,9 +2805,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     /*
      * register globals
      */
-    char cvar_init[64]; cvar_init[0] = 0;
-    strcat(cvar_init, CVAR_LUA_TABLE_NAME); strcat(cvar_init, " = {};");
-    state.doString(cvar_init);
+    state.set(CVAR_LUA_TABLE_NAME, lua::Table());
 
     Game_RegisterLuaFunctions(state);
 
