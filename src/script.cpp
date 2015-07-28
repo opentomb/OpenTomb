@@ -353,4 +353,10 @@ void lua_Clean(lua::State& state)
 {
     state["tlist_Clear"]();
     state["entfuncs_Clear"]();
+    state["fe_Clear"]();
+}
+
+void lua_Prepare(lua::State& state)
+{
+    state["fe_Prepare"]();
 }

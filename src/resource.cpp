@@ -1014,7 +1014,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPEFFECT:
-                                snprintf(buf, 128, "   doEffect(%d, %d); \n", operands, timer_field);
+                                snprintf(buf, 128, "   doEffect(%d, entity_index, %d); \n", operands, timer_field);
                                 cont_events += buf;
                                 break;
 

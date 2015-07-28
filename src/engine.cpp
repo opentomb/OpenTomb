@@ -436,6 +436,17 @@ uint32_t lua_GetEntitySectorMaterial(int id)
     return 0;
 }
 
+uint32_t lua_GetEntitySubstanceState(int id)
+{
+    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+
+    if(ent != NULL)
+    {
+        return static_cast<uint32_t>(ent->getSubstanceState());
+    }
+    return 0;
+}
+
 bool lua_SameRoom(int id1, int id2)
 {
     std::shared_ptr<Entity> ent1 = engine_world.getEntityByID(id1);
@@ -2951,6 +2962,7 @@ void Engine_LuaRegisterFuncs(lua::State& state)
     lua_registerc(state, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_registerc(state, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_registerc(state, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    lua_registerc(state, "getEntitySubstanceState", lua_GetEntitySubstanceState);
 
     lua_registerc(state, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_registerc(state, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
@@ -3405,6 +3417,8 @@ int Engine_LoadMap(const std::string& name)
     engine_world.type = 0;
 
     Game_Prepare();
+
+    lua_Prepare(engine_lua);
 
     renderer.setWorld(&engine_world);
 

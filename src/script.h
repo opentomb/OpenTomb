@@ -26,6 +26,7 @@ float SC_ParseFloat(const char **ch);
 int   SC_ParseInt(char **ch);
 
 void lua_Clean(lua::State& state);
+void lua_Prepare(lua::State& state);
 
 void lua_ParseScreen(lua::State& state, ScreenInfo *sc);
 void lua_ParseRender(lua::State& state, RenderSettings *rs);

@@ -158,12 +158,8 @@ end
 
 -- Does specified flipeffect.
 
-function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
-    if(flipeffects[effect_index] ~= nil) then
-        return flipeffects[effect_index](parameter);
-    else
-        return nil; -- Add hardcoded flipeffect routine here
-    end;
+function doEffect(effect_index, caller, operand) -- operand is usually the timer field
+    execFlipeffect(effect_index, caller, operand);
 end
 
 
