@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="generator" content="AsciiDoc 8.6.8">
+<meta name="generator" content="AsciiDoc 8.6.9">
 <title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -93,7 +93,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -222,7 +224,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -508,6 +510,9 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
+th.tableblock.grid-none, td.tableblock.grid-none {
+  border-style: hidden;
+}
 
 /*
  * manpage specific
@@ -530,19 +535,16 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
-/*
-  pygmentize filter
-*/
 .highlight .hll { background-color: #ffffcc }
-.highlight  { background: #f4f4f4; }
-.highlight .c { color: #008800; font-style: italic } /* Comment */
+.highlight  { background: #f8f8f8; }
+.highlight .c { color: #408080; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
-.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
+.highlight .k { color: #008000; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #008800 } /* Comment.Preproc */
-.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
+.highlight .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #BC7A00 } /* Comment.Preproc */
+.highlight .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #408080; font-style: italic } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
@@ -553,49 +555,48 @@ body.manpage div.sectionbody {
 .highlight .gs { font-weight: bold } /* Generic.Strong */
 .highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
 .highlight .gt { color: #0040D0 } /* Generic.Traceback */
-.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
-.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
-.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
-.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
-.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
-.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
+.highlight .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #008000 } /* Keyword.Pseudo */
+.highlight .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #B00040 } /* Keyword.Type */
 .highlight .m { color: #666666 } /* Literal.Number */
-.highlight .s { color: #BB4444 } /* Literal.String */
-.highlight .na { color: #BB4444 } /* Name.Attribute */
-.highlight .nb { color: #AA22FF } /* Name.Builtin */
-.highlight .nc { color: #0000FF } /* Name.Class */
+.highlight .s { color: #BA2121 } /* Literal.String */
+.highlight .na { color: #7D9029 } /* Name.Attribute */
+.highlight .nb { color: #008000 } /* Name.Builtin */
+.highlight .nc { color: #0000FF; font-weight: bold } /* Name.Class */
 .highlight .no { color: #880000 } /* Name.Constant */
 .highlight .nd { color: #AA22FF } /* Name.Decorator */
 .highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
 .highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.highlight .nf { color: #00A000 } /* Name.Function */
+.highlight .nf { color: #0000FF } /* Name.Function */
 .highlight .nl { color: #A0A000 } /* Name.Label */
 .highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
 .highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.highlight .nv { color: #B8860B } /* Name.Variable */
+.highlight .nv { color: #19177C } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
-.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
-.highlight .sc { color: #BB4444 } /* Literal.String.Char */
-.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
-.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
+.highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
+.highlight .sc { color: #BA2121 } /* Literal.String.Char */
+.highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BA2121 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
+.highlight .sh { color: #BA2121 } /* Literal.String.Heredoc */
 .highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
 .highlight .sx { color: #008000 } /* Literal.String.Other */
 .highlight .sr { color: #BB6688 } /* Literal.String.Regex */
-.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
-.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
-.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
-.highlight .vc { color: #B8860B } /* Name.Variable.Class */
-.highlight .vg { color: #B8860B } /* Name.Variable.Global */
-.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
+.highlight .s1 { color: #BA2121 } /* Literal.String.Single */
+.highlight .ss { color: #19177C } /* Literal.String.Symbol */
+.highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #19177C } /* Name.Variable.Class */
+.highlight .vg { color: #19177C } /* Name.Variable.Global */
+.highlight .vi { color: #19177C } /* Name.Variable.Instance */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
-
 
 
 @media screen {
@@ -5594,15 +5595,14 @@ MP3 player, which takes place of deprecated CD-Audio player.</p></div>
 <span class="monospaced">CDAUDIO.WAD</span> file, which also contained a header with a list of all tracks and their durations. So, when game requests an audiotrack to play, it takes info on
 needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then goes straight to an offset for this track into it. The format of <span class="monospaced">CDAUDIO.WAD</span> header entry is:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_cdaudio_entry</span>    <span class="c1">// 0x108 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_cdaudio_entry</span>    <span class="c1">// 0x10C bytes</span>
 <span class="p">{</span>
-    <span class="kt">int32_t</span> <span class="n">SampleLength</span><span class="p">;</span>     <span class="c1">// how many bytes</span>
-    <span class="kt">int32_t</span> <span class="n">SampleOffset</span><span class="p">;</span>     <span class="c1">// absolute offset in file</span>
-    <span class="kt">int8_t</span> <span class="n">Name</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>         <span class="c1">// C string with track name</span>
+        <span class="kt">char</span> <span class="n">Name</span><span class="p">[</span><span class="mi">260</span><span class="p">];</span>     <span class="c1">// C string with track name</span>
+    <span class="kt">uint32_t</span> <span class="n">WavLength</span><span class="p">;</span>     <span class="c1">// Wave file size</span>
+    <span class="kt">uint32_t</span> <span class="n">WavOffset</span><span class="p">;</span>     <span class="c1">// Absolute offset in CDAUDIO.WAD</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>The number of header entries is always 120 (meaning the whole size of header should be <span class="monospaced">0x108 * 120</span>). Header is immediately followed by embedded audio files in
-<em>WAV</em> format.</p></div>
+<div class="paragraph"><p>The number of header entries is always 130 (meaning the whole size of header should be <span class="monospaced">0x10C * 130</span>). Header is immediately followed by embedded audio files in <em>WAV</em> format.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -6363,7 +6363,12 @@ brightness and greater values being darker.</p></div>
 <span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 20 bytes [TR1 version])</span>
 <span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
-<span class="kt">int16_t</span> <span class="n">Zones</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// zone data (NumBoxes * 12 bytes [TR1 version])</span>
+<span class="kt">uint16_t</span> <span class="n">GroundZone</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// ground zone data</span>
+<span class="kt">uint16_t</span> <span class="n">GroundZone2</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// ground zone 2 data</span>
+<span class="kt">uint16_t</span> <span class="n">FlyZone</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// fly zone data</span>
+<span class="kt">uint16_t</span> <span class="n">GroundZoneAlt</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// ground zone data (alternate rooms?)</span>
+<span class="kt">uint16_t</span> <span class="n">GroundZoneAlt2</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// ground zone 2 data (alternate rooms?)</span>
+<span class="kt">uint16_t</span> <span class="n">FlyZoneAlt</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// fly zone data (alternate rooms?)</span>
 <span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
@@ -7822,7 +7827,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 3.0<br>
-Last updated 2015-07-27 07:20:09 CEST
+Last updated 2015-07-27 11:25:02 MSK
 </div>
 </div>
 </body>
