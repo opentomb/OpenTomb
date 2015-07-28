@@ -225,7 +225,7 @@ void Engine_InitSDLVideo()
         video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     }
 
-    ///@TODO: is it really needede for correct work?
+    ///@TODO: is it really needed for correct work?
     if(SDL_GL_LoadLibrary(NULL) < 0)
     {
         Sys_Error("Could not init OpenGL driver");
@@ -239,9 +239,15 @@ void Engine_InitSDLVideo()
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+
+        if(!sdl_gl_context)
+            Sys_Error("Can't create OpenGL 3.2 context - shutting down.");
+
+        assert(sdl_gl_context);
         SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
         GLint maxSamples = 0;
@@ -280,15 +286,9 @@ void Engine_InitSDLVideo()
 #if STENCIL_FRUSTUM
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #endif
-    // set the opengl context version
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
-    assert(sdl_gl_context);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
     ConsoleInfo::instance().addLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
