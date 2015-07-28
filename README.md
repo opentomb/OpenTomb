@@ -191,6 +191,7 @@ more developers getting involved in the development of OpenTomb so some recent o
 from this list!
 
 * TeslaRus: main developer.
+* ablepharus: compilation fix-ups and miscellaneous patches.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
 * Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state fix-ups, camera.
 * Lwmte: state fix-ups, controls, GUI and audio modules, trigger and entity scripts.
@@ -198,6 +199,7 @@ from this list!
 * pmatulka: Linux port and testing.
 * Richard_trle: Github migration, Github repo maintenance, website design.
 * Saracen: room and static mesh lighting.
+* stltomb: general code maintenance, enhancements and bugfixes.
 * stohrendorf: CXX-fication, general code refactoring and optimizing.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.
