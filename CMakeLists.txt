@@ -35,10 +35,18 @@ else()
     )
 endif()
 
-add_executable(
-    ${PROJECT_NAME}
-    ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}
-)
+
+if(WIN32)
+    set(PRJ_ICON_RES "resource/icon/opentomb.rc")
+    add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES})
+elseif(APPLE)
+    set(MACOSX_BUNDLE_ICON_FILE opentomb.icns)
+    set(PRJ_ICON_RES "resource/icon/opentomb.icns")
+    set_source_files_properties(${PRJ_ICON_RES} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE ${PRJ_ICON_RES} ${PRJ_HDR} ${PRJ_SRC})
+else()
+    add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC})
+endif()
 
 # -std-gnu++11 is needed for picky fileno function in streaming track code.
 # I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
@@ -142,7 +150,6 @@ trylinklib("vorbis" SHARED)
 trylinklib("vorbisfile" SHARED)
 trylinklib("sndfile" SHARED)
 
-
 if(MINGW)
     if(CMAKE_CROSSCOMPILING)
         # We are cross compiling on Linux with the MinGW toolchain.
@@ -160,7 +167,6 @@ if(MINGW)
         set(SDL2_IMAGE_LIBRARIES /usr/${COMPILER_PREFIX}/lib/libSDL2_image.dll.a)
         add_definitions("-Dmain=SDL_main")
         set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-        set(PRJ_ICON_RES "resource/icon/opentomb.rc")
     else()
         # We are probably creating project files for CodeBlocks on Windows
         message(STATUS "MinGW Compilation")
@@ -192,7 +198,7 @@ else()
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS}
-                    ${SDL2_IMAGE_INCLUDE_DIRS})
+                           ${SDL2_IMAGE_INCLUDE_DIRS})
 
                     
 target_link_libraries(
