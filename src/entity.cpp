@@ -818,7 +818,6 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
     {
         assert(af->anim_command < engine_world.anim_commands.size());
         int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
-        int8_t   random_value = 0;
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {

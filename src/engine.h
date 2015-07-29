@@ -68,11 +68,28 @@ struct EngineContainer
     Object* object = nullptr;
     Room* room = nullptr;
 
-    bool is_valid = true;
+    uint64_t is_valid = 0x0123456789abcdefUL;
 
     ~EngineContainer()
     {
-        is_valid = false;
+        check();
+        is_valid = 0xfedcba9876543210UL;
+    }
+
+    void check() const
+    {
+        if( is_valid == 0x0123456789abcdefUL )
+        {
+            // all ok
+        }
+        else if( is_valid == 0xfedcba9876543210UL )
+        {
+            throw std::runtime_error("EngineContainer invalid (destroyed)");
+        }
+        else
+        {
+            throw std::runtime_error("EngineContainer invalid (currupted)");
+        }
     }
 };
 
@@ -152,9 +169,7 @@ public:
     {
         const EngineContainer* c1 = (const EngineContainer*)rayResult.m_collisionObject->getUserPointer();
 
-        if(!c1->is_valid) {
-            throw std::runtime_error("OOOOOOPS");
-        }
+        c1->check();
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
@@ -203,6 +218,7 @@ public:
     {
         const Room* r0 = m_container ? m_container->room : nullptr;
         const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
+        c1->check();
         const Room* r1 = c1 ? c1->room : nullptr;
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
