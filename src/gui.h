@@ -30,21 +30,6 @@
 #define GUI_ANCHOR_HOR_RIGHT        1
 #define GUI_ANCHOR_HOR_CENTER       2
 
-// OpenTomb has three types of fonts - primary, secondary and console
-// font. This should be enough for most of the cases. However, user
-// can generate and use additional font types via script, but engine
-// behaviour with extra font types is undefined.
-
-enum font_Type
-{
-    FONT_CONSOLE = 0,
-    FONT_PRIMARY,
-    FONT_SECONDARY
-};
-
-#define GUI_MIN_FONT_SIZE 1
-#define GUI_MAX_FONT_SIZE 72
-
 
 struct inventory_node_s;
 
@@ -169,7 +154,7 @@ enum Faders
 #define GUI_MENU_ITEMTYPE_QUEST  2
 
 // Main fader class.
-
+#if 0
 class gui_Fader
 {
 public:
@@ -220,7 +205,7 @@ private:
     float           mCurrentTime;           // Current fader time.
     float           mMaxTime;               // Maximum delay time.
 };
-
+#endif
 
 // Immutable bars enumeration.
 // These are the bars that are always exist in GUI.
@@ -402,111 +387,8 @@ void Gui_RenderStrings();
  */
 void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix);
-#if 0
-typedef struct gui_invmenu_item_ammo_s
-{
-    struct inventory_node_s    *linked_item;
-
-    //float                       size;
-    uint16_t                    type;
-    //uint32_t                    id;
-    //uint32_t                    count;
-    //uint32_t                    max_count;
-    //char                       *name;
-    char                       *description;
-}gui_invmenu_item_ammo_t, *gui_invmenu_item_ammo_p;
-
-typedef struct gui_invmenu_item_s
-{
-    struct inventory_node_s    *linked_item;
-
-    float                       angle;
-    int8_t                      angle_dir;              // rotation direction: 0, 1 or -1
-    //float                       size;
-    //uint16_t                    type;
-    //uint32_t                    id;
-    //uint32_t                    count;
-    //char                       *name;
-    char                       *description;
-    int8_t                      selected_ammo;
-
-    gui_invmenu_item_ammo_s   **ammo;                   // array of ammo structs
-    gui_invmenu_item_s        **combinables;            // array of items it can be combined with
-    gui_invmenu_item_s         *next;                   // next item in the row
-}gui_invmenu_item_t, *gui_invmenu_item_p;
-
-class gui_InventoryMenu
-{
-private:
-    bool                        mVisible;
-
-    int                         mRowOffset;
-    int                         mRow1Max;
-    int                         mRow2Max;
-    int                         mRow3Max;
-    int                         mSelected;
-    int                         mMaxItems;
-
-    gui_invmenu_item_s         *mFirstInRow1;
-    gui_invmenu_item_s         *mFirstInRow2;
-    gui_invmenu_item_s         *mFirstInRow3;
-
-    int                         mFrame;
-    int                         mAnim;
-    float                       mTime;
-    float                       mMovementH;
-    float                       mMovementV;
-    float                       mMovementC;
-    int                         mMovementDirectionH;
-    int                         mMovementDirectionV;
-    int                         mMovementDirectionC;
-    float                       mShiftBig;
-    float                       mShiftSmall;
-    float                       mAngle;
-
-    int                         mFontSize;
-    int                         mFontHeight;
-    // background settings
-public:
-    gui_text_line_s             mLabel_Title;                // Styles
-    char                        mLabel_Title_text[128];
-    gui_text_line_s             mLabel_ItemName;
-    char                        mLabel_ItemName_text[128];
-
-    gui_InventoryMenu();
-    ~gui_InventoryMenu();
-
-    void DestroyItems();
-    void Toggle();
-    bool IsVisible()
-    {
-        return mVisible;
-    }
-    bool IsMoving()
-    {
-        if (mMovementH!=0 || mMovementDirectionV!=0 || mMovementDirectionC!=0)
-            return true;
-        return false;
-    }
-    void SetRowOffset(int dy)               /// Scrolling inventory
-    {
-        mRowOffset = dy;
-    }
-    void AddItem(inventory_node_p item);
-    void UpdateItemRemoval(inventory_node_p item);
-    void RemoveAllItems();
-    void UpdateItemsOrder(int row);
-    void MoveSelectHorisontal(int dx);
-    void MoveSelectVertical(int dy);
-
-    void UpdateMovements();
-    void Render();
-    // inventory parameters calculation
-    // mouse callback
-};
-#endif
 /*
- * Other inventory renderer class
+ * Inventory renderer class
  */
 class gui_InventoryManager
 {
@@ -587,8 +469,6 @@ public:
 
 
 extern gui_InventoryManager  *main_inventory_manager;
-//extern gui_InventoryMenu     *main_inventory_menu;
-//extern gui_FontManager       *FontManager;
 
 /**
  * Draws text using a FONT_SECONDARY.

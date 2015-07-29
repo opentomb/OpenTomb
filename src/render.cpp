@@ -1186,6 +1186,7 @@ void Render_DrawList_DebugLines()
     if(!debugDrawer.IsEmpty())
     {
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);

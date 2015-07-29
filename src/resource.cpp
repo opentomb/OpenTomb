@@ -4407,11 +4407,11 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
             case TR_II_DEMO:
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
-                    case 0x02:
+                    /*case 0x02:
                         world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
+                        break;*/
                     case 0x01:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
                     case 0x03:
                         world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;

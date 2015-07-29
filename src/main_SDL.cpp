@@ -289,9 +289,7 @@ void Engine_InitSDLVideo()
 
     Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
     Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
-    char buf[con_base.line_size];
-    snprintf(buf, con_base.line_size, "OpenGL version %s", glGetString(GL_VERSION));
-    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_INFO);
+    Con_Printf("OpenGL version %s", glGetString(GL_VERSION));
     Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 

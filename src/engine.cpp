@@ -476,10 +476,9 @@ int Engine_LoadMap(const char *name)
 
 int Engine_ExecCmd(char *ch)
 {
-    char token[con_base.line_size];
-    char buf[con_base.line_size + 32];
+    char token[1024];
+    char buf[1024];
     char *pch;
-    int val;
     room_p r;
     room_sector_p sect;
     FILE *f;
@@ -548,7 +547,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify("spacing = %d", con_base.spacing);
+                Con_Notify("spacing = %d", Con_GetLineInterval());
                 return 1;
             }
             Con_SetLineInterval(atof(token));
@@ -559,21 +558,12 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify("showing lines = %d", con_base.showing_lines);
+                Con_Notify("showing lines = %d", Con_GetShowingLines());
                 return 1;
             }
             else
             {
-                val = atoi(token);
-                if((val >=2 ) && (val <= con_base.line_count))
-                {
-                    con_base.showing_lines = val;
-                    con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
-                }
-                else
-                {
-                    Con_Warning("wrong lines count, must be in interval: (%d, %d)", 2, con_base.line_count);
-                }
+                Con_SetShowingLines(atoi(token));
             }
             return 1;
         }
@@ -702,7 +692,7 @@ int Engine_ExecCmd(char *ch)
             }
             else
             {
-                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
+                snprintf(buf, 1024, "Command \"%s\" not found", token);
                 Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }
             return 0;
@@ -730,7 +720,7 @@ void Engine_InitConfig(const char *filename)
             lua_ParseScreen(lua, &screen_info);
             lua_ParseRender(lua, &renderer.settings);
             lua_ParseAudio(lua, &audio_settings);
-            lua_ParseConsole(lua, &con_base);
+            lua_ParseConsole(lua, Con_GetConsole());
             lua_ParseControls(lua, &control_mapper);
             lua_close(lua);
         }

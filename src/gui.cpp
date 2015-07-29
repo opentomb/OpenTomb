@@ -25,7 +25,7 @@ uint16_t            temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
-gui_Fader           Fader[FADER_LASTINDEX];
+//gui_Fader           Fader[FADER_LASTINDEX];
 
 gui_InventoryManager  *main_inventory_manager = NULL;
 
@@ -45,7 +45,6 @@ void Gui_Init()
     glGenBuffersARB(1, &crosshairBuffer);
     Gui_FillCrosshairBuffer();
 
-    //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
 }
 
@@ -184,7 +183,7 @@ void Gui_InitBars()
 
 void Gui_InitFaders()
 {
-    for(int i = 0; i < FADER_LASTINDEX; i++)
+    /*for(int i = 0; i < FADER_LASTINDEX; i++)
     {
         switch(i)
         {
@@ -216,7 +215,7 @@ void Gui_InitFaders()
                 }
                 break;
         }
-    }
+    }*/
 }
 
 void Gui_InitNotifier()
@@ -237,10 +236,10 @@ void Gui_Destroy()
         gui_temp_lines[i].text = NULL;
     }
 
-    for(int i = 0; i < FADER_LASTINDEX; i++)
+    /*for(int i = 0; i < FADER_LASTINDEX; i++)
     {
         Fader[i].Cut();
-    }
+    }*/
 
     temp_lines_used = GUI_MAX_TEMP_LINES;
 
@@ -359,20 +358,22 @@ void Gui_Resize()
     }
 
     Con_SetScaleFonts(screen_info.scale_factor);
-
-    /* let us update console too */
-    Con_SetLineInterval(con_base.spacing);
     Gui_FillCrosshairBuffer();
 }
 
 void Gui_Render()
 {
+    const text_shader_description *shader = renderer.shader_manager->getTextShader();
     screenSize[0] = screen_info.w;
     screenSize[1] = screen_info.h;
+    glUseProgramObjectARB(shader->program);
+    glUniform1iARB(shader->sampler, 0);
+    glUniform2fvARB(shader->screenSize, 1, screenSize);
+
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -387,17 +388,8 @@ void Gui_Render()
     Gui_DrawBars();
     Gui_DrawFaders();
 
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     Gui_RenderStrings();
-    BindWhiteTexture();
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    const text_shader_description *shader = renderer.shader_manager->getTextShader();
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
-
-    glUniform2fvARB(shader->screenSize, 1, screenSize);
     Con_Draw(engine_frame_time);
-    glUseProgramObjectARB(0);
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -444,24 +436,41 @@ void Gui_RenderStringLine(gui_text_line_p l)
             break;
     }
 
-    // missing texture_coord pointer... GL_TEXTURE_COORD_ARRAY state are enabled here!
-    /*if(style->rect)
+    if(style->rect)
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
+        BindWhiteTexture();
         GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
         GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
         GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
         GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
+        GLfloat *v, backgroundArray[32];
 
-        GLfloat rectCoords[8];
-        rectCoords[0] = x0; rectCoords[1] = y0;
-        rectCoords[2] = x1; rectCoords[3] = y0;
-        rectCoords[4] = x1; rectCoords[5] = y1;
-        rectCoords[6] = x0; rectCoords[7] = y1;
-        color(style->rect_color);
-        glVertexPointer(2, GL_FLOAT, 0, rectCoords);
-        glDrawArrays(GL_POLYGON, 0, 4);
-    }*/
+        v = backgroundArray;
+       *v++ = x0; *v++ = y0;
+        vec4_copy(v, style->rect_color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x1; *v++ = y0;
+        vec4_copy(v, style->rect_color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x1; *v++ = y1;
+        vec4_copy(v, style->rect_color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x0; *v++ = y1;
+        vec4_copy(v, style->rect_color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
+        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
+        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
 
     if(style->shadowed)
     {
@@ -485,11 +494,6 @@ void Gui_RenderStrings()
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    const text_shader_description *shader = renderer.shader_manager->getTextShader();
-    glUseProgramObjectARB(shader->program);
-    glUniform2fvARB(shader->screenSize, 1, screenSize);
-    glUniform1iARB(shader->sampler, 0);
 
     while(l)
     {
@@ -1107,53 +1111,58 @@ void Gui_SwitchGLMode(char is_gui)
 
 void Gui_FillCrosshairBuffer()
 {
-    GLfloat crosshair_buf[] = {
-        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
-    };
+    GLfloat x0 = screen_info.w / 2.0f;
+    GLfloat y0 = screen_info.h / 2.0f;
+    GLfloat *v, crosshairArray[32];
+    const GLfloat size = 5.0f;
+    const GLfloat color[4] = {1.0, 0.0, 0.0, 1.0};
+
+    v = crosshairArray;
+   *v++ = x0; *v++ = y0 - size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x0; *v++ = y0 + size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x0 - size; *v++ = y0;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x0 + size; *v++ = y0;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
 
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
 }
 
 void Gui_DrawCrosshair()
 {
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
-
-    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
-
-    glUseProgramObjectARB(shader->program);
-    GLfloat factor[2] = {
-        2.0f / screen_info.w,
-        2.0f / screen_info.h
-    };
-    glUniform2fvARB(shader->factor, 1, factor);
-    GLfloat offset[2] = { -1.f, -1.f };
-    glUniform2fvARB(shader->offset, 1, offset);
-
+    BindWhiteTexture();
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
-    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), 0);
-    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), (void *) sizeof(GLfloat [2]));
+    glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+    glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
+    glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
     glDrawArrays(GL_LINES, 0, 4);
-
-    glPopAttrib();
 }
 
 void Gui_DrawFaders()
 {
-    for(int i = 0; i < FADER_LASTINDEX; i++)
+    /*for(int i = 0; i < FADER_LASTINDEX; i++)
     {
         Fader[i].Show();
-    }
+    }*/
 }
 
 void Gui_DrawBars()
 {
-    if(engine_world.Character && engine_world.Character->character)
+    /*if(engine_world.Character && engine_world.Character->character)
     {
         if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
             Bar[BAR_HEALTH].Forced = true;
@@ -1162,12 +1171,11 @@ void Gui_DrawBars()
         Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
         Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
-    }
+    }*/
 }
 
 void Gui_DrawInventory()
 {
-    //if (!main_inventory_menu->IsVisible())
     main_inventory_manager->frame(engine_frame_time);
     if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED)
     {
@@ -1208,7 +1216,6 @@ void Gui_DrawInventory()
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
     Gui_SwitchGLMode(0);
-    //main_inventory_menu->Render(); //engine_world.Character->character->inventory
     main_inventory_manager->render();
     Gui_SwitchGLMode(1);
 }
@@ -1248,7 +1255,7 @@ void Gui_DrawLoadScreen(int value)
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    Fader[FADER_LOADSCREEN].Show();
+    //Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
@@ -1289,7 +1296,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             break;
     };
 
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
@@ -1327,7 +1334,7 @@ bool Gui_FadeStart(int fader, int fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_FADING))
+    /*if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_FADING))
     {
         Fader[fader].Engage(fade_direction);
         return true;
@@ -1335,12 +1342,13 @@ bool Gui_FadeStart(int fader, int fade_direction)
     else
     {
         return false;
-    }
+    }*/
+    return true;
 }
 
 bool Gui_FadeStop(int fader)
 {
-    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_IDLE))
+    /*if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_IDLE))
     {
         Fader[fader].Cut();
         return true;
@@ -1348,7 +1356,8 @@ bool Gui_FadeStop(int fader)
     else
     {
         return false;
-    }
+    }*/
+    return true;
 }
 
 bool Gui_FadeAssignPic(int fader, const char* pic_name)
@@ -1404,7 +1413,7 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
             }
         }
 
-        return Fader[fader].SetTexture(buf);
+        //return Fader[fader].SetTexture(buf);
     }
 
     return false;
@@ -1414,31 +1423,31 @@ void Gui_FadeSetup(int fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed)
 {
-    if(fader >= FADER_LASTINDEX) return;
+    /*if(fader >= FADER_LASTINDEX) return;
 
     Fader[fader].SetAlpha(alpha);
     Fader[fader].SetColor(R,G,B);
     Fader[fader].SetBlendingMode(blending_mode);
-    Fader[fader].SetSpeed(fadein_speed,fadeout_speed);
+    Fader[fader].SetSpeed(fadein_speed,fadeout_speed);*/
 }
 
 int Gui_FadeCheck(int fader)
 {
-    if((fader >= 0) && (fader < FADER_LASTINDEX))
+    /*if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         return Fader[fader].IsFading();
     }
     else
     {
         return false;
-    }
+    }*/
 }
 
 
 // ===================================================================================
 // ============================ FADER CLASS IMPLEMENTATION ===========================
 // ===================================================================================
-
+#if 0
 gui_Fader::gui_Fader()
 {
     SetColor(0, 0, 0);
@@ -1877,7 +1886,7 @@ int gui_Fader::IsFading()
         return GUI_FADER_STATUS_IDLE;
     }
 }
-
+#endif
 
 // ===================================================================================
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================

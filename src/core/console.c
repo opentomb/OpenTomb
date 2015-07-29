@@ -6,20 +6,23 @@
 #include <SDL2/SDL_keycode.h>
 
 #include "gl_font.h"
+#include "gl_util.h"
 #include "console.h"
 #include "system.h"
 #include "vmath.h"
 
-console_info_t                  con_base;
+static console_info_t           con_base;
 static gl_font_manager_p        con_font_manager = NULL;
+
+static void Con_DrawBackground();
+static void Con_DrawCursor();
 
 int  Engine_ExecCmd(char *ch);
 
 void Con_Init()
 {
     uint16_t i;
-
-    con_base.inited = 0;
+    
     con_base.log_pos = 0;
 
     // lines count check
@@ -88,21 +91,21 @@ void Con_Init()
     }
 
     con_font_manager = glf_create_manager(GUI_MAX_FONTS, GUI_MAX_FONTSTYLES);
-
-    con_base.inited = 1;
 }
+
 
 void Con_InitFont()
 {
-    if(con_font_manager->fonts[0].gl_font == NULL)
+    if(con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL)
     {
         glf_manager_add_font(con_font_manager, 0, 12, "resource/fonts/DroidSansMono.ttf");
     }
-    if(con_font_manager->fonts[0].gl_font)
+    if(con_font_manager->fonts[FONT_CONSOLE].gl_font)
     {
         Con_SetLineInterval(con_base.spacing);
     }
 }
+
 
 void Con_InitGlobals()
 {
@@ -122,30 +125,27 @@ void Con_InitGlobals()
 
     con_base.showing_lines = con_base.line_count;
     con_base.show_cursor_period = 0.5;
+    con_base.cursor_pos = 0;
 }
+
 
 void Con_Destroy()
 {
-    if(con_base.inited)
+    uint16_t i;
+
+    for(i=0;i<con_base.line_count;i++)
     {
-        uint16_t i;
-
-        for(i=0;i<con_base.line_count;i++)
-        {
-            free(con_base.line_text[i]);
-        }
-        free(con_base.line_text);
-        free(con_base.line_style_id);
-
-        for(i=0;i<con_base.log_lines_count;i++)
-        {
-            free(con_base.log_lines[i]);
-        }
-        free(con_base.log_lines);
-        con_base.log_lines = NULL;
-
-        con_base.inited = 0;
+        free(con_base.line_text[i]);
     }
+    free(con_base.line_text);
+    free(con_base.line_style_id);
+
+    for(i=0;i<con_base.log_lines_count;i++)
+    {
+        free(con_base.log_lines[i]);
+    }
+    free(con_base.log_lines);
+    con_base.log_lines = NULL;
 
     if(con_font_manager)
     {
@@ -154,25 +154,52 @@ void Con_Destroy()
     }
 }
 
+
+console_info_p Con_GetConsole()
+{
+    return &con_base;
+}
+
+
+float Con_GetLineInterval()
+{
+    return con_base.spacing;
+}
+
+
 void Con_SetLineInterval(float interval)
 {
-    if((con_font_manager == NULL) || (con_font_manager->fonts[0].gl_font == NULL) ||
+    if(!con_font_manager || (con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL) ||
        (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
     }
 
-    con_base.inited = 0;
     con_base.spacing = interval;
     // con_base.font->font_size has absolute size (after scaling)
-    con_base.line_height = (1.0 + con_base.spacing) * con_font_manager->fonts[0].gl_font->font_size;
+    con_base.line_height = (1.0 + con_base.spacing) * con_font_manager->fonts[FONT_CONSOLE].gl_font->font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
     {
         con_base.cursor_y = 8;
     }
-    con_base.inited = 1;
+}
+
+
+uint16_t Con_GetShowingLines()
+{
+    return con_base.showing_lines;
+}
+
+
+void Con_SetShowingLines(uint16_t value)
+{
+    if((value >=2 ) && (value <= con_base.line_count))
+    {
+        con_base.showing_lines = value;
+        con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
+    }
 }
 
 
@@ -191,7 +218,7 @@ void Con_Filter(char *text)
 
 void Con_Edit(int key)
 {
-    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !con_base.inited)
+    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH)
     {
         return;
     }
@@ -313,16 +340,16 @@ void Con_Edit(int key)
 
 void Con_CalcCursorPosition()
 {
-    if(con_font_manager && (con_font_manager->fonts[0].gl_font))
+    if(con_font_manager && (con_font_manager->fonts[FONT_CONSOLE].gl_font))
     {
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_font_manager->fonts[0].gl_font, con_base.line_text[0], con_base.cursor_pos);
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_font_manager->fonts[FONT_CONSOLE].gl_font, con_base.line_text[0], con_base.cursor_pos);
     }
 }
 
 
 void Con_AddLog(const char *text)
 {
-    if(con_base.inited && (text != NULL) && (text[0] != 0))
+    if((text != NULL) && (text[0] != 0))
     {
         if(con_base.log_lines_count > 1)
         {
@@ -349,7 +376,7 @@ void Con_AddLog(const char *text)
 
 void Con_AddLine(const char *text, uint16_t font_style)
 {
-    if(con_base.inited && (text != NULL))
+    if(text != NULL)
     {
         size_t len = 0;
         do
@@ -377,38 +404,41 @@ void Con_AddLine(const char *text, uint16_t font_style)
 
 void Con_AddText(const char *text, uint16_t font_style)
 {
-    char buf[4096], ch;
-    size_t i, j, text_size = strlen(text);
-
-    buf[0] = 0;
-    for(i=0,j=0;i<text_size;i++)
+    if(text != NULL)
     {
-        ch = text[i];
-        if((ch == 10) || (ch == 13))
+        char buf[4096], ch;
+        size_t i, j, text_size = strlen(text);
+
+        buf[0] = 0;
+        for(i=0,j=0;i<text_size;i++)
         {
-            j = (j < 4096)?(j):(4095);
-            buf[j] = 0;
-            buf[4095] = 0;
-            if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
+            ch = text[i];
+            if((ch == 10) || (ch == 13))
             {
-                Con_AddLine(buf, font_style);
+                j = (j < 4096)?(j):(4095);
+                buf[j] = 0;
+                buf[4095] = 0;
+                if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
+                {
+                    Con_AddLine(buf, font_style);
+                }
+                j=0;
             }
-            j=0;
+            else if(j < 4096)
+            {
+               buf[j++] = ch;
+            }
         }
-        else if(j < 4096)
-        {
-           buf[j++] = ch;
-        }
-    }
 
-    buf[4095] = 0;
-    if(j < 4096)
-    {
-        buf[j] = 0;
-    }
-    if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
-    {
-        Con_AddLine(buf, font_style);
+        buf[4095] = 0;
+        if(j < 4096)
+        {
+            buf[j] = 0;
+        }
+        if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
+        {
+            Con_AddLine(buf, font_style);
+        }
     }
 }
 
@@ -522,6 +552,7 @@ void Con_SetScaleFonts(float scale)
     if(con_font_manager)
     {
         glf_manager_resize(con_font_manager, scale);
+        Con_SetLineInterval(con_base.spacing);
     }
 }
 
@@ -541,12 +572,14 @@ void Con_Clean()
 void Con_Draw(float time)
 {
     gl_tex_font_p glf = Con_GetFont(0);
-    if(glf && con_base.show)
+    if(glf && con_base.show_console)
     {
         int x = 8;
         int y = con_base.cursor_y;
         
         con_base.cursor_time += time;
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        BindWhiteTexture();
         Con_DrawBackground();
         Con_DrawCursor();
         
@@ -629,4 +662,14 @@ void Con_DrawCursor()
         glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array + 6);
         glDrawArrays(GL_LINES, 0, 2);
     }
+}
+
+int  Con_IsShown()
+{
+    return con_base.show_console;
+}
+
+void Con_SetShown(int value)
+{
+    con_base.show_console = value;
 }

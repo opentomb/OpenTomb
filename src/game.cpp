@@ -787,13 +787,14 @@ void Game_UpdateCharacters()
 
     if(ent && ent->character)
     {
+        Character_SetParam(ent, PARAM_HEALTH, -1.0f);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->resp.kill = 1;   // Kill, if no HP.
+            ent->character->resp.kill = 0;   // Kill, if no HP.
         }
         Hair_Update(ent);
     }
@@ -828,7 +829,7 @@ void Game_Frame(btScalar time)
 
     ///@FIXME: I have no idea what's happening here! - Lwmte
 
-    if(!con_base.show && control_states.gui_inventory && main_inventory_manager)
+    if(!Con_IsShown() && control_states.gui_inventory && main_inventory_manager)
     {
         if((is_character) &&
            (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
@@ -843,7 +844,7 @@ void Game_Frame(btScalar time)
     }
 
     // If console or inventory is active, only thing to update is audio.
-    if(con_base.show || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    if(Con_IsShown() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {

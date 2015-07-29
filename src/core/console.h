@@ -46,6 +46,22 @@ enum font_Style
         FONTSTYLE_GENERIC
 };
 
+
+// OpenTomb has three types of fonts - primary, secondary and console
+// font. This should be enough for most of the cases. However, user
+// can generate and use additional font types via script, but engine
+// behaviour with extra font types is undefined.
+
+enum font_Type
+{
+    FONT_CONSOLE = 0,
+    FONT_PRIMARY,
+    FONT_SECONDARY
+};
+
+#define GUI_MIN_FONT_SIZE  1
+#define GUI_MAX_FONT_SIZE  72
+
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 #define GUI_MAX_FONTS      8    // 8 fonts is PLENTY.
 
@@ -65,27 +81,29 @@ typedef struct console_info_s
     int16_t                     line_height;                // Height, including spacing
 
     uint16_t                    showing_lines;              // Amount of visible lines
-    float                       spacing;                    // Line spacing
-
     int16_t                     cursor_pos;                 // Current cursor position, in symbols
     int16_t                     cursor_x;                   // Cursor position in pixels
     int16_t                     cursor_y;
+    
+    float                       spacing;                    // Line spacing
     float                       cursor_time;                // Current cursor draw time
     float                       show_cursor_period;
+    
     int8_t                      show_cursor;                // Cursor visibility flag
-
-    int8_t                      inited;                     // Ready-to-use flag
-    int8_t                      show;                       // Visibility flag
+    int8_t                      show_console;               // Visibility flag
 }console_info_t, *console_info_p;
 
-extern console_info_t           con_base;
 
 void Con_Init();
 void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();
+console_info_p Con_GetConsole();
 
-void Con_SetLineInterval(float interval);
+float Con_GetLineInterval();
+void  Con_SetLineInterval(float interval);
+uint16_t Con_GetShowingLines();
+void Con_SetShowingLines(uint16_t value);
 
 void Con_Filter(char *text);
 void Con_Edit(int key);
@@ -111,8 +129,8 @@ void Con_SetScaleFonts(float scale);
 void Con_Clean();
 
 void Con_Draw(float time);
-void Con_DrawBackground();
-void Con_DrawCursor();
+int  Con_IsShown();
+void Con_SetShown(int value);
 
 #ifdef	__cplusplus
 }

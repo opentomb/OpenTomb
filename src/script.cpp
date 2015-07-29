@@ -726,7 +726,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
             cn->line_count = t;
         }
 
-        cn->show = lua_GetScalarField(lua, "show");
+        cn->show_console = lua_GetScalarField(lua, "show");
         cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
 
         lua_settop(lua, top);

@@ -34,8 +34,8 @@ typedef struct vertex_s
 
 typedef struct polygon_s
 {
-    uint16_t            vertex_count;                                           // number of vertices
     struct vertex_s    *vertices;                                               // vertices data
+    uint16_t            vertex_count;                                           // number of vertices
     uint16_t            tex_index;                                              // texture index
     uint16_t            anim_id;                                                // anim texture ID
     uint16_t            frame_offset;                                           // anim texture frame offset

@@ -124,9 +124,9 @@ void Controls_Key(int32_t button, int state)
                 case ACT_CONSOLE:
                     if(!state)
                     {
-                        con_base.show = !con_base.show;
+                        Con_SetShown(!Con_IsShown());
 
-                        if(con_base.show)
+                        if(Con_IsShown())
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                             SDL_ShowCursor(1);
@@ -469,7 +469,7 @@ void Controls_PollSDLInput()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!con_base.show && control_states.mouse_look != 0 &&
+                if(!Con_IsShown() && control_states.mouse_look != 0 &&
                     ((event.motion.x != (screen_info.w/2)) ||
                      (event.motion.y != (screen_info.h/2))))
                 {
@@ -535,7 +535,7 @@ void Controls_PollSDLInput()
 
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
-                if(con_base.show && event.key.state)
+                if(Con_IsShown() && event.key.state)
                 {
                     Con_Filter(event.text.text);
                     return;
@@ -552,7 +552,7 @@ void Controls_PollSDLInput()
                     break;
                 }
 
-                if(con_base.show && event.key.state)
+                if(Con_IsShown() && event.key.state)
                 {
                     switch (event.key.keysym.sym)
                     {
