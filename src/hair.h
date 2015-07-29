@@ -50,7 +50,7 @@ struct Hair : public Object
 {
     std::unique_ptr<EngineContainer> m_container;
 
-    std::shared_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
+    std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
     uint32_t m_ownerBody;         // Owner entity's body ID.
     btTransform m_ownerBodyHairRoot; // transform from owner body to root of hair start
 

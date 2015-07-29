@@ -2223,7 +2223,10 @@ void Character::updateHair()
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
-        hair->m_container->room = hair->m_ownerChar->m_self->room;
+        if (auto ownerChar = hair->m_ownerChar.lock())
+        {
+            hair->m_container->room = ownerChar->m_self->room;
+        }
     }
 }
 
