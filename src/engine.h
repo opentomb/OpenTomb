@@ -2,10 +2,18 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include <SDL2/SDL.h>
 #include <cstdint>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_video.h>
+
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
+
 #include "world.h"
 #include "script.h"
 #include "controls.h"
@@ -51,6 +59,12 @@
 #define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
 #define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
 
+#define COLLISION_MARGIN_DEFAULT                (2.0)
+#define COLLISION_MARGIN_RIGIDBODY              (0.5)
+#define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4)
+#define COLLISION_CAMERA_SPHERE_RADIUS          (16.0)
+#define COLLISION_TRAVERSE_TEST_RADIUS          (0.48)
+
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
@@ -58,7 +72,6 @@ class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
 struct Camera;
-struct lua_State;
 
 struct EngineContainer
 {
@@ -67,13 +80,6 @@ struct EngineContainer
     lua::Integer collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
-
-    bool is_valid = true;
-
-    ~EngineContainer()
-    {
-        is_valid = false;
-    }
 };
 
 //! @todo Use bools where appropriate.
@@ -151,10 +157,6 @@ public:
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
         const EngineContainer* c1 = (const EngineContainer*)rayResult.m_collisionObject->getUserPointer();
-
-        if(!c1->is_valid) {
-            throw std::runtime_error("OOOOOOPS");
-        }
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
@@ -235,59 +237,55 @@ protected:
     const bool m_skip_ghost;
 };
 
+// ? Are they used at all ?
+
 int engine_lua_fputs(const char *str, FILE *f);
 int engine_lua_fprintf(FILE *f, const char *fmt, ...);
 int engine_lua_printf(const char *fmt, ...);
+
+// Starter and destructor.
+
+void Engine_Start();
+void Engine_Destroy();
+void Engine_Shutdown(int val) __attribute__((noreturn));
+
+// Initializers
 
 void Engine_Init_Pre();     // Initial init
 void Engine_Init_Post();    // Finalizing init
 
 void Engine_InitDefaultGlobals();
 
-void Engine_Destroy();
-void Engine_Shutdown(int val) __attribute__((noreturn));
+void Engine_InitGL();
+void Engine_InitSDLControls();
+void Engine_InitSDLVideo();
+void Engine_InitSDLImage();
+void Engine_InitAL();
+void Engine_InitBullet();
 
-void Engine_Frame(btScalar time);
+// Config parser
+
+void Engine_InitConfig(const char *filename);
+void Engine_SaveConfig();
+
+// Core system routines - display and tick.
+
 void Engine_Display();
+void Engine_Frame(btScalar time);
 
-void Engine_BTInit();
+// Resize event.
+// Nominal values are used e.g. to set the size for the console.
+// pixel values are used for glViewport. Both will be the same on
+// normal displays, but on retina displays or similar, pixels will be twice nominal (or more).
 
-int lua_print(lua_State *state);
-void Engine_LuaInit();
-void Engine_LuaClearTasks();
-void Engine_LuaRegisterFuncs(lua::State &state);
+void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
-// Simple override to register both upper- and lowercase versions of function name.
+// Debug functions.
 
-template<typename Function>
-inline void lua_registerc(lua::State& state, const std::string& func_name, Function func)
-{
-    std::string uc, lc;
-    for(char c : func_name)
-    {
-        lc += std::tolower(c);
-        uc += std::toupper(c);
-    }
-
-    state.set(func_name.c_str(), func);
-    state.set(lc.c_str(), func);
-    state.set(uc.c_str(), func);
-}
-
-template<>
-inline void lua_registerc(lua::State& state, const std::string& func_name, int (*func)(lua_State*))
-{
-    std::string uc, lc;
-    for(char c : func_name)
-    {
-        lc += std::tolower(c);
-        uc += std::toupper(c);
-    }
-
-    lua_register(state.getState(), func_name.c_str(), func);
-    lua_register(state.getState(), lc.c_str(), func);
-    lua_register(state.getState(), uc.c_str(), func);
-}
+void Engine_PrimaryMouseDown();
+void Engine_SecondaryMouseDown();
+void Engine_ShowDebugInfo();
+void Engine_DumpRoom(Room* r);
 
 // PC-specific level loader routines.
 
@@ -298,17 +296,20 @@ int  Engine_GetPCLevelVersion(const std::string &name);
 
 bool Engine_FileFound(const std::string &name, bool Write = false);
 int  Engine_GetLevelFormat(const std::string &name);
+int  Engine_LoadMap(const std::string &name);
+
+// String getters.
+
 std::string Engine_GetLevelName(const std::string &path);
 std::string Engine_GetLevelScriptName(int game_version, const std::string &postfix = NULL);
-int  Engine_LoadMap(const std::string &name);
+
+// Console command parser.
 
 int  Engine_ExecCmd(const char *ch);
 
-void Engine_InitConfig(const char *filename);
-void Engine_SaveConfig();
+// Bullet global methods.
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-
 
 #endif

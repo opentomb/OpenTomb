@@ -34,11 +34,8 @@ void main(void)
     fPerturb = 0.5 * abs(sin(fSum * 8.0 + fTime)) + 0.5;
     fGlow = 0.5 * abs(sin(8.0 + fTime)) + 0.5;
     
-    float fResult = tintMult * mix(1.0, fPerturb, 1.0) * mix(1.0, fGlow, 0.8);
-    
-    vCol.r *= fResult;
-    vCol.g *= fResult;
-    vCol.b *= fResult;
+    vCol *= tintMult * mix(1.0, fPerturb, 1.0) * mix(1.0, fGlow, 0.8);
+    vCol.a = 1.0;
 #endif
 
 #if IS_FLICKER

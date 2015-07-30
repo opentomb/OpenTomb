@@ -879,7 +879,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                             {
                                                 // Switch action type case.
                                                 snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                                if(only_once)
+                                                if((engine_world.version >= TR_III) && (only_once))
                                                 {
                                                     // Just lock out activator, no anti-action needed.
                                                     snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -933,7 +933,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                         {
                                             snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once?"true":"false", timer_field);
                                             item_events += buf;
-                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
+                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index, %s); \n", operands, only_once?"true":"false");
                                             anti_events += buf;
                                         }
                                     }
@@ -1014,7 +1014,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPEFFECT:
-                                snprintf(buf, 128, "   doEffect(%d, %d); \n", operands, timer_field);
+                                snprintf(buf, 128, "   doEffect(%d, entity_index, %d); \n", operands, timer_field);
                                 cont_events += buf;
                                 break;
 
@@ -1123,7 +1123,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                             {
                                 script += buf2;
-                                if(!only_once)
+                                if((engine_world.version < TR_III) || (!only_once))
                                 {
                                     script += single_events;
                                     script += anti_events;    // Single/continous events are engaged along with
@@ -1649,7 +1649,8 @@ void Res_ScriptsOpen(int engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
-    lua_register(level_script.getState(), "print", lua_print);
+    lua_register(level_script.getState(), "print", lua_Print);
+
     level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
     level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
     level_script.set("setSectorPortal", lua_SetSectorPortal);
@@ -3933,7 +3934,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I_UB:
                 world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
-                for(size_t i = 0; i < tr->samples_count-1; i++)
+                for(size_t i = 0; i < tr->sample_indices_count-1; i++)
                 {
                     pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];

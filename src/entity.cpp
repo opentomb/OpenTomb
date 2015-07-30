@@ -40,13 +40,14 @@ void Entity::createGhosts()
     m_bt.last_collisions.clear();
     for(size_t i=0; i<m_bf.bone_tags.size(); i++)
     {
-        btVector3 box = 0.40 * (m_bf.bone_tags[i].mesh_base->m_bbMax - m_bf.bone_tags[i].mesh_base->m_bbMin);
+        btVector3 box = COLLISION_GHOST_VOLUME_COEFFICIENT * (m_bf.bone_tags[i].mesh_base->m_bbMax - m_bf.bone_tags[i].mesh_base->m_bbMin);
         m_bt.shapes.emplace_back( new btBoxShape(box) );
+        m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
         m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
 
         m_bt.ghostObjects.emplace_back( new btPairCachingGhostObject() );
 
-        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.ghostObjects.back().get(), true);
+        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.bt_body[i].get(), true);
 
         btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;
         gltr.setOrigin( gltr * m_bf.bone_tags[i].mesh_base->m_center );
@@ -351,7 +352,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         }
         else
         {
-            auto parent_from = btag->full_transform * btag->mesh_base->m_center;
+            auto parent_from = btag->parent->full_transform * btag->parent->mesh_base->m_center;
             from = m_transform * parent_from;
         }
 
@@ -576,7 +577,7 @@ void Entity::updateRigidBody(bool force)
         {
             if(m_bf.bone_tags[i].parent != NULL)
             {
-                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].full_transform.inverse() * m_bf.bone_tags[i].full_transform;
+                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].parent->full_transform.inverse() * m_bf.bone_tags[i].full_transform;
             }
             else
             {
@@ -818,7 +819,6 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
     {
         assert(af->anim_command < engine_world.anim_commands.size());
         int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
-        int8_t   random_value = 0;
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
@@ -882,128 +882,10 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                 break;
 
             case TR_ANIMCOMMAND_PLAYEFFECT:
-                // Effects (flipeffects) are various non-typical actions which vary
-                // across different TR game engine versions. There are common ones,
-                // however, and currently only these are supported.
                 if(ss_anim->current_frame == pointer[0])
                 {
-                    switch(pointer[1] & 0x3FFF)
-                    {
-                    case TR_EFFECT_SHAKESCREEN:
-                        if(engine_world.character)
-                        {
-                            btScalar dist = engine_world.character->findDistance(*this);
-                            dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
-                            if(dist > 0)
-                                renderer.camera()->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
-                        }
-                        break;
-
-                    case TR_EFFECT_CHANGEDIRECTION:
-                        break;
-
-                    case TR_EFFECT_HIDEOBJECT:
-                        m_visible = false;
-                        break;
-
-                    case TR_EFFECT_SHOWOBJECT:
-                        m_visible = true;
-                        break;
-
-                    case TR_EFFECT_PLAYSTEPSOUND:
-                        // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                        // this flag and play step sound in any case on land, ignoring it
-                        // completely in water rooms.
-                        if(getSubstanceState() == Substance::None)
-                        {
-                            // TR3-5 footstep map.
-                            // We define it here as a magic numbers array, because TR3-5 versions
-                            // fortunately have no differences in footstep sounds order.
-                            // Also note that some footstep types mutually share same sound IDs
-                            // across different TR versions.
-                            switch(m_currentSector->material)
-                            {
-                            case SECTOR_MATERIAL_MUD:
-                                Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                if(engine_world.version != TR_IV)
-                                {
-                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                }
-                                break;
-
-                            case SECTOR_MATERIAL_SAND:  // Same as grass
-                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_GRAVEL:
-                                Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                if(engine_world.version != TR_IV)
-                                {
-                                    Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                }
-                                break;
-
-                            case SECTOR_MATERIAL_WATER: // BYPASS!
-                                // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, id);
-                                break;
-
-                            case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, id);
-                                break;
-
-                            case SECTOR_MATERIAL_WOOD:
-                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_METAL:
-                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                if(engine_world.version == TR_IV)
-                                {
-                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                }
-                                break;
-
-                            case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-
-                            case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                break;
-                            }
-                        }
-                        break;
-
-                    case TR_EFFECT_BUBBLE:
-                        ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                        random_value = rand() % 100;
-                        if(random_value > 60)
-                        {
-                            Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                        break;
-
-                    default:
-                        ///@FIXME: TODO ALL OTHER EFFECTS!
-                        break;
-                    }
+                    uint16_t effect_id = pointer[1] & 0x3FFF;
+                    if(effect_id > 0) lua_ExecEffect(engine_lua, effect_id, m_id);
                 }
                 pointer += 2;
                 break;

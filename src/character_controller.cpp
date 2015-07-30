@@ -40,12 +40,16 @@
 Character::Character(uint32_t id)
     : Entity(id)
 {
+    m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self);
+    m_climbSensor.reset( new btSphereShape(m_climbR) );
+    m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
+
+    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.cb = m_rayCb;
 
-    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
+    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
@@ -272,7 +276,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
             {
                 assert( rs->sector_above != nullptr );
                 rs = rs->sector_above->checkFlip();
-                assert( rs != nullptr && rs->sector_above != nullptr );
+                assert( rs != nullptr && rs->owner_room != nullptr );
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -1753,7 +1757,8 @@ int Character::checkTraverse(const Entity& obj)
         to.setIdentity();
         to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
+        sp.setMargin(COLLISION_MARGIN_DEFAULT);
         BtEngineClosestConvexResultCallback ccb(obj.m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
@@ -1799,7 +1804,8 @@ int Character::checkTraverse(const Entity& obj)
         to.setIdentity();
         to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
+        sp.setMargin(COLLISION_MARGIN_DEFAULT);
         BtEngineClosestConvexResultCallback ccb(m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
@@ -2217,7 +2223,10 @@ void Character::updateHair()
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
-        hair->m_container->room = hair->m_ownerChar->m_self->room;
+        if (auto ownerChar = hair->m_ownerChar.lock())
+        {
+            hair->m_container->room = ownerChar->m_self->room;
+        }
     }
 }
 

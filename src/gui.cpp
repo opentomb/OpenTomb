@@ -648,6 +648,7 @@ gui_InventoryManager::gui_InventoryManager()
     mVerticalOffset             = 0.0;
 
     mItemRotatePeriod           = 4.0;
+    mItemTime                   = 0.0;
     mItemAngle                  = 0.0;
 
     mInventory                  = NULL;
@@ -1647,6 +1648,8 @@ bool gui_Fader::SetTexture(const char *texture_path)
                 texture_format = GL_RGBA;
             else
                 texture_format = GL_BGRA;
+
+            color_depth = GL_RGBA;
         }
         else if(color_depth == 3)   // No alpha channel
         {
@@ -1654,6 +1657,8 @@ bool gui_Fader::SetTexture(const char *texture_path)
                 texture_format = GL_RGB;
             else
                 texture_format = GL_BGR;
+
+            color_depth = GL_RGB;
         }
         else
         {

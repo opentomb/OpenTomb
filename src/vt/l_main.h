@@ -437,71 +437,71 @@ class TR_Level {
 
     uint32_t textile8_count;
     uint32_t textile16_count;
-    tr_textile8_t *textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
-    tr2_textile16_t *textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
+    tr_textile8_t *textile8 = nullptr;                ///< \brief 8-bit 256x256 textiles(TR1-3).
+    tr2_textile16_t *textile16 = nullptr;             ///< \brief 16-bit 256x256 textiles(TR2-5).
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     uint32_t rooms_count;
     tr5_room_t *rooms;                      ///< \brief all rooms (normal and alternate).
     uint32_t floor_data_size;               ///< \brief the floor data size
-    uint16_t *floor_data;                   ///< \brief the floor data.
+    uint16_t *floor_data = nullptr;                   ///< \brief the floor data.
     uint32_t meshes_count;
-    tr4_mesh_t *meshes;                     ///< \brief all meshes (static and moveables).
+    tr4_mesh_t *meshes = nullptr;                     ///< \brief all meshes (static and moveables).
     uint32_t mesh_indices_count;
-    uint32_t *mesh_indices;                 ///< \brief mesh index table.
+    uint32_t *mesh_indices = nullptr;                 ///< \brief mesh index table.
     uint32_t animations_count;
-    tr_animation_t *animations;             ///< \brief animations for moveables.
+    tr_animation_t *animations = nullptr;             ///< \brief animations for moveables.
     uint32_t state_changes_count;
-    tr_state_change_t *state_changes;       ///< \brief state changes for moveables.
+    tr_state_change_t *state_changes = nullptr;       ///< \brief state changes for moveables.
     uint32_t anim_dispatches_count;
-    tr_anim_dispatch_t *anim_dispatches;    ///< \brief animation dispatches for moveables.
+    tr_anim_dispatch_t *anim_dispatches = nullptr;    ///< \brief animation dispatches for moveables.
     uint32_t anim_commands_count;
-    int16_t *anim_commands;                 ///< \brief animation commands for moveables.
+    int16_t *anim_commands = nullptr;                 ///< \brief animation commands for moveables.
     uint32_t moveables_count;
     tr_moveable_t *moveables;               ///< \brief data for the moveables.
     uint32_t static_meshes_count;
-    tr_staticmesh_t *static_meshes;         ///< \brief data for the static meshes.
+    tr_staticmesh_t *static_meshes = nullptr;         ///< \brief data for the static meshes.
     std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
     uint32_t animated_textures_count;
-    uint16_t *animated_textures;            ///< \brief animated textures.
+    uint16_t *animated_textures = nullptr;            ///< \brief animated textures.
     uint32_t animated_textures_uv_count;
     std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
     uint32_t sprite_sequences_count;
     tr_sprite_sequence_t *sprite_sequences; ///< \brief sprite sequences for animation.
     uint32_t cameras_count;
-    tr_camera_t *cameras;                   ///< \brief cameras.
+    tr_camera_t *cameras = nullptr;                   ///< \brief cameras.
     uint32_t flyby_cameras_count;
-    tr4_flyby_camera_t *flyby_cameras;      ///< \brief flyby cameras.
+    tr4_flyby_camera_t *flyby_cameras = nullptr;      ///< \brief flyby cameras.
     uint32_t sound_sources_count;
-    tr_sound_source_t *sound_sources;       ///< \brief sound sources.
+    tr_sound_source_t *sound_sources = nullptr;       ///< \brief sound sources.
     uint32_t boxes_count;
-    tr_box_t *boxes;                        ///< \brief boxes.
+    tr_box_t *boxes = nullptr;                        ///< \brief boxes.
     uint32_t overlaps_count;
-    uint16_t *overlaps;                     ///< \brief overlaps.
+    uint16_t *overlaps = nullptr;                     ///< \brief overlaps.
     uint32_t zones_count;
-    int16_t *zones;                         ///< \brief zones.
+    int16_t *zones = nullptr;                         ///< \brief zones.
     uint32_t items_count;
-    tr2_item_t *items;                      ///< \brief items.
+    tr2_item_t *items = nullptr;                      ///< \brief items.
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
     tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
     tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).
     uint32_t ai_objects_count;
-    tr4_ai_object_t *ai_objects;            ///< \brief ai objects (TR4-5).
+    tr4_ai_object_t *ai_objects = nullptr;            ///< \brief ai objects (TR4-5).
     uint32_t cinematic_frames_count;
-    tr_cinematic_frame_t *cinematic_frames; ///< \brief cinematic frames (TR1-3).
+    tr_cinematic_frame_t *cinematic_frames = nullptr; ///< \brief cinematic frames (TR1-3).
     uint32_t demo_data_count;
-    uint8_t *demo_data;                     ///< \brief demo data.
-    int16_t *soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
+    uint8_t *demo_data = nullptr;                     ///< \brief demo data.
+    int16_t *soundmap = nullptr;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
     uint32_t sound_details_count;
     tr_sound_details_t *sound_details;      ///< \brief sound details.
     uint32_t samples_count;
     std::vector<uint8_t> samples_data;                  ///< \brief samples.
     uint32_t sample_indices_count;
-    uint32_t *sample_indices;               ///< \brief sample indices.
+    uint32_t *sample_indices = nullptr;               ///< \brief sample indices.
 
     uint32_t frame_data_size;               ///< \brief frame data array size
-    uint16_t *frame_data;                   ///< \brief frame data array
+    uint16_t *frame_data = nullptr;                   ///< \brief frame data array
     uint32_t mesh_tree_data_size;
-    uint32_t *mesh_tree_data;
+    uint32_t *mesh_tree_data = nullptr;
 
     char     sfx_path[256];
 

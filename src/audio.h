@@ -370,7 +370,7 @@ public:
 private:
     bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
     bool        is_water;       // Marker to define if sample is in underwater state or not.
-    ALuint      source_index;   // Source index. Should be unique for each source.
+    ALuint      source_index = 0;   // Source index. Should be unique for each source.
 
     void LinkEmitter();                             // Link source to parent emitter.
     void SetPosition(const ALfloat pos_vector[]);   // Set source position.
