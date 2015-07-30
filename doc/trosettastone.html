@@ -2257,11 +2257,6 @@ What&#8217;s the purpose of bits 0-2 (mapping correction) in <em>flags</em> fiel
 Clarify the box-overlap-zone relation in NPC behaviour section.
 </p>
 </li>
-<li>
-<p>
-Expand AI objects section with description of all AI objects in TR3-TR5.
-</p>
-</li>
 </ol></div>
 </div>
 <div class="sect2">
@@ -3300,13 +3295,6 @@ we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p><
 <div class="paragraph"><p><span class="monospaced">Lighting</span> value is ignored by the engine, as now each vertex has its own defined 15-bit colour (see below).</p></div>
 <div class="paragraph"><p><span class="monospaced">Attributes</span> bit flags were extended. Here is the list:</p></div>
 <div class="ulist"><ul>
-<li>
-<p>
-<em>Bit 4:</em> <span class="image">
-<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
-</span> Same meaning as in <a href="#tr_room_vertex">[tr_room_vertex]</a>
-</p>
-</li>
 <li>
 <p>
 <em>Bit 13:</em> Water / quicksand surface &#8220;wave&#8221; movement. Brightness is also shifting, if this flag is set (but it&#8217;s not the same type as with <em>Bit 14</em>, it&#8217;s much
@@ -5894,7 +5882,7 @@ Thus, if the number of samples is 4, then the TR engine looks in <span class="mo
 <td class="content">
 <div class="paragraph"><p>Wave format used in TR1/TR2 and TR3/TR4/TR5 is different. While TR1 and TR2 used 8-bit 11 kHz data, TR3 onwards switched to 16-bit 22 kHz data. However,
 PlayStation versions of TR1 and TR2 used 16-bit samples as well, which generally made PlayStation version sound quality better, without dithering artifacts.</p></div>
-<div class="paragraph"><p>Additionally, TR4 and TR5 introduced usage of <em>MS-ADPCM</em> codec to store sample data, which was uncompressed and loaded into buffers on level loading. However,
+<div class="paragraph"><p>Additionally, TR4 and TR5 introduced usage of <em>MS-ADPCM</em> codec to store sample data, which was compressed and loaded into buffers on level loading. However,
 <em>TR4 engine version bundled with TRLE</em> used uncompressed wave data, as in TR1-TR3.</p></div>
 </td>
 </tr></table>
@@ -7685,7 +7673,7 @@ to "0x500" which loads the title screen when Lara dies in-game. Some other comma
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-30 02:49:25 MSK
+Last updated 2015-07-30 04:10:57 MSK
 </div>
 </div>
 </body>
