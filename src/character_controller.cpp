@@ -24,11 +24,11 @@ Character::Character(uint32_t id)
 {
     m_climbSensor.reset( new btSphereShape(m_climbR) );
 
-    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self);
+    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.cb = m_rayCb;
 
-    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
+    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
@@ -2223,7 +2223,10 @@ void Character::updateHair()
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
-        hair->m_container->room = hair->m_ownerChar->m_self->room;
+        if (auto ownerChar = hair->m_ownerChar.lock())
+        {
+            hair->m_container->room = ownerChar->m_self->room;
+        }
     }
 }
 

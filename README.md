@@ -123,6 +123,9 @@ assets and where to get them:
    format to store all loading screen files. So, to ease your life, you can simply download the
    loading screen package here: https://www.dropbox.com/s/uycdw9x294ipc0r/loading_screens.zip?dl=0
    Just extract these files directly into the main OpenTomb directory, and that should do the trick.
+
+ * If you are looking for the soundtracks and loading screens of only a single Tomb Raider game, you
+   can also download them at [opentomb.earvillage.net](http://opentomb.earvillage.net/).
     
 8. Compiling
 ------------

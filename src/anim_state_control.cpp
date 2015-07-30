@@ -79,7 +79,7 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int state)
+void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
 {
     AnimationFrame* af = &ss_anim->model->animations[ ss_anim->current_animation ];
 
