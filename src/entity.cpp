@@ -47,7 +47,7 @@ void Entity::createGhosts()
 
         m_bt.ghostObjects.emplace_back( new btPairCachingGhostObject() );
 
-        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.ghostObjects.back().get(), true);
+        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.bt_body[i].get(), true);
 
         btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;
         gltr.setOrigin( gltr * m_bf.bone_tags[i].mesh_base->m_center );
