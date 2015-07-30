@@ -52,22 +52,55 @@ end;
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(object_id, true);
+    setEntityActivity(id, true);
+    
+    entity_funcs[id].open_state   = 1;
+    entity_funcs[id].closed_state = 0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        swapEntityState(object_id, 0, 1);
+        entity_funcs[object_id].must_open  = true;
+        entity_funcs[object_id].must_close = false;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        entity_funcs[object_id].must_open  = false;
+        entity_funcs[object_id].must_close = true;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
+        local a,f,n = getEntityAnim(object_id);
+        if((a ~= 1) and (a ~= 3)) then
+            local st = getEntityState(object_id);
+            if((entity_funcs[object_id].must_open  == true) and (entity_funcs[object_id].open_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].open_state);
+                entity_funcs[object_id].must_open  = false;
+            elseif((entity_funcs[object_id].must_close == true) and (entity_funcs[object_id].closed_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].closed_state);
+                entity_funcs[object_id].must_close = false;
+            end;
+        end;    
+    
         if(tickEntity(object_id) == TICK_STOPPED) then
-            swapEntityState(object_id, 0, 1);
-            setEntityEvent(object_id, false);
+            entity_funcs[object_id].must_open  = false;
+            entity_funcs[object_id].must_close = true;
         end;
     end
     
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].open_state   = nil;
+        entity_funcs[object_id].closed_state = nil;
+        entity_funcs[object_id].must_open    = nil;
+        entity_funcs[object_id].must_close   = nil;
+    end;
+    
     prepareEntity(id);
+    
+    if(entity_funcs[id].must_open == true) then
+        entity_funcs[id].onLoop(id);
+        entity_funcs[id].open_state   = 0;
+        entity_funcs[id].closed_state = 1;
+    end;
+    
 end
 
 function keyhole_init(id)    -- Key and puzzle holes

@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
@@ -13,7 +13,6 @@
 #include "console.h"
 #include "common.h"
 #include "game.h"
-#include "main_SDL.h"
 #include "script.h"
 #include "vmath.h"
 

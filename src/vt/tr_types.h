@@ -1,7 +1,7 @@
 #ifndef _TR_TYPES_H_
 #define _TR_TYPES_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include "glmath.h"
 
 /// \brief RGBA colour using bitu8. For palette etc.

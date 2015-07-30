@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+
 #include "engine.h"
 
 #define TR_GAMEFLOW_MAX_ACTIONS 32
@@ -25,7 +26,7 @@ typedef struct gameflow_manager_s
     gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
 
     bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
-    
+
 } gameflow_manager_t, *gameflow_manager_p;
 
 enum TR_GAMEFLOW_OP

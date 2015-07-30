@@ -3,15 +3,17 @@
 #define WORLD_H
 
 #include <cstdint>
+#include <memory>
+#include <vector>
+
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+
+#include "object.h"
 #include "audio.h"
 #include "camera.h"
 #include "bordered_texture_atlas.h"
-#include <LinearMath/btScalar.h>
-#include <LinearMath/btVector3.h>
-#include "object.h"
 
-#include <memory>
-#include <vector>
 
 // Native TR floor data functions
 

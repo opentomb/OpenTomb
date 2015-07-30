@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SDL2/SDL.h>
 #include <cstdint>
+#include <SDL2/SDL.h>
 
 #define JOY_BUTTON_MASK  1000
 #define JOY_HAT_MASK     1100

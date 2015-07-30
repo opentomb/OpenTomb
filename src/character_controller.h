@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+#include <list>
+
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 #include <BulletCollision/CollisionShapes/btCapsuleShape.h>
@@ -10,10 +14,6 @@
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-#include <cstdint>
-#include <vector>
-#include <list>
 
 #include "engine.h"
 #include "entity.h"

@@ -1,6 +1,11 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
 #include "vmath.h"
 #include "mesh.h"
 #include "entity.h"
@@ -22,11 +27,6 @@
 
 #include <lua.hpp>
 #include "LuaState.h"
-
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 
 void Entity::createGhosts()

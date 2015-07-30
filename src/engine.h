@@ -3,9 +3,9 @@
 #define ENGINE_H
 
 #include <cstdint>
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>

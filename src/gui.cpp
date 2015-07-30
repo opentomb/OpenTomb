@@ -1,5 +1,6 @@
 
 #include <cstdint>
+
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
 #else

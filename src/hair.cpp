@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+
 #include <LinearMath/btScalar.h>
 
 #include "hair.h"

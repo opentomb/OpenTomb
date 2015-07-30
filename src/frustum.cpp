@@ -1,10 +1,9 @@
-#include "frustum.h"
-
 #include <cstdio>
 #include <cstdlib>
 
 #include <LinearMath/btScalar.h>
 
+#include "frustum.h"
 #include "vmath.h"
 #include "camera.h"
 #include "polygon.h"

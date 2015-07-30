@@ -1,10 +1,9 @@
 
-#include "world.h"
-
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
+#include "world.h"
 #include "character_controller.h"
 #include "obb.h"
 #include "anim_state_control.h"

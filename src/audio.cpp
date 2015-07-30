@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdio>
 
+#include <SDL2/SDL.h>
+
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
@@ -13,8 +15,6 @@
 #include "render.h"
 #include "strings.h"
 #include "helpers.h"
-
-#include <SDL2/SDL.h>
 
 #ifndef AL_ALEXT_PROTOTYPES
 extern "C"

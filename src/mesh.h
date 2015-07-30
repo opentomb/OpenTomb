@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+
 #include <LinearMath/btScalar.h>
 
 #include "vertex_array.h"

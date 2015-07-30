@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 #include "script.h"
 #include "system.h"
@@ -24,7 +25,6 @@
 #include <lua.hpp>
 #include "LuaState.h"
 
-#include <iostream>
 
 /*
  * debug functions

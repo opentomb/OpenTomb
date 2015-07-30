@@ -115,18 +115,18 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
     btScalar u = plane.normal.dot(rayDir);
     if(std::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
-        return false;                                                               // plane is parallel to the ray - no intersection
+        return false;    // plane is parallel to the ray - no intersection
     }
     *lambda = -plane.distance(dot) / u;
 
-    auto vp = &vertices.front();                                                           // current polygon pointer
+    auto vp = &vertices.front();           // current polygon pointer
     btVector3 T = dot - vp[0].position;
 
     btVector3 E2 = vp[1].position - vp[0].position;
     for(size_t i=0; i<vertices.size()-2; i++,vp++)
     {
-        btVector3 E1 = E2;                                                       // PREV
-        E2 = vp[2].position - vertices[0].position;                   // NEXT
+        btVector3 E1 = E2;                           // PREV
+        E2 = vp[2].position - vertices[0].position;  // NEXT
 
         btVector3 P = rayDir.cross(E2);
         btVector3 Q = T.cross(E1);
@@ -150,7 +150,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
 {
     if(SPLIT_IN_BOTH != splitClassify(p2->plane) || (SPLIT_IN_BOTH != p2->splitClassify(plane)))
     {
-        return false;                                                               // quick check
+        return false;  // quick check
     }
 
     std::vector<btVector3> result_buf;
@@ -168,14 +168,16 @@ bool Polygon::intersectPolygon(Polygon* p2)
         {
             if(dist0 < -SPLIT_EPSILON)
             {
-                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position, curr_v->position - prev_v->position) );
+                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position,
+                                                                curr_v->position - prev_v->position) );
             }
         }
         else if(dist1 < -SPLIT_EPSILON)
         {
             if(dist0 > SPLIT_EPSILON)
             {
-                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position, curr_v->position - prev_v->position) );
+                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position,
+                                                                curr_v->position - prev_v->position) );
             }
         }
         else
@@ -205,14 +207,16 @@ bool Polygon::intersectPolygon(Polygon* p2)
         {
             if(dist0 < -SPLIT_EPSILON)
             {
-                result_buf.emplace_back( plane.rayIntersect(prev_v->position, curr_v->position - prev_v->position) );
+                result_buf.emplace_back( plane.rayIntersect(prev_v->position,
+                                                            curr_v->position - prev_v->position) );
             }
         }
         else if(dist1 < -SPLIT_EPSILON)
         {
             if(dist0 > SPLIT_EPSILON)
             {
-                result_buf.emplace_back( plane.rayIntersect(prev_v->position, curr_v->position - prev_v->position) );
+                result_buf.emplace_back( plane.rayIntersect(prev_v->position,
+                                                            curr_v->position - prev_v->position) );
             }
         }
         else
@@ -229,7 +233,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
         curr_v ++;
     }
 
-    auto dir = plane.normal.cross(p2->plane.normal);                                      // vector of two planes intersection line
+    auto dir = plane.normal.cross(p2->plane.normal);  // vector of two planes intersection line
     btScalar t = std::abs(dir[0]);
     dist0 = std::abs(dir[1]);
     btScalar dist1 = std::abs(dir[2]);

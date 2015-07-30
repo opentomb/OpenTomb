@@ -139,11 +139,3 @@
 #define SYSNOTE_LOADED_DC_LEVEL          1017
 #define SYSNOTE_LOADED_OT_LEVEL          1018
 #define SYSNOTE_WAD_PLAYING              1019
-
-// String conversion preload size is used when decoding UTF-8 string
-// to UTF-32 string. To avoid reallocating memory zone each parsed
-// symbol, we specify preload buffer size after which memory will be
-// indeed reallocated. Average string size in TR generic strings is
-// 16 symbols - hence, 16 dwords is an average preload size.
-
-#define STR_CONV_PRELOAD_SIZE       16

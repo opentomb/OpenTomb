@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <cstdio>
 
+#include "vt/tr_versions.h"
+
 #include "vmath.h"
 #include "polygon.h"
 #include "engine.h"
@@ -17,7 +19,6 @@
 #include "console.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "vt/tr_versions.h"
 #include "resource.h"
 
 /*

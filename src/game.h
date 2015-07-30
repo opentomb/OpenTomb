@@ -2,15 +2,16 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <cstdint>
+#include <map>
+#include <memory>
+
 #include <LinearMath/btScalar.h>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include <cstdint>
 #include <lua.hpp>
 
-#include <map>
-#include <memory>
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including

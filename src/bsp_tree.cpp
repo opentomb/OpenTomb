@@ -2,6 +2,7 @@
 #include <cstdint>
 
 #include <LinearMath/btScalar.h>
+
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"
