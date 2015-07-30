@@ -2833,7 +2833,6 @@ by the larger structures that are built using the smaller structures.</p></div>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
-    <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>             <span class="c1">// Y-offset of room (world coordinates) - only in TR5</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>             <span class="c1">// Z-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">yBottom</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">yTop</span><span class="p">;</span>
@@ -3017,10 +3016,10 @@ colour won&#8217;t affect room faces.</td>
 <div class="paragraph"><p>There are four different types of room light structures. First one is used in TR1-2, second is used in TR3, third is used in TR4, and fourth is used in TR5.
 Here is the description of each:</p></div>
 <div class="sect4">
-<h5 id="_tr1_2_room_lighting">TR1-2 Room Lighting</h5>
+<h5 id="_tr1_room_lighting">TR1 Room Lighting</h5>
 <div class="listingblock">
 <a id="tr_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_light</span>   <span class="c1">// 18 bytes (TR2: 24 bytes)</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_light</span>   <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
      <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
@@ -3031,7 +3030,10 @@ Here is the description of each:</p></div>
 the first of the paired <span class="monospaced">Intensity</span> and <span class="monospaced">Fade</span> values.</p></div>
 <div class="paragraph"><p><span class="monospaced">Intensity1</span> ranges from 0 (dark) to 0x1FFF (bright). However, some rooms occasionally have some lights with intensity greater than 0x1FFF (for example, look at
 room #9, 2nd light in <span class="monospaced">level1.phd</span>). <span class="monospaced">Fade1</span> is the maximum distance the light shines on, and ranges from 0 to 0x7FFF.</p></div>
-<div class="paragraph"><p>TR2 uses an extended version of this structure:</p></div>
+</div>
+<div class="sect4">
+<h5 id="_tr2_room_lighting">TR2 Room Lighting</h5>
+<div class="paragraph"><p>TR2 uses an extended version of TR1 light structure:</p></div>
 <div class="listingblock">
 <a id="tr2_room_light"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_light</span>   <span class="c1">// 24 bytes</span>
@@ -3052,9 +3054,7 @@ always black, so the number is pseudo-signed (negative values are always treated
 <a id="tr3_room_light"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_light</span>   <span class="c1">// 24 bytes</span>
 <span class="p">{</span>
-        <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// Position of light, in world coordinates</span>
-        <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
-        <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
+        <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
      <span class="n">tr_colour4</span> <span class="n">Colour</span><span class="p">;</span>        <span class="c1">// Colour of the light</span>
        <span class="kt">uint32_t</span> <span class="n">Intensity</span><span class="p">;</span>
        <span class="kt">uint32_t</span> <span class="n">Fade</span><span class="p">;</span>          <span class="c1">// Falloff value</span>
@@ -4037,7 +4037,7 @@ the FloorData should be read sequentially.</p></div>
 <table class="tableblock frame-all grid-all"
 style="
 margin-left:auto; margin-right:auto;
-width:30%;
+width:50%;
 ">
 <col style="width:50%;">
 <col style="width:50%;">
@@ -5237,14 +5237,19 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
     <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">;</span>
      <span class="kt">uint8_t</span> <span class="n">x</span><span class="p">;</span>
      <span class="kt">uint8_t</span> <span class="n">y</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">Width</span><span class="p">;</span>        <span class="c1">// Actually (Width  * 256) + 255</span>
-    <span class="kt">uint16_t</span> <span class="n">Height</span><span class="p">;</span>       <span class="c1">// Actually (Height * 256) + 255</span>
+    <span class="kt">uint16_t</span> <span class="n">Width</span><span class="p">;</span>        <span class="c1">// (ActualWidth  * 256) + 255</span>
+    <span class="kt">uint16_t</span> <span class="n">Height</span><span class="p">;</span>       <span class="c1">// (ActualHeight * 256) + 255</span>
      <span class="kt">int16_t</span> <span class="n">LeftSide</span><span class="p">;</span>
      <span class="kt">int16_t</span> <span class="n">TopSide</span><span class="p">;</span>
      <span class="kt">int16_t</span> <span class="n">RightSide</span><span class="p">;</span>
      <span class="kt">int16_t</span> <span class="n">BottomSide</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> <span class="monospaced">x</span> and <span class="monospaced">y</span> values <em>are not used</em> in this version. Additionally, formula for <span class="monospaced">Width</span> and <span class="monospaced">Height</span> is changed: now it&#8217;s <span class="monospaced">(ActualWidth - 1) * 256</span> and <span class="monospaced">(ActualHeight - 1) * 256</span> respectively.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_sprite_sequences">5.7. Sprite Sequences</h3>
@@ -5781,15 +5786,22 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> TR4 introduced two additional AI objects, <strong>AI_X1</strong> and <strong>AI_X2</strong>. These are used with SAS Guards in <em>Cairo</em> story arc. When AI_X1 object is placed in the same sector with SAS Guard, he will prefer to shoot grenades instead of bullets. If another SAS Guard with AI_X2 is activated nearby, then first one will stop shooting grenades, and second one will shoot them instead.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">
-<div class="paragraph"><p>Beginning with TR4, AI objects are <em>not kept along with other entities</em>, and moved to separate data block. This seems reasonable, as the only purpose of AI objects is to serve as &#8220;waypoints&#8221;, and they have neither <em>collisional</em> nor <em>control</em> code attached to them.</p></div>
-</td>
-</tr></table>
+<div class="sect3">
+<h4 id="_ai_data_block_in_tr4_5">7.4.1. AI Data Block in TR4-5</h4>
+<div class="paragraph"><p>Beginning with TR4, AI objects are <em>not kept along with other entities</em>. Instead, they have their own structure, which is basically simplified <a href="#tr4_entity">[tr4_entity]</a> structure, and moved to separate data block. This seems reasonable, as the only purpose of AI objects is to serve as &#8220;waypoints&#8221;, and they have neither <em>collisional</em> nor <em>control</em> code attached to them.</p></div>
+<div class="paragraph"><p>The format of AI object structure as follows:</p></div>
+<div class="listingblock">
+<a id="tr_ai_object"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_ai_object</span>   <span class="c1">// 24 bytes</span>
+<span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">TypeID</span>     <span class="c1">// Object type ID (same meaning as with tr4_entity)</span>
+    <span class="kt">uint16_t</span> <span class="n">Room</span><span class="p">;</span>      <span class="c1">// Room where AI object is placed</span>
+     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>   <span class="c1">// Coordinates</span>
+     <span class="kt">int16_t</span> <span class="n">OCB</span><span class="p">;</span>       <span class="c1">// Same meaning as with tr4_entity</span>
+    <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span>     <span class="c1">// Activation mask, bitwise-shifted left by 1</span>
+     <span class="kt">int32_t</span> <span class="n">Angle</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
 </div>
 </div>
 </div>
@@ -6271,6 +6283,9 @@ bumped texture tiles</em>, and rendered one more texture pass on this face using
 <div class="paragraph"><p><span class="monospaced">Width</span> and <span class="monospaced">Height</span> are helper values which specify width and height for a given object texture.</p></div>
 <div class="paragraph"><p><span class="monospaced">OriginalU</span> and <span class="monospaced">OriginalV</span> are unused values, which seem to identify <em>original UV coordinates</em> of object texture in TRLE texture page listings. These
 coordinates are getting messed up when level is compiled, so one shouldn&#8217;t bother about parsing them correctly.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> There is also null <span class="monospaced">uint16_t</span> filler in the end of each <span class="monospaced">tr4_object_texture</span>.</p></div>
 </div>
 </div>
 <div class="sect2">
@@ -6910,7 +6925,7 @@ TR1 has no colour table or 16-bit palette before the start of the textures; it a
 </li>
 <li>
 <p>
-In TR1, tr2_vertex_room_struct has after its tr2_vertex struct only the first light intensity, and not the attributes or the second intensity.
+In TR1, <span class="monospaced">tr2_room_vertex</span> has after its <span class="monospaced">tr_vertex</span> struct only the first light intensity, and not the attributes or the second intensity.
 </p>
 </li>
 <li>
@@ -6983,21 +6998,239 @@ After the two room-light intensities, TR2 has a lighting-mode value, which TR3 l
 </li>
 <li>
 <p>
-Also in <span class="monospaced">tr2_room_struct</span>, TR3 has 3 extra bytes at the end, which appears to be the room-light color.
+Also in <span class="monospaced">tr3_room</span>, TR3 has 3 extra bytes at the end, which are <span class="monospaced">WaterScheme</span>, <span class="monospaced">ReverbInfo</span> and null filler.
 </p>
 </li>
 <li>
 <p>
-Finally, in TR2, the <span class="monospaced">tr2_object_texture</span> data is before the <span class="monospaced">tr2_sprite_texture</span> data. In TR3, it is before the <span class="monospaced">tr2_item</span> data.
+Finally, in TR2, the <span class="monospaced">tr_object_texture</span> data is before the <span class="monospaced">tr_sprite_texture</span> data. In TR3, it is before the <span class="monospaced">tr2_item</span> data.
 </p>
 </li>
 </ul></div>
 </div>
 <div class="sect2">
 <h3 id="_itemized_differences_between_tr3_and_tr4">10.8. Itemized Differences between TR3 and TR4</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+There are no more 8-bit and 16-bit palettes.
+</p>
+</li>
+<li>
+<p>
+There are no more 8-bit textures.
+</p>
+</li>
+<li>
+<p>
+There are now 32-bit textures.
+</p>
+</li>
+<li>
+<p>
+Texture tiles are now divided into three parts: <em>non-bumped room texture tiles</em>, <em>model texture tiles</em> and <em>bumped room texture tiles</em>.
+</p>
+</li>
+<li>
+<p>
+Level file divided in several chunks, with each chunk compressed using <em>zlib</em>:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+Chunk 1: 32-bit texture tiles.
+</p>
+</li>
+<li>
+<p>
+Chunk 2: 16-bit texture tiles.
+</p>
+</li>
+<li>
+<p>
+Chunk 3: 32-bit <em>sky and font graphics</em>.
+</p>
+</li>
+<li>
+<p>
+Chunk 4: Level data.
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+Each compressed chunk is preceded by its <em>uncompressed size</em> and <em>compressed size</em> `uint32_t`s.
+</p>
+</li>
+<li>
+<p>
+After last compressed chunk, there are now all audio samples, sequentially stored in this manner:
+</p>
+</li>
+</ul></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_sample</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span>  <span class="n">UncompressedSize</span><span class="p">;</span>
+    <span class="kt">uint32_t</span>  <span class="n">CompressedSize</span><span class="p">;</span>
+        <span class="kt">char</span>  <span class="n">WaveFile</span><span class="p">[];</span>       <span class="c1">// Embedded sample in MS-ADPCM or PCM WAV format.</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Room Light structure has completely changed:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+Colour is no longer stored in <a href="#tr_colour4">[tr_colour4]</a> format, rather <a href="#tr_colour">[tr_colour]</a>.
+</p>
+</li>
+<li>
+<p>
+There is new field <span class="monospaced">LightType</span>, which specifies light mode or fog bulb mode.
+</p>
+</li>
+<li>
+<p>
+After <span class="monospaced">LightType</span>, there is a <span class="monospaced">uint8_t Filler</span> value of <span class="monospaced">0xFF</span>.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">Intensity</span> is now <span class="monospaced">uint8_t</span>.
+</p>
+</li>
+<li>
+<p>
+Instead of <span class="monospaced">Fade</span>, there is a set of 4 float values: <span class="monospaced">In</span>, <span class="monospaced">Out</span>, <span class="monospaced">Length</span> and <span class="monospaced">CutOff</span>.
+</p>
+</li>
+<li>
+<p>
+There are also three float values defining <em>light direction</em>.
+</p>
+</li>
+</ul></div>
+</li>
+<li>
+<p>
+There are now two dedicated structures for <em>mesh faces</em>, bearing extra field <span class="monospaced">Lighting</span>.
+</p>
+</li>
+<li>
+<p>
+There is now <em>FlybyCameras</em> block before <em>SoundSources</em> block.
+</p>
+</li>
+<li>
+<p>
+<em>Cinematic Frames</em> are replaced with <em>AI Data</em> block.
+</p>
+</li>
+<li>
+<p>
+Meaning of fields in <a href="#tr_sprite_texture">[tr_sprite_texture]</a> has changed.
+</p>
+</li>
+<li>
+<p>
+In addition, the <span class="monospaced">NumSpriteTextures</span> field is preceeded by the 3 ASCII bytes <span class="monospaced">SPR</span>.
+</p>
+</li>
+<li>
+<p>
+Meshes have no longer colored tris / quads. So, <span class="monospaced">NumColoredRectangles</span>, <span class="monospaced">ColoredRectangles[]</span>, <span class="monospaced">NumColoredTriangles</span>, <span class="monospaced">ColoredTriangles[]</span> no longer exist in the tr4_mesh structure.
+</p>
+</li>
+<li>
+<p>
+The <span class="monospaced">NumObjectTextures</span> field is now preceeded by 4 ASCII bytes <span class="monospaced">\0TEX</span>
+</p>
+</li>
+<li>
+<p>
+<a href="#tr4_object_texture">[tr4_object_texture]</a> struct is used instead of <a href="#tr_object_texture">[tr_object_texture]</a>.
+</p>
+</li>
+<li>
+<p>
+<a href="#tr4_animation">[tr4_animation]</a> struct is used instead of <a href="#tr_animation">[tr_animation]</a>.
+</p>
+</li>
+<li>
+<p>
+There is no lightmap.
+</p>
+</li>
+<li>
+<p>
+TR4 levels have an additional 6 bytes at the end of the uncompressed <em>Level data</em> that seem to be always 0.
+</p>
+</li>
+</ul></div>
 </div>
 <div class="sect2">
 <h3 id="_itemized_differences_between_tr4_and_tr5">10.9. Itemized Differences between TR4 and TR5</h3>
+<div class="ulist"><ul>
+<li>
+<p>
+There is no more <em>bumped room texture tiles</em> block.
+</p>
+</li>
+<li>
+<p>
+There are now two extra <span class="monospaced">uint16_t</span> values after last texture block specifying Lara type and weather type.
+</p>
+</li>
+<li>
+<p>
+Also, it is followed by 28 bytes zero padding.
+</p>
+</li>
+<li>
+<p>
+<em>uncompressed size</em> and <em>compressed size</em> `uint32_t`s for <em>Level data</em> block are equal (reason below).
+</p>
+</li>
+<li>
+<p>
+<em>Level data</em> block is not compressed.
+</p>
+</li>
+<li>
+<p>
+<a href="#tr5_room">[tr5_room]</a> struct is used instead of <a href="#tr4_room">[tr4_room]</a>.
+</p>
+</li>
+<li>
+<p>
+<a href="#tr5_room_info">[tr5_room_info]</a> struct is used instead of <a href="#tr5_room_info">[tr5_room_info]</a>.
+</p>
+</li>
+<li>
+<p>
+<a href="#tr5_room_vertex">[tr5_room_vertex]</a> struct is used instead of <a href="#tr4_room_vertex">[tr4_room_vertex]</a>.
+</p>
+</li>
+<li>
+<p>
+<a href="#tr5_room_light">[tr5_room_light]</a> struct is used instead of <a href="#tr4_room_light">[tr4_room_light]</a>.
+</p>
+</li>
+<li>
+<p>
+Each <a id="tr4_object_texture"></a> ends with extra null <span class="monospaced">uint16_t</span> value.
+</p>
+</li>
+<li>
+<p>
+SoundMap is 450 <span class="monospaced">int16_t</span>s in TR5, but 370 <span class="monospaced">int16_t</span>s in TR4.
+</p>
+</li>
+</ul></div>
 </div>
 <div class="sect2">
 <h3 id="_itemized_differences_between_8220_normal_8221_trs_and_demos">10.10. Itemized Differences between &#8220;normal&#8221; TRs and Demos</h3>
@@ -8094,7 +8327,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-30 04:14:22 MSK
+Last updated 2015-07-30 04:14:58 MSK
 </div>
 </div>
 </body>
