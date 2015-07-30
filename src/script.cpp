@@ -32,7 +32,7 @@
 
 void lua_CheckStack()
 {
-    ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(engine_lua.getState()));
+    ConsoleInfo::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(engine_lua.getState()));
 }
 
 int lua_Print(lua_State* state)
@@ -59,7 +59,7 @@ void lua_DumpModel(int id)
     SkeletalModel* sm = engine_world.getModelByID(id);
     if(sm == NULL)
     {
-        ConsoleInfo::instance().printf("wrong model id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
         return;
     }
 
@@ -1105,7 +1105,7 @@ void lua_MoveEntityGlobal(int id, float x, float y, float z)
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == NULL)
     {
-        ConsoleInfo::instance().printf("can not find entity with id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     ent->m_transform.getOrigin()[0] += x;
@@ -1963,12 +1963,12 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
         }
         else
         {
-            ConsoleInfo::instance().printf("wrong bone number = %d", bone);
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        ConsoleInfo::instance().printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
@@ -1983,12 +1983,12 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, int flag)
         }
         else
         {
-            ConsoleInfo::instance().printf("wrong bone number = %d", bone);
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        ConsoleInfo::instance().printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
@@ -1997,14 +1997,14 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     SkeletalModel* sm1 = engine_world.getModelByID(id1);
     if(sm1 == NULL)
     {
-        ConsoleInfo::instance().printf("can not find model with id = %d", id1);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
     SkeletalModel* sm2 = engine_world.getModelByID(id2);
     if(sm2 == NULL)
     {
-        ConsoleInfo::instance().printf("can not find model with id = %d", id2);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
         return;
     }
 
@@ -2014,7 +2014,7 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     }
     else
     {
-        ConsoleInfo::instance().addLine("wrong bone number = %d", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
     }
 }
 
@@ -2049,7 +2049,7 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
     }
     else
     {
-        ConsoleInfo::instance().printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
@@ -2059,7 +2059,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     if(lua_gettop(lua) < 3)
     {
-        ConsoleInfo::instance().printf("Wrong arguments count. Must be [entity_id, body_number, (mass / each body mass)]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, body_number, (mass / each body mass)]");
         return 0;
     }
 
@@ -2132,7 +2132,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     }
     else
     {
-        ConsoleInfo::instance().printf("Can't find entity %d or body number is more than %d", id, body_number);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ENTITY_OR_BODY, id, body_number);
     }
 
     return 0;
@@ -2159,7 +2159,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
     }
     else
     {
-        ConsoleInfo::instance().printf("Can't apply force to entity %d - no entity, body, or entity is not dynamic!", id);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
@@ -2173,7 +2173,7 @@ void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
     }
     else
     {
-        ConsoleInfo::instance().printf("can not find entity with id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
@@ -2202,7 +2202,7 @@ void lua_SetCharacterCurrentWeapon(int id, int weapon)
     }
     else
     {
-        ConsoleInfo::instance().printf("can not find entity with id = %d", id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
@@ -2385,7 +2385,8 @@ void lua_SetGame(int gameId, lua::Value levelId)
 
 void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
-    ConsoleInfo::instance().printf("Loading map %s", mapName);
+    ConsoleInfo::instance().notify(SYSNOTE_LOADING_MAP, mapName);
+
     if(mapName && mapName != gameflow_manager.CurrentLevelPath)
     {
         if(gameId.is<lua::Integer>() && gameId>=0)

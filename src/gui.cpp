@@ -1579,7 +1579,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     if (status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        ConsoleInfo::instance().printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        ConsoleInfo::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
         return false;
     }
 
@@ -1631,7 +1631,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    ConsoleInfo::instance().printf("Loaded fader picture: %s", texture_path);
+    ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);
