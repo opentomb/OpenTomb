@@ -15,6 +15,8 @@
 
 #include "polygon.h"
 
+#define DEFAULT_OBB_TEST_OVERLAP (1.2)
+
 
 /*
  * In base_edges we safe the initial shape polygons
@@ -37,7 +39,7 @@ struct OBB
     void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
 };
 
-int OBB_OBB_Test(const Entity &e1, const Entity &e2);
+int OBB_OBB_Test(const Entity &e1, const Entity &e2, btScalar overlap = DEFAULT_OBB_TEST_OVERLAP);
 
 #endif /* OBB_H */
 

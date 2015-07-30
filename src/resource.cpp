@@ -85,6 +85,8 @@ void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int e
 
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
+    if(entities.size() == 0) return;
+
     for(const auto& pair : entities)
         Res_SetEntityFunction(pair.second);
 }

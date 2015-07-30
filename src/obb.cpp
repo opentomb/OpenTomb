@@ -154,15 +154,15 @@ void OBB::doTransform()
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(const Entity& e1, const Entity& e2)
+int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 {
     //translation, in parent frame
     auto v = e2.m_obb->centre - e1.m_obb->centre;
     //translation, in A's frame
     btVector3 T = e1.m_transform.getBasis() * v;
 
-    btScalar *a = e1.m_obb->extent;
-    btScalar *b = e2.m_obb->extent;
+    btVector3 a = e1.m_obb->extent * overlap;
+    btVector3 b = e2.m_obb->extent * overlap;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];

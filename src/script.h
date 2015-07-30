@@ -1,6 +1,4 @@
-
-#ifndef PARSE_H
-#define PARSE_H
+#pragma once
 
 #include <LinearMath/btScalar.h>
 
@@ -105,5 +103,3 @@ void lua_ParseRender(lua::State& state, RenderSettings *rs);
 void lua_ParseAudio(lua::State& state, AudioSettings *as);
 void lua_ParseConsole(lua::State& state, ConsoleInfo *cn);
 void lua_ParseControls(lua::State& state, ControlSettings *cs);
-
-#endif

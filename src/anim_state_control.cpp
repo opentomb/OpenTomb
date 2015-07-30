@@ -2533,7 +2533,9 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_FORWARD:
+            character->m_bt.no_fix_body_parts = BODY_PART_HANDS;
             character->m_moveType = MOVE_ON_WATER;
+
             if(resp->kill)
             {
                 ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;

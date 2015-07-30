@@ -1214,7 +1214,7 @@ function oldspike_init(id)  -- Teeth spikes
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 end;
             elseif(ls > 512.0) then
-                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
+                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 1024.0));
             end;
         end;
     end
