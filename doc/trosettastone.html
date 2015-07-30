@@ -5098,6 +5098,11 @@ index specified for them.</p></div>
 </span><span class="image">
 <img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span> Sometimes, model may refer to sprite or sprite sequence to draw itself (for example, pick-up items and flame emitters). In this case, model is replaced with sprite in run-time. This behaviour is hardcoded for specific model IDs.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Sometimes, model may have <em>two different versions</em> defined in level files&#8201;&#8212;&#8201;one is normal, and another is low-detailed one, with the latter used when camera position gets too far from them. These are called <em>MIP models</em>, and mostly exist for NPCs (enemies). Usually, their type IDs are one off their normal counterparts (for example, skeleton type ID in TR4 is <em>35</em>, and its MIP variation is <em>36</em>).</p></div>
 <div class="listingblock">
 <a id="tr_model"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_model</span>  <span class="c1">// 18 bytes</span>
@@ -5280,7 +5285,7 @@ in other ways (text). Some sequences have only one member; this is done so as to
 <div class="paragraph"><p>The animated mesh objects in the Tomb Raider series are sets of meshes that are moved relative to each other, as defined by <span class="monospaced">Entities[]</span> entries. Each entry
 describes which meshes to be used (a contiguous set of them referred to in <span class="monospaced">MeshPointers[]</span>), what hierarchy and relative offsets they have (contents of
 <span class="monospaced">MeshTree[]</span> pointed to), and what animations are to be used (contents of <span class="monospaced">Animations[]</span> pointed to).</p></div>
-<div class="paragraph"><p>The hierarchy used is a branching one, with the meshes being at the nodes, and with the first mesh being the root node. The <span class="monospaced">MeshTree[]</span> values are applied to each of the child meshes in sequence; they are sets of four `int32_t`s, the first being a hierarchy operator,
+<div class="paragraph"><p>The hierarchy used is a branching one, with the meshes being at the nodes, and with the first mesh being the root node. The <span class="monospaced">MeshTree[]</span> values are applied to each of the child meshes in sequence; they are sets of four <span class="monospaced">int32_t</span>s, the first being a hierarchy operator,
 and the remaining three being the coordinates in the parent mesh&#8217;s system. A hierarchy example is that for the Lara meshes:</p></div>
 <table class="tableblock frame-none grid-all"
 style="
@@ -5485,7 +5490,7 @@ left foot forward and another animation for right foot forward.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_animcommand_structure">6.2.6. AnimCommand Structure</h4>
-<div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of `int16_t`s packed into an array. As the <em>FloorData</em>, AnimCommands must be
+<div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an array. As the <em>FloorData</em>, AnimCommands must be
 parsed sequentially, one by one.</p></div>
 <div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
 parsed after current one without switching to next AnimCommand). For a given animation, AnimCommands are parsed until <span class="monospaced">NumAnimCommands</span> value is reached.</p></div>
@@ -5658,7 +5663,7 @@ command of the game AI. NPCs find their way in a level by checking &#8220;FloorD
 Several neighbour sectors may point to the same box. A box is a horizontal rectangle, with corners and height specified; each box also has a pointer into the
 list of <em>overlaps</em>. Each segment in that list is the list of accessible neighbouring boxes for some box; the NPCs apparently select from this list to decide where
 to go next.</p></div>
-<div class="paragraph"><p>This selection is done with the help of the <em>zones</em>. These structures of 6 (TR1) or 10 (TR2-TR5) `int16_t`s that act as zone IDs;
+<div class="paragraph"><p>This selection is done with the help of the <em>zones</em>. These structures of 6 (TR1) or 10 (TR2-TR5) <span class="monospaced">int16_t</span>s that act as zone IDs;
 their overall indexing is the same as the boxes, meaning that each box will have an associated set of zone IDs. An NPC will select one of this set to use, and
 will prefer to go only into the overlaps-list boxes that have the same zone value as the box it is currently in. For example, one can create guard paths by making
 chains of zone-ID-sharing boxes, with their overlaps pointing to the next boxes in those chains.</p></div>
@@ -5699,7 +5704,7 @@ use this list to decide where to go next.</p></div>
 </div>
 <div class="sect4">
 <h5 id="_zones">Zones</h5>
-<div class="paragraph"><p>This is a set of `int16_t`s, 6 for TR1 and 10 for TR2-5. NPCs prefer to travel to a box with the same zone ID as the one they are currently at.
+<div class="paragraph"><p>This is a set of <span class="monospaced">int16_t</span>s, 6 for TR1 and 10 for TR2-5. NPCs prefer to travel to a box with the same zone ID as the one they are currently at.
 Which of these zone IDs it uses depends on the kind of the NPC and its current state. The first half of the Zones structure is for the <em>normal</em> room state,
 and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 2 sets of ground zones and 1 set of fly zones:</p></div>
 <div class="listingblock">
@@ -5790,9 +5795,81 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> TR4 introduced two additional AI objects, <strong>AI_X1</strong> and <strong>AI_X2</strong>. These are used with SAS Guards in <em>Cairo</em> story arc. When AI_X1 object is placed in the same sector with SAS Guard, he will prefer to shoot grenades instead of bullets. If another SAS Guard with AI_X2 is activated nearby, then first one will stop shooting grenades, and second one will shoot them instead.</p></div>
+</span> TR4 introduced two additional AI objects, <strong>AI_X1</strong> and <strong>AI_X2</strong>. For example, these are used with SAS Guards in <em>Cairo</em> story arc. When AI_X1 object is placed in the same sector with SAS Guard, he will prefer to shoot grenades instead of bullets. If another SAS Guard with AI_X2 is activated nearby, then first one will stop shooting grenades, and second one will shoot them instead.</p></div>
 <div class="sect3">
-<h4 id="_ai_data_block_in_tr4_5">7.4.1. AI Data Block in TR4-5</h4>
+<h4 id="_ai_object_ids">7.4.1. AI Object IDs</h4>
+<div class="paragraph"><p>Here are all AI Object type IDs in each TR version which has them:</p></div>
+<table class="tableblock frame-all grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:40%;
+">
+<col style="width:40%;">
+<col style="width:20%;">
+<col style="width:20%;">
+<col style="width:20%;">
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top" >            </th>
+<th class="tableblock halign-center valign-top" > TR3 </th>
+<th class="tableblock halign-center valign-top" > TR4 </th>
+<th class="tableblock halign-center valign-top" > TR5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_GUARD</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">74</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">398</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">378</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_AMBUSH</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">75</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">399</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">379</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_PATROL1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">76</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">400</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">380</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_PATROL2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">79</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">403</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">383</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_MODIFY</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">77</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">401</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">381</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_FOLLOW</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">78</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">402</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">382</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_X1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">404</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">384</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">AI_X2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">405</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">385</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_ai_data_block_in_tr4_5">7.4.2. AI Data Block in TR4-5</h4>
 <div class="paragraph"><p>Beginning with TR4, AI objects are <em>not kept along with other entities</em>. Instead, they have their own structure, which is basically simplified <a href="#tr4_entity">[tr4_entity]</a> structure, and moved to separate data block. This seems reasonable, as the only purpose of AI objects is to serve as &#8220;waypoints&#8221;, and they have neither <em>collisional</em> nor <em>control</em> code attached to them.</p></div>
 <div class="paragraph"><p>The format of AI object structure as follows:</p></div>
 <div class="listingblock">
@@ -7065,7 +7142,7 @@ Chunk 4: Level data.
 </li>
 <li>
 <p>
-Each compressed chunk is preceded by its <em>uncompressed size</em> and <em>compressed size</em> `uint32_t`s.
+Each compressed chunk is preceded by its <em>uncompressed size</em> and <em>compressed size</em> <span class="monospaced">uint32_t</span>s.
 </p>
 </li>
 <li>
@@ -7187,7 +7264,7 @@ There is no more <em>bumped room texture tiles</em> block.
 </li>
 <li>
 <p>
-There are now two extra <span class="monospaced">uint16_t</span> values after last texture block specifying Lara type and weather type.
+There are now two extra <span class="monospaced">uint16_t</span> values after last texture block specifying <em>Lara type</em> and <em>weather type</em>. Weather type may be either <em>0</em> (no weather), <em>1</em> (raining) or <em>2</em> (snowing).
 </p>
 </li>
 <li>
@@ -7197,7 +7274,7 @@ Also, it is followed by 28 bytes zero padding.
 </li>
 <li>
 <p>
-<em>uncompressed size</em> and <em>compressed size</em> `uint32_t`s for <em>Level data</em> block are equal (reason below).
+<em>uncompressed size</em> and <em>compressed size</em> <span class="monospaced">uint32_t</span> values for <em>Level data</em> block are equal (reason below).
 </p>
 </li>
 <li>
@@ -7980,7 +8057,7 @@ null-terminated.</p></div>
 <span class="p">}</span>
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">NumTotalLevels</span> is an amount of levels included in script. Title flyby is also counted.</p></div>
-<div class="paragraph"><p><span class="monospaced">LevelpathStringLen</span> is a sum of lengths of all <em>level path strings</em>, including `0x00`s (empty ones).</p></div>
+<div class="paragraph"><p><span class="monospaced">LevelpathStringLen</span> is a sum of lengths of all <em>level path strings</em>, including <span class="monospaced">0x00</span>s (empty ones).</p></div>
 <div class="paragraph"><p><span class="monospaced">LevelBlockLen</span> is a sum of lengths of each level script data length.</p></div>
 </div>
 <div class="sect3">
