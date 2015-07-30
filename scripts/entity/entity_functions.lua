@@ -725,6 +725,7 @@ end;
 function disc_init(id)
     dart_init(id);
     entity_funcs[id].coll_sound = 258;
+    entity_funcs[id].speed       = 80.0;
 end;
 
 function dartgun_tr3_init(id)
@@ -814,10 +815,11 @@ end
 function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     setEntityActivity(id, true);
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(getEntityDistance(player, object_id) < 512.0) then
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(activator_id == player) then
             playSound(SOUND_MEDIPACK);
             changeCharacterParam(player, PARAM_HEALTH, 200);
             disableEntity(object_id);
