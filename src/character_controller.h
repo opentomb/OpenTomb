@@ -137,9 +137,12 @@
 #define INERTIA_SPEED_ONWATER    (1.5)
 
 // flags constants
-#define CHARACTER_SLIDE_FRONT                   (0x02)
-#define CHARACTER_SLIDE_BACK                    (0x01)
-#define CHARACTER_SLIDE_NONE                    (0x00)
+enum class SlideType
+{
+    None,
+    Back,
+    Front
+};
 
 /*
  * Next step height information
@@ -248,7 +251,7 @@ struct HeightInfo
 
 struct CharacterCommand
 {
-    btVector3 rot;
+    btVector3 rot = {0,0,0};
     std::array<int8_t,3> move{{0,0,0}};
 
     bool        roll = false;
@@ -258,17 +261,25 @@ struct CharacterCommand
     bool        action = false;
     bool        ready_weapon = false;
     bool        sprint = false;
-
-    int8_t      flags = 0;
 };
 
 struct CharacterResponse
 {
-    int8_t      kill = 0;
-    int8_t      vertical_collide = 0;
-    int8_t      horizontal_collide = 0;
-    //int8_t      step_up;
-    int8_t      slide = CHARACTER_SLIDE_NONE;
+    bool killed = false;
+
+    union
+    {
+        int8_t      vertical_collide_raw = 0;
+        struct
+        {
+            bool ceiling_collision : 1;
+            bool floor_collision : 1;
+        };
+    };
+
+    bool horizontal_collision = false;
+
+    SlideType   slide = SlideType::None;
 };
 
 struct CharacterParam
@@ -379,7 +390,7 @@ struct Character : public Entity
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override {
-        m_response.kill = 1;
+        m_response.killed = true;
     }
     virtual Substance getSubstanceState() const override;
     void updateTransform() override {

@@ -722,7 +722,7 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> 
         }
         if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
-            ent->m_response.kill = 1;                                      // Kill, if no HP.
+            ent->m_response.killed = true;                                      // Kill, if no HP.
         }
         ent->applyCommands();
         ent->updateHair();
@@ -742,7 +742,7 @@ void Game_UpdateCharacters()
         }
         if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
-            ent->m_response.kill = 1;   // Kill, if no HP.
+            ent->m_response.killed = true;   // Kill, if no HP.
         }
         ent->updateHair();
     }

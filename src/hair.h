@@ -36,12 +36,14 @@
 
 struct HairElement
 {
-    std::shared_ptr<BaseMesh> mesh;           // Pointer to rendered mesh.
-    std::unique_ptr<btCollisionShape> shape;          // Pointer to collision shape.
-    std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
-    btVector3 position;     // Position of this hair element
-    // relative to the model (NOT the parent!). Should be a matrix in theory,
-    // but since this never has a rotation part, we can save a few bytes here.
+    std::shared_ptr<BaseMesh> mesh;           //!< Pointer to rendered mesh.
+    std::unique_ptr<btCollisionShape> shape;  //!< Pointer to collision shape.
+    std::shared_ptr<btRigidBody> body;        //!< Pointer to dynamic body.
+
+    //! Position of this hair element relative to the model (NOT the parent!).
+    //! @note Should be a matrix in theory,
+    //! but since this never has a rotation part, we can save a few bytes here.
+    btVector3 position;
 };
 
 struct HairSetup;
@@ -50,23 +52,31 @@ struct Hair : public Object
 {
     std::unique_ptr<EngineContainer> m_container;
 
-    std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
-    uint32_t m_ownerBody;         // Owner entity's body ID.
-    btTransform m_ownerBodyHairRoot; // transform from owner body to root of hair start
+    //! Entity who owns this hair.
+    std::weak_ptr<Entity> m_ownerChar;
 
-    uint8_t m_rootIndex;         // Index of "root" element.
-    uint8_t m_tailIndex;         // Index of "tail" element.
+    //! Owner entity's body ID.
+    uint32_t m_ownerBody;
 
-    std::vector<HairElement> m_elements;           // Array of elements.
+    //! transform from owner body to root of hair start
+    btTransform m_ownerBodyHairRoot;
 
-    std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;             // Array of joints.
+    //! Index of "root" element.
+    uint8_t m_rootIndex;
 
-    std::shared_ptr<BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
+    //! Index of "tail" element.
+    uint8_t m_tailIndex;
+
+    std::vector<HairElement> m_elements;
+
+    std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;
+
+    std::shared_ptr<BaseMesh> m_mesh;
 
     ~Hair();
 
-    // Creates hair into allocated hair structure, using previously defined setup and
-    // entity index.
+    //! Creates hair into allocated hair structure, using previously defined setup and
+    //! entity index.
     bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
 
 private:
@@ -75,25 +85,25 @@ private:
 
 struct HairSetup
 {
-    uint32_t     m_model;              // Hair model ID
-    uint32_t     m_linkBody;          // Lara's head mesh index
+    uint32_t     m_model;             //!< Hair model ID
+    uint32_t     m_linkBody;          //!< Lara's head mesh index
 
-    btScalar     m_rootWeight;        // Root and tail hair body weight. Intermediate body
-    btScalar     m_tailWeight;        // weights are calculated from these two parameters
+    btScalar     m_rootWeight;        //!< Root and tail hair body weight. Intermediate body
+    btScalar     m_tailWeight;        //!< weights are calculated from these two parameters
 
-    btScalar     m_hairDamping[2];    // Damping affects hair "plasticity"
-    btScalar     m_hairInertia;       // Inertia affects hair "responsiveness"
-    btScalar     m_hairRestitution;   // "Bounciness" of the hair
-    btScalar     m_hairFriction;      // How much other bodies will affect hair trajectory
+    btScalar     m_hairDamping[2];    //!< Damping affects hair "plasticity"
+    btScalar     m_hairInertia;       //!< Inertia affects hair "responsiveness"
+    btScalar     m_hairRestitution;   //!< "Bounciness" of the hair
+    btScalar     m_hairFriction;      //!< How much other bodies will affect hair trajectory
 
-    btScalar     m_jointOverlap;      // How much two hair bodies overlap each other
+    btScalar     m_jointOverlap;      //!< How much two hair bodies overlap each other
 
-    btScalar     m_jointCfm;          // Constraint force mixing (joint softness)
-    btScalar     m_jointErp;          // Error reduction parameter (joint "inertia")
+    btScalar     m_jointCfm;          //!< Constraint force mixing (joint softness)
+    btScalar     m_jointErp;          //!< Error reduction parameter (joint "inertia")
 
-    btVector3    m_headOffset;        // Linear offset to place hair to
-    btVector3    m_rootAngle;      // First constraint set angle (to align hair angle)
+    btVector3    m_headOffset;        //!< Linear offset to place hair to
+    btVector3    m_rootAngle;         //!< First constraint set angle (to align hair angle)
 
-    // Gets scripted hair set-up to specified hair set-up structure.
+    //! Gets scripted hair set-up to specified hair set-up structure.
     void getSetup(uint32_t hair_entry_index);
 };

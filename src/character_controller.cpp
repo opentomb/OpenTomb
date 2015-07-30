@@ -42,8 +42,7 @@ Character::Character(uint32_t id)
 {
     m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_climbSensor.reset( new btSphereShape(m_climbR) );
-    m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
+    m_climbSensor.setMargin(COLLISION_MARGIN_DEFAULT);
 
     m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -946,8 +945,9 @@ int Character::moveOnFloor()
     HeightInfo nfc;
     nfc.cb = m_rayCb;
     nfc.ccb = m_convexCb;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.bb_min[2]))
@@ -969,7 +969,7 @@ int Character::moveOnFloor()
     /*
      * check move type
      */
-    if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
+    if(m_heightInfo.floor_hit || m_response.floor_collision)
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
@@ -979,7 +979,7 @@ int Character::moveOnFloor()
         }
         else
         {
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
 
         btVector3 floorNormal = m_heightInfo.floor_normale;
@@ -994,22 +994,22 @@ int Character::moveOnFloor()
             if(t >= 0.0)
             {
                 // front forward slide down
-                m_response.slide = CHARACTER_SLIDE_FRONT;
+                m_response.slide = SlideType::Front;
                 m_angles[0] = zAngle + 180;
             }
             else
             {
                 // back forward slide down
-                m_response.slide = CHARACTER_SLIDE_BACK;
+                m_response.slide = SlideType::Back;
                 m_angles[0] = zAngle;
             }
             updateTransform();
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
         else    // no slide - free to walk
         {
             const btScalar fullSpeed = m_currentSpeed * m_speedMult;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
 
@@ -1035,13 +1035,14 @@ int Character::moveOnFloor()
             {
                 //dir_flag = ENT_MOVE_FORWARD;
             }
-            m_response.slide = CHARACTER_SLIDE_NONE;
+            m_response.slide = SlideType::None;
         }
     }
     else                                                                        // no hit to the floor
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
-        m_response.vertical_collide = 0x00;
+        m_response.slide = SlideType::None;
+        m_response.ceiling_collision = false;
+        m_response.floor_collision = false;
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
         return -1;                                                              // nothing to do here
@@ -1096,10 +1097,10 @@ int Character::moveOnFloor()
         {
             position[2] = m_heightInfo.floor_point[2];
             fixPenetrations(nullptr);
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
     }
-    else if(!(m_response.vertical_collide & 0x01))
+    else if(!m_response.floor_collision)
     {
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
@@ -1122,9 +1123,10 @@ int Character::freeFalling()
      * init height info structure
      */
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     btScalar rot = inertiaAngular(1.0, ROT_SPEED_FREEFALL, 0);
     m_angles[0] += rot;
@@ -1175,7 +1177,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 0.0;
-            m_response.vertical_collide |= 0x02;
+            m_response.ceiling_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
         }
@@ -1187,7 +1189,7 @@ int Character::freeFalling()
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
             m_moveType = MOVE_ON_FLOOR;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
             return 2;
@@ -1203,7 +1205,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 0.0;
-            m_response.vertical_collide |= 0x02;
+            m_response.ceiling_collision = true;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
@@ -1213,7 +1215,7 @@ int Character::freeFalling()
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
             m_moveType = MOVE_ON_FLOOR;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
             return 2;
@@ -1234,12 +1236,12 @@ int Character::monkeyClimbing()
     auto& pos = m_transform.getOrigin();
 
     m_speed[2] = 0.0;
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = true; //! @todo Monkey climbing with floor collision?
 
     t = m_currentSpeed * m_speedMult;
-    m_response.vertical_collide |= 0x01;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_MONKEYSWING, 0);
     m_angles[1] = 0.0;
@@ -1266,7 +1268,7 @@ int Character::monkeyClimbing()
     {
         //dir_flag = ENT_MOVE_FORWARD;
     }
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
 
     m_speed = spd;
     move = spd * engine_frame_time;
@@ -1303,9 +1305,10 @@ int Character::wallsClimbing()
     btScalar t;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     spd={0,0,0};
     *climb = checkWallsClimbability();
@@ -1365,12 +1368,12 @@ int Character::wallsClimbing()
  */
 int Character::climbing()
 {
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = true; //! @todo Climbing with floor collision?
 
     const btScalar fullSpeed = m_currentSpeed * m_speedMult;
-    m_response.vertical_collide |= 0x01;
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
@@ -1395,13 +1398,13 @@ int Character::climbing()
     }
     else
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
+        m_response.slide = SlideType::None;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_speed = spd;
     btVector3 move = spd * engine_frame_time;
 
@@ -1434,15 +1437,16 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     // Calculate current speed.
 
     btScalar t = inertiaLinear(MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, m_command.jump);
 
-    if(!m_response.kill)   // Block controls if Lara is dead.
+    if(!m_response.killed)   // Block controls if Lara is dead.
     {
         m_angles[0] += inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 0);
         m_angles[1] -= inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 1);
@@ -1493,9 +1497,10 @@ int Character::moveOnWater()
     btVector3 move, spd(0.0, 0.0, 0.0);
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_ONWATER, 0);
     m_angles[1] = 0.0;
@@ -1920,7 +1925,7 @@ void Character::updateParams()
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
                 {
-                    m_response.kill = 1;
+                    m_response.killed = true;
                 }
             }
             break;
@@ -2082,8 +2087,9 @@ void Character::fixPenetrations(const btVector3* move)
 
     if(move != nullptr)
     {
-        m_response.horizontal_collide    = 0x00;
-        m_response.vertical_collide      = 0x00;
+        m_response.horizontal_collision = false;
+        m_response.ceiling_collision = false;
+        m_response.floor_collision = false;
     }
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -2112,30 +2118,30 @@ void Character::fixPenetrations(const btVector3* move)
             t1 = (reaction[0] * move->x() + reaction[1] * move->y()) / sqrtf(t2);
             if(t1 < m_criticalWallComponent)
             {
-                m_response.horizontal_collide |= 0x01;
+                m_response.horizontal_collision = true;
             }
         }
         else if((reaction[2] * reaction[2] > t1) && (move->z() * move->z() > t2))
         {
             if((reaction[2] > 0.0) && (move->z() < 0.0))
             {
-                m_response.vertical_collide |= 0x01;
+                m_response.floor_collision = true;
             }
             else if((reaction[2] < 0.0) && (move->z() > 0.0))
             {
-                m_response.vertical_collide |= 0x02;
+                m_response.ceiling_collision = true;
             }
         }
     }
 
     if(m_heightInfo.ceiling_hit && (reaction[2] < -0.1))
     {
-        m_response.vertical_collide |= 0x02;
+        m_response.ceiling_collision = true;
     }
 
     if(m_heightInfo.floor_hit && (reaction[2] > 0.1))
     {
-        m_response.vertical_collide |= 0x01;
+        m_response.floor_collision = true;
     }
 
     ghostUpdate();
@@ -2143,7 +2149,7 @@ void Character::fixPenetrations(const btVector3* move)
 
 /**
  * we check walls and other collision objects reaction. if reaction more than critical
- * then m_command.horizontal_collide |= 0x01;
+ * then m_command.horizontal_collision=true;
  * @param move absolute 3d move vector
  */
 int Character::checkNextPenetration(const btVector3& move)
@@ -2153,7 +2159,7 @@ int Character::checkNextPenetration(const btVector3& move)
 
     ghostUpdate();
     m_transform.getOrigin() += move;
-    //m_response.horizontal_collide = 0x00;
+    //m_response.horizontal_collision = false;
     btVector3 reaction;
     int ret = getPenetrationFixVector(&reaction, true);
     if(ret > 0) {
@@ -2163,7 +2169,7 @@ int Character::checkNextPenetration(const btVector3& move)
             t2 *= t1;
             t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
             if(t1 < m_criticalWallComponent) {
-                m_response.horizontal_collide |= 0x01;
+                m_response.horizontal_collision = true;
             }
         }
     }
@@ -2291,7 +2297,7 @@ void Character::processSectorImpl() {
                 (m_moveType == MOVE_QUICKSAND))
         {
             setParam(PARAM_HEALTH, 0.0);
-            m_response.kill = 1;
+            m_response.killed = true;
         }
     }
 }
@@ -2325,8 +2331,9 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal) {
         m_dirFlag = ENT_MOVE_FORWARD;
     }
 
-    m_response.vertical_collide = 0x00;
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
+    m_response.slide = SlideType::None;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
@@ -2818,11 +2825,11 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
         setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
         m_dirFlag = ENT_STAY;
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_DEATH;
     }
-    else if(m_response.slide == CHARACTER_SLIDE_FRONT)
+    else if(m_response.slide == SlideType::Front)
     {
         Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, id());
 
@@ -2836,7 +2843,7 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
             setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
         }
     }
-    else if(m_response.slide == CHARACTER_SLIDE_BACK)
+    else if(m_response.slide == SlideType::Back)
     {
         if(m_command.jump)
         {
@@ -2904,7 +2911,7 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
             global_offset[2] += m_bf.bb_max[2];
             global_offset += m_transform.getOrigin();
             Character::getHeightInfo(global_offset, &next_fc);
-            if(((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) &&
+            if(((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) &&
                (next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight)))
             {
                 m_moveType = MOVE_ON_FLOOR;
@@ -2925,7 +2932,7 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
             btVector3 global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
             global_offset[2] += m_bf.bb_max[2];
             checkNextStep(global_offset, &next_fc);
-            if(((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) && !hasStopSlant(next_fc))
+            if(((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) && !hasStopSlant(next_fc))
             {
                 m_moveType = MOVE_ON_FLOOR;
                 m_dirFlag = ENT_MOVE_FORWARD;
@@ -3007,7 +3014,7 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
         if(m_command.shift)
         {
             btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
             {
                 btVector3 global_offset = m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
                 global_offset[2] += m_bf.bb_max[2];
@@ -3023,7 +3030,7 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
         else    // RUN BACK
         {
             btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
             {
                 m_dirFlag = ENT_MOVE_BACKWARD;
                 if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
@@ -3042,12 +3049,12 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
         if(m_command.shift)
         {
             btVector3 move = m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
             {
                 btVector3 global_offset = m_transform.getBasis().getColumn(0) * RUN_FORWARD_OFFSET;
                 global_offset[2] += m_bf.bb_max[2];
                 NextStepInfo i = checkNextStep(global_offset, &next_fc);
-                if((m_response.horizontal_collide == 0) && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
+                if(!m_response.horizontal_collision && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
                 {
                     m_command.rot[0] = 0.0;
                     m_dirFlag = ENT_MOVE_RIGHT;
@@ -3065,12 +3072,12 @@ void Character::stateLaraStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool lo
         if(m_command.shift)
         {
             btVector3 move = m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
             {
                 btVector3 global_offset = m_transform.getBasis().getColumn(0) * -RUN_FORWARD_OFFSET;
                 global_offset[2] += m_bf.bb_max[2];
                 NextStepInfo i = checkNextStep(global_offset, &next_fc);
-                if((m_response.horizontal_collide == 0) && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
+                if(!m_response.horizontal_collision && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
                 {
                     m_command.rot[0] = 0.0;
                     m_dirFlag = ENT_MOVE_LEFT;
@@ -3090,12 +3097,12 @@ void Character::stateLaraJumpPrepare(SSAnimation* ss_anim)
     m_command.rot[0] = 0;
     lean(0.0);
 
-    if(m_response.slide == CHARACTER_SLIDE_BACK)      // Slide checking is only for jumps direction correction!
+    if(m_response.slide == SlideType::Back)      // Slide checking is only for jumps direction correction!
     {
         setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
         m_command.move[0] = -1;
     }
-    else if(m_response.slide == CHARACTER_SLIDE_FRONT)
+    else if(m_response.slide == SlideType::Front)
     {
         setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
         m_command.move[0] = 1;
@@ -3145,7 +3152,7 @@ void Character::stateLaraJumpPrepare(SSAnimation* ss_anim)
 void Character::stateLaraJumpBack(SSAnimation* ss_anim)
 {
     m_command.rot[0] = 0.0;
-    if(m_response.vertical_collide & 0x01 || m_moveType == MOVE_ON_FLOOR)
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
     {
         if(m_heightInfo.quicksand)
         {
@@ -3156,7 +3163,7 @@ void Character::stateLaraJumpBack(SSAnimation* ss_anim)
             ss_anim->next_state = TR_STATE_LARA_STOP;       // landing
         }
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         Controls_JoyRumble(200.0, 200);
         setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
@@ -3176,7 +3183,7 @@ void Character::stateLaraJumpBack(SSAnimation* ss_anim)
 void Character::stateLaraJumpLeftRight(SSAnimation* ss_anim)
 {
     m_command.rot[0] = 0.0;
-    if(m_response.vertical_collide & 0x01 || m_moveType == MOVE_ON_FLOOR)
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
     {
         if(m_heightInfo.quicksand)
         {
@@ -3187,7 +3194,7 @@ void Character::stateLaraJumpLeftRight(SSAnimation* ss_anim)
             ss_anim->next_state = TR_STATE_LARA_STOP;       // landing
         }
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         Controls_JoyRumble(200.0, 200);
         setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
@@ -3211,7 +3218,7 @@ void Character::stateLaraRunBack()
         m_dirFlag = ENT_MOVE_FORWARD;
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_BACK, 0);
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK_END, 0);
     }
@@ -3311,15 +3318,15 @@ void Character::stateLaraRunForward(SSAnimation* ss_anim, HeightInfo& next_fc, b
     {
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_DEATH;
     }
-    else if(m_response.slide == CHARACTER_SLIDE_FRONT)
+    else if(m_response.slide == SlideType::Front)
     {
         setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
     }
-    else if(m_response.slide == CHARACTER_SLIDE_BACK)
+    else if(m_response.slide == SlideType::Back)
     {
         setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
         m_dirFlag = ENT_MOVE_BACKWARD;
@@ -3350,7 +3357,7 @@ void Character::stateLaraRunForward(SSAnimation* ss_anim, HeightInfo& next_fc, b
             m_dirFlag = ENT_MOVE_FORWARD;
         }
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
         global_offset[2] += 1024.0;
@@ -3432,15 +3439,15 @@ void Character::stateLaraSprint(SSAnimation* ss_anim, HeightInfo& next_fc, bool 
     {
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;    // Normal run then die
     }
-    else if(m_response.slide == CHARACTER_SLIDE_FRONT)
+    else if(m_response.slide == SlideType::Front)
     {
         setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
     }
-    else if(m_response.slide == CHARACTER_SLIDE_BACK)
+    else if(m_response.slide == SlideType::Back)
     {
         setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
     }
@@ -3453,7 +3460,7 @@ void Character::stateLaraSprint(SSAnimation* ss_anim, HeightInfo& next_fc, bool 
     {
         ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;     // Interrupt sprint
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         Controls_JoyRumble(200.0, 200);
 
@@ -3520,7 +3527,7 @@ void Character::stateLaraWalkForward(SSAnimation* ss_anim, HeightInfo& next_fc, 
     {
         setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;
     }
@@ -3570,7 +3577,7 @@ void Character::stateLaraWalkForward(SSAnimation* ss_anim, HeightInfo& next_fc, 
             m_dirFlag = ENT_MOVE_FORWARD;
         }
     }
-    else if((m_response.horizontal_collide & 0x01) || (i < NextStepInfo::DownBig || i > NextStepInfo::UpBig) || (low_vertical_space))
+    else if(m_response.horizontal_collision || (i < NextStepInfo::DownBig || i > NextStepInfo::UpBig) || (low_vertical_space))
     {
         /*
          * too high
@@ -3608,7 +3615,7 @@ void Character::stateLaraWadeForward(SSAnimation* ss_anim)
         checkNextPenetration(move);
     }
 
-    if(m_response.kill == 1)
+    if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;
     }
@@ -3622,7 +3629,7 @@ void Character::stateLaraWadeForward(SSAnimation* ss_anim)
         if((m_heightInfo.transition_level - m_heightInfo.floor_point[2] <= m_wadeDepth))
         {
             // run / walk case
-            if((m_command.move[0] == 1) && (m_response.horizontal_collide == 0))
+            if((m_command.move[0] == 1) && !m_response.horizontal_collision)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
             }
@@ -3647,7 +3654,7 @@ void Character::stateLaraWadeForward(SSAnimation* ss_anim)
         }
         else if(m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth)              // wade case
         {
-            if((m_command.move[0] != 1) || (m_response.horizontal_collide != 0))
+            if((m_command.move[0] != 1) || m_response.horizontal_collision)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
@@ -3655,7 +3662,7 @@ void Character::stateLaraWadeForward(SSAnimation* ss_anim)
     }
     else                                                                // no water, stay or run / walk
     {
-        if((m_command.move[0] == 1) && (m_response.horizontal_collide == 0))
+        if((m_command.move[0] == 1) && !m_response.horizontal_collision)
         {
             if(!m_heightInfo.quicksand)
             {
@@ -3795,11 +3802,11 @@ void Character::stateLaraSlideBack(SSAnimation* ss_anim)
 
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
     }
-    else if(m_response.slide == CHARACTER_SLIDE_NONE)
+    else if(m_response.slide == SlideType::None)
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;
     }
-    else if(m_response.slide != CHARACTER_SLIDE_NONE && m_command.jump)
+    else if(m_response.slide != SlideType::None && m_command.jump)
     {
         ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;
     }
@@ -3823,7 +3830,7 @@ void Character::stateLaraSlideForward(SSAnimation* ss_anim)
         m_speed[1] *= 0.2;
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
     }
-    else if(m_response.slide == CHARACTER_SLIDE_NONE)
+    else if(m_response.slide == SlideType::None)
     {
         if((m_command.move[0] == 1) && (engine_world.version >= TR_III))
         {
@@ -3834,7 +3841,7 @@ void Character::stateLaraSlideForward(SSAnimation* ss_anim)
              ss_anim->next_state = TR_STATE_LARA_STOP;                  // stop
         }
     }
-    else if(m_response.slide != CHARACTER_SLIDE_NONE && m_command.jump)
+    else if(m_response.slide != SlideType::None && m_command.jump)
     {
         ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;               // jump
     }
@@ -4067,11 +4074,11 @@ void Character::stateLaraRollBackward(bool low_vertical_space)
     {
         m_dirFlag = ENT_STAY;
     }
-    else if(m_response.slide == CHARACTER_SLIDE_FRONT)
+    else if(m_response.slide == SlideType::Front)
     {
         setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
     }
-    else if(m_response.slide == CHARACTER_SLIDE_BACK)
+    else if(m_response.slide == SlideType::Back)
     {
         setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
     }
@@ -4151,7 +4158,7 @@ void Character::stateLaraJumpUp(SSAnimation* ss_anim, HeightInfo& next_fc)
         ss_anim->next_state = TR_STATE_LARA_HANG;
         setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
     }
-    else if((m_response.vertical_collide & 0x01) || (m_moveType == MOVE_ON_FLOOR))
+    else if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;                        // landing immediately
     }
@@ -4207,7 +4214,7 @@ void Character::stateLaraReach(SSAnimation* ss_anim, HeightInfo& next_fc)
         ss_anim->onFrame = &Character::toMonkeySwing;
         return;
     }
-    if(((m_response.vertical_collide & 0x01) || (m_moveType == MOVE_ON_FLOOR)) && (!m_command.action || !m_climb.can_hang))
+    if((m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR)) && (!m_command.action || !m_climb.can_hang))
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;                       // middle landing
         return;
@@ -4291,7 +4298,7 @@ void Character::stateLaraHang(SSAnimation* ss_anim, HeightInfo& next_fc)
         return;
     }
 
-    if((m_response.kill == 0) && m_command.action)                         // we have to update climb point every time so entity can move
+    if(!m_response.killed && m_command.action)                         // we have to update climb point every time so entity can move
     {
         btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
         btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
@@ -4348,7 +4355,7 @@ void Character::stateLaraHang(SSAnimation* ss_anim, HeightInfo& next_fc)
         else if(m_command.move[1] ==-1)
         {
             btVector3 move = m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) //we only want lara to shimmy when last frame is reached!
             {
                 m_moveType = ENT_MOVE_LEFT;
                 setAnimation(TR_ANIMATION_LARA_CLIMB_LEFT, 0);
@@ -4361,7 +4368,7 @@ void Character::stateLaraHang(SSAnimation* ss_anim, HeightInfo& next_fc)
         else if(m_command.move[1] == 1)
         {
             btVector3 move = m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
-            if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) //we only want lara to shimmy when last frame is reached!
             {
                 m_moveType = ENT_MOVE_RIGHT;
                 setAnimation(TR_ANIMATION_LARA_CLIMB_RIGHT, 0);
@@ -4566,7 +4573,7 @@ void Character::stateLaraShimmyLeftRight(SSAnimation* ss_anim, HeightInfo& next_
     if(m_command.move[1] == moveCommand)
     {
         btVector3 move = moveCommand * m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
-        if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))
+        if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
         {
             ss_anim->next_state = TR_STATE_LARA_HANG;
         }
@@ -4589,7 +4596,7 @@ void Character::stateLaraJumpForwardFallBackward(SSAnimation* ss_anim)
     m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
     lean(4.0);
 
-    if((m_response.vertical_collide & 0x01) || (m_moveType == MOVE_ON_FLOOR))
+    if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
     {
         if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
         {
@@ -4612,7 +4619,7 @@ void Character::stateLaraJumpForwardFallBackward(SSAnimation* ss_anim)
         updateTransform();
         setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
     }
-    else if(m_response.horizontal_collide & 0x01)
+    else if(m_response.horizontal_collision)
     {
         setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_dirFlag = ENT_MOVE_BACKWARD;
@@ -4679,7 +4686,7 @@ void Character::stateLaraFreefall(SSAnimation* ss_anim)
             Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, id());
         }
     }
-    else if((m_response.vertical_collide & 0x01) || (m_moveType == MOVE_ON_FLOOR))
+    else if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
     {
         if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
         {
@@ -4690,7 +4697,7 @@ void Character::stateLaraFreefall(SSAnimation* ss_anim)
         {
             if(!changeParam(PARAM_HEALTH, (m_speed[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
             {
-                m_response.kill = 1;
+                m_response.killed = true;
                 setAnimation(TR_ANIMATION_LARA_LANDING_DEATH, 0);
                 Controls_JoyRumble(200.0, 500);
             }
@@ -4708,7 +4715,7 @@ void Character::stateLaraFreefall(SSAnimation* ss_anim)
             setAnimation(TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
         }
 
-        if(m_response.kill == 1)
+        if(m_response.killed)
         {
             ss_anim->next_state = TR_STATE_LARA_DEATH;
             Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, id());
@@ -4724,7 +4731,7 @@ void Character::stateLaraFreefall(SSAnimation* ss_anim)
 void Character::stateLaraSwandiveBegin(SSAnimation* ss_anim)
 {
     m_command.rot[0] *= 0.4;
-    if(m_response.vertical_collide & 0x01 || m_moveType == MOVE_ON_FLOOR)
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;                        // landing - roll
     }
@@ -4746,11 +4753,11 @@ void Character::stateLaraSwandiveEnd(SSAnimation* ss_anim)
     m_speed[0] = 0.0;
     m_speed[1] = 0.0;
 
-    if((m_response.vertical_collide & 0x01) || (m_moveType == MOVE_ON_FLOOR))
+    if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
     {
         if(m_heightInfo.quicksand)
         {
-            m_response.kill = 1;
+            m_response.killed = true;
             setParam(PARAM_HEALTH, 0.0);
             setParam(PARAM_AIR, 0.0);
             setAnimation(TR_ANIMATION_LARA_LANDING_DEATH, -1);
@@ -4777,7 +4784,7 @@ void Character::stateLaraUnderwaterStop(SSAnimation* ss_anim)
     {
         setAnimation(0, 0);
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -4805,7 +4812,7 @@ void Character::stateLaraUnderwaterForward(SSAnimation* ss_anim)
     {
         setAnimation(0, 0);
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -4842,7 +4849,7 @@ void Character::stateLaraUnderwaterInertia(SSAnimation* ss_anim)
         m_inertiaLinear = 0.0;
         setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -4906,7 +4913,7 @@ void Character::stateLaraOnwaterStop(SSAnimation* ss_anim, HeightInfo& next_fc, 
             ss_anim->onFrame = &Character::climbOutOfWater;
         }
     }
-    else if(m_response.kill == 1)
+    else if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -4955,7 +4962,7 @@ void Character::stateLaraOnwaterStop(SSAnimation* ss_anim, HeightInfo& next_fc, 
 void Character::stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo& next_fc)
 {
     m_moveType = MOVE_ON_WATER;
-    if(m_response.kill)
+    if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -5055,7 +5062,7 @@ void Character::stateLaraCrouchIdle(SSAnimation* ss_anim, HeightInfo& next_fc, b
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;                        // Back to stand
     }
-    else if((m_command.move[0] != 0) || (m_response.kill == 1))
+    else if((m_command.move[0] != 0) || m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE;                  // Both forward & back provoke crawl stage
     }
@@ -5097,7 +5104,7 @@ void Character::stateLaraSprintCrouchRoll(SSAnimation* ss_anim)
     }
 
     btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
-    if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))  // Smash into wall
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)  // Smash into wall
     {
         ss_anim->next_state = TR_STATE_LARA_STOP;
     }
@@ -5107,7 +5114,7 @@ void Character::stateLaraCrawlIdle(SSAnimation* ss_anim, HeightInfo& next_fc)
 {
     m_dirFlag = ENT_MOVE_FORWARD;
     m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-    if(m_response.kill == 1)
+    if(m_response.killed)
     {
         m_dirFlag = ENT_STAY;
         ss_anim->next_state = TR_STATE_LARA_DEATH;
@@ -5125,7 +5132,7 @@ void Character::stateLaraCrawlIdle(SSAnimation* ss_anim, HeightInfo& next_fc)
     else if(m_command.move[0] == 1)
     {
         btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
-        if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+        if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
         {
             btVector3 global_offset = m_transform.getBasis().getColumn(1) * CRAWL_FORWARD_OFFSET;
             global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
@@ -5141,7 +5148,7 @@ void Character::stateLaraCrawlIdle(SSAnimation* ss_anim, HeightInfo& next_fc)
     else if(m_command.move[0] == -1)
     {
         btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
-        if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
+        if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
         {
             btVector3 global_offset = m_transform.getBasis().getColumn(1) * -CRAWL_FORWARD_OFFSET;
             global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
@@ -5153,7 +5160,7 @@ void Character::stateLaraCrawlIdle(SSAnimation* ss_anim, HeightInfo& next_fc)
                 m_dirFlag = ENT_MOVE_BACKWARD;
                 ss_anim->next_state = TR_STATE_LARA_CRAWL_BACK;
             }
-            else if(m_command.action && (m_response.horizontal_collide == 0) &&
+            else if(m_command.action && !m_response.horizontal_collision &&
                (next_fc.floor_point[2] < m_transform.getOrigin()[2] - m_height))
             {
                 const btVector3 temp = m_transform.getOrigin();                                       // save entity position
@@ -5201,7 +5208,7 @@ void Character::stateLaraCrawlForward(SSAnimation* ss_anim, HeightInfo& next_fc)
     m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_command.rot[0] = m_command.rot[0] * 0.5;
     btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
-    if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
     {
         m_dirFlag = ENT_STAY;
         setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
@@ -5212,7 +5219,7 @@ void Character::stateLaraCrawlForward(SSAnimation* ss_anim, HeightInfo& next_fc)
     global_offset += m_transform.getOrigin();
     Character::getHeightInfo(global_offset, &next_fc);
 
-    if((m_command.move[0] != 1) || (m_response.kill == 1))
+    if((m_command.move[0] != 1) || m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
     }
@@ -5230,7 +5237,7 @@ void Character::stateLaraCrawlBack(SSAnimation* ss_anim, HeightInfo& next_fc)
     m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_command.rot[0] = m_command.rot[0] * 0.5;
     btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
-    if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
     {
         m_dirFlag = ENT_STAY;
         setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
@@ -5240,7 +5247,7 @@ void Character::stateLaraCrawlBack(SSAnimation* ss_anim, HeightInfo& next_fc)
     global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
     global_offset += m_transform.getOrigin();
     Character::getHeightInfo(global_offset, &next_fc);
-    if((m_command.move[0] != -1) || (m_response.kill == 1))
+    if((m_command.move[0] != -1) || m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
     }
@@ -5262,7 +5269,7 @@ void Character::stateLaraCrawlTurnLeftRight(SSAnimation* ss_anim)
                     ? -1
                     : 1;
 
-    if((m_command.move[1] != moveCommand) || (m_response.kill == 1))
+    if((m_command.move[1] != moveCommand) || m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE; // stop
     }
@@ -5273,7 +5280,7 @@ void Character::stateLaraCrouchTurnLeftRight(SSAnimation* ss_anim)
     m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_command.rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 23))?(0.6):(0.0);
 
-    if((m_command.move[1] == 0) || (m_response.kill == 1))
+    if((m_command.move[1] == 0) || m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_CROUCH_IDLE;
     }
@@ -5398,7 +5405,7 @@ int Character::stateControlLara(SSAnimation* ss_anim)
     bool low_vertical_space = (m_heightInfo.floor_hit && m_heightInfo.ceiling_hit && (m_heightInfo.ceiling_point[2] - m_heightInfo.floor_point[2] < m_height - LARA_HANG_VERTICAL_EPSILON));
     const bool last_frame = static_cast<int>( ss_anim->model->animations[ss_anim->current_animation].frames.size() ) <= ss_anim->current_frame + 1;
 
-    if(m_response.kill == 1)   // Stop any music, if Lara is dead.
+    if(m_response.killed)   // Stop any music, if Lara is dead.
     {
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
@@ -5796,7 +5803,7 @@ void Character::setCmdSlide(SSAnimation* ss_anim, int state)
 {
     if(state == ENTITY_ANIM_NEWANIM)
     {
-        m_response.slide = CHARACTER_SLIDE_BACK;
+        m_response.slide = SlideType::Back;
         ss_anim->onFrame = nullptr;
     }
 }
