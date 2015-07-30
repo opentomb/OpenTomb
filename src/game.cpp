@@ -176,7 +176,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Engine_LuaClearTasks();
+        Script_LuaClearTasks();
         try {
             engine_lua.doFile(token);
         }
@@ -196,7 +196,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Engine_LuaClearTasks();
+        Script_LuaClearTasks();
         try {
             engine_lua.doFile(name);
         }
