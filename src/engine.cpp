@@ -79,8 +79,6 @@ static btScalar   *frame_vertex_buffer           = nullptr;
 static size_t      frame_vertex_buffer_size      = 0;
 static size_t      frame_vertex_buffer_size_left = 0;
 
-lua::State engine_lua;
-
 btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
 btCollisionDispatcher               *bt_engine_dispatcher             = nullptr;
 btGhostPairCallback                 *bt_engine_ghostPairCallback      = nullptr;
@@ -427,7 +425,7 @@ void Engine_Start()
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    luaL_dofile(engine_lua.getState(), "autoexec.lua");
+    script::engine_lua.doFile("autoexec.lua");
 }
 
 
@@ -666,9 +664,9 @@ void Engine_Init_Pre()
 
     Gui_InitFontManager();
     ConsoleInfo::instance().init();
-    Script_LuaInit();
+    script::Script_LuaInit();
 
-    engine_lua["loadscript_pre"]();
+    script::engine_lua["loadscript_pre"]();
 
     Gameflow_Init();
 
@@ -687,7 +685,7 @@ void Engine_Init_Pre()
 
 void Engine_Init_Post()
 {
-    engine_lua["loadscript_post"]();
+    script::engine_lua["loadscript_post"]();
 
     ConsoleInfo::instance().initFonts();
 
@@ -778,7 +776,7 @@ void Engine_Destroy()
 
 void Engine_Shutdown(int val)
 {
-    Script_LuaClearTasks();
+    script::Script_LuaClearTasks();
     renderer.empty();
     engine_world.empty();
     Engine_Destroy();
@@ -1091,7 +1089,7 @@ int Engine_LoadMap(const std::string& name)
     engine_world.empty();
     engine_world.prepare();
 
-    lua_Clean(engine_lua);
+    script::clean(script::engine_lua);
 
     Audio_Init();
 
@@ -1125,7 +1123,7 @@ int Engine_LoadMap(const std::string& name)
 
     Game_Prepare();
 
-    lua_Prepare(engine_lua);
+    script::prepare(script::engine_lua);
 
     renderer.setWorld(&engine_world);
 
@@ -1147,7 +1145,7 @@ int Engine_ExecCmd(const char *ch)
     while(ch!=NULL)
     {
         pch = ch;
-        ch = parse_token(ch, token);
+        ch = script::parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
             ConsoleInfo::instance().addLine("Available commands:", FONTSTYLE_CONSOLE_WARNING);
@@ -1170,14 +1168,14 @@ int Engine_ExecCmd(const char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = true;
-            renderer.camera()->m_pos[0] = Script_ParseFloat(&ch);
-            renderer.camera()->m_pos[1] = Script_ParseFloat(&ch);
-            renderer.camera()->m_pos[2] = Script_ParseFloat(&ch);
+            renderer.camera()->m_pos[0] = script::Script_ParseFloat(&ch);
+            renderer.camera()->m_pos[1] = script::Script_ParseFloat(&ch);
+            renderer.camera()->m_pos[2] = script::Script_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
         {
-            ch = parse_token(ch, token);
+            ch = script::parse_token(ch, token);
             if(NULL != ch)
             {
                 Game_Save(token);
@@ -1186,7 +1184,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "load"))
         {
-            ch = parse_token(ch, token);
+            ch = script::parse_token(ch, token);
             if(NULL != ch)
             {
                 Game_Load(token);
@@ -1205,7 +1203,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "spacing"))
         {
-            ch = parse_token(ch, token);
+            ch = script::parse_token(ch, token);
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_SPACING, ConsoleInfo::instance().spacing());
@@ -1216,7 +1214,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "showing_lines"))
         {
-            ch = parse_token(ch, token);
+            ch = script::parse_token(ch, token);
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, ConsoleInfo::instance().visibleLines());
@@ -1352,7 +1350,7 @@ int Engine_ExecCmd(const char *ch)
         {
             ConsoleInfo::instance().addLine(pch, FONTSTYLE_CONSOLE_EVENT);
             try {
-                engine_lua.doString(pch);
+                script::engine_lua.doString(pch);
             }
             catch(lua::RuntimeError& error) {
                 ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
@@ -1376,7 +1374,7 @@ void Engine_InitConfig(const char *filename)
     if((filename != NULL) && Engine_FileFound(filename))
     {
         lua::State state;
-        lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
+        script::registerCaseInsensitive(state, "bind", script::lua_BindKey);                             // get and set key bindings
         try {
             state.doFile(filename);
         }
@@ -1389,11 +1387,11 @@ void Engine_InitConfig(const char *filename)
             return;
         }
 
-        lua_ParseScreen(state, &screen_info);
-        lua_ParseRender(state, &renderer.settings());
-        lua_ParseAudio(state, &audio_settings);
-        lua_ParseConsole(state, &ConsoleInfo::instance());
-        lua_ParseControls(state, &control_mapper);
+        script::parseScreen(state, &screen_info);
+        script::parseRender(state, &renderer.settings());
+        script::parseAudio(state, &audio_settings);
+        script::parseConsole(state, &ConsoleInfo::instance());
+        script::parseControls(state, &control_mapper);
     }
     else
     {

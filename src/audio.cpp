@@ -1076,7 +1076,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
+    if(!script::getSoundtrack(script::engine_lua, track_index, file_path, &load_method, &stream_type))
     {
         ConsoleInfo::instance().addLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
@@ -1575,7 +1575,7 @@ void Audio_LoadOverridedSamples(struct World *world)
     char sample_name_mask[256];
     char sample_name[256];
 
-    if(lua_GetOverridedSamplesInfo(engine_lua, &num_samples, &num_sounds, sample_name_mask))
+    if(script::getOverriddenSamplesInfo(script::engine_lua, &num_samples, &num_sounds, sample_name_mask))
     {
         int buffer_counter = 0;
 
@@ -1583,7 +1583,7 @@ void Audio_LoadOverridedSamples(struct World *world)
         {
             if(world->audio_map[i] != -1)
             {
-                if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
+                if(script::getOverriddenSample(script::engine_lua, i, &sample_index, &sample_count))
                 {
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {

@@ -413,7 +413,7 @@ void World::empty()
     extern EngineContainer* last_cont;
 
     last_cont = NULL;
-    Script_LuaClearTasks();
+    script::Script_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
 

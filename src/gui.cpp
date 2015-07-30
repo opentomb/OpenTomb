@@ -756,7 +756,7 @@ void gui_InventoryManager::setTitle(int items_type)
             break;
     }
 
-    lua_GetString(engine_lua, string_index, GUI_LINE_DEFAULTSIZE, mLabel_Title_text);
+    script::getString(script::engine_lua, string_index, GUI_LINE_DEFAULTSIZE, mLabel_Title_text);
 }
 
 int gui_InventoryManager::setItemsType(int type)
@@ -862,7 +862,7 @@ void gui_InventoryManager::frame(float time)
                     break;
 
                 case INVENTORY_CLOSE:
-                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                    Audio_Send(script::getGlobalSound(script::engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     mCurrentState = mNextState;
@@ -915,7 +915,7 @@ void gui_InventoryManager::frame(float time)
             {
                 if(setItemsType(mCurrentItemsType) >= 0)
                 {
-                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    Audio_Send(script::getGlobalSound(script::engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mCurrentState = INVENTORY_OPEN;
                     mRingAngle = 180.0;
                     mRingVerticalAngle = 180.0;
@@ -1069,7 +1069,7 @@ void gui_InventoryManager::render()
                     if(i.count > 1)
                     {
                         char counter[32];
-                        lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
+                        script::getString(script::engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
                         snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i.count);
 
                     }

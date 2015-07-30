@@ -1,9 +1,12 @@
+#include "script.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
-#include "script.h"
+#include <lua.hpp>
+
 #include "system.h"
 #include "console.h"
 #include "entity.h"
@@ -21,21 +24,15 @@
 #include "hair.h"
 #include "ragdoll.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
-
-#include <iostream>
 
 /*
  * debug functions
  */
 
-void lua_CheckStack()
-{
-    ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(engine_lua.getState()));
-}
+lua::State script::engine_lua;
 
-int lua_Print(lua_State* state)
+int script::lua_Print(lua_State* state)
 {
      const int top = lua_gettop(state);
 
@@ -51,6 +48,13 @@ int lua_Print(lua_State* state)
          ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
      }
      return 0;
+}
+
+namespace
+{
+void lua_CheckStack()
+{
+    ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(script::engine_lua.getState()));
 }
 
 void lua_DumpModel(int id)
@@ -573,17 +577,6 @@ bool lua_GetActionChange(int act)
 int lua_GetLevelVersion()
 {
     return engine_world.version;
-}
-
-void lua_BindKey(int act, int primary, lua::Value secondary)
-{
-    if(act < 0 || act >= ACT_LASTINDEX)
-    {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
-    }
-    control_mapper.action_map[act].primary = primary;
-    if(secondary.is<lua::Integer>())
-        control_mapper.action_map[act].secondary = secondary;
 }
 
 void lua_AddFont(int index, const char* path, uint32_t size)
@@ -2374,7 +2367,7 @@ void lua_SetGame(int gameId, lua::Value levelId)
     if(!levelId.is<lua::Nil>() && levelId>=0)
         gameflow_manager.CurrentLevelID = levelId;
 
-    const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
+    const char* str = script::engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
     Gui_FadeAssignPic(FADER_LOADSCREEN, str);
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
@@ -2397,7 +2390,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
             gameflow_manager.CurrentLevelID = mapId;
         }
         char file_path[MAX_ENGINE_PATH];
-        lua_GetLoadingScreen(engine_lua, gameflow_manager.CurrentLevelID, file_path);
+        script::getLoadingScreen(script::engine_lua, gameflow_manager.CurrentLevelID, file_path);
         Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
         Engine_LoadMap(mapName);
@@ -2565,7 +2558,7 @@ void lua_genUVRotateAnimation(int id)
 // to produce some debug output. Lua calls abort afterwards, so sending
 // the output to the internal console is not an option.
 
-static int lua_Panic(lua_State *lua)
+int lua_Panic(lua_State *lua)
 {
     if (lua_gettop(lua) < 1) {
         fprintf(stderr, "Fatal lua error (no details provided).\n");
@@ -2575,8 +2568,9 @@ static int lua_Panic(lua_State *lua)
     fflush(stderr);
     return 0;
 }
+} // anonymous namespace
 
-void Script_LuaInit()
+void script::Script_LuaInit()
 {
     Script_LuaRegisterFuncs(engine_lua);
     lua_atpanic(engine_lua.getState(), lua_Panic);
@@ -2586,13 +2580,13 @@ void Script_LuaInit()
     luaL_dofile(engine_lua.getState(), "scripts/loadscript.lua");
 }
 
-void Script_LuaClearTasks()
+void script::Script_LuaClearTasks()
 {
     engine_lua["clearTasks"]();
 }
 
 
-void Script_LuaRegisterFuncs(lua::State& state)
+void script::Script_LuaRegisterFuncs(lua::State& state)
 {
     /*
      * register globals
@@ -2603,186 +2597,186 @@ void Script_LuaRegisterFuncs(lua::State& state)
 
     // Register script functions
 
-    lua_registerc(state, "print", lua_Print);
+    registerCaseInsensitive(state, "print", lua_Print);
 
-    lua_registerc(state, "checkStack", lua_CheckStack);
-    lua_registerc(state, "dumpModel", lua_DumpModel);
-    lua_registerc(state, "dumpRoom", lua_DumpRoom);
-    lua_registerc(state, "setRoomEnabled", lua_SetRoomEnabled);
+    registerCaseInsensitive(state, "checkStack", lua_CheckStack);
+    registerCaseInsensitive(state, "dumpModel", lua_DumpModel);
+    registerCaseInsensitive(state, "dumpRoom", lua_DumpRoom);
+    registerCaseInsensitive(state, "setRoomEnabled", lua_SetRoomEnabled);
 
-    lua_registerc(state, "playSound", lua_PlaySound);
-    lua_registerc(state, "stopSound", lua_StopSound);
+    registerCaseInsensitive(state, "playSound", lua_PlaySound);
+    registerCaseInsensitive(state, "stopSound", lua_StopSound);
 
-    lua_registerc(state, "playStream", lua_PlayStream);
-    lua_registerc(state, "stopStreams", lua_StopStreams);
+    registerCaseInsensitive(state, "playStream", lua_PlayStream);
+    registerCaseInsensitive(state, "stopStreams", lua_StopStreams);
 
-    lua_registerc(state, "setLevel", lua_SetLevel);
-    lua_registerc(state, "getLevel", lua_GetLevel);
+    registerCaseInsensitive(state, "setLevel", lua_SetLevel);
+    registerCaseInsensitive(state, "getLevel", lua_GetLevel);
 
-    lua_registerc(state, "setGame", lua_SetGame);
-    lua_registerc(state, "loadMap", lua_LoadMap);
+    registerCaseInsensitive(state, "setGame", lua_SetGame);
+    registerCaseInsensitive(state, "loadMap", lua_LoadMap);
 
-    lua_registerc(state, "camShake", lua_CamShake);
+    registerCaseInsensitive(state, "camShake", lua_CamShake);
 
-    lua_registerc(state, "fadeOut", lua_FadeOut);
-    lua_registerc(state, "fadeIn", lua_FadeIn);
-    lua_registerc(state, "fadeCheck", lua_FadeCheck);
+    registerCaseInsensitive(state, "fadeOut", lua_FadeOut);
+    registerCaseInsensitive(state, "fadeIn", lua_FadeIn);
+    registerCaseInsensitive(state, "fadeCheck", lua_FadeCheck);
 
-    lua_registerc(state, "flashSetup", lua_FlashSetup);
-    lua_registerc(state, "flashStart", lua_FlashStart);
+    registerCaseInsensitive(state, "flashSetup", lua_FlashSetup);
+    registerCaseInsensitive(state, "flashStart", lua_FlashStart);
 
-    lua_registerc(state, "getLevelVersion", lua_GetLevelVersion);
+    registerCaseInsensitive(state, "getLevelVersion", lua_GetLevelVersion);
 
-    lua_registerc(state, "setFlipMap", lua_SetFlipMap);
-    lua_registerc(state, "getFlipMap", lua_GetFlipMap);
-    lua_registerc(state, "setFlipState", lua_SetFlipState);
-    lua_registerc(state, "getFlipState", lua_GetFlipState);
+    registerCaseInsensitive(state, "setFlipMap", lua_SetFlipMap);
+    registerCaseInsensitive(state, "getFlipMap", lua_GetFlipMap);
+    registerCaseInsensitive(state, "setFlipState", lua_SetFlipState);
+    registerCaseInsensitive(state, "getFlipState", lua_GetFlipState);
 
-    lua_registerc(state, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
-    lua_registerc(state, "setModelCollisionMap", lua_SetModelCollisionMap);
-    lua_registerc(state, "getAnimCommandTransform", lua_GetAnimCommandTransform);
-    lua_registerc(state, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-    lua_registerc(state, "setStateChangeRange", lua_SetStateChangeRange);
+    registerCaseInsensitive(state, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
+    registerCaseInsensitive(state, "setModelCollisionMap", lua_SetModelCollisionMap);
+    registerCaseInsensitive(state, "getAnimCommandTransform", lua_GetAnimCommandTransform);
+    registerCaseInsensitive(state, "setAnimCommandTransform", lua_SetAnimCommandTransform);
+    registerCaseInsensitive(state, "setStateChangeRange", lua_SetStateChangeRange);
 
-    lua_registerc(state, "addItem", lua_AddItem);
-    lua_registerc(state, "removeItem", lua_RemoveItem);
-    lua_registerc(state, "removeAllItems", lua_RemoveAllItems);
-    lua_registerc(state, "getItemsCount", lua_GetItemsCount);
-    lua_registerc(state, "createBaseItem", lua_CreateBaseItem);
-    lua_registerc(state, "deleteBaseItem", lua_DeleteBaseItem);
-    lua_registerc(state, "printItems", lua_PrintItems);
+    registerCaseInsensitive(state, "addItem", lua_AddItem);
+    registerCaseInsensitive(state, "removeItem", lua_RemoveItem);
+    registerCaseInsensitive(state, "removeAllItems", lua_RemoveAllItems);
+    registerCaseInsensitive(state, "getItemsCount", lua_GetItemsCount);
+    registerCaseInsensitive(state, "createBaseItem", lua_CreateBaseItem);
+    registerCaseInsensitive(state, "deleteBaseItem", lua_DeleteBaseItem);
+    registerCaseInsensitive(state, "printItems", lua_PrintItems);
 
-    lua_registerc(state, "canTriggerEntity", lua_CanTriggerEntity);
-    lua_registerc(state, "spawnEntity", lua_SpawnEntity);
-    lua_registerc(state, "deleteEntity", lua_DeleteEntity);
-    lua_registerc(state, "enableEntity", lua_EnableEntity);
-    lua_registerc(state, "disableEntity", lua_DisableEntity);
+    registerCaseInsensitive(state, "canTriggerEntity", lua_CanTriggerEntity);
+    registerCaseInsensitive(state, "spawnEntity", lua_SpawnEntity);
+    registerCaseInsensitive(state, "deleteEntity", lua_DeleteEntity);
+    registerCaseInsensitive(state, "enableEntity", lua_EnableEntity);
+    registerCaseInsensitive(state, "disableEntity", lua_DisableEntity);
 
-    lua_registerc(state, "isInRoom", lua_IsInRoom);
-    lua_registerc(state, "sameRoom", lua_SameRoom);
-    lua_registerc(state, "newSector", lua_NewSector);
-    lua_registerc(state, "similarSector", lua_SimilarSector);
-    lua_registerc(state, "getSectorHeight", lua_GetSectorHeight);
+    registerCaseInsensitive(state, "isInRoom", lua_IsInRoom);
+    registerCaseInsensitive(state, "sameRoom", lua_SameRoom);
+    registerCaseInsensitive(state, "newSector", lua_NewSector);
+    registerCaseInsensitive(state, "similarSector", lua_SimilarSector);
+    registerCaseInsensitive(state, "getSectorHeight", lua_GetSectorHeight);
 
-    lua_registerc(state, "moveEntityGlobal", lua_MoveEntityGlobal);
-    lua_registerc(state, "moveEntityLocal", lua_MoveEntityLocal);
-    lua_registerc(state, "moveEntityToSink", lua_MoveEntityToSink);
-    lua_registerc(state, "moveEntityToEntity", lua_MoveEntityToEntity);
-    lua_registerc(state, "rotateEntity", lua_RotateEntity);
+    registerCaseInsensitive(state, "moveEntityGlobal", lua_MoveEntityGlobal);
+    registerCaseInsensitive(state, "moveEntityLocal", lua_MoveEntityLocal);
+    registerCaseInsensitive(state, "moveEntityToSink", lua_MoveEntityToSink);
+    registerCaseInsensitive(state, "moveEntityToEntity", lua_MoveEntityToEntity);
+    registerCaseInsensitive(state, "rotateEntity", lua_RotateEntity);
 
-    lua_registerc(state, "getEntityModelID", lua_GetEntityModelID);
+    registerCaseInsensitive(state, "getEntityModelID", lua_GetEntityModelID);
 
-    lua_registerc(state, "getEntityVector", lua_GetEntityVector);
-    lua_registerc(state, "getEntityDirDot", lua_GetEntityDirDot);
-    lua_registerc(state, "getEntityDistance", lua_GetEntityDistance);
-    lua_registerc(state, "getEntityPos", lua_GetEntityPosition);
-    lua_registerc(state, "setEntityPos", lua_SetEntityPosition);
-    lua_registerc(state, "getEntityAngles", lua_GetEntityAngles);
-    lua_registerc(state, "setEntityAngles", lua_SetEntityAngles);
-    lua_registerc(state, "getEntityScaling", lua_GetEntityScaling);
-    lua_registerc(state, "setEntityScaling", lua_SetEntityScaling);
-    lua_registerc(state, "getEntitySpeed", lua_GetEntitySpeed);
-    lua_registerc(state, "setEntitySpeed", lua_SetEntitySpeed);
-    lua_registerc(state, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
-    lua_registerc(state, "setEntityCollision", lua_SetEntityCollision);
-    lua_registerc(state, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
-    lua_registerc(state, "getEntityAnim", lua_GetEntityAnim);
-    lua_registerc(state, "setEntityAnim", lua_SetEntityAnim);
-    lua_registerc(state, "setEntityAnimFlag", lua_SetEntityAnimFlag);
-    lua_registerc(state, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
-    lua_registerc(state, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
-    lua_registerc(state, "getEntityModel", lua_GetEntityModel);
-    lua_registerc(state, "getEntityVisibility", lua_GetEntityVisibility);
-    lua_registerc(state, "setEntityVisibility", lua_SetEntityVisibility);
-    lua_registerc(state, "getEntityActivity", lua_GetEntityActivity);
-    lua_registerc(state, "setEntityActivity", lua_SetEntityActivity);
-    lua_registerc(state, "getEntityEnability", lua_GetEntityEnability);
-    lua_registerc(state, "getEntityOCB", lua_GetEntityOCB);
-    lua_registerc(state, "setEntityOCB", lua_SetEntityOCB);
-    lua_registerc(state, "getEntityTimer", lua_GetEntityTimer);
-    lua_registerc(state, "setEntityTimer", lua_SetEntityTimer);
-    lua_registerc(state, "getEntityFlags", lua_GetEntityFlags);
-    lua_registerc(state, "setEntityFlags", lua_SetEntityFlags);
-    lua_registerc(state, "getEntityTypeFlag", lua_GetEntityTypeFlag);
-    lua_registerc(state, "setEntityTypeFlag", lua_SetEntityTypeFlag);
-    lua_registerc(state, "getEntityStateFlag", lua_GetEntityStateFlag);
-    lua_registerc(state, "setEntityStateFlag", lua_SetEntityStateFlag);
-    lua_registerc(state, "getEntityCallbackFlag", lua_GetEntityCallbackFlag);
-    lua_registerc(state, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
-    lua_registerc(state, "getEntityState", lua_GetEntityState);
-    lua_registerc(state, "setEntityState", lua_SetEntityState);
-    lua_registerc(state, "setEntityRoomMove", lua_SetEntityRoomMove);
-    lua_registerc(state, "getEntityMoveType", lua_GetEntityMoveType);
-    lua_registerc(state, "setEntityMoveType", lua_SetEntityMoveType);
-    lua_registerc(state, "getEntityResponse", lua_GetEntityResponse);
-    lua_registerc(state, "setEntityResponse", lua_SetEntityResponse);
-    lua_registerc(state, "getEntityMeshCount", lua_GetEntityMeshCount);
-    lua_registerc(state, "setEntityMeshswap", lua_SetEntityMeshswap);
-    lua_registerc(state, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
-    lua_registerc(state, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
-    lua_registerc(state, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
+    registerCaseInsensitive(state, "getEntityVector", lua_GetEntityVector);
+    registerCaseInsensitive(state, "getEntityDirDot", lua_GetEntityDirDot);
+    registerCaseInsensitive(state, "getEntityDistance", lua_GetEntityDistance);
+    registerCaseInsensitive(state, "getEntityPos", lua_GetEntityPosition);
+    registerCaseInsensitive(state, "setEntityPos", lua_SetEntityPosition);
+    registerCaseInsensitive(state, "getEntityAngles", lua_GetEntityAngles);
+    registerCaseInsensitive(state, "setEntityAngles", lua_SetEntityAngles);
+    registerCaseInsensitive(state, "getEntityScaling", lua_GetEntityScaling);
+    registerCaseInsensitive(state, "setEntityScaling", lua_SetEntityScaling);
+    registerCaseInsensitive(state, "getEntitySpeed", lua_GetEntitySpeed);
+    registerCaseInsensitive(state, "setEntitySpeed", lua_SetEntitySpeed);
+    registerCaseInsensitive(state, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
+    registerCaseInsensitive(state, "setEntityCollision", lua_SetEntityCollision);
+    registerCaseInsensitive(state, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
+    registerCaseInsensitive(state, "getEntityAnim", lua_GetEntityAnim);
+    registerCaseInsensitive(state, "setEntityAnim", lua_SetEntityAnim);
+    registerCaseInsensitive(state, "setEntityAnimFlag", lua_SetEntityAnimFlag);
+    registerCaseInsensitive(state, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
+    registerCaseInsensitive(state, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
+    registerCaseInsensitive(state, "getEntityModel", lua_GetEntityModel);
+    registerCaseInsensitive(state, "getEntityVisibility", lua_GetEntityVisibility);
+    registerCaseInsensitive(state, "setEntityVisibility", lua_SetEntityVisibility);
+    registerCaseInsensitive(state, "getEntityActivity", lua_GetEntityActivity);
+    registerCaseInsensitive(state, "setEntityActivity", lua_SetEntityActivity);
+    registerCaseInsensitive(state, "getEntityEnability", lua_GetEntityEnability);
+    registerCaseInsensitive(state, "getEntityOCB", lua_GetEntityOCB);
+    registerCaseInsensitive(state, "setEntityOCB", lua_SetEntityOCB);
+    registerCaseInsensitive(state, "getEntityTimer", lua_GetEntityTimer);
+    registerCaseInsensitive(state, "setEntityTimer", lua_SetEntityTimer);
+    registerCaseInsensitive(state, "getEntityFlags", lua_GetEntityFlags);
+    registerCaseInsensitive(state, "setEntityFlags", lua_SetEntityFlags);
+    registerCaseInsensitive(state, "getEntityTypeFlag", lua_GetEntityTypeFlag);
+    registerCaseInsensitive(state, "setEntityTypeFlag", lua_SetEntityTypeFlag);
+    registerCaseInsensitive(state, "getEntityStateFlag", lua_GetEntityStateFlag);
+    registerCaseInsensitive(state, "setEntityStateFlag", lua_SetEntityStateFlag);
+    registerCaseInsensitive(state, "getEntityCallbackFlag", lua_GetEntityCallbackFlag);
+    registerCaseInsensitive(state, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
+    registerCaseInsensitive(state, "getEntityState", lua_GetEntityState);
+    registerCaseInsensitive(state, "setEntityState", lua_SetEntityState);
+    registerCaseInsensitive(state, "setEntityRoomMove", lua_SetEntityRoomMove);
+    registerCaseInsensitive(state, "getEntityMoveType", lua_GetEntityMoveType);
+    registerCaseInsensitive(state, "setEntityMoveType", lua_SetEntityMoveType);
+    registerCaseInsensitive(state, "getEntityResponse", lua_GetEntityResponse);
+    registerCaseInsensitive(state, "setEntityResponse", lua_SetEntityResponse);
+    registerCaseInsensitive(state, "getEntityMeshCount", lua_GetEntityMeshCount);
+    registerCaseInsensitive(state, "setEntityMeshswap", lua_SetEntityMeshswap);
+    registerCaseInsensitive(state, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
+    registerCaseInsensitive(state, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
+    registerCaseInsensitive(state, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
-    lua_registerc(state, "createEntityGhosts", lua_CreateEntityGhosts);
-    lua_registerc(state, "setEntityBodyMass", lua_SetEntityBodyMass);
-    lua_registerc(state, "pushEntityBody", lua_PushEntityBody);
-    lua_registerc(state, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
+    registerCaseInsensitive(state, "createEntityGhosts", lua_CreateEntityGhosts);
+    registerCaseInsensitive(state, "setEntityBodyMass", lua_SetEntityBodyMass);
+    registerCaseInsensitive(state, "pushEntityBody", lua_PushEntityBody);
+    registerCaseInsensitive(state, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
 
-    lua_registerc(state, "getEntityTriggerLayout", lua_GetEntityTriggerLayout);
-    lua_registerc(state, "setEntityTriggerLayout", lua_SetEntityTriggerLayout);
-    lua_registerc(state, "getEntityMask", lua_GetEntityMask);
-    lua_registerc(state, "setEntityMask", lua_SetEntityMask);
-    lua_registerc(state, "getEntityEvent", lua_GetEntityEvent);
-    lua_registerc(state, "setEntityEvent", lua_SetEntityEvent);
-    lua_registerc(state, "getEntityLock", lua_GetEntityLock);
-    lua_registerc(state, "setEntityLock", lua_SetEntityLock);
-    lua_registerc(state, "getEntitySectorStatus", lua_GetEntitySectorStatus);
-    lua_registerc(state, "setEntitySectorStatus", lua_SetEntitySectorStatus);
+    registerCaseInsensitive(state, "getEntityTriggerLayout", lua_GetEntityTriggerLayout);
+    registerCaseInsensitive(state, "setEntityTriggerLayout", lua_SetEntityTriggerLayout);
+    registerCaseInsensitive(state, "getEntityMask", lua_GetEntityMask);
+    registerCaseInsensitive(state, "setEntityMask", lua_SetEntityMask);
+    registerCaseInsensitive(state, "getEntityEvent", lua_GetEntityEvent);
+    registerCaseInsensitive(state, "setEntityEvent", lua_SetEntityEvent);
+    registerCaseInsensitive(state, "getEntityLock", lua_GetEntityLock);
+    registerCaseInsensitive(state, "setEntityLock", lua_SetEntityLock);
+    registerCaseInsensitive(state, "getEntitySectorStatus", lua_GetEntitySectorStatus);
+    registerCaseInsensitive(state, "setEntitySectorStatus", lua_SetEntitySectorStatus);
 
-    lua_registerc(state, "getEntityActivationOffset", lua_GetEntityActivationOffset);
-    lua_registerc(state, "setEntityActivationOffset", lua_SetEntityActivationOffset);
-    lua_registerc(state, "getEntitySectorIndex", lua_GetEntitySectorIndex);
-    lua_registerc(state, "getEntitySectorFlags", lua_GetEntitySectorFlags);
-    lua_registerc(state, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
-    lua_registerc(state, "getEntitySubstanceState", lua_GetEntitySubstanceState);
+    registerCaseInsensitive(state, "getEntityActivationOffset", lua_GetEntityActivationOffset);
+    registerCaseInsensitive(state, "setEntityActivationOffset", lua_SetEntityActivationOffset);
+    registerCaseInsensitive(state, "getEntitySectorIndex", lua_GetEntitySectorIndex);
+    registerCaseInsensitive(state, "getEntitySectorFlags", lua_GetEntitySectorFlags);
+    registerCaseInsensitive(state, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    registerCaseInsensitive(state, "getEntitySubstanceState", lua_GetEntitySubstanceState);
 
-    lua_registerc(state, "addEntityRagdoll", lua_AddEntityRagdoll);
-    lua_registerc(state, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
+    registerCaseInsensitive(state, "addEntityRagdoll", lua_AddEntityRagdoll);
+    registerCaseInsensitive(state, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
-    lua_registerc(state, "getCharacterParam", lua_GetCharacterParam);
-    lua_registerc(state, "setCharacterParam", lua_SetCharacterParam);
-    lua_registerc(state, "changeCharacterParam", lua_ChangeCharacterParam);
-    lua_registerc(state, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
-    lua_registerc(state, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
-    lua_registerc(state, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
-    lua_registerc(state, "getCharacterCombatMode", lua_GetCharacterCombatMode);
+    registerCaseInsensitive(state, "getCharacterParam", lua_GetCharacterParam);
+    registerCaseInsensitive(state, "setCharacterParam", lua_SetCharacterParam);
+    registerCaseInsensitive(state, "changeCharacterParam", lua_ChangeCharacterParam);
+    registerCaseInsensitive(state, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
+    registerCaseInsensitive(state, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
+    registerCaseInsensitive(state, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
+    registerCaseInsensitive(state, "getCharacterCombatMode", lua_GetCharacterCombatMode);
 
-    lua_registerc(state, "addCharacterHair", lua_AddCharacterHair);
-    lua_registerc(state, "resetCharacterHair", lua_ResetCharacterHair);
+    registerCaseInsensitive(state, "addCharacterHair", lua_AddCharacterHair);
+    registerCaseInsensitive(state, "resetCharacterHair", lua_ResetCharacterHair);
 
-    lua_registerc(state, "getSecretStatus", lua_GetSecretStatus);
-    lua_registerc(state, "setSecretStatus", lua_SetSecretStatus);
+    registerCaseInsensitive(state, "getSecretStatus", lua_GetSecretStatus);
+    registerCaseInsensitive(state, "setSecretStatus", lua_SetSecretStatus);
 
-    lua_registerc(state, "getActionState", lua_GetActionState);
-    lua_registerc(state, "getActionChange", lua_GetActionChange);
+    registerCaseInsensitive(state, "getActionState", lua_GetActionState);
+    registerCaseInsensitive(state, "getActionChange", lua_GetActionChange);
 
-    lua_registerc(state, "genUVRotateAnimation", lua_genUVRotateAnimation);
+    registerCaseInsensitive(state, "genUVRotateAnimation", lua_genUVRotateAnimation);
 
-    lua_registerc(state, "getGravity", lua_GetGravity);
-    lua_registerc(state, "setGravity", lua_SetGravity);
-    lua_registerc(state, "dropEntity", lua_DropEntity);
-    lua_registerc(state, "bind", lua_BindKey);
+    registerCaseInsensitive(state, "getGravity", lua_GetGravity);
+    registerCaseInsensitive(state, "setGravity", lua_SetGravity);
+    registerCaseInsensitive(state, "dropEntity", lua_DropEntity);
+    registerCaseInsensitive(state, "bind", lua_BindKey);
 
-    lua_registerc(state, "addFont", lua_AddFont);
-    lua_registerc(state, "deleteFont", lua_DeleteFont);
-    lua_registerc(state, "addFontStyle", lua_AddFontStyle);
-    lua_registerc(state, "deleteFontStyle", lua_DeleteFontStyle);
+    registerCaseInsensitive(state, "addFont", lua_AddFont);
+    registerCaseInsensitive(state, "deleteFont", lua_DeleteFont);
+    registerCaseInsensitive(state, "addFontStyle", lua_AddFontStyle);
+    registerCaseInsensitive(state, "deleteFontStyle", lua_DeleteFontStyle);
 }
 
 /*
  * MISC
  */
 
-const char *parse_token(const char *data, char *token)
+const char *script::parse_token(const char *data, char *token)
 {
     ///@FIXME: token may be overflowed
     int c;
@@ -2858,7 +2852,7 @@ const char *parse_token(const char *data, char *token)
     return data;
 }
 
-float Script_ParseFloat(const char **ch)
+float script::Script_ParseFloat(const char **ch)
 {
     char token[64];
     (*ch) = parse_token(*ch, token);
@@ -2869,7 +2863,7 @@ float Script_ParseFloat(const char **ch)
     return 0.0;
 }
 
-int Script_ParseInt(char **ch)
+int script::Script_ParseInt(char **ch)
 {
     char token[64];
     (*ch) = const_cast<char*>( parse_token(*ch, token) );
@@ -2884,22 +2878,22 @@ int Script_ParseInt(char **ch)
  *   Specific functions to get specific parameters from script.
  */
 
-int lua_GetGlobalSound(lua::State& state, int global_sound_id)
+int script::getGlobalSound(lua::State& state, int global_sound_id)
 {
     return state["getGlobalSound"](engine_world.version, global_sound_id);
 }
 
-int lua_GetSecretTrackNumber(lua::State& state)
+int script::getSecretTrackNumber(lua::State& state)
 {
     return state["getSecretTrackNumber"](engine_world.version);
 }
 
-int lua_GetNumTracks(lua::State& state)
+int script::getNumTracks(lua::State& state)
 {
     return state["getNumTracks"](engine_world.version);
 }
 
-bool lua_GetOverridedSamplesInfo(lua::State& state, int *num_samples, int *num_sounds, char *sample_name_mask)
+bool script::getOverriddenSamplesInfo(lua::State& state, int *num_samples, int *num_sounds, char *sample_name_mask)
 {
     const char* realPath;
     lua::tie(realPath, *num_sounds, *num_samples) = state["getOverridedSamplesInfo"](engine_world.version);
@@ -2909,13 +2903,13 @@ bool lua_GetOverridedSamplesInfo(lua::State& state, int *num_samples, int *num_s
     return *num_sounds != -1 && *num_samples != -1 && strcmp(realPath, "NONE")!=0;
 }
 
-bool lua_GetOverridedSample(lua::State& state, int sound_id, int *first_sample_number, int *samples_count)
+bool script::getOverriddenSample(lua::State& state, int sound_id, int *first_sample_number, int *samples_count)
 {
     lua::tie(*first_sample_number, *samples_count) = state["getOverridedSample"](engine_world.version, int(gameflow_manager.CurrentLevelID), sound_id);
     return *first_sample_number != -1 && *samples_count != -1;
 }
 
-bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int *load_method, int *stream_type)
+bool script::getSoundtrack(lua::State& state, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     const char* realPath;
     int _load_method, _stream_type;
@@ -2927,21 +2921,21 @@ bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int 
     return _stream_type != -1;
 }
 
-bool lua_GetString(lua::State& state, int string_index, size_t string_size, char *buffer)
+bool script::getString(lua::State& state, int string_index, size_t string_size, char *buffer)
 {
     const char* str = state["getString"](string_index);
     strncpy(buffer, str, string_size);
     return true;
 }
 
-bool lua_GetSysNotify(lua::State& state, int string_index, size_t string_size, char *buffer)
+bool script::getSysNotify(lua::State& state, int string_index, size_t string_size, char *buffer)
 {
     const char* str = state["getSysNotify"](string_index);
     strncpy(buffer, str, string_size);
     return true;
 }
 
-bool lua_GetLoadingScreen(lua::State& state, int level_index, char *pic_path)
+bool script::getLoadingScreen(lua::State& state, int level_index, char *pic_path)
 {
     const char* realPath = state["getLoadingScreen"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), level_index);
     strncpy(pic_path, realPath, MAX_ENGINE_PATH);
@@ -2952,31 +2946,31 @@ bool lua_GetLoadingScreen(lua::State& state, int level_index, char *pic_path)
  * System lua functions
  */
 
-void lua_Clean(lua::State& state)
+void script::clean(lua::State& state)
 {
     state["tlist_Clear"]();
     state["entfuncs_Clear"]();
     state["fe_Clear"]();
 }
 
-void lua_Prepare(lua::State& state)
+void script::prepare(lua::State& state)
 {
     state["fe_Prepare"]();
 }
 
-void lua_DoTasks(lua::State& state, btScalar time)
+void script::doTasks(lua::State& state, btScalar time)
 {
     state.set( "frame_time", time );
     state["doTasks"]();
     state["clearKeys"]();
 }
 
-void lua_AddKey(lua::State& lstate, int keycode, bool state)
+void script::addKey(lua::State& lstate, int keycode, bool state)
 {
     lstate["addKey"](keycode, state);
 }
 
-void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator)
+void script::execEntity(lua::State& state, int id_callback, int id_object, int id_activator)
 {
     if(id_activator >= 0)
         state["execEntity"](id_callback, id_object, id_activator);
@@ -2984,7 +2978,7 @@ void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_ac
         state["execEntity"](id_callback, id_object);
 }
 
-void lua_LoopEntity(lua::State& state, int object_id)
+void script::loopEntity(lua::State& state, int object_id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(object_id);
     if(ent && ent->m_active) {
@@ -2992,7 +2986,7 @@ void lua_LoopEntity(lua::State& state, int object_id)
     }
 }
 
-void lua_ExecEffect(lua::State& state, int id, int caller, int operand)
+void script::execEffect(lua::State& state, int id, int caller, int operand)
 {
     state["execFlipeffect"](id, caller, operand);
 }
@@ -3001,7 +2995,7 @@ void lua_ExecEffect(lua::State& state, int id, int caller, int operand)
  * Game structures parse
  */
 
-void lua_ParseControls(lua::State& state, struct ControlSettings *cs)
+void script::parseControls(lua::State& state, struct ControlSettings *cs)
 {
     cs->mouse_sensitivity = state["controls"]["mouse_sensitivity"];
     cs->use_joy = state["controls"]["use_joy"];
@@ -3019,7 +3013,7 @@ void lua_ParseControls(lua::State& state, struct ControlSettings *cs)
     cs->joy_move_deadzone = state["controls"]["joy_move_deadzone"];
 }
 
-void lua_ParseScreen(lua::State& state, struct ScreenInfo *sc)
+void script::parseScreen(lua::State& state, struct ScreenInfo *sc)
 {
     sc->x = state["screen"]["x"];
     sc->y = state["screen"]["y"];
@@ -3034,7 +3028,7 @@ void lua_ParseScreen(lua::State& state, struct ScreenInfo *sc)
     sc->fov = state["screen"]["fov"];
 }
 
-void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
+void script::parseRender(lua::State& state, struct RenderSettings *rs)
 {
     rs->mipmap_mode = state["render"]["mipmap_mode"];
     rs->mipmaps = state["render"]["mipmaps"];
@@ -3061,7 +3055,7 @@ void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
     }
 }
 
-void lua_ParseAudio(lua::State& state, struct AudioSettings *as)
+void script::parseAudio(lua::State& state, struct AudioSettings *as)
 {
     as->music_volume = state["audio"]["music_volume"];
     as->sound_volume = state["audio"]["sound_volume"];
@@ -3075,7 +3069,7 @@ void lua_ParseAudio(lua::State& state, struct AudioSettings *as)
     as->music_volume = state["audio"]["music_volume"];
 }
 
-void lua_ParseConsole(lua::State& state, ConsoleInfo *cn)
+void script::parseConsole(lua::State& state, ConsoleInfo *cn)
 {
     {
         float r = state["console"]["background_color"]["r"];
@@ -3111,3 +3105,15 @@ void lua_ParseConsole(lua::State& state, ConsoleInfo *cn)
     tmpF = state["console"]["show_cursor_period"];
     cn->setShowCursorPeriod( tmpF );
 }
+
+void script::lua_BindKey(int act, int primary, lua::Value secondary)
+{
+    if(act < 0 || act >= ACT_LASTINDEX)
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+    }
+    control_mapper.action_map[act].primary = primary;
+    if(secondary.is<lua::Integer>())
+        control_mapper.action_map[act].secondary = secondary;
+}
+
