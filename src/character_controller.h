@@ -216,7 +216,7 @@ struct HeightInfo
 {
     HeightInfo()
     {
-        sp->setMargin(0.04);
+        sp->setMargin(COLLISION_MARGIN_DEFAULT);
     }
 
     std::shared_ptr<BtEngineClosestRayResultCallback> cb;

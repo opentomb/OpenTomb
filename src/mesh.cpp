@@ -680,7 +680,7 @@ btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max
     }
 
     ret = new btConvexTriangleMeshShape(trimesh, true);
-    ret->setMargin(0.04);
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
 
     return ret;
 }
@@ -725,7 +725,7 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
         ret = new btConvexTriangleMeshShape(trimesh, true);
     }
 
-    ret->setMargin(0.04);
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
 
     return ret;
 }
@@ -938,7 +938,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
     }
 
     auto ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-    ret->setMargin(0.04);
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
     return ret;
 }
 

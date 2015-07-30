@@ -40,9 +40,9 @@ void Entity::createGhosts()
     m_bt.last_collisions.clear();
     for(size_t i=0; i<m_bf.bone_tags.size(); i++)
     {
-        btVector3 box = 0.40 * (m_bf.bone_tags[i].mesh_base->m_bbMax - m_bf.bone_tags[i].mesh_base->m_bbMin);
+        btVector3 box = COLLISION_GHOST_VOLUME_COEFFICIENT * (m_bf.bone_tags[i].mesh_base->m_bbMax - m_bf.bone_tags[i].mesh_base->m_bbMin);
         m_bt.shapes.emplace_back( new btBoxShape(box) );
-        m_bt.shapes.back()->setMargin(0.04);
+        m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
         m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
 
         m_bt.ghostObjects.emplace_back( new btPairCachingGhostObject() );

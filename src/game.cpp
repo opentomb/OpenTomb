@@ -504,8 +504,8 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
 bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
-    btSphereShape cameraSphere(16.0);
-    cameraSphere.setMargin(0.04);
+    btSphereShape cameraSphere(COLLISION_CAMERA_SPHERE_RADIUS);
+    cameraSphere.setMargin(COLLISION_MARGIN_DEFAULT);
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = nullptr;
     bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);

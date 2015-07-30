@@ -264,6 +264,9 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->m_dirFlag = ENT_STAY;
             }
 
+            if(character->m_moveType == MOVE_ON_FLOOR)
+                character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
             character->lean(cmd, 0.0);
@@ -790,9 +793,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->crouch |= low_vertical_space;
 
             if(character->m_moveType == MOVE_ON_FLOOR)
-            {
-                character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;;
-            }
+                character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+
             character->lean(cmd, 6.0);
 
             if(character->m_moveType == MOVE_FREE_FALLING)
