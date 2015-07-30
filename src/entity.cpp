@@ -352,7 +352,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         }
         else
         {
-            auto parent_from = btag->full_transform * btag->mesh_base->m_center;
+            auto parent_from = btag->parent->full_transform * btag->parent->mesh_base->m_center;
             from = m_transform * parent_from;
         }
 
@@ -577,7 +577,7 @@ void Entity::updateRigidBody(bool force)
         {
             if(m_bf.bone_tags[i].parent != NULL)
             {
-                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].full_transform.inverse() * m_bf.bone_tags[i].full_transform;
+                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].parent->full_transform.inverse() * m_bf.bone_tags[i].full_transform;
             }
             else
             {
