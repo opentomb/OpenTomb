@@ -7665,7 +7665,428 @@ to "0x500" which loads the title screen when Lara dies in-game. Some other comma
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cutseq_file_format_tr4_tr5">12. CUTSEQ file format (TR4-TR5)</h2>
+<h2 id="_scripting_in_tr4">12. Scripting in TR4</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>In this chapter we will describe full gameflow script specification for TR4 <em>script file</em> (usually called <span class="monospaced">SCRIPT.DAT</span>) and <em>language file</em>, which contains all
+the strings used in game for specific language (e.g., <span class="monospaced">ENGLISH.DAT</span>, <span class="monospaced">FRENCH.DAT</span>, and so on).</p></div>
+<div class="sect2">
+<h3 id="_the_script_file">12.1. The Script File</h3>
+<div class="paragraph"><p>The script is divided into several blocks (or <em>headers</em>), some of them are global (applicable to whole game instance), and some are per-level only.</p></div>
+<div class="sect3">
+<h4 id="_global_header">12.1.1. Global Header</h4>
+<div class="paragraph"><p>This header contains general information not specific to particular level.</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_header</span>
+<span class="p">{</span>
+    <span class="kt">uint8_t</span>  <span class="n">Options</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>  <span class="n">Filler</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>     <span class="c1">// Unused</span>
+    <span class="kt">uint32_t</span> <span class="n">InputTimeout</span><span class="p">;</span>
+    <span class="kt">uint8_t</span>  <span class="n">Security</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">Options</span> is a set of bit flags with several global game settings (name of the settings directly borrowed from original text scripts distributed with TRLE):</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>Bit 0</em> (<span class="monospaced">0x01</span>)&#8201;&#8212;&#8201;FlyCheat. Enables debug fly mode activated by typing <span class="monospaced">DOZY</span> ingame.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 1</em> (<span class="monospaced">0x02</span>)&#8201;&#8212;&#8201;LoadSave. When this bit is not set, load and save features are disabled. This option was used for demo versions.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 2</em> (<span class="monospaced">0x04</span>)&#8201;&#8212;&#8201;Title. Specifies if title screen should be displayed or not. If not set, game will start right away after user has launched an application.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 3</em> (<span class="monospaced">0x08</span>)&#8201;&#8212;&#8201;PlayAnyLevel. Gives an access to any level from the title screen.
+</p>
+</li>
+<li>
+<p>
+<em>Bit 7</em> (<span class="monospaced">0x80</span>)&#8201;&#8212;&#8201;DemoDisc. Unknown feature, probably related to game versions deployed on promotional CDs.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p><span class="monospaced">InputTimeout</span>: in early TR4 demos (for example, version dated September 15, 1999) this parameter specified time interval, after which game will engage
+pre-recorded rolling demo, in case there was no user input. This feature became useless in final version.</p></div>
+<div class="paragraph"><p><span class="monospaced">Security</span> parameter meant to be a special &#8220;key&#8221; value used to encrypt script data. Encryption is done with simple XOR operation against the data. However,
+this value was never used, and instead, hardcoded one was specified. This matter will be discussed later.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_level_header">12.1.2. Level Header</h4>
+<div class="paragraph"><p>This section defines platform-specific information, such as <em>file extensions</em> used in PC an PlayStation versions of the game. All the mentioned strings are
+null-terminated.</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_levelheader</span>
+<span class="p">{</span>
+     <span class="kt">uint8_t</span> <span class="n">NumTotalLevels</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">NumUniqueLevelPaths</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span> <span class="n">LevelpathStringLen</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">LevelBlockLen</span><span class="p">;</span>
+
+    <span class="kt">uint8_t</span>  <span class="n">PSXLevelString</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.PSX&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">PSXFMVString</span>   <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.FMV&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">PSXCutString</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.CUT&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">Filler</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>            <span class="c1">//  Possibly for some additional extension type?</span>
+
+    <span class="kt">uint8_t</span>  <span class="n">PCLevelString</span>  <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.TR4&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">PCFMVString</span>    <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.BIK&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">PCCutString</span>    <span class="p">[</span><span class="mi">5</span><span class="p">];</span>    <span class="c1">//  typically &quot;.TR4&quot;</span>
+    <span class="kt">uint8_t</span>  <span class="n">Unused</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">NumTotalLevels</span> is an amount of levels included in script. Title flyby is also counted.</p></div>
+<div class="paragraph"><p><span class="monospaced">LevelpathStringLen</span> is a sum of lengths of all <em>level path strings</em>, including `0x00`s (empty ones).</p></div>
+<div class="paragraph"><p><span class="monospaced">LevelBlockLen</span> is a sum of lengths of each level script data length.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_level_listing_block">12.1.3. Level Listing Block</h4>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_levellisting</span>
+<span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">OffsetsToLevelpathString</span><span class="p">[</span><span class="n">NumTotalLevels</span><span class="p">];</span>
+     <span class="kt">uint8_t</span> <span class="n">LevelpathStringBlock</span> <span class="p">[</span><span class="n">LevelpathStringLen</span><span class="p">];</span>
+
+    <span class="kt">uint16_t</span> <span class="n">OffsetsToLevelData</span> <span class="p">[</span><span class="n">NumTotalLevels</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p>Note that the offsets in the offset table themselves <strong>are not</strong> relative to the file address <span class="monospaced">0</span>. The level-path offsets are relative to the first path string&#8217;s
+starting byte address <span class="monospaced">(56 + NumTotalLevels * 2)</span>, while the level-data offsets are relative to the first level data&#8217;s starting byte address <span class="monospaced">(56 +
+NumTotalLevels * 2 + LevelpathStringLen + NumTotalLevels * 2)</span>.</p></div>
+<div class="paragraph"><p>It is also worth noting that the level-path strings in <span class="monospaced">SCRIPT.DAT</span> are ordered the same way they were ordered in corresponding <span class="monospaced">[Level]</span> blocks in uncompiled
+<em>SCRIPT.TXT</em>. For example, if the first <em>[Level]</em> in <span class="monospaced">SCRIPT.TXT</span> defines <span class="monospaced">Level=DATA\TEST1,101</span> and the second <span class="monospaced">Level=DATA\TEST2,101</span>&#8201;&#8212;&#8201;then there will be 2
+level-paths in <span class="monospaced">SCRIPT.DAT</span>, in the order such as this: <span class="monospaced">DATA\\TEST1.DATA\\TEST2;</span> where <span class="monospaced">.</span> is the null-terminator (<span class="monospaced">0x00</span>) byte.</p></div>
+<div class="paragraph"><p>To get to a certain level&#8217;s path within <span class="monospaced">SCRIPT.DAT</span> knowing only its number, just look-up at <span class="monospaced">OffsetsToLevelpathString[LevelNum]</span> and go to that offset
+(remember, it is <em>not relative</em> to file address <span class="monospaced">0</span>!).</p></div>
+</div>
+<div class="sect3">
+<h4 id="_level_block">12.1.4. Level Block</h4>
+<div class="paragraph"><p>Inside the level block, each level stores its own data describing certain parameters, such as level name, puzzle item names, load camera position, default
+background ambience soundtrack, and so on (the title level is no exception!).</p></div>
+<div class="paragraph"><p>While in <span class="monospaced">SCRIPT.TXT</span> each parameter was given its own line and position within the file itself, in <span class="monospaced">SCRIPT.DAT</span> this is not the case. Rather, bitfields are
+used for bool options (enabled/disabled; such as <em>Lightning</em> option) and the rest of the usually multi-byte data uses an <em>opcode data structure</em>.</p></div>
+<div class="paragraph"><p>That is, preceding a certain type of data you usually find a byte. That is the <em>opcode byte</em>&#8201;&#8212;&#8201;depending on its value, it can be determined what kind and how
+many arguments follow that need parsing. For example, chunk <span class="monospaced">0x81</span> indicates the level description opcode; with that info, the parser knows that 4 arguments
+follows: the string index, etc. This structure is somewhat akin to the <em>AnimCommands</em> structure of level files (see description above). The chunk order <em>does</em>
+matter; the original <span class="monospaced">tomb4.exe</span> binary seems to crash if something is not ordered the way it should be.</p></div>
+<div class="paragraph"><p>The title screen is special in that it uses the <span class="monospaced">0x82</span> opcode the indicate the level-name and audio track information and it, naturally, lacks the string index
+integer as the title level has no name associated with it.</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_leveldata</span>
+<span class="p">{</span>
+    <span class="kt">uint8_t</span> <span class="n">LevelData</span> <span class="p">[</span><span class="n">LevelDataLen</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">LevelData</span> is all of the level&#8217;s data continuously stored in memory. Number of level data sections is equal to overall amount of levels in game, and overall
+size of all level data sections comprise <em>Level Block</em>.</p></div>
+<div class="paragraph"><p>To get to a certain level&#8217;s data section, follow that particular level&#8217;s offset from inside the offset table you loaded (described above). The data sections
+themselves are ordered the very same way levels were ordered in <span class="monospaced">SCRIPT.TXT</span>. For more info on the types of all available TR4 chunks and how to parse them, see
+the <a href="#Script Opcodes">[Script Opcodes]</a> section.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_language_file_listing_block">12.1.5. Language File Listing Block</h4>
+<div class="paragraph"><p>After the level block follows a simple array of ASCII strings which define <em>all the language files the game can choose from</em>. There are, however, no offset
+tables for this one, so one must simply read until a null-byte is reached, and then take that as the string and repeat onwards until EOF. Therefore, the last
+byte of <span class="monospaced">SCRIPT.DAT</span> must always be the null-terminator (<span class="monospaced">0x00</span>).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">This setup is valid only for standard TR4 scripts generated by original TRLE script utility. <em>TRNG</em> scripts have their own special footer and data block
+appended to the bottom of the file, which contain all the extra information it needs.</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_script_opcodes">12.1.6. Script Opcodes</h4>
+<div class="paragraph"><p>Here is a list of all available TR4 opcodes, their meaning and their corresponding arguments (order of arguments matters!):</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>0x81  Level           bitu8 stringIndex, uint16_t levelOptions, bitu8 pathIndex, bitu8 audio
+0x82  [Title] Level   bitu8 pathIndex, uint16_t titleOptions, bitu8 audio
+0x8C  Legend          bitu8 stringIndex
+0x91  LoadCamera      bit32 srcX, bit32 srcY, bit32 srcZ, bit32 targX, bit32 targY, bit32 targZ, bitu8 room
+0x89  Layer1          bitu8 red, bitu8 green, bitu8 blue, bit8 speed
+0x8A  Layer2          bitu8 red, bitu8 green, bitu8 blue, bit8 speed
+0x8E  Mirror          bitu8 room, bit32 xAxis
+0x8F  Fog             bitu8 red, bitu8 green, bitu8 blue
+0x84  Cut             bitu8 cutIndex
+0x8B  UVrotate        bit8 speed
+0x85  ResidentCut1    bitu8 cutIndex
+0x86  ResidentCut2    bitu8 cutIndex
+0x87  ResidentCut3    bitu8 cutIndex
+0x88  ResidentCut4    bitu8 cutIndex
+0x80  FMV             bitu8: 4 least significant bits represent the FMV index; 4 most significant bits (y) represent the FMV trigger bitfield as in y=1&lt;-&gt;bit 8 set
+0x92  ResetHUB        bitu8 levelIndex
+0x90  AnimatingMIP    bitu8: 4 least significant bits represent animatingObjectIndex - 1; 4 most significant bits represent the distance
+0x8D  LensFlare       uint16_t yClicks, bit16 zClicks, uint16_t xClicks, bitu8 red, bitu8 green, bitu8 blue
+0x93  KEY_ITEM1       uint16_t stringIndex, uint16_t height, uint16_t size, uint16_t yAngle, uint16_t zAngle, uint16_t xAngle, uint16_t unknown
+0x94  KEY_ITEM2   -=-  (All the same)
+0x95  KEY_ITEM3   -=-
+0x96  KEY_ITEM4   -=-
+0x97  KEY_ITEM5   -=-
+0x98  KEY_ITEM6   -=-
+0x99  KEY_ITEM7   -=-
+0x9A  KEY_ITEM8   -=-
+0x9B  KEY_ITEM9   -=-
+0x9C  KEY_ITEM10  -=-
+0x9D  KEY_ITEM11  -=-
+0x9E  KEY_ITEM12  -=-
+0x9F  PUZZLE_ITEM1  -=-
+0xA0  PUZZLE_ITEM2  -=-
+0xA1  PUZZLE_ITEM3  -=-
+0xA2  PUZZLE_ITEM4  -=-
+0xA3  PUZZLE_ITEM5  -=-
+0xA4  PUZZLE_ITEM6  -=-
+0xA5  PUZZLE_ITEM7  -=-
+0xA6  PUZZLE_ITEM8  -=-
+0xA7  PUZZLE_ITEM9  -=-
+0xA8  PUZZLE_ITEM10  -=-
+0xA9  PUZZLE_ITEM11  -=-
+0xAA  PUZZLE_ITEM12  -=-
+
+0xAB  PICKUP_ITEM1  -=-
+0xAC  PICKUP_ITEM2  -=-
+0xAD  PICKUP_ITEM3  -=-
+0xAE  PICKUP_ITEM4  -=-
+
+0xAF  EXAMINE1 -=-
+0xB0  EXAMINE2 -=-
+0xB1  EXAMINE3 -=-
+
+0xB2  KEY_ITEM1_COMBO1 -=-
+0xB3  KEY_ITEM1_COMBO2 -=-
+0xB4  KEY_ITEM2_COMBO1 -=-
+0xB5  KEY_ITEM2_COMBO2 -=-
+0xB6  KEY_ITEM3_COMBO1 -=-
+0xB7  KEY_ITEM3_COMBO2 -=-
+0xB8  KEY_ITEM4_COMBO1 -=-
+0xB9  KEY_ITEM4_COMBO2 -=-
+0xBA  KEY_ITEM5_COMBO1 -=-
+0xBB  KEY_ITEM5_COMBO2 -=-
+0xBC  KEY_ITEM6_COMBO1 -=-
+0xBD  KEY_ITEM6_COMBO2 -=-
+0xBE  KEY_ITEM7_COMBO1 -=-
+0xBF  KEY_ITEM7_COMBO2 -=-
+0xC0  KEY_ITEM8_COMBO1 -=-
+0xC1  KEY_ITEM8_COMBO2 -=-
+
+0xC2  PUZZLE_ITEM1_COMBO1 -=-
+0xC3  PUZZLE_ITEM1_COMBO2  -=-
+0xC4  PUZZLE_ITEM2_COMBO1  -=-
+0xC5  PUZZLE_ITEM2_COMBO2  -=-
+0xC6  PUZZLE_ITEM3_COMBO1  -=-
+0xC7  PUZZLE_ITEM3_COMBO2  -=-
+0xC8  PUZZLE_ITEM4_COMBO1  -=-
+0xC9  PUZZLE_ITEM4_COMBO2  -=-
+0xCA  PUZZLE_ITEM5_COMBO1  -=-
+0xCB  PUZZLE_ITEM5_COMBO2  -=-
+0xCC  PUZZLE_ITEM6_COMBO1  -=-
+0xCD  PUZZLE_ITEM6_COMBO2 -=-
+0xCE  PUZZLE_ITEM7_COMBO1 -=-
+0xCF  PUZZLE_ITEM7_COMBO2 -=-
+0xD0  PUZZLE_ITEM8_COMBO1 -=-
+0xD1  PUZZLE_ITEM8_COMBO2 -=-
+
+0xD2  PICKUP_ITEM1_COMBO1 -=-
+0xD3  PICKUP_ITEM1_COMBO2 -=-
+0xD4  PICKUP_ITEM2_COMBO1 -=-
+0xD5  PICKUP_ITEM2_COMBO2 -=-
+0xD6  PICKUP_ITEM3_COMBO1 -=-
+0xD7  PICKUP_ITEM3_COMBO2 -=-
+0xD8  PICKUP_ITEM4_COMBO1 -=-
+0xD9  PICKUP_ITEM4_COMBO2 -=-
+
+0x83  level-data-end  no arguments - this opcode appears at the end of every level (incl. title) block</pre>
+</div></div>
+<div class="paragraph"><p>The <span class="monospaced">uint16_t</span> values <span class="monospaced">levelOptions</span> and <span class="monospaced">titleOptions</span> are actually <em>bit fields</em> containing several boolean options, and are laid out as follows (per-bit
+description):</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<em>Bit 0</em> (<span class="monospaced">0x0001</span>)&#8201;&#8212;&#8201;YoungLara
+</p>
+</li>
+<li>
+<p>
+<em>Bit 1</em> (<span class="monospaced">0x0002</span>)&#8201;&#8212;&#8201;Weather
+</p>
+</li>
+<li>
+<p>
+<em>Bit 2</em> (<span class="monospaced">0x0004</span>)&#8201;&#8212;&#8201;Horizon
+</p>
+</li>
+<li>
+<p>
+<em>Bit 4</em> (<span class="monospaced">0x0010</span>)&#8201;&#8212;&#8201;Layer2 used (?)
+</p>
+</li>
+<li>
+<p>
+<em>Bit 3</em> (<span class="monospaced">0x0008</span>)&#8201;&#8212;&#8201;Horizon (has to be paired with 3)
+</p>
+</li>
+<li>
+<p>
+<em>Bit 5</em> (<span class="monospaced">0x0020</span>)&#8201;&#8212;&#8201;Starfield
+</p>
+</li>
+<li>
+<p>
+<em>Bit 6</em> (<span class="monospaced">0x0040</span>)&#8201;&#8212;&#8201;Lightning
+</p>
+</li>
+<li>
+<p>
+<em>Bit 7</em> (<span class="monospaced">0x0080</span>)&#8201;&#8212;&#8201;Train
+</p>
+</li>
+<li>
+<p>
+<em>Bit 8</em> (<span class="monospaced">0x0100</span>)&#8201;&#8212;&#8201;Pulse
+</p>
+</li>
+<li>
+<p>
+<em>Bit 9</em> (<span class="monospaced">0x0200</span>)&#8201;&#8212;&#8201;ColAddHorizon
+</p>
+</li>
+<li>
+<p>
+<em>Bit 10</em> (<span class="monospaced">0x0400</span>)&#8201;&#8212;&#8201;ResetHUB used
+</p>
+</li>
+<li>
+<p>
+<em>Bit 11</em> (<span class="monospaced">0x0800</span>)&#8201;&#8212;&#8201;ColAddHorizon (has to be paired with 10)
+</p>
+</li>
+<li>
+<p>
+<em>Bit 12</em> (<span class="monospaced">0x1000</span>)&#8201;&#8212;&#8201;Timer
+</p>
+</li>
+<li>
+<p>
+<em>Bit 13</em> (<span class="monospaced">0x2000</span>)&#8201;&#8212;&#8201;Mirror used
+</p>
+</li>
+<li>
+<p>
+<em>Bit 14</em> (<span class="monospaced">0x4000</span>)&#8201;&#8212;&#8201;RemoveAmulet
+</p>
+</li>
+<li>
+<p>
+<em>Bit 15</em> (<span class="monospaced">0x8000</span>)&#8201;&#8212;&#8201;NoLevel
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_language_file">12.2. The Language File</h3>
+<div class="paragraph"><p>In contrary to TR2 and TR3, TR4 uses a more sophisticated language-handling scheme. Instead of storing the strings in <span class="monospaced">SCRIPT.DAT</span> for every different language,
+TR4 splits the string definition (<span class="monospaced">{LANGUAGE}.DAT</span>) and script definition (<span class="monospaced">SCRIPT.DAT</span>) data into the two mentioned files. This allows for smaller files, finer
+grain of selectivity and easy localization.</p></div>
+<div class="paragraph"><p>This means that, within <span class="monospaced">SCRIPT.DAT</span>, strings are always given as string indices, i.e. numbers that correspond to the array positions of the corresponding
+strings within <span class="monospaced">{LANGUAGE}.DAT</span>, where <span class="monospaced">{LANGUAGE}</span> can be any supported language filename.</p></div>
+<div class="paragraph"><p>From these files, the game will choose the first one that is available and use that as the <em>string resource</em>. See below for details on string selection.</p></div>
+<div class="sect3">
+<h4 id="_language_file_priority">12.2.1. Language File Priority</h4>
+<div class="paragraph"><p>The number of supported language files depends on what was defined in <span class="monospaced">SCRIPT.TXT</span>, in the <em>[Language]</em> section. Also, the priority of loading is specified
+there (the first number before the comma). For example, if we have defined:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>[Language]
+File= 0,ENGLISH.TXT
+File= 1,FRENCH.TXT
+File= 2,GERMAN.TXT
+File= 3,ITALIAN.TXT
+File= 4,SPANISH.TXT
+File= 5,US.TXT</pre>
+</div></div>
+<div class="paragraph"><p>&#8230;that would mean that the game will first look for <span class="monospaced">ENGLISH.DAT</span> for loading. If that&#8217;s not present, it will look for <span class="monospaced">FRENCH.DAT</span>. If not, it&#8217;ll look for
+<span class="monospaced">GERMAN.DAT</span>, and so on. If none of the files are present, the game will crash. In <span class="monospaced">SCRIPT.DAT</span>, these numbers reflect on the order of file name strings: in the
+above situation, the <em>language file listing block</em> at the end of <span class="monospaced">SCRIPT.DAT</span> would look like this (highest&#8594;lowest priority):</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>ENGLISH.DAT FRENCH.DAT GERMAN.DAT ITALIAN DAT SPANISH.DAT US.DAT.</pre>
+</div></div>
+<div class="paragraph"><p>&#8230;where the splitting space between filenames specifies the null-terminator (0x00) byte.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_language_file_structure">12.2.2. Language File Structure</h4>
+<div class="sect4">
+<h5 id="_the_header">The Header</h5>
+<div class="paragraph"><p>The header of the language file follows this structure:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_lang_header</span>
+<span class="p">{</span>
+    <span class="kt">uint16_t</span> <span class="n">NumGenericStrings</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">NumPSXStrings</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">NumPCStrings</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span> <span class="n">GenericStringsLen</span><span class="p">;</span> <span class="c1">//  including the null-terminator bytes</span>
+    <span class="kt">uint16_t</span> <span class="n">PSXStringsLen</span><span class="p">;</span>     <span class="c1">//  including the null-terminator bytes</span>
+    <span class="kt">uint16_t</span> <span class="n">PCStringsLen</span><span class="p">;</span>      <span class="c1">//  including the null-terminator bytes</span>
+
+    <span class="kt">uint16_t</span> <span class="n">StringOffsetTable</span><span class="p">[];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p><span class="monospaced">StringOffsetTable</span> is a table holding offsets which point to corresponding strings. Therefore, its size is <span class="monospaced">NumGenericStrings + NumPSXStrings + NumPCStrings</span>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">Offsets in the offset table themselves <em>are not</em> relative to the file address 0! They are actually relative to the first string&#8217;s starting byte address!</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>In order to get an absolute offset of a string whose relative offset you retrieved from the offset table, do the following:</p></div>
+<div class="paragraph"><p><span class="monospaced">absoluteOffset = relativeOffset + sizeof(tr4_lang_header)</span></p></div>
+<div class="paragraph"><p><span class="monospaced">sizeof(tr4_lang_header)</span> depends, of course, on the number of strings in each group. Therefore, the header size is <span class="monospaced">sizeof(uint16_t) * 6 + sizeof(OffsetTable)</span>.</p></div>
+</div>
+<div class="sect4">
+<h5 id="_string_data">String Data</h5>
+<div class="paragraph"><p>In the usual TR4 situation, there are typically <em>359 strings</em> (that is, usually <em>NumTotalStrings = NumGenericStrings + NumPSXStrings + NumPCStrings = 359</em>)
+defined. This, however, is <em>not</em> a limit nor rule of any kind.</p></div>
+<div class="paragraph"><p>All the strings defined within <span class="monospaced">{LANGUAGE}.DAT</span> files are ASCII null-terminated strings. Every character (byte) contained in such a string is XOR-ed with byte
+<span class="monospaced">0xA5</span> (as mentioned above, it is done regardless of what byte was specified in <span class="monospaced">SCRIPT.TXT</span> under the <em>Security</em> option).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">The null-termination byte is <em>not</em> being XOR-ed!</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>After the above defined header section goes an array of strings, in a predefined order: <em>Generic &#8594; PSX &#8594; PC</em>.</p></div>
+<div class="paragraph"><p>The length of this array of total <em>(NumTotalStrings)</em> strings is therefore <em>TotalStringsLen = GenericStringsLen + PSXStringsLen + PCStringsLen</em>.</p></div>
+<div class="paragraph"><p>Hence the string array has the following format:</p></div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_lang_stringdata</span>
+<span class="p">{</span>
+    <span class="n">string_entry</span> <span class="n">Strings</span><span class="p">[</span><span class="n">NumTotalStrings</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div></div></div>
+<div class="paragraph"><p>where <span class="monospaced">string_entry</span> is simply a <span class="monospaced">char</span> array, whose length depends on the corresponding string&#8217;s length. That can be calculated by subtracting the next
+string&#8217;s by the current string&#8217;s offset.</p></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cutseq_file_format_tr4_tr5">13. CUTSEQ file format (TR4-TR5)</h2>
 <div class="sectionbody">
 </div>
 </div>
@@ -7673,7 +8094,7 @@ to "0x500" which loads the title screen when Lara dies in-game. Some other comma
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-30 04:10:57 MSK
+Last updated 2015-07-30 04:14:22 MSK
 </div>
 </div>
 </body>
