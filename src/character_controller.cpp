@@ -22,7 +22,10 @@
 Character::Character(uint32_t id)
     : Entity(id)
 {
+    m_sphere->setMargin(0.04);
+
     m_climbSensor.reset( new btSphereShape(m_climbR) );
+    m_climbSensor->setMargin(0.04);
 
     m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -1760,6 +1763,7 @@ int Character::checkTraverse(const Entity& obj)
         to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        sp.setMargin(0.04);
         BtEngineClosestConvexResultCallback ccb(obj.m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
@@ -1806,6 +1810,7 @@ int Character::checkTraverse(const Entity& obj)
         to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        sp.setMargin(0.04);
         BtEngineClosestConvexResultCallback ccb(m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 

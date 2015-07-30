@@ -214,6 +214,11 @@ struct ClimbInfo
 
 struct HeightInfo
 {
+    HeightInfo()
+    {
+        sp->setMargin(0.04);
+    }
+
     std::shared_ptr<BtEngineClosestRayResultCallback> cb;
     std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);

@@ -653,6 +653,7 @@ void Controls_PrimaryMouseDown()
     btVector3 localInertia(0, 0, 0);
 
     btCollisionShape* cshape = new btSphereShape(dbgR);
+    cshape->setMargin(0.04);
     //cshape = new btCapsuleShapeZ(50.0, 100.0);
     btTransform startTransform;
     startTransform.setIdentity();
