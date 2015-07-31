@@ -2075,7 +2075,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-07-30)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-07-31)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -6603,9 +6603,9 @@ in sequence, and so on.</p></div>
 <p>
 <strong>Bit 1</strong>&#8201;&#8212;&#8201;<span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
-</span> Unknown tracking behaviour. <span class="monospaced">Timer</span> field affects the way camera behaves, but the meaning is not clear. <span class="image">
+</span> Tracks specified entity position (from <span class="monospaced">Entities[]</span> array). <span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> TRLE for TR5 (version <span class="monospaced">.51 (225)</span>) says it does <em>slow motion</em> movement, with <span class="monospaced">Timer</span> indicating time for such movement.
+</span> Creates a vignette around the picture, giving impression of "subjective" camera.
 </p>
 </li>
 <li>
@@ -6625,7 +6625,7 @@ in sequence, and so on.</p></div>
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span> Camera focuses on Lara&#8217;s last head position. <span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> TRLE for TR5 says this flag is now used to hide Lara for this camera.
+</span> For TR5, this flag is now used to hide Lara for this camera.
 </p>
 </li>
 <li>
@@ -6667,14 +6667,14 @@ in sequence, and so on.</p></div>
 <p>
 <strong>Bit 12</strong>&#8201;&#8212;&#8201;<span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> Make screen fade-out.
+</span> Make screen fade-in.
 </p>
 </li>
 <li>
 <p>
 <strong>Bit 13</strong>&#8201;&#8212;&#8201;<span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> Make screen fade-in.
+</span> Make screen fade-out.
 </p>
 </li>
 <li>
@@ -7392,7 +7392,7 @@ Also, it is followed by 28 bytes zero padding.
 </li>
 <li>
 <p>
-<a href="#tr5_room_info">[tr5_room_info]</a> struct is used instead of <a href="#tr5_room_info">[tr5_room_info]</a>.
+<a href="#tr5_room_info">[tr5_room_info]</a> struct is used instead of <a href="#tr_room_info">[tr_room_info]</a>.
 </p>
 </li>
 <li>
@@ -8512,7 +8512,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-30 04:14:58 MSK
+Last updated 2015-07-31 13:08:00 MSK
 </div>
 </div>
 </body>
