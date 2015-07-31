@@ -681,11 +681,13 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     
     entity_funcs[id].speed       = 100.0;
     entity_funcs[id].damage      = 50.0;
+    entity_funcs[id].poison      = 0.0;   -- Poison appeared only in TR3.
     entity_funcs[id].coll_sound  = -1;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
             changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+            changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
             removeEntity(object_id);
         end;
     end
@@ -702,6 +704,7 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].damage      = nil;
+        entity_funcs[object_id].poison      = nil;
         entity_funcs[object_id].speed       = nil;
         entity_funcs[object_id].coll_sound  = nil;
     end
@@ -773,6 +776,7 @@ end;
 function dart_tr3_init(id)
     dart_init(id);
     entity_funcs[id].speed      = 150.0;
+    entity_funcs[id].poison     = 0.01;
 end;
 
 function pickup_init(id, item_id)    -- Pick-ups

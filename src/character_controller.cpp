@@ -1880,6 +1880,16 @@ void Character::applyCommands()
 
 void Character::updateParams()
 {
+    // Poisoning is always global
+
+    float poison = getParam(PARAM_POISON);
+
+    if(poison)
+    {
+        changeParam(PARAM_POISON, 0.0001);
+        changeParam(PARAM_HEALTH, -poison);
+    }
+
     switch(m_moveType)
     {
         case MOVE_ON_FLOOR:
@@ -1952,6 +1962,9 @@ int Character::setParamMaximum(int parameter, float max_value)
 int Character::setParam(int parameter, float value)
 {
     if(parameter >= PARAM_SENTINEL)
+        return 0;
+
+    if(value == m_parameters.param[parameter])
         return 0;
 
     float maximum = m_parameters.maximum[parameter];

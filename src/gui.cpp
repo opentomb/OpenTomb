@@ -1173,6 +1173,9 @@ void Gui_DrawBars()
         if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
+        if(engine_world.character->getParam(PARAM_POISON) > 0.0)
+            Bar[BAR_HEALTH].Alternate = true;
+
         Bar[BAR_AIR].Show    (engine_world.character->getParam( PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(engine_world.character->getParam( PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (engine_world.character->getParam( PARAM_HEALTH ));
@@ -2361,6 +2364,10 @@ void gui_ProgressBar::Show(float value)
                                            :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
 
     } // end if(Invert)
+
+    // We need to reset Alternate flag each frame, cause behaviour is immediate.
+
+    Alternate = false;
 
     // If vertical style flag is set, we draw bar base top-bottom, else we draw it left-right.
     if(Vertical)
