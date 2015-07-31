@@ -32,8 +32,6 @@ struct entity_s;
 typedef struct base_mesh_s
 {
     uint32_t              id;                                                   // mesh's ID
-    uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
-
     uint32_t              polygons_count;                                       // number of all mesh's polygons
     struct polygon_s     *polygons;                                             // polygons data
 

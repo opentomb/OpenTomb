@@ -2685,7 +2685,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    world->tex_atlas->createTextures(world->textures, 0);
+    world->tex_atlas->createTextures(world->textures);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
@@ -2936,7 +2936,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners,
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, const uint16_t *vertex_indices, unsigned color, polygon_p p)
 {
     for (int i = 0; i < p->vertex_count; i++)
     {
@@ -2950,14 +2950,10 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, co
             p->vertices[i].color[2] = p->vertices[i].color[2] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
         }
         p->vertices[i].color[3] = 1.0f;
-
-        p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
-        p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
     }
-    mesh->uses_vertex_colors = 1;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t *vertex_indices, polygon_p p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, const uint16_t *vertex_indices, polygon_p p)
 {
     for (int i = 0; i < p->vertex_count; i++)
     {
@@ -2967,8 +2963,6 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
             p->vertices[i].color[1] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[2] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[3] = 1.0f;
-
-            mesh->uses_vertex_colors = 1;
         }
         else
         {
@@ -3010,7 +3004,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
     mesh->R = tr_mesh->collision_size;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    mesh->num_texture_pages = world->tex_atlas->getNumAtlasPages();
 
     mesh->vertex_count = tr_mesh->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
@@ -3047,7 +3041,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         }
 
         tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face3->vertices, p);
+        tr_setupTexturedFace(tr_mesh, face3->vertices, p);
 
         world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
@@ -3059,12 +3053,13 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p->tex_index = 0;
         p->transparency = 0;
         p->anim_id = 0;
 
         tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face3->vertices, col, p);
+        world->tex_atlas->getWhiteTextureCoordinates(p);
+        tr_setupColoredFace(tr_mesh, tr, face3->vertices, col, p);
     }
 
     /*
@@ -3089,7 +3084,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         }
 
         tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face4->vertices, p);
+        tr_setupTexturedFace(tr_mesh, face4->vertices, p);
 
         world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
@@ -3102,12 +3097,13 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         face4 = &tr_mesh->coloured_rectangles[i];
         col = face4->texture & 0xff;
         Polygon_Resize(p, 4);
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p->tex_index = 0;
         p->transparency = 0;
         p->anim_id = 0;
 
         tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face4->vertices, col, p);
+        world->tex_atlas->getWhiteTextureCoordinates(p);
+        tr_setupColoredFace(tr_mesh, tr, face4->vertices, col, p);
     }
 
     /*
@@ -3200,8 +3196,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
 
     mesh = room->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
     mesh->id = room_index;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
-    mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes
+    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages();
 
     mesh->vertex_count = tr_room->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));

@@ -47,7 +47,8 @@ static __inline GLuint NextPowerOf2(GLuint in)
      return in + 1;
 }
 
-#define ARRAY_CAPACITY_INCREASE_STEP 32
+#define ARRAY_CAPACITY_INCREASE_STEP (32)
+#define WHITE_TEXTURE_INDEX          (0x8000)
 
 /*!
  * The bordered texture atlas used by the borderedTextureAtlas_CompareCanonicalTextureSizes function. Sadly, qsort does not allow passing this context through as a parameter, and the nonstandard extensions qsort_r/qsort_s which do are not supported on MinGW, so this has to be done as a global variable.
@@ -187,8 +188,16 @@ canonical_object_textures(NULL)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     result_page_width = max_texture_edge_length;
 
-    size_t maxNumberCanonicalTextures = object_texture_count + sprite_texture_count;
+    size_t maxNumberCanonicalTextures = object_texture_count + sprite_texture_count + 1;
     canonical_object_textures = new canonical_object_texture[maxNumberCanonicalTextures];
+
+    number_canonical_object_textures = 1;
+    canonical_object_texture &canonical = canonical_object_textures[0];
+    canonical.width = 8;
+    canonical.height = 8;
+    canonical.original_page = WHITE_TEXTURE_INDEX;
+    canonical.original_x = 0;
+    canonical.original_y = 0;
 
     file_object_textures = new file_object_texture[object_texture_count];
     for (size_t i = 0; i < object_texture_count; i++)
@@ -351,6 +360,42 @@ float bordered_texture_atlas::getTextureHeight(unsigned long texture) const
     return (GLfloat)canonical.height / (GLfloat)(result_page_height[canonical.new_page]);
 }
 
+void bordered_texture_atlas::getWhiteTextureCoordinates(polygon_p poly)
+{
+    const canonical_object_texture &canonical = canonical_object_textures[0];
+    poly->tex_index = canonical.new_page;
+    for (unsigned long i = 0; i < poly->vertex_count; i++)
+    {
+        unsigned x_coord;
+        unsigned y_coord;
+
+        switch (file_object_textures->corner_locations[i])
+        {
+            case TOP_LEFT:
+                x_coord = canonical.new_x_with_border + border_width;
+                y_coord = canonical.new_y_with_border + border_width;
+                break;
+            case TOP_RIGHT:
+                x_coord = canonical.new_x_with_border + border_width + canonical.width;
+                y_coord = canonical.new_y_with_border + border_width;
+                break;
+            case BOTTOM_LEFT:
+                x_coord = canonical.new_x_with_border + border_width;
+                y_coord = canonical.new_y_with_border + border_width + canonical.height;
+                break;
+            case BOTTOM_RIGHT:
+                x_coord = canonical.new_x_with_border + border_width + canonical.width;
+                y_coord = canonical.new_y_with_border + border_width + canonical.height;
+                break;
+            default:
+                assert(0);
+        }
+
+        poly->vertices[i].tex_coord[0] = (GLfloat) x_coord / (GLfloat) result_page_width;
+        poly->vertices[i].tex_coord[1] = (GLfloat) y_coord / (GLfloat) result_page_height[canonical.new_page];
+    }
+}
+
 ///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
 void bordered_texture_atlas::getCoordinates(unsigned long texture,
                                          bool reverse,
@@ -447,11 +492,11 @@ unsigned long bordered_texture_atlas::getNumAtlasPages() const
     return number_result_pages;
 }
 
-void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames) const
+void bordered_texture_atlas::createTextures(GLuint *textureNames) const
 {
     GLubyte *data = (GLubyte *) malloc(4 * result_page_width * result_page_width);
 
-    glGenTextures((GLsizei) number_result_pages + additionalTextureNames, textureNames);
+    glGenTextures((GLsizei) number_result_pages, textureNames);
 
     for (unsigned long page = 0; page < number_result_pages; page++)
     {
@@ -461,72 +506,128 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additio
             if (canonical.new_page != page)
                 continue;
 
-            const char *original = (char *) original_pages[canonical.original_page].pixels;
-
-            // Add top border
-            for (int border = 0; border < border_width; border++)
+            if(canonical.original_page == WHITE_TEXTURE_INDEX)
             {
-                unsigned x = canonical.new_x_with_border;
-                unsigned y = canonical.new_y_with_border + border;
-                unsigned old_x = canonical.original_x;
-                unsigned old_y = canonical.original_y;
+                uint32_t white_pixels[1] = {0xFFFFFFFFU};
+                // Add top border
+                for (int border = 0; border < border_width; border++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + border;
 
-                // expand top-left pixel
-                memset_pattern4(&data[(y*result_page_width + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * border_width);
-                // copy top line
-                memcpy(&data[(y*result_page_width + x + border_width) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
-                       canonical.width * 4);
-                // expand top-right pixel
-                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * border_width);
+                    // expand top-left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           white_pixels, 4 * border_width);
+                    // copy top line
+                    memset_pattern4(&data[(y*result_page_width + x + border_width) * 4],
+                           white_pixels, canonical.width * 4);
+                    // expand top-right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           white_pixels, 4 * border_width);
+                }
+
+                // Copy main content
+                for (int line = 0; line < canonical.height; line++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + border_width + line;
+
+                    // expand left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           white_pixels, 4 * border_width);
+                    // copy line
+                    memset_pattern4(&data[(y*result_page_width + x + border_width) * 4],
+                           white_pixels, canonical.width * 4);
+                    // expand right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           white_pixels, 4 * border_width);
+                }
+
+                // Add bottom border
+                for (int border = 0; border < border_width; border++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + canonical.height + border_width + border;
+
+                    // expand bottom-left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           white_pixels, 4 * border_width);
+                    // copy bottom line
+                    memset_pattern4(&data[(y*result_page_width + x + border_width) * 4],
+                           white_pixels, canonical.width * 4);
+                    // expand bottom-right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           white_pixels, 4 * border_width);
+                }
             }
-
-            // Copy main content
-            for (int line = 0; line < canonical.height; line++)
+            else
             {
-                unsigned x = canonical.new_x_with_border;
-                unsigned y = canonical.new_y_with_border + border_width + line;
-                unsigned old_x = canonical.original_x;
-                unsigned old_y = canonical.original_y + line;
+                const char *original = (char *) original_pages[canonical.original_page].pixels;
+                // Add top border
+                for (int border = 0; border < border_width; border++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + border;
+                    unsigned old_x = canonical.original_x;
+                    unsigned old_y = canonical.original_y;
 
-                // expand left pixel
-                memset_pattern4(&data[(y*result_page_width + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * border_width);
-                // copy line
-                memcpy(&data[(y*result_page_width + x + border_width) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
-                       canonical.width * 4);
-                // expand right pixel
-                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * border_width);
-            }
+                    // expand top-left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           &(original[(old_y * 256 + old_x) * 4]),
+                           4 * border_width);
+                    // copy top line
+                    memcpy(&data[(y*result_page_width + x + border_width) * 4],
+                           &original[(old_y * 256 + old_x) * 4],
+                           canonical.width * 4);
+                    // expand top-right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                           4 * border_width);
+                }
 
-            // Add bottom border
-            for (int border = 0; border < border_width; border++)
-            {
-                unsigned x = canonical.new_x_with_border;
-                unsigned y = canonical.new_y_with_border + canonical.height + border_width + border;
-                unsigned old_x = canonical.original_x;
-                unsigned old_y = canonical.original_y + canonical.height;
+                // Copy main content
+                for (int line = 0; line < canonical.height; line++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + border_width + line;
+                    unsigned old_x = canonical.original_x;
+                    unsigned old_y = canonical.original_y + line;
 
-                // expand bottom-left pixel
-                memset_pattern4(&data[(y*result_page_width + x) * 4],
-                       &(original[(old_y * 256 + old_x) * 4]),
-                       4 * border_width);
-                // copy bottom line
-                memcpy(&data[(y*result_page_width + x + border_width) * 4],
-                       &original[(old_y * 256 + old_x) * 4],
-                       canonical.width * 4);
-                // expand bottom-right pixel
-                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
-                       4 * border_width);
+                    // expand left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           &(original[(old_y * 256 + old_x) * 4]),
+                           4 * border_width);
+                    // copy line
+                    memcpy(&data[(y*result_page_width + x + border_width) * 4],
+                           &original[(old_y * 256 + old_x) * 4],
+                           canonical.width * 4);
+                    // expand right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                           4 * border_width);
+                }
+
+                // Add bottom border
+                for (int border = 0; border < border_width; border++)
+                {
+                    unsigned x = canonical.new_x_with_border;
+                    unsigned y = canonical.new_y_with_border + canonical.height + border_width + border;
+                    unsigned old_x = canonical.original_x;
+                    unsigned old_y = canonical.original_y + canonical.height;
+
+                    // expand bottom-left pixel
+                    memset_pattern4(&data[(y*result_page_width + x) * 4],
+                           &(original[(old_y * 256 + old_x) * 4]),
+                           4 * border_width);
+                    // copy bottom line
+                    memcpy(&data[(y*result_page_width + x + border_width) * 4],
+                           &original[(old_y * 256 + old_x) * 4],
+                           canonical.width * 4);
+                    // expand bottom-right pixel
+                    memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                           &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                           4 * border_width);
+                }
             }
         }
 

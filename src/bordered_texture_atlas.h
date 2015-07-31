@@ -133,6 +133,8 @@ public:
      */
     ~bordered_texture_atlas();
     
+    void getWhiteTextureCoordinates(polygon_p poly);
+    
     /*!
      * Returns the texture coordinates of the specified texture. This must only be
      * called after all pages and object texture coordinates have been added.
@@ -176,7 +178,7 @@ public:
      * @param textureNames The names of the textures.
      * @param additionalTextureNames How many texture names to create in addition to the needed ones.
      */
-    void createTextures(GLuint *textureNames, GLuint additionalTextureNames) const;
+    void createTextures(GLuint *textureNames) const;
 
 };
 
