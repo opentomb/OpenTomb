@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstdint>
+#include <vector>
+#include <list>
+
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 #include <BulletCollision/CollisionShapes/btCapsuleShape.h>
@@ -10,10 +14,6 @@
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-#include <cstdint>
-#include <vector>
-#include <list>
 
 #include "engine.h"
 #include "entity.h"
@@ -168,6 +168,7 @@ enum CharParameters
     PARAM_AIR,
     PARAM_STAMINA,
     PARAM_WARMTH,
+    PARAM_POISON,
     PARAM_EXTRA1,
     PARAM_EXTRA2,
     PARAM_EXTRA3,
@@ -183,6 +184,7 @@ enum CharParameters
 #define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
+#define LARA_PARAM_POISON_MAX             (5.0)
 
 struct EngineContainer;
 struct Entity;
@@ -503,9 +505,9 @@ private:
     void stateLaraUnderwaterStop(SSAnimation* ss_anim);
     void stateLaraUnderwaterDeath();
     void stateLaraUnderwaterForward(SSAnimation* ss_anim);
-    void stateLaraOnwaterStop(SSAnimation* ss_anim, HeightInfo &next_fc, bool low_vertical_space);
+    void stateLaraOnwaterStop(SSAnimation* ss_anim);
     void stateLaraOnwaterBack(SSAnimation* ss_anim);
-    void stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo &next_fc);
+    void stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo &next_fc, bool low_vertical_space);
     void stateLaraOnwaterLeftRight(SSAnimation* ss_anim);
     void stateLaraUnderwaterInertia(SSAnimation* ss_anim);
     void stateLaraCrouchIdle(SSAnimation* ss_anim, HeightInfo &next_fc, bool low_vertical_space);

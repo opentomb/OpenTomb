@@ -22,6 +22,14 @@ matrix4 float4::transposeMult(const float4 &other) const
 #endif
 }
 
+matrix4 matrix4::affineInverse() const
+{
+	return matrix4(float4(x.x, y.x, z.x, 0),
+				  float4(x.y, y.y, z.y, 0),
+				  float4(x.z, y.z, z.z, 0),
+				  float4(-w*x, -w*y, -w*z, 1.0));
+}
+
 matrix4 matrix4::transposed() const
 {
 #ifdef __SSE__
@@ -30,7 +38,7 @@ matrix4 matrix4::transposed() const
 	tmp2 = _mm_unpacklo_ps(z.v, w.v);
 	tmp1 = _mm_unpackhi_ps(x.v, y.v);
 	tmp3 = _mm_unpackhi_ps(z.v, w.v);
-	
+
 	return matrix4(_mm_movelh_ps(tmp0, tmp2), _mm_movehl_ps(tmp2, tmp0), _mm_movelh_ps(tmp1, tmp3), _mm_movehl_ps(tmp3, tmp1));
 #else
 	return matrix4(float4(x.x, y.x, z.x, w.x),
@@ -58,14 +66,6 @@ matrix4 matrix4::createLookAt(const float4 &eye, const float4 &center, const flo
     result.w = eye;
 
     return result.affineInverse();
-}
-
-matrix4 matrix4::affineInverse() const
-{
-    return matrix4(float4(x.x, y.x, z.x, 0),
-                   float4(x.y, y.y, z.y, 0),
-                   float4(x.z, y.z, z.z, 0),
-                   float4(-w*x, -w*y, -w*z, 1.0));
 }
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec)

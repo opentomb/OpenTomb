@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdio>
 
+#include <SDL2/SDL.h>
+
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
@@ -13,8 +15,6 @@
 #include "render.h"
 #include "strings.h"
 #include "helpers.h"
-
-#include <SDL2/SDL.h>
 
 #ifndef AL_ALEXT_PROTOTYPES
 extern "C"
@@ -651,7 +651,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 {
     if(index >= TR_AUDIO_STREAM_WAD_COUNT)
     {
-        ConsoleInfo::instance().warning(SYSNOTE_WAD_OUT_OF_BOUNDS, TR_AUDIO_STREAM_WAD_COUNT);
+        ConsoleInfo::instance().warning(SYSWARN_WAD_OUT_OF_BOUNDS, TR_AUDIO_STREAM_WAD_COUNT);
         return false;
     }
     else
@@ -679,7 +679,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 
             if(!(snd_file = sf_open_fd(fileno(wad_file), SFM_READ, &sf_info, false)))
             {
-                ConsoleInfo::instance().warning(SYSNOTE_WAD_SEEK_FAILED, offset);
+                ConsoleInfo::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
                 method = -1;
                 return false;
             }
@@ -1057,7 +1057,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(track_index >= engine_world.stream_track_map.size())
     {
-        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -1066,7 +1066,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(Audio_IsTrackPlaying(track_index))
     {
-        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -1078,7 +1078,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!script::getSoundtrack(script::engine_lua, track_index, file_path, &load_method, &stream_type))
     {
-        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -1104,7 +1104,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
         if(target_stream == -1)
         {
-            ConsoleInfo::instance().addLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
+            ConsoleInfo::instance().warning(SYSWARN_NO_FREE_STREAM);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
         }
     }
@@ -1122,7 +1122,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
-        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -1130,7 +1130,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
     {
-        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 

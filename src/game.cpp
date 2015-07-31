@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include <cstdio>
 
@@ -462,6 +461,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         {
             if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(PARAM_HEALTH, 250))
             {
+                ch->setParam(PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -474,6 +474,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             if(ch->getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
                ch->changeParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
             {
+                ch->setParam(PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -867,6 +868,8 @@ void Game_Prepare()
         engine_world.character->setParam       (PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
         engine_world.character->setParamMaximum(PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
         engine_world.character->setParam       (PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        engine_world.character->setParamMaximum(PARAM_POISON,  LARA_PARAM_POISON_MAX );
+        engine_world.character->setParam       (PARAM_POISON , 0                     );
 
         // Set character statistics to default.
 

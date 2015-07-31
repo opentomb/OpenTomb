@@ -409,7 +409,7 @@ void Engine_Start()
     // OpenAL initialization.
     Engine_InitAL();
 
-    ConsoleInfo::instance().addLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
+    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_INITED);
 
     // Clearing up memory for initial level loading.
     engine_world.prepare();
@@ -1148,22 +1148,8 @@ int Engine_ExecCmd(const char *ch)
         ch = script::parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
-            ConsoleInfo::instance().addLine("Available commands:", FONTSTYLE_CONSOLE_WARNING);
-            ConsoleInfo::instance().addLine("help - show help info", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("loadMap(\"file_name\") - load level \"file_name\"", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("save, load - save and load game state in \"file_name\"", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("exit - close program", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("cls - clean console", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("show_fps - switch show fps flag", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("spacing - read and write spacing", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("showing_lines - read and write number of showing lines", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("free_look - switch camera mode", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("cam_distance - camera distance to actor", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("playsound(id) - play specified sound", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("stopsound(id) - stop specified sound", FONTSTYLE_CONSOLE_NOTIFY);
-            ConsoleInfo::instance().addLine("Watch out for case sensitive commands!", FONTSTYLE_CONSOLE_WARNING);
+            for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
+            { ConsoleInfo::instance().notify(i); }
         }
         else if(!strcmp(token, "goto"))
         {
@@ -1368,7 +1354,6 @@ int Engine_ExecCmd(const char *ch)
 
 void Engine_InitConfig(const char *filename)
 {
-
     Engine_InitDefaultGlobals();
 
     if((filename != NULL) && Engine_FileFound(filename))

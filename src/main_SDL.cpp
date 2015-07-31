@@ -1,3 +1,5 @@
+#include <cstdlib>
+
 #include "engine.h"
 #include "system.h"
 
@@ -5,7 +7,6 @@
 
 bool done = false;
 btScalar time_scale = 1.0;
-
 
 /*
  * CURRENT TODO LIST:

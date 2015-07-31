@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
-#include <lua.hpp>
 
 #include <AL/al.h>
 #include <AL/alc.h>

@@ -1,5 +1,7 @@
 
+#include <cstdio>
 #include <SDL2/SDL.h>
+
 #ifndef __APPLE_CC__
 #include <SDL2/SDL_image.h>
 #else
@@ -7,24 +9,24 @@
 #include <ImageIO/ImageIO.h>
 #include <CoreServices/CoreServices.h>
 #endif
-#include <cstdio>
+
+#include "vt/vt_level.h"
 
 #include "system.h"
 #include "console.h"
 #include "script.h"
-#include "vt/vt_level.h"
 #include "vmath.h"
 
 static int screenshot_cnt = 0;
 
 void Com_Init()
 {
-	
+
 }
 
 void Com_Destroy()
 {
-	
+
 }
 
 #ifdef __APPLE_CC__
@@ -44,7 +46,7 @@ void Com_TakeScreenShot()
     SDL_Surface *surface;
 #endif
     uint32_t str_size;
-    
+
     glGetIntegerv(GL_VIEWPORT, ViewPort);
     snprintf(fname, 128, "screen_%05d.png", screenshot_cnt);
     str_size = ViewPort[2] * 4;
@@ -56,7 +58,7 @@ void Com_TakeScreenShot()
     CGImageRef image = CGImageCreate(ViewPort[2], ViewPort[3], 32, 8, str_size * ViewPort[3], deviceRgb, kCGImageAlphaLast, dataProvider, nullptr, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dataProvider);
     CGColorSpaceRelease(deviceRgb);
-    
+
     CFStringRef pathString = CFStringCreateWithBytes(kCFAllocatorDefault, (const Uint8*)fname, strlen(fname), kCFStringEncodingASCII, FALSE);
     CFURLRef destinationUrl = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, pathString, kCFURLPOSIXPathStyle, FALSE);
     CFRelease(pathString);
@@ -68,7 +70,7 @@ void Com_TakeScreenShot()
     CGImageRelease(image);
     CGImageDestinationFinalize(imageDestination);
     CFRelease(imageDestination);
-    
+
 #else
     GLubyte buf[str_size];
     for(int h=0;h<ViewPort[3]/2;h++)

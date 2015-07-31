@@ -36,6 +36,7 @@
 #include "bsp_tree.h"
 #include "shader_description.h"
 #include "helpers.h"
+#include "strings.h"
 
 #include <lua.hpp>
 #include "LuaState.h"
@@ -84,6 +85,8 @@ void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int e
 
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
+    if(entities.size() == 0) return;
+
     for(const auto& pair : entities)
         Res_SetEntityFunction(pair.second);
 }
@@ -1403,7 +1406,6 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                         case TR_EFFECT_CHANGEDIRECTION:
                             af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
                             ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, pointer[0], af->frames.size());
-                            //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames.size());
                             break;
                     }
                     pointer += 2;
@@ -1589,7 +1591,7 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1605,7 +1607,7 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Val
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1622,7 +1624,7 @@ void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1637,7 +1639,7 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -3431,7 +3433,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
             if(frame_offset >= tr->frame_data_size)
             {
-                //Con_Printf("Bad frame offset");
                 for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
                 {
                     tree_tag = &model->mesh_tree[k];

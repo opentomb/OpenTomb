@@ -6,8 +6,8 @@
 #include <vector>
 
 #include <LinearMath/btScalar.h>
-#include <btBulletDynamicsCommon.h>
 #include <LinearMath/btIDebugDraw.h>
+#include <btBulletDynamicsCommon.h>
 
 #include "matrix4.h"
 #include "vertex_array.h"

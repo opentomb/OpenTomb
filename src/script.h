@@ -5,15 +5,15 @@
 
 #include "LuaState.h"
 
+#define CVAR_NAME_SIZE 32
+#define CVAR_LUA_TABLE_NAME "cvars"
+
 struct ScreenInfo;
 struct ConsoleInfo;
 struct Entity;
 struct AudioSettings;
 struct ControlSettings;
 struct RenderSettings;
-
-#define CVAR_NAME_SIZE 32
-#define CVAR_LUA_TABLE_NAME "cvars"
 
 namespace lua {
 class State;

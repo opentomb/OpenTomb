@@ -1,15 +1,14 @@
-#include "ragdoll.h"
 
 #include <cmath>
-#include <assert.h>
+#include <cassert>
 
 #include <LinearMath/btScalar.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+#include "ragdoll.h"
 #include "vmath.h"
 #include "character_controller.h"
-
 #include "engine.h"
 #include "entity.h"
 

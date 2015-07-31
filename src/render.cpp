@@ -120,11 +120,8 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
             {
                 continue;
             }
-             AnimSeq* seq = &engine_world.anim_sequences[ p.anim_id - 1 ];
 
-            if (seq->uvrotate) {
-                printf("?");
-            }
+            AnimSeq* seq = &engine_world.anim_sequences[ p.anim_id - 1 ];
 
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
             TexFrame* tf = &seq->frames[frame];
@@ -857,8 +854,7 @@ void Render::drawList()
     }
 
     glEnable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_BLEND);
 
     renderSkyBox(m_cam->m_glViewProjMat);
 

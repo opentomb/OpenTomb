@@ -116,8 +116,22 @@
 #define SYSWARN_NO_RAGDOLL_SETUP         35
 #define SYSWARN_CANT_CREATE_RAGDOLL      36
 #define SYSWARN_CANT_REMOVE_RAGDOLL      37
-#define SYSNOTE_WAD_OUT_OF_BOUNDS        38
-#define SYSNOTE_WAD_SEEK_FAILED          39
+#define SYSWARN_WAD_OUT_OF_BOUNDS        38
+#define SYSWARN_WAD_SEEK_FAILED          39
+#define SYSWARN_TRACK_OUT_OF_BOUNDS      40
+#define SYSWARN_TRACK_ALREADY_PLAYING    41
+#define SYSWARN_TRACK_WRONG_INDEX        42
+#define SYSWARN_NO_FREE_STREAM           43
+#define SYSWARN_STREAM_LOAD_ERROR        44
+#define SYSWARN_STREAM_PLAY_ERROR        45
+#define SYSWARN_WRONG_SECTOR_INFO        46
+#define SYSWARN_WRONG_BONE_NUMBER        47
+#define SYSWARN_IMAGE_NOT_LOADED         48
+#define SYSWARN_WRONG_MODEL_ID           49
+#define SYSWARN_WRONG_ENTITY_OR_BODY     50
+#define SYSWARN_CANT_APPLY_FORCE         51
+
+
 
 #define SYSNOTE_TRACK_OPENED             1000
 #define SYSNOTE_READING_FILE             1001
@@ -139,11 +153,22 @@
 #define SYSNOTE_LOADED_DC_LEVEL          1017
 #define SYSNOTE_LOADED_OT_LEVEL          1018
 #define SYSNOTE_WAD_PLAYING              1019
+#define SYSNOTE_ENGINE_INITED            1020
+#define SYSNOTE_LUA_STACK_INDEX          1021
+#define SYSNOTE_LOADING_MAP              1022
 
-// String conversion preload size is used when decoding UTF-8 string
-// to UTF-32 string. To avoid reallocating memory zone each parsed
-// symbol, we specify preload buffer size after which memory will be
-// indeed reallocated. Average string size in TR generic strings is
-// 16 symbols - hence, 16 dwords is an average preload size.
-
-#define STR_CONV_PRELOAD_SIZE       16
+#define SYSNOTE_COMMAND_HELP1            1023
+#define SYSNOTE_COMMAND_HELP2            1024
+#define SYSNOTE_COMMAND_HELP3            1025
+#define SYSNOTE_COMMAND_HELP4            1026
+#define SYSNOTE_COMMAND_HELP5            1027
+#define SYSNOTE_COMMAND_HELP6            1028
+#define SYSNOTE_COMMAND_HELP7            1029
+#define SYSNOTE_COMMAND_HELP8            1030
+#define SYSNOTE_COMMAND_HELP9            1031
+#define SYSNOTE_COMMAND_HELP10           1032
+#define SYSNOTE_COMMAND_HELP11           1033
+#define SYSNOTE_COMMAND_HELP12           1034
+#define SYSNOTE_COMMAND_HELP13           1035
+#define SYSNOTE_COMMAND_HELP14           1036
+#define SYSNOTE_COMMAND_HELP15           1037

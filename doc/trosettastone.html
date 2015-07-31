@@ -5014,6 +5014,7 @@ people thought it is used for lipsync or dragging SAS troop body in &#8220;City 
 </span> Engages a <em>flyby camera sequence</em> specified in <span class="monospaced">Parameter</span> field. The feature was added in TR4 and enables to play cinematographic interludes with
 camera continuously &#8220;flying&#8221; from one point to another. Such <em>sequences</em>, their <em>points</em>, properties and order are defined in a level editor, and engine moves
 camera across them using <em>spline function</em>.</p></div>
+<div class="paragraph"><p><span class="monospaced">uint16_t</span> immediately following flyby&#8217;s own entry contains <em>one-shot flag</em> at <span class="monospaced">0x0100</span>. If this flag is not set, flyby will infinitely loop. As with <em>Camera</em> TrigAction, flag at <span class="monospaced">0x8000</span> is a continuation bit, which overrides previous entry&#8217;s continuation bit.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_trigaction_span_class_monospaced_0x0d_span_8201_8212_8201_cutscene">4.6.14. TrigAction <span class="monospaced">0x0D</span>&#8201;&#8212;&#8201;Cutscene</h4>
@@ -6600,7 +6601,11 @@ in sequence, and so on.</p></div>
 </li>
 <li>
 <p>
-<strong>Bit 1</strong>&#8201;&#8212;&#8201;Camera continuously focuses on Lara&#8217;s feet, overriding own angle.
+<strong>Bit 1</strong>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> Unknown tracking behaviour. <span class="monospaced">Timer</span> field affects the way camera behaves, but the meaning is not clear. <span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> TRLE for TR5 (version <span class="monospaced">.51 (225)</span>) says it does <em>slow motion</em> movement, with <span class="monospaced">Timer</span> indicating time for such movement.
 </p>
 </li>
 <li>
@@ -6616,7 +6621,11 @@ in sequence, and so on.</p></div>
 </li>
 <li>
 <p>
-<strong>Bit 4</strong>&#8201;&#8212;&#8201;Camera focuses on Lara&#8217;s last head position.
+<strong>Bit 4</strong>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> Camera focuses on Lara&#8217;s last head position. <span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> TRLE for TR5 says this flag is now used to hide Lara for this camera.
 </p>
 </li>
 <li>
@@ -6656,12 +6665,16 @@ in sequence, and so on.</p></div>
 </li>
 <li>
 <p>
-<strong>Bit 12</strong>&#8201;&#8212;&#8201;Not used.
+<strong>Bit 12</strong>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Make screen fade-out.
 </p>
 </li>
 <li>
 <p>
-<strong>Bit 13</strong>&#8201;&#8212;&#8201;Not used.
+<strong>Bit 13</strong>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Make screen fade-in.
 </p>
 </li>
 <li>
@@ -6671,7 +6684,9 @@ in sequence, and so on.</p></div>
 </li>
 <li>
 <p>
-<strong>Bit 15</strong>&#8201;&#8212;&#8201;Not used.
+<strong>Bit 15</strong>&#8201;&#8212;&#8201;<span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> TRLE for TR5 says this flag is used to make camera one-shot, but it&#8217;s not true. Actual one-shot flag is placed in extra <span class="monospaced">uint16_t</span> field at <span class="monospaced">0x0100</span> for flyby camera <em>TrigAction</em>.
 </p>
 </li>
 </ul></div>

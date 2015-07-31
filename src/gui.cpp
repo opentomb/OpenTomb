@@ -1,5 +1,6 @@
 
 #include <cstdint>
+
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
 #else
@@ -1172,6 +1173,9 @@ void Gui_DrawBars()
         if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
+        if(engine_world.character->getParam(PARAM_POISON) > 0.0)
+            Bar[BAR_HEALTH].Alternate = true;
+
         Bar[BAR_AIR].Show    (engine_world.character->getParam( PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(engine_world.character->getParam( PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (engine_world.character->getParam( PARAM_HEALTH ));
@@ -1578,7 +1582,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     if (status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        ConsoleInfo::instance().printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        ConsoleInfo::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
         return false;
     }
 
@@ -1630,7 +1634,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    ConsoleInfo::instance().printf("Loaded fader picture: %s", texture_path);
+    ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);
@@ -2360,6 +2364,10 @@ void gui_ProgressBar::Show(float value)
                                            :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
 
     } // end if(Invert)
+
+    // We need to reset Alternate flag each frame, cause behaviour is immediate.
+
+    Alternate = false;
 
     // If vertical style flag is set, we draw bar base top-bottom, else we draw it left-right.
     if(Vertical)

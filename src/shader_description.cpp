@@ -6,10 +6,10 @@
 //  Copyright (c) 2015 Torsten Kammer. All rights reserved.
 //
 
-#include "shader_description.h"
-
 #include <cstdlib>
 #include <cassert>
+
+#include "shader_description.h"
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
@@ -32,10 +32,10 @@ ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStag
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
-    
+
     checkOpenGLError();
     printShaderInfoLog(program);
-    
+
     sampler = glGetUniformLocation(program, "color_map");
 }
 
@@ -72,7 +72,7 @@ TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const Sh
     assert(isLinked == GL_TRUE);
 
     checkOpenGLError();
-    
+
     printShaderInfoLog(program);
 
     screenSize = glGetUniformLocation(program, "screenSize");
@@ -111,7 +111,7 @@ UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const 
     checkOpenGLError();
 
     printShaderInfoLog(program);
-    
+
     model_view_projection = glGetUniformLocation(program, "modelViewProjection");
 }
 

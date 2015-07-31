@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <vector>
+
 #include <LinearMath/btScalar.h>
 
 #include "vertex_array.h"
@@ -202,7 +203,7 @@ struct AnimSeq
     btScalar    current_uvrotate;       // Current coordinate window position.
 
     std::vector<TexFrame> frames;
-    std::vector<uint32_t> frame_list;       // Offset into anim textures frame list.
+    std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
 };
 
 

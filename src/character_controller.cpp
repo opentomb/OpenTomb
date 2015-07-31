@@ -1,10 +1,9 @@
 
-#include "world.h"
-
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
+#include "world.h"
 #include "character_controller.h"
 #include "obb.h"
 #include "anim_state_control.h"
@@ -1881,6 +1880,16 @@ void Character::applyCommands()
 
 void Character::updateParams()
 {
+    // Poisoning is always global
+
+    float poison = getParam(PARAM_POISON);
+
+    if(poison)
+    {
+        changeParam(PARAM_POISON, 0.0001);
+        changeParam(PARAM_HEALTH, -poison);
+    }
+
     switch(m_moveType)
     {
         case MOVE_ON_FLOOR:
@@ -1953,6 +1962,9 @@ int Character::setParamMaximum(int parameter, float max_value)
 int Character::setParam(int parameter, float value)
 {
     if(parameter >= PARAM_SENTINEL)
+        return 0;
+
+    if(value == m_parameters.param[parameter])
         return 0;
 
     float maximum = m_parameters.maximum[parameter];
@@ -4867,53 +4879,9 @@ void Character::stateLaraUnderwaterInertia(SSAnimation* ss_anim)
     }
 }
 
-void Character::stateLaraOnwaterStop(SSAnimation* ss_anim, HeightInfo& next_fc, bool low_vertical_space)
+void Character::stateLaraOnwaterStop(SSAnimation* ss_anim)
 {
-    if(m_command.action && (m_command.move[0] == 1) && (m_moveType != MOVE_CLIMBING))
-    {
-        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
-        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
-        global_offset[2] += LARA_HANG_VERTICAL_EPSILON;                        // inc for water_surf.z
-        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
-        if(m_climb.edge_hit != ClimbType::NoClimb)
-        {
-            low_vertical_space = true;
-        }
-        else
-        {
-            low_vertical_space = false;
-            global_offset[2] += m_maxStepUpHeight + LARA_HANG_VERTICAL_EPSILON;
-            m_climb = checkClimbability(global_offset, &next_fc, 0.0);
-        }
-
-        if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON))// && (m_climb.edge_point[2] - m_transform.getOrigin()[2] < ent->max_step_up_height))   // max_step_up_height is not correct value here
-        {
-            m_dirFlag = ENT_STAY;
-            m_moveType = MOVE_CLIMBING;
-            m_bt.no_fix_all = true;
-            m_angles[0] = m_climb.edge_z_ang;
-            updateTransform();
-            m_climb.point = m_climb.edge_point;
-        }
-    }
-
-    if(m_moveType == MOVE_CLIMBING)
-    {
-        m_speed.setZero();
-        m_command.rot[0] = 0.0;
-        m_bt.no_fix_all = true;
-        if(low_vertical_space)
-        {
-            setAnimation(TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
-            climbOutOfWater(ss_anim, ENTITY_ANIM_NEWANIM);
-        }
-        else
-        {
-            ss_anim->next_state = TR_STATE_LARA_STOP;
-            ss_anim->onFrame = &Character::climbOutOfWater;
-        }
-    }
-    else if(m_response.killed)
+    if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
     }
@@ -4959,9 +4927,11 @@ void Character::stateLaraOnwaterStop(SSAnimation* ss_anim, HeightInfo& next_fc, 
     }
 }
 
-void Character::stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo& next_fc)
+void Character::stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo& next_fc, bool low_vertical_space)
 {
+    m_bt.no_fix_body_parts = BODY_PART_HANDS;
     m_moveType = MOVE_ON_WATER;
+
     if(m_response.killed)
     {
         ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
@@ -4974,9 +4944,55 @@ void Character::stateLaraOnwaterForward(SSAnimation* ss_anim, HeightInfo& next_f
         ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
         ss_anim->onFrame = &Character::setUnderwater;                          // dive
     }
-    else if((m_command.move[0] == 1) && !m_command.action)
+    else if(m_command.move[0] == 1)
     {
-        if(!m_heightInfo.floor_hit || (m_transform.getOrigin()[2] - m_height > m_heightInfo.floor_point[2]- m_swimDepth))
+        if(m_command.action)
+        {
+            if(m_moveType != MOVE_CLIMBING)
+            {
+                btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+                global_offset[2] += LARA_HANG_VERTICAL_EPSILON;                        // inc for water_surf.z
+                m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+                if(m_climb.edge_hit != ClimbType::NoClimb)
+                {
+                    low_vertical_space = true;
+                }
+                else
+                {
+                    low_vertical_space = false;
+                    global_offset[2] += m_maxStepUpHeight + LARA_HANG_VERTICAL_EPSILON;
+                    m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+                }
+
+                if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON))// && (m_climb.edge_point[2] - m_transform.getOrigin()[2] < ent->max_step_up_height))   // max_step_up_height is not correct value here
+                {
+                    m_dirFlag = ENT_STAY;
+                    m_moveType = MOVE_CLIMBING;
+                    m_bt.no_fix_all = true;
+                    m_angles[0] = m_climb.edge_z_ang;
+                    updateTransform();
+                    m_climb.point = m_climb.edge_point;
+                }
+            }
+
+            if(m_moveType == MOVE_CLIMBING)
+            {
+                m_speed.setZero();
+                m_command.rot[0] = 0.0;
+                m_bt.no_fix_all = true;
+                if(low_vertical_space)
+                {
+                    setAnimation(TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
+                }
+                else
+                {
+                    setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
+                }
+                climbOutOfWater(ss_anim, ENTITY_ANIM_NEWANIM);
+            }
+        }
+        else if(!m_heightInfo.floor_hit || (m_transform.getOrigin()[2] - m_height > m_heightInfo.floor_point[2]- m_swimDepth))
         {
             //ent->last_state = ent->last_state;                          // swim forward
         }
@@ -5607,11 +5623,11 @@ int Character::stateControlLara(SSAnimation* ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_STOP:
-            stateLaraOnwaterStop(ss_anim, next_fc, low_vertical_space);
+            stateLaraOnwaterStop(ss_anim);
             break;
 
         case TR_STATE_LARA_ONWATER_FORWARD:
-            stateLaraOnwaterForward(ss_anim, next_fc);
+            stateLaraOnwaterForward(ss_anim, next_fc, low_vertical_space);
             break;
 
         case TR_STATE_LARA_ONWATER_BACK:
