@@ -1,5 +1,4 @@
-#ifndef VEC4_H
-#define VEC4_H
+#pragma once
 
 /*
  *  matrix4.cpp
@@ -428,9 +427,9 @@ struct matrix4
 	
 	const float4 &operator[](int i) const { return (&x)[i]; }
 	float4 &operator[](int i) { return (&x)[i]; }
-	
+
+    static matrix4 createLookAt(const float4 &eye, const float4 &center, const float4 &up);
+    matrix4 affineInverse() const;
 };
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec);
-
-#endif /* VEC4_H */

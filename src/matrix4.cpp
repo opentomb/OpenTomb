@@ -5,10 +5,10 @@
  *  Created by Torsten Kammer on 07.05.10.
  */
 
+#include <iostream>
+
 #include "matrix4.h"
 #include "vmath.h"
-
-#include <iostream>
 
 matrix4 float4::transposeMult(const float4 &other) const
 {
@@ -48,7 +48,27 @@ matrix4 matrix4::diagonal(const float4 &diagonal)
 				  float4(0.0f, 0.0f, 0.0f, diagonal.w));
 }
 
+matrix4 matrix4::createLookAt(const float4 &eye, const float4 &center, const float4 &up)
+{
+    matrix4 result;
+    float4 direction = center - eye;
+    result.x = direction.cross(up).normalized();
+    result.y = result.x.cross(direction).normalized();
+    result.z = -direction.normalized();
+    result.w = eye;
+
+    return result.affineInverse();
+}
+
+matrix4 matrix4::affineInverse() const
+{
+    return matrix4(float4(x.x, y.x, z.x, 0),
+                   float4(x.y, y.y, z.y, 0),
+                   float4(x.z, y.z, z.z, 0),
+                   float4(-w*x, -w*y, -w*z, 1.0));
+}
+
 std::ostream &operator<<(std::ostream &out, const float4 &vec)
 {
-	return out << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w;
+    return out << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w;
 }
