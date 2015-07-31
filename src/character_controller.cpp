@@ -1944,11 +1944,6 @@ void Character::updateParams()
     }
 }
 
-bool IsCharacter(std::shared_ptr<Entity> ent)
-{
-    return std::dynamic_pointer_cast<Character>(ent) != nullptr;
-}
-
 int Character::setParamMaximum(int parameter, float max_value)
 {
     if(parameter >= PARAM_SENTINEL)

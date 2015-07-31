@@ -524,6 +524,5 @@ private:
     void stateLaraMonkeyswingLeftRight();
 };
 
-bool IsCharacter(std::shared_ptr<Entity> ent);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
 
