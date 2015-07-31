@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/time.h>
+#include <chrono>
 
 #include "console.h"
 #include "engine.h"
@@ -137,32 +137,17 @@ void Sys_Strtime(char *buf, size_t buf_size)
 
 void Sys_StrRunSec(char *buf, size_t buf_size)
 {
-    struct              timeval tp;
-    static long int     secbase = 0;
-
-    gettimeofday(&tp, NULL);
-
-    if(!secbase)
-    {
-        secbase = tp.tv_sec;
-    }
-
-    snprintf(buf, buf_size, "%06d.%03d", (int)(tp.tv_sec-secbase), (int)(tp.tv_usec/1000));
+	static auto start = std::chrono::system_clock::now();
+	std::chrono::system_clock::duration delta = std::chrono::system_clock::now() - start;
+	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(delta);
+    snprintf(buf, buf_size, "%06d.%03d", int(ms.count()/1000), int(ms.count()%1000));
 }
 
 btScalar Sys_FloatTime (void)
 {
-    struct              timeval tp;
-    static long int     secbase = 0;
-
-    gettimeofday(&tp, NULL);
-
-    if (!secbase)
-    {
-        secbase = tp.tv_sec;
-        return tp.tv_usec * 1.0e-6;
-    }
-
-    return (btScalar)(tp.tv_sec - secbase) + (btScalar)tp.tv_usec * 1.0e-6;
+	static auto start = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::duration delta = std::chrono::high_resolution_clock::now() - start;
+	std::chrono::microseconds ms = std::chrono::duration_cast<std::chrono::microseconds>(delta);
+	return ms.count() / 1.0e-6;
 }
 

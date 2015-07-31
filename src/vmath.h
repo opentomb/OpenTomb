@@ -3,7 +3,6 @@
 #define VMATH_H
 
 #include <cmath>
-#include <array>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
@@ -17,11 +16,11 @@
 
 namespace
 {
-constexpr const float DegPerRad = 180 / M_PI;
-constexpr const float RadPerDeg = M_PI / 180;
-constexpr const float Rad90 = 0.5*M_PI;
-constexpr const float Rad180 = M_PI;
-constexpr const float Rad360 = 2*M_PI;
+constexpr const double DegPerRad = 180 / M_PI;
+constexpr const double RadPerDeg = M_PI / 180;
+constexpr const double Rad90 = 0.5*M_PI;
+constexpr const double Rad180 = M_PI;
+constexpr const double Rad360 = 2*M_PI;
 }
 
 /**

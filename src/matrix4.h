@@ -12,6 +12,12 @@
 #include <cstring>
 #include <limits>
 #include <iosfwd>
+#include <algorithm>
+
+#ifdef _MSC_VER
+#undef __SSE__
+#undef _WIN32
+#endif
 
 #if defined(_WIN32) || defined(__SSE__)
 #include <xmmintrin.h>
@@ -23,7 +29,7 @@
 
 #include <LinearMath/btTransform.h>
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 // Microsoft Visual C++
 #ifdef max
 #undef max
@@ -32,15 +38,6 @@
 #ifdef min
 #undef min
 #endif
-
-static inline float fmaxf(float a, float b)
-{
-	return a > b ? a : b;
-}
-static inline float fminf(float a, float b)
-{
-	return b > a ? a : b;
-}
 #else
 // Mac OS X or iPhone or something else (that hopefully has this)
 static inline int _finite(float a)
@@ -294,8 +291,8 @@ union float4
 #endif
 	}
 	
-	float max() const { return fmaxf(fmaxf(x, y), fmaxf(z, w)); }
-	float min() const { return fminf(fminf(x, y), fminf(z, w)); }
+	float max() const { return std::max(std::max(x, y), std::max(z, w)); }
+	float min() const { return std::min(std::min(x, y), std::min(z, w)); }
 	
 	float4 min(const float4 &other) const
 	{

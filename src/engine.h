@@ -247,7 +247,11 @@ int engine_lua_printf(const char *fmt, ...);
 
 void Engine_Start();
 void Engine_Destroy();
+#ifdef __GNUC__
 void Engine_Shutdown(int val) __attribute__((noreturn));
+#else
+void Engine_Shutdown(int val);
+#endif
 
 // Initializers
 

@@ -53,9 +53,11 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
+elseif(MSVC)
+	add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
-if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11 -Wall -Wextra -msse3)
 endif()
 
@@ -125,6 +127,8 @@ if(USE_OPENAL_FLOAT)
     target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
                 "${LIBNAME}_LIB"
@@ -145,10 +149,14 @@ function(trylinklib LIBNAME ATTRIBS)
         mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 
-trylinklib("ogg" SHARED)
-trylinklib("vorbis" SHARED)
-trylinklib("vorbisfile" SHARED)
-trylinklib("sndfile" SHARED)
+find_package(Ogg REQUIRED)
+include_directories(${OGG_INCLUDE_DIR})
+find_package(Vorbis REQUIRED)
+include_directories(${VORBIS_INCLUDE_DIR})
+find_package(VorbisFile REQUIRED)
+include_directories(${VORBISFILE_INCLUDE_DIR})
+find_package(SndFile REQUIRED)
+include_directories(${SNDFILE_INCLUDE_DIR})
 
 if(MINGW)
     if(CMAKE_CROSSCOMPILING)
@@ -179,12 +187,11 @@ if(MINGW)
         add_definitions("-DSDL_MAIN_HANDLED")
     endif()
 else()
-    include(FindPkgConfig)
+    find_package(PkgConfig)
     if(PKG_CONFIG_FOUND)
         pkg_search_module(SDL2 REQUIRED sdl2)
         pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
     else()
-        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
         find_package(SDL2 REQUIRED)
         find_package(SDL2IMAGE REQUIRED)
         
@@ -212,10 +219,10 @@ target_link_libraries(
     Lua
     Freetype
     OpenAL
-    ${ogg_LIB}
-    ${vorbis_LIB}
-    ${vorbisfile_LIB}
-    ${sndfile_LIB}
+    ${OGG_LIBRARIES}
+    ${VORBIS_LIBRARIES}
+    ${VORBISFILE_LIBRARIES}
+    ${SNDFILE_LIBRARIES}
     # efence
 )
 

@@ -171,7 +171,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     bone_tags.resize(model->mesh_count);
 
     int stack = 0;
-    SSBoneTag* parents[bone_tags.size()];
+    std::vector<SSBoneTag*> parents(bone_tags.size());
     parents[0] = NULL;
     bone_tags[0].parent = NULL;                                             // root
     for(uint16_t i=0;i<bone_tags.size();i++)

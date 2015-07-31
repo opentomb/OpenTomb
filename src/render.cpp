@@ -1172,8 +1172,8 @@ void RenderDebugDrawer::render()
         if (m_glbuffer == 0) {
             glGenBuffers(1, &m_glbuffer);
             VertexArrayAttribute attribs[] = {
-                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
-                VertexArrayAttribute(UnlitShaderDescription::Color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), 0),
+                VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
             };
             m_vertexArray.reset( new VertexArray(0, 2, attribs) );
         }

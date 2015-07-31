@@ -48,14 +48,14 @@ lua::State level_script;
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != NULL && objects_flags_conf["getEntityModelProperties"])
+    if(ent->m_bf.animations.model != NULL && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
         ent->m_typeFlags |= flg;
     }
 
-    if(ent->m_bf.animations.model != NULL && level_script["getEntityModelProperties"])
+    if(ent->m_bf.animations.model != NULL && level_script["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
@@ -3117,8 +3117,8 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     free(elements);
 
     VertexArrayAttribute attribs[3] = {
-        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
-        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position,      3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), 0),
+        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::tex_coord,     2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
