@@ -404,7 +404,7 @@ void Gui_Render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    Gui_DrawCrosshair();
+    if(screen_info.show_debuginfo) Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();

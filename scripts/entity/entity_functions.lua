@@ -776,7 +776,7 @@ end;
 function dart_tr3_init(id)
     dart_init(id);
     entity_funcs[id].speed      = 150.0;
-    entity_funcs[id].poison     = 0.01;
+    entity_funcs[id].poison     = 0.03;
 end;
 
 function pickup_init(id, item_id)    -- Pick-ups
