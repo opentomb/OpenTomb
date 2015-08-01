@@ -1224,33 +1224,39 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-    if(m_self->room != NULL)
+	if (m_self->room == nullptr)
+		return;
+
+    btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
+	auto containers = m_self->room->containers;
+    for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
-        btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
-        for(const std::shared_ptr<EngineContainer>& cont : m_self->room->containers)
+		if (cont->object_type != OBJECT_ENTITY || !cont->object)
+			continue;
+
+        Entity* e = static_cast<Entity*>(cont->object);
+		if (!e->m_enabled)
+			continue;
+
+        if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
-            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+            //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+            if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
             {
-                Entity* e = static_cast<Entity*>(cont->object);
-                btScalar r = e->m_activationRadius;
-                r *= r;
-                if((e->m_typeFlags & ENTITY_TYPE_INTERACTIVE) && e->m_enabled)
-                {
-                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
-                    {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
-                    }
-                }
-                else if((e->m_typeFlags & ENTITY_TYPE_PICKABLE) && e->m_enabled)
-                {
-                    const btVector3& v = e->m_transform.getOrigin();
-                    if((e != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                            (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
-                    {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
-                    }
-                }
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+            }
+        }
+        else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
+        {
+			btScalar r = e->m_activationRadius;
+			r *= r;
+			const btVector3& v = e->m_transform.getOrigin();
+            if(    (e != this)
+				&& ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
+				&& (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2])
+				&& (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
+            {
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
         }
     }
