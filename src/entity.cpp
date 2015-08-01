@@ -955,7 +955,6 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.next_animation = animation;
     m_bf.animations.next_frame = frame;
 
-    m_bf.animations.frame_time = (btScalar)frame * m_bf.animations.period;
     //long int t = (bf.animations.frame_time) / bf.animations.period;
     //btScalar dt = bf.animations.frame_time - (btScalar)t * bf.animations.period;
     m_bf.animations.frame_time = (btScalar)frame * m_bf.animations.period;// + dt;

@@ -834,8 +834,9 @@ void Game_Frame(btScalar time)
         }
         if(!control_states.noclip && !control_states.free_look)
         {
-            engine_world.character->applyCommands();
             engine_world.character->frame(engine_frame_time);
+            engine_world.character->applyCommands();
+            engine_world.character->frame(0.0);
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
         }
     }
