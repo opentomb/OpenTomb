@@ -280,7 +280,7 @@ struct SSAnimation
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 
-    void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
+    void                        (Character::*onFrame)(int state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;

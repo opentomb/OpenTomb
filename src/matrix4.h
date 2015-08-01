@@ -1,5 +1,4 @@
-#ifndef VEC4_H
-#define VEC4_H
+#pragma once
 
 /*
  *  matrix4.cpp
@@ -49,79 +48,7 @@ static inline int _finite(float a)
 }
 #endif
 
-union float4;
 struct matrix4;
-
-union uint4
-{
-	struct
-	{
-		unsigned x;
-		unsigned y;
-		unsigned z;
-		unsigned w;
-	};
-#ifdef __SSE__
-	__m128 v; // The type for bitwise operations is the one for floating point
-	// because integer operations and types were a later addition to SSE.
-#endif
-	
-	uint4(bool a, bool b, bool c, bool d)
-#if defined(__SSE__)
-	: x(std::numeric_limits<unsigned>::max() * a), y(std::numeric_limits<unsigned>::max() * b), z(std::numeric_limits<unsigned>::max() * c), w(std::numeric_limits<unsigned>::max() * d) {}
-#else
-	: x(a), y(b), z(c), w(d) {}
-#endif
-#ifdef __SSE__
-	uint4(__m128 vec) : v(vec) {}
-#endif
-	
-	bool any() const
-	{
-#ifdef __SSE__
-		return _mm_movemask_ps(v) != 0;
-#else
-		return x || y || z || w;
-#endif
-	}
-	
-	bool all() const
-	{
-#ifdef __SSE__
-		return _mm_movemask_ps(v) == 0xF;
-#else
-		return x && y && z && w;
-#endif
-	}
-	
-	uint4 operator&&(const uint4 &other)
-	{
-#ifdef __SSE__
-		return _mm_and_ps(v, other.v);
-#else
-		return uint4(x && other.x, y && other.y, z && other.z, w && other.w);
-#endif
-	}
-	uint4 operator||(const uint4 &other)
-	{
-#ifdef __SSE__
-		return _mm_or_ps(v, other.v);
-#else
-		return uint4(x || other.x, y || other.y, z || other.z, w || other.w);
-#endif
-	}
-	uint4 operator!()
-	{
-#if defined(__VEC__)
-        // !v = v NOR 0 = v = v NOR (x XOR x) = v NOR (v XOR v)
-        return vec_nor(v, vec_xor(v, v));
-#else
-		return uint4(!x, !y, !z, !w);
-#endif
-	}
-		
-	float4 select(const float4 &a, const float4 &b) const;
-};
 
 union float4
 {
@@ -372,60 +299,6 @@ union float4
 	const float &operator[](int i) const { return this->c_ptr()[i]; }
 	float &operator[](int i) { return this->c_ptr()[i]; }
 	
-	// Comparison
-	uint4 operator>(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmpgt_ps(v, other.v);
-#else
-		return uint4(x > other.x, y > other.y, z > other.z, w > other.w);
-#endif
-	}
-	uint4 operator<(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmplt_ps(v, other.v);
-#else
-		return uint4(x < other.x, y < other.y, z < other.z, w < other.w);
-#endif
-	}
-	uint4 operator>=(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmpge_ps(v, other.v);
-#else
-		return uint4(x >= other.x, y >= other.y, z >= other.z, w >= other.w);
-#endif
-	}
-	uint4 operator<=(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmple_ps(v, other.v);
-#else
-		return uint4(x <= other.x, y <= other.y, z <= other.z, w <= other.w);
-#endif
-	}
-	uint4 operator==(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmpeq_ps(v, other.v);
-#else
-		return uint4(x == other.x, y == other.y, z == other.z, w == other.w);
-#endif
-	}
-	uint4 operator!=(const float4 &other) const
-	{
-#ifdef __SSE__
-		return _mm_cmpneq_ps(v, other.v);
-#else
-		return uint4(x != other.x, y != other.y, z != other.z, w != other.w);
-#endif
-	}
-	
-	uint4 is_finite() const { return uint4(_finite(x), _finite(y), _finite(z), _finite(w)); }
-	
-	bool isOnTriangle(const float4 *points) const;
-	
 	// Treat as quaternion
 	// Note: We use the final component as w (not the first), mainly because it
 	// already has that name in the struct.
@@ -459,53 +332,6 @@ inline float4 operator*(float s, float4 v)
 	return v * s;
 }
 
-inline float4 uint4::select(const float4 &a, const float4 &b) const
-{
-#if defined(__SSE4_1__)
-	return _mm_blendv_ps(a.v, b.v, v);
-#elif defined(__SSE__)
-	return _mm_or_ps(_mm_and_ps(v, a.v), _mm_andnot_ps(v, b.v));
-#else
-	return float4(x ? a.x : b.x, y ? a.y : b.y, z ? a.z : b.z, w ? a.w : b.w);
-#endif
-}
-
-class ray4
-{
-	float4 s;
-	float4 e;
-	
-public:
-	ray4(const float4 &start, const float4 &end)
-	: s(start), e(end) {}
-	
-	float4 &start() { return s; }
-	const float4 &start() const { return s; }
-	
-	float4 &end() { return e; }
-	const float4 &end() const { return e; }
-	
-	float4 direction() const { return e-s; };
-	
-	float4 point(float t) const { return s + t*direction(); }
-	
-	ray4 reverse() const { return ray4(end(), start()); }
-	
-	bool hitsAABB(const float4 &min, const float4 &max, float4 &point) const;
-	
-	ray4 operator/(float4 f) const { return ray4(s/f, e/f); }
-	
-	float planeIntersection(const float4 &planeNormal, const float4 &planePoint) const
-	{
-		return (planeNormal*(planePoint - start()))/(planeNormal*direction());
-	}
-	float4 planeIntersectionPoint(const float4 &planeNormal, const float4 &planePoint) const
-	{
-		return point(planeIntersection(planeNormal, planePoint));
-	}
-	bool hitsTriangle(const float4 *points, float &length) const;
-};
-
 struct matrix4
 {
 	float4 x;
@@ -527,12 +353,6 @@ struct matrix4
         b.getOpenGLMatrix(&x.x);
     }
 	
-	static matrix4 position(const float4 &position) { return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
-    static matrix4 rotation(float4 vector, float angleInRadian);
-	static matrix4 frustum(float angle, float aspect, float near, float far);
-	static matrix4 inverseFrustum(float angle, float aspect, float near, float far);
-	static matrix4 lookat(const float4 &eye, const float4 &center, const float4 &up);
-	static matrix4 fromQuaternion(const float4 &quaternion);
 	static matrix4 diagonal(const float4 &diagonal);
 	
 	matrix4 transposed() const;
@@ -584,10 +404,6 @@ struct matrix4
 					  vec.x * x.w + vec.y * y.w + vec.z * z.w + vec.w * w.w);
 #endif
 	}
-	ray4 operator*(const ray4 &ray) const
-	{
-		return ray4(*this * ray.start(), *this * ray.end());
-	}
 	matrix4 operator*(const matrix4 &other) const
 	{
 		return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
@@ -601,25 +417,19 @@ struct matrix4
     matrix4 operator*(const btTransform &other) const
     {
         return *this * matrix4(other);
-    };
-	matrix4 mulRotationOnly(const matrix4 &other) const
-	{
-		return matrix4(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));
-	};
+    }
 	void operator*=(const matrix4 &other)
 	{
 		*this = *this * other;
 	}
-	matrix4 affineInverse() const;
-	
 	const float *c_ptr() const { return x.c_ptr(); }
 	float *c_ptr() { return x.c_ptr(); }
 	
 	const float4 &operator[](int i) const { return (&x)[i]; }
 	float4 &operator[](int i) { return (&x)[i]; }
-	
+
+    static matrix4 createLookAt(const float4 &eye, const float4 &center, const float4 &up);
+    matrix4 affineInverse() const;
 };
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec);
-
-#endif /* VEC4_H */

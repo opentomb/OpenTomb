@@ -453,7 +453,7 @@ void Entity::checkCollisionCallbacks()
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
+                script::execEntity(script::engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
@@ -461,7 +461,7 @@ void Entity::checkCollisionCallbacks()
                 (type == OBJECT_ROOM_BASE))
         {
             Room* activator = static_cast<Room*>(cont->object);
-            lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
+            script::execEntity(script::engine_lua, ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
         }
     }
 }
@@ -885,7 +885,8 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                 if(ss_anim->current_frame == pointer[0])
                 {
                     uint16_t effect_id = pointer[1] & 0x3FFF;
-                    if(effect_id > 0) lua_ExecEffect(engine_lua, effect_id, m_id);
+                    if(effect_id > 0)
+                        script::execEffect(script::engine_lua, effect_id, m_id);
                 }
                 pointer += 2;
                 break;
@@ -917,7 +918,7 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-        engine_lua["tlist_RunTrigger"](lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+        script::engine_lua["tlist_RunTrigger"](lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
     }
 }
 
@@ -1230,7 +1231,7 @@ void Entity::checkActivators()
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
                     if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
                     {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                        script::execEntity(script::engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
                     }
                 }
                 else if((e->m_typeFlags & ENTITY_TYPE_PICKABLE) && e->m_enabled)
@@ -1239,7 +1240,7 @@ void Entity::checkActivators()
                     if((e != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                             (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
                     {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                        script::execEntity(script::engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
                     }
                 }
             }

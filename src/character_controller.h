@@ -137,27 +137,28 @@
 #define INERTIA_SPEED_ONWATER    (1.5)
 
 // flags constants
-#define CHARACTER_SLIDE_FRONT                   (0x02)
-#define CHARACTER_SLIDE_BACK                    (0x01)
-#define CHARACTER_SLIDE_NONE                    (0x00)
+enum class SlideType
+{
+    None,
+    Back,
+    Front
+};
 
 /*
  * Next step height information
  */
-#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
-#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
-#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
-#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
-#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
-#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
-#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
-#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
-#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
-
-#define CLIMB_ABSENT                            (0x00)
-#define CLIMB_HANG_ONLY                         (0x01)
-#define CLIMB_ALT_HEIGHT                        (0x02)
-#define CLIMB_FULL_HEIGHT                       (0x03)
+enum class NextStepInfo
+{
+    DownCanHang, //!< enough height to hang here
+    DownDrop,    //!< big height, cannot walk next, drop only
+    DownBig,     //!< enough height change, step down is needed
+    DownLittle,  //!< too little height change, step down is not needed
+    Horizontal,  //!< horizontal plane
+    UpLittle,    //!< too little height change, step up is not needed
+    UpBig,       //!< enough height change, step up is needed
+    UpClimb,     //!< big height, cannot walk next, climb only
+    UpImpossible //!< too big height, no one ways here, or phantom case
+};
 
 // CHARACTER PARAMETERS TYPES
 
@@ -192,25 +193,31 @@ class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
+enum class ClimbType
+{
+    NoClimb,   //!< No climability at all
+    HandsOnly, //!< Hands only climbability
+    FullClimb  //!< Full body climbability (hands and feet)
+};
+
 struct ClimbInfo
 {
-    int8_t                         height_info = 0;
-    int8_t                         can_hang = 0;
+    NextStepInfo                   height_info = NextStepInfo::Horizontal;
+    bool                           can_hang = false;
 
     btVector3 point;
     btVector3 n;
-    btVector3 t;
-    btVector3 up;
-    btScalar                       floor_limit;
-    btScalar                       ceiling_limit;
-    btScalar                       next_z_space = 0;
+    btVector3                      right_dir = {0,0,0}; //!< Where to climb to when climbing "right"
+    btVector3                      up_dir = {0,0,0};    //!< Where to climb to when climbing "up"
+    btScalar                       floor_limit   = -9e10;
+    btScalar                       ceiling_limit = +9e10;
+    btScalar                       next_z_space  = 0;
 
-    int8_t                         wall_hit = 0;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit = 0;
-    btVector3                      edge_point;
-    btVector3                      edge_normale;
-    btVector3                      edge_tan_xy;
-    btScalar                       edge_z_ang;
+    ClimbType                      wall_hit = ClimbType::NoClimb;
+    ClimbType                      edge_hit = ClimbType::NoClimb;
+    btVector3                      edge_point;  //!< The point we're grabbing the edge
+    btVector3                      edge_tan_xy; //!< The edge's normalized direction, excluding vertical component
+    btScalar                       edge_z_ang;  //!< Z Angle of the edge we're hanging on
     btCollisionObject             *edge_obj = nullptr;
 };
 
@@ -246,7 +253,7 @@ struct HeightInfo
 
 struct CharacterCommand
 {
-    btVector3 rot;
+    btVector3 rot = {0,0,0};
     std::array<int8_t,3> move{{0,0,0}};
 
     bool        roll = false;
@@ -256,17 +263,25 @@ struct CharacterCommand
     bool        action = false;
     bool        ready_weapon = false;
     bool        sprint = false;
-
-    int8_t      flags = 0;
 };
 
 struct CharacterResponse
 {
-    int8_t      kill = 0;
-    int8_t      vertical_collide = 0;
-    int8_t      horizontal_collide = 0;
-    //int8_t      step_up;
-    int8_t      slide = CHARACTER_SLIDE_NONE;
+    bool killed = false;
+
+    union
+    {
+        int8_t      vertical_collide_raw = 0;
+        struct
+        {
+            bool ceiling_collision : 1;
+            bool floor_collision : 1;
+        };
+    };
+
+    bool horizontal_collision = false;
+
+    SlideType   slide = SlideType::None;
 };
 
 struct CharacterParam
@@ -328,7 +343,7 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    void (Character::*state_func)() = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -338,14 +353,14 @@ struct Character : public Entity
     btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
     btScalar                     m_forwardSize = 48;           // offset for climbing calculation
     btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
     btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
     btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
 
     std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
-    std::unique_ptr<btSphereShape> m_climbSensor;
+    btScalar      m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    btSphereShape m_climbSensor{DEFAULT_CHARACTER_CLIMB_R};
 
     HeightInfo         m_heightInfo{};
     ClimbInfo          m_climb{};
@@ -377,7 +392,7 @@ struct Character : public Entity
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override {
-        m_response.kill = 1;
+        m_response.killed = true;
     }
     virtual Substance getSubstanceState() const override;
     void updateTransform() override {
@@ -396,16 +411,16 @@ struct Character : public Entity
     int32_t getItemsCount(uint32_t item_id);                // returns items count
 
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-    int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
+    NextStepInfo checkNextStep(const btVector3 &offset, HeightInfo *nfc);
     bool hasStopSlant(const HeightInfo &next_fc);
-    ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkClimbability(const btVector3 &offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();
 
     void updateCurrentHeight();
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void lean(CharacterCommand* cmd, btScalar max_lean);
+    void lean(btScalar max_lean);
     btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 
@@ -433,8 +448,81 @@ struct Character : public Entity
     int   setParamMaximum(int parameter, float max_value);
 
     int   setWeaponModel(int weapon_model, int armed);
+
+    void stateControlLara();
+
+private:
+    // Anim frame callbacks
+    void stopTraverse(int state);
+    void setOnFloor(int state);
+    void turnFast(int state);
+    void setOnFloorAfterClimb(int state);
+    void setUnderwater(int state);
+    void setFreeFalling(int state);
+    void setCmdSlide(int state);
+    void correctDivingAngle(int state);
+    void toOnWater(int state);
+    void climbOutOfWater(int state);
+    void toEdgeClimb(int state);
+    void toMonkeySwing(int state);
+    void crawlToClimb(int state);
+
+    // State control subfunctions
+    void stateLaraStop(HeightInfo& next_fc, bool low_vertical_space);
+    void stateLaraJumpPrepare();
+    void stateLaraJumpBack();
+    void stateLaraJumpLeftRight();
+    void stateLaraRunBack();
+    void stateLaraTurnSlow(bool last_frame);
+    void stateLaraTurnFast();
+    void stateLaraRunForward(HeightInfo& next_fc, bool low_vertical_space);
+    void stateLaraSprint(HeightInfo& next_fc, bool low_vertical_space);
+    void stateLaraWalkForward(HeightInfo& next_fc, bool low_vertical_space);
+    void stateLaraWadeForward();
+    void stateLaraWalkBack(HeightInfo& next_fc);
+    void stateLaraWalkLeftRight(HeightInfo& next_fc);
+    void stateLaraSlideBack();
+    void stateLaraSlideForward();
+    void stateLaraPushableGrab();
+    void stateLaraPushablePush();
+    void stateLaraPushablePull();
+    void stateLaraRollBackward(bool low_vertical_space);
+    void stateLaraJumpUp(HeightInfo &next_fc);
+    void stateLaraReach(HeightInfo &next_fc);
+    void stateLaraFixClimbEnd();
+    void stateLaraHang(HeightInfo &next_fc);
+    void stateLaraLadderIdle(HeightInfo &next_fc);
+    void stateLaraLadderLeftRight();
+    void stateLaraLadderUp(HeightInfo &next_fc);
+    void stateLaraLadderDown();
+    void stateLaraShimmyLeftRight(HeightInfo &next_fc);
+    void stateLaraOnWaterExit();
+    void stateLaraJumpForwardFallBackward();
+    void stateLaraUnderwaterDiving();
+    void stateLaraFreefall();
+    void stateLaraSwandiveBegin();
+    void stateLaraSwandiveEnd();
+    void stateLaraUnderwaterStop();
+    void stateLaraUnderwaterDeath();
+    void stateLaraUnderwaterForward();
+    void stateLaraOnwaterStop();
+    void stateLaraOnwaterBack();
+    void stateLaraOnwaterForward(HeightInfo &next_fc, bool low_vertical_space);
+    void stateLaraOnwaterLeftRight();
+    void stateLaraUnderwaterInertia();
+    void stateLaraCrouchIdle(HeightInfo &next_fc, bool low_vertical_space);
+    void stateLaraSprintCrouchRoll();
+    void stateLaraCrawlIdle(HeightInfo &next_fc);
+    void stateLaraCrawlToClimb();
+    void stateLaraCrawlForward(HeightInfo &next_fc);
+    void stateLaraCrawlBack(HeightInfo &next_fc);
+    void stateLaraCrawlTurnLeftRight();
+    void stateLaraCrouchTurnLeftRight();
+    void stateLaraMonkeyswingIdle();
+    void stateLaraMonkeyswingTurnLeftRight();
+    void stateLaraMonkeyswingForward();
+    void stateLaraMonkeyswingLeftRight();
 };
 
-bool IsCharacter(std::shared_ptr<Entity> ent);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
 

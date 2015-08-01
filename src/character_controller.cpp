@@ -18,13 +18,30 @@
 #include "console.h"
 #include "strings.h"
 
+#define LEFT_LEG                    (3)
+#define RIGHT_LEG                   (6)
+
+#define PENETRATION_TEST_OFFSET     (48.0)        ///@TODO: tune it!
+#define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
+#define WALK_BACK_OFFSET            (16.0)
+#define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
+#define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
+#define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
+#define CRAWL_FORWARD_OFFSET        (256.0)
+#define LARA_HANG_WALL_DISTANCE     (128.0 - 24.0)
+#define LARA_HANG_VERTICAL_EPSILON  (64.0)
+#define LARA_HANG_VERTICAL_OFFSET   (12.0)        // in original is 0, in real life hands are little more higher than edge
+#define LARA_TRY_HANG_WALL_OFFSET   (72.0)        // It works more stable than 32 or 128
+#define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
+
+#define OSCILLATE_HANG_USE 0
+
 Character::Character(uint32_t id)
     : Entity(id)
 {
     m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_climbSensor.reset( new btSphereShape(m_climbR) );
-    m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
+    m_climbSensor.setMargin(COLLISION_MARGIN_DEFAULT);
 
     m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -149,19 +166,19 @@ void Character::updateCurrentHeight()
 void Character::updatePlatformPreStep()
 {
 #if 0
-    if(character->platform)
+    if(platform)
     {
-        EngineContainer* cont = (EngineContainer*)character->platform->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)platform->getUserPointer();
         if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
         {
             btScalar trpl[16];
-            character->platform->getWorldTransform().getOpenGLMatrix(trpl);
+            platform->getWorldTransform().getOpenGLMatrix(trpl);
 #if 0
-            new_tr = trpl * character->local_platform;
+            new_tr = trpl * local_platform;
             vec3_copy(transform.getOrigin(), new_tr + 12);
 #else
             ///make something with platform rotation
-            transform = trpl * character->local_platform;
+            transform = trpl * local_platform;
 #endif
         }
     }
@@ -177,37 +194,37 @@ void Character::updatePlatformPostStep()
     switch(move_type)
     {
         case MOVE_ON_FLOOR:
-            if(character->height_info.floor_hit)
+            if(height_info.floor_hit)
             {
-                character->platform = character->height_info.floor_obj;
+                platform = height_info.floor_obj;
             }
             break;
 
         case MOVE_CLIMBING:
-            if(character->climb.edge_hit)
+            if(climb.edge_hit != ClimbInfo::NoClimb)
             {
-                character->platform = character->climb.edge_obj;
+                platform = climb.edge_obj;
             }
             break;
 
         default:
-            character->platform = NULL;
+            platform = NULL;
             break;
     };
 
-    if(character->platform)
+    if(platform)
     {
-        EngineContainer* cont = (EngineContainer*)character->platform->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)platform->getUserPointer();
         if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
         {
             btScalar trpl[16];
-            character->platform->getWorldTransform().getOpenGLMatrix(trpl);
+            platform->getWorldTransform().getOpenGLMatrix(trpl);
             /* local_platform = (global_platform ^ -1) x (global_entity); */
-            character->local_platform = trpl.inverse() * transform;
+            local_platform = trpl.inverse() * transform;
         }
         else
         {
-            character->platform = NULL;
+            platform = NULL;
         }
     }
 #endif
@@ -339,12 +356,12 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
  * Calculates next floor info + phantom filter + returns step info.
  * Current height info must be calculated!
  */
-int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
+NextStepInfo Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 {
     btScalar delta;
     HeightInfo* fc = &m_heightInfo;
     btVector3 from, to;
-    int ret = CHARACTER_STEP_HORIZONTAL;
+    NextStepInfo ret = NextStepInfo::Horizontal;
     ///penetration test?
 
     auto pos = m_transform.getOrigin() + offset;
@@ -356,7 +373,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
         if(std::abs(delta) < SPLIT_EPSILON)
         {
             from[2] = fc->floor_point[2];
-            ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
+            ret = NextStepInfo::Horizontal;                                    // horizontal
         }
         else if(delta < 0.0)                                                    // down way
         {
@@ -364,19 +381,19 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
             from[2] = fc->floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_LITTLE;
+                ret = NextStepInfo::DownLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_BIG;
+                ret = NextStepInfo::DownBig;
             }
             else if(delta <= m_height)
             {
-                ret = CHARACTER_STEP_DOWN_DROP;
+                ret = NextStepInfo::DownDrop;
             }
             else
             {
-                ret = CHARACTER_STEP_DOWN_CAN_HANG;
+                ret = NextStepInfo::DownCanHang;
             }
         }
         else                                                                    // up way
@@ -384,36 +401,36 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
             from[2] = nfc->floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_LITTLE;
+                ret = NextStepInfo::UpLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_BIG;
+                ret = NextStepInfo::UpBig;
             }
             else if(delta <= m_maxClimbHeight)
             {
-                ret = CHARACTER_STEP_UP_CLIMB;
+                ret = NextStepInfo::UpClimb;
             }
             else
             {
-                ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+                ret = NextStepInfo::UpImpossible;
             }
         }
     }
     else if(!fc->floor_hit && !nfc->floor_hit)
     {
         from[2] = pos[2];
-        ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
+        ret = NextStepInfo::Horizontal;                                        // horizontal? yes no maybe...
     }
     else if(!fc->floor_hit && nfc->floor_hit)                                   // strange case
     {
         from[2] = nfc->floor_point[2];
-        ret = 0x00;
+        ret = NextStepInfo::Horizontal;
     }
     else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless
     {
         from[2] = fc->floor_point[2];
-        ret = CHARACTER_STEP_DOWN_CAN_HANG;
+        ret = NextStepInfo::DownCanHang;
     }
 
     /*
@@ -430,7 +447,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     bt_engine_dynamicsWorld->rayTest(from, to, *fc->cb);
     if(fc->cb->hasHit())
     {
-        ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+        ret = NextStepInfo::UpImpossible;
     }
 
     return ret;
@@ -457,71 +474,68 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc, btScalar test_height)
+ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInfo *nfc, btScalar test_height)
 {
-    btVector3 from, to;
-    btScalar d;
-    const auto& pos = m_transform.getOrigin();
-    btTransform t1, t2;
-    char up_founded;
+    const btVector3 entityPos = m_transform.getOrigin();
     extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
     nfc->cb = m_rayCb;
     nfc->ccb = m_convexCb;
-    auto tmp = pos + offset;                                        // tmp = native offset point
-    offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
+    btVector3 to = entityPos + offset; // native offset point
 
-    ClimbInfo ret;
-    ret.height_info = checkNextStep(offset, nfc);
-    offset[2] -= 128.0;
-    ret.can_hang = 0;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
-    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
+    ClimbInfo result;
+    result.height_info = checkNextStep(offset + btVector3{0, 0, 128.0}, nfc);
+    result.floor_limit = m_heightInfo.floor_hit
+                       ? m_heightInfo.floor_point[2]
+                       : -9E10;
+    result.ceiling_limit = m_heightInfo.ceiling_hit
+                         ? m_heightInfo.ceiling_point[2]
+                         : 9E10;
+
+    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < result.ceiling_limit))
     {
-        ret.ceiling_limit = nfc->ceiling_point[2];
+        result.ceiling_limit = nfc->ceiling_point[2];
     }
-    ret.point = m_climb.point;
+
+    result.point = m_climb.point;
     /*
      * check max height
      */
-    if(m_heightInfo.ceiling_hit && (tmp[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
+    if(m_heightInfo.ceiling_hit && (to[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
     {
-        tmp[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0;
+        to[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0;
     }
 
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
-    from[1] = pos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
-    from[2] = tmp[2];
-    to = tmp;
+    btVector3 from;
+    from[0] = entityPos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
+    from[1] = entityPos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
+    from[2] = to[2];
 
-    //vec3_copy(cast_ray, from);
-    //vec3_copy(cast_ray+3, to);
+    btTransform fromTransform;
+    fromTransform.setIdentity();
 
-    t1.setIdentity();
-    t2.setIdentity();
-    up_founded = 0;
-    test_height = (test_height >= m_maxStepUpHeight)?(test_height):(m_maxStepUpHeight);
-    d = pos[2] + m_bf.bb_max[2] - test_height;
-    std::copy(to+0, to+3, cast_ray+0);
-    std::copy(to+0, to+3, cast_ray+3);
+    btTransform toTransform;
+    toTransform.setIdentity();
+
+    btScalar d = entityPos[2] + m_bf.bb_max[2] - std::max(test_height, m_maxStepUpHeight);
+    std::copy(&to[0], &to[3], cast_ray+0);
+    std::copy(&to[0], &to[3], cast_ray+3);
     cast_ray[5] -= d;
+    int up_founded = 0;
     btVector3 n0{0,0,0}, n1{0,0,0};
     btScalar n0d{0}, n1d{0};
     do
     {
-        t1.setOrigin(from);
-        t2.setOrigin(to);
+        fromTransform.setOrigin(from);
+        toTransform.setOrigin(to);
         nfc->ccb->m_closestHitFraction = 1.0;
-        nfc->ccb->m_hitCollisionObject = NULL;
-        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+        nfc->ccb->m_hitCollisionObject = nullptr;
+        bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
             if(nfc->ccb->m_hitNormalWorld[2] >= 0.1)
@@ -530,7 +544,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
                 n0 = nfc->ccb->m_hitNormalWorld;
                 n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
-            if(up_founded && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
+            if(up_founded!=0 && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
             {
                 n1 = nfc->ccb->m_hitNormalWorld;
                 n1d = -n1.dot(nfc->ccb->m_hitPointWorld);
@@ -541,16 +555,11 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         }
         else
         {
-            tmp[0] = to[0];
-            tmp[1] = to[1];
-            tmp[2] = d;
-            t1.setOrigin(to);
-            t2.setOrigin(tmp);
-            //vec3_copy(cast_ray, to);
-            //vec3_copy(cast_ray+3, tmp);
+            fromTransform.setOrigin(to);
+            toTransform.setOrigin({to[0], to[1], d});
             nfc->ccb->m_closestHitFraction = 1.0;
             nfc->ccb->m_hitCollisionObject = NULL;
-            bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+            bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
@@ -559,7 +568,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             }
             else
             {
-                return ret;
+                return result;
             }
         }
 
@@ -569,17 +578,16 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         // close to 0.5 - middle speed, good precision
         from[2] -= 0.66 * m_climbR;
         to[2] -= 0.66 * m_climbR;
-    }
-    while(to[2] >= d);                                                 // we can't climb under floor!
+    } while(to[2] >= d);                                                 // we can't climb under floor!
 
     if(up_founded != 2)
     {
-        return ret;
+        return result;
     }
 
     // get the character plane equation
     btVector3 n2 = m_transform.getBasis().getColumn(0);
-    btScalar n2d = -n2.dot(pos);
+    btScalar n2d = -n2.dot(entityPos);
 
     assert( !n0.fuzzyZero() );
     assert( !n1.fuzzyZero() );
@@ -595,41 +603,43 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
 
     if(std::abs(d) < 0.005)
     {
-        return ret;
+        return result;
     }
 
-    ret.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                        n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                        n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
-    ret.edge_point[0] /= d;
+    result.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
+                           n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                           n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
+    result.edge_point[0] /= d;
 
-    ret.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
-                        n1[0] * (n0d * n2[2] - n0[2] * n2d) +
-                        n2[0] * (n0d * n1[2] - n0[2] * n1d);
-    ret.edge_point[1] /= d;
+    result.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
+                           n1[0] * (n0d * n2[2] - n0[2] * n2d) +
+                           n2[0] * (n0d * n1[2] - n0[2] * n1d);
+    result.edge_point[1] /= d;
 
-    ret.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
-                        n1[0] * (n0[1] * n2d - n0d * n2[1]) +
-                        n2[0] * (n0[1] * n1d - n0d * n1[1]);
-    ret.edge_point[2] /= d;
-    ret.point = ret.edge_point;
-    std::copy(ret.point+0, ret.point+3, cast_ray+3);
+    result.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
+                           n1[0] * (n0[1] * n2d - n0d * n2[1]) +
+                           n2[0] * (n0[1] * n1d - n0d * n1[1]);
+    result.edge_point[2] /= d;
+
+    result.point = result.edge_point;
+    std::copy(result.point+0, result.point+3, cast_ray+3);
     /*
      * unclimbable edge slant %)
      */
     n2 = n0.cross(n1);
     d = m_criticalSlantZComponent;
-    d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
+    d *= d * n2.length2();
     if(n2[2] * n2[2] > d)
     {
-        return ret;
+        return result;
     }
 
     /*
      * Now, let us calculate z_angle
      */
-    ret.edge_hit = 0x01;
+    result.edge_hit = ClimbType::HandsOnly;
 
+    // $0,$1,$2 => $1,-$0,0.0
     n2[2] = n2[0];
     n2[0] = n2[1];
     n2[1] =-n2[2];
@@ -640,122 +650,109 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         n2[1] = -n2[1];
     }
 
-    ret.n = n2;
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
-    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
-    ret.edge_tan_xy[0] = -n2[1];
-    ret.edge_tan_xy[1] = n2[0];
-    ret.edge_tan_xy[2] = 0.0;
-    ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
-    ret.t = ret.edge_tan_xy;
+    result.n = n2;
+    result.up_dir = {0,0,1};
+    result.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
+    result.edge_tan_xy = {-n2[1], n2[0], 0.0};
+    result.edge_tan_xy.normalize();
+    result.right_dir = result.edge_tan_xy;
 
-    if(!m_heightInfo.floor_hit || (ret.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
+    if(!m_heightInfo.floor_hit || (result.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
     {
-        ret.can_hang = 1;
+        result.can_hang = true;
     }
 
-    ret.next_z_space = 2.0 * m_height;
+    result.next_z_space = 2.0 * m_height;
     if(nfc->floor_hit && nfc->ceiling_hit)
     {
-        ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+        result.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
     }
 
-    return ret;
+    return result;
 }
 
 
 ClimbInfo Character::checkWallsClimbability()
 {
 
-    ClimbInfo ret;
-    ret.can_hang = 0x00;
-    ret.wall_hit = 0x00;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
-    ret.point = m_climb.point;
+    ClimbInfo result;
+    if(m_heightInfo.floor_hit)
+        result.floor_limit = m_heightInfo.floor_point[2];
+    if(m_heightInfo.ceiling_hit)
+        result.ceiling_limit = m_heightInfo.ceiling_point[2];
+    result.point = m_climb.point;
 
     if(!m_heightInfo.walls_climb)
     {
-        return ret;
+        return result;
     }
 
-    ret.up = {0,0,1};
+    result.up_dir = {0,0,1};
 
-    btVector3& pos = m_transform.getOrigin();
-    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    const btVector3 entityPosition = m_transform.getOrigin();
+    btVector3 from = entityPosition + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
     btVector3 to = from;
-    btScalar t = m_forwardSize + m_bf.bb_max[1];
-    to += m_transform.getBasis().getColumn(1) * t;
+    to += m_transform.getBasis().getColumn(1) * (m_forwardSize + m_bf.bb_max[1]);
 
     auto ccb = m_convexCb;
     ccb->m_closestHitFraction = 1.0;
     ccb->m_hitCollisionObject = nullptr;
 
-    btTransform tr1;
-    tr1.setIdentity();
-    tr1.setOrigin(from);
+    btTransform fromTransform;
+    fromTransform.setIdentity();
+    fromTransform.setOrigin(from);
 
-    btTransform tr2;
-    tr2.setIdentity();
-    tr2.setOrigin(to);
+    btTransform toTransform;
+    toTransform.setIdentity();
+    toTransform.setOrigin(to);
 
-    bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+    bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *ccb);
     if(!ccb->hasHit())
     {
-        return ret;
+        return result;
     }
 
-    ret.point = ccb->m_hitPointWorld;
-    ret.n = ccb->m_hitNormalWorld;
-    btScalar wn2[2] = {ret.n[0], ret.n[1]};
-    t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
-    wn2[0] /= t;
-    wn2[1] /= t;
+    result.point = ccb->m_hitPointWorld;
+    result.n = ccb->m_hitNormalWorld;
+    btVector3 wn2 = {result.n[0], result.n[1], 0};
+    wn2.normalize();
 
-    ret.t[0] =-wn2[1];
-    ret.t[1] = wn2[0];
-    ret.t[2] = 0.0;
+    result.right_dir = {-wn2[1], wn2[0], 0.0};
     // now we have wall normale in XOY plane. Let us check all flags
 
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, -1, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (0, -1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (-1, 0, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, 1, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (0, 1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (1, 0, 0);
+        result.wall_hit = ClimbType::HandsOnly;                                                    // nW = (1, 0, 0);
     }
 
-    if(ret.wall_hit)
+    if(result.wall_hit != ClimbType::NoClimb)
     {
-        t = 0.67 * m_height;
-        from -= m_transform.getBasis().getColumn(2) * t;
+        from -= m_transform.getBasis().getColumn(2) * (0.67 * m_height);
         to = from;
-        t = m_forwardSize + m_bf.bb_max[1];
-        to += m_transform.getBasis().getColumn(1) * t;
+        to += m_transform.getBasis().getColumn(1) * (m_forwardSize + m_bf.bb_max[1]);
 
         ccb->m_closestHitFraction = 1.0;
         ccb->m_hitCollisionObject = NULL;
-        tr1.setIdentity();
-        tr1.setOrigin(from);
-        tr2.setIdentity();
-        tr2.setOrigin(to);
-        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+        fromTransform.setIdentity();
+        fromTransform.setOrigin(from);
+        toTransform.setIdentity();
+        toTransform.setOrigin(to);
+        bt_engine_dynamicsWorld->convexSweepTest(&m_climbSensor, fromTransform, toTransform, *ccb);
         if(ccb->hasHit())
         {
-            ret.wall_hit = 0x02;
+            result.wall_hit = ClimbType::FullClimb;
         }
     }
 
@@ -773,18 +770,18 @@ ClimbInfo Character::checkWallsClimbability()
         ret.ceiling_limit = (ret.ceiling_limit > point[2])?(point[2]):(ret.ceiling_limit);
     }*/
 
-    return ret;
+    return result;
 }
 
 
-void Character::lean(CharacterCommand *cmd, btScalar max_lean)
+void Character::lean(btScalar max_lean)
 {
     btScalar neg_lean   = 360.0 - max_lean;
     btScalar lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
-    if((cmd->move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
+    if((m_command.move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -800,7 +797,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
         }
     }
-    else if(cmd->move[1] == 1) // Right direction
+    else if(m_command.move[1] == 1) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
@@ -822,7 +819,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
         }
     }
-    else if(cmd->move[1] == -1)     // Left direction
+    else if(m_command.move[1] == -1)     // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
@@ -947,8 +944,9 @@ int Character::moveOnFloor()
     HeightInfo nfc;
     nfc.cb = m_rayCb;
     nfc.ccb = m_convexCb;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.bb_min[2]))
@@ -959,7 +957,7 @@ int Character::moveOnFloor()
             Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id(), id());
+                script::execEntity(script::engine_lua, ENTITY_CALLBACK_STAND, e->id(), id());
             }
         }
     }
@@ -970,7 +968,7 @@ int Character::moveOnFloor()
     /*
      * check move type
      */
-    if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
+    if(m_heightInfo.floor_hit || m_response.floor_collision)
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
@@ -980,7 +978,7 @@ int Character::moveOnFloor()
         }
         else
         {
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
 
         btVector3 floorNormal = m_heightInfo.floor_normale;
@@ -995,22 +993,22 @@ int Character::moveOnFloor()
             if(t >= 0.0)
             {
                 // front forward slide down
-                m_response.slide = CHARACTER_SLIDE_FRONT;
+                m_response.slide = SlideType::Front;
                 m_angles[0] = zAngle + 180;
             }
             else
             {
                 // back forward slide down
-                m_response.slide = CHARACTER_SLIDE_BACK;
+                m_response.slide = SlideType::Back;
                 m_angles[0] = zAngle;
             }
             updateTransform();
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
         else    // no slide - free to walk
         {
             const btScalar fullSpeed = m_currentSpeed * m_speedMult;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
 
@@ -1036,13 +1034,14 @@ int Character::moveOnFloor()
             {
                 //dir_flag = ENT_MOVE_FORWARD;
             }
-            m_response.slide = CHARACTER_SLIDE_NONE;
+            m_response.slide = SlideType::None;
         }
     }
     else                                                                        // no hit to the floor
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
-        m_response.vertical_collide = 0x00;
+        m_response.slide = SlideType::None;
+        m_response.ceiling_collision = false;
+        m_response.floor_collision = false;
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
         return -1;                                                              // nothing to do here
@@ -1097,10 +1096,10 @@ int Character::moveOnFloor()
         {
             position[2] = m_heightInfo.floor_point[2];
             fixPenetrations(nullptr);
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
         }
     }
-    else if(!(m_response.vertical_collide & 0x01))
+    else if(!m_response.floor_collision)
     {
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
@@ -1123,9 +1122,10 @@ int Character::freeFalling()
      * init height info structure
      */
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     btScalar rot = inertiaAngular(1.0, ROT_SPEED_FREEFALL, 0);
     m_angles[0] += rot;
@@ -1176,7 +1176,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 0.0;
-            m_response.vertical_collide |= 0x02;
+            m_response.ceiling_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
         }
@@ -1188,7 +1188,7 @@ int Character::freeFalling()
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
             m_moveType = MOVE_ON_FLOOR;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
             return 2;
@@ -1204,7 +1204,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 0.0;
-            m_response.vertical_collide |= 0x02;
+            m_response.ceiling_collision = true;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
@@ -1214,7 +1214,7 @@ int Character::freeFalling()
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
             m_moveType = MOVE_ON_FLOOR;
-            m_response.vertical_collide |= 0x01;
+            m_response.floor_collision = true;
             fixPenetrations(nullptr);
             updateRoomPos();
             return 2;
@@ -1235,12 +1235,12 @@ int Character::monkeyClimbing()
     auto& pos = m_transform.getOrigin();
 
     m_speed[2] = 0.0;
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = true; //! @todo Monkey climbing with floor collision?
 
     t = m_currentSpeed * m_speedMult;
-    m_response.vertical_collide |= 0x01;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_MONKEYSWING, 0);
     m_angles[1] = 0.0;
@@ -1267,7 +1267,7 @@ int Character::monkeyClimbing()
     {
         //dir_flag = ENT_MOVE_FORWARD;
     }
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
 
     m_speed = spd;
     move = spd * engine_frame_time;
@@ -1304,14 +1304,15 @@ int Character::wallsClimbing()
     btScalar t;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     spd={0,0,0};
     *climb = checkWallsClimbability();
     m_climb = *climb;
-    if(!(climb->wall_hit))
+    if(climb->wall_hit == ClimbType::NoClimb)
     {
         m_heightInfo.walls_climb = false;
         return 2;
@@ -1324,19 +1325,19 @@ int Character::wallsClimbing()
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
-        spd += climb->up;
+        spd += climb->up_dir;
     }
     else if(m_dirFlag == ENT_MOVE_BACKWARD)
     {
-        spd -= climb->up;
+        spd -= climb->up_dir;
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd += climb->t;
+        spd += climb->right_dir;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd -= climb->t;
+        spd -= climb->right_dir;
     }
     t = spd.length();
     if(t > 0.01)
@@ -1366,55 +1367,52 @@ int Character::wallsClimbing()
  */
 int Character::climbing()
 {
-    btVector3 move, spd(0.0, 0.0, 0.0);
-    btScalar t;
-    auto& pos = m_transform.getOrigin();
-    btScalar z = pos[2];
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = true; //! @todo Climbing with floor collision?
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
-
-    t = m_currentSpeed * m_speedMult;
-    m_response.vertical_collide |= 0x01;
+    const btScalar fullSpeed = m_currentSpeed * m_speedMult;
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
 
+    btVector3 spd(0.0, 0.0, 0.0);
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
-        spd = m_transform.getBasis().getColumn(1) * t;
+        spd = m_transform.getBasis().getColumn(1) * fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_BACKWARD)
     {
-        spd = m_transform.getBasis().getColumn(1) * -t;
+        spd = m_transform.getBasis().getColumn(1) * -fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd = m_transform.getBasis().getColumn(0) * -t;
+        spd = m_transform.getBasis().getColumn(0) * -fullSpeed;
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd = m_transform.getBasis().getColumn(0) * t;
+        spd = m_transform.getBasis().getColumn(0) * fullSpeed;
     }
     else
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
+        m_response.slide = SlideType::None;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_speed = spd;
-    move = spd * engine_frame_time;
+    btVector3 move = spd * engine_frame_time;
 
     ghostUpdate();
-    pos += move;
+    const btScalar origZ = m_transform.getOrigin()[2];
+    m_transform.getOrigin() += move;
     fixPenetrations(&move);                              // get horizontal collide
     updateRoomPos();
-    pos[2] = z;
+    m_transform.getOrigin()[2] = origZ;
 
     return 1;
 }
@@ -1438,15 +1436,16 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     // Calculate current speed.
 
     btScalar t = inertiaLinear(MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, m_command.jump);
 
-    if(!m_response.kill)   // Block controls if Lara is dead.
+    if(!m_response.killed)   // Block controls if Lara is dead.
     {
         m_angles[0] += inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 0);
         m_angles[1] -= inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 1);
@@ -1497,9 +1496,10 @@ int Character::moveOnWater()
     btVector3 move, spd(0.0, 0.0, 0.0);
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
-    m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide = 0x00;
+    m_response.slide = SlideType::None;
+    m_response.horizontal_collision = false;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_ONWATER, 0);
     m_angles[1] = 0.0;
@@ -1836,7 +1836,7 @@ void Character::applyCommands()
 
     if(state_func)
     {
-        state_func(this, &m_bf.animations);
+        (this->*state_func)();
     }
 
     switch(m_moveType)
@@ -1934,7 +1934,7 @@ void Character::updateParams()
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
                 {
-                    m_response.kill = 1;
+                    m_response.killed = true;
                 }
             }
             break;
@@ -1942,11 +1942,6 @@ void Character::updateParams()
         default:
             break;  // Add quicksand later...
     }
-}
-
-bool IsCharacter(std::shared_ptr<Entity> ent)
-{
-    return std::dynamic_pointer_cast<Character>(ent) != nullptr;
 }
 
 int Character::setParamMaximum(int parameter, float max_value)
@@ -2099,8 +2094,9 @@ void Character::fixPenetrations(const btVector3* move)
 
     if(move != nullptr)
     {
-        m_response.horizontal_collide    = 0x00;
-        m_response.vertical_collide      = 0x00;
+        m_response.horizontal_collision = false;
+        m_response.ceiling_collision = false;
+        m_response.floor_collision = false;
     }
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -2129,30 +2125,30 @@ void Character::fixPenetrations(const btVector3* move)
             t1 = (reaction[0] * move->x() + reaction[1] * move->y()) / sqrtf(t2);
             if(t1 < m_criticalWallComponent)
             {
-                m_response.horizontal_collide |= 0x01;
+                m_response.horizontal_collision = true;
             }
         }
         else if((reaction[2] * reaction[2] > t1) && (move->z() * move->z() > t2))
         {
             if((reaction[2] > 0.0) && (move->z() < 0.0))
             {
-                m_response.vertical_collide |= 0x01;
+                m_response.floor_collision = true;
             }
             else if((reaction[2] < 0.0) && (move->z() > 0.0))
             {
-                m_response.vertical_collide |= 0x02;
+                m_response.ceiling_collision = true;
             }
         }
     }
 
     if(m_heightInfo.ceiling_hit && (reaction[2] < -0.1))
     {
-        m_response.vertical_collide |= 0x02;
+        m_response.ceiling_collision = true;
     }
 
     if(m_heightInfo.floor_hit && (reaction[2] > 0.1))
     {
-        m_response.vertical_collide |= 0x01;
+        m_response.floor_collision = true;
     }
 
     ghostUpdate();
@@ -2160,7 +2156,7 @@ void Character::fixPenetrations(const btVector3* move)
 
 /**
  * we check walls and other collision objects reaction. if reaction more than critical
- * then cmd->horizontal_collide |= 0x01;
+ * then m_command.horizontal_collision=true;
  * @param move absolute 3d move vector
  */
 int Character::checkNextPenetration(const btVector3& move)
@@ -2170,7 +2166,7 @@ int Character::checkNextPenetration(const btVector3& move)
 
     ghostUpdate();
     m_transform.getOrigin() += move;
-    //resp->horizontal_collide = 0x00;
+    //m_response.horizontal_collision = false;
     btVector3 reaction;
     int ret = getPenetrationFixVector(&reaction, true);
     if(ret > 0) {
@@ -2180,7 +2176,7 @@ int Character::checkNextPenetration(const btVector3& move)
             t2 *= t1;
             t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
             if(t1 < m_criticalWallComponent) {
-                m_response.horizontal_collide |= 0x01;
+                m_response.horizontal_collision = true;
             }
         }
     }
@@ -2272,9 +2268,9 @@ void Character::frameImpl(btScalar time, int16_t frame, int state) {
 
     doWeaponFrame(time);
 
-    if(m_bf.animations.onFrame != NULL)
+    if(m_bf.animations.onFrame != nullptr)
     {
-        m_bf.animations.onFrame(this, &m_bf.animations, state);
+        (this->*m_bf.animations.onFrame)(state);
     }
 }
 
@@ -2308,7 +2304,7 @@ void Character::processSectorImpl() {
                 (m_moveType == MOVE_QUICKSAND))
         {
             setParam(PARAM_HEALTH, 0.0);
-            m_response.kill = 1;
+            m_response.killed = true;
         }
     }
 }
@@ -2342,8 +2338,9 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal) {
         m_dirFlag = ENT_MOVE_FORWARD;
     }
 
-    m_response.vertical_collide = 0x00;
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.ceiling_collision = false;
+    m_response.floor_collision = false;
+    m_response.slide = SlideType::None;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
@@ -2801,5 +2798,3099 @@ void Character::doWeaponFrame(btScalar time)
         }
 
         doAnimCommands(ss_anim, 0);
+    }
+}
+
+void Character::stateLaraStop(HeightInfo &next_fc, bool low_vertical_space)
+{
+    // Reset directional flag only on intermediate animation!
+
+    if(m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID)
+    {
+        m_dirFlag = ENT_STAY;
+    }
+
+    m_command.rot[0] = 0;
+    m_command.crouch |= low_vertical_space;
+    lean(0.0);
+
+    if( (m_climb.can_hang &&
+        (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON) &&
+        (m_moveType == MOVE_CLIMBING)) ||
+        (m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID) )
+    {
+        m_moveType = MOVE_ON_FLOOR;
+    }
+
+    if(m_moveType == MOVE_ON_FLOOR)
+    {
+        m_bt.no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    }
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+        m_dirFlag = ENT_STAY;
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_DEATH;
+    }
+    else if(m_response.slide == SlideType::Front)
+    {
+        Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, id());
+
+        if(m_command.jump)
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+            setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
+        }
+        else
+        {
+            setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
+        }
+    }
+    else if(m_response.slide == SlideType::Back)
+    {
+        if(m_command.jump)
+        {
+            m_dirFlag = ENT_MOVE_BACKWARD;
+            setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
+            Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+        else
+        {
+            setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
+        }
+    }
+    else if(m_command.jump)
+    {
+        if(!m_heightInfo.quicksand)
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
+    }
+    else if(m_command.roll)
+    {
+        if(!m_heightInfo.quicksand && m_bf.animations.current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+            setAnimation(TR_ANIMATION_LARA_ROLL_BEGIN, 0);
+        }
+    }
+    else if(m_command.crouch)
+    {
+        if(!m_heightInfo.quicksand)
+            m_bf.animations.next_state = TR_STATE_LARA_CROUCH_IDLE;
+    }
+    else if(m_command.action && findTraverse())
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_GRAB;
+        btScalar t;
+        if(m_transform.getBasis().getColumn(1).x() > 0.9)
+        {
+            t = -m_traversedObject->m_bf.bb_min[0] + 72.0;
+        }
+        else if(m_transform.getBasis().getColumn(1).x() < -0.9)
+        {
+            t = m_traversedObject->m_bf.bb_max[0] + 72.0;
+        }
+        else if(m_transform.getBasis().getColumn(1).y() > 0.9)
+        {
+            t = -m_traversedObject->m_bf.bb_min[1] + 72.0;
+        }
+        else if(m_transform.getBasis().getColumn(1).y() < -0.9)
+        {
+            t = m_traversedObject->m_bf.bb_max[1] + 72.0;
+        }
+        else
+        {
+            t = 512.0 + 72.0;                                           ///@PARANOID
+        }
+        const btVector3& v = m_traversedObject->m_transform.getOrigin();
+        m_transform.getOrigin()[0] = v[0] - m_transform.getBasis().getColumn(1).x() * t;
+        m_transform.getOrigin()[1] = v[1] - m_transform.getBasis().getColumn(1).y() * t;
+    }
+    else if(m_command.move[0] == 1)
+    {
+        if(m_command.shift)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+            btVector3 global_offset = m_transform.getBasis().getColumn(1) * WALK_FORWARD_OFFSET;
+            global_offset[2] += m_bf.bb_max[2];
+            global_offset += m_transform.getOrigin();
+            Character::getHeightInfo(global_offset, &next_fc);
+            if(((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) &&
+               (next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight)))
+            {
+                m_moveType = MOVE_ON_FLOOR;
+                m_dirFlag = ENT_MOVE_FORWARD;
+                if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+                }
+                else
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_WALK_FORWARD;
+                }
+            }
+        }       // end IF CMD->SHIFT
+        else
+        {
+            btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+            btVector3 global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+            global_offset[2] += m_bf.bb_max[2];
+            checkNextStep(global_offset, &next_fc);
+            if(((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) && !hasStopSlant(next_fc))
+            {
+                m_moveType = MOVE_ON_FLOOR;
+                m_dirFlag = ENT_MOVE_FORWARD;
+                if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+                }
+                else
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+                }
+            }
+        }
+
+        if( m_command.action &&
+            ((m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_IDLE)        ||
+             (m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID)       ||
+             (m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT)  ||
+             (m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)) )
+        {
+            btScalar t = m_forwardSize + LARA_TRY_HANG_WALL_OFFSET;
+            btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+
+            global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
+            m_climb = checkClimbability(global_offset, &next_fc, 0.5 * DEFAULT_CLIMB_UP_HEIGHT);
+            if(  m_climb.edge_hit != ClimbType::NoClimb                                       &&
+                (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON)    &&
+                (m_transform.getOrigin()[2] + m_maxStepUpHeight < next_fc.floor_point[2])             &&
+                (m_transform.getOrigin()[2] + 2944.0 >= next_fc.floor_point[2])                                  &&
+                (next_fc.floor_normale[2] >= m_criticalSlantZComponent)  ) // trying to climb on
+            {
+                if(m_transform.getOrigin()[2] + 640.0 >= next_fc.floor_point[2])
+                {
+                    m_angles[0] = m_climb.edge_z_ang;
+                    m_transform.getOrigin()[2] = next_fc.floor_point[2] - 512.0;
+                    m_climb.point = next_fc.floor_point;
+                    setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
+                    m_bt.no_fix_all = true;
+                    m_bf.animations.onFrame = &Character::setOnFloorAfterClimb;
+                    return;
+                }
+                else if(m_transform.getOrigin()[2] + 896.0 >= next_fc.floor_point[2])
+                {
+                    m_angles[0] = m_climb.edge_z_ang;
+                    m_transform.getOrigin()[2] = next_fc.floor_point[2] - 768.0;
+                    m_climb.point = next_fc.floor_point;
+                    setAnimation(TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
+                    m_bt.no_fix_all = true;
+                    m_bf.animations.onFrame = &Character::setOnFloorAfterClimb;
+                    return;
+                }
+            }   // end IF MOVE_LITTLE_CLIMBING
+
+            global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
+            m_climb = checkClimbability(global_offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
+            if(  m_climb.edge_hit != ClimbType::NoClimb                                       &&
+                (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON)    &&
+                (m_transform.getOrigin()[2] + m_maxStepUpHeight < next_fc.floor_point[2])             &&
+                (m_transform.getOrigin()[2] + 2944.0 >= next_fc.floor_point[2])                                  &&
+                (next_fc.floor_normale[2] >= m_criticalSlantZComponent)  ) // trying to climb on
+            {
+                if(m_transform.getOrigin()[2] + 1920.0 >= next_fc.floor_point[2])
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_JUMP_UP;
+                    return;
+                }
+            }   // end IF MOVE_BIG_CLIMBING
+
+            m_climb = checkWallsClimbability();
+            if(m_climb.wall_hit != ClimbType::NoClimb)
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_JUMP_UP;
+                return;
+            }
+        }
+    }       // end CMD->MOVE FORWARD
+    else if(m_command.move[0] == -1)
+    {
+        if(m_command.shift)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+            {
+                btVector3 global_offset = m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
+                global_offset[2] += m_bf.bb_max[2];
+                global_offset += m_transform.getOrigin();
+                Character::getHeightInfo(global_offset, &next_fc);
+                if((next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight)))
+                {
+                    m_dirFlag = ENT_MOVE_BACKWARD;
+                    m_bf.animations.next_state = TR_STATE_LARA_WALK_BACK;
+                }
+            }
+        }
+        else    // RUN BACK
+        {
+            btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+            {
+                m_dirFlag = ENT_MOVE_BACKWARD;
+                if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_WALK_BACK;
+                }
+                else
+                {
+                    m_bf.animations.next_state = TR_STATE_LARA_RUN_BACK;
+                }
+            }
+        }
+    }       // end CMD->MOVE BACK
+    else if(m_command.move[1] == 1)
+    {
+        if(m_command.shift)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+            {
+                btVector3 global_offset = m_transform.getBasis().getColumn(0) * RUN_FORWARD_OFFSET;
+                global_offset[2] += m_bf.bb_max[2];
+                NextStepInfo i = checkNextStep(global_offset, &next_fc);
+                if(!m_response.horizontal_collision && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
+                {
+                    m_command.rot[0] = 0.0;
+                    m_dirFlag = ENT_MOVE_RIGHT;
+                    m_bf.animations.next_state = TR_STATE_LARA_WALK_RIGHT;
+                }
+            }
+        }       //end IF CMD->SHIFT
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_TURN_RIGHT_SLOW;
+        }
+    }       // end MOVE RIGHT
+    else if(m_command.move[1] == -1)
+    {
+        if(m_command.shift)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+            {
+                btVector3 global_offset = m_transform.getBasis().getColumn(0) * -RUN_FORWARD_OFFSET;
+                global_offset[2] += m_bf.bb_max[2];
+                NextStepInfo i = checkNextStep(global_offset, &next_fc);
+                if(!m_response.horizontal_collision && (i >= NextStepInfo::DownLittle && i <= NextStepInfo::UpLittle))
+                {
+                    m_command.rot[0] = 0.0;
+                    m_dirFlag = ENT_MOVE_LEFT;
+                    m_bf.animations.next_state = TR_STATE_LARA_WALK_LEFT;
+                }
+            }
+        }       //end IF CMD->SHIFT
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_TURN_LEFT_SLOW;
+        }
+    }       // end MOVE LEFT
+}
+
+void Character::stateLaraJumpPrepare()
+{
+    m_command.rot[0] = 0;
+    lean(0.0);
+
+    if(m_response.slide == SlideType::Back)      // Slide checking is only for jumps direction correction!
+    {
+        setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
+        m_command.move[0] = -1;
+    }
+    else if(m_response.slide == SlideType::Front)
+    {
+        setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
+        m_command.move[0] = 1;
+    }
+    if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+    {
+        //Stay, directional jumps are not allowed whilst in wade depth
+    }
+    else if(m_command.move[0] == 1)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+        if(checkNextPenetration(move) == 0)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_FORWARD;           // jump forward
+        }
+    }
+    else if(m_command.move[0] ==-1)
+    {
+        m_dirFlag = ENT_MOVE_BACKWARD;
+        btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+        if(checkNextPenetration(move) == 0)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_BACK;              // jump backward
+        }
+    }
+    else if(m_command.move[1] == 1)
+    {
+        m_dirFlag = ENT_MOVE_RIGHT;
+        btVector3 move = m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+        if(checkNextPenetration(move) == 0)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_LEFT;              // jump right
+        }
+    }
+    else if(m_command.move[1] ==-1)
+    {
+        m_dirFlag = ENT_MOVE_LEFT;
+        btVector3 move = m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+        if(checkNextPenetration(move) == 0)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_RIGHT;             // jump left
+        }
+    }
+}
+
+void Character::stateLaraJumpBack()
+{
+    m_command.rot[0] = 0.0;
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
+    {
+        if(m_heightInfo.quicksand)
+        {
+            setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;       // landing
+        }
+    }
+    else if(m_response.horizontal_collision)
+    {
+        Controls_JoyRumble(200.0, 200);
+        setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
+        m_dirFlag = ENT_MOVE_FORWARD;
+        updateCurrentSpeed(true);
+    }
+    else if((m_moveType == MOVE_UNDERWATER) || (m_speed[2] <= -FREE_FALL_SPEED_2))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;                   // free falling
+    }
+    else if(m_command.roll)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_ROLL;
+    }
+}
+
+void Character::stateLaraJumpLeftRight()
+{
+    m_command.rot[0] = 0.0;
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
+    {
+        if(m_heightInfo.quicksand)
+        {
+            setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;       // landing
+        }
+    }
+    else if(m_response.horizontal_collision)
+    {
+        Controls_JoyRumble(200.0, 200);
+        setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
+        m_dirFlag = m_bf.animations.last_state==TR_STATE_LARA_JUMP_LEFT
+                  ? ENT_MOVE_RIGHT
+                  : ENT_MOVE_LEFT;
+        updateCurrentSpeed(true);
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;
+    }
+}
+
+void Character::stateLaraRunBack()
+{
+    m_dirFlag = ENT_MOVE_BACKWARD;
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_BACK, 0);
+    }
+    else if(m_response.horizontal_collision)
+    {
+        setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK_END, 0);
+    }
+}
+
+void Character::stateLaraTurnSlow(bool last_frame)
+{
+    m_command.rot[0] *= 0.7;
+    m_dirFlag = ENT_STAY;
+    lean(0.0);
+    m_bt.no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+
+    if(m_command.move[0] == 1)
+    {
+        Substance substance_state = getSubstanceState();
+        if((substance_state == Substance::None) ||
+           (substance_state == Substance::WaterShallow))
+        {
+            if(m_command.shift)
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_WALK_FORWARD;
+                m_dirFlag = ENT_MOVE_FORWARD;
+            }
+            else
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+                m_dirFlag = ENT_MOVE_FORWARD;
+            }
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+
+    }
+    else if(((m_bf.animations.last_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (m_command.move[1] == -1)) ||
+            ((m_bf.animations.last_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (m_command.move[1] ==  1))  )
+    {
+        Substance substance_state = getSubstanceState();
+        if(last_frame &&
+           (substance_state != Substance::WaterWade) &&
+           (substance_state != Substance::QuicksandConsumed) &&
+           (substance_state != Substance::QuicksandShallow))
+         {
+             m_bf.animations.next_state = TR_STATE_LARA_TURN_FAST;
+         }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraTurnFast()
+{
+    // 65 - wade
+    m_dirFlag = ENT_STAY;
+    m_bt.no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    lean(0.0);
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+    }
+    else if(m_command.move[0] == 1 && !m_command.jump && !m_command.crouch && m_command.shift)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WALK_FORWARD;
+        m_dirFlag = ENT_MOVE_FORWARD;
+    }
+    else if(m_command.move[0] == 1 && !m_command.jump && !m_command.crouch && !m_command.shift)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+        m_dirFlag = ENT_MOVE_FORWARD;
+    }
+    else if(m_command.move[1] == 0)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraRunForward(HeightInfo& next_fc, bool low_vertical_space)
+{
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+    global_offset[2] += m_bf.bb_max[2];
+    NextStepInfo i = checkNextStep(global_offset, &next_fc);
+    m_dirFlag = ENT_MOVE_FORWARD;
+    m_command.crouch |= low_vertical_space;
+
+    if(m_moveType == MOVE_ON_FLOOR)
+    {
+        m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;;
+    }
+    lean(6.0);
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_DEATH;
+    }
+    else if(m_response.slide == SlideType::Front)
+    {
+        setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
+    }
+    else if(m_response.slide == SlideType::Back)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
+        m_dirFlag = ENT_MOVE_BACKWARD;
+    }
+    else if(hasStopSlant(next_fc))
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+    }
+    else if(m_command.crouch)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CROUCH_IDLE;
+    }
+    else if((m_command.move[0] == 1) && !m_command.crouch && (next_fc.floor_normale[2] >= m_criticalSlantZComponent) && (i == NextStepInfo::UpBig))
+    {
+        m_dirFlag = ENT_STAY;
+        int dispCase = getAnimDispatchCase(2);                         // MOST CORRECT STATECHANGE!!!
+        if(dispCase == 0)
+        {
+            setAnimation(TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
+            m_transform.getOrigin()[2] = next_fc.floor_point[2];
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+        else //if(i == 1)
+        {
+            setAnimation(TR_ANIMATION_LARA_RUN_UP_STEP_LEFT, 0);
+            m_transform.getOrigin()[2] = next_fc.floor_point[2];
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+    }
+    else if(m_response.horizontal_collision)
+    {
+        global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+        global_offset[2] += 1024.0;
+        if(m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_TO_RUN)
+        {
+            setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+        }
+        else
+        {
+            Controls_JoyRumble(200.0, 200);
+
+            if(m_command.move[0] == 1)
+            {
+                int dispCase = getAnimDispatchCase(2);
+                if(dispCase == 1)
+                {
+                    setAnimation(TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
+                }
+                else
+                {
+                    setAnimation(TR_ANIMATION_LARA_WALL_SMASH_RIGHT, 0);
+                }
+            }
+            else
+            {
+                setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
+            }
+        }
+        updateCurrentSpeed(false);
+    }
+    else if(m_command.move[0] == 1)                                          // If we continue running...
+    {
+        if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+        }
+        else if(m_command.shift)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_WALK_FORWARD;
+        }
+        else if(m_command.jump && (m_bf.animations.last_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_JUMP_FORWARD;
+        }
+        else if(m_command.roll)
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+            setAnimation(TR_ANIMATION_LARA_ROLL_BEGIN, 0);
+        }
+        else if(m_command.sprint)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_SPRINT;
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraSprint(HeightInfo& next_fc, bool low_vertical_space)
+{
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+    lean(12.0);
+    global_offset[2] += m_bf.bb_max[2];
+    NextStepInfo i = checkNextStep(global_offset, &next_fc);
+    m_command.crouch |= low_vertical_space;
+
+    if(m_moveType == MOVE_ON_FLOOR)
+    {
+        m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    }
+
+    if(!getParam(PARAM_STAMINA))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+    }
+    else if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;    // Normal run then die
+    }
+    else if(m_response.slide == SlideType::Front)
+    {
+        setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
+    }
+    else if(m_response.slide == SlideType::Back)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
+    }
+    else if((next_fc.floor_normale[2] < m_criticalSlantZComponent) && (i > NextStepInfo::Horizontal))
+    {
+        m_currentSpeed = 0.0;
+        setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);       ///@FIXME: maybe RUN_TO_STAY
+    }
+    else if((next_fc.floor_normale[2] >= m_criticalSlantZComponent) && (i == NextStepInfo::UpBig))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;     // Interrupt sprint
+    }
+    else if(m_response.horizontal_collision)
+    {
+        Controls_JoyRumble(200.0, 200);
+
+        int dispCase = getAnimDispatchCase(2);                         // tested!
+        if(dispCase == 1)
+        {
+            setAnimation(TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
+        }
+        else if(dispCase == 0)
+        {
+            setAnimation(TR_ANIMATION_LARA_WALL_SMASH_RIGHT, 0);
+        }
+        updateCurrentSpeed(false);
+    }
+    else if(!m_command.sprint)
+    {
+        if(m_command.move[0] == 1)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;
+        }
+    }
+    else
+    {
+        if(m_command.jump == 1)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_SPRINT_ROLL;
+        }
+        else if(m_command.roll == 1)
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+            setAnimation(TR_ANIMATION_LARA_ROLL_BEGIN, 0);
+        }
+        else if(m_command.crouch)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_CROUCH_IDLE;
+        }
+        else if(m_command.move[0] == 0)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;
+        }
+    }
+}
+
+void Character::stateLaraWalkForward(HeightInfo& next_fc, bool low_vertical_space)
+{
+    m_command.rot[0] *= 0.4;
+    lean(0.0);
+
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * WALK_FORWARD_OFFSET;
+    global_offset[2] += m_bf.bb_max[2];
+    NextStepInfo i = checkNextStep(global_offset, &next_fc);
+    m_dirFlag = ENT_MOVE_FORWARD;
+
+    if(m_moveType == MOVE_ON_FLOOR)
+    {
+        m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    }
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+    else if((next_fc.floor_normale[2] >= m_criticalSlantZComponent) && (i == NextStepInfo::UpBig))
+    {
+        /*
+         * climb up
+         */
+        m_dirFlag = ENT_STAY;
+        int dispCase = getAnimDispatchCase(2);
+        if(dispCase == 1)
+        {
+            setAnimation(TR_ANIMATION_LARA_WALK_UP_STEP_RIGHT, 0);
+            m_transform.getOrigin() = next_fc.floor_point;
+            m_moveType = MOVE_ON_FLOOR;
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+        else
+        {
+            setAnimation(TR_ANIMATION_LARA_WALK_UP_STEP_LEFT, 0);
+            m_transform.getOrigin() = next_fc.floor_point;
+            m_moveType = MOVE_ON_FLOOR;
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+    }
+    else if((next_fc.floor_normale[2] >= m_criticalSlantZComponent) && (i == NextStepInfo::DownBig))
+    {
+        /*
+         * climb down
+         */
+        m_dirFlag = ENT_STAY;
+        int dispCase = getAnimDispatchCase(2);
+        if(dispCase == 1)
+        {
+            setAnimation(TR_ANIMATION_LARA_WALK_DOWN_RIGHT, 0);
+            m_climb.point = next_fc.floor_point;
+            m_transform.getOrigin() = next_fc.floor_point;
+            m_moveType = MOVE_ON_FLOOR;
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+        else //if(i == 0)
+        {
+            setAnimation(TR_ANIMATION_LARA_WALK_DOWN_LEFT, 0);
+            m_climb.point = next_fc.floor_point;
+            m_transform.getOrigin() = next_fc.floor_point;
+            m_moveType = MOVE_ON_FLOOR;
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+    }
+    else if(m_response.horizontal_collision || (i < NextStepInfo::DownBig || i > NextStepInfo::UpBig) || (low_vertical_space))
+    {
+        /*
+         * too high
+         */
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+    }
+    else if(m_command.move[0] != 1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+    else if((m_heightInfo.water || m_heightInfo.quicksand) && m_heightInfo.floor_hit && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+    }
+    else if(m_command.move[0] == 1 && !m_command.crouch && !m_command.shift)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+    }
+}
+
+void Character::stateLaraWadeForward()
+{
+    m_command.rot[0] *= 0.4;
+    m_dirFlag = ENT_MOVE_FORWARD;
+
+    if(m_heightInfo.quicksand)
+    {
+        m_currentSpeed = (m_currentSpeed > MAX_SPEED_QUICKSAND)?MAX_SPEED_QUICKSAND:m_currentSpeed;
+    }
+
+    if(m_command.move[0] == 1)
+    {
+        btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+        checkNextPenetration(move);
+    }
+
+    if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+
+    if(!m_heightInfo.floor_hit || m_moveType == MOVE_FREE_FALLING)      // free fall, next swim
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+    }
+    else if(m_heightInfo.water)
+    {
+        if((m_heightInfo.transition_level - m_heightInfo.floor_point[2] <= m_wadeDepth))
+        {
+            // run / walk case
+            if((m_command.move[0] == 1) && !m_response.horizontal_collision)
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+            }
+            else
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_STOP;
+            }
+        }
+        else if(m_heightInfo.transition_level - m_heightInfo.floor_point[2] > (m_height - m_swimDepth))
+        {
+            // swim case
+            if(m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_height + m_maxStepUpHeight)
+            {
+                setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);                                    // swim underwater
+            }
+            else
+            {
+                setAnimation(TR_ANIMATION_LARA_ONWATER_IDLE, 0);                                       // swim onwater
+                m_moveType = MOVE_ON_WATER;
+                m_transform.getOrigin()[2] = m_heightInfo.transition_level;
+            }
+        }
+        else if(m_heightInfo.transition_level - m_heightInfo.floor_point[2] > m_wadeDepth)              // wade case
+        {
+            if((m_command.move[0] != 1) || m_response.horizontal_collision)
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_STOP;
+            }
+        }
+    }
+    else                                                                // no water, stay or run / walk
+    {
+        if((m_command.move[0] == 1) && !m_response.horizontal_collision)
+        {
+            if(!m_heightInfo.quicksand)
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+            }
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;
+        }
+    }
+}
+
+void Character::stateLaraWalkBack(HeightInfo& next_fc)
+{
+    m_command.rot[0] *= 0.4;
+    m_dirFlag = ENT_MOVE_BACKWARD;
+
+    if(m_heightInfo.quicksand)
+    {
+        m_currentSpeed = (m_currentSpeed > MAX_SPEED_QUICKSAND)?MAX_SPEED_QUICKSAND:m_currentSpeed;
+    }
+
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
+    global_offset[2] += m_bf.bb_max[2];
+    NextStepInfo i = checkNextStep(global_offset, &next_fc);
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+    }
+    else if(m_heightInfo.water && (m_heightInfo.floor_point[2] + m_height < m_heightInfo.transition_level))
+    {
+        setAnimation(TR_ANIMATION_LARA_ONWATER_SWIM_BACK, 0);
+        m_bf.animations.next_state = TR_STATE_LARA_ONWATER_BACK;
+        m_moveType = MOVE_ON_WATER;
+    }
+    else if((i < NextStepInfo::DownBig) || (i > NextStepInfo::UpBig))
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK_END, 0);
+    }
+    else if((next_fc.floor_normale[2] >= m_criticalSlantZComponent) && (i == NextStepInfo::DownBig))
+    {
+        if(!m_bt.no_fix_all)
+        {
+            int frames_count = m_bf.animations.model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size();
+            int frames_count2 = (frames_count + 1) / 2;
+            if((m_bf.animations.current_frame >= 0) && (m_bf.animations.current_frame <= frames_count2))
+            {
+                setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_bf.animations.current_frame);
+                m_dirFlag = ENT_MOVE_BACKWARD;
+                m_transform.getOrigin()[2] -= (m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
+                m_bt.no_fix_all = true;
+            }
+            else if((m_bf.animations.current_frame >= frames_count) && (m_bf.animations.current_frame <= frames_count + frames_count2))
+            {
+                setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_bf.animations.current_frame - frames_count);
+                m_dirFlag = ENT_MOVE_BACKWARD;
+                m_transform.getOrigin()[2] -= (m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
+                m_bt.no_fix_all = true;
+            }
+            else
+            {
+                m_dirFlag = ENT_STAY;                               // waiting for correct frame
+            }
+        }
+    }
+    else if((m_command.move[0] == -1) && (m_command.shift || m_heightInfo.quicksand))
+    {
+        m_dirFlag = ENT_MOVE_BACKWARD;
+        m_bf.animations.next_state = TR_STATE_LARA_WALK_BACK;
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraWalkLeftRight(HeightInfo& next_fc)
+{
+    m_command.rot[0] = 0;
+    m_dirFlag = m_bf.animations.last_state == TR_STATE_LARA_WALK_LEFT
+              ? ENT_MOVE_LEFT
+              : ENT_MOVE_RIGHT;
+    const int8_t moveCommand = m_bf.animations.last_state == TR_STATE_LARA_WALK_LEFT
+                         ? -1
+                         : 1;
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+    }
+    else if(m_command.move[1] == moveCommand && m_command.shift)
+    {
+        btVector3 global_offset = moveCommand * m_transform.getBasis().getColumn(0) * RUN_FORWARD_OFFSET;  // not an error - RUN_... more correct here
+        global_offset[2] += m_bf.bb_max[2];
+        global_offset += m_transform.getOrigin();
+        Character::getHeightInfo(global_offset, &next_fc);
+        if(next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight))
+        {
+            if(!m_heightInfo.water || (m_heightInfo.floor_point[2] + m_height > m_heightInfo.transition_level)) // if (floor_hit == 0) then we went to MOVE_FREE_FALLING.
+            {
+                // continue walking
+            }
+            else
+            {
+                m_bf.animations.next_state = m_bf.animations.last_state == TR_STATE_LARA_WALK_LEFT
+                                    ? TR_STATE_LARA_ONWATER_LEFT
+                                    : TR_STATE_LARA_ONWATER_RIGHT;
+                m_bf.animations.onFrame = &Character::toOnWater;
+            }
+        }
+        else
+        {
+            m_dirFlag = ENT_STAY;
+            setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraSlideBack()
+{
+    m_command.rot[0] = 0;
+    lean(0.0);
+    m_dirFlag = ENT_MOVE_BACKWARD;
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        if(m_command.action)
+        {
+            m_speed[0] = -m_transform.getBasis().getColumn(1)[0] * 128.0;
+            m_speed[1] = -m_transform.getBasis().getColumn(1)[1] * 128.0;
+        }
+
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+    else if(m_response.slide == SlideType::None)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+    else if(m_response.slide != SlideType::None && m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_BACK;
+    }
+    else
+    {
+        return;
+    }
+
+    Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, id());
+}
+
+void Character::stateLaraSlideForward()
+{
+    m_command.rot[0] = 0;
+    lean(0.0);
+    m_dirFlag = ENT_MOVE_FORWARD;
+
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        m_speed[0] *= 0.2;
+        m_speed[1] *= 0.2;
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+    else if(m_response.slide == SlideType::None)
+    {
+        if((m_command.move[0] == 1) && (engine_world.version >= TR_III))
+        {
+             m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+        }
+        else
+        {
+             m_bf.animations.next_state = TR_STATE_LARA_STOP;                  // stop
+        }
+    }
+    else if(m_response.slide != SlideType::None && m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_FORWARD;               // jump
+    }
+    else
+    {
+        return;
+    }
+
+    Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, id());
+}
+
+void Character::stateLaraPushableGrab()
+{
+    m_moveType = MOVE_ON_FLOOR;
+    m_bt.no_fix_all = true;
+    m_command.rot[0] = 0.0;
+
+    if(m_command.action)//If Lara is grabbing the block
+    {
+        int tf = checkTraverse(*m_traversedObject);
+        m_dirFlag = ENT_STAY;
+        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;                     //We hold it (loop last frame)
+
+        if((m_command.move[0] == 1) && (tf & Character::TraverseForward))                          //If player press up push
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+            m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+            m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PUSH;
+        }
+        else if((m_command.move[0] == -1) && (tf & Character::TraverseBackward))                    //If player press down pull
+        {
+            m_dirFlag = ENT_MOVE_BACKWARD;
+            m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+            m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PULL;
+        }
+    }
+    else//Lara has let go of the block
+    {
+        m_dirFlag = ENT_STAY;
+        m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;                      //We no longer loop last frame
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;                       //Switch to next Lara state
+    }
+}
+
+void Character::stateLaraPushablePush()
+{
+    m_bt.no_fix_all = true;
+    m_bf.animations.onFrame = &Character::stopTraverse;
+    m_command.rot[0] = 0.0;
+    m_camFollowCenter = 64;
+    int i = m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size();
+
+    if(!m_command.action || !(Character::TraverseForward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+
+    if((m_traversedObject != NULL) && (m_bf.animations.current_frame > 16) && (m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 16
+    {
+        bool was_traversed = false;
+
+        if(m_transform.getBasis().getColumn(1)[0] > 0.9)
+        {
+            btScalar t = m_transform.getOrigin()[0] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[0] - 32.0);
+            if(t > m_traversedObject->m_transform.getOrigin()[0])
+            {
+                m_traversedObject->m_transform.getOrigin()[0] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
+        {
+            btScalar t = m_transform.getOrigin()[0] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[0] - 32.0);
+            if(t < m_traversedObject->m_transform.getOrigin()[0])
+            {
+                m_traversedObject->m_transform.getOrigin()[0] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
+        {
+            btScalar t = m_transform.getOrigin()[1] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[1] - 32.0);
+            if(t > m_traversedObject->m_transform.getOrigin()[1])
+            {
+                m_traversedObject->m_transform.getOrigin()[1] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
+        {
+            btScalar t = m_transform.getOrigin()[1] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[1] - 32.0);
+            if(t < m_traversedObject->m_transform.getOrigin()[1])
+            {
+                m_traversedObject->m_transform.getOrigin()[1] = t;
+                was_traversed = true;
+            }
+        }
+
+        if(engine_world.version > TR_III)
+        {
+            if(was_traversed)
+            {
+                if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,id()) == -1)
+                    Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+            else
+            {
+                Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+        }
+        else
+        {
+            if( (m_bf.animations.current_frame == 49)   ||
+                (m_bf.animations.current_frame == 110)  ||
+                (m_bf.animations.current_frame == 142)   )
+            {
+                if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,id()) == -1)
+                    Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+        }
+
+        m_traversedObject->updateRigidBody(true);
+    }
+    else
+    {
+        if(engine_world.version > TR_III)
+        {
+            Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+    }
+}
+
+void Character::stateLaraPushablePull()
+{
+    m_bt.no_fix_all = true;
+    m_bf.animations.onFrame = &Character::stopTraverse;
+    m_command.rot[0] = 0.0;
+    m_camFollowCenter = 64;
+    int i = m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size();
+
+    if(!m_command.action || !(Character::TraverseBackward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+
+    if((m_traversedObject != NULL) && (m_bf.animations.current_frame > 20) && (m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 20
+    {
+        bool was_traversed = false;
+
+        if(m_transform.getBasis().getColumn(1)[0] > 0.9)
+        {
+            btScalar t = m_transform.getOrigin()[0] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[0] - 32.0);
+            if(t < m_traversedObject->m_transform.getOrigin()[0])
+            {
+                m_traversedObject->m_transform.getOrigin()[0] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
+        {
+            btScalar t = m_transform.getOrigin()[0] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[0] - 32.0);
+            if(t > m_traversedObject->m_transform.getOrigin()[0])
+            {
+                m_traversedObject->m_transform.getOrigin()[0] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
+        {
+            btScalar t = m_transform.getOrigin()[1] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[1] - 32.0);
+            if(t < m_traversedObject->m_transform.getOrigin()[1])
+            {
+                m_traversedObject->m_transform.getOrigin()[1] = t;
+                was_traversed = true;
+            }
+        }
+        else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
+        {
+            btScalar t = m_transform.getOrigin()[1] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[1] - 32.0);
+            if(t > m_traversedObject->m_transform.getOrigin()[1])
+            {
+                m_traversedObject->m_transform.getOrigin()[1] = t;
+                was_traversed = true;
+            }
+        }
+
+        if(engine_world.version > TR_III)
+        {
+            if(was_traversed)
+            {
+                if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,id()) == -1)
+
+                    Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+            else
+            {
+                Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+        }
+        else
+        {
+            if( (m_bf.animations.current_frame == 40)  ||
+                (m_bf.animations.current_frame == 92)  ||
+                (m_bf.animations.current_frame == 124) ||
+                (m_bf.animations.current_frame == 156)  )
+            {
+                if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,id()) == -1)
+                    Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+            }
+        }
+
+        m_traversedObject->updateRigidBody(true);
+    }
+    else
+    {
+        if(engine_world.version > TR_III)
+        {
+            Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+    }
+}
+
+void Character::stateLaraRollBackward(bool low_vertical_space)
+{
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+    else if(low_vertical_space)
+    {
+        m_dirFlag = ENT_STAY;
+    }
+    else if(m_response.slide == SlideType::Front)
+    {
+        setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
+    }
+    else if(m_response.slide == SlideType::Back)
+    {
+        setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
+    }
+}
+
+void Character::stateLaraJumpUp(HeightInfo& next_fc)
+{
+    m_command.rot[0] = 0.0;
+    if(m_command.action && (m_moveType != MOVE_WALLS_CLIMB) && (m_moveType != MOVE_CLIMBING))
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * m_speed[2];
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.edge_hit != ClimbType::NoClimb)
+        {
+            m_climb.point = m_climb.edge_point;
+            m_angles[0] = m_climb.edge_z_ang;
+            updateTransform();
+            m_moveType = MOVE_CLIMBING;                             // hang on
+            m_speed.setZero();
+
+            m_transform.getOrigin()[0] = m_climb.point[0] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[0];
+            m_transform.getOrigin()[1] = m_climb.point[1] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[1];
+            m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+        }
+        else
+        {
+            m_climb = checkWallsClimbability();
+            if((m_climb.wall_hit != ClimbType::NoClimb) &&
+               (m_speed[2] < 0.0)) // Only hang if speed is lower than zero.
+            {
+                // Fix the position to the TR metering step.
+                m_transform.getOrigin()[2] = std::floor(m_transform.getOrigin()[2] / TR_METERING_STEP) * TR_METERING_STEP;
+                m_moveType = MOVE_WALLS_CLIMB;
+                setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
+                return;
+            }
+        }
+    }
+
+    if(m_command.move[0] == 1)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+    }
+    else if(m_command.move[0] == -1)
+    {
+        m_dirFlag = ENT_MOVE_BACKWARD;
+    }
+    else if(m_command.move[1] == 1)
+    {
+        m_dirFlag = ENT_MOVE_RIGHT;
+    }
+    else if(m_command.move[1] == -1)
+    {
+        m_dirFlag = ENT_MOVE_LEFT;
+    }
+    else
+    {
+        m_dirFlag = ENT_STAY;
+    }
+
+    if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_angles[1] = -45.0;
+        m_command.rot[1] = 0.0;
+        updateTransform();
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+    }
+    else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+        m_bf.animations.onFrame = &Character::toMonkeySwing;
+    }
+    else if(m_command.action && (m_moveType == MOVE_CLIMBING))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_HANG;
+        setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
+    }
+    else if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;                        // landing immediately
+    }
+    else
+    {
+        if(m_speed[2] < -FREE_FALL_SPEED_2)                 // next free fall stage
+        {
+            m_moveType = MOVE_FREE_FALLING;
+            m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;
+        }
+    }
+}
+
+void Character::stateLaraReach(HeightInfo& next_fc)
+{
+    m_command.rot[0] = 0.0;
+    if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_angles[1] = -45.0;
+        m_command.rot[1] = 0.0;
+        updateTransform();
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+        return;
+    }
+
+    if(m_command.action && (m_moveType == MOVE_FREE_FALLING))
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * m_speed[2];
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.edge_hit != ClimbType::NoClimb && m_climb.can_hang)
+        {
+            m_climb.point = m_climb.edge_point;
+            m_angles[0] = m_climb.edge_z_ang;
+            updateTransform();
+            m_moveType = MOVE_CLIMBING;                             // hang on
+            m_speed.setZero();
+        }
+
+        // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
+        // depending on the current angle.
+        if((m_dirFlag == ENT_MOVE_BACKWARD) && (m_moveType == MOVE_CLIMBING))
+        {
+            m_transform.getOrigin()[0] = m_climb.point[0] - m_transform.getBasis().getColumn(1)[0] * (m_forwardSize + 16.0);
+            m_transform.getOrigin()[1] = m_climb.point[1] - m_transform.getBasis().getColumn(1)[1] * (m_forwardSize + 16.0);
+        }
+    }
+
+    if(((m_moveType != MOVE_ON_FLOOR)) && m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+        m_bf.animations.onFrame = &Character::toMonkeySwing;
+        return;
+    }
+    if((m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR)) && (!m_command.action || !m_climb.can_hang))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;                       // middle landing
+        return;
+    }
+
+    if((m_speed[2] < -FREE_FALL_SPEED_2))
+    {
+        m_moveType = MOVE_FREE_FALLING;
+        m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;
+        return;
+    }
+
+    if(m_moveType == MOVE_CLIMBING)
+    {
+        m_speed.setZero();
+        m_bf.animations.next_state = TR_STATE_LARA_HANG;
+        m_bf.animations.onFrame = &Character::toEdgeClimb;
+#if OSCILLATE_HANG_USE
+        move = ent->transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+        if(Entity_CheckNextPenetration(ent, cmd, move) == 0)
+        {
+            ent->setAnimation(TR_ANIMATION_LARA_OSCILLATE_HANG_ON, 0);
+            &Character::toEdgeClimb(ent);
+        }
+#endif
+    }
+}
+
+void Character::stateLaraFixClimbEnd()
+{
+    m_command.rot[0] = 0;
+    m_bt.no_fix_all = true;
+    m_bf.animations.onFrame = &Character::setOnFloorAfterClimb;
+}
+
+void Character::stateLaraHang(HeightInfo& next_fc)
+{
+    m_command.rot[0] = 0.0;
+
+    if(m_moveType == MOVE_WALLS_CLIMB)
+    {
+        if(m_command.action)
+        {
+            if((m_climb.wall_hit == ClimbType::FullClimb) && (m_command.move[0] == 0) && (m_command.move[1] == 0))
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+            }
+            else if(m_command.move[0] == 1)             // UP
+            {
+                setAnimation(TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
+            }
+            else if(m_command.move[0] ==-1)             // DOWN
+            {
+                setAnimation(TR_ANIMATION_LARA_LADDER_DOWN_HANDS, 0);
+            }
+            else if(m_command.move[1] == 1)
+            {
+                m_dirFlag = ENT_MOVE_RIGHT;
+                setAnimation(TR_ANIMATION_LARA_CLIMB_RIGHT, 0); // edge climb right
+            }
+            else if(m_command.move[1] ==-1)
+            {
+                m_dirFlag = ENT_MOVE_LEFT;
+                setAnimation(TR_ANIMATION_LARA_CLIMB_LEFT, 0); // edge climb left
+            }
+            else if(m_climb.wall_hit == ClimbType::NoClimb)
+            {
+                m_moveType = MOVE_FREE_FALLING;
+                setAnimation(TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+            }
+            else
+            {
+                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;             // disable shake
+            }
+        }
+        else
+        {
+            m_moveType = MOVE_FREE_FALLING;
+            setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
+        }
+        return;
+    }
+
+    if(!m_response.killed && m_command.action)                         // we have to update climb point every time so entity can move
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.can_hang)
+        {
+            m_climb.point = m_climb.edge_point;
+            m_angles[0] = m_climb.edge_z_ang;
+            updateTransform();
+            m_moveType = MOVE_CLIMBING;                             // hang on
+        }
+    }
+    else
+    {
+        m_moveType = MOVE_FREE_FALLING;
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
+        return;
+    }
+
+    if(m_moveType == MOVE_CLIMBING)
+    {
+        if(m_command.move[0] == 1)
+        {
+            if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= 512.0) && ((m_climb.next_z_space < m_height - LARA_HANG_VERTICAL_EPSILON) || m_command.crouch))
+            {
+                m_climb.point = m_climb.edge_point;
+                m_bf.animations.next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;     // crawlspace climb
+            }
+            else if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON))
+            {
+                Sys_DebugLog(LOG_FILENAME, "Zspace = %f", m_climb.next_z_space);
+                m_climb.point = m_climb.edge_point;
+                m_bf.animations.next_state = (m_command.shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_CLIMBING);               // climb up
+            }
+            else
+            {
+                m_transform.getOrigin()[0] = m_climb.point[0] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[0];
+                m_transform.getOrigin()[1] = m_climb.point[1] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[1];
+                m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                m_speed.setZero();
+                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;             // disable shake
+            }
+        }
+        else if(m_command.move[0] ==-1)                                      // check walls climbing
+        {
+            m_climb = checkWallsClimbability();
+            if(m_climb.wall_hit != ClimbType::NoClimb)
+            {
+                m_moveType = MOVE_WALLS_CLIMB;
+            }
+            m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;                 // disable shake
+        }
+        else if(m_command.move[1] ==-1)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) //we only want lara to shimmy when last frame is reached!
+            {
+                m_moveType = ENT_MOVE_LEFT;
+                setAnimation(TR_ANIMATION_LARA_CLIMB_LEFT, 0);
+            }
+            else
+            {
+                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;             // disable shake
+            }
+        }
+        else if(m_command.move[1] == 1)
+        {
+            btVector3 move = m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+            if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision) //we only want lara to shimmy when last frame is reached!
+            {
+                m_moveType = ENT_MOVE_RIGHT;
+                setAnimation(TR_ANIMATION_LARA_CLIMB_RIGHT, 0);
+            }
+            else
+            {
+                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;             // disable shake
+            }
+        }
+        else
+        {
+            m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;                 // disable shake
+            m_transform.getOrigin()[0] = m_climb.point[0] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[0];
+            m_transform.getOrigin()[1] = m_climb.point[1] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[1];
+            m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+            m_speed.setZero();
+        }
+    }
+    else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+        m_bf.animations.onFrame = &Character::toMonkeySwing;
+    }
+    else
+    {
+        m_moveType = MOVE_FREE_FALLING;
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
+    }
+}
+
+void Character::stateLaraLadderIdle(HeightInfo& next_fc)
+{
+    m_command.rot[0] = 0;
+    m_moveType = MOVE_WALLS_CLIMB;
+    m_dirFlag = ENT_STAY;
+    m_camFollowCenter = 64;
+    if(m_moveType == MOVE_CLIMBING)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CLIMBING;
+        return;
+    }
+    if(!m_command.action)
+    {
+        m_moveType = MOVE_FREE_FALLING;
+        setAnimation(TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+    }
+    else if(m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_BACK;
+        m_dirFlag = ENT_MOVE_BACKWARD;
+    }
+    else if(m_command.move[0] == 1)
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= 512.0))
+        {
+            m_moveType = MOVE_CLIMBING;
+            m_bf.animations.next_state = TR_STATE_LARA_CLIMBING;
+        }
+        else if((!m_heightInfo.ceiling_hit) || (m_transform.getOrigin()[2] + m_bf.bb_max[2] < m_heightInfo.ceiling_point[2]))
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_LADDER_UP;
+        }
+    }
+    else if(m_command.move[0] == -1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_DOWN;
+    }
+    else if(m_command.move[1] == 1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_RIGHT;
+    }
+    else if(m_command.move[1] == -1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_LEFT;
+    }
+}
+
+void Character::stateLaraLadderLeftRight()
+{
+    m_dirFlag = m_bf.animations.last_state == TR_STATE_LARA_LADDER_LEFT
+              ? ENT_MOVE_LEFT
+              : ENT_MOVE_RIGHT;
+    if(!m_command.action || (m_climb.wall_hit == ClimbType::NoClimb))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_HANG;
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+    }
+}
+
+void Character::stateLaraLadderUp(HeightInfo& next_fc)
+{
+    m_camFollowCenter = 64;
+    if(m_moveType == MOVE_CLIMBING)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+        return;
+    }
+
+    if(m_command.action && m_climb.wall_hit != ClimbType::NoClimb)
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= 512.0))
+        {
+            m_moveType = MOVE_CLIMBING;
+            m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+        }
+        else if((m_command.move[0] <= 0) && (m_heightInfo.ceiling_hit || (m_transform.getOrigin()[2] + m_bf.bb_max[2] >= m_heightInfo.ceiling_point[2])))
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+        }
+
+        if(m_heightInfo.ceiling_hit && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2]))
+        {
+            m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+        }
+    }
+    else
+    {
+        // Free fall after stop
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+    }
+}
+
+void Character::stateLaraLadderDown()
+{
+    m_camFollowCenter = 64;
+    if(m_command.action && m_climb.wall_hit != ClimbType::NoClimb && (m_command.move[1] < 0))
+    {
+        if(m_climb.wall_hit != ClimbType::FullClimb)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
+    }
+}
+
+void Character::stateLaraShimmyLeftRight(HeightInfo& next_fc)
+{
+    m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+
+    m_command.rot[0] = 0.0;
+    m_dirFlag = m_bf.animations.last_state == TR_STATE_LARA_SHIMMY_LEFT
+              ? ENT_MOVE_LEFT
+              : ENT_MOVE_RIGHT;
+    if(!m_command.action)
+    {
+        m_speed.setZero();
+        m_moveType = MOVE_FREE_FALLING;
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
+        return;
+    }
+
+    if(m_moveType == MOVE_WALLS_CLIMB)
+    {
+        if(m_climb.wall_hit == ClimbType::NoClimb)
+        {
+            m_moveType = MOVE_FREE_FALLING;
+            setAnimation(TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+        }
+    }
+    else
+    {
+        btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+        btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+        global_offset[2] += LARA_HANG_SENSOR_Z + LARA_HANG_VERTICAL_EPSILON;
+        m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+        if(m_climb.edge_hit != ClimbType::NoClimb)
+        {
+            m_climb.point = m_climb.edge_point;
+            m_angles[0] = m_climb.edge_z_ang;
+            updateTransform();
+            m_moveType = MOVE_CLIMBING;                             // hang on
+            m_transform.getOrigin()[0] = m_climb.point[0] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[0];
+            m_transform.getOrigin()[1] = m_climb.point[1] - (LARA_HANG_WALL_DISTANCE) * m_transform.getBasis().getColumn(1)[1];
+            m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+            m_speed.setZero();
+        }
+        else
+        {
+            m_moveType = MOVE_FREE_FALLING;
+            setAnimation(TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+            return;
+        }
+    }
+
+    int moveCommand = m_bf.animations.last_state == TR_STATE_LARA_SHIMMY_LEFT
+                    ? -1
+                    : 1;
+    if(m_command.move[1] == moveCommand)
+    {
+        btVector3 move = moveCommand * m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+        if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_HANG;
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_HANG;
+    }
+}
+
+void Character::stateLaraOnWaterExit()
+{
+    m_command.rot[0] *= 0.0;
+    m_bt.no_fix_all = true;
+    m_bf.animations.onFrame = &Character::setOnFloorAfterClimb;
+}
+
+void Character::stateLaraJumpForwardFallBackward()
+{
+    m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    lean(4.0);
+
+    if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
+    {
+        if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+        {
+            setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+        }
+        else if(!m_command.action && (m_command.move[0] == 1) && !m_command.crouch)
+        {
+            m_moveType = MOVE_ON_FLOOR;
+            m_bf.animations.next_state = TR_STATE_LARA_RUN_FORWARD;
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_STOP;
+        }
+    }
+    else if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_angles[1] = -45.0;
+        m_command.rot[1] = 0.0;
+        updateTransform();
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+    }
+    else if(m_response.horizontal_collision)
+    {
+        setAnimation(TR_ANIMATION_LARA_SMASH_JUMP, 0);
+        m_dirFlag = ENT_MOVE_BACKWARD;
+        updateCurrentSpeed(true);
+    }
+    else if(m_speed[2] <= -FREE_FALL_SPEED_2)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;                    // free falling
+    }
+    else if(m_command.action)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_REACH;
+    }
+    else if(m_command.shift)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_SWANDIVE_BEGIN;              // fly like fish
+    }
+    else if(m_speed[2] <= -FREE_FALL_SPEED_2)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_FREEFALL;                    // free falling
+    }
+    else if(m_command.roll)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_ROLL;
+    }
+}
+
+void Character::stateLaraUnderwaterDiving()
+{
+    m_angles[1] = -45.0;
+    m_command.rot[1] = 0.0;
+    updateTransform();
+    m_bf.animations.onFrame = &Character::correctDivingAngle;
+}
+
+void Character::stateLaraFreefall()
+{
+    lean(1.0);
+
+    if( (int(m_speed[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
+        (int(m_speed[2]) >= (-FREE_FALL_SPEED_CRITICAL-100)) )
+    {
+        m_speed[2] = -FREE_FALL_SPEED_CRITICAL-101;
+        Audio_Send(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, id());       // Scream
+    }
+    else if(m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
+    {
+        //Reset these to zero so Lara is only falling downwards
+        m_speed[0] = 0.0;
+        m_speed[1] = 0.0;
+    }
+
+    if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_angles[1] = -45.0;
+        m_command.rot[1] = 0.0;
+        updateTransform();                                     // needed here to fix underwater in wall collision bug
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+        Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, id());       // Stop scream
+
+        // Splash sound is hardcoded, beginning with TR3.
+        if(engine_world.version > TR_II)
+        {
+            Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+    }
+    else if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
+    {
+        if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+        {
+            setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+            Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+        else if(m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
+        {
+            if(!changeParam(PARAM_HEALTH, (m_speed[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
+            {
+                m_response.killed = true;
+                setAnimation(TR_ANIMATION_LARA_LANDING_DEATH, 0);
+                Controls_JoyRumble(200.0, 500);
+            }
+            else
+            {
+                setAnimation(TR_ANIMATION_LARA_LANDING_HARD, 0);
+            }
+        }
+        else if(m_speed[2] <= -FREE_FALL_SPEED_2)
+        {
+            setAnimation(TR_ANIMATION_LARA_LANDING_HARD, 0);
+        }
+        else
+        {
+            setAnimation(TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
+        }
+
+        if(m_response.killed)
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_DEATH;
+            Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, id());
+        }
+    }
+    else if(m_command.action)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        m_bf.animations.next_state = TR_STATE_LARA_REACH;
+    }
+}
+
+void Character::stateLaraSwandiveBegin()
+{
+    m_command.rot[0] *= 0.4;
+    if(m_response.floor_collision || m_moveType == MOVE_ON_FLOOR)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;                        // landing - roll
+    }
+    else if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_DIVING;
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_SWANDIVE_END;                // next stage
+    }
+}
+
+void Character::stateLaraSwandiveEnd()
+{
+    m_command.rot[0] = 0.0;
+
+    //Reset these to zero so Lara is only falling downwards
+    m_speed[0] = 0.0;
+    m_speed[1] = 0.0;
+
+    if(m_response.floor_collision || (m_moveType == MOVE_ON_FLOOR))
+    {
+        if(m_heightInfo.quicksand)
+        {
+            m_response.killed = true;
+            setParam(PARAM_HEALTH, 0.0);
+            setParam(PARAM_AIR, 0.0);
+            setAnimation(TR_ANIMATION_LARA_LANDING_DEATH, -1);
+        }
+        else
+        {
+            setParam(PARAM_HEALTH, 0.0);
+            m_bf.animations.next_state = TR_STATE_LARA_DEATH;
+        }
+    }
+    else if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_DIVING;
+    }
+    else if(m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_JUMP_ROLL;
+    }
+}
+
+void Character::stateLaraUnderwaterStop()
+{
+    if(m_moveType != MOVE_UNDERWATER && m_moveType != MOVE_ON_WATER)
+    {
+        setAnimation(0, 0);
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WATER_DEATH;
+    }
+    else if(m_command.roll)
+    {
+        setAnimation(TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN, 0);
+    }
+    else if(m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
+    }
+}
+
+void Character::stateLaraUnderwaterDeath()
+{
+    if(m_moveType != MOVE_ON_WATER)
+    {
+        m_transform.getOrigin()[2] += (TR_METERING_SECTORSIZE / 4) * engine_frame_time;     // go to the air
+    }
+}
+
+void Character::stateLaraUnderwaterForward()
+{
+    if(m_moveType != MOVE_UNDERWATER && m_moveType != MOVE_ON_WATER)
+    {
+        setAnimation(0, 0);
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WATER_DEATH;
+    }
+    else if(m_heightInfo.floor_hit && m_heightInfo.water && (m_heightInfo.transition_level - m_heightInfo.floor_point[2] <= m_maxStepUpHeight))
+    {
+        setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_WADE, 0); // go to the air
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+        m_climb.point = m_heightInfo.floor_point;  ///@FIXME: without it Lara are pulled high up, but this string was not been here.
+        m_moveType = MOVE_ON_FLOOR;
+    }
+    else if(m_command.roll)
+    {
+        setAnimation(TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN, 0);
+    }
+    else if(m_command.jump)
+    {
+        if(m_moveType == MOVE_ON_WATER)
+        {
+            m_inertiaLinear = 0.0;
+            m_bf.animations.next_state = TR_STATE_LARA_ONWATER_STOP;
+            setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_INERTIA;
+    }
+}
+
+void Character::stateLaraUnderwaterInertia()
+{
+    if(m_moveType == MOVE_ON_WATER)
+    {
+        m_inertiaLinear = 0.0;
+        setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
+    }
+    else if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WATER_DEATH;
+    }
+    else if(m_command.roll)
+    {
+        setAnimation(TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN, 0);
+    }
+    else if(m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_STOP;
+    }
+}
+
+void Character::stateLaraOnwaterStop()
+{
+    if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WATER_DEATH;
+    }
+    else if((m_command.move[0] == 1) || m_command.jump)                    // dive works correct only after TR_STATE_LARA_ONWATER_FORWARD
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        m_bf.animations.next_state = TR_STATE_LARA_ONWATER_FORWARD;
+    }
+    else if(m_command.move[0] ==-1)
+    {
+        m_dirFlag = ENT_MOVE_BACKWARD;
+        m_bf.animations.next_state = TR_STATE_LARA_ONWATER_BACK;
+    }
+    else if(m_command.move[1] ==-1)
+    {
+        if(m_command.shift)
+        {
+            m_dirFlag = ENT_MOVE_LEFT;
+            m_command.rot[0] = 0.0;
+            m_bf.animations.next_state = TR_STATE_LARA_ONWATER_LEFT;
+        }
+        else
+        {
+            // rotate on water
+        }
+    }
+    else if(m_command.move[1] == 1)
+    {
+        if(m_command.shift)
+        {
+            m_dirFlag = ENT_MOVE_RIGHT;
+            m_command.rot[0] = 0.0;
+            m_bf.animations.next_state = TR_STATE_LARA_ONWATER_RIGHT;
+        }
+        else
+        {
+            // rotate on water
+        }
+    }
+    else if(m_moveType == MOVE_UNDERWATER)
+    {
+        m_moveType = MOVE_ON_WATER;
+    }
+}
+
+void Character::stateLaraOnwaterForward(HeightInfo& next_fc, bool low_vertical_space)
+{
+    m_bt.no_fix_body_parts = BODY_PART_HANDS;
+    m_moveType = MOVE_ON_WATER;
+
+    if(m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_WATER_DEATH;
+    }
+    else if(m_command.jump)
+    {
+        btScalar t = m_transform.getOrigin()[2];
+        Character::getHeightInfo(m_transform.getOrigin(), &next_fc);
+        m_transform.getOrigin()[2] = t;
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
+        m_bf.animations.onFrame = &Character::setUnderwater;                          // dive
+    }
+    else if(m_command.move[0] == 1)
+    {
+        if(m_command.action)
+        {
+            if(m_moveType != MOVE_CLIMBING)
+            {
+                btScalar t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                btVector3 global_offset = m_transform.getBasis().getColumn(1) * t;
+                global_offset[2] += LARA_HANG_VERTICAL_EPSILON;                        // inc for water_surf.z
+                m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+                if(m_climb.edge_hit != ClimbType::NoClimb)
+                {
+                    low_vertical_space = true;
+                }
+                else
+                {
+                    low_vertical_space = false;
+                    global_offset[2] += m_maxStepUpHeight + LARA_HANG_VERTICAL_EPSILON;
+                    m_climb = checkClimbability(global_offset, &next_fc, 0.0);
+                }
+
+                if(m_climb.edge_hit != ClimbType::NoClimb && (m_climb.next_z_space >= m_height - LARA_HANG_VERTICAL_EPSILON))// && (m_climb.edge_point[2] - m_transform.getOrigin()[2] < ent->max_step_up_height))   // max_step_up_height is not correct value here
+                {
+                    m_dirFlag = ENT_STAY;
+                    m_moveType = MOVE_CLIMBING;
+                    m_bt.no_fix_all = true;
+                    m_angles[0] = m_climb.edge_z_ang;
+                    updateTransform();
+                    m_climb.point = m_climb.edge_point;
+                }
+            }
+
+            if(m_moveType == MOVE_CLIMBING)
+            {
+                m_speed.setZero();
+                m_command.rot[0] = 0.0;
+                m_bt.no_fix_all = true;
+                if(low_vertical_space)
+                {
+                    setAnimation(TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
+                }
+                else
+                {
+                    setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
+                }
+                climbOutOfWater(ENTITY_ANIM_NEWANIM);
+            }
+        }
+        else if(!m_heightInfo.floor_hit || (m_transform.getOrigin()[2] - m_height > m_heightInfo.floor_point[2]- m_swimDepth))
+        {
+            //ent->last_state = ent->last_state;                          // swim forward
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_WADE_FORWARD;
+            m_bf.animations.onFrame = &Character::setOnFloor;                        // to wade
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_ONWATER_STOP;
+    }
+}
+
+void Character::stateLaraOnwaterBack()
+{
+    if(m_command.move[0] == -1 && !m_command.jump)
+    {
+        if(!m_heightInfo.floor_hit || (m_heightInfo.floor_point[2] + m_height < m_heightInfo.transition_level))
+        {
+            //ent->current_state = TR_STATE_CURRENT;                      // continue swimming
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_ONWATER_STOP;
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_ONWATER_STOP;
+    }
+}
+
+void Character::stateLaraOnwaterLeftRight()
+{
+    m_command.rot[0] = 0.0;
+    if(!m_command.jump)
+    {
+        int moveCommand = m_bf.animations.last_state == TR_STATE_LARA_ONWATER_LEFT
+                        ? -1
+                        : 1;
+        if(m_command.move[1] == moveCommand && m_command.shift)
+        {
+            if(!m_heightInfo.floor_hit || (m_transform.getOrigin()[2] - m_height > m_heightInfo.floor_point[2]))
+            {
+                // walk left
+                m_bf.animations.next_state = m_bf.animations.last_state == TR_STATE_LARA_ONWATER_LEFT
+                                    ? TR_STATE_LARA_ONWATER_LEFT
+                                    : TR_STATE_LARA_ONWATER_RIGHT;
+            }
+            else
+            {
+                // walk left
+                m_bf.animations.next_state = m_bf.animations.last_state == TR_STATE_LARA_ONWATER_LEFT
+                                    ? TR_STATE_LARA_WALK_LEFT
+                                    : TR_STATE_LARA_WALK_RIGHT;
+                m_bf.animations.onFrame = &Character::setOnFloor;
+            }
+        }
+        else
+        {
+            m_bf.animations.next_state = TR_STATE_LARA_ONWATER_STOP;
+        }
+    }
+    else
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_UNDERWATER_DIVING;
+    }
+}
+
+void Character::stateLaraCrouchIdle(HeightInfo& next_fc, bool low_vertical_space)
+{
+    m_dirFlag = ENT_MOVE_FORWARD;
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    btVector3 move = m_transform.getOrigin();
+    move[2] += 0.5 * (m_bf.bb_max[2] - m_bf.bb_min[2]);
+    Character::getHeightInfo(move, &next_fc);
+
+    lean(0.0);
+
+    if(!m_command.crouch && !low_vertical_space)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;                        // Back to stand
+    }
+    else if((m_command.move[0] != 0) || m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CRAWL_IDLE;                  // Both forward & back provoke crawl stage
+    }
+    else if(m_command.jump)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CROUCH_ROLL;                 // Crouch roll
+    }
+    else
+    {
+        if(engine_world.version > TR_III)
+        {
+            if(m_command.move[1] == 1)
+            {
+                m_dirFlag = ENT_MOVE_FORWARD;
+                m_bf.animations.next_state = TR_STATE_LARA_CROUCH_TURN_RIGHT;
+            }
+            else if(m_command.move[1] == -1)
+            {
+                m_dirFlag = ENT_MOVE_FORWARD;
+                m_bf.animations.next_state = TR_STATE_LARA_CROUCH_TURN_LEFT;
+            }
+        }
+        else
+        {
+            m_command.rot[0] = 0.0;
+        }
+    }
+}
+
+void Character::stateLaraSprintCrouchRoll()
+{
+    m_command.rot[0] = 0.0;
+    lean(0.0);
+    if(m_moveType == MOVE_FREE_FALLING)
+    {
+        m_speed[0] *= 0.5;
+        m_speed[1] *= 0.5;
+        setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+    }
+
+    btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)  // Smash into wall
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_STOP;
+    }
+}
+
+void Character::stateLaraCrawlIdle(HeightInfo& next_fc)
+{
+    m_dirFlag = ENT_MOVE_FORWARD;
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    if(m_response.killed)
+    {
+        m_dirFlag = ENT_STAY;
+        m_bf.animations.next_state = TR_STATE_LARA_DEATH;
+    }
+    else if(m_command.move[1] == -1)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_TURN_LEFT, 0);
+    }
+    else if(m_command.move[1] == 1)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_TURN_RIGHT, 0);
+    }
+    else if(m_command.move[0] == 1)
+    {
+        btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+        if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+        {
+            btVector3 global_offset = m_transform.getBasis().getColumn(1) * CRAWL_FORWARD_OFFSET;
+            global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+            global_offset += m_transform.getOrigin();
+            Character::getHeightInfo(global_offset, &next_fc);
+            if((next_fc.floor_point[2] < m_transform.getOrigin()[2] + m_minStepUpHeight) &&
+               (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_minStepUpHeight))
+            {
+                m_bf.animations.next_state = TR_STATE_LARA_CRAWL_FORWARD;           // In TR4+, first state is crawlspace jump
+            }
+        }
+    }
+    else if(m_command.move[0] == -1)
+    {
+        btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+        if((checkNextPenetration(move) == 0) || !m_response.horizontal_collision)
+        {
+            btVector3 global_offset = m_transform.getBasis().getColumn(1) * -CRAWL_FORWARD_OFFSET;
+            global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+            global_offset += m_transform.getOrigin();
+            Character::getHeightInfo(global_offset, &next_fc);
+            if((next_fc.floor_point[2] < m_transform.getOrigin()[2] + m_minStepUpHeight) &&
+               (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_minStepUpHeight))
+            {
+                m_dirFlag = ENT_MOVE_BACKWARD;
+                m_bf.animations.next_state = TR_STATE_LARA_CRAWL_BACK;
+            }
+            else if(m_command.action && !m_response.horizontal_collision &&
+               (next_fc.floor_point[2] < m_transform.getOrigin()[2] - m_height))
+            {
+                const btVector3 temp = m_transform.getOrigin();                                       // save entity position
+                m_transform.getOrigin()[0] = next_fc.floor_point[0];
+                m_transform.getOrigin()[1] = next_fc.floor_point[1];
+                global_offset = m_transform.getBasis().getColumn(1) * 0.5 * CRAWL_FORWARD_OFFSET;
+                global_offset[2] += 128.0;
+                m_heightInfo.floor_hit = next_fc.floor_hit;
+                m_heightInfo.floor_point = next_fc.floor_point;
+                m_heightInfo.floor_normale = next_fc.floor_normale;
+                m_heightInfo.floor_obj = next_fc.floor_obj;
+                m_heightInfo.ceiling_hit = next_fc.ceiling_hit;
+                m_heightInfo.ceiling_point = next_fc.ceiling_point;
+                m_heightInfo.ceiling_normale = next_fc.ceiling_normale;
+                m_heightInfo.ceiling_obj = next_fc.ceiling_obj;
+
+                m_climb = checkClimbability(global_offset, &next_fc, 1.5 * m_bf.bb_max[2]);
+                m_transform.getOrigin() = temp;                                       // restore entity position
+                if(m_climb.can_hang)
+                {
+                    m_angles[0] = m_climb.edge_z_ang;
+                    m_dirFlag = ENT_MOVE_BACKWARD;
+                    m_moveType = MOVE_CLIMBING;
+                    m_climb.point = m_climb.edge_point;
+                    m_bf.animations.next_state = TR_STATE_LARA_CRAWL_TO_CLIMB;
+                }
+            }
+        }
+    }
+    else if(!m_command.crouch)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CROUCH_IDLE;                // Back to crouch.
+    }
+}
+
+void Character::stateLaraCrawlToClimb()
+{
+    m_bt.no_fix_all = true;
+    m_bf.animations.onFrame = &Character::crawlToClimb;
+}
+
+void Character::stateLaraCrawlForward(HeightInfo& next_fc)
+{
+    m_dirFlag = ENT_MOVE_FORWARD;
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_command.rot[0] = m_command.rot[0] * 0.5;
+    btVector3 move = m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
+        return;
+    }
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * CRAWL_FORWARD_OFFSET;
+    global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+    global_offset += m_transform.getOrigin();
+    Character::getHeightInfo(global_offset, &next_fc);
+
+    if((m_command.move[0] != 1) || m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
+    }
+    else if( (next_fc.floor_point[2] >= m_transform.getOrigin()[2] + m_minStepUpHeight) ||
+             (next_fc.floor_point[2] <= m_transform.getOrigin()[2] - m_minStepUpHeight)  )
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
+    }
+}
+
+void Character::stateLaraCrawlBack(HeightInfo& next_fc)
+{
+    m_dirFlag = ENT_MOVE_FORWARD;   // Absurd? No, Core Design.
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_command.rot[0] = m_command.rot[0] * 0.5;
+    btVector3 move = m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+    if((checkNextPenetration(move) > 0) && m_response.horizontal_collision)
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
+        return;
+    }
+    btVector3 global_offset = m_transform.getBasis().getColumn(1) * -CRAWL_FORWARD_OFFSET;
+    global_offset[2] += 0.5 * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+    global_offset += m_transform.getOrigin();
+    Character::getHeightInfo(global_offset, &next_fc);
+    if((m_command.move[0] != -1) || m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
+    }
+    else if( (next_fc.floor_point[2] >= m_transform.getOrigin()[2] + m_minStepUpHeight)   ||
+             (next_fc.floor_point[2] <= m_transform.getOrigin()[2] - m_minStepUpHeight)    )
+    {
+        m_dirFlag = ENT_STAY;
+        setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
+    }
+}
+
+void Character::stateLaraCrawlTurnLeftRight()
+{
+    m_dirFlag = ENT_MOVE_FORWARD;
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14))?(1.0):(0.0);
+
+    int moveCommand = m_bf.animations.last_state == TR_STATE_LARA_CRAWL_TURN_LEFT
+                    ? -1
+                    : 1;
+
+    if((m_command.move[1] != moveCommand) || m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CRAWL_IDLE; // stop
+    }
+}
+
+void Character::stateLaraCrouchTurnLeftRight()
+{
+    m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23))?(0.6):(0.0);
+
+    if((m_command.move[1] == 0) || m_response.killed)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_CROUCH_IDLE;
+    }
+}
+
+void Character::stateLaraMonkeyswingIdle()
+{
+    m_command.rot[0] = 0.0;
+    m_dirFlag = ENT_STAY;
+    ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150
+    if(m_command.action && (m_moveType != MOVE_MONKEYSWING) && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 96.0))
+    {
+        m_moveType = MOVE_MONKEYSWING;
+        setAnimation(TR_ANIMATION_LARA_MONKEY_IDLE, 0);
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+        m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+    }
+
+    if((m_moveType != MOVE_MONKEYSWING) || !m_command.action)
+    {
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+        m_dirFlag = ENT_STAY;
+        m_moveType = MOVE_FREE_FALLING;
+    }
+    else if(m_command.shift && (m_command.move[1] ==-1))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_LEFT;
+    }
+    else if(m_command.shift && (m_command.move[1] == 1))
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_RIGHT;
+    }
+    else if(m_command.move[0] == 1)
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_FORWARD;
+    }
+    else if(m_command.move[1] ==-1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_TURN_LEFT;
+    }
+    else if(m_command.move[1] == 1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_TURN_RIGHT;
+    }
+}
+
+void Character::stateLaraMonkeyswingTurnLeftRight()
+{
+    m_command.rot[0] *= 0.5;
+
+    int moveCommand = m_bf.animations.last_state == TR_STATE_LARA_MONKEYSWING_TURN_LEFT
+                    ? -1
+                    : 1;
+
+    if((m_moveType != MOVE_MONKEYSWING) || !m_command.action)
+    {
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+        m_dirFlag = ENT_STAY;
+        m_moveType = MOVE_FREE_FALLING;
+    }
+    else if(m_command.move[1] != moveCommand)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+    }
+}
+
+void Character::stateLaraMonkeyswingForward()
+{
+    m_command.rot[0] *= 0.45;
+    m_dirFlag = ENT_MOVE_FORWARD;
+
+    if((m_moveType != MOVE_MONKEYSWING) || !m_command.action)
+    {
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+        m_moveType = MOVE_FREE_FALLING;
+    }
+    else if(m_command.move[0] != 1)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+    }
+}
+
+void Character::stateLaraMonkeyswingLeftRight()
+{
+    m_command.rot[0] = 0.0;
+    m_dirFlag = ENT_MOVE_LEFT;
+
+    int moveCommand = m_bf.animations.last_state == TR_STATE_LARA_MONKEYSWING_LEFT
+                    ? -1
+                    : 1;
+
+    if((m_moveType != MOVE_MONKEYSWING) || !m_command.action)
+    {
+        setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+        m_moveType = MOVE_FREE_FALLING;
+    }
+    else if(m_command.move[0] != moveCommand)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+    }
+}
+
+/**
+ * Current animation != current state - use original TR state concept!
+ */
+void Character::stateControlLara()
+{
+    HeightInfo next_fc;
+    next_fc.sp = m_heightInfo.sp;
+    next_fc.cb = m_rayCb;
+    next_fc.cb->m_closestHitFraction = 1.0;
+    next_fc.cb->m_collisionObject = nullptr;
+    next_fc.ccb = m_convexCb;
+    next_fc.ccb->m_closestHitFraction = 1.0;
+    next_fc.ccb->m_hitCollisionObject = nullptr;
+    m_bt.no_fix_body_parts = 0x00000000;
+
+    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+    updateCurrentHeight();
+
+    bool low_vertical_space = (m_heightInfo.floor_hit && m_heightInfo.ceiling_hit && (m_heightInfo.ceiling_point[2] - m_heightInfo.floor_point[2] < m_height - LARA_HANG_VERTICAL_EPSILON));
+    const bool last_frame = static_cast<int>( m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() ) <= m_bf.animations.current_frame + 1;
+
+    if(m_response.killed)   // Stop any music, if Lara is dead.
+    {
+        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
+        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
+    }
+
+ /*
+ * - On floor animations
+ * - Climbing animations
+ * - Landing animations
+ * - Free fall animations
+ * - Water animations
+ */
+    switch(m_bf.animations.last_state)
+    {
+        /*
+         * Base onfloor animations
+         */
+        case TR_STATE_LARA_STOP:
+            stateLaraStop(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_JUMP_PREPARE:
+            stateLaraJumpPrepare();
+            break;
+
+        case TR_STATE_LARA_JUMP_BACK:
+            stateLaraJumpBack();
+            break;
+
+        case TR_STATE_LARA_JUMP_LEFT:
+        case TR_STATE_LARA_JUMP_RIGHT:
+            stateLaraJumpLeftRight();
+            break;
+
+        case TR_STATE_LARA_RUN_BACK:
+            stateLaraRunBack();
+            break;
+
+
+        case TR_STATE_LARA_TURN_LEFT_SLOW:
+        case TR_STATE_LARA_TURN_RIGHT_SLOW:
+            stateLaraTurnSlow(last_frame);
+            break;
+
+        case TR_STATE_LARA_TURN_FAST:
+            stateLaraTurnFast();
+            break;
+
+            /*
+             * RUN AND WALK animations section
+             */
+        case TR_STATE_LARA_RUN_FORWARD:
+            stateLaraRunForward(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_SPRINT:
+            stateLaraSprint(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_WALK_FORWARD:
+            stateLaraWalkForward(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_WADE_FORWARD:
+            stateLaraWadeForward();
+            break;
+
+        case TR_STATE_LARA_WALK_BACK:
+            stateLaraWalkBack(next_fc);
+            break;
+
+        case TR_STATE_LARA_WALK_LEFT:
+        case TR_STATE_LARA_WALK_RIGHT:
+            stateLaraWalkLeftRight(next_fc);
+            break;
+
+            /*
+             * Slide animations section
+             */
+        case TR_STATE_LARA_SLIDE_BACK:
+            stateLaraSlideBack();
+            break;
+
+        case TR_STATE_LARA_SLIDE_FORWARD:
+            stateLaraSlideForward();
+            break;
+
+            /*
+             * Misk animations
+             */
+        case TR_STATE_LARA_PUSHABLE_GRAB:
+            stateLaraPushableGrab();
+            break;
+
+        case TR_STATE_LARA_PUSHABLE_PUSH:
+            stateLaraPushablePush();
+            break;
+
+        case TR_STATE_LARA_PUSHABLE_PULL:
+            stateLaraPushablePull();
+            break;
+
+        case TR_STATE_LARA_ROLL_FORWARD:
+            break;
+
+        case TR_STATE_LARA_ROLL_BACKWARD:
+            stateLaraRollBackward(low_vertical_space);
+            break;
+
+        /*
+         * Climbing section
+         */
+        case TR_STATE_LARA_JUMP_UP:
+            stateLaraJumpUp(next_fc);
+            break;
+
+        case TR_STATE_LARA_REACH:
+            stateLaraReach(next_fc);
+            break;
+
+        /*other code here prevents to UGLY Lara's move in end of "climb on", do not loose &Character::setOnFloorAfterClimb callback here!*/
+        case TR_STATE_LARA_HANDSTAND:
+        case TR_STATE_LARA_CLIMBING:
+        case TR_STATE_LARA_CLIMB_TO_CRAWL:
+            stateLaraFixClimbEnd();
+            break;
+
+        case TR_STATE_LARA_HANG:
+            stateLaraHang(next_fc);
+            break;
+
+        case TR_STATE_LARA_LADDER_IDLE:
+            stateLaraLadderIdle(next_fc);
+            break;
+
+        case TR_STATE_LARA_LADDER_LEFT:
+        case TR_STATE_LARA_LADDER_RIGHT:
+            stateLaraLadderLeftRight();
+            break;
+
+        case TR_STATE_LARA_LADDER_UP:
+            stateLaraLadderUp(next_fc);
+            break;
+
+        case TR_STATE_LARA_LADDER_DOWN:
+            stateLaraLadderDown();
+            break;
+
+        case TR_STATE_LARA_SHIMMY_LEFT:
+        case TR_STATE_LARA_SHIMMY_RIGHT:
+            stateLaraShimmyLeftRight(next_fc);
+            break;
+
+        case TR_STATE_LARA_ONWATER_EXIT:
+            stateLaraOnWaterExit();
+            break;
+
+        case TR_STATE_LARA_JUMP_FORWARD:
+        case TR_STATE_LARA_FALL_BACKWARD:
+            stateLaraJumpForwardFallBackward();
+            break;
+
+            /*
+             * FREE FALL TO UNDERWATER CASES
+             */
+        case TR_STATE_LARA_UNDERWATER_DIVING:
+            stateLaraUnderwaterDiving();
+            break;
+
+        case TR_STATE_LARA_FREEFALL:
+            stateLaraFreefall();
+            break;
+
+        case TR_STATE_LARA_SWANDIVE_BEGIN:
+            stateLaraSwandiveBegin();
+            break;
+
+        case TR_STATE_LARA_SWANDIVE_END:
+            stateLaraSwandiveEnd();
+            break;
+
+            /*
+             * WATER ANIMATIONS
+             */
+        case TR_STATE_LARA_UNDERWATER_STOP:
+            stateLaraUnderwaterStop();
+            break;
+
+        case TR_STATE_LARA_WATER_DEATH:
+            stateLaraUnderwaterDeath();
+            break;
+
+        case TR_STATE_LARA_UNDERWATER_FORWARD:
+            stateLaraUnderwaterForward();
+            break;
+
+        case TR_STATE_LARA_UNDERWATER_INERTIA:
+            stateLaraUnderwaterInertia();
+            break;
+
+        case TR_STATE_LARA_ONWATER_STOP:
+            stateLaraOnwaterStop();
+            break;
+
+        case TR_STATE_LARA_ONWATER_FORWARD:
+            stateLaraOnwaterForward(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_ONWATER_BACK:
+            stateLaraOnwaterBack();
+            break;
+
+        case TR_STATE_LARA_ONWATER_LEFT:
+        case TR_STATE_LARA_ONWATER_RIGHT:
+            stateLaraOnwaterLeftRight();
+            break;
+
+            /*
+             * CROUCH SECTION
+             */
+        case TR_STATE_LARA_CROUCH_IDLE:
+            stateLaraCrouchIdle(next_fc, low_vertical_space);
+            break;
+
+        case TR_STATE_LARA_CROUCH_ROLL:
+        case TR_STATE_LARA_SPRINT_ROLL:
+            stateLaraSprintCrouchRoll();
+            break;
+
+        case TR_STATE_LARA_CRAWL_IDLE:
+            stateLaraCrawlIdle(next_fc);
+            break;
+
+        case TR_STATE_LARA_CRAWL_TO_CLIMB:
+            stateLaraCrawlToClimb();
+            break;
+
+        case TR_STATE_LARA_CRAWL_FORWARD:
+            stateLaraCrawlForward(next_fc);
+            break;
+
+        case TR_STATE_LARA_CRAWL_BACK:
+            stateLaraCrawlBack(next_fc);
+            break;
+
+        case TR_STATE_LARA_CRAWL_TURN_LEFT:
+        case TR_STATE_LARA_CRAWL_TURN_RIGHT:
+            stateLaraCrawlTurnLeftRight();
+            break;
+
+        case TR_STATE_LARA_CROUCH_TURN_LEFT:
+        case TR_STATE_LARA_CROUCH_TURN_RIGHT:
+            stateLaraCrouchTurnLeftRight();
+            break;
+
+            /*
+             * CLIMB MONKEY
+             */
+        case TR_STATE_LARA_MONKEYSWING_IDLE:
+            stateLaraMonkeyswingIdle();
+            break;
+
+        case TR_STATE_LARA_MONKEYSWING_TURN_LEFT:
+        case TR_STATE_LARA_MONKEYSWING_TURN_RIGHT:
+            stateLaraMonkeyswingTurnLeftRight();
+            break;
+
+        case TR_STATE_LARA_MONKEYSWING_FORWARD:
+            stateLaraMonkeyswingForward();
+            break;
+
+        case TR_STATE_LARA_MONKEYSWING_LEFT:
+        case TR_STATE_LARA_MONKEYSWING_RIGHT:
+            stateLaraMonkeyswingLeftRight();
+            break;
+
+            /*
+             * intermediate animations are processed automatically.
+             */
+        default:
+        {
+            m_command.rot[0] = 0.0;
+            if((m_moveType == MOVE_MONKEYSWING) || (m_moveType == MOVE_WALLS_CLIMB))
+            {
+                if(!m_command.action)
+                {
+                    setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                    m_dirFlag = ENT_STAY;
+                    m_moveType = MOVE_FREE_FALLING;
+                }
+            }
+            break;
+        }
+    };
+
+    /*
+     * additional animations control
+     */
+    switch(m_bf.animations.current_animation)
+    {
+        case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
+            m_bt.no_fix_body_parts |= BODY_PART_HEAD;
+            break;
+
+        case TR_ANIMATION_LARA_TRY_HANG_SOLID:
+        case TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
+            if((m_moveType == MOVE_FREE_FALLING) && m_command.action &&
+               (m_speed[0] * m_transform.getBasis().getColumn(1)[0] + m_speed[1] * m_transform.getBasis().getColumn(1)[1] < 0.0))
+            {
+                m_speed[0] = -m_speed[0];
+                m_speed[1] = -m_speed[1];
+            }
+            break;
+    };
+}
+
+void Character::stopTraverse(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        btVector3& pos = m_traversedObject->m_transform.getOrigin();
+        int i = pos[0] / TR_METERING_SECTORSIZE;
+        pos[0] = i * TR_METERING_SECTORSIZE + 512.0;
+        i = pos[1] / TR_METERING_SECTORSIZE;
+        pos[1] = i * TR_METERING_SECTORSIZE + 512.0;
+        m_traversedObject->updateRigidBody(true);
+        m_traversedObject = nullptr;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::setOnFloor(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_moveType = MOVE_ON_FLOOR;
+        m_transform.getOrigin()[2] = m_heightInfo.floor_point[2];
+        ghostUpdate();
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::turnFast(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_bf.animations.next_state = TR_STATE_LARA_TURN_FAST;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::setOnFloorAfterClimb(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
+        if(m_bf.animations.current_frame >= static_cast<int>(af->frames.size() - 1))
+        {
+            auto move = m_transform * m_bf.bone_tags[0].full_transform.getOrigin();
+            setAnimation(af->next_anim->id, af->next_frame);
+            auto p = m_transform * m_bf.bone_tags[0].full_transform.getOrigin();
+            move -= p;
+            m_transform.getOrigin() += move;
+            m_transform.getOrigin()[2] = m_climb.point[2];
+            Entity::updateCurrentBoneFrame(&m_bf, &m_transform);
+            updateRigidBody(false);
+            ghostUpdate();
+            m_moveType = MOVE_ON_FLOOR;
+            m_bf.animations.onFrame = nullptr;
+        }
+    }
+}
+
+void Character::setUnderwater(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_moveType = MOVE_UNDERWATER;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::setFreeFalling(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_moveType = MOVE_FREE_FALLING;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::setCmdSlide(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_response.slide = SlideType::Back;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::correctDivingAngle(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_angles[1] = -45.0;
+        updateTransform();
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::toOnWater(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_transform.getOrigin()[2] = m_heightInfo.transition_level;
+        ghostUpdate();
+        m_moveType = MOVE_ON_WATER;
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::climbOutOfWater(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        const btVector3& v = m_climb.point;
+
+        m_transform.getOrigin() = v + m_transform.getBasis().getColumn(1) * 48.0;             // temporary stick
+        m_transform.getOrigin()[2] = v[2];
+        ghostUpdate();
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::toEdgeClimb(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_transform.getOrigin()[0] = m_climb.point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
+        m_transform.getOrigin()[1] = m_climb.point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
+        m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2];
+        ghostUpdate();
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::toMonkeySwing(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        m_moveType = MOVE_MONKEYSWING;
+        m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+        ghostUpdate();
+        m_bf.animations.onFrame = nullptr;
+    }
+}
+
+void Character::crawlToClimb(int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        if(!m_command.action)
+        {
+            setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+            m_moveType = MOVE_FREE_FALLING;
+            m_dirFlag = ENT_MOVE_BACKWARD;
+        }
+        else
+        {
+            setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
+        }
+
+        m_bt.no_fix_all = false;
+        toEdgeClimb(state);
+        m_bf.animations.onFrame = nullptr;
     }
 }

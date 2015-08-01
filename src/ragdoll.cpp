@@ -17,7 +17,7 @@
 
 bool RDSetup::getSetup(int ragdoll_index)
 {
-    lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
+    lua::Value rds = script::engine_lua["getRagdollSetup"](ragdoll_index);
     if(!rds.is<lua::Table>())
         return false;
 

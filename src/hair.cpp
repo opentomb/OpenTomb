@@ -317,7 +317,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
 void HairSetup::getSetup(uint32_t hair_entry_index)
 {
-    lua::Value res = engine_lua["getHairSetup"](hair_entry_index);
+    lua::Value res = script::engine_lua["getHairSetup"](hair_entry_index);
     if(!res.is<lua::Table>())
         return;
 

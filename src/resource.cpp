@@ -71,7 +71,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     {
         const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
         if(funcName)
-            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
+            Res_CreateEntityFunc(script::engine_lua, funcName ? funcName : std::string(), ent->id());
     }
 }
 
@@ -1008,7 +1008,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                                 if(engine_world.version < TR_II)
                                 {
                                     int looped;
-                                    lua_GetSoundtrack(engine_lua, operands, nullptr, nullptr, &looped);
+                                    script::getSoundtrack(script::engine_lua, operands, nullptr, nullptr, &looped);
                                     if(looped == TR_AUDIO_STREAM_TYPE_BACKGROUND) break;
                                 }
 
@@ -1142,7 +1142,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     if(action_type != TR_ACTIONTYPE_BYPASS)
                     {
                         // Sys_DebugLog("triggers.lua", script);    // Debug!
-                        engine_lua.doString(script);
+                        script::engine_lua.doString(script);
                     }
                 }
                 break;
@@ -1584,6 +1584,8 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
+namespace
+{
 void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
@@ -1646,12 +1648,13 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(cpflag);
     if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
+} // anonymous namespace
 
 void Res_ScriptsOpen(int engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
-    lua_register(level_script.getState(), "print", lua_Print);
+    lua_register(level_script.getState(), "print", script::lua_Print);
 
     level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
     level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
@@ -1712,7 +1715,7 @@ void Res_AutoexecOpen(int engine_version)
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
 
     try {
-        engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
+        script::engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
     }
     catch(lua::RuntimeError& error) {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
@@ -1721,7 +1724,7 @@ void Res_AutoexecOpen(int engine_version)
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
     try {
-        engine_lua.doFile(temp_script_name);          // do level-specific autoexec
+        script::engine_lua.doFile(temp_script_name);          // do level-specific autoexec
     }
     catch(lua::RuntimeError& error) {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
@@ -3146,7 +3149,7 @@ void Res_GenVBOs(World *world)
 
 void Res_GenBaseItems(World* world)
 {
-    engine_lua["genBaseItems"]();
+    script::engine_lua["genBaseItems"]();
 
     if(!world->items_tree.empty())
     {
@@ -3820,7 +3823,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM = lara->m_bf.animations.model;
 
-            engine_lua.set("player", lara->id());
+            script::engine_lua.set("player", lara->id());
 
             switch(tr->game_version)
             {
@@ -3877,7 +3880,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->genEntityRigidBody();
             lara->createGhosts();
             lara->m_height = 768.0;
-            lara->state_func = State_Control_Lara;
+            lara->state_func = &Character::stateControlLara;
 
             continue;
         }
@@ -3906,7 +3909,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    world->stream_track_map.resize( lua_GetNumTracks(engine_lua), 0 );
+    world->stream_track_map.resize( script::getNumTracks(script::engine_lua), 0 );
     if(world->stream_track_map.empty())
         world->stream_track_map.resize( TR_AUDIO_STREAM_MAP_SIZE, 0 );
 
@@ -4147,10 +4150,10 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                 if(ent->m_bf.animations.model->id != item->world_model_id)
                     continue;
 
-                if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->id())].is<lua::Nil>())
-                    engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->id()), lua::Table());
+                if(script::engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->id())].is<lua::Nil>())
+                    script::engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->id()), lua::Table());
 
-                engine_lua["pickup_init"](ent->id(), item->id);
+                script::engine_lua["pickup_init"](ent->id(), item->id);
 
                 ent->disableCollision();
             }
