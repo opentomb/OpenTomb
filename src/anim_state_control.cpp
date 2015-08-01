@@ -2414,7 +2414,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
                 character->setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
             }
-            else if(!cmd->jumpset`nw)
+            else if(!cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_INERTIA;
             }
