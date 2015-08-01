@@ -112,7 +112,7 @@ int32_t Character::removeAllItems()
     }
     auto ret = m_inventory.size();
     m_inventory.clear();
-    return ret;
+    return static_cast<int32_t>( ret );
 }
 
 
@@ -479,8 +479,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
+    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10f);
+    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10f);
     if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
     {
         ret.ceiling_limit = nfc->ceiling_point[2];
@@ -491,14 +491,14 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
      */
     if(m_heightInfo.ceiling_hit && (tmp[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
     {
-        tmp[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0;
+        tmp[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0f;
     }
 
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0;
-    from[1] = pos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0;
+    from[0] = pos[0] - m_transform.getBasis().getColumn(1)[0] * m_climbR * 2.0f;
+    from[1] = pos[1] - m_transform.getBasis().getColumn(1)[1] * m_climbR * 2.0f;
     from[2] = tmp[2];
     to = tmp;
 
@@ -567,8 +567,8 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         // close to 1.0 - bad precision, good speed;
         // close to 0.0 - bad speed, bad precision;
         // close to 0.5 - middle speed, good precision
-        from[2] -= 0.66 * m_climbR;
-        to[2] -= 0.66 * m_climbR;
+        from[2] -= 0.66f * m_climbR;
+        to[2] -= 0.66f * m_climbR;
     }
     while(to[2] >= d);                                                 // we can't climb under floor!
 
@@ -656,7 +656,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         ret.can_hang = 1;
     }
 
-    ret.next_z_space = 2.0 * m_height;
+    ret.next_z_space = 2.0f * m_height;
     if(nfc->floor_hit && nfc->ceiling_hit)
     {
         ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
@@ -674,8 +674,8 @@ ClimbInfo Character::checkWallsClimbability()
     ret.wall_hit = 0x00;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
+    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10f);
+    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10f);
     ret.point = m_climb.point;
 
     if(!m_heightInfo.walls_climb)
@@ -740,7 +740,7 @@ ClimbInfo Character::checkWallsClimbability()
 
     if(ret.wall_hit)
     {
-        t = 0.67 * m_height;
+        t = 0.67f * m_height;
         from -= m_transform.getBasis().getColumn(2) * t;
         to = from;
         t = m_forwardSize + m_bf.bb_max[1];
@@ -779,8 +779,8 @@ ClimbInfo Character::checkWallsClimbability()
 
 void Character::lean(CharacterCommand *cmd, btScalar max_lean)
 {
-    btScalar neg_lean   = 360.0 - max_lean;
-    btScalar lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
+    btScalar neg_lean   = 360.0f - max_lean;
+    btScalar lean_coeff = (max_lean == 0.0)?(48.0f):(max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
@@ -812,7 +812,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
@@ -828,7 +828,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                m_angles[2] -= ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
@@ -839,8 +839,8 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
-                if(m_angles[2] > 360.0) m_angles[2] -= 360.0;
+                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(m_angles[2] > 360.0) m_angles[2] -= 360.0f;
             }
         }
     }
@@ -1074,7 +1074,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight > position[2])
         {
-            btScalar dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
+            btScalar dz_to_land = engine_frame_time * 2400.0f;                   ///@FIXME: magick
             if(position[2] > m_heightInfo.floor_point[2] + dz_to_land)
             {
                 position[2] -= dz_to_land;
@@ -1607,8 +1607,8 @@ int Character::findTraverse()
                 Entity* e = static_cast<Entity*>(cont->object);
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
-                    int oz = (m_angles[0] + 45.0) / 90.0;
-                    m_angles[0] = oz * 90.0;
+                    int oz = (m_angles[0] + 45.0f) / 90.0f;
+                    m_angles[0] = oz * 90.0f;
                     m_traversedObject = e;
                     updateTransform();
                     return 1;
@@ -1644,8 +1644,8 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
-    from[2] = floor + TR_METERING_SECTORSIZE * 0.5;
-    to[2] = floor - TR_METERING_SECTORSIZE * 0.5;
+    from[2] = floor + TR_METERING_SECTORSIZE * 0.5f;
+    to[2] = floor - TR_METERING_SECTORSIZE * 0.5f;
     bt_engine_dynamicsWorld->rayTest(from, to, cb);
     if(cb.hasHit())
     {
@@ -1711,8 +1711,8 @@ int Character::checkTraverse(const Entity& obj)
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
-    v0[2] = floor + TR_METERING_SECTORSIZE * 0.5;
-    v1[2] = floor + TR_METERING_SECTORSIZE * 2.5;
+    v0[2] = floor + TR_METERING_SECTORSIZE * 0.5f;
+    v1[2] = floor + TR_METERING_SECTORSIZE * 2.5f;
     bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
@@ -1802,11 +1802,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * TR_METERING_SECTORSIZE));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * TR_METERING_SECTORSIZE));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
@@ -1886,7 +1886,7 @@ void Character::updateParams()
 
     if(poison)
     {
-        changeParam(PARAM_POISON, 0.0001);
+        changeParam(PARAM_POISON, 0.0001f);
         changeParam(PARAM_HEALTH, -poison);
     }
 

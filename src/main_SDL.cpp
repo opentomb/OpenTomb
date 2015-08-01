@@ -43,7 +43,6 @@ btScalar time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    btScalar time, newtime;
     static btScalar oldtime = 0.0;
 
     Engine_Start();
@@ -52,8 +51,8 @@ int main(int /*argc*/, char** /*argv*/)
 
     while(!done)
     {
-        newtime = Sys_FloatTime();
-        time = newtime - oldtime;
+        auto newtime = Sys_FloatTime();
+        auto time = newtime - oldtime;
         oldtime = newtime;
 
         Engine_Frame(time * time_scale);

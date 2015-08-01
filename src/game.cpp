@@ -111,7 +111,7 @@ void lua_timescale(lua::Value scale)
     {
         if(time_scale == 1.0)
         {
-            time_scale = 0.033;
+            time_scale = 0.033f;
         }
         else
         {
@@ -359,9 +359,9 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     // APPLY CONTROLS
 
-    cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
-    cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
-    cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
+    cam_angles[0] += 2.2f * engine_frame_time * look_logic[0];
+    cam_angles[1] += 2.2f * engine_frame_time * look_logic[1];
+    cam_angles[2] += 2.2f * engine_frame_time * look_logic[2];
 
     if(!renderer.world())
     {
@@ -369,25 +369,25 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                cam_angles[0] -=0.015 * engine_frame_time * control_mapper.joy_look_x;
+                cam_angles[0] -=0.015f * engine_frame_time * control_mapper.joy_look_x;
 
             }
             if(control_mapper.joy_look_y != 0)
             {
-                cam_angles[1] -=0.015 * engine_frame_time * control_mapper.joy_look_y;
+                cam_angles[1] -=0.015f * engine_frame_time * control_mapper.joy_look_y;
             }
         }
 
         if(control_states.mouse_look)
         {
-            cam_angles[0] -= 0.015 * control_states.look_axis_x;
-            cam_angles[1] -= 0.015 * control_states.look_axis_y;
+            cam_angles[0] -= 0.015f * control_states.look_axis_x;
+            cam_angles[1] -= 0.015f * control_states.look_axis_y;
             control_states.look_axis_x = 0.0;
             control_states.look_axis_y = 0.0;
         }
 
         renderer.camera()->setRotation(cam_angles);
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3f):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
         renderer.camera()->moveVertical(dist * move_logic[2]);
@@ -409,15 +409,15 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     if(control_states.mouse_look)
     {
-        cam_angles[0] -= 0.015 * control_states.look_axis_x;
-        cam_angles[1] -= 0.015 * control_states.look_axis_y;
+        cam_angles[0] -= 0.015f * control_states.look_axis_x;
+        cam_angles[1] -= 0.015f * control_states.look_axis_y;
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
 
     if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
     {
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3f):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -427,7 +427,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     else if(control_states.noclip)
     {
         btVector3 pos;
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3f):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -541,8 +541,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
             {
                 btVector3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
-                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
-                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
+                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0f) * RadPerDeg) * control_states.cam_distance;
+                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0f) * RadPerDeg) * control_states.cam_distance;
                 cameraTo.setOrigin(cam_pos2);
 
                 //If collided we want to go right otherwise stay left
@@ -550,8 +550,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
-                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0f) * RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0f) * RadPerDeg) * control_states.cam_distance;
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
@@ -584,13 +584,13 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                 targetAngle = (ent->m_angles[0]) * RadPerDeg;
                 break;
             case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->m_angles[0] - 180.0) * RadPerDeg;
+                targetAngle = (ent->m_angles[0] - 180.0f) * RadPerDeg;
                 break;
             case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->m_angles[0] - 75.0) * RadPerDeg;
+                targetAngle = (ent->m_angles[0] - 75.0f) * RadPerDeg;
                 break;
             case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->m_angles[0] + 75.0) * RadPerDeg;
+                targetAngle = (ent->m_angles[0] + 75.0f) * RadPerDeg;
                 break;
             default:
                 targetAngle = (ent->m_angles[0]) * RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
@@ -615,10 +615,10 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     //Code to manage screen shaking effects
     if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0):(renderer.camera()->m_shakeTime)-engine_frame_time;
+        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0f):(renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -661,7 +661,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_pos[2] += 128.0;
     if((cam->m_currentRoom != NULL) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0 * 64.0;
+        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0f * 64.0f;
     }
 
     cam->setRotation(cam_angles);
@@ -753,7 +753,7 @@ void Game_UpdateCharacters()
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
-    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+    int t = static_cast<int>(*game_logic_time / GAME_LOGIC_REFRESH_INTERVAL);
     btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= dt;
     return dt;
@@ -844,8 +844,8 @@ void Game_Frame(btScalar time)
 
     Game_UpdateAllEntities(engine_world.entity_tree);
 
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();

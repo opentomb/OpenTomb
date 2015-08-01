@@ -123,10 +123,11 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+		return;
     }
 
-    if((arg >= 0) && (arg < model->mesh_count) &&
-            (val >= 0) && (val < model->mesh_count))
+    if((arg >= 0) && (arg < model->collision_map.size()) &&
+       (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
     }
@@ -428,8 +429,6 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     {
         if(value.is<lua::Number>())
             ent->changeParam(parameter, value.to<lua::Number>());
-        else
-            ent->changeParam(parameter, value.to<lua::Integer>());
     }
     else
     {
@@ -538,7 +537,8 @@ bool lua_GetSecretStatus(int secret_number)
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return;   // No such secret - return
+    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
+		return;   // No such secret - return
 
     gameflow_manager.SecretsTriggerMap[secret_number] = status;
 }
@@ -1146,7 +1146,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     btVector3 sink_pos; sink_pos[0] = sink->x;
     sink_pos[1] = sink->y;
-    sink_pos[2] = sink->z + 256.0;
+    sink_pos[2] = sink->z + 256.0f;
 
     assert( ent->m_currentSector != nullptr );
     RoomSector* ls = ent->m_currentSector->getLowestSector();
@@ -1166,7 +1166,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     ent->m_transform.getOrigin()[0] += speed[0];
     ent->m_transform.getOrigin()[1] += speed[1];
-    ent->m_transform.getOrigin()[2] += speed[2] * 16.0;
+    ent->m_transform.getOrigin()[2] += speed[2] * 16.0f;
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1562,7 +1562,7 @@ bool lua_GetEntitySectorStatus(int id)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7;
     }
-    return -1;
+    return true;
 }
 
 void lua_SetEntitySectorStatus(int id, bool status)
@@ -2152,7 +2152,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
         if(vfactor.is<lua::Number>())
         {
             ang3 = std::abs(vfactor.to<float>());
-            ang3 = (ang3 > 1.0)?(1.0):(ang3);
+            ang3 = (ang3 > 1.0)?(1.0f):(ang3);
         }
 
         ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(std::abs(ang1), std::abs(ang2), ang3));
@@ -2219,7 +2219,7 @@ void lua_CamShake(float power, float time, lua::Value id)
         btVector3 cam_pos = renderer.camera()->m_pos;
 
         btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
-        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):(1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
+        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):(1.0f - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
 
         power *= dist;
     }
@@ -2518,7 +2518,7 @@ void lua_genUVRotateAnimation(int id)
     seq->frame_lock        = false; // by default anim is playing
     seq->uvrotate          = true;
     seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-    seq->frame_rate        = 0.025;  // Should be passed as 1 / FPS.
+    seq->frame_rate        = 0.025f;  // Should be passed as 1 / FPS.
     seq->frame_time        = 0.0;   // Reset frame time to initial state.
     seq->current_frame     = 0;     // Reset current frame to zero.
     seq->frames.resize(16);
@@ -2539,7 +2539,7 @@ void lua_genUVRotateAnimation(int id)
         }
     }
 
-    seq->uvrotate_max = 0.5 * (v_max - v_min);
+    seq->uvrotate_max = 0.5f * (v_max - v_min);
     seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
     for(uint16_t j=0;j<seq->frames.size();j++)
     {
@@ -2555,7 +2555,7 @@ void lua_genUVRotateAnimation(int id)
     for(struct Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons) {
         p.anim_id = engine_world.anim_sequences.size();
         for(Vertex& v : p.vertices) {
-            v.tex_coord[1] = v_min + 0.5 * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
+            v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
         }
     }
 

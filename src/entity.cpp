@@ -365,7 +365,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         {
             break;
         }
-        int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;     ///@FIXME (not a critical): magick const 4.0!
+        int iter = static_cast<int>((4.0 * move_len / btag->mesh_base->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
         move /= (btScalar)iter;
 
         for(int j=0; j<=iter; j++) {
@@ -676,7 +676,7 @@ void Entity::updateTransform()
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
     btScalar t  = m_currentSpeed * m_speedMult;
-    btScalar vz = (zeroVz)?(0.0):(m_speed[2]);
+    btScalar vz = (zeroVz)?(0.0f):(m_speed[2]);
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
@@ -723,7 +723,7 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0 / 30.0;;
+        ss_anim->period = 1.0f / 30.0f;
     }
 }
 
@@ -917,7 +917,15 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-        engine_lua["tlist_RunTrigger"](lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+		try
+		{
+			if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+				engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+		}
+		catch (lua::RuntimeError& error)
+		{
+			Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+		}
     }
 }
 
@@ -945,7 +953,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
     frame = (frame >= 0)?(frame):(anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0 / 30.0;
+    m_bf.animations.period = 1.0f / 30.0f;
 
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;
@@ -1032,8 +1040,8 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
 {
     AnimationFrame* curr_anim = &bf->animations.model->animations[ bf->animations.current_animation ];
 
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
+    *frame = static_cast<int16_t>((bf->animations.frame_time + time) / bf->animations.period);
+    *frame = (*frame >= 0.0)?(*frame):(0);                                    // paranoid checking
     *anim  = bf->animations.current_animation;
 
     /*
@@ -1184,7 +1192,7 @@ int Entity::frame(btScalar time)
     // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
     m_bf.animations.frame_time += time;
 
-    t = (m_bf.animations.frame_time) / m_bf.animations.period;
+    t = static_cast<long>(m_bf.animations.frame_time / m_bf.animations.period);
     dt = m_bf.animations.frame_time - (btScalar)t * m_bf.animations.period;
     m_bf.animations.frame_time = (btScalar)frame * m_bf.animations.period + dt;
     m_bf.animations.lerp = dt / m_bf.animations.period;
@@ -1415,7 +1423,7 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         if(!m_bf.bone_tags[i].parent) {
             btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
-            m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
+            m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
         }
     }
@@ -1468,14 +1476,14 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         case RDJointSetup::Hinge: {
             std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
-            hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
+            hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
             m_bt.bt_joints[i] = hingeC;
         }
             break;
 
         case RDJointSetup::Cone: {
             std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
-            coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
+            coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
             m_bt.bt_joints[i] = coneC;
         }
             break;

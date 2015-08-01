@@ -3,6 +3,7 @@
 #define VMATH_H
 
 #include <cmath>
+#include <cassert>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
@@ -16,11 +17,11 @@
 
 namespace
 {
-constexpr const double DegPerRad = 180 / M_PI;
-constexpr const double RadPerDeg = M_PI / 180;
-constexpr const double Rad90 = 0.5*M_PI;
-constexpr const double Rad180 = M_PI;
-constexpr const double Rad360 = 2*M_PI;
+constexpr const float DegPerRad = 180 / M_PI;
+constexpr const float RadPerDeg = M_PI / 180;
+constexpr const float Rad90 = 0.5*M_PI;
+constexpr const float Rad180 = M_PI;
+constexpr const float Rad360 = 2*M_PI;
 }
 
 /**
@@ -58,7 +59,9 @@ struct Plane
 
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
-        normal = v1.cross(v2).normalized();
+		normal = v1.cross(v2);
+		// assert(!normal.fuzzyZero());
+		normal.safeNormalize();
         dot = normal.dot( pos );
     }
 

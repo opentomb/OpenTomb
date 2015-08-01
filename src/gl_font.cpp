@@ -387,7 +387,7 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-            x += (GLfloat)(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0;
+            x += (GLfloat)(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0f;
         }
     }
 
@@ -435,8 +435,8 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
             yy1 = yy0 - g->height;
             bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
 
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
+            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
         }
     }
 }
@@ -520,8 +520,8 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 vec4_copy(p, glf->gl_font_color);   p += 4;
                 elements_count++;
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
+            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
         }
         FontBuffer_Unmap();
         ///RENDER
@@ -592,8 +592,8 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
                 glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
+            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
         }
     }
 }

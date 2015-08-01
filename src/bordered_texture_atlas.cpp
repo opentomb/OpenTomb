@@ -127,7 +127,7 @@ void BorderedTextureAtlas::layOutTextures()
 
                 size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
                 if (highest_y + 1 > m_resultPageHeights[page])
-                    m_resultPageHeights[page] = highest_y;
+                    m_resultPageHeights[page] = static_cast<unsigned int>(highest_y);
 
                 break;
             }
@@ -182,7 +182,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         for(const tr_sprite_texture_t& t : sprite_textures)
             areaSum += std::abs( (t.x1-t.x0) * (t.y1-t.y0) );
 
-        m_resultPageWidth = std::min( max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)) );
+        m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
     }
     else
     {
@@ -338,7 +338,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = canonical.new_page;
+    poly->tex_index = static_cast<uint16_t>( canonical.new_page );
     for (size_t i = 0; i < poly->vertices.size(); i++)
     {
         unsigned x_coord = 0;
@@ -521,10 +521,10 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             {
                 for(int j=0;j<w;j++)
                 {
-                    mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)data[i * w * 16 + j * 8 + 0] + (int)data[i * w * 16 + j * 8 + 4 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
-                    mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)data[i * w * 16 + j * 8 + 1] + (int)data[i * w * 16 + j * 8 + 4 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
-                    mip_data[i * w * 4 + j * 4 + 2] = 0.25 * ((int)data[i * w * 16 + j * 8 + 2] + (int)data[i * w * 16 + j * 8 + 4 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
-                    mip_data[i * w * 4 + j * 4 + 3] = 0.25 * ((int)data[i * w * 16 + j * 8 + 3] + (int)data[i * w * 16 + j * 8 + 4 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
+                    mip_data[i * w * 4 + j * 4 + 0] = 0.25f * ((int)data[i * w * 16 + j * 8 + 0] + (int)data[i * w * 16 + j * 8 + 4 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
+                    mip_data[i * w * 4 + j * 4 + 1] = 0.25f * ((int)data[i * w * 16 + j * 8 + 1] + (int)data[i * w * 16 + j * 8 + 4 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
+                    mip_data[i * w * 4 + j * 4 + 2] = 0.25f * ((int)data[i * w * 16 + j * 8 + 2] + (int)data[i * w * 16 + j * 8 + 4 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
+                    mip_data[i * w * 4 + j * 4 + 3] = 0.25f * ((int)data[i * w * 16 + j * 8 + 3] + (int)data[i * w * 16 + j * 8 + 4 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
                 }
             }
 
@@ -543,10 +543,10 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
                 {
                     for(int j=0;j<w;j++)
                     {
-                        mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 0] + (int)mip_data[i * w * 16 + j * 8 + 4 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
-                        mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 1] + (int)mip_data[i * w * 16 + j * 8 + 4 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
-                        mip_data[i * w * 4 + j * 4 + 2] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 2] + (int)mip_data[i * w * 16 + j * 8 + 4 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
-                        mip_data[i * w * 4 + j * 4 + 3] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 3] + (int)mip_data[i * w * 16 + j * 8 + 4 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
+                        mip_data[i * w * 4 + j * 4 + 0] = 0.25f * ((int)mip_data[i * w * 16 + j * 8 + 0] + (int)mip_data[i * w * 16 + j * 8 + 4 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
+                        mip_data[i * w * 4 + j * 4 + 1] = 0.25f * ((int)mip_data[i * w * 16 + j * 8 + 1] + (int)mip_data[i * w * 16 + j * 8 + 4 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
+                        mip_data[i * w * 4 + j * 4 + 2] = 0.25f * ((int)mip_data[i * w * 16 + j * 8 + 2] + (int)mip_data[i * w * 16 + j * 8 + 4 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
+                        mip_data[i * w * 4 + j * 4 + 3] = 0.25f * ((int)mip_data[i * w * 16 + j * 8 + 3] + (int)mip_data[i * w * 16 + j * 8 + 4 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
                     }
                 }
                 //sprintf(tgan, "mip_%0.2d.tga", mip_level);

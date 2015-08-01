@@ -499,7 +499,7 @@ void Engine_Frame(btScalar time)
     extern gui_text_line_t system_fps;
     if(time > 0.1)
     {
-        time = 0.1;
+        time = 0.1f;
     }
 
     engine_frame_time = time;
@@ -510,7 +510,7 @@ void Engine_Frame(btScalar time)
     }
     else
     {
-        screen_info.fps = (20.0 / time_cycl);
+        screen_info.fps = (20.0f / time_cycl);
         snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
         cycles = 0;
         time_cycl = 0.0;
@@ -1390,7 +1390,7 @@ void Engine_InitConfig(const char *filename)
 int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
     ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
-    return strlen(str);
+    return static_cast<int>(strlen(str));
 }
 
 

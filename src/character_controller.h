@@ -103,38 +103,41 @@
 
 // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
-#define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
-#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
-#define DEFAULT_FALL_DOWN_HEIGHT                (320.0)                         ///@FIXME: check original
-#define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
-#define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
-#define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
-#define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
-#define DEFAULT_CHARACTER_CLIMB_R               (32.0)
-#define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
+#define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0f)                         ///@FIXME: check original
+#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0f + 32.0f)                  ///@FIXME: check original
+#define DEFAULT_FALL_DOWN_HEIGHT                (320.0f)                         ///@FIXME: check original
+#define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0f)                        ///@FIXME: check original
+#define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810f)                         ///@FIXME: cos(alpha = 30 deg)
+#define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707f)                        ///@FIXME: cos(alpha = 45 deg)
+#define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0f)                          ///@FIXME: magic - not like in original
+#define DEFAULT_CHARACTER_CLIMB_R               (32.0f)
+#define DEFAULT_CHARACTER_WADE_DEPTH            (256.0f)
 // If less than this much of Lara is looking out of the water, she goes from wading to swimming.
-#define DEFAULT_CHARACTER_SWIM_DEPTH            (100.0) ///@FIXME: Guess
+#define DEFAULT_CHARACTER_SWIM_DEPTH            (100.0f) ///@FIXME: Guess
 
 // Speed limits
 
-#define FREE_FALL_SPEED_1        (2000.0)
-#define FREE_FALL_SPEED_2        (4500.0)
-#define FREE_FALL_SPEED_MAXSAFE  (5500.0)
-#define FREE_FALL_SPEED_CRITICAL (7500.0)
-#define FREE_FALL_SPEED_MAXIMUM  (7800.0)
+namespace
+{
+constexpr float FREE_FALL_SPEED_1        = 2000.0f;
+constexpr float FREE_FALL_SPEED_2        = 4500.0f;
+constexpr float FREE_FALL_SPEED_MAXSAFE  = 5500.0f;
+constexpr float FREE_FALL_SPEED_CRITICAL = 7500.0f;
+constexpr float FREE_FALL_SPEED_MAXIMUM  = 7800.0f;
 
-#define MAX_SPEED_UNDERWATER     (64.0)
-#define MAX_SPEED_ONWATER        (24.0)
-#define MAX_SPEED_QUICKSAND      (5.0 )
+constexpr float MAX_SPEED_UNDERWATER     = 64.0f;
+constexpr float MAX_SPEED_ONWATER        = 24.0f;
+constexpr float MAX_SPEED_QUICKSAND      = 5.0f;
 
-#define ROT_SPEED_UNDERWATER     (2.0)
-#define ROT_SPEED_ONWATER        (3.0)
-#define ROT_SPEED_LAND           (4.5)
-#define ROT_SPEED_FREEFALL       (0.5)
-#define ROT_SPEED_MONKEYSWING    (3.5)
+constexpr float ROT_SPEED_UNDERWATER     = 2.0f;
+constexpr float ROT_SPEED_ONWATER        = 3.0f;
+constexpr float ROT_SPEED_LAND           = 4.5f;
+constexpr float ROT_SPEED_FREEFALL       = 0.5f;
+constexpr float ROT_SPEED_MONKEYSWING    = 3.5f;
 
-#define INERTIA_SPEED_UNDERWATER (1.0)
-#define INERTIA_SPEED_ONWATER    (1.5)
+constexpr float INERTIA_SPEED_UNDERWATER = 1.0f;
+constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
+}
 
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
@@ -179,11 +182,11 @@ enum CharParameters
 
 #define PARAM_ABSOLUTE_MAX                (-1)
 
-#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 1000 HP
-#define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
-#define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
-#define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
-#define LARA_PARAM_POISON_MAX             (5.0)
+#define LARA_PARAM_HEALTH_MAX             (1000.0f)      // 1000 HP
+#define LARA_PARAM_AIR_MAX                (3600.0f)      // 60 secs of air
+#define LARA_PARAM_STAMINA_MAX            (120.0f)       // 4  secs of sprint
+#define LARA_PARAM_WARMTH_MAX             (240.0f)       // 8  secs of freeze
+#define LARA_PARAM_POISON_MAX             (5.0f)
 
 struct EngineContainer;
 struct Entity;

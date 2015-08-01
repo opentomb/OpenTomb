@@ -1923,6 +1923,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         r_static->vbb_min[0] = tr_static->visibility_box[0].x;
         r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
         r_static->vbb_min[2] = tr_static->visibility_box[1].y;
+
         r_static->vbb_max[0] = tr_static->visibility_box[1].x;
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
@@ -2034,9 +2035,9 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
+        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
+        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
+        sector->pos[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
 
@@ -2358,8 +2359,8 @@ void TR_GenBoxes(World *world, class VT_Level *tr)
         room.true_floor =-tr->boxes[i].true_floor;
         room.x_min = tr->boxes[i].xmin;
         room.x_max = tr->boxes[i].xmax;
-        room.y_min =-tr->boxes[i].zmax;
-        room.y_max =-tr->boxes[i].zmin;
+        room.y_min =-static_cast<int>(tr->boxes[i].zmax);
+        room.y_max =-static_cast<int>(tr->boxes[i].zmin);
     }
 }
 
@@ -2519,7 +2520,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
         seq->frame_lock        = false; // by default anim is playing
         seq->uvrotate          = false; // by default uvrotate
         seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-        seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+        seq->frame_rate        = 0.05f;  // Should be passed as 1 / FPS.
         seq->frame_time        = 0.0;   // Reset frame time to initial state.
         seq->current_frame     = 0;     // Reset current frame to zero.
 
@@ -2700,8 +2701,8 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
         }
         p->vertices[i].color[3] = 1.0f;
 
-        p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
-        p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
+        p->vertices[i].tex_coord[0] = i & 2 ? 1.0f : 0.0f;
+        p->vertices[i].tex_coord[1] = i >= 2 ? 1.0f : 0.0f;
     }
     mesh->m_usesVertexColors = true;
 }
@@ -2866,7 +2867,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
      * let us normalise normales %)
      */
     for(Vertex& v : mesh->m_vertices) {
-        v.normal.normalize();
+        v.normal.safeNormalize();
     }
 
     /*
@@ -2979,7 +2980,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
      */
     for(Vertex& v : room->mesh->m_vertices)
     {
-        v.normal.normalize();
+        v.normal.safeNormalize();
     }
 
     /*
@@ -3715,9 +3716,7 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
         bone_frame->pos[2] = 0.0;
     }
 
-    bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
-    bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
-    bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
+    bone_frame->centre = (bone_frame->bb_min + bone_frame->bb_max) / 2.0f;
 }
 
 void TR_GenSkeletalModels(World *world, class VT_Level *tr)
@@ -4019,25 +4018,25 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     {
         if(tr->game_version < TR_III)
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0f; // Max. volume in TR1/TR2 is 32767.
             world->audio_effects[i].chance = tr->sound_details[i].chance;
         }
         else if(tr->game_version > TR_III)
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0f; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->sound_details[i].chance * 255;
         }
         else
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0f; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->sound_details[i].chance * 127;
         }
 
         world->audio_effects[i].rand_gain_var  = 50;
         world->audio_effects[i].rand_pitch_var = 50;
 
-        world->audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
-        world->audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
+        world->audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0f + 1.0f;
+        world->audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0f;
 
         world->audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
         world->audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);

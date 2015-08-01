@@ -458,10 +458,10 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
         btScalar distance = xyz.length();
 
         // Find color
-        colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
-        colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
-        colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
-        colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
+        colors[current_light_number*4 + 0] = std::min(std::max(current_light->colour[0], 0.0f), 1.0f);
+        colors[current_light_number*4 + 1] = std::min(std::max(current_light->colour[1], 0.0f), 1.0f);
+        colors[current_light_number*4 + 2] = std::min(std::max(current_light->colour[2], 0.0f), 1.0f);
+        colors[current_light_number*4 + 3] = std::min(std::max(current_light->colour[3], 0.0f), 1.0f);
 
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
@@ -1269,7 +1269,7 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh
 {
     if(render->m_drawNormals)
     {
-        setColor(0.8, 0.0, 0.9);
+        setColor(0.8f, 0.0f, 0.9f);
         if(!overrideVertices.empty())
         {
             const btVector3* ov = &overrideVertices.front();
@@ -1355,7 +1355,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {
-        debugDrawer.setColor(0.0, 0.1, 0.9);
+        debugDrawer.setColor(0.0f, 0.1f, 0.9f);
         debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
@@ -1395,7 +1395,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 
         if(render->m_drawBoxes)
         {
-            debugDrawer.setColor(0.0, 1.0, 0.1);
+            debugDrawer.setColor(0.0f, 1.0f, 0.1f);
             debugDrawer.drawOBB(sm->obb);
         }
 

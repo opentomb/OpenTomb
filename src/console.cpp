@@ -46,10 +46,10 @@ void ConsoleInfo::initFonts() {
 }
 
 void ConsoleInfo::initGlobals() {
-    m_backgroundColor[0] = 1.0;
-    m_backgroundColor[1] = 0.9;
-    m_backgroundColor[2] = 0.7;
-    m_backgroundColor[3] = 0.4;
+    m_backgroundColor[0] = 1.0f;
+    m_backgroundColor[1] = 0.9f;
+    m_backgroundColor[2] = 0.7f;
+    m_backgroundColor[3] = 0.4f;
 
     m_spacing         = CON_MIN_LINE_INTERVAL;
     m_lineSize       = CON_MIN_LINE_SIZE;
@@ -67,7 +67,7 @@ void ConsoleInfo::setLineInterval(float interval) {
     inited = false;
     m_spacing = interval;
     // font->font_size has absolute size (after scaling)
-    m_lineHeight = (1.0 + m_spacing) * m_font->font_size;
+    m_lineHeight = (1 + m_spacing) * m_font->font_size;
     m_cursorX = 8 + 1;
     m_cursorY = screen_info.h - m_lineHeight * m_visibleLines;
     if(m_cursorY < 8)
@@ -122,7 +122,7 @@ void ConsoleInfo::drawBackground() {
     /*
          * Draw finalise line
          */
-    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
     Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
 }
 
@@ -141,11 +141,11 @@ void ConsoleInfo::drawCursor() {
 
     if(m_showCursor)
     {
-        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
         Gui_DrawRect(m_cursorX,
-                     y + m_lineHeight * 0.9,
+                     y + m_lineHeight * 0.9f,
                      1,
-                     m_lineHeight * 0.8,
+                     m_lineHeight * 0.8f,
                      white, white, white, white,
                      BM_SCREEN);
     }

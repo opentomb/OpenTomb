@@ -442,7 +442,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
             real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
         case GUI_ANCHOR_HOR_CENTER:
-            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            real_x = ((float)screen_info.w / 2.0f) - ((l->rect[2] - l->rect[0]) / 2.0f) + l->absXoffset;  // Absolute center.
             break;
     }
 
@@ -455,7 +455,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
             real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = ((float)screen_info.h / 2.0f) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 
@@ -571,7 +571,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 
     bf->animations.frame_time += time;
 
-    t = (bf->animations.frame_time) / bf->animations.period;
+    t = static_cast<long>(bf->animations.frame_time / bf->animations.period);
     dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
     bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
@@ -605,7 +605,7 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
         }
-        size *= 0.8;
+        size *= 0.8f;
 
         btTransform scaledMatrix;
         scaledMatrix.setIdentity();
@@ -713,7 +713,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
     {
         if(mItemAngle <= 180)
         {
-            mItemAngle -= 180.0 * time / mRingRotatePeriod;
+            mItemAngle -= 180.0f * time / mRingRotatePeriod;
             if(mItemAngle < 0.0)
             {
                 mItemAngle = 0.0;
@@ -721,7 +721,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
         }
         else
         {
-            mItemAngle += 180.0 * time / mRingRotatePeriod;
+            mItemAngle += 180.0f * time / mRingRotatePeriod;
             if(mItemAngle >= 360.0)
             {
                 mItemAngle = 0.0;
@@ -786,7 +786,7 @@ int gui_InventoryManager::setItemsType(int type)
     {
         mCurrentItemsCount = count;
         mCurrentItemsType = type;
-        mRingAngleStep = 360.0 / mCurrentItemsCount;
+        mRingAngleStep = 360.0f / mCurrentItemsCount;
         mItemsOffset %= count;
         mRingTime = 0.0;
         mRingAngle = 0.0;
@@ -852,7 +852,7 @@ void gui_InventoryManager::frame(float time)
                 default:
                 case INVENTORY_IDLE:
                     mItemTime += time;
-                    mItemAngle = 360.0 * mItemTime / mItemRotatePeriod;
+                    mItemAngle = 360.0f * mItemTime / mItemRotatePeriod;
                     if(mItemTime >= mItemRotatePeriod)
                     {
                         mItemTime = 0.0;
@@ -933,7 +933,7 @@ void gui_InventoryManager::frame(float time)
                 restoreItemAngle(time);
                 mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
                 mVerticalOffset = - mBaseRingRadius * mRingTime / mRingRotatePeriod;
-                mRingAngle += 180.0 * time / mRingRotatePeriod;
+                mRingAngle += 180.0f * time / mRingRotatePeriod;
             }
             else if(mRingTime < 2.0 * mRingRotatePeriod)
             {
@@ -942,7 +942,7 @@ void gui_InventoryManager::frame(float time)
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = mBaseRingRadius;
-                    mRingAngleStep = 360.0 / mNextItemsCount;
+                    mRingAngleStep = 360.0f / mNextItemsCount;
                     mRingAngle = 180.0;
                     mCurrentItemsType++;
                     mCurrentItemsCount = mNextItemsCount;
@@ -951,7 +951,7 @@ void gui_InventoryManager::frame(float time)
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset -= mBaseRingRadius * time / mRingRotatePeriod;
-                mRingAngle -= 180.0 * time / mRingRotatePeriod;
+                mRingAngle -= 180.0f * time / mRingRotatePeriod;
             }
             else
             {
@@ -971,7 +971,7 @@ void gui_InventoryManager::frame(float time)
                 restoreItemAngle(time);
                 mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
                 mVerticalOffset = mBaseRingRadius * mRingTime / mRingRotatePeriod;
-                mRingAngle += 180.0 * time / mRingRotatePeriod;
+                mRingAngle += 180.0f * time / mRingRotatePeriod;
             }
             else if(mRingTime < 2.0 * mRingRotatePeriod)
             {
@@ -980,7 +980,7 @@ void gui_InventoryManager::frame(float time)
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = -mBaseRingRadius;
-                    mRingAngleStep = 360.0 / mNextItemsCount;
+                    mRingAngleStep = 360.0f / mNextItemsCount;
                     mRingAngle = 180.0;
                     mCurrentItemsType--;
                     mCurrentItemsCount = mNextItemsCount;
@@ -989,7 +989,7 @@ void gui_InventoryManager::frame(float time)
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset += mBaseRingRadius * time / mRingRotatePeriod;
-                mRingAngle -= 180.0 * time / mRingRotatePeriod;
+                mRingAngle -= 180.0f * time / mRingRotatePeriod;
             }
             else
             {
@@ -1003,8 +1003,8 @@ void gui_InventoryManager::frame(float time)
         case INVENTORY_OPEN:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * mRingTime / mRingRotatePeriod;
-            mRingAngle -= 180.0 * time / mRingRotatePeriod;
-            mRingVerticalAngle -= 180.0 * time / mRingRotatePeriod;
+            mRingAngle -= 180.0f * time / mRingRotatePeriod;
+            mRingVerticalAngle -= 180.0f * time / mRingRotatePeriod;
             if(mRingTime >= mRingRotatePeriod)
             {
                 mCurrentState = INVENTORY_IDLE;
@@ -1022,8 +1022,8 @@ void gui_InventoryManager::frame(float time)
         case INVENTORY_CLOSE:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
-            mRingAngle += 180.0 * time / mRingRotatePeriod;
-            mRingVerticalAngle += 180.0 * time / mRingRotatePeriod;
+            mRingAngle += 180.0f * time / mRingRotatePeriod;
+            mRingVerticalAngle += 180.0f * time / mRingRotatePeriod;
             if(mRingTime >= mRingRotatePeriod)
             {
                 mCurrentState = INVENTORY_DISABLED;
@@ -1053,9 +1053,9 @@ void gui_InventoryManager::render()
 
             btTransform matrix;
             matrix.setIdentity();
-            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
+            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0f);
             //Mat4_RotateX(matrix, 25.0);
-            Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
+            Mat4_RotateX(matrix, 25.0f + mRingVerticalAngle);
             btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
             Mat4_RotateY(matrix, ang);
             Mat4_Translate(matrix, 0.0, mVerticalOffset, mRingRadius);
@@ -1075,16 +1075,16 @@ void gui_InventoryManager::render()
 
                     }
                 }
-                Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
+                Mat4_RotateZ(matrix, 90.0f + mItemAngle - ang);
                 Item_Frame(bi->bf.get(), 0.0);                            // here will be time != 0 for using items animation
             }
             else
             {
-                Mat4_RotateZ(matrix, 90.0 - ang);
+                Mat4_RotateZ(matrix, 90.0f - ang);
                 Item_Frame(bi->bf.get(), 0.0);
             }
-            Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
-            Mat4_Scale(matrix, 0.7, 0.7, 0.7);
+            Mat4_Translate(matrix, -0.5f * bi->bf->centre[0], -0.5f * bi->bf->centre[1], -0.5f * bi->bf->centre[2]);
+            Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);
             Gui_RenderItem(bi->bf.get(), 0.0, matrix);
 
             num++;
@@ -1103,11 +1103,11 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat near_dist = -1.0f;
 
         guiProjectionMatrix = matrix4{};                                        // identity matrix
-        guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
-        guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix[3][0] =-1.0;
-        guiProjectionMatrix[3][1] =-1.0;
+        guiProjectionMatrix[0][0] = 2.0f / ((GLfloat)screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0f / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] =-1.0f;
+        guiProjectionMatrix[3][1] =-1.0f;
         guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
@@ -1205,8 +1205,8 @@ void Gui_DrawInventory()
 
     // Background
 
-    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45};
-    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75};
+    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45f};
+    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75f};
 
     Gui_DrawRect(0.0, 0.0, (GLfloat)screen_info.w, (GLfloat)screen_info.h,
                  upper_color, upper_color, lower_color, lower_color,
@@ -1541,13 +1541,13 @@ void gui_Fader::SetBlendingMode(uint32_t mode)
 
 void gui_Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
 {
-    mSpeed           = 1000.0 / (float)fade_speed;
-    mSpeedSecondary  = 1000.0 / (float)fade_speed_secondary;
+    mSpeed           = 1000.0f / (float)fade_speed;
+    mSpeedSecondary  = 1000.0f / (float)fade_speed_secondary;
 }
 
 void gui_Fader::SetDelay(uint32_t delay_msec)
 {
-    mMaxTime         = (float)delay_msec / 1000.0;
+    mMaxTime         = (float)delay_msec / 1000.0f;
 }
 
 void gui_Fader::SetAspect()
@@ -2172,7 +2172,7 @@ void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
-    mExtrudeDepth[3] = (float)depth / 255.0;        // We need only alpha transparency.
+    mExtrudeDepth[3] = (float)depth / 255.0f;        // We need only alpha transparency.
     mExtrudeDepth[4] = mExtrudeDepth[3];
 }
 
@@ -2479,7 +2479,7 @@ void gui_ItemNotifier::Animate()
             mCurrRotX += (engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
 
-            mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0):(mCurrRotX);
+            mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0f):(mCurrRotX);
             //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
         }
 
@@ -2487,8 +2487,8 @@ void gui_ItemNotifier::Animate()
 
         if(mCurrTime == 0)
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0f);
+            step = (step <= 0.5)?(0.5f):(step);
 
             mCurrPosX -= step;
             mCurrPosX  = (mCurrPosX < mEndPosX)?(mEndPosX):(mCurrPosX);
@@ -2502,8 +2502,8 @@ void gui_ItemNotifier::Animate()
         }
         else
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0f);
+            step = (step <= 0.5)?(0.5f):(step);
 
             mCurrPosX += step;
             mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
@@ -2560,7 +2560,7 @@ void gui_ItemNotifier::Draw()
 void gui_ItemNotifier::SetPos(float X, float Y)
 {
     mAbsPosX = X;
-    mAbsPosY = 1000.0 - Y;
+    mAbsPosY = 1000.0f - Y;
 }
 
 void gui_ItemNotifier::SetRot(float X, float Y)
@@ -2576,7 +2576,7 @@ void gui_ItemNotifier::SetSize(float size)
 
 void gui_ItemNotifier::SetRotateTime(float time)
 {
-    mRotateTime = (1000.0 / time) * 360.0;
+    mRotateTime = (1000.0f / time) * 360.0f;
 }
 
 // ===================================================================================
