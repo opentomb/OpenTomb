@@ -97,7 +97,7 @@ RenderDebugDrawer                    debugDrawer;
 btVector3 light_position = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-std::shared_ptr<EngineContainer> last_cont = nullptr;
+EngineContainer* last_cont = nullptr;
 
 
 
@@ -550,7 +550,7 @@ void Engine_ShowDebugInfo()
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
     }
 
-    if(last_cont != NULL)
+    if(last_cont != nullptr)
     {
         switch(last_cont->object_type)
         {

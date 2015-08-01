@@ -16,7 +16,7 @@
 #include "script.h"
 #include "vmath.h"
 
-extern int done;
+extern bool done;
 
 extern SDL_Joystick         *sdl_joystick;
 extern SDL_GameController   *sdl_controller;
@@ -544,7 +544,7 @@ void Controls_PollSDLInput()
                     (event.key.state == SDL_PRESSED)  &&
                     (event.key.keysym.mod & KMOD_ALT) )
                 {
-                    done = 1;
+                    done = true;
                     break;
                 }
 
@@ -577,7 +577,7 @@ void Controls_PollSDLInput()
                 break;
 
             case SDL_QUIT:
-                done = 1;
+                done = true;
                 break;
 
             case SDL_WINDOWEVENT:

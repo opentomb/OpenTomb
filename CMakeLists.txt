@@ -62,7 +62,7 @@ if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
 endif()
 
 find_package(Bullet)
-if(BULLET_INCLUDE_DIR)
+if(BULLET_FOUND)
     add_library(Bullet INTERFACE)
     target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
     target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
@@ -100,8 +100,8 @@ target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
 find_package(ZLIB REQUIRED)
 add_library(ZLIB INTERFACE)
-target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARIES})
+target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
+target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARY})
 
 find_package(Lua REQUIRED)
 add_library(Lua INTERFACE)
@@ -193,12 +193,15 @@ else()
         pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
     else()
         find_package(SDL2 REQUIRED)
-        find_package(SDL2IMAGE REQUIRED)
+		add_library(SDL2 INTERFACE)
+		target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
+		target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
         
-        set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})
-        # This is a workaround. SDL headers are included in two ways: mentioning the SDL 
-        # directory (which is uncommon) and directly (SDL/SDL.h vs SDL.h)
-        set(SDL2_IMAGE_INCLUDE_DIRS "${SDL2IMAGE_INCLUDE_DIR};${SDL2_INCLUDE_DIR}/SDL2")
+		find_package(SDL2IMAGE REQUIRED)
+		add_library(SDL2IMAGE INTERFACE)
+		target_include_directories(SDL2IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
+		target_include_directories(SDL2IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
+		target_link_libraries(SDL2IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
     endif()
     # disable glext prototypes
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
@@ -213,8 +216,8 @@ target_link_libraries(
     OpenGL
     Bullet
     GLEW
-    ${SDL2_LIBRARIES}
-    ${SDL2_IMAGE_LIBRARIES}
+    SDL2
+    SDL2IMAGE
     ZLIB
     Lua
     Freetype
