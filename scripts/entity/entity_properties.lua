@@ -165,16 +165,16 @@ tr1_entity_tbl[117] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 
 -- PUZZLES, KEYS AND SLOTS FOR THEM --
 
-tr1_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 1 empty
-tr1_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 2 empty
-tr1_entity_tbl[120] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 3 empty
-tr1_entity_tbl[121] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 4 empty
-tr1_entity_tbl[122] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 1 full
-tr1_entity_tbl[123] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 2 full
-tr1_entity_tbl[124] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 3 full
-tr1_entity_tbl[125] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 4 full
+tr1_entity_tbl[118] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 1 empty
+tr1_entity_tbl[119] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 2 empty
+tr1_entity_tbl[120] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 3 empty
+tr1_entity_tbl[121] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 4 empty
+tr1_entity_tbl[122] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Slot 1 full
+tr1_entity_tbl[123] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Slot 2 full
+tr1_entity_tbl[124] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Slot 3 full
+tr1_entity_tbl[125] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Slot 4 full
 
-tr1_entity_tbl[127] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Puzzle item 1
+tr1_entity_tbl[127] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Puzzle item 1
 tr1_entity_tbl[128] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true, func = "midastouch"};        -- Midas gold touch
 
 tr1_entity_tbl[133] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Key 1
@@ -182,13 +182,13 @@ tr1_entity_tbl[134] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr1_entity_tbl[135] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Key 3
 tr1_entity_tbl[136] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Key 4
 
-tr1_entity_tbl[137] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 1
-tr1_entity_tbl[138] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 2
-tr1_entity_tbl[139] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 3
-tr1_entity_tbl[140] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 4
+tr1_entity_tbl[137] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 1
+tr1_entity_tbl[138] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 2
+tr1_entity_tbl[139] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 3
+tr1_entity_tbl[140] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 4
 
-tr1_entity_tbl[145] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Scion 1
-tr1_entity_tbl[146] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Scion 2
+tr1_entity_tbl[145] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Scion 1
+tr1_entity_tbl[146] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};                     -- Scion 2
 tr1_entity_tbl[147] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Scion holder
 tr1_entity_tbl[150] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Scion piece
 
@@ -616,14 +616,14 @@ tr3_entity_tbl[209] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr3_entity_tbl[210] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Puzzle 2 (menu item)
 tr3_entity_tbl[211] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Puzzle 3 (menu item)
 tr3_entity_tbl[212] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Puzzle 4 (menu item)
-tr3_entity_tbl[213] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 1 empty
-tr3_entity_tbl[214] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 2 empty
-tr3_entity_tbl[215] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 3 empty
-tr3_entity_tbl[216] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 4 empty
-tr3_entity_tbl[217] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 1 full
-tr3_entity_tbl[218] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 2 full
-tr3_entity_tbl[219] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 3 full
-tr3_entity_tbl[220] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 4 full
+tr3_entity_tbl[213] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 1 empty
+tr3_entity_tbl[214] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 2 empty
+tr3_entity_tbl[215] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 3 empty
+tr3_entity_tbl[216] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 4 empty
+tr3_entity_tbl[217] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};           -- Slot 1 full
+tr3_entity_tbl[218] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};           -- Slot 2 full
+tr3_entity_tbl[219] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};           -- Slot 3 full
+tr3_entity_tbl[220] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX};           -- Slot 4 full
 tr3_entity_tbl[224] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 1 (pick-up)
 tr3_entity_tbl[225] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 2 (pick-up)
 tr3_entity_tbl[226] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 3 (pick-up)
@@ -632,10 +632,10 @@ tr3_entity_tbl[228] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr3_entity_tbl[229] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 2 (menu item)
 tr3_entity_tbl[230] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 3 (menu item)
 tr3_entity_tbl[231] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Key 4 (menu item)
-tr3_entity_tbl[232] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 1
-tr3_entity_tbl[233] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 2
-tr3_entity_tbl[234] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 3
-tr3_entity_tbl[235] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 4
+tr3_entity_tbl[232] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 1
+tr3_entity_tbl[233] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 2
+tr3_entity_tbl[234] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 3
+tr3_entity_tbl[235] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 4
 tr3_entity_tbl[236] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (pick-up)
 tr3_entity_tbl[237] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused] (pick-up)
 tr3_entity_tbl[238] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (menu item)
@@ -1018,7 +1018,7 @@ tr4_entity_tbl[280] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr4_entity_tbl[281] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Puzzle done 10
 tr4_entity_tbl[282] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Puzzle done 11
 tr4_entity_tbl[283] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Puzzle done 12
-tr4_entity_tbl[284] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 1 (ig keyhole hub.tr4)
+tr4_entity_tbl[284] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 1 (ig keyhole hub.tr4)
 tr4_entity_tbl[285] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 2
 tr4_entity_tbl[286] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 3
 tr4_entity_tbl[287] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 4
@@ -1046,22 +1046,22 @@ tr4_entity_tbl[305] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 
 -- SWITCHES
 
-tr4_entity_tbl[306] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 1
-tr4_entity_tbl[307] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 2
-tr4_entity_tbl[308] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 3
-tr4_entity_tbl[309] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 4
-tr4_entity_tbl[310] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 5
-tr4_entity_tbl[311] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 6
-tr4_entity_tbl[312] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 7
-tr4_entity_tbl[313] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 8
-tr4_entity_tbl[314] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Underwater switch 1
-tr4_entity_tbl[315] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Underwater switch 2
-tr4_entity_tbl[316] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Turn switch
-tr4_entity_tbl[317] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Cog switch
-tr4_entity_tbl[318] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Lever switch
-tr4_entity_tbl[319] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Jump switch
-tr4_entity_tbl[320] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Crowbar switch
-tr4_entity_tbl[321] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Pulley
+tr4_entity_tbl[306] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 1
+tr4_entity_tbl[307] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 2
+tr4_entity_tbl[308] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 3
+tr4_entity_tbl[309] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 4
+tr4_entity_tbl[310] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 5
+tr4_entity_tbl[311] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 6
+tr4_entity_tbl[312] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 7
+tr4_entity_tbl[313] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Switch type 8
+tr4_entity_tbl[314] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Underwater switch 1
+tr4_entity_tbl[315] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Underwater switch 2
+tr4_entity_tbl[316] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Turn switch
+tr4_entity_tbl[317] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Cog switch
+tr4_entity_tbl[318] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Lever switch
+tr4_entity_tbl[319] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Jump switch
+tr4_entity_tbl[320] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Crowbar switch
+tr4_entity_tbl[321] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Pulley
 
 -- DOORS
 

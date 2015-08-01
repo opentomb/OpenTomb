@@ -2372,6 +2372,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
             }
+            else if(character->m_moveType == MOVE_ON_WATER)
+            {
+                character->m_inertiaLinear = 0.0;
+                ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
+                character->setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
+            }
             break;
 
         case TR_STATE_LARA_WATER_DEATH:
@@ -2402,16 +2408,13 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 character->setAnimation(TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN, 0);
             }
-            else if(cmd->jump)
+            else if(character->m_moveType == MOVE_ON_WATER)
             {
-                if(character->m_moveType == MOVE_ON_WATER)
-                {
-                    character->m_inertiaLinear = 0.0;
-                    ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
-                    character->setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
-                }
+                character->m_inertiaLinear = 0.0;
+                ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
+                character->setAnimation(TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
             }
-            else
+            else if(!cmd->jumpset`nw)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_INERTIA;
             }
