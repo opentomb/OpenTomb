@@ -226,11 +226,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     curr_fc = &ent->character->height_info;
     next_fc.sp = curr_fc->sp;
     next_fc.cb = ent->character->ray_cb;
-    next_fc.cb->m_closestHitFraction = 1.0;
-    next_fc.cb->m_collisionObject = NULL;
     next_fc.ccb = ent->character->convex_cb;
-    next_fc.ccb->m_closestHitFraction = 1.0;
-    next_fc.ccb->m_hitCollisionObject = NULL;
     ent->bt.no_fix_body_parts = 0x00000000;
 
     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;

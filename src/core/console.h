@@ -29,7 +29,7 @@ extern "C" {
 ///@TODO: add system message console style
 enum font_Style
 {
-        FONTSTYLE_CONSOLE_INFO,
+        FONTSTYLE_CONSOLE_INFO = 0,
         FONTSTYLE_CONSOLE_WARNING,
         FONTSTYLE_CONSOLE_EVENT,
         FONTSTYLE_CONSOLE_NOTIFY,
@@ -117,10 +117,10 @@ void Con_Notify(const char *fmt, ...);
 
 int  Con_AddFont(uint16_t index, uint16_t size, const char* path);
 int  Con_RemoveFont(uint16_t index);
-int Con_AddFontStyle(uint16_t index,
-                     GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                     uint8_t shadow, uint8_t rect, uint8_t rect_border,
-                     GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
+int  Con_AddFontStyle(uint16_t index,
+                      GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                      uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
 int  Con_RemoveFontStyle(uint16_t index);
 gl_tex_font_p  Con_GetFont(uint16_t index);
 gl_fontstyle_p Con_GetFontStyle(uint16_t index);

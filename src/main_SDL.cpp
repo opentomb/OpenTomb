@@ -430,17 +430,10 @@ void Engine_Display()
         Render_DrawList();
 
         Gui_SwitchGLMode(1);
-        {
-            glEnable(GL_ALPHA_TEST);
+        glEnable(GL_ALPHA_TEST);
 
-            Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
-            {
-                Gui_DrawInventory();
-            }
-        }
+        Gui_DrawNotifier();
         glPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
-
         Gui_Render();
         Gui_SwitchGLMode(0);
 

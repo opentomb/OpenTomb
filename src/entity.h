@@ -140,20 +140,6 @@ void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
 
-// Bullet entity rigid body generating.
-void BT_GenEntityRigidBody(entity_p ent);
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Entity_GhostUpdate(struct entity_s *ent);
-void Entity_UpdateCurrentCollisions(struct entity_s *ent);
-int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
-void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
-int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-void Entity_CheckCollisionCallbacks(struct entity_s *ent);
-bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
-void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
-
 void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent, int force);
 

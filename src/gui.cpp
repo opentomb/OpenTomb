@@ -371,7 +371,7 @@ void Gui_Render()
     glUniform2fvARB(shader->screenSize, 1, screenSize);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
 
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -379,6 +379,13 @@ void Gui_Render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_ALPHA_TEST);
+
+    if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
+    {
+        Gui_DrawInventory();
+    }
+    glUseProgramObjectARB(shader->program);
+
     glDepthMask(GL_FALSE);
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
@@ -1182,42 +1189,56 @@ void Gui_DrawInventory()
         return;
     }
 
+    glDepthMask(GL_FALSE);
+    {
+        BindWhiteTexture();
+        GLfloat x0 = 0.0f;
+        GLfloat y0 = 0.0f;
+        GLfloat x1 = screen_info.w;
+        GLfloat y1 = screen_info.h;
+        GLfloat *v, backgroundArray[32];
+        GLfloat color[4] = {0.0f, 0.0f, 0.0f, 0.5f};
+
+        v = backgroundArray;
+       *v++ = x0; *v++ = y0;
+        vec4_copy(v, color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x1; *v++ = y0;
+        vec4_copy(v, color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x1; *v++ = y1;
+        vec4_copy(v, color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+       *v++ = x0; *v++ = y1;
+        vec4_copy(v, color);
+        v += 4;
+       *v++ = 0.0; *v++ = 0.0;
+
+        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
+        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
+        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    }
+    glDepthMask(GL_TRUE);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    glPopClientAttrib();
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glPolygonMode(GL_FRONT, GL_FILL);
-    glFrontFace(GL_CCW);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
-    glDepthMask(GL_FALSE);
-
-    // Background
-
-    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45};
-    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75};
-
-    Gui_DrawRect(0.0, 0.0, (GLfloat)screen_info.w, (GLfloat)screen_info.h,
-                 upper_color, upper_color, lower_color, lower_color,
-                 BM_OPAQUE);
-
-    glDepthMask(GL_TRUE);
-    glPopClientAttrib();
-    glPopAttrib();
-
+    glPushAttrib(GL_ENABLE_BIT);
+    glEnable(GL_ALPHA_TEST);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    //GLfloat color[4] = {0,0,0,0.45};
-    //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
-
     Gui_SwitchGLMode(0);
     main_inventory_manager->render();
     Gui_SwitchGLMode(1);
+    glPopClientAttrib();
+    glPopAttrib();
 }
 
 void Gui_NotifierStart(int item)
@@ -1362,7 +1383,7 @@ bool Gui_FadeStop(int fader)
 
 bool Gui_FadeAssignPic(int fader, const char* pic_name)
 {
-    if((fader >= 0) && (fader < FADER_LASTINDEX))
+    /*if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
         size_t len = strlen(pic_name);
@@ -1415,7 +1436,7 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
 
         //return Fader[fader].SetTexture(buf);
     }
-
+*/
     return false;
 }
 

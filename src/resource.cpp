@@ -2155,11 +2155,11 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             switch(r_static->self->collision_shape)
             {
                 case COLLISION_SHAPE_BOX:
-                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true);
+                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max);
                     break;
 
                 case COLLISION_SHAPE_BOX_BASE:
-                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true);
+                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max);
                     break;
 
                 case COLLISION_SHAPE_TRIMESH:

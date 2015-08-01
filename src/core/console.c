@@ -527,7 +527,7 @@ int Con_RemoveFontStyle(uint16_t index)
 }
 
 
-gl_tex_font_p  Con_GetFont(uint16_t index)
+gl_tex_font_p Con_GetFont(uint16_t index)
 {
     if(con_font_manager)
     {

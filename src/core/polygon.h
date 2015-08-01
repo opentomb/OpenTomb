@@ -75,7 +75,7 @@ typedef struct anim_seq_s
 }anim_seq_t, *anim_seq_p;
 
 
-__inline void ApplyAnimTextureTransformation(GLfloat *uv_out, const GLfloat *uv_in, const struct tex_frame_s *tf);
+void ApplyAnimTextureTransformation(GLfloat *uv_out, const GLfloat *uv_in, const struct tex_frame_s *tf);
 
 /*
  * polygons functions

@@ -12,18 +12,40 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
+struct entity_s;
 
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
+class btPairCachingGhostObject;
 
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
 extern btCollisionDispatcher                   *bt_engine_dispatcher;
 extern btBroadphaseInterface                   *bt_engine_overlappingPairCache;
 extern btSequentialImpulseConstraintSolver     *bt_engine_solver ;
 extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
+
+
+/* bullet collision model calculation */
+btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+
+// Bullet entity rigid body generating.
+void BT_GenEntityRigidBody(struct entity_s *ent);
+int  Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
+void Entity_GhostUpdate(struct entity_s *ent);
+void Entity_UpdateCurrentCollisions(struct entity_s *ent);
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
+void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
+int  Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
+void Entity_CheckCollisionCallbacks(struct entity_s *ent);
+bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
+void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
 
 class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
@@ -116,7 +138,7 @@ public:
         return 1.0;
     }
 
-protected:
+private:
     bool               m_skip_ghost;
     engine_container_p m_cont;
 };
