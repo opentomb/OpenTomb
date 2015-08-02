@@ -133,19 +133,13 @@ void Sys_Strtime(char *buf, size_t buf_size)
 
 void Sys_StrRunSec(char *buf, size_t buf_size)
 {
-	static std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-	std::chrono::system_clock::duration delta = std::chrono::system_clock::now() - start;
-	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(delta);
-    snprintf(buf, buf_size, "%06d.%03d", int(ms.count()/1000), int(ms.count()%1000));
+    static std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+    std::chrono::system_clock::duration delta = std::chrono::system_clock::now() - start;
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(delta);
+    snprintf(buf, buf_size, "%06d.%03d", int(ms.count() / 1000), int(ms.count() % 1000));
 }
 
 btScalar Sys_FloatTime(void)
 {
-	return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count()/1e3;
-
-	static std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-	std::chrono::high_resolution_clock::duration delta = std::chrono::high_resolution_clock::now() - start;
-	std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(delta);
-	return ms.count();
+    return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count() / 1000.0f;
 }
-
