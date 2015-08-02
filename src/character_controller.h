@@ -326,9 +326,6 @@ typedef struct character_s
     struct climb_info_s          climb;
 
     struct entity_s             *traversed_object;
-    
-    bt_engine_ClosestRayResultCallback                  *ray_cb;
-    bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;
 
 void Character_Create(struct entity_s *ent);

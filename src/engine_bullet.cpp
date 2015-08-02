@@ -460,7 +460,7 @@ void BT_GenEntityRigidBody(struct entity_s *ent)
         return;
     }
 
-    ent->bt.bt_body = (btRigidBody**)malloc(ent->bf.bone_tag_count * sizeof(btRigidBody*));
+    ent->physics.bt_body = (btRigidBody**)malloc(ent->bf.bone_tag_count * sizeof(btRigidBody*));
 
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
@@ -486,7 +486,7 @@ void BT_GenEntityRigidBody(struct entity_s *ent)
                  break;
         };
 
-        ent->bt.bt_body[i] = NULL;
+        ent->physics.bt_body[i] = NULL;
 
         if(cshape)
         {
@@ -495,11 +495,11 @@ void BT_GenEntityRigidBody(struct entity_s *ent)
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-            ent->bt.bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            //ent->bt.bt_body[i]->setCollisionFlags(ent->bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-            ent->bt.bt_body[i]->setUserPointer(ent->self);
-            ent->bt.bt_body[i]->setUserIndex(i);
+            ent->physics.bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
+            //ent->physics.bt_body[i]->setCollisionFlags(ent->physics.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+            bt_engine_dynamicsWorld->addRigidBody(ent->physics.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+            ent->physics.bt_body[i]->setUserPointer(ent->self);
+            ent->physics.bt_body[i]->setUserIndex(i);
         }
     }
 }
@@ -579,7 +579,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 void Entity_GhostUpdate(struct entity_s *ent)
 {
-    if(ent->bt.ghostObjects != NULL)
+    if(ent->physics.ghostObjects != NULL)
     {
         if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
         {
@@ -590,9 +590,9 @@ void Entity_GhostUpdate(struct entity_s *ent)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
                 v = ent->bf.animations.model->mesh_tree[i].mesh_base->centre;
-                ent->bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+                ent->physics.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
                 Mat4_vec3_mul_macro(pos.m_floats, tr, v);
-                ent->bt.ghostObjects[i]->getWorldTransform().setOrigin(pos);
+                ent->physics.ghostObjects[i]->getWorldTransform().setOrigin(pos);
             }
         }
         else
@@ -600,10 +600,10 @@ void Entity_GhostUpdate(struct entity_s *ent)
             btScalar tr[16], v[3];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                ent->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+                ent->physics.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
                 Mat4_vec3_mul(v, tr, ent->bf.bone_tags[i].mesh_base->centre);
                 vec3_copy(tr+12, v);
-                ent->bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+                ent->physics.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
             }
         }
     }
@@ -612,7 +612,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 
 void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 {
-    if(ent->bt.ghostObjects != NULL)
+    if(ent->physics.ghostObjects != NULL)
     {
         btScalar tr[16], *v;
         btTransform orig_tr;
@@ -620,8 +620,8 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            btPairCachingGhostObject *ghost = ent->bt.ghostObjects[i];
-            entity_collision_node_p cn = ent->bt.last_collisions + i;
+            btPairCachingGhostObject *ghost = ent->physics.ghostObjects[i];
+            entity_collision_node_p cn = ent->physics.last_collisions + i;
 
             cn->obj_count = 0;
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -641,7 +641,7 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
             int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
             for(int j=0;j<num_pairs;j++)
             {
-                ent->bt.manifoldArray->clear();
+                ent->physics.manifoldArray->clear();
                 btBroadphasePair *collisionPair = &pairArray[j];
 
                 if(!collisionPair)
@@ -651,23 +651,23 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 
                 if(collisionPair->m_algorithm)
                 {
-                    collisionPair->m_algorithm->getAllContactManifolds(*ent->bt.manifoldArray);
+                    collisionPair->m_algorithm->getAllContactManifolds(*ent->physics.manifoldArray);
                 }
 
-                for(int k=0;k<ent->bt.manifoldArray->size();k++)
+                for(int k=0;k<ent->physics.manifoldArray->size();k++)
                 {
                     if(cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1)
                     {
-                        btPersistentManifold* manifold = (*ent->bt.manifoldArray)[k];
+                        btPersistentManifold* manifold = (*ent->physics.manifoldArray)[k];
                         for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
                         {
                             //const btManifoldPoint &pt = manifold->getContactPoint(c);
                             if(manifold->getContactPoint(c).getDistance() < 0.0)
                             {
-                                cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->bt.manifoldArray)[k]->getBody0();
+                                cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->physics.manifoldArray)[k]->getBody0();
                                 if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
                                 {
-                                    cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->bt.manifoldArray)[k]->getBody1();
+                                    cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->physics.manifoldArray)[k]->getBody1();
                                 }
                                 cn->obj_count++;                                    // do it once in current cycle, so condition (cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1) located in correct place
                                 break;
@@ -688,7 +688,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
     int ret = 0;
 
     vec3_set_zero(reaction);
-    if((ent->bt.ghostObjects != NULL) && (ent->bt.no_fix_all == 0))
+    if((ent->physics.ghostObjects != NULL) && (ent->physics.no_fix_all == 0))
     {
         btScalar tmp[3], orig_pos[3];
         btScalar tr[16];
@@ -702,7 +702,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
             uint16_t m = ent->bf.animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf.bone_tags + m;
 
-            if(btag->body_part & ent->bt.no_fix_body_parts)
+            if(btag->body_part & ent->physics.no_fix_skeletal_parts)
             {
                 continue;
             }
@@ -710,7 +710,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
             // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
             if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
-                from = ent->bt.ghostObjects[m]->getWorldTransform().getOrigin();
+                from = ent->physics.ghostObjects[m]->getWorldTransform().getOrigin();
                 from.m_floats[0] += ent->transform[12+0] - orig_pos[0];
                 from.m_floats[1] += ent->transform[12+1] - orig_pos[1];
                 from.m_floats[2] += ent->transform[12+2] - orig_pos[2];
@@ -740,8 +740,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
             {
                 vec3_copy(tr+12, curr.m_floats);
                 tr_current.setFromOpenGLMatrix(tr);
-                ent->bt.ghostObjects[m]->setWorldTransform(tr_current);
-                if(Ghost_GetPenetrationFixVector(ent->bt.ghostObjects[m], ent->bt.manifoldArray, tmp))
+                ent->physics.ghostObjects[m]->setWorldTransform(tr_current);
+                if(Ghost_GetPenetrationFixVector(ent->physics.ghostObjects[m], ent->physics.manifoldArray, tmp))
                 {
                     ent->transform[12+0] += tmp[0];
                     ent->transform[12+1] += tmp[1];
@@ -767,7 +767,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
 
 void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
 {
-    if(ent->bt.ghostObjects != NULL)
+    if(ent->physics.ghostObjects != NULL)
     {
         btScalar t1, t2, reaction[3];
 
@@ -782,7 +782,7 @@ void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
             return;
         }
 
-        if(ent->bt.no_fix_all)
+        if(ent->physics.no_fix_all)
         {
             Entity_GhostUpdate(ent);
             return;
@@ -845,7 +845,7 @@ void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
 int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 {
     int ret = 0;
-    if(ent->bt.ghostObjects != NULL)
+    if(ent->physics.ghostObjects != NULL)
     {
         btScalar t1, t2, reaction[3], *pos = ent->transform + 12;
         character_response_p resp = &ent->character->resp;
@@ -879,7 +879,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 
 void Entity_CheckCollisionCallbacks(struct entity_s *ent)
 {
-    if(ent->bt.ghostObjects != NULL)
+    if(ent->physics.ghostObjects != NULL)
     {
         btCollisionObject *cobj;
         uint32_t curr_flag;
@@ -912,11 +912,11 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
 
 bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
-    if(ent->bt.last_collisions != NULL)
+    if(ent->physics.last_collisions != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->bt.last_collisions[i].obj_count > 0))
+            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->physics.last_collisions[i].obj_count > 0))
             {
                 return true;
             }
@@ -929,11 +929,11 @@ bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 
 void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
 {
-    if(ent->bt.last_collisions != NULL)
+    if(ent->physics.last_collisions != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            ent->bt.last_collisions[i].obj_count = 0;
+            ent->physics.last_collisions[i].obj_count = 0;
         }
     }
 }
@@ -941,13 +941,13 @@ void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
 
 void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
-    if(ent->bt.last_collisions != NULL)
+    if(ent->physics.last_collisions != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             if(ent->bf.bone_tags[i].body_part & parts_flags)
             {
-                ent->bt.last_collisions[i].obj_count = 0;
+                ent->physics.last_collisions[i].obj_count = 0;
             }
         }
     }
@@ -957,13 +957,13 @@ void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
 {
     *curr_flag = 0x00;
-    if(ent->bt.last_collisions != NULL)
+    if(ent->physics.last_collisions != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             if(ent->bf.bone_tags[i].body_part & parts_flags)
             {
-                entity_collision_node_p cn = ent->bt.last_collisions + i;
+                entity_collision_node_p cn = ent->physics.last_collisions + i;
                 if(cn->obj_count > 0)
                 {
                     *curr_flag = ent->bf.bone_tags[i].body_part;

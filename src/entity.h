@@ -13,6 +13,8 @@
 
 class btCollisionShape;
 class btRigidBody;
+class bt_engine_ClosestRayResultCallback;
+class bt_engine_ClosestConvexResultCallback;
 
 struct room_s;
 struct room_sector_s;
@@ -68,44 +70,95 @@ struct ss_bone_frame_s;
 
 #define MAX_OBJECTS_IN_COLLSION_NODE    (4)
 
+/*
+ * typedef struct climb_info_s
+{
+    int8_t                         height_info;
+    int8_t                         can_hang;
+
+    btScalar                       point[3];
+    btScalar                       n[3];
+    btScalar                       t[3];
+    btScalar                       up[3];
+    btScalar                       floor_limit;
+    btScalar                       ceiling_limit;
+    btScalar                       next_z_space;
+
+    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                         edge_hit;
+    btVector3                      edge_point;
+    btVector3                      edge_normale;
+    btVector3                      edge_tan_xy;
+    btScalar                       edge_z_ang;
+    btCollisionObject             *edge_obj;
+}climb_info_t, *climb_info_p;
+
+typedef struct height_info_s
+{
+    bt_engine_ClosestRayResultCallback         *cb;
+    bt_engine_ClosestConvexResultCallback      *ccb;
+    btConvexShape                              *sp;
+
+    int8_t                                      ceiling_climb;
+    int8_t                                      walls_climb;
+    int8_t                                      walls_climb_dir;
+
+    btVector3                                   floor_normale;
+    btVector3                                   floor_point;
+    int16_t                                     floor_hit;
+    btCollisionObject                          *floor_obj;
+
+    btVector3                                   ceiling_normale;
+    btVector3                                   ceiling_point;
+    int16_t                                     ceiling_hit;
+    btCollisionObject                          *ceiling_obj;
+
+    btScalar                                    transition_level;
+    int16_t                                     water;
+    int16_t                                     quicksand;
+}height_info_t, *height_info_p;
+ */
+
 typedef struct entity_collision_node_s
 {
     uint16_t                    obj_count;
     btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
 }entity_collision_node_t, *entity_collision_node_p;
 
-typedef struct bt_entity_data_s
+typedef struct physics_data_s
 {
-    uint32_t                            no_fix_body_parts;
+    // kinematic
+    btCollisionShape                  **shapes;
+    btRigidBody                       **bt_body;
+    
+    // dynamic
+    bt_engine_ClosestRayResultCallback                  *ray_cb;
+    bt_engine_ClosestConvexResultCallback               *convex_cb;
+    uint32_t                            no_fix_skeletal_parts;
     int8_t                              no_fix_all;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
-    
-    btCollisionShape                  **shapes;
-    btRigidBody                       **bt_body;
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
     
     struct entity_collision_node_s     *last_collisions;
-}bt_entity_data_t, *bt_entity_data_p;
+}physics_data_t, *physics_data_p;
 
 typedef struct entity_s
 {
     uint32_t                            id;                 // Unique entity ID
     int32_t                             OCB;                // Object code bit (since TR4)
     uint8_t                             trigger_layout;     // Mask + once + event + sector status flags
+    uint8_t                             dir_flag;           // (move direction)
+    uint8_t                             was_rendered;       // render once per frame trigger
+    uint8_t                             was_rendered_lines; // same for debug lines
+    
     float                               timer;              // Set by "timer" trigger field
-
     uint32_t                            callback_flags;     // information about scripts callbacks
     uint16_t                            type_flags;
     uint16_t                            state_flags;
 
-    uint8_t                             dir_flag;           // (move direction)
-    uint16_t                            move_type;          // on floor / free fall / swim ....
-    
-    uint8_t                             was_rendered;       // render once per frame trigger
-    uint8_t                             was_rendered_lines; // same for debug lines
-
+    uint16_t                            move_type;          // on floor / free fall / swim ....    
     btScalar                            current_speed;      // current linear speed from animation info
     btScalar                            speed_mult;
     btVector3                           speed;              // speed of the entity XYZ
@@ -114,7 +167,7 @@ typedef struct entity_s
     btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
     
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
-    struct bt_entity_data_s             bt;
+    struct physics_data_s               physics;
     btScalar                            scaling[3];         // entity scaling
     btScalar                            angles[3];
     btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix

@@ -78,13 +78,13 @@ void Character_Create(struct entity_s *ent)
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
 
-    ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self, true);
-    ret->ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    ret->convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self, true);
-    ret->convex_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    ent->physics.ray_cb = new bt_engine_ClosestRayResultCallback(ent->self, true);
+    ent->physics.ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    ent->physics.convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self, true);
+    ent->physics.convex_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
 
-    ret->height_info.cb = ret->ray_cb;
-    ret->height_info.ccb = ret->convex_cb;
+    ret->height_info.cb = ent->physics.ray_cb;
+    ret->height_info.ccb = ent->physics.convex_cb;
     ret->height_info.sp = new btSphereShape(16.0);
     ret->height_info.ceiling_hit = 0x00;
     ret->height_info.floor_hit = 0x00;
@@ -147,15 +147,15 @@ void Character_Clean(struct entity_s *ent)
         actor->sphere = NULL;
     }
 
-    if(actor->ray_cb)
+    if(ent->physics.ray_cb)
     {
-        delete actor->ray_cb;
-        actor->ray_cb = NULL;
+        delete ent->physics.ray_cb;
+        ent->physics.ray_cb = NULL;
     }
-    if(actor->convex_cb)
+    if(ent->physics.convex_cb)
     {
-        delete actor->convex_cb;
-        actor->convex_cb = NULL;
+        delete ent->physics.convex_cb;
+        ent->physics.convex_cb = NULL;
     }
 
     actor->height_info.cb = NULL;
@@ -654,8 +654,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     /*
      * init callbacks functions
      */
-    nfc->cb = ent->character->ray_cb;
-    nfc->ccb = ent->character->convex_cb;
+    nfc->cb = ent->physics.ray_cb;
+    nfc->ccb = ent->physics.convex_cb;
     vec3_add(tmp.m_floats, pos, offset);                                        // tmp = native offset point
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
@@ -851,7 +851,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     btVector3 from, to;
     btTransform tr1, tr2;
     btScalar wn2[2], t, *pos = ent->transform + 12;
-    bt_engine_ClosestConvexResultCallback *ccb = ent->character->convex_cb;
+    bt_engine_ClosestConvexResultCallback *ccb = ent->physics.convex_cb;
 
     ret.can_hang = 0x00;
     ret.wall_hit = 0x00;
@@ -1190,8 +1190,8 @@ int Character_MoveOnFloor(struct entity_s *ent)
     /*
      * init height info structure
      */
-    nfc.cb = ent->character->ray_cb;
-    nfc.ccb = ent->character->convex_cb;
+    nfc.cb = ent->physics.ray_cb;
+    nfc.ccb = ent->physics.convex_cb;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
@@ -1336,7 +1336,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->bt.no_fix_all == 0x00))
+        if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->physics.no_fix_all == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point.m_floats[2];
             Entity_FixPenetrations(ent, NULL);

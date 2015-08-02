@@ -860,7 +860,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(ent->bt.bt_joint_count)
+            if(ent->physics.bt_joint_count)
             {
                 Ragdoll_Delete(ent);
             }
@@ -1576,17 +1576,17 @@ int lua_SetEntityScaling(lua_State * lua)
         ent->scaling[1] = lua_tonumber(lua, 3);
         ent->scaling[2] = lua_tonumber(lua, 4);
 
-        if((ent->bf.bone_tag_count > 0) && (ent->bt.bt_body))
+        if((ent->bf.bone_tag_count > 0) && (ent->physics.bt_body))
         {
             for(int i=0; i<ent->bf.bone_tag_count; i++)
             {
-                if(ent->bt.bt_body[i] != NULL)
+                if(ent->physics.bt_body[i] != NULL)
                 {
-                    bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
-                        ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
-                    bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
+                    bt_engine_dynamicsWorld->removeRigidBody(ent->physics.bt_body[i]);
+                        ent->physics.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
+                    bt_engine_dynamicsWorld->addRigidBody(ent->physics.bt_body[i]);
 
-                    ent->bt.bt_body[i]->activate();
+                    ent->physics.bt_body[i]->activate();
                 }
             }
         }
@@ -3243,7 +3243,7 @@ int lua_PushEntityBody(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if(ent && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->bf.bone_tag_count) && (ent->physics.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -3256,10 +3256,10 @@ int lua_PushEntityBody(lua_State *lua)
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
 
         if(lua_toboolean(lua, 5))
-            ent->bt.bt_body[body_number]->clearForces();
+            ent->physics.bt_body[body_number]->clearForces();
 
-        ent->bt.bt_body[body_number]->setLinearVelocity(angle);
-        ent->bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
+        ent->physics.bt_body[body_number]->setLinearVelocity(angle);
+        ent->physics.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
     else
     {
@@ -3299,37 +3299,37 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
-            if(ent->bt.bt_body[i])
+            if(ent->physics.bt_body[i])
             {
-                bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
+                bt_engine_dynamicsWorld->removeRigidBody(ent->physics.bt_body[i]);
 
-                    ent->bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+                    ent->physics.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
-                    ent->bt.bt_body[i]->setMassProps(mass, inertia);
+                    ent->physics.bt_body[i]->setMassProps(mass, inertia);
 
-                    ent->bt.bt_body[i]->updateInertiaTensor();
-                    ent->bt.bt_body[i]->clearForces();
+                    ent->physics.bt_body[i]->updateInertiaTensor();
+                    ent->physics.bt_body[i]->clearForces();
 
-                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
+                    ent->physics.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
 
                     btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
-                    ent->bt.bt_body[i]->setLinearFactor (factor);
-                    ent->bt.bt_body[i]->setAngularFactor(factor);
+                    ent->physics.bt_body[i]->setLinearFactor (factor);
+                    ent->physics.bt_body[i]->setAngularFactor(factor);
 
-                    //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
+                    //ent->physics_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
-                    //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-                    //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
+                    //ent->physics_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+                    //ent->physics_body[i]->setCcdSweptSphereRadius(32.0);
 
-                bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
+                bt_engine_dynamicsWorld->addRigidBody(ent->physics.bt_body[i]);
 
-                ent->bt.bt_body[i]->activate();
+                ent->physics.bt_body[i]->activate();
 
-                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
-                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
+                //ent->physics_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
+                //ent->physics_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
 
                 //ent->self->object_type = OBJECT_ENTITY;
-                //ent->bt_body[i]->setUserPointer(ent->self);
+                //ent->physics_body[i]->setUserPointer(ent->self);
 
                 if(mass > 0.0) dynamic = true;
             }
@@ -3369,7 +3369,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if(ent && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->bf.bone_tag_count) && (ent->physics.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -3382,7 +3382,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 
-        ent->bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
+        ent->physics.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {

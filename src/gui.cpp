@@ -1069,7 +1069,6 @@ void gui_InventoryManager::render()
                         char counter[32];
                         lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
                         snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
-
                     }
                 }
                 Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
@@ -1189,6 +1188,7 @@ void Gui_DrawInventory()
         return;
     }
 
+    Render_ResetActiveTexture();
     glDepthMask(GL_FALSE);
     {
         BindWhiteTexture();

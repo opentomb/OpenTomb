@@ -531,7 +531,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     if(ent->character)
     {
-        cb = ent->character->convex_cb;
+        cb = ent->physics.convex_cb;
     }
     else
     {
