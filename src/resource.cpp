@@ -44,7 +44,7 @@ lua::State level_script;
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"])
+    if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
@@ -2225,7 +2225,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         p->vertices[2] += room->transform.getOrigin();
         TR_vertex_to_arr(p->vertices[3], tr_portal->vertices[0]);
         p->vertices[3] += room->transform.getOrigin();
-        p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3(0, 0, 0)) / 4;
+        p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3(0, 0, 0)) / p->vertices.size();
         p->genNormale();
 
         /*

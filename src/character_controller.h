@@ -399,7 +399,7 @@ struct Character : public Entity
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
     int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
     bool hasStopSlant(const HeightInfo &next_fc);
-    ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkClimbability(const btVector3& offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();
 
     void updateCurrentHeight();

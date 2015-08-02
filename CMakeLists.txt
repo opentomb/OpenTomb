@@ -114,7 +114,7 @@ target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 find_package(SDL2 REQUIRED)
 add_library(SDL2 INTERFACE)
 target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
-target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
+target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
         
 find_package(SDL2Image REQUIRED)
 add_library(SDL2_IMAGE INTERFACE)

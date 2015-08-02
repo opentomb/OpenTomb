@@ -451,7 +451,7 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc, btScalar test_height)
+ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInfo *nfc, btScalar test_height)
 {
     btVector3 from, to;
     btScalar d;
@@ -465,11 +465,9 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     nfc->cb = m_rayCb;
     nfc->ccb = m_convexCb;
     auto tmp = pos + offset;                                        // tmp = native offset point
-    offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
 
     ClimbInfo ret;
-    ret.height_info = checkNextStep(offset, nfc);
-    offset[2] -= 128.0;
+    ret.height_info = checkNextStep(offset + btVector3{0, 0, 128}, nfc); ///@FIXME: stick for big slant
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = nullptr;
