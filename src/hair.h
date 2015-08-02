@@ -1,9 +1,6 @@
 #pragma once
 
-#include <cassert>
 #include <cstdint>
-
-#include <lua.hpp>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
@@ -12,10 +9,7 @@
 #include "character_controller.h"
 #include "engine.h"
 #include "entity.h"
-#include "game.h"
 #include "mesh.h"
-#include "script.h"
-#include "vmath.h"
 #include "world.h"
 
 #define HAIR_TR1       0

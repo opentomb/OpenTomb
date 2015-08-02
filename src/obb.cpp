@@ -1,6 +1,4 @@
-
 #include <cmath>
-#include <cstdlib>
 
 #include <LinearMath/btScalar.h>
 
@@ -9,12 +7,10 @@
 #include "polygon.h"
 #include "entity.h"
 
-#include "engine.h"
-
 void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
-    extent = (bb_max - bb_min)/2;
-    base_centre = (bb_min + bb_max)/2;
+    extent = (bb_max - bb_min) / 2;
+    base_centre = (bb_min + bb_max) / 2;
     r = extent.length();
 
     struct Polygon *p = base_polygons;
@@ -26,21 +22,21 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v->position[0] = bb_max[0];
     v->position[1] = bb_max[1];
     v->position[2] = bb_max[2];
-    v ++;
+    v++;
 
     // 1 0
     // 0 0
     v->position[0] = bb_min[0];
     v->position[1] = bb_max[1];
     v->position[2] = bb_max[2];
-    v ++;
+    v++;
 
     // 0 0
     // 1 0
     v->position[0] = bb_min[0];
     v->position[1] = bb_min[1];
     v->position[2] = bb_max[2];
-    v ++;
+    v++;
 
     // 0 0
     // 0 1
@@ -63,21 +59,21 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v->position[0] = bb_max[0];
     v->position[1] = bb_max[1];
     v->position[2] = bb_min[2];
-    v ++;
+    v++;
 
     // 0 0
     // 0 1
     v->position[0] = bb_max[0];
     v->position[1] = bb_min[1];
     v->position[2] = bb_min[2];
-    v ++;
+    v++;
 
     // 0 0
     // 1 0
     v->position[0] = bb_min[0];
     v->position[1] = bb_min[1];
     v->position[2] = bb_min[2];
-    v ++;
+    v++;
 
     // 1 0
     // 0 0
@@ -98,7 +94,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     p->findNormal();
     p++;
 
-
     // LEFT: OX-
     v = &p->vertices.front();
     v[0].position = p_up->vertices[1].position;                       // 0 1  up
@@ -108,7 +103,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 
     p->findNormal();
     p++;
-
 
     // FORWARD: OY+
     v = &p->vertices.front();
@@ -134,17 +128,20 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     p->findNormal();
 }
 
-
 void OBB::doTransform()
 {
-    if(transform != NULL) {
-        for(int i=0;i<6;i++) {
+    if(transform != nullptr)
+    {
+        for(int i = 0; i < 6; i++)
+        {
             polygons[i].vTransform(&base_polygons[i], *transform);
         }
         centre = *transform * base_centre;
     }
-    else {
-        for(int i=0;i<6;i++) {
+    else
+    {
+        for(int i = 0; i < 6; i++)
+        {
             polygons[i] = base_polygons[i];
         }
         centre = base_centre;
@@ -170,9 +167,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     int i, k;
 
     //calculate rotation matrix
-    for(i=0 ; i<3 ; i++)
+    for(i = 0; i < 3; i++)
     {
-        for(k=0 ; k<3 ; k++)
+        for(k = 0; k < 3; k++)
         {
             const btVector3 e1b = e1.m_transform.getBasis().getColumn(i);
             const btVector3 e2b = e2.m_transform.getBasis().getColumn(k);
@@ -185,10 +182,10 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     boxes overlap. */
 
     //A's basis vectors
-    for(i=0;i<3;i++)
+    for(i = 0; i < 3; i++)
     {
         ra = a[i];
-        rb = b[0]*std::abs(R[i][0]) + b[1]*std::abs(R[i][1]) + b[2]*std::abs(R[i][2]);
+        rb = b[0] * std::abs(R[i][0]) + b[1] * std::abs(R[i][1]) + b[2] * std::abs(R[i][2]);
         t = std::abs(T[i]);
 
         if(t > ra + rb)
@@ -198,11 +195,11 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //B's basis vectors
-    for(k=0;k<3;k++)
+    for(k = 0; k < 3; k++)
     {
-        ra = a[0]*std::abs(R[0][k]) + a[1]*std::abs(R[1][k]) + a[2]*std::abs(R[2][k]);
+        ra = a[0] * std::abs(R[0][k]) + a[1] * std::abs(R[1][k]) + a[2] * std::abs(R[2][k]);
         rb = b[k];
-        t = std::abs(T[0]*R[0][k] + T[1]*R[1][k] + T[2]*R[2][k]);
+        t = std::abs(T[0] * R[0][k] + T[1] * R[1][k] + T[2] * R[2][k]);
         if(t > ra + rb)
         {
             return 0;
@@ -211,9 +208,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     //9 cross products
     //L = A0 x B0
-    ra = a[1]*std::abs(R[2][0]) + a[2]*std::abs(R[1][0]);
-    rb = b[1]*std::abs(R[0][2]) + b[2]*std::abs(R[0][1]);
-    t = std::abs(T[2]*R[1][0] - T[1]*R[2][0]);
+    ra = a[1] * std::abs(R[2][0]) + a[2] * std::abs(R[1][0]);
+    rb = b[1] * std::abs(R[0][2]) + b[2] * std::abs(R[0][1]);
+    t = std::abs(T[2] * R[1][0] - T[1] * R[2][0]);
 
     if(t > ra + rb)
     {
@@ -221,9 +218,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A0 x B1
-    ra = a[1]*std::abs(R[2][1]) + a[2]*std::abs(R[1][1]);
-    rb = b[0]*std::abs(R[0][2]) + b[2]*std::abs(R[0][0]);
-    t = std::abs(T[2]*R[1][1] - T[1]*R[2][1]);
+    ra = a[1] * std::abs(R[2][1]) + a[2] * std::abs(R[1][1]);
+    rb = b[0] * std::abs(R[0][2]) + b[2] * std::abs(R[0][0]);
+    t = std::abs(T[2] * R[1][1] - T[1] * R[2][1]);
 
     if(t > ra + rb)
     {
@@ -231,9 +228,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A0 x B2
-    ra = a[1]*std::abs(R[2][2]) + a[2]*std::abs(R[1][2]);
-    rb = b[0]*std::abs(R[0][1]) + b[1]*std::abs(R[0][0]);
-    t = std::abs(T[2]*R[1][2] - T[1]*R[2][2]);
+    ra = a[1] * std::abs(R[2][2]) + a[2] * std::abs(R[1][2]);
+    rb = b[0] * std::abs(R[0][1]) + b[1] * std::abs(R[0][0]);
+    t = std::abs(T[2] * R[1][2] - T[1] * R[2][2]);
 
     if(t > ra + rb)
     {
@@ -241,9 +238,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A1 x B0
-    ra = a[0]*std::abs(R[2][0]) + a[2]*std::abs(R[0][0]);
-    rb = b[1]*std::abs(R[1][2]) + b[2]*std::abs(R[1][1]);
-    t = std::abs(T[0]*R[2][0] - T[2]*R[0][0]);
+    ra = a[0] * std::abs(R[2][0]) + a[2] * std::abs(R[0][0]);
+    rb = b[1] * std::abs(R[1][2]) + b[2] * std::abs(R[1][1]);
+    t = std::abs(T[0] * R[2][0] - T[2] * R[0][0]);
 
     if(t > ra + rb)
     {
@@ -251,9 +248,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A1 x B1
-    ra = a[0]*std::abs(R[2][1]) + a[2]*std::abs(R[0][1]);
-    rb = b[0]*std::abs(R[1][2]) + b[2]*std::abs(R[1][0]);
-    t = std::abs(T[0]*R[2][1] - T[2]*R[0][1]);
+    ra = a[0] * std::abs(R[2][1]) + a[2] * std::abs(R[0][1]);
+    rb = b[0] * std::abs(R[1][2]) + b[2] * std::abs(R[1][0]);
+    t = std::abs(T[0] * R[2][1] - T[2] * R[0][1]);
 
     if(t > ra + rb)
     {
@@ -261,9 +258,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A1 x B2
-    ra = a[0]*std::abs(R[2][2]) + a[2]*std::abs(R[0][2]);
-    rb = b[0]*std::abs(R[1][1]) + b[1]*std::abs(R[1][0]);
-    t = std::abs(T[0]*R[2][2] - T[2]*R[0][2]);
+    ra = a[0] * std::abs(R[2][2]) + a[2] * std::abs(R[0][2]);
+    rb = b[0] * std::abs(R[1][1]) + b[1] * std::abs(R[1][0]);
+    t = std::abs(T[0] * R[2][2] - T[2] * R[0][2]);
 
     if(t > ra + rb)
     {
@@ -271,20 +268,19 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A2 x B0
-    ra = a[0]*std::abs(R[1][0]) + a[1]*std::abs(R[0][0]);
-    rb = b[1]*std::abs(R[2][2]) + b[2]*std::abs(R[2][1]);
-    t = std::abs(T[1]*R[0][0] - T[0]*R[1][0]);
+    ra = a[0] * std::abs(R[1][0]) + a[1] * std::abs(R[0][0]);
+    rb = b[1] * std::abs(R[2][2]) + b[2] * std::abs(R[2][1]);
+    t = std::abs(T[1] * R[0][0] - T[0] * R[1][0]);
 
     if(t > ra + rb)
     {
         return 0;
     }
 
-
     //L = A2 x B1
-    ra = a[0]*std::abs(R[1][1]) + a[1]*std::abs(R[0][1]);
-    rb = b[0] *std::abs(R[2][2]) + b[2]*std::abs(R[2][0]);
-    t = std::abs(T[1]*R[0][1] - T[0]*R[1][1]);
+    ra = a[0] * std::abs(R[1][1]) + a[1] * std::abs(R[0][1]);
+    rb = b[0] * std::abs(R[2][2]) + b[2] * std::abs(R[2][0]);
+    t = std::abs(T[1] * R[0][1] - T[0] * R[1][1]);
 
     if(t > ra + rb)
     {
@@ -292,9 +288,9 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     }
 
     //L = A2 x B2
-    ra = a[0]*std::abs(R[1][2]) + a[1]*std::abs(R[0][2]);
-    rb = b[0]*std::abs(R[2][1]) + b[1]*std::abs(R[2][0]);
-    t = std::abs(T[1]*R[0][2] - T[0]*R[1][2]);
+    ra = a[0] * std::abs(R[1][2]) + a[1] * std::abs(R[0][2]);
+    rb = b[0] * std::abs(R[2][1]) + b[1] * std::abs(R[2][0]);
+    t = std::abs(T[1] * R[0][2] - T[0] * R[1][2]);
 
     if(t > ra + rb)
     {

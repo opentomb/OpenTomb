@@ -75,7 +75,6 @@
 #define STR_GEN_GAMENAME_TR5        500
 #define STR_GEN_GAMENAME_CUSTOM     600
 
-
 // Generic system warnings enumeration
 
 #define SYSWARN_ENTER_ENTITY_ID          0
@@ -130,8 +129,6 @@
 #define SYSWARN_WRONG_MODEL_ID           49
 #define SYSWARN_WRONG_ENTITY_OR_BODY     50
 #define SYSWARN_CANT_APPLY_FORCE         51
-
-
 
 #define SYSNOTE_TRACK_OPENED             1000
 #define SYSNOTE_READING_FILE             1001

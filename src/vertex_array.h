@@ -1,17 +1,18 @@
 #pragma once
 
 /*!
- * This class encapsulates a set of vertex state. Depending on whether the 
+ * This class encapsulates a set of vertex state. Depending on whether the
  * current OpenGL context supports it or not (at creation time), this is
  * stored in a VAO, or not.
  */
 
 #include "gl_util.h"
 
-/*!
- * Description of a single vertex array attribute.
- */
-struct VertexArrayAttribute {
+ /*!
+  * Description of a single vertex array attribute.
+  */
+struct VertexArrayAttribute
+{
     /*! The number of the attribute, used to match it to the shader. */
     size_t m_index;
     /*! The number of components of the attribute. */
@@ -29,14 +30,16 @@ struct VertexArrayAttribute {
     size_t m_stride;
     /*! The start offset of the attribute within its vbo in bytes. */
     size_t m_offset;
-    
+
     VertexArrayAttribute() = default;
     VertexArrayAttribute(unsigned index, unsigned size, GLenum type, bool normalized, GLuint vbo, size_t stride, size_t offset)
         : m_index(index), m_size(size), m_type(type), m_normalized(normalized), m_vbo(vbo), m_stride(stride), m_offset(offset)
-    {}
+    {
+    }
 };
 
-class VertexArray {
+class VertexArray
+{
     GLuint m_vertexArrayObject = 0;
 
 public:

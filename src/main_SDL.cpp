@@ -40,7 +40,6 @@ btScalar time_scale = 1.0;
  *      - enemies AI
  */
 
-
 int main(int /*argc*/, char** /*argv*/)
 {
     static btScalar oldtime = 0.0;

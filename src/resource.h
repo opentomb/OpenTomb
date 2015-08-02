@@ -79,7 +79,7 @@ void Res_GenRoomFlipMap(World *world);
 void Res_GenBaseItems(World *world);
 void Res_GenVBOs(World *world);
 
-uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
 int      Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
@@ -96,7 +96,7 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version);
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent);
 void Res_CreateEntityFunc(lua::State &lua, const std::string &func_name, int entity_id);
-void Res_GenEntityFunctions(std::map<uint32_t,std::shared_ptr<Entity>>& entities);
+void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity>>& entities);
 
 // Assign pickup functions to previously created base items.
 
@@ -117,7 +117,6 @@ bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 void Res_ScriptsOpen(int engine_version);
 void Res_ScriptsClose();
 void Res_AutoexecOpen(int engine_version);
-
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 

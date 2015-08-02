@@ -1,4 +1,3 @@
-
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -23,7 +22,6 @@
 #include "polygon.h"
 #include "portal.h"
 #include "console.h"
-#include "frustum.h"
 #include "system.h"
 #include "game.h"
 #include "gui.h"
@@ -33,29 +31,27 @@
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
-#include "bsp_tree.h"
 #include "shader_description.h"
 #include "helpers.h"
 #include "strings.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
+#include "script.h"
 
 lua::State objects_flags_conf;
 lua::State ent_ID_override;
 lua::State level_script;
 
-
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != NULL && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"])
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
         ent->m_typeFlags |= flg;
     }
 
-    if(ent->m_bf.animations.model != NULL && level_script["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_bf.animations.model != nullptr && level_script["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
         lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
@@ -63,7 +59,6 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         ent->m_typeFlags |= flg;                 // get traverse information
     }
 }
-
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
@@ -74,7 +69,6 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
 }
-
 
 void Res_CreateEntityFunc(lua::State& state, const std::string& func_name, int entity_id)
 {
@@ -110,7 +104,6 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
  *  |-------------------> OX       |--------------------> OXY
  */
 
-
 void Res_Sector_SetTweenFloorConfig(SectorTween *tween)
 {
     if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
@@ -124,7 +117,7 @@ void Res_Sector_SetTweenFloorConfig(SectorTween *tween)
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
     }
     else if((tween->floor_corners[0][2] != tween->floor_corners[1][2]) &&
-       (tween->floor_corners[2][2] != tween->floor_corners[3][2]))
+            (tween->floor_corners[2][2] != tween->floor_corners[3][2]))
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
@@ -155,7 +148,7 @@ void Res_Sector_SetTweenCeilingConfig(SectorTween *tween)
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
     }
     else if((tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2]) &&
-       (tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2]))
+            (tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2]))
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
@@ -196,16 +189,16 @@ int Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
 std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
 {
     std::vector<SectorTween> result;
-    for(uint16_t h = 0; h < room->sectors_y-1; h++)
+    for(uint16_t h = 0; h < room->sectors_y - 1; h++)
     {
-        for(uint16_t w = 0; w < room->sectors_x-1; w++)
+        for(uint16_t w = 0; w < room->sectors_x - 1; w++)
         {
             result.emplace_back();
             SectorTween* room_tween = &result.back();
             // Init X-plane tween [ | ]
 
-            RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h) ];
-            RoomSector* next_heightmap    = current_heightmap + 1;
+            RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+            RoomSector* next_heightmap = current_heightmap + 1;
             char joined_floors = 0;
             char joined_ceilings = 0;
 
@@ -260,7 +253,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap    = next_heightmap->checkPortalPointer();
+                            next_heightmap = next_heightmap->checkPortalPointer();
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -286,12 +279,12 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     }
                 }
 
-                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
-                next_heightmap    = current_heightmap + 1;
+                current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                next_heightmap = current_heightmap + 1;
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
@@ -301,14 +294,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
@@ -318,7 +311,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
@@ -335,12 +328,12 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     }
                 }
 
-                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
-                next_heightmap    = current_heightmap + 1;
+                current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                next_heightmap = current_heightmap + 1;
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
@@ -350,14 +343,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
@@ -367,7 +360,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
@@ -391,8 +384,8 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
 
             result.emplace_back();
             room_tween = &result.back();
-            current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
-            next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
+            current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+            next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
             room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
             room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
             room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
@@ -447,7 +440,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap    = next_heightmap->checkPortalPointer();
+                            next_heightmap = next_heightmap->checkPortalPointer();
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -473,12 +466,12 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     }
                 }
 
-                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
-                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
+                current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
@@ -488,14 +481,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
@@ -505,7 +498,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
@@ -522,12 +515,12 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     }
                 }
 
-                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
-                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
+                current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
@@ -537,14 +530,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
@@ -554,7 +547,7 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
-                            if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
                             }
@@ -576,11 +569,11 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
     return result;
 }
 
-uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
 {
-    v1 = (v1 > v2)?(v1):(v2);
-    v2 = (v3 > v4)?(v3):(v4);
-    return (v1 > v2)?(v1):(v2);
+    v1 = (v1 > v2) ? (v1) : (v2);
+    v2 = (v3 > v4) ? (v3) : (v4);
+    return (v1 > v2) ? (v1) : (v2);
 }
 
 bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
@@ -594,11 +587,11 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 
     while(*curr_table_index != -1)
     {
-        if(*curr_table_index == (int32_t)entity_index) return true;
+        if(*curr_table_index == static_cast<int32_t>(entity_index)) return true;
         curr_table_index++;
     }
 
-    *curr_table_index = (int32_t)entity_index;
+    *curr_table_index = static_cast<int32_t>(entity_index);
     return false;
 }
 
@@ -619,7 +612,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
     uint16_t *entry = tr->floor_data + sector->trig_index;
 
     int ret = 0;
-    uint16_t end_bit = 0;
+    uint16_t end_bit;
 
     do
     {
@@ -628,9 +621,9 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         //TR_III+, but works with TR_I - TR_II
-        uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
+        uint16_t function = ((*entry) & 0x001F);             // 0b00000000 00011111
         // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
-        uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        uint16_t sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
 
@@ -644,17 +637,17 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     if(*entry < engine_world.rooms.size())
                     {
                         sector->portal_to_room = *entry;
-                        sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
+                        sector->floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
                         sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
                     }
-                    entry ++;
+                    entry++;
                 }
                 break;
 
             case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
                 if(sub_function == 0x00)
                 {
-                    int8_t raw_y_slant =  (*entry & 0x00FF);
+                    int8_t raw_y_slant = (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
 
                     sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
@@ -662,24 +655,24 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->floor_corners[2][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->floor_corners[0][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -689,7 +682,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
             case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
                 if(sub_function == 0x00)
                 {
-                    int8_t raw_y_slant =  (*entry & 0x00FF);
+                    int8_t raw_y_slant = (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
 
                     sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
@@ -697,24 +690,24 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->ceiling_corners[3][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->ceiling_corners[1][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (std::abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -722,430 +715,429 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                 break;
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGERS
+            {
+                std::string header;         // Header condition
+                std::string once_condition; // One-shot condition
+                std::string cont_events;    // Continous trigger events
+                std::string single_events;  // One-shot trigger events
+                std::string item_events;    // Item activation events
+                std::string anti_events;    // Item deactivation events, if needed
+
+                std::string script;         // Final script compile
+
+                char buf[512];                  buf[0] = 0;    // Stream buffer
+                char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
+
+                int activator = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
+                int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
+                int condition = 0;                        // No condition by default.
+                int mask_mode = AMASK_OP_OR;              // Activation mask by default.
+
+                int8_t  timer_field = (*entry) & 0x00FF;          // Used as common parameter for some commands.
+                uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
+                uint8_t only_once = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
+
+                // Processed entities lookup array initialization.
+
+                int32_t ent_lookup_table[64];
+                memset(ent_lookup_table, 0xFF, sizeof(int32_t) * 64);
+
+                // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
+                // some specific entity classes.
+
+                int activator_type = ((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
+                                      (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
+                                      (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH)) ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+
+                // Table cell header.
+
+                snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
+                         sector->trig_index, activator_type);
+
+                script += buf;
+                buf[0] = 0;     // Zero out buffer to prevent further trashing.
+
+                switch(sub_function)
                 {
-                    std::string header;         // Header condition
-                    std::string once_condition; // One-shot condition
-                    std::string cont_events;    // Continous trigger events
-                    std::string single_events;  // One-shot trigger events
-                    std::string item_events;    // Item activation events
-                    std::string anti_events;    // Item deactivation events, if needed
+                    case TR_FD_TRIGTYPE_TRIGGER:
+                    case TR_FD_TRIGTYPE_HEAVY:
+                        activator = TR_ACTIVATOR_NORMAL;
+                        break;
 
-                    std::string script;         // Final script compile
+                    case TR_FD_TRIGTYPE_PAD:
+                    case TR_FD_TRIGTYPE_ANTIPAD:
+                        // Check move type for triggering entity.
+                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
+                        if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
+                        condition = 1;  // Set additional condition.
+                        break;
 
-                    char buf[512];                  buf[0]  = 0;    // Stream buffer
-                    char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
+                    case TR_FD_TRIGTYPE_SWITCH:
+                        // Set activator and action type for now; conditions are linked with first item in operand chain.
+                        activator = TR_ACTIVATOR_SWITCH;
+                        action_type = TR_ACTIONTYPE_SWITCH;
+                        mask_mode = AMASK_OP_XOR;
+                        break;
 
-                    int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
-                    int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
-                    int condition   = 0;                        // No condition by default.
-                    int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
+                    case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                        // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
+                        activator = TR_ACTIVATOR_SWITCH;
+                        mask_mode = AMASK_OP_XOR;
+                        break;
 
-                    int8_t  timer_field  =  (*entry) & 0x00FF;          // Used as common parameter for some commands.
-                    uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
-                    uint8_t only_once    = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
+                    case TR_FD_TRIGTYPE_KEY:
+                        // Action type remains normal, as key acts one-way (no need in switch routines).
+                        activator = TR_ACTIVATOR_KEY;
+                        break;
 
-                    // Processed entities lookup array initialization.
+                    case TR_FD_TRIGTYPE_PICKUP:
+                        // Action type remains normal, as pick-up acts one-way (no need in switch routines).
+                        activator = TR_ACTIVATOR_PICKUP;
+                        break;
 
-                    int32_t ent_lookup_table[64];
-                    memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
+                    case TR_FD_TRIGTYPE_COMBAT:
+                        // Check weapon status for triggering entity.
+                        snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
+                        condition = 1;  // Set additional condition.
+                        break;
 
-                    // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
-                    // some specific entity classes.
+                    case TR_FD_TRIGTYPE_DUMMY:
+                    case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
+                        // These triggers are being parsed, but not added to trigger script!
+                        action_type = TR_ACTIONTYPE_BYPASS;
+                        break;
 
-                    int activator_type = ( (sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
-                                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
-                                           (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+                    case TR_FD_TRIGTYPE_ANTITRIGGER:
+                    case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                        action_type = TR_ACTIONTYPE_ANTI;
+                        break;
 
-                    // Table cell header.
+                    case TR_FD_TRIGTYPE_MONKEY:
+                    case TR_FD_TRIGTYPE_CLIMB:
+                        // Check move type for triggering entity.
+                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY) ? MOVE_MONKEYSWING : MOVE_CLIMBING);
+                        condition = 1;  // Set additional condition.
+                        break;
 
-                    snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
-                                         sector->trig_index, activator_type);
+                    case TR_FD_TRIGTYPE_TIGHTROPE:
+                        // Check state range for triggering entity.
+                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                        condition = 1;  // Set additional condition.
+                        break;
+                    case TR_FD_TRIGTYPE_CRAWLDUCK:
+                        // Check state range for triggering entity.
+                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                        condition = 1;  // Set additional condition.
+                        break;
+                }
 
-                    script += buf;
-                    buf[0] = 0;     // Zero out buffer to prevent further trashing.
+                header += buf;    // Add condition to header.
 
-                    switch(sub_function)
+                uint16_t cont_bit;
+                uint16_t argn = 0;
+
+                // Now parse operand chain for trigger function!
+
+                do
+                {
+                    entry++;
+
+                    uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
+                    uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
+                    cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
+
+                    switch(trigger_function)
                     {
-                        case TR_FD_TRIGTYPE_TRIGGER:
-                        case TR_FD_TRIGTYPE_HEAVY:
-                            activator = TR_ACTIVATOR_NORMAL;
-                            break;
-
-                        case TR_FD_TRIGTYPE_PAD:
-                        case TR_FD_TRIGTYPE_ANTIPAD:
-                            // Check move type for triggering entity.
-                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
-                            if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
-                            condition = 1;  // Set additional condition.
-                            break;
-
-                        case TR_FD_TRIGTYPE_SWITCH:
-                            // Set activator and action type for now; conditions are linked with first item in operand chain.
-                            activator = TR_ACTIVATOR_SWITCH;
-                            action_type = TR_ACTIONTYPE_SWITCH;
-                            mask_mode = AMASK_OP_XOR;
-                            break;
-
-                        case TR_FD_TRIGTYPE_HEAVYSWITCH:
-                            // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
-                            activator = TR_ACTIVATOR_SWITCH;
-                            mask_mode = AMASK_OP_XOR;
-                            break;
-
-                        case TR_FD_TRIGTYPE_KEY:
-                            // Action type remains normal, as key acts one-way (no need in switch routines).
-                            activator = TR_ACTIVATOR_KEY;
-                            break;
-
-                        case TR_FD_TRIGTYPE_PICKUP:
-                            // Action type remains normal, as pick-up acts one-way (no need in switch routines).
-                            activator = TR_ACTIVATOR_PICKUP;
-                            break;
-
-                        case TR_FD_TRIGTYPE_COMBAT:
-                            // Check weapon status for triggering entity.
-                            snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
-                            condition = 1;  // Set additional condition.
-                            break;
-
-                        case TR_FD_TRIGTYPE_DUMMY:
-                        case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
-                            // These triggers are being parsed, but not added to trigger script!
-                            action_type = TR_ACTIONTYPE_BYPASS;
-                            break;
-
-                        case TR_FD_TRIGTYPE_ANTITRIGGER:
-                        case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-                            action_type = TR_ACTIONTYPE_ANTI;
-                            break;
-
-                        case TR_FD_TRIGTYPE_MONKEY:
-                        case TR_FD_TRIGTYPE_CLIMB:
-                            // Check move type for triggering entity.
-                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
-                            condition = 1;  // Set additional condition.
-                            break;
-
-                        case TR_FD_TRIGTYPE_TIGHTROPE:
-                            // Check state range for triggering entity.
-                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
-                            condition = 1;  // Set additional condition.
-                            break;
-                        case TR_FD_TRIGTYPE_CRAWLDUCK:
-                            // Check state range for triggering entity.
-                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
-                            condition = 1;  // Set additional condition.
-                            break;
-                    }
-
-                    header += buf;    // Add condition to header.
-
-                    uint16_t cont_bit = 0;
-                    uint16_t argn = 0;
-
-                    // Now parse operand chain for trigger function!
-
-                    do
-                    {
-                        entry++;
-
-                        uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
-                        uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
-                                 cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
-
-                        switch(trigger_function)
-                        {
-                            case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
-                                // If activator is specified, first item operand counts as activator index (except
-                                // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                                if((argn == 0) && (activator))
+                        case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
+                            // If activator is specified, first item operand counts as activator index (except
+                            // heavy switch case, which is ordinary heavy trigger case with certain differences).
+                            if((argn == 0) && (activator))
+                            {
+                                switch(activator)
                                 {
-                                    switch(activator)
-                                    {
-                                        case TR_ACTIVATOR_SWITCH:
-                                            if(action_type == TR_ACTIONTYPE_SWITCH)
-                                            {
-                                                // Switch action type case.
-                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
-                                            }
-                                            else
-                                            {
-                                                // Ordinary type case (e.g. heavy switch).
-                                                snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
-                                            }
-                                            script += buf;
-
-                                            // Trigger activation mask is here filtered through activator's own mask.
-                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
-                                            script += buf;
-                                            if(action_type == TR_ACTIONTYPE_SWITCH)
-                                            {
-                                                // Switch action type case.
-                                                snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                                if((engine_world.version >= TR_III) && (only_once))
-                                                {
-                                                    // Just lock out activator, no anti-action needed.
-                                                    snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
-                                                }
-                                                else
-                                                {
-                                                    // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and switch_sectorstatus) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                // Ordinary type case (e.g. heavy switch).
-                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
-                                                item_events += buf;
-                                                snprintf(buf, 128, " if(not switch_sectorstatus) then \n   setEntitySectorStatus(entity_index, true) \n");
-                                            }
-                                            break;
-
-                                        case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityLock(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
-                                            break;
-
-                                        case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((not getEntityEnability(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
-                                            break;
-                                    }
-
-                                    script += buf;
-                                }
-                                else
-                                {
-                                    // In many original Core Design levels, level designers left dublicated entity activation operands.
-                                    // This results in setting same activation mask twice, effectively blocking entity from activation.
-                                    // To prevent this, a lookup table was implemented to know if entity already had its activation
-                                    // command added.
-                                    if(!Res_IsEntityProcessed(ent_lookup_table, operands))
-                                    {
-                                        // Other item operands are simply parsed as activation functions. Switch case is special, because
-                                        // function is fed with activation mask argument derived from activator mask filter (switch_mask),
-                                        // and also we need to process deactivation in a same way as activation, excluding resetting timer
-                                        // field. This is needed for two-way switch combinations (e.g. Palace Midas).
-                                        if(activator == TR_ACTIVATOR_SWITCH)
+                                    case TR_ACTIVATOR_SWITCH:
+                                        if(action_type == TR_ACTIONTYPE_SWITCH)
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once?"true":"false", timer_field);
-                                            item_events += buf;
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once?"true":"false");
-                                            anti_events += buf;
+                                            // Switch action type case.
+                                            snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
                                         }
                                         else
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once?"true":"false", timer_field);
-                                            item_events += buf;
-                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index, %s); \n", operands, only_once?"true":"false");
-                                            anti_events += buf;
+                                            // Ordinary type case (e.g. heavy switch).
+                                            snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
                                         }
+                                        script += buf;
+
+                                        // Trigger activation mask is here filtered through activator's own mask.
+                                        snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
+                                        script += buf;
+                                        if(action_type == TR_ACTIONTYPE_SWITCH)
+                                        {
+                                            // Switch action type case.
+                                            snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
+                                            if((engine_world.version >= TR_III) && (only_once))
+                                            {
+                                                // Just lock out activator, no anti-action needed.
+                                                snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
+                                            }
+                                            else
+                                            {
+                                                // Create statement for antitriggering a switch.
+                                                snprintf(buf2, 256, " elseif((switch_state == 1) and switch_sectorstatus) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Ordinary type case (e.g. heavy switch).
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
+                                            item_events += buf;
+                                            snprintf(buf, 128, " if(not switch_sectorstatus) then \n   setEntitySectorStatus(entity_index, true) \n");
+                                        }
+                                        break;
+
+                                    case TR_ACTIVATOR_KEY:
+                                        snprintf(buf, 256, " if((getEntityLock(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                        break;
+
+                                    case TR_ACTIVATOR_PICKUP:
+                                        snprintf(buf, 256, " if((not getEntityEnability(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                        break;
+                                }
+
+                                script += buf;
+                            }
+                            else
+                            {
+                                // In many original Core Design levels, level designers left dublicated entity activation operands.
+                                // This results in setting same activation mask twice, effectively blocking entity from activation.
+                                // To prevent this, a lookup table was implemented to know if entity already had its activation
+                                // command added.
+                                if(!Res_IsEntityProcessed(ent_lookup_table, operands))
+                                {
+                                    // Other item operands are simply parsed as activation functions. Switch case is special, because
+                                    // function is fed with activation mask argument derived from activator mask filter (switch_mask),
+                                    // and also we need to process deactivation in a same way as activation, excluding resetting timer
+                                    // field. This is needed for two-way switch combinations (e.g. Palace Midas).
+                                    if(activator == TR_ACTIVATOR_SWITCH)
+                                    {
+                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
+                                        item_events += buf;
+                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once ? "true" : "false");
+                                        anti_events += buf;
+                                    }
+                                    else
+                                    {
+                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once ? "true" : "false", timer_field);
+                                        item_events += buf;
+                                        snprintf(buf, 128, "   deactivateEntity(%d, entity_index, %s); \n", operands, only_once ? "true" : "false");
+                                        anti_events += buf;
                                     }
                                 }
-                                argn++;
-                                break;
+                            }
+                            argn++;
+                            break;
 
-                            case TR_FD_TRIGFUNC_CAMERATARGET:
-                                {
-                                    uint8_t cam_index = (*entry) & 0x007F;
-                                    entry++;
-                                    uint8_t cam_timer = ((*entry) & 0x00FF);
-                                    uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
-                                    uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                    cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-
-                                    snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
-                                    single_events += buf;
-                                }
-                                break;
-
-                            case TR_FD_TRIGFUNC_UWCURRENT:
-                                snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
-                                cont_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPMAP:
-                                // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
-                                // anti-events array.
-                                if(activator == TR_ACTIVATOR_SWITCH)
-                                {
-                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
-                                    single_events += buf;
-                                }
-                                else
-                                {
-                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, true); \n", operands, trigger_mask, operands);
-                                    single_events += buf;
-                                }
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPON:
-                                // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
-                                // the switch with FLIP_ON trigger, room will remain flipped.
-                                snprintf(buf, 128, "   setFlipState(%d, true); \n", operands);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPOFF:
-                                // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
-                                // the switch with FLIP_OFF trigger, room will remain unflipped.
-                                snprintf(buf, 128, "   setFlipState(%d, false); \n", operands);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_LOOKAT:
-                                snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_ENDLEVEL:
-                                snprintf(buf, 128, "   setLevel(%d); \n", operands);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_PLAYTRACK:
-                                // Override for looped BGM tracks in TR1: if there are any sectors
-                                // triggering looped tracks, ignore it, as BGM is always set in script.
-                                if(engine_world.version < TR_II)
-                                {
-                                    int looped;
-                                    lua_GetSoundtrack(engine_lua, operands, nullptr, nullptr, &looped);
-                                    if(looped == TR_AUDIO_STREAM_TYPE_BACKGROUND) break;
-                                }
-
-                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPEFFECT:
-                                snprintf(buf, 128, "   doEffect(%d, entity_index, %d); \n", operands, timer_field);
-                                cont_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_SECRET:
-                                snprintf(buf, 128, "   findSecret(%d); \n", operands);
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_CLEARBODIES:
-                                snprintf(buf, 128, "   clearBodies(); \n");
-                                single_events += buf;
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLYBY:
-                                {
-                                    entry++;
-                                    uint8_t flyby_once  = ((*entry) & 0x0100) >> 8;
-                                    cont_bit  = ((*entry) & 0x8000) >> 15;
-
-                                    snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
-                                    cont_events += buf;
-                                }
-                                break;
-
-                            case TR_FD_TRIGFUNC_CUTSCENE:
-                                snprintf(buf, 128, "   playCutscene(%d); \n", operands);
-                                single_events += buf;
-                                break;
-
-                            default: // UNKNOWN!
-                                break;
-                        };
-                    }
-                    while(!cont_bit && entry < end_p);
-
-                    if(!script.empty())
-                    {
-                        script += header;
-
-                        // Heavy trigger and antitrigger item events are engaged ONLY
-                        // once, when triggering item is approaching sector. Hence, we
-                        // copy item events to single events and nullify original item
-                        // events sequence to prevent it to be merged into continous
-                        // events.
-
-                        if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
-                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
+                        case TR_FD_TRIGFUNC_CAMERATARGET:
                         {
-                            if(action_type == TR_ACTIONTYPE_ANTI)
+                            uint8_t cam_index = (*entry) & 0x007F;
+                            entry++;
+                            uint8_t cam_timer = ((*entry) & 0x00FF);
+                            uint8_t cam_once = ((*entry) & 0x0100) >> 8;
+                            uint8_t cam_zoom = ((*entry) & 0x1000) >> 12;
+                            cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+
+                            snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
+                            single_events += buf;
+                        }
+                        break;
+
+                        case TR_FD_TRIGFUNC_UWCURRENT:
+                            snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
+                            cont_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPMAP:
+                            // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
+                            // anti-events array.
+                            if(activator == TR_ACTIVATOR_SWITCH)
                             {
-                                single_events += anti_events;
+                                snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
+                                single_events += buf;
                             }
                             else
                             {
-                                single_events += item_events;
+                                snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, true); \n", operands, trigger_mask, operands);
+                                single_events += buf;
+                            }
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPON:
+                            // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_ON trigger, room will remain flipped.
+                            snprintf(buf, 128, "   setFlipState(%d, true); \n", operands);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPOFF:
+                            // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_OFF trigger, room will remain unflipped.
+                            snprintf(buf, 128, "   setFlipState(%d, false); \n", operands);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_LOOKAT:
+                            snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_ENDLEVEL:
+                            snprintf(buf, 128, "   setLevel(%d); \n", operands);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_PLAYTRACK:
+                            // Override for looped BGM tracks in TR1: if there are any sectors
+                            // triggering looped tracks, ignore it, as BGM is always set in script.
+                            if(engine_world.version < TR_II)
+                            {
+                                int looped;
+                                lua_GetSoundtrack(engine_lua, operands, nullptr, nullptr, &looped);
+                                if(looped == TR_AUDIO_STREAM_TYPE_BACKGROUND) break;
                             }
 
-                            anti_events.clear();
-                            item_events.clear();
+                            snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPEFFECT:
+                            snprintf(buf, 128, "   doEffect(%d, entity_index, %d); \n", operands, timer_field);
+                            cont_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_SECRET:
+                            snprintf(buf, 128, "   findSecret(%d); \n", operands);
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_CLEARBODIES:
+                            snprintf(buf, 128, "   clearBodies(); \n");
+                            single_events += buf;
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLYBY:
+                        {
+                            entry++;
+                            uint8_t flyby_once = ((*entry) & 0x0100) >> 8;
+                            cont_bit = ((*entry) & 0x8000) >> 15;
+
+                            snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
+                            cont_events += buf;
+                        }
+                        break;
+
+                        case TR_FD_TRIGFUNC_CUTSCENE:
+                            snprintf(buf, 128, "   playCutscene(%d); \n", operands);
+                            single_events += buf;
+                            break;
+
+                        default: // UNKNOWN!
+                            break;
+                    };
+                } while(!cont_bit && entry < end_p);
+
+                if(!script.empty())
+                {
+                    script += header;
+
+                    // Heavy trigger and antitrigger item events are engaged ONLY
+                    // once, when triggering item is approaching sector. Hence, we
+                    // copy item events to single events and nullify original item
+                    // events sequence to prevent it to be merged into continous
+                    // events.
+
+                    if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
+                       (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
+                    {
+                        if(action_type == TR_ACTIONTYPE_ANTI)
+                        {
+                            single_events += anti_events;
+                        }
+                        else
+                        {
+                            single_events += item_events;
                         }
 
-                        if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
+                        anti_events.clear();
+                        item_events.clear();
+                    }
+
+                    if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
+                    {
+                        if(!single_events.empty())
                         {
-                            if(!single_events.empty())
-                            {
-                                if(condition)
-                                    once_condition += " ";
-                                once_condition += " if(not getEntitySectorStatus(entity_index)) then \n";
-                                script += once_condition;
-                                script += single_events;
-                                script += "   setEntitySectorStatus(entity_index, true); \n";
-
-                                if(condition)
-                                {
-                                    script += "  end;\n"; // First ENDIF is tabbed for extra condition.
-                                }
-                                else
-                                {
-                                    script += " end;\n";
-                                }
-                            }
-
-                            // Item commands kind depends on action type. If type is ANTI, then item
-                            // antitriggering is engaged. If type is normal, ordinary triggering happens
-                            // in cycle with other continous commands. It is needed to prevent timer dispatch
-                            // before activator leaves trigger sector.
-
-                            if(action_type == TR_ACTIONTYPE_ANTI)
-                            {
-                                script += anti_events;
-                            }
-                            else
-                            {
-                                script += item_events;
-                            }
-
-                            script += cont_events;
                             if(condition)
-                                script += " end;\n"; // Additional ENDIF for extra condition.
-                        }
-                        else    // SWITCH, KEY and ITEM cases.
-                        {
+                                once_condition += " ";
+                            once_condition += " if(not getEntitySectorStatus(entity_index)) then \n";
+                            script += once_condition;
                             script += single_events;
-                            script += item_events;
-                            script += cont_events;
-                            if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
+                            script += "   setEntitySectorStatus(entity_index, true); \n";
+
+                            if(condition)
                             {
-                                script += buf2;
-                                if((engine_world.version < TR_III) || (!only_once))
-                                {
-                                    script += single_events;
-                                    script += anti_events;    // Single/continous events are engaged along with
-                                    script += cont_events;    // antitriggered items, as described above.
-                                }
+                                script += "  end;\n"; // First ENDIF is tabbed for extra condition.
                             }
-                            script += " end;\n";
+                            else
+                            {
+                                script += " end;\n";
+                            }
                         }
 
-                        script += "return 1;\nend }\n";  // Finalize the entry.
+                        // Item commands kind depends on action type. If type is ANTI, then item
+                        // antitriggering is engaged. If type is normal, ordinary triggering happens
+                        // in cycle with other continous commands. It is needed to prevent timer dispatch
+                        // before activator leaves trigger sector.
+
+                        if(action_type == TR_ACTIONTYPE_ANTI)
+                        {
+                            script += anti_events;
+                        }
+                        else
+                        {
+                            script += item_events;
+                        }
+
+                        script += cont_events;
+                        if(condition)
+                            script += " end;\n"; // Additional ENDIF for extra condition.
+                    }
+                    else    // SWITCH, KEY and ITEM cases.
+                    {
+                        script += single_events;
+                        script += item_events;
+                        script += cont_events;
+                        if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            script += buf2;
+                            if((engine_world.version < TR_III) || (!only_once))
+                            {
+                                script += single_events;
+                                script += anti_events;    // Single/continous events are engaged along with
+                                script += cont_events;    // antitriggered items, as described above.
+                            }
+                        }
+                        script += " end;\n";
                     }
 
-                    if(action_type != TR_ACTIONTYPE_BYPASS)
-                    {
-                        // Sys_DebugLog("triggers.lua", script);    // Debug!
-                        engine_lua.doString(script);
-                    }
+                    script += "return 1;\nend }\n";  // Finalize the entry.
                 }
-                break;
+
+                if(action_type != TR_ACTIONTYPE_BYPASS)
+                {
+                    // Sys_DebugLog("triggers.lua", script);    // Debug!
+                    engine_lua.doString(script);
+                }
+            }
+            break;
 
             case TR_FD_FUNC_DEATH:
                 sector->flags |= SECTOR_FLAG_DEATH;
@@ -1188,43 +1180,45 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 
             default:
                 // Other functions are TR3+ collisional triangle functions.
-                if( (function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
-                    (function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE) )
+                if((function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
+                   (function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE))
                 {
                     entry--;    // Go back, since these functions are parsed differently.
 
                     end_bit = ((*entry) & 0x8000) >> 15;      // 0b10000000 00000000
 
-                    int16_t  slope_t01  = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                    int16_t  slope_t00  = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+#if 0
+                    int16_t  slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                    int16_t  slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
                     // uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
 
                     // t01/t02 are 5-bit values, where sign is specified by 0x10 mask.
 
                     if(slope_t01 & 0x10) slope_t01 |= 0xFFF0;
                     if(slope_t00 & 0x10) slope_t00 |= 0xFFF0;
+#endif
 
                     entry++;
 
-                    uint16_t slope_t13  = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                    uint16_t slope_t12  = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                    uint16_t slope_t11  = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                    uint16_t slope_t10  = ((*entry) & 0x000F);            // 0b00000000 00001111
+                    uint16_t slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                    uint16_t slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                    uint16_t slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                    uint16_t slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
 
                     entry++;
 
-                    float overall_adjustment = (float)Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
+                    float overall_adjustment = static_cast<float>(Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13)) * TR_METERING_STEP;
 
-                    if( (function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
-                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
-                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)  )
+                    if((function == TR_FD_FUNC_FLOORTRIANGLE_NW) ||
+                       (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
+                       (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE))
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1239,16 +1233,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_FLOORTRIANGLE_NE)           ||
-                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
-                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)  )
+                    else if((function == TR_FD_FUNC_FLOORTRIANGLE_NE) ||
+                            (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
+                            (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE))
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1263,16 +1257,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NW)           ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)  )
+                    else if((function == TR_FD_FUNC_CEILINGTRIANGLE_NW) ||
+                            (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
+                            (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE))
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1287,16 +1281,16 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NE)           ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)  )
+                    else if((function == TR_FD_FUNC_CEILINGTRIANGLE_NE) ||
+                            (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
+                            (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE))
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1319,8 +1313,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                 break;
         };
         ret++;
-    }
-    while(!end_bit && entry < end_p);
+    } while(!end_bit && entry < end_p);
 
     return ret;
 }
@@ -1345,7 +1338,6 @@ void Res_Sector_FixHeights(RoomSector* sector)
     }
 }
 
-
 void GenerateAnimCommandsTransform(SkeletalModel* model)
 {
     if(engine_world.anim_commands.empty())
@@ -1360,12 +1352,12 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
             continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
         }
 
-        AnimationFrame* af  = &model->animations[anim];
+        AnimationFrame* af = &model->animations[anim];
         if(af->num_anim_commands == 0)
             continue;
 
-        assert( af->anim_command < engine_world.anim_commands.size() );
-        int16_t *pointer    = &engine_world.anim_commands[af->anim_command];
+        assert(af->anim_command < engine_world.anim_commands.size());
+        int16_t *pointer = &engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
@@ -1375,18 +1367,18 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames.size()-1].move[0] = (btScalar)pointer[0];                          // x = x;
-                    af->frames[af->frames.size()-1].move[2] =-(btScalar)pointer[1];                          // z =-y
-                    af->frames[af->frames.size()-1].move[1] = (btScalar)pointer[2];                          // y = z
-                    af->frames[af->frames.size()-1].command |= ANIM_CMD_MOVE;
+                    af->frames[af->frames.size() - 1].move[0] = static_cast<btScalar>(pointer[0]);                          // x = x;
+                    af->frames[af->frames.size() - 1].move[2] = -static_cast<btScalar>(pointer[1]);                          // z =-y
+                    af->frames[af->frames.size() - 1].move[1] = static_cast<btScalar>(pointer[2]);                          // y = z
+                    af->frames[af->frames.size() - 1].command |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
                     pointer += 3;
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames.size()-1].v_Vertical   = pointer[0];
-                    af->frames[af->frames.size()-1].v_Horizontal = pointer[1];
-                    af->frames[af->frames.size()-1].command |= ANIM_CMD_JUMP;
+                    af->frames[af->frames.size() - 1].v_Vertical = pointer[0];
+                    af->frames[af->frames.size() - 1].v_Horizontal = pointer[1];
+                    af->frames[af->frames.size() - 1].command |= ANIM_CMD_JUMP;
                     pointer += 2;
                     break;
 
@@ -1405,7 +1397,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
                             af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
-                            ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, pointer[0], af->frames.size());
+                            ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                             break;
                     }
                     pointer += 2;
@@ -1414,7 +1406,6 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
         }
     }
 }
-
 
 bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
 {
@@ -1494,26 +1485,26 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
      */
 
     RoomSector* sector = room->sectors.data();
-    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
+    for(uint32_t i = 0; i < room->sectors.size(); i++, sector++)
     {
         /*
          * Let us fill pointers to sectors above and sectors below
          */
 
         uint8_t rp = tr_room->sector_list[i].room_below;
-        sector->sector_below = NULL;
+        sector->sector_below = nullptr;
         if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_below = world->rooms[rp]->getSectorRaw(sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
-        sector->sector_above = NULL;
+        sector->sector_above = nullptr;
         if(rp < world->rooms.size() && rp != 255)
         {
             sector->sector_above = world->rooms[rp]->getSectorRaw(sector->pos);
         }
 
-        RoomSector* near_sector = NULL;
+        RoomSector* near_sector = nullptr;
 
         /**** OX *****/
         if((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == 0))
@@ -1534,7 +1525,7 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
             near_sector = sector - 1;
         }
 
-        if((near_sector != NULL) && (sector->portal_to_room >= 0))
+        if((near_sector != nullptr) && (sector->portal_to_room >= 0))
         {
             for(const Portal& p : room->portals)
             {
@@ -1542,7 +1533,7 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
                 {
                     RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
                     RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
-                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p.dest_room->id;
                         orig_dst = dst;
@@ -1556,11 +1547,11 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
 void TR_vertex_to_arr(btVector3& v, const tr5_vertex_t& tr_v)
 {
     v[0] = tr_v.x;
-    v[1] =-tr_v.z;
+    v[1] = -tr_v.z;
     v[2] = tr_v.y;
 }
 
-void TR_color_to_arr(std::array<GLfloat,4>& v, const tr5_colour_t& tr_c)
+void TR_color_to_arr(std::array<GLfloat, 4>& v, const tr5_colour_t& tr_c)
 {
     v[0] = tr_c.r * 2;
     v[1] = tr_c.g * 2;
@@ -1572,22 +1563,22 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
     if(room_id >= engine_world.rooms.size())
     {
-        return NULL;
+        return nullptr;
     }
 
     auto room = engine_world.rooms[room_id];
     if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
     {
-        return NULL;
+        return nullptr;
     }
 
-    return &room->sectors[ sx * room->sectors_y + sy ];
+    return &room->sectors[sx * room->sectors_y + sy];
 }
 
 void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(rs == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
@@ -1596,14 +1587,14 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value
     if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<int>(pen);
     if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(diag);
     if(floor.is<lua::Integer>()) rs->floor = floor;
-    rs->floor_corners[0] = {z0,z1,z2};
+    rs->floor_corners[0] = { z0,z1,z2 };
     rs->floor_corners[0][3] = z3;
 }
 
 void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value ceil, float z0, float z1, float z2, float z3)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(rs == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
@@ -1613,14 +1604,14 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Val
     if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<int>(diag);
     if(ceil.is<lua::Integer>()) rs->ceiling = ceil;
 
-    rs->ceiling_corners[0] = {z0,z1,z2};
+    rs->ceiling_corners[0] = { z0,z1,z2 };
     rs->ceiling_corners[0][3] = z3;
 }
 
 void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(rs == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
@@ -1635,7 +1626,7 @@ void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
 void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ftflag, lua::Value cpflag, lua::Value ctflag)
 {
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(rs == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
@@ -1658,47 +1649,58 @@ void Res_ScriptsOpen(int engine_version)
     level_script.set("setSectorPortal", lua_SetSectorPortal);
     level_script.set("setSectorFlags", lua_SetSectorFlags);
 
-    try {
+    try
+    {
         level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
     }
-    catch(lua::RuntimeError& error) {
+    catch(lua::RuntimeError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    catch(lua::LoadError& error) {
+    catch(lua::LoadError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 
     if(Engine_FileFound(temp_script_name, false))
     {
-        try {
+        try
+        {
             level_script.doFile(temp_script_name);
         }
-        catch(lua::RuntimeError& error) {
+        catch(lua::RuntimeError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
-        catch(lua::LoadError& error) {
+        catch(lua::LoadError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
 
-
-    try {
+    try
+    {
         objects_flags_conf.doFile("scripts/entity/entity_properties.lua");
     }
-    catch(lua::RuntimeError& error) {
+    catch(lua::RuntimeError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    catch(lua::LoadError& error) {
+    catch(lua::LoadError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 
-    try {
+    try
+    {
         ent_ID_override.doFile("scripts/entity/entity_model_ID_override.lua");
     }
-    catch(lua::RuntimeError& error) {
+    catch(lua::RuntimeError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    catch(lua::LoadError& error) {
+    catch(lua::LoadError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 }
@@ -1711,22 +1713,28 @@ void Res_AutoexecOpen(int engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
 
-    try {
+    try
+    {
         engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
     }
-    catch(lua::RuntimeError& error) {
+    catch(lua::RuntimeError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    catch(lua::LoadError& error) {
+    catch(lua::LoadError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    try {
+    try
+    {
         engine_lua.doFile(temp_script_name);          // do level-specific autoexec
     }
-    catch(lua::RuntimeError& error) {
+    catch(lua::RuntimeError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
-    catch(lua::LoadError& error) {
+    catch(lua::LoadError& error)
+    {
         Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 }
@@ -1826,7 +1834,6 @@ void TR_GenWorld(World *world, class VT_Level *tr)
     Gui_DrawLoadScreen(970);
 }
 
-
 void Res_GenRBTrees(World *world)
 {
     world->entity_tree.clear();
@@ -1834,12 +1841,11 @@ void Res_GenRBTrees(World *world)
     world->items_tree.clear();
 }
 
-
 void TR_GenRooms(World *world, class VT_Level *tr)
 {
     world->rooms.resize(tr->rooms_count);
     std::generate(std::begin(world->rooms), std::end(world->rooms), std::make_shared<Room>);
-    for(uint32_t i=0; i<world->rooms.size(); i++)
+    for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
         TR_GenRoom(i, world->rooms[i], world, tr);
     }
@@ -1866,12 +1872,12 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 
     room->transform.setIdentity();
     room->transform.getOrigin()[0] = tr->rooms[room_index].offset.x;                       // x = x;
-    room->transform.getOrigin()[1] =-tr->rooms[room_index].offset.z;                       // y =-z;
+    room->transform.getOrigin()[1] = -tr->rooms[room_index].offset.z;                       // y =-z;
     room->transform.getOrigin()[2] = tr->rooms[room_index].offset.y;                       // z = y;
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
-    room->self.reset( new EngineContainer() );
+    room->self.reset(new EngineContainer());
     room->self->room = room.get();
     room->self->object = room.get();
     room->self->object_type = OBJECT_ROOM_BASE;
@@ -1886,23 +1892,23 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
      */
     room->static_mesh.clear();
 
-    for(uint16_t i=0;i<tr_room->num_static_meshes;i++)
+    for(uint16_t i = 0; i < tr_room->num_static_meshes; i++)
     {
         tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
-        if(tr_static == NULL)
+        if(tr_static == nullptr)
         {
             continue;
         }
-        room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
+        room->static_mesh.emplace_back(std::make_shared<StaticMesh>());
         std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
         r_static->self = std::make_shared<EngineContainer>();
         r_static->self->room = room.get();
         r_static->self->object = room->static_mesh[i].get();
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
-        r_static->mesh = world->meshes[ tr->mesh_indices[tr_static->mesh] ];
+        r_static->mesh = world->meshes[tr->mesh_indices[tr_static->mesh]];
         r_static->pos[0] = tr_room->static_meshes[i].pos.x;
-        r_static->pos[1] =-tr_room->static_meshes[i].pos.z;
+        r_static->pos[1] = -tr_room->static_meshes[i].pos.z;
         r_static->pos[2] = tr_room->static_meshes[i].pos.y;
         r_static->rot[0] = tr_room->static_meshes[i].rotation;
         r_static->rot[1] = 0.0;
@@ -1914,18 +1920,18 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         r_static->obb = new OBB();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
-        r_static->cbb_min[1] =-tr_static->collision_box[0].z;
+        r_static->cbb_min[1] = -tr_static->collision_box[0].z;
         r_static->cbb_min[2] = tr_static->collision_box[1].y;
         r_static->cbb_max[0] = tr_static->collision_box[1].x;
-        r_static->cbb_max[1] =-tr_static->collision_box[1].z;
+        r_static->cbb_max[1] = -tr_static->collision_box[1].z;
         r_static->cbb_max[2] = tr_static->collision_box[0].y;
 
         r_static->vbb_min[0] = tr_static->visibility_box[0].x;
-        r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
+        r_static->vbb_min[1] = -tr_static->visibility_box[0].z;
         r_static->vbb_min[2] = tr_static->visibility_box[1].y;
 
         r_static->vbb_max[0] = tr_static->visibility_box[1].x;
-        r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
+        r_static->vbb_max[1] = -tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
         r_static->obb->transform = &room->static_mesh[i]->transform;
@@ -1937,7 +1943,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         r_static->obb->rebuild(r_static->vbb_min, r_static->vbb_max);
         r_static->obb->doTransform();
 
-        r_static->bt_body = NULL;
+        r_static->bt_body = nullptr;
         r_static->hide = false;
 
         // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
@@ -1945,7 +1951,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 
         if((tr_static->flags == 3) ||
            ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
-            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])) )
+            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
         {
             r_static->self->collision_type = COLLISION_NONE;
         }
@@ -1980,7 +1986,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
                     break;
 
                 default:
-                    cshape = NULL;
+                    cshape = nullptr;
                     break;
             };
 
@@ -1998,10 +2004,10 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      * sprites loading section
      */
-    for(uint32_t i=0;i<tr_room->num_sprites;i++)
+    for(uint32_t i = 0; i < tr_room->num_sprites; i++)
     {
         room->sprites.emplace_back();
-        if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites.size()))
+        if((tr_room->sprites[i].texture >= 0) && (static_cast<uint32_t>(tr_room->sprites[i].texture) < world->sprites.size()))
         {
             room->sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
             TR_vertex_to_arr(room->sprites[i].pos, tr_room->vertices[tr_room->sprites[i].vertex].vertex);
@@ -2020,15 +2026,15 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
      * base sectors information loading and collisional mesh creation
      */
 
-    // To avoid manipulating with unnecessary information, we declare simple
-    // heightmap here, which will be operated with sector and floordata parsing,
-    // then vertical inbetween polys will be constructed, and Bullet collisional
-    // object will be created. Afterwards, this heightmap also can be used to
-    // quickly detect slopes for pushable blocks and other entities that rely on
-    // floor level.
+     // To avoid manipulating with unnecessary information, we declare simple
+     // heightmap here, which will be operated with sector and floordata parsing,
+     // then vertical inbetween polys will be constructed, and Bullet collisional
+     // object will be created. Afterwards, this heightmap also can be used to
+     // quickly detect slopes for pushable blocks and other entities that rely on
+     // floor level.
 
     sector = room->sectors.data();
-    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
+    for(uint32_t i = 0; i < room->sectors.size(); i++, sector++)
     {
         // Filling base sectors information.
 
@@ -2044,20 +2050,20 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         if(tr->game_version < TR_III)
         {
             sector->box_index = tr_room->sector_list[i].box_index;
-            sector->material  = SECTOR_MATERIAL_STONE;
+            sector->material = SECTOR_MATERIAL_STONE;
         }
         else
         {
             sector->box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
-            sector->material  =  tr_room->sector_list[i].box_index & 0x000F;
+            sector->material = tr_room->sector_list[i].box_index & 0x000F;
         }
 
         if(sector->box_index == 0xFFFF) sector->box_index = -1;
 
         sector->flags = 0;  // Clear sector flags.
 
-        sector->floor      = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
-        sector->ceiling    = -TR_METERING_STEP * (int)tr_room->sector_list[i].ceiling;
+        sector->floor = -TR_METERING_STEP * static_cast<int>(tr_room->sector_list[i].floor);
+        sector->ceiling = -TR_METERING_STEP * static_cast<int>(tr_room->sector_list[i].ceiling);
         sector->trig_index = tr_room->sector_list[i].fd_index;
 
         // BUILDING CEILING HEIGHTMAP.
@@ -2087,7 +2093,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 
         room->sectors[i].portal_to_room = -1;
         room->sectors[i].ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
-        room->sectors[i].floor_diagonal_type   = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        room->sectors[i].floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
 
         // Now, we define heightmap cells position and draft (flat) height.
         // Draft height is derived from sector's floor and ceiling values, which are
@@ -2147,27 +2153,27 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      *  load lights
      */
-    room->lights.resize( tr_room->num_lights );
+    room->lights.resize(tr_room->num_lights);
 
-    for(uint16_t i=0;i<tr_room->num_lights;i++)
+    for(uint16_t i = 0; i < tr_room->num_lights; i++)
     {
         switch(tr_room->lights[i].light_type)
         {
-        case 0:
-            room->lights[i].light_type = LT_SUN;
-            break;
-        case 1:
-            room->lights[i].light_type = LT_POINT;
-            break;
-        case 2:
-            room->lights[i].light_type = LT_SPOTLIGHT;
-            break;
-        case 3:
-            room->lights[i].light_type = LT_SHADOW;
-            break;
-        default:
-            room->lights[i].light_type = LT_NULL;
-            break;
+            case 0:
+                room->lights[i].light_type = LT_SUN;
+                break;
+            case 1:
+                room->lights[i].light_type = LT_POINT;
+                break;
+            case 2:
+                room->lights[i].light_type = LT_SPOTLIGHT;
+                break;
+            case 3:
+                room->lights[i].light_type = LT_SHADOW;
+                break;
+            default:
+                room->lights[i].light_type = LT_NULL;
+                break;
         }
 
         room->lights[i].pos[0] = tr_room->lights[i].pos.x;
@@ -2198,13 +2204,12 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         room->lights[i].falloff = 0.001f / room->lights[i].outer;
     }
 
-
     /*
      * portals loading / calculation!!!
      */
     room->portals.resize(tr_room->num_portals);
     tr_portal = tr_room->portals;
-    for(size_t i=0; i<room->portals.size(); i++, tr_portal++)
+    for(size_t i = 0; i < room->portals.size(); i++, tr_portal++)
     {
         Portal* p = &room->portals[i];
         std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
@@ -2226,22 +2231,22 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         /*
          * Portal position fix...
          */
-        // X_MIN
-        if((p->normal.normal[0] > 0.999) && (((int)p->centre[0])%2))
+         // X_MIN
+        if((p->normal.normal[0] > 0.999) && (static_cast<int>(p->centre[0]) % 2))
         {
-            p->move({1,0,0});
+            p->move({ 1,0,0 });
         }
 
         // Y_MIN
-        if((p->normal.normal[1] > 0.999) && (((int)p->centre[1])%2))
+        if((p->normal.normal[1] > 0.999) && (static_cast<int>(p->centre[1]) % 2))
         {
-            p->move({0,1,0});
+            p->move({ 0,1,0 });
         }
 
         // Z_MAX
-        if((p->normal.normal[2] <-0.999) && (((int)p->centre[2])%2))
+        if((p->normal.normal[2] < -0.999) && (static_cast<int>(p->centre[2]) % 2))
         {
-            p->move({0,0,-1});
+            p->move({ 0,0,-1 });
         }
     }
 
@@ -2259,20 +2264,19 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      * alternate room pointer calculation if one exists.
      */
-    room->alternate_room = NULL;
-    room->base_room = NULL;
+    room->alternate_room = nullptr;
+    room->base_room = nullptr;
 
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
+    if((tr_room->alternate_room >= 0) && (static_cast<uint32_t>(tr_room->alternate_room) < tr->rooms_count))
     {
-        room->alternate_room = world->rooms[ tr_room->alternate_room ];
+        room->alternate_room = world->rooms[tr_room->alternate_room];
     }
 }
-
 
 void Res_GenRoomCollision(World *world)
 {
     /*
-    if(level_script != NULL)
+    if(level_script != nullptr)
     {
         lua_CallVoidFunc(level_script, "doTuneSector");
     }
@@ -2300,7 +2304,7 @@ void Res_GenRoomCollision(World *world)
         {
             btVector3 localInertia(0, 0, 0);
             btDefaultMotionState* motionState = new btDefaultMotionState(room->transform);
-            room->bt_body.reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
+            room->bt_body.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
             bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             room->bt_body->setUserPointer(room->self.get());
             room->bt_body->setRestitution(1.0);
@@ -2311,13 +2315,12 @@ void Res_GenRoomCollision(World *world)
     }
 }
 
-
 void TR_GenRoomProperties(World *world, class VT_Level *tr)
 {
-    for(uint32_t i=0;i<world->rooms.size();i++)
+    for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
         std::shared_ptr<Room> r = world->rooms[i];
-        if(r->alternate_room != NULL)
+        if(r->alternate_room != nullptr)
         {
             r->alternate_room->base_room = r;   // Refill base room pointer.
         }
@@ -2339,24 +2342,22 @@ void TR_GenRoomProperties(World *world, class VT_Level *tr)
     }
 }
 
-
 void Res_GenRoomFlipMap(World *world)
 {
     // Flipmap count is hardcoded, as no original levels contain such info.
     world->flip_data.resize(FLIPMAP_MAX_NUMBER);
 }
 
-
 void TR_GenBoxes(World *world, class VT_Level *tr)
 {
     world->room_boxes.clear();
 
-    for(uint32_t i=0;i<tr->boxes_count;i++)
+    for(uint32_t i = 0; i < tr->boxes_count; i++)
     {
         world->room_boxes.emplace_back();
         auto& room = world->room_boxes.back();
         room.overlap_index = tr->boxes[i].overlap_index;
-        room.true_floor =-tr->boxes[i].true_floor;
+        room.true_floor = -tr->boxes[i].true_floor;
         room.x_min = tr->boxes[i].xmin;
         room.x_max = tr->boxes[i].xmax;
         room.y_min =-static_cast<int>(tr->boxes[i].zmax);
@@ -2368,13 +2369,14 @@ void TR_GenCameras(World *world, class VT_Level *tr)
 {
     world->cameras_sinks.clear();
 
-    for(uint32_t i=0; i<tr->cameras_count; i++) {
+    for(uint32_t i = 0; i < tr->cameras_count; i++)
+    {
         world->cameras_sinks.emplace_back();
-        world->cameras_sinks[i].x                   =  tr->cameras[i].x;
-        world->cameras_sinks[i].y                   =  tr->cameras[i].z;
-        world->cameras_sinks[i].z                   = -tr->cameras[i].y;
-        world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
-        world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
+        world->cameras_sinks[i].x = tr->cameras[i].x;
+        world->cameras_sinks[i].y = tr->cameras[i].z;
+        world->cameras_sinks[i].z = -tr->cameras[i].y;
+        world->cameras_sinks[i].room_or_strength = tr->cameras[i].room;
+        world->cameras_sinks[i].flag_or_zone = tr->cameras[i].unknown1;
     }
 }
 
@@ -2389,8 +2391,7 @@ void TR_GenSprites(World *world, class VT_Level *tr)
         return;
     }
 
-
-    for(size_t i=0; i<tr->sprite_textures.size(); i++)
+    for(size_t i = 0; i < tr->sprite_textures.size(); i++)
     {
         world->sprites.emplace_back();
         auto s = &world->sprites.back();
@@ -2405,9 +2406,9 @@ void TR_GenSprites(World *world, class VT_Level *tr)
         world->tex_atlas->getSpriteCoordinates(i, s->texture, s->tex_coord);
     }
 
-    for(uint32_t i=0;i<tr->sprite_sequences_count;i++)
+    for(uint32_t i = 0; i < tr->sprite_sequences_count; i++)
     {
-        if((tr->sprite_sequences[i].offset >= 0) && ((uint32_t)tr->sprite_sequences[i].offset < world->sprites.size()))
+        if((tr->sprite_sequences[i].offset >= 0) && (static_cast<uint32_t>(tr->sprite_sequences[i].offset) < world->sprites.size()))
         {
             world->sprites[tr->sprite_sequences[i].offset].id = tr->sprite_sequences[i].object_id;
         }
@@ -2416,7 +2417,7 @@ void TR_GenSprites(World *world, class VT_Level *tr)
 
 void Res_GenSpritesBuffer(World *world)
 {
-    for (uint32_t i = 0; i < world->rooms.size(); i++)
+    for(uint32_t i = 0; i < world->rooms.size(); i++)
         Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
@@ -2424,11 +2425,11 @@ void TR_GenTextures(World* world, class VT_Level *tr)
 {
     int border_size = Clamp(renderer.settings().texture_border, 0, 64);
 
-    world->tex_atlas.reset( new BorderedTextureAtlas(border_size,
-                                                     renderer.settings().save_texture_memory,
-                                                     tr->textile32,
-                                                     tr->object_textures,
-                                                     tr->sprite_textures) );
+    world->tex_atlas.reset(new BorderedTextureAtlas(border_size,
+                                                    renderer.settings().save_texture_memory,
+                                                    tr->textile32,
+                                                    tr->object_textures,
+                                                    tr->sprite_textures));
 
     world->textures.resize(world->tex_atlas->getNumAtlasPages() + 1);
 
@@ -2437,10 +2438,10 @@ void TR_GenTextures(World* world, class VT_Level *tr)
     world->tex_atlas->createTextures(world->textures.data(), 1);
 
     // white texture data for coloured polygons and debug lines.
-    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    GLubyte whtx[] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
     // Select mipmap mode
     switch(renderer.settings().mipmap_mode)
@@ -2476,7 +2477,6 @@ void TR_GenTextures(World* world, class VT_Level *tr)
     // Read lod bias
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings().lod_bias);
 
-
     glBindTexture(GL_TEXTURE_2D, world->textures.back());          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -2484,7 +2484,6 @@ void TR_GenTextures(World* world, class VT_Level *tr)
     glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
     glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
     //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
-
 }
 
 /**   Animated textures loading.
@@ -2502,7 +2501,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
     p0.vertices.resize(3);
     p.vertices.resize(3);
 
-    pointer       = tr->animated_textures;
+    pointer = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
 
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
@@ -2510,15 +2509,15 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
     world->anim_sequences.resize(num_sequences);
 
     AnimSeq* seq = world->anim_sequences.data();
-    for(uint16_t i = 0; i < num_sequences; i++,seq++)
+    for(uint16_t i = 0; i < num_sequences; i++, seq++)
     {
         seq->frames.resize(*(pointer++) + 1);
         seq->frame_list.resize(seq->frames.size());
 
         // Fill up new sequence with frame list.
-        seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
-        seq->frame_lock        = false; // by default anim is playing
-        seq->uvrotate          = false; // by default uvrotate
+        seq->anim_type = TR_ANIMTEXTURE_FORWARD;
+        seq->frame_lock = false; // by default anim is playing
+        seq->uvrotate = false; // by default uvrotate
         seq->reverse_direction = false; // Needed for proper reverse-type start-up.
         seq->frame_rate        = 0.05f;  // Should be passed as 1 / FPS.
         seq->frame_time        = 0.0;   // Reset frame time to initial state.
@@ -2542,30 +2541,30 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
 
         if(i < num_uvrotates)
         {
-            seq->frame_lock        = false; // by default anim is playing
+            seq->frame_lock = false; // by default anim is playing
 
             seq->uvrotate = true;
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
             seq->frames.resize(8);
-            seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
+            seq->uvrotate_max = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
+            seq->uvrotate_speed = seq->uvrotate_max / static_cast<btScalar>(seq->frames.size());
             seq->frame_list.resize(8);
 
             if(uvrotate_script > 0)
             {
-                seq->anim_type        = TR_ANIMTEXTURE_FORWARD;
+                seq->anim_type = TR_ANIMTEXTURE_FORWARD;
             }
             else if(uvrotate_script < 0)
             {
-                seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
+                seq->anim_type = TR_ANIMTEXTURE_BACKWARD;
             }
 
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
-            for(uint16_t j=0;j<seq->frames.size();j++)
+            for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, (GLfloat)j * seq->uvrotate_speed, true);
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, static_cast<GLfloat>(j) * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -2581,8 +2580,8 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
 
                 d = A0[0] * B0[1] - A0[1] * B0[0];
                 seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
-                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                seq->frames[j].mat[1 + 0 * 2] = -(A[1] * B0[1] - A0[1] * B[1]) / d;
+                seq->frames[j].mat[0 + 1 * 2] = -(A0[0] * B[0] - A[0] * B0[0]) / d;
                 seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
 
                 seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
@@ -2592,7 +2591,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
         else
         {
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
-            for(uint16_t j=0;j<seq->frames.size();j++)
+            for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
                 engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
@@ -2610,14 +2609,13 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
 
                 d = A0[0] * B0[1] - A0[1] * B0[0];
                 seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
-                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                seq->frames[j].mat[1 + 0 * 2] = -(A[1] * B0[1] - A0[1] * B[1]) / d;
+                seq->frames[j].mat[0 + 1 * 2] = -(A0[0] * B[0] - A[0] * B0[0]) / d;
                 seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
 
                 seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
                 seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
             }
-
         }
     }
 }
@@ -2642,8 +2640,8 @@ bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *w
                 // If we have found assigned texture ID in animation texture lists,
                 // we assign corresponding animation sequence to this polygon,
                 // additionally specifying frame offset.
-                polygon->anim_id      = i + 1;  // Animation sequence ID.
-                polygon->frame_offset  = j;     // Animation frame offset.
+                polygon->anim_id = i + 1;  // Animation sequence ID.
+                polygon->frame_offset = j;     // Animation frame offset.
                 return true;
             }
         }
@@ -2654,9 +2652,10 @@ bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *w
 
 void TR_GenMeshes(World *world, class VT_Level *tr)
 {
-    world->meshes.resize( tr->meshes_count );
-    size_t i=0;
-    for(std::shared_ptr<BaseMesh>& baseMesh : world->meshes) {
+    world->meshes.resize(tr->meshes_count);
+    size_t i = 0;
+    for(std::shared_ptr<BaseMesh>& baseMesh : world->meshes)
+    {
         baseMesh = std::make_shared<BaseMesh>();
         TR_GenMesh(world, i++, baseMesh, tr);
     }
@@ -2664,7 +2663,7 @@ void TR_GenMeshes(World *world, class VT_Level *tr)
 
 static void tr_copyNormals(struct Polygon *polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
-    for (size_t i=0; i<polygon->vertices.size(); ++i)
+    for(size_t i = 0; i < polygon->vertices.size(); ++i)
     {
         polygon->vertices[i].normal = mesh->m_vertices[mesh_vertex_indices[i]].normal;
     }
@@ -2674,13 +2673,13 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
 {
     p->vertices.resize(numCorners);
 
-    for (int i = 0; i < numCorners; i++)
+    for(int i = 0; i < numCorners; i++)
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_mesh->vertices[vertex_indices[i]]);
     }
     p->findNormal();
 
-    for (int i = 0; i < numCorners; i++)
+    for(int i = 0; i < numCorners; i++)
     {
         mesh->m_vertices[vertex_indices[i]].normal += p->plane.normal;
     }
@@ -2688,7 +2687,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
 
 void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
-    for (size_t i = 0; i < p->vertices.size(); i++)
+    for(size_t i = 0; i < p->vertices.size(); i++)
     {
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
@@ -2709,7 +2708,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
 
 void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, struct Polygon *p)
 {
-    for (size_t i = 0; i < p->vertices.size(); i++)
+    for(size_t i = 0; i < p->vertices.size(); i++)
     {
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
@@ -2729,7 +2728,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *v
 
 void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
 {
-    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2749,14 +2748,14 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     tr4_mesh_t* tr_mesh = &tr->meshes[mesh_index];
     mesh->m_id = mesh_index;
     mesh->m_center[0] = tr_mesh->centre.x;
-    mesh->m_center[1] =-tr_mesh->centre.z;
+    mesh->m_center[1] = -tr_mesh->centre.z;
     mesh->m_center[2] = tr_mesh->centre.y;
     mesh->m_radius = tr_mesh->collision_size;
-    mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
 
-    mesh->m_vertices.resize( tr_mesh->num_vertices );
+    mesh->m_vertices.resize(tr_mesh->num_vertices);
     auto vertex = mesh->m_vertices.data();
-    for(size_t i=0; i<mesh->m_vertices.size(); i++, vertex++)
+    for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
     {
         TR_vertex_to_arr(vertex->position, tr_mesh->vertices[i]);
         vertex->normal.setZero();                                          // paranoid
@@ -2769,7 +2768,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured triangles
      */
-    for(int i=0; i<tr_mesh->num_textured_triangles; ++i)
+    for(int i = 0; i < tr_mesh->num_textured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2777,7 +2776,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
         auto face3 = &tr_mesh->textured_triangles[i];
         auto tex = &tr->object_textures[face3->texture & tex_mask];
 
-        p.double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p.double_side = static_cast<bool>(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(&p, face3->texture & tex_mask, world);
 
@@ -2799,14 +2798,14 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured triangles
      */
-    for(int i=0; i<tr_mesh->num_coloured_triangles; ++i)
+    for(int i = 0; i < tr_mesh->num_coloured_triangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
 
         auto face3 = &tr_mesh->coloured_triangles[i];
         auto col = face3->texture & 0xff;
-        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.tex_index = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages());
         p.transparency = 0;
         p.anim_id = 0;
 
@@ -2817,7 +2816,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured rectangles
      */
-    for(int i=0; i<tr_mesh->num_textured_rectangles; ++i)
+    for(int i = 0; i < tr_mesh->num_textured_rectangles; ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2825,7 +2824,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
         auto face4 = &tr_mesh->textured_rectangles[i];
         auto tex = &tr->object_textures[face4->texture & tex_mask];
 
-        p.double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p.double_side = static_cast<bool>(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(&p, face4->texture & tex_mask, world);
 
@@ -2847,7 +2846,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++)
+    for(int16_t i = 0; i < tr_mesh->num_coloured_rectangles; i++)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2855,7 +2854,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
         auto face4 = &tr_mesh->coloured_rectangles[i];
         auto col = face4->texture & 0xff;
         p.vertices.resize(4);
-        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.tex_index = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages());
         p.transparency = 0;
         p.anim_id = 0;
 
@@ -2866,7 +2865,8 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * let us normalise normales %)
      */
-    for(Vertex& v : mesh->m_vertices) {
+    for(Vertex& v : mesh->m_vertices)
+    {
         v.normal.safeNormalize();
     }
 
@@ -2874,12 +2874,12 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
      * triangles
      */
     auto p = mesh->m_polygons.begin();
-    for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
+    for(int16_t i = 0; i < tr_mesh->num_textured_triangles; i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->textured_triangles[i].vertices);
     }
 
-    for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
+    for(int16_t i = 0; i < tr_mesh->num_coloured_triangles; i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->coloured_triangles[i].vertices);
     }
@@ -2887,12 +2887,12 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
+    for(int16_t i = 0; i < tr_mesh->num_textured_rectangles; i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->textured_rectangles[i].vertices);
     }
 
-    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
+    for(int16_t i = 0; i < tr_mesh->num_coloured_rectangles; i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
@@ -2906,13 +2906,13 @@ void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const
 {
     p->vertices.resize(numCorners);
 
-    for (int i = 0; i < numCorners; i++)
+    for(int i = 0; i < numCorners; i++)
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_room->vertices[vertices[i]].vertex);
     }
     p->findNormal();
 
-    for (int i = 0; i < numCorners; i++)
+    for(int i = 0; i < numCorners; i++)
     {
         mesh->m_vertices[vertices[i]].normal += p->plane.normal;
         p->vertices[i].normal = p->plane.normal;
@@ -2924,29 +2924,28 @@ void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const
     p->transparency = tex->transparency_flags;
 
     world->tex_atlas->getCoordinates(masked_texture, 0, p);
-
 }
 
 void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
-    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     auto tr_room = &tr->rooms[room_index];
 
     if(tr_room->num_triangles + tr_room->num_rectangles == 0)
     {
-        room->mesh = NULL;
+        room->mesh = nullptr;
         return;
     }
 
     room->mesh = std::make_shared<BaseMesh>();
     room->mesh->m_id = room_index;
-    room->mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    room->mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
     room->mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    room->mesh->m_vertices.resize( tr_room->num_vertices );
+    room->mesh->m_vertices.resize(tr_room->num_vertices);
     auto vertex = room->mesh->m_vertices.data();
-    for(size_t i=0; i<room->mesh->m_vertices.size(); i++, vertex++)
+    for(size_t i = 0; i < room->mesh->m_vertices.size(); i++, vertex++)
     {
         TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
         vertex->normal.setZero();                                          // paranoid
@@ -2954,13 +2953,13 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
 
     room->mesh->findBB();
 
-    room->mesh->m_polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
+    room->mesh->m_polygons.resize(tr_room->num_triangles + tr_room->num_rectangles);
     auto p = room->mesh->m_polygons.begin();
 
     /*
      * triangles
      */
-    for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
+    for(uint32_t i = 0; i < tr_room->num_triangles; i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->triangles[i].texture & 0x8000;
@@ -2969,7 +2968,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
     /*
      * rectangles
      */
-    for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
+    for(uint32_t i = 0; i < tr_room->num_rectangles; i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
@@ -2987,7 +2986,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
      * triangles
      */
     p = room->mesh->m_polygons.begin();
-    for(size_t i=0; i<tr_room->num_triangles; i++, p++)
+    for(size_t i = 0; i < tr_room->num_triangles; i++, ++p)
     {
         tr_copyNormals(&*p, room->mesh, tr_room->triangles[i].vertices);
     }
@@ -2995,7 +2994,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
     /*
      * rectangles
      */
-    for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
+    for(uint32_t i = 0; i < tr_room->num_rectangles; i++, ++p)
     {
         tr_copyNormals(&*p, room->mesh, tr_room->rectangles[i].vertices);
     }
@@ -3012,72 +3011,71 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     int actualSpritesFound = 0;
     for(RoomSprite& sp : room->sprites)
     {
-        if (sp.sprite)
+        if(sp.sprite)
         {
             actualSpritesFound += 1;
             highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
         }
     }
-    if (actualSpritesFound == 0)
+    if(actualSpritesFound == 0)
     {
-        room->sprite_buffer = 0;
+        room->sprite_buffer = nullptr;
         return;
     }
 
-    room->sprite_buffer = (SpriteBuffer *) calloc(sizeof(SpriteBuffer), 1);
+    room->sprite_buffer = static_cast<SpriteBuffer *>(calloc(sizeof(SpriteBuffer), 1));
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
-    room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
+    room->sprite_buffer->element_count_per_texture = static_cast<uint32_t *>(calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages));
 
     // First collect indices on a per-texture basis
-    uint16_t **elements_for_texture = (uint16_t **)calloc(sizeof(uint16_t*), highestTexturePageFound + 1);
+    uint16_t **elements_for_texture = static_cast<uint16_t **>(calloc(sizeof(uint16_t*), highestTexturePageFound + 1));
 
-    GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
+    GLfloat *spriteData = static_cast<GLfloat *>(calloc(sizeof(GLfloat[7]), actualSpritesFound * 4));
 
     int writeIndex = 0;
-    for (const RoomSprite& room_sprite : room->sprites)
+    for(const RoomSprite& room_sprite : room->sprites)
     {
-        if (room_sprite.sprite)
+        if(room_sprite.sprite)
         {
             int vertexStart = writeIndex;
             // top right
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[0], sizeof(GLfloat [2]));
+            memcpy(&spriteData[writeIndex * 7 + 0], room_sprite.pos, sizeof(GLfloat[3]));
+            memcpy(&spriteData[writeIndex * 7 + 3], &room_sprite.sprite->tex_coord[0], sizeof(GLfloat[2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
 
             writeIndex += 1;
 
             // top left
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[2], sizeof(GLfloat [2]));
+            memcpy(&spriteData[writeIndex * 7 + 0], room_sprite.pos, sizeof(GLfloat[3]));
+            memcpy(&spriteData[writeIndex * 7 + 3], &room_sprite.sprite->tex_coord[2], sizeof(GLfloat[2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
 
             writeIndex += 1;
 
             // bottom left
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[4], sizeof(GLfloat [2]));
+            memcpy(&spriteData[writeIndex * 7 + 0], room_sprite.pos, sizeof(GLfloat[3]));
+            memcpy(&spriteData[writeIndex * 7 + 3], &room_sprite.sprite->tex_coord[4], sizeof(GLfloat[2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
 
             writeIndex += 1;
 
             // bottom right
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[6], sizeof(GLfloat [2]));
+            memcpy(&spriteData[writeIndex * 7 + 0], room_sprite.pos, sizeof(GLfloat[3]));
+            memcpy(&spriteData[writeIndex * 7 + 3], &room_sprite.sprite->tex_coord[6], sizeof(GLfloat[2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
 
             writeIndex += 1;
-
 
             // Assign indices
             uint32_t texture = room_sprite.sprite->texture;
             uint32_t start = room->sprite_buffer->element_count_per_texture[texture];
             uint32_t newElementCount = start + 6;
             room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
-            elements_for_texture[texture] = (uint16_t *)realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t));
+            elements_for_texture[texture] = static_cast<uint16_t *>(realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t)));
 
             elements_for_texture[texture][start + 0] = vertexStart + 0;
             elements_for_texture[texture][start + 1] = vertexStart + 1;
@@ -3089,16 +3087,16 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     }
 
     // Now flatten all these indices to a single array
-    uint16_t *elements = NULL;
+    uint16_t *elements = nullptr;
     uint32_t elementsSoFar = 0;
     for(uint32_t i = 0; i <= highestTexturePageFound; i++)
     {
-        if(elements_for_texture[i] == NULL)
+        if(elements_for_texture[i] == nullptr)
         {
             continue;
         }
-        elements = (uint16_t*)realloc(elements, (elementsSoFar + room->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0]));
-        memcpy(elements + elementsSoFar, elements_for_texture[i], room->sprite_buffer->element_count_per_texture[i]*sizeof(elements_for_texture[0][0]));
+        elements = static_cast<uint16_t*>(realloc(elements, (elementsSoFar + room->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0])));
+        memcpy(elements + elementsSoFar, elements_for_texture[i], room->sprite_buffer->element_count_per_texture[i] * sizeof(elements_for_texture[0][0]));
 
         elementsSoFar += room->sprite_buffer->element_count_per_texture[i];
         free(elements_for_texture[i]);
@@ -3109,7 +3107,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     GLuint arrayBuffer, elementBuffer;
     glGenBuffers(1, &arrayBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
     glGenBuffers(1, &elementBuffer);
@@ -3123,12 +3121,12 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
-    room->sprite_buffer->data.reset( new VertexArray(elementBuffer, 3, attribs) );
+    room->sprite_buffer->data.reset(new VertexArray(elementBuffer, 3, attribs));
 }
 
 void Res_GenVBOs(World *world)
 {
-    for(uint32_t i=0; i<world->meshes.size(); i++)
+    for(uint32_t i = 0; i < world->meshes.size(); i++)
     {
         if(!world->meshes[i]->m_vertices.empty() || !world->meshes[i]->m_animatedVertices.empty())
         {
@@ -3136,7 +3134,7 @@ void Res_GenVBOs(World *world)
         }
     }
 
-    for(uint32_t i=0; i<world->rooms.size(); i++)
+    for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
         if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || !world->rooms[i]->mesh->m_animatedVertices.empty()))
         {
@@ -3157,10 +3155,10 @@ void Res_GenBaseItems(World* world)
 
 void Res_FixRooms(World *world)
 {
-    for(uint32_t i=0;i<world->rooms.size();i++)
+    for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
         auto r = world->rooms[i];
-        if(r->base_room != NULL)
+        if(r->base_room != nullptr)
         {
             r->disable();    // Disable current room
         }
@@ -3196,7 +3194,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     }
     else
     {
-        if((offset < tr_animation->frame_offset) && (offset >= (tr_animation+1)->frame_offset))
+        if((offset < tr_animation->frame_offset) && (offset >= (tr_animation + 1)->frame_offset))
         {
             return -2;
         }
@@ -3224,13 +3222,13 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
             return world->getModelByID(TR_ITEM_SKYBOX_TR5);
 
         default:
-            return NULL;
+            return nullptr;
     }
 }
 
 void TR_GenAnimCommands(World *world, class VT_Level *tr)
 {
-    world->anim_commands.assign( tr->anim_commands+0, tr->anim_commands+tr->anim_commands_count );
+    world->anim_commands.assign(tr->anim_commands + 0, tr->anim_commands + tr->anim_commands_count);
     free(tr->anim_commands);
     tr->anim_commands = nullptr;
     tr->anim_commands_count = 0;
@@ -3252,7 +3250,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
     tr_moveable = &tr->moveables[model_num];                                    // original tr structure
     model->collision_map.resize(model->mesh_count);
-    for(uint16_t i=0;i<model->mesh_count;i++)
+    for(uint16_t i = 0; i < model->mesh_count; i++)
     {
         model->collision_map[i] = i;
     }
@@ -3262,13 +3260,13 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
 
-    for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
+    for(uint16_t k = 0; k < model->mesh_count; k++, tree_tag++)
     {
         tree_tag->mesh_base = world->meshes[mesh_index[k]];
-        tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
+        tree_tag->mesh_skin = nullptr;                                             ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
-        tree_tag->body_part    = 0x00;
+        tree_tag->body_part = 0x00;
         tree_tag->offset[0] = 0.0;
         tree_tag->offset[1] = 0.0;
         tree_tag->offset[2] = 0.0;
@@ -3278,11 +3276,11 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         }
         else
         {
-            uint32_t *tr_mesh_tree = tr->mesh_tree_data + tr_moveable->mesh_tree_index + (k-1)*4;
+            uint32_t *tr_mesh_tree = tr->mesh_tree_data + tr_moveable->mesh_tree_index + (k - 1) * 4;
             tree_tag->flag = (tr_mesh_tree[0] & 0xFF);
-            tree_tag->offset[0] = (float)((int32_t)tr_mesh_tree[1]);
-            tree_tag->offset[1] = (float)((int32_t)tr_mesh_tree[3]);
-            tree_tag->offset[2] =-(float)((int32_t)tr_mesh_tree[2]);
+            tree_tag->offset[0] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[1]));
+            tree_tag->offset[1] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[3]));
+            tree_tag->offset[2] = -static_cast<float>(static_cast<int32_t>(tr_mesh_tree[2]));
         }
     }
 
@@ -3300,30 +3298,30 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         bone_frame = model->animations.front().frames.data();
 
         model->animations.front().id = 0;
-        model->animations.front().next_anim = NULL;
+        model->animations.front().next_anim = nullptr;
         model->animations.front().next_frame = 0;
         model->animations.front().state_change.clear();
         model->animations.front().original_frame_rate = 1;
 
-        bone_frame->bone_tags.resize( model->mesh_count );
+        bone_frame->bone_tags.resize(model->mesh_count);
 
         bone_frame->pos.setZero();
         bone_frame->move.setZero();
         bone_frame->v_Horizontal = 0.0;
         bone_frame->v_Vertical = 0.0;
         bone_frame->command = 0x00;
-        for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
+        for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
         {
             tree_tag = &model->mesh_tree[k];
             bone_tag = &bone_frame->bone_tags[k];
 
-            vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+            vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
             bone_tag->offset = tree_tag->offset;
         }
         return;
     }
     //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
-    model->animations.resize( TR_GetNumAnimationsForMoveable(tr, model_num) );
+    model->animations.resize(TR_GetNumAnimationsForMoveable(tr, model_num));
     if(model->animations.empty())
     {
         /*
@@ -3342,9 +3340,9 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
     anim = model->animations.data();
-    for(uint16_t i=0;i<model->animations.size();i++,anim++)
+    for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
     {
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
         frame_offset = tr_animation->frame_offset / 2;
         uint16_t l_start = 0x09;
         if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
@@ -3365,7 +3363,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames.resize( TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i) );
+        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -3373,11 +3371,11 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
         // See http://evpopov.com/dl/TR4format.html#Animations for details.
 
-        if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
+        if((anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255))
         {
             // Calculate current animation anim command block offset.
-            assert( anim->anim_command < world->anim_commands.size() );
-            int16_t *pointer = &world->anim_commands[ anim->anim_command ];
+            assert(anim->anim_command < world->anim_commands.size());
+            int16_t *pointer = &world->anim_commands[anim->anim_command];
 
             for(uint32_t count = 0; count < anim->num_anim_commands; count++)
             {
@@ -3409,7 +3407,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             }
         }
 
-
         if(anim->frames.empty())
         {
             /*
@@ -3422,46 +3419,47 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
          * let us begin to load animations
          */
         bone_frame = anim->frames.data();
-        for(uint16_t j=0;j<anim->frames.size();j++,bone_frame++,frame_offset+=frame_step)
+        for(uint16_t j = 0; j < anim->frames.size(); j++, bone_frame++, frame_offset += frame_step)
         {
-            bone_frame->bone_tags.resize( model->mesh_count );
+            bone_frame->bone_tags.resize(model->mesh_count);
             bone_frame->pos.setZero();
             bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)
             {
-                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
+                for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
                 {
                     tree_tag = &model->mesh_tree[k];
                     bone_tag = &bone_frame->bone_tags[k];
-                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
                     bone_tag->offset = tree_tag->offset;
                 }
             }
             else
             {
                 uint16_t l = l_start;
-                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
+                for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
                 {
                     tree_tag = &model->mesh_tree[k];
                     bone_tag = &bone_frame->bone_tags[k];
-                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
                     bone_tag->offset = tree_tag->offset;
 
                     switch(tr->game_version)
                     {
                         case TR_I:                                              /* TR_I */
                         case TR_I_UB:
-                        case TR_I_DEMO: {
+                        case TR_I_DEMO:
+                        {
                             temp2 = tr->frame_data[frame_offset + l];
-                            l ++;
+                            l++;
                             temp1 = tr->frame_data[frame_offset + l];
-                            l ++;
+                            l++;
                             btVector3 rot;
-                            rot[0] = (float)((temp1 & 0x3ff0) >> 4);
-                            rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
-                            rot[1] = (float)(temp2 & 0x03ff);
+                            rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
+                            rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                            rot[1] = static_cast<float>(temp2 & 0x03ff);
                             rot *= 360.0 / 1024.0;
                             vec4_SetTRRotations(bone_tag->qrotate, rot);
                             break;
@@ -3469,43 +3467,44 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
                         default:                                                /* TR_II + */
                             temp1 = tr->frame_data[frame_offset + l];
-                            l ++;
+                            l++;
                             if(tr->game_version >= TR_IV)
                             {
-                                ang = (float)(temp1 & 0x0fff);
+                                ang = static_cast<float>(temp1 & 0x0fff);
                                 ang *= 360.0 / 4096.0;
                             }
                             else
                             {
-                                ang = (float)(temp1 & 0x03ff);
+                                ang = static_cast<float>(temp1 & 0x03ff);
                                 ang *= 360.0 / 1024.0;
                             }
 
-                            switch (temp1 & 0xc000)
+                            switch(temp1 & 0xc000)
                             {
                                 case 0x4000:    // x only
-                                    vec4_SetTRRotations(bone_tag->qrotate, {ang,0,0});
+                                    vec4_SetTRRotations(bone_tag->qrotate, { ang,0,0 });
                                     break;
 
                                 case 0x8000:    // y only
-                                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,-ang});
+                                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,-ang });
                                     break;
 
                                 case 0xc000:    // z only
-                                    vec4_SetTRRotations(bone_tag->qrotate, {0,ang,0});
+                                    vec4_SetTRRotations(bone_tag->qrotate, { 0,ang,0 });
                                     break;
 
-                                default: {        // all three
+                                default:
+                                {        // all three
                                     temp2 = tr->frame_data[frame_offset + l];
                                     btVector3 rot;
-                                    rot[0] = (float)((temp1 & 0x3ff0) >> 4);
-                                    rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
-                                    rot[1] = (float)(temp2 & 0x03ff);
+                                    rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
+                                    rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                                    rot[1] = static_cast<float>(temp2 & 0x03ff);
                                     rot[0] *= 360.0 / 1024.0;
                                     rot[1] *= 360.0 / 1024.0;
                                     rot[2] *= 360.0 / 1024.0;
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
-                                    l ++;
+                                    l++;
                                     break;
                                 }
                             };
@@ -3531,17 +3530,17 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     }
 #endif
     anim = model->animations.data();
-    for(uint16_t i=0;i<model->animations.size();i++,anim++)
+    for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
     {
         anim->state_change.clear();
 
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
-        int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
-        j &= 0x7fff; // this masks out the sign bit
-        assert( j >= 0 );
-        if(static_cast<size_t>(j) < model->animations.size())
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
+        int16_t animId = tr_animation->next_animation - tr_moveable->animation_index;
+        animId &= 0x7fff; // this masks out the sign bit
+        assert(animId >= 0);
+        if(static_cast<size_t>(animId) < model->animations.size())
         {
-            anim->next_anim = &model->animations[j];
+            anim->next_anim = &model->animations[animId];
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
             anim->next_frame %= anim->next_anim->frames.size();
             if(anim->next_frame < 0)
@@ -3554,7 +3553,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         }
         else
         {
-            anim->next_anim = NULL;
+            anim->next_anim = nullptr;
             anim->next_frame = 0;
         }
 
@@ -3564,20 +3563,20 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         {
             StateChange* sch_p;
 #if LOG_ANIM_DISPATCHES
-            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->id):(-1), anim->next_frame);
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
 #endif
-            anim->state_change.resize( tr_animation->num_state_changes );
+            anim->state_change.resize(tr_animation->num_state_changes);
             sch_p = anim->state_change.data();
 
-            for(uint16_t j=0;j<tr_animation->num_state_changes;j++,sch_p++)
+            for(uint16_t j = 0; j < tr_animation->num_state_changes; j++, sch_p++)
             {
                 tr_state_change_t *tr_sch;
-                tr_sch = &tr->state_changes[j+tr_animation->state_change_offset];
+                tr_sch = &tr->state_changes[j + tr_animation->state_change_offset];
                 sch_p->id = tr_sch->state_id;
                 sch_p->anim_dispatch.clear();
-                for(uint16_t l=0;l<tr_sch->num_anim_dispatches;l++)
+                for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
                 {
-                    tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
+                    tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch + l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
                     if(next_anim_ind < model->animations.size())
@@ -3588,18 +3587,18 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                         uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
                         uint16_t next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
 
-                        uint16_t low  = tr_adisp->low  - tr_animation->frame_start;
+                        uint16_t low = tr_adisp->low - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low  = low  % anim->frames.size();
+                        adsp->frame_low = low  % anim->frames.size();
                         adsp->frame_high = (high - 1) % anim->frames.size();
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 
 #if LOG_ANIM_DISPATCHES
                         Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames.size() = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
-                                    anim->frames.size(), adsp->frame_low, adsp->frame_high,
-                                    adsp->next_anim, adsp->next_frame);
+                                     anim->frames.size(), adsp->frame_low, adsp->frame_high,
+                                     adsp->next_anim, adsp->next_frame);
 #endif
                     }
                 }
@@ -3621,9 +3620,9 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         return 0;
     }
 
-    if(moveable_ind == tr->moveables_count-1)
+    if(moveable_ind == tr->moveables_count - 1)
     {
-        ret = (int32_t)tr->animations_count - (int32_t)curr_moveable->animation_index;
+        ret = static_cast<int32_t>(tr->animations_count) - static_cast<int32_t>(curr_moveable->animation_index);
         if(ret < 0)
         {
             return 1;
@@ -3634,12 +3633,12 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         }
     }
 
-    next_moveable = &tr->moveables[moveable_ind+1];
+    next_moveable = &tr->moveables[moveable_ind + 1];
     if(next_moveable->animation_index == 0xFFFF)
     {
         if(moveable_ind + 2 < tr->moveables_count)                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
         {
-            next_moveable = &tr->moveables[moveable_ind+2];
+            next_moveable = &tr->moveables[moveable_ind + 2];
         }
         else
         {
@@ -3647,12 +3646,11 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         }
     }
 
-    ret = (next_moveable->animation_index <= tr->animations_count)?(next_moveable->animation_index):(tr->animations_count);
-    ret -= (int32_t)curr_moveable->animation_index;
+    ret = (next_moveable->animation_index <= tr->animations_count) ? (next_moveable->animation_index) : (tr->animations_count);
+    ret -= static_cast<int32_t>(curr_moveable->animation_index);
 
     return ret;
 }
-
 
 /*
  * It returns real animation count
@@ -3691,15 +3689,15 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
         frame = tr->frame_data + frame_offset;
         bone_frame->bb_min[0] = (short int)frame[0];                            // x_min
         bone_frame->bb_min[1] = (short int)frame[4];                            // y_min
-        bone_frame->bb_min[2] =-(short int)frame[3];                            // z_min
+        bone_frame->bb_min[2] = -(short int)frame[3];                            // z_min
 
         bone_frame->bb_max[0] = (short int)frame[1];                            // x_max
         bone_frame->bb_max[1] = (short int)frame[5];                            // y_max
-        bone_frame->bb_max[2] =-(short int)frame[2];                            // z_max
+        bone_frame->bb_max[2] = -(short int)frame[2];                            // z_max
 
         bone_frame->pos[0] = (short int)frame[6];
         bone_frame->pos[1] = (short int)frame[8];
-        bone_frame->pos[2] =-(short int)frame[7];
+        bone_frame->pos[2] = -(short int)frame[7];
     }
     else
     {
@@ -3723,7 +3721,7 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 {
     world->skeletal_models.resize(tr->moveables_count);
 
-    for(uint32_t i=0;i<tr->moveables_count;i++)
+    for(uint32_t i = 0; i < tr->moveables_count; i++)
     {
         auto tr_moveable = &tr->moveables[i];
         auto smodel = &world->skeletal_models[i];
@@ -3734,55 +3732,56 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
     }
 }
 
-
 void TR_GenEntities(World *world, class VT_Level *tr)
 {
-    for(uint32_t i=0;i<tr->items_count;i++)
+    for(uint32_t i = 0; i < tr->items_count; i++)
     {
         tr2_item_t *tr_item = &tr->items[i];
-        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
+        std::shared_ptr<Entity> entity = (tr_item->object_id == 0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
-        entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
+        entity->m_transform.getOrigin()[1] = -tr_item->pos.z;
         entity->m_transform.getOrigin()[2] = tr_item->pos.y;
         entity->m_angles[0] = tr_item->rotation;
         entity->m_angles[1] = 0;
         entity->m_angles[2] = 0;
         entity->updateTransform();
-        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
+        if((tr_item->room >= 0) && (static_cast<uint32_t>(tr_item->room) < world->rooms.size()))
         {
             entity->m_self->room = world->rooms[tr_item->room].get();
         }
         else
         {
-            entity->m_self->room = NULL;
+            entity->m_self->room = nullptr;
         }
 
-        entity->m_triggerLayout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->m_OCB             = tr_item->ocb;
-        entity->m_timer           = 0.0;
+        entity->m_triggerLayout = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->m_OCB = tr_item->ocb;
+        entity->m_timer = 0.0;
 
         entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
         entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        entity->m_moveType          = 0x0000;
-        entity->m_inertiaLinear     = 0.0;
+        entity->m_moveType = 0x0000;
+        entity->m_inertiaLinear = 0.0;
         entity->m_inertiaAngular[0] = 0.0;
         entity->m_inertiaAngular[1] = 0.0;
-        entity->m_moveType          = 0;
+        entity->m_moveType = 0;
 
         entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
 
-        if(entity->m_bf.animations.model == nullptr) {
+        if(entity->m_bf.animations.model == nullptr)
+        {
             int id = ent_ID_override["getOverridedID"](tr->game_version, tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
         int replace_anim_id = ent_ID_override["getOverridedAnim"](tr->game_version, tr_item->object_id);
-        if(replace_anim_id > 0) {
+        if(replace_anim_id > 0)
+        {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
             std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
         }
 
-        if(entity->m_bf.animations.model == NULL)
+        if(entity->m_bf.animations.model == nullptr)
         {
             // SPRITE LOADING
             Sprite* sp = world->getSpriteByID(tr_item->object_id);
@@ -3817,7 +3816,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
             lara->m_bf.animations.model->hide = 0;
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            SkeletalModel* LM = lara->m_bf.animations.model;
+            SkeletalModel* LM;
 
             engine_lua.set("player", lara->id());
 
@@ -3866,11 +3865,11 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                     break;
             };
 
-            for(uint16_t j=0;j<lara->m_bf.bone_tags.size();j++)
+            for(uint16_t j = 0; j < lara->m_bf.bone_tags.size(); j++)
             {
                 lara->m_bf.bone_tags[j].mesh_base = lara->m_bf.animations.model->mesh_tree[j].mesh_base;
                 lara->m_bf.bone_tags[j].mesh_skin = lara->m_bf.animations.model->mesh_tree[j].mesh_skin;
-                lara->m_bf.bone_tags[j].mesh_slot = NULL;
+                lara->m_bf.bone_tags[j].mesh_slot = nullptr;
             }
             world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
             lara->genEntityRigidBody();
@@ -3895,7 +3894,6 @@ void TR_GenEntities(World *world, class VT_Level *tr)
     }
 }
 
-
 void TR_GenSamples(World *world, class VT_Level *tr)
 {
     // Generate new buffer array.
@@ -3905,9 +3903,9 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    world->stream_track_map.resize( lua_GetNumTracks(engine_lua), 0 );
+    world->stream_track_map.resize(lua_GetNumTracks(engine_lua), 0);
     if(world->stream_track_map.empty())
-        world->stream_track_map.resize( TR_AUDIO_STREAM_MAP_SIZE, 0 );
+        world->stream_track_map.resize(TR_AUDIO_STREAM_MAP_SIZE, 0);
 
     // Generate new audio effects array.
     world->audio_effects.resize(tr->sound_details_count);
@@ -3934,10 +3932,10 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I_UB:
                 world->audio_map.assign(tr->soundmap + 0, tr->soundmap + TR_AUDIO_MAP_SIZE_TR1);
 
-                for(size_t i = 0; i < tr->sample_indices_count-1; i++)
+                for(size_t i = 0; i < tr->sample_indices_count - 1; i++)
                 {
                     pointer = tr->samples_data.data() + tr->sample_indices[i];
-                    uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
+                    uint32_t size = tr->sample_indices[(i + 1)] - tr->sample_indices[i];
                     Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, size);
                 }
                 break;
@@ -3946,20 +3944,24 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_II_DEMO:
             case TR_III:
             {
-                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2)));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_III) ? (TR_AUDIO_MAP_SIZE_TR3) : (TR_AUDIO_MAP_SIZE_TR2)));
                 size_t ind1 = 0;
                 size_t ind2 = 0;
                 bool flag = false;
                 size_t i = 0;
-                while(pointer < tr->samples_data.data() + tr->samples_data.size() - 4) {
+                while(pointer < tr->samples_data.data() + tr->samples_data.size() - 4)
+                {
                     pointer = tr->samples_data.data() + ind2;
-                    if(0x46464952 == *((int32_t*)pointer)) {
+                    if(0x46464952 == *reinterpret_cast<int32_t*>(pointer))
+                    {
                         // RIFF
-                        if(!flag) {
+                        if(!flag)
+                        {
                             ind1 = ind2;
                             flag = true;
                         }
-                        else {
+                        else
+                        {
                             size_t uncomp_size = ind2 - ind1;
                             auto* srcData = tr->samples_data.data() + ind1;
                             Audio_LoadALbufferFromMem(world->audio_buffers[i], srcData, uncomp_size);
@@ -3975,7 +3977,8 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 }
                 size_t uncomp_size = tr->samples_data.size() - ind1;
                 pointer = tr->samples_data.data() + ind1;
-                if(i < world->audio_buffers.size()) {
+                if(i < world->audio_buffers.size())
+                {
                     Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, uncomp_size);
                 }
                 break;
@@ -3984,15 +3987,15 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4)));
+                world->audio_map.assign(tr->soundmap + 0, tr->soundmap + ((tr->game_version == TR_V) ? (TR_AUDIO_MAP_SIZE_TR5) : (TR_AUDIO_MAP_SIZE_TR4)));
 
                 for(size_t i = 0; i < tr->samples_count; i++)
                 {
                     // Parse sample sizes.
                     // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
-                    size_t uncomp_size = *((uint32_t*)pointer);
+                    size_t uncomp_size = *reinterpret_cast<uint32_t*>(pointer);
                     pointer += 4;
-                    size_t comp_size   = *((uint32_t*)pointer);
+                    size_t comp_size = *reinterpret_cast<uint32_t*>(pointer);
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
@@ -4004,7 +4007,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 break;
 
             default:
-                world->audio_map.resize( TR_AUDIO_MAP_SIZE_NONE );
+                world->audio_map.resize(TR_AUDIO_MAP_SIZE_NONE);
                 tr->samples_data.clear();
                 return;
         }
@@ -4018,28 +4021,28 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     {
         if(tr->game_version < TR_III)
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0f; // Max. volume in TR1/TR2 is 32767.
+            world->audio_effects[i].gain = static_cast<float>(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
             world->audio_effects[i].chance = tr->sound_details[i].chance;
         }
         else if(tr->game_version > TR_III)
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0f; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain = static_cast<float>(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->sound_details[i].chance * 255;
         }
         else
         {
-            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0f; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain = static_cast<float>(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->sound_details[i].chance * 127;
         }
 
-        world->audio_effects[i].rand_gain_var  = 50;
+        world->audio_effects[i].rand_gain_var = 50;
         world->audio_effects[i].rand_pitch_var = 50;
 
-        world->audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0f + 1.0f;
-        world->audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0f;
+        world->audio_effects[i].pitch = static_cast<float>(tr->sound_details[i].pitch) / 127.0 + 1.0;
+        world->audio_effects[i].range = static_cast<float>(tr->sound_details[i].sound_range) * 1024.0;
 
         world->audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
-        world->audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
+        world->audio_effects[i].rand_gain = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
 
         switch(tr->game_version)
         {
@@ -4079,7 +4082,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 break;
         }
 
-        world->audio_effects[i].sample_index =  tr->sound_details[i].sample;
+        world->audio_effects[i].sample_index = tr->sound_details[i].sample;
         world->audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
     }
 
@@ -4098,14 +4101,14 @@ void TR_GenSamples(World *world, class VT_Level *tr)
         case TR_I_DEMO:
         case TR_I_UB:
             // Fix for underwater looped sound.
-            if ((world->audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
+            if((world->audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
             {
                 world->audio_effects[(world->audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
             }
             break;
         case TR_II:
             // Fix for helicopter sound range.
-            if ((world->audio_map[297]) >= 0)
+            if((world->audio_map[297]) >= 0)
             {
                 world->audio_effects[(world->audio_map[297])].range *= 10.0;
             }
@@ -4118,19 +4121,18 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     for(size_t i = 0; i < world->audio_emitters.size(); i++)
     {
         world->audio_emitters[i].emitter_index = i;
-        world->audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
-        world->audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
-        world->audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
-        world->audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
-        world->audio_emitters[i].flags         =  tr->sound_sources[i].flags;
+        world->audio_emitters[i].sound_index = tr->sound_sources[i].sound_id;
+        world->audio_emitters[i].position[0] = tr->sound_sources[i].x;
+        world->audio_emitters[i].position[1] = tr->sound_sources[i].z;
+        world->audio_emitters[i].position[2] = -tr->sound_sources[i].y;
+        world->audio_emitters[i].flags = tr->sound_sources[i].flags;
     }
 }
-
 
 void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
 {
     for(std::map<uint32_t, std::shared_ptr<BaseItem> >::iterator it = map.begin();
-        it != map.end();
+    it != map.end();
         ++it)
     {
         std::shared_ptr<BaseItem> item = it->second;

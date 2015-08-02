@@ -16,7 +16,6 @@
 #define ENTITY_ANIM_NEWFRAME 0x01
 #define ENTITY_ANIM_NEWANIM  0x02
 
-
 class btCollisionShape;
 class btRigidBody;
 
@@ -49,7 +48,8 @@ struct RDSetup;
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 #define ENTITY_CALLBACK_ROOMCOLLISION               (0x00000020)
 
-enum class Substance {
+enum class Substance
+{
     None,
     WaterShallow,
     WaterWade,
@@ -93,7 +93,10 @@ struct Entity : public Object
 private:
     const uint32_t m_id;                 // Unique entity ID
 public:
-    uint32_t id() const noexcept { return m_id; }
+    uint32_t id() const noexcept
+    {
+        return m_id;
+    }
 
     int32_t                             m_OCB = 0;                // Object code bit (since TR4)
     uint8_t                             m_triggerLayout = 0;     // Mask + once + event + sector status flags
@@ -102,7 +105,7 @@ public:
     uint32_t                            m_callbackFlags = 0;     // information about scripts callbacks
     uint16_t                            m_typeFlags = ENTITY_TYPE_GENERIC;
     bool m_enabled = true;
-    bool m_active  = true;
+    bool m_active = true;
     bool m_visible = true;
 
     uint8_t                             m_dirFlag = 0;           // (move direction)
@@ -122,7 +125,7 @@ public:
     BtEntityData m_bt;
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
-    btVector3 m_scaling = {1,1,1};
+    btVector3 m_scaling = { 1,1,1 };
 
     std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
@@ -131,7 +134,7 @@ public:
 
     std::shared_ptr<EngineContainer> m_self;
 
-    btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
+    btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
 
     Entity(uint32_t id);
@@ -165,7 +168,8 @@ public:
     void addOverrideAnim(int model_id);
     void checkActivators();
 
-    virtual Substance getSubstanceState() const {
+    virtual Substance getSubstanceState() const
+    {
         return Substance::None;
     }
 
@@ -180,7 +184,8 @@ public:
     btScalar findDistance(const Entity& entity_2);
 
     // Constantly updates some specific parameters to keep hair aligned to entity.
-    virtual void updateHair() {
+    virtual void updateHair()
+    {
     }
 
     bool createRagdoll(RDSetup* setup);
@@ -198,23 +203,29 @@ public:
         m_bf.animations.current_frame = frame;
     }
 
-    virtual void processSectorImpl() {
+    virtual void processSectorImpl()
+    {
     }
-    virtual void jump(btScalar /*vert*/, btScalar /*hor*/) {
+    virtual void jump(btScalar /*vert*/, btScalar /*hor*/)
+    {
     }
-    virtual void kill() {
+    virtual void kill()
+    {
     }
-    virtual void updateGhostRigidBody() {
+    virtual void updateGhostRigidBody()
+    {
     }
     virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const;
 
-    virtual btVector3 camPosForFollowing(btScalar dz) {
+    virtual btVector3 camPosForFollowing(btScalar dz)
+    {
         auto cam_pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
         cam_pos[2] += dz;
         return cam_pos;
     }
 
-    virtual void updatePlatformPreStep() {
+    virtual void updatePlatformPreStep()
+    {
     }
 
 private:
@@ -222,7 +233,7 @@ private:
 
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {
-        btVector3 d = bb_max-bb_min;
+        btVector3 d = bb_max - bb_min;
         return btMin(d[0], btMin(d[1], d[2]));
     }
 };
@@ -231,4 +242,3 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim);
 struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id);
-

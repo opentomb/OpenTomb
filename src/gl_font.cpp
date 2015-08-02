@@ -10,8 +10,6 @@
 
 #include <ft2build.h>
 #include <freetype.h>
-#include <ftglyph.h>
-#include <ftmodapi.h>
 
 #include "gl_font.h"
 #include "gl_font_buffer.h"
@@ -20,23 +18,23 @@
 
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size)
 {
-    if(ft_library != NULL)
+    if(ft_library != nullptr)
     {
-        gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
-        glf->ft_face = NULL;
+        gl_tex_font_p glf = static_cast<gl_tex_font_p>(malloc(sizeof(gl_tex_font_t)));
+        glf->ft_face = nullptr;
 
         if(FT_New_Face(ft_library, file_name, 0, &glf->ft_face))                //T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
         {
             free(glf);
-            return NULL;
+            return nullptr;
         }
 
         glf->glyphs_count = glf->ft_face->num_glyphs;
-        glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
+        glf->glyphs = static_cast<char_info_p>(malloc(glf->glyphs_count * sizeof(char_info_t)));
 
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
-        glf->gl_tex_indexes = NULL;
+        glf->gl_tex_indexes = nullptr;
         glf->gl_tex_indexes_count = 0;
         glf->gl_real_tex_indexes_count = 0;
         glf->gl_font_color[0] = 0.0;
@@ -50,9 +48,8 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         return glf;
     }
 
-    return NULL;
+    return nullptr;
 }
-
 
 /**
  * Creates gl texture font from true type font;
@@ -64,23 +61,23 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
  */
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
 {
-    if(ft_library != NULL)
+    if(ft_library != nullptr)
     {
-        gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
-        glf->ft_face = NULL;
+        gl_tex_font_p glf = static_cast<gl_tex_font_p>(malloc(sizeof(gl_tex_font_t)));
+        glf->ft_face = nullptr;
 
-        if(FT_New_Memory_Face(ft_library, (const FT_Byte*)face_data, face_data_size, 0, &glf->ft_face))
+        if(FT_New_Memory_Face(ft_library, static_cast<const FT_Byte*>(face_data), face_data_size, 0, &glf->ft_face))
         {
             free(glf);
-            return NULL;
+            return nullptr;
         }
 
         glf->glyphs_count = glf->ft_face->num_glyphs;
-        glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
+        glf->glyphs = static_cast<char_info_p>(malloc(glf->glyphs_count * sizeof(char_info_t)));
 
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
-        glf->gl_tex_indexes = NULL;
+        glf->gl_tex_indexes = nullptr;
         glf->gl_tex_indexes_count = 0;
         glf->gl_real_tex_indexes_count = 0;
         glf_resize(glf, font_size);
@@ -89,29 +86,28 @@ gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t
         return glf;
     }
 
-    return NULL;
+    return nullptr;
 }
-
 
 void glf_free_font(gl_tex_font_p glf)
 {
-    if(glf != NULL)
+    if(glf != nullptr)
     {
-        if(glf->ft_face != NULL)
+        if(glf->ft_face != nullptr)
         {
             FT_Done_Face(glf->ft_face);
         }
 
-        glf->ft_face = NULL;
-        if(glf->glyphs != NULL)
+        glf->ft_face = nullptr;
+        if(glf->glyphs != nullptr)
         {
             free(glf->glyphs);
-            glf->glyphs = NULL;
+            glf->glyphs = nullptr;
         }
         glf->glyphs_count = 0;
 
         glf->gl_real_tex_indexes_count = 0;
-        if(glf->gl_tex_indexes != NULL)
+        if(glf->gl_tex_indexes != nullptr)
         {
             if(glf->gl_tex_indexes_count > 0)
             {
@@ -120,26 +116,24 @@ void glf_free_font(gl_tex_font_p glf)
             free(glf->gl_tex_indexes);
         }
         glf->gl_tex_indexes_count = 0;
-        glf->gl_tex_indexes = NULL;
+        glf->gl_tex_indexes = nullptr;
 
         free(glf);
     }
 }
 
-
 static __inline GLuint NextPowerOf2(GLuint in)
 {
-     in -= 1;
+    in -= 1;
 
-     in |= in >> 16;
-     in |= in >> 8;
-     in |= in >> 4;
-     in |= in >> 2;
-     in |= in >> 1;
+    in |= in >> 16;
+    in |= in >> 8;
+    in |= in >> 4;
+    in |= in >> 2;
+    in |= in >> 1;
 
-     return in + 1;
+    return in + 1;
 }
-
 
 static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
                               float *x_min, float *x_max, float *y_min, float *y_max)
@@ -187,10 +181,9 @@ static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
     }
 }
 
-
 void glf_resize(gl_tex_font_p glf, uint16_t font_size)
 {
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if((glf != nullptr) && (glf->ft_face != nullptr))
     {
         const GLint padding = 2;
         GLubyte *buffer;
@@ -200,7 +193,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         int i, ii, i0 = 0;
 
         // clear old atlas, if exists
-        if(glf->gl_tex_indexes != NULL)
+        if(glf->gl_tex_indexes != nullptr)
         {
             if(glf->gl_tex_indexes_count > 0)
             {
@@ -208,7 +201,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             }
             free(glf->gl_tex_indexes);
         }
-        glf->gl_tex_indexes = NULL;
+        glf->gl_tex_indexes = nullptr;
         glf->gl_real_tex_indexes_count = 0;
 
         // resize base font
@@ -228,14 +221,14 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         chars_in_row = glf->gl_tex_width / (font_size + padding);
         chars_in_column = glf->glyphs_count / chars_in_row + 1;
         glf->gl_tex_indexes_count = (chars_in_column * (font_size + padding)) / glf->gl_tex_width + 1;
-        glf->gl_tex_indexes = (GLuint*)malloc(glf->gl_tex_indexes_count * sizeof(GLuint));
+        glf->gl_tex_indexes = static_cast<GLuint*>(malloc(glf->gl_tex_indexes_count * sizeof(GLuint)));
         glGenTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
 
         buffer_size = glf->gl_tex_width * glf->gl_tex_width * sizeof(GLubyte);
-        buffer = (GLubyte*)malloc(buffer_size);
+        buffer = static_cast<GLubyte*>(malloc(buffer_size));
         memset(buffer, 0x00, buffer_size);
 
-        for(i=0,x=0,y=0;i<glf->glyphs_count;i++)
+        for(i = 0, x = 0, y = 0; i < glf->glyphs_count; i++)
         {
             FT_GlyphSlot g;
             glf->glyphs[i].tex_index = 0;
@@ -270,19 +263,18 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 y += glf->font_size + padding;
                 if(y + glf->font_size > glf->gl_tex_width)
                 {
-                    int ii;
                     glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, glf->gl_tex_width, 0, GL_R8, GL_UNSIGNED_BYTE, buffer);
-                    for(ii=i0;ii<i;ii++)
+                    for(int ii2 = i0; ii2 < i; ii2++)
                     {
-                        glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
-                        glf->glyphs[ii].tex_x1 /= (GLfloat)glf->gl_tex_width;
-                        glf->glyphs[ii].tex_y0 /= (GLfloat)glf->gl_tex_width;
-                        glf->glyphs[ii].tex_y1 /= (GLfloat)glf->gl_tex_width;
+                        glf->glyphs[ii2].tex_x0 /= static_cast<GLfloat>(glf->gl_tex_width);
+                        glf->glyphs[ii2].tex_x1 /= static_cast<GLfloat>(glf->gl_tex_width);
+                        glf->glyphs[ii2].tex_y0 /= static_cast<GLfloat>(glf->gl_tex_width);
+                        glf->glyphs[ii2].tex_y1 /= static_cast<GLfloat>(glf->gl_tex_width);
                     }
                     memset(buffer, 0x00, buffer_size);
                     y = 0;
@@ -291,17 +283,17 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 }
             }
 
-            glf->glyphs[i].tex_x0 = (GLfloat)x;
-            glf->glyphs[i].tex_y0 = (GLfloat)y;
-            glf->glyphs[i].tex_x1 = (GLfloat)(x + g->bitmap.width);
-            glf->glyphs[i].tex_y1 = (GLfloat)(y + g->bitmap.rows);
+            glf->glyphs[i].tex_x0 = static_cast<GLfloat>(x);
+            glf->glyphs[i].tex_y0 = static_cast<GLfloat>(y);
+            glf->glyphs[i].tex_x1 = static_cast<GLfloat>(x + g->bitmap.width);
+            glf->glyphs[i].tex_y1 = static_cast<GLfloat>(y + g->bitmap.rows);
 
             glf->glyphs[i].tex_index = glf->gl_tex_indexes[glf->gl_real_tex_indexes_count];
-            for(size_t xx=0; xx<g->bitmap.width; xx++)
+            for(size_t xx = 0; xx < g->bitmap.width; xx++)
             {
-                for(size_t yy=0; yy<g->bitmap.rows; yy++)
+                for(size_t yy = 0; yy < g->bitmap.rows; yy++)
                 {
-                    buffer[(y+yy)*glf->gl_tex_width + (x+xx)] = g->bitmap.buffer[yy * g->bitmap.width + xx];
+                    buffer[(y + yy)*glf->gl_tex_width + (x + xx)] = g->bitmap.buffer[yy * g->bitmap.width + xx];
                 }
             }
 
@@ -309,25 +301,24 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         }
 
         glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         chars_in_column = NextPowerOf2(y + font_size + padding);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, chars_in_column, 0, GL_RED, GL_UNSIGNED_BYTE, buffer);
 
-        for(ii=i0;ii<glf->glyphs_count;ii++)
+        for(ii = i0; ii < glf->glyphs_count; ii++)
         {
-            glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
-            glf->glyphs[ii].tex_x1 /= (GLfloat)glf->gl_tex_width;
-            glf->glyphs[ii].tex_y0 /= (GLfloat)chars_in_column;
-            glf->glyphs[ii].tex_y1 /= (GLfloat)chars_in_column;
+            glf->glyphs[ii].tex_x0 /= static_cast<GLfloat>(glf->gl_tex_width);
+            glf->glyphs[ii].tex_x1 /= static_cast<GLfloat>(glf->gl_tex_width);
+            glf->glyphs[ii].tex_y0 /= static_cast<GLfloat>(chars_in_column);
+            glf->glyphs[ii].tex_y1 /= static_cast<GLfloat>(chars_in_column);
         }
         free(buffer);
         glf->gl_real_tex_indexes_count++;
     }
 }
-
 
 void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
 {
@@ -338,21 +329,19 @@ void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
     glf_resize(glf, font_size);
 }
 
-
 float glf_get_ascender(gl_tex_font_p glf)
 {
-    if((glf->font_size == 0) || (glf->ft_face == NULL))
+    if((glf->font_size == 0) || (glf->ft_face == nullptr))
     {
         return 0.0;
     }
 
-    return (float)(glf->ft_face->ascender) / 64.0f;
+    return static_cast<float>(glf->ft_face->ascender) / 64.0f;
 }
-
 
 uint16_t glf_get_font_size(gl_tex_font_p glf)
 {
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if((glf != nullptr) && (glf->ft_face != nullptr))
     {
         return glf->font_size;
     }
@@ -362,21 +351,22 @@ uint16_t glf_get_font_size(gl_tex_font_p glf)
     }
 }
 
-
 float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
 {
     float x = 0.0;
 
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if((glf != nullptr) && (glf->ft_face != nullptr))
     {
-        uint8_t *nch, *nch2, *ch = (uint8_t*)text;
+        uint8_t *nch;
+        uint8_t *nch2;
+        uint8_t *ch = (uint8_t*)text;
         uint32_t curr_utf32, next_utf32;
         int i;
 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
+        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
 
@@ -387,13 +377,12 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-            x += (GLfloat)(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0f;
+            x += static_cast<GLfloat>(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0;
         }
     }
 
     return x;
 }
-
 
 void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1)
 {
@@ -402,10 +391,11 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
     *y0 = 0.0;
     *y1 = 0.0;
 
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if((glf != nullptr) && (glf->ft_face != nullptr))
     {
-
-        uint8_t *nch, *nch2, *ch = (uint8_t*)text;
+        uint8_t *nch;
+        uint8_t *nch2;
+        uint8_t *ch = (uint8_t*)text;
         float x = 0.0;
         float y = 0.0;
         float xx0, xx1, yy0, yy1;
@@ -415,7 +405,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
+        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
             char_info_p g = glf->glyphs + curr_utf32;
@@ -429,29 +419,29 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
 
-            xx0 = x  + g->left;
+            xx0 = x + g->left;
             xx1 = xx0 + g->width;
-            yy0 = y  + g->top;
+            yy0 = y + g->top;
             yy1 = yy0 - g->height;
             bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
 
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
+            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
+            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
         }
     }
 }
 
-
 void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 {
-    uint8_t *nch, *ch = (uint8_t*)text;
+    uint8_t *nch;
+    uint8_t *ch = (uint8_t*)text;
     FT_Vector kern;
 
-    if((glf == NULL) || (glf->ft_face == NULL) || (text == NULL) || (text[0] == '\0'))
+    if((glf == nullptr) || (glf->ft_face == nullptr) || (text == nullptr) || (text[0] == '\0'))
     {
         return;
     }
-    
+
     FontBuffer_Bind();
 
     if(glf->gl_real_tex_indexes_count == 1)
@@ -477,9 +467,9 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
             if(g->tex_index != 0)
             {
-                GLfloat x0 = x  + g->left;
+                GLfloat x0 = x + g->left;
                 GLfloat x1 = x0 + g->width;
-                GLfloat y0 = y  + g->top;
+                GLfloat y0 = y + g->top;
                 GLfloat y1 = y0 - g->height;
 
                 *p = x0;            p++;
@@ -520,8 +510,8 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 vec4_copy(p, glf->gl_font_color);   p += 4;
                 elements_count++;
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
+            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
+            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
         }
         FontBuffer_Unmap();
         ///RENDER
@@ -537,9 +527,9 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        for(;*ch;)
+        for(; *ch;)
         {
-            GLfloat *p = FontBuffer_ResizeAndMap(sizeof(GLfloat [32]));
+            GLfloat *p = FontBuffer_ResizeAndMap(sizeof(GLfloat[32]));
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 
@@ -559,9 +549,9 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                     active_texture = g->tex_index;
                 }
                 ///RENDER
-                GLfloat x0 = x  + g->left;
+                GLfloat x0 = x + g->left;
                 GLfloat x1 = x0 + g->width;
-                GLfloat y0 = y  + g->top;
+                GLfloat y0 = y + g->top;
                 GLfloat y1 = y0 - g->height;
 
                 *p = x0;            p++;
@@ -587,13 +577,13 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 *p = g->tex_x0;     p++;
                 *p = g->tex_y1;     p++;
                 vec4_copy(p, glf->gl_font_color);
-                
+
                 FontBuffer_Unmap();
 
                 glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0f;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0f;
+            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
+            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
         }
     }
 }
@@ -620,20 +610,18 @@ static uint8_t* utf8_next_symbol(uint8_t *utf8)
     return utf8;
 }
 
-
 uint32_t utf8_strlen(const char *str)
 {
     uint32_t i = 0;
     uint8_t *ch = (uint8_t*)str;
 
-    for(;*ch;i++)
+    for(; *ch; i++)
     {
         ch = utf8_next_symbol(ch);
     }
 
     return i;
 }
-
 
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
 {
@@ -645,7 +633,7 @@ uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
     // save ASC symbol as is
     if(!(b & 0x80))
     {
-       *utf32 = b;
+        *utf32 = b;
         return utf8 + 1;
     }
 
@@ -666,6 +654,6 @@ uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
         shift = 6;
     }
 
-   *utf32 = c;
+    *utf32 = c;
     return u_utf8;
 }

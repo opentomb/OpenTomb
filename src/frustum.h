@@ -6,8 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <LinearMath/btScalar.h>
-
 #include "vmath.h"
 
 struct Room;

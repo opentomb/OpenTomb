@@ -6,14 +6,9 @@
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
-#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
-#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
-#include <BulletCollision/CollisionShapes/btMultiSphereShape.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include "engine.h"
 #include "entity.h"
@@ -73,7 +68,6 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-
 /*
  * default legs offsets
  */
@@ -82,9 +76,9 @@
 #define LEFT_HAND                   (13)
 #define RIGHT_HAND                  (10)
 
-/*
- * ENTITY MOVEMENT TYPES
- */
+ /*
+  * ENTITY MOVEMENT TYPES
+  */
 
 #define MOVE_STATIC_POS         (0)
 #define MOVE_KINEMATIC          (1)
@@ -101,7 +95,7 @@
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
-// Lara's character behavior constants
+  // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0f)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0f + 32.0f)                  ///@FIXME: check original
@@ -162,7 +156,7 @@ constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
 #define CLIMB_ALT_HEIGHT                        (0x02)
 #define CLIMB_FULL_HEIGHT                       (0x03)
 
-// CHARACTER PARAMETERS TYPES
+ // CHARACTER PARAMETERS TYPES
 
 enum CharParameters
 {
@@ -232,13 +226,13 @@ struct HeightInfo
     bool                                        walls_climb = false;
     int8_t                                      walls_climb_dir = 0;
 
-    btVector3                                   floor_normale = {0,0,1};
-    btVector3                                   floor_point = {0,0,0};
+    btVector3                                   floor_normale = { 0,0,1 };
+    btVector3                                   floor_point = { 0,0,0 };
     bool                                        floor_hit = false;
     const btCollisionObject                    *floor_obj = nullptr;
 
-    btVector3                                   ceiling_normale = {0,0,-1};
-    btVector3                                   ceiling_point = {0,0,0};
+    btVector3                                   ceiling_normale = { 0,0,-1 };
+    btVector3                                   ceiling_point = { 0,0,0 };
     bool                                        ceiling_hit = false;
     const btCollisionObject                    *ceiling_obj = nullptr;
 
@@ -250,7 +244,7 @@ struct HeightInfo
 struct CharacterCommand
 {
     btVector3 rot;
-    std::array<int8_t,3> move{{0,0,0}};
+    std::array<int8_t, 3> move{ {0,0,0} };
 
     bool        roll = false;
     bool        jump = false;
@@ -274,8 +268,8 @@ struct CharacterResponse
 
 struct CharacterParam
 {
-    std::array<float,PARAM_SENTINEL> param{{}};
-    std::array<float,PARAM_SENTINEL> maximum{{}};
+    std::array<float, PARAM_SENTINEL> param{ {} };
+    std::array<float, PARAM_SENTINEL> maximum{ {} };
 
     CharacterParam()
     {
@@ -303,11 +297,11 @@ struct InventoryNode
     uint32_t                    max_count;
 };
 
-
 struct Hair;
 struct SSAnimation;
 
-enum class WeaponState {
+enum class WeaponState
+{
     Hide,
     HideToReady,
     Idle,
@@ -331,7 +325,7 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    int(*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -373,22 +367,26 @@ struct Character : public Entity
         pos[1] = m_transform.getOrigin()[1];
         return pos;
     }
-    void transferToRoom(Room* /*room*/) override {
+    void transferToRoom(Room* /*room*/) override
+    {
     }
     void updateHair() override;
     void frameImpl(btScalar time, int16_t frame, int state) override;
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
-    void kill() override {
+    void kill() override
+    {
         m_response.kill = 1;
     }
     virtual Substance getSubstanceState() const override;
-    void updateTransform() override {
+    void updateTransform() override
+    {
         ghostUpdate();
         Entity::updateTransform();
     }
     void updateGhostRigidBody() override;
-    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override {
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override
+    {
         return m_convexCb;
     }
     btVector3 camPosForFollowing(btScalar dz) override;
@@ -440,4 +438,3 @@ struct Character : public Entity
 
 bool IsCharacter(std::shared_ptr<Entity> ent);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
-

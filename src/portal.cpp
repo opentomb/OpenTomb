@@ -1,21 +1,16 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
 
 #include <LinearMath/btScalar.h>
 
 #include "polygon.h"
 #include "portal.h"
 #include "vmath.h"
-#include "camera.h"
-#include "world.h"
-#include "render.h"
-#include "frustum.h"
-#include "engine.h"
 
 /*
  * CLIP PLANES
  */
-
 
 void Portal::move(const btVector3& mv)
 {
@@ -24,7 +19,6 @@ void Portal::move(const btVector3& mv)
         v += mv;
     normal.moveTo(vertices[0]);
 }
-
 
 /**
  * Barycentric method for determining the intersection of a ray and a triangle
@@ -47,9 +41,9 @@ bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
     // The vector that does not change for the entire polygon
     const btVector3 T = rayStart - vertices[0];
 
-    btVector3 edge = vertices[1]-vertices[0];
+    btVector3 edge = vertices[1] - vertices[0];
     // Bypass polygon fan, one of the vectors remains unchanged
-    for(size_t i=2; i<vertices.size(); i++)
+    for(size_t i = 2; i < vertices.size(); i++)
     {
         // PREV
         btVector3 prevEdge = edge;
@@ -76,7 +70,7 @@ bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
  */
 void Portal::genNormale()
 {
-    assert( vertices.size() > 3 );
+    assert(vertices.size() > 3);
     auto v1 = vertices[1] - vertices[0];
     auto v2 = vertices[2] - vertices[1];
     normal.assign(v1, v2, vertices[0]);

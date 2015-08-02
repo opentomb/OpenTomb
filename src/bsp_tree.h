@@ -1,12 +1,8 @@
 #ifndef BSP_TREE_H
 #define BSP_TREE_H
 
-#include <cstring>
-#include <cstdint>
 #include <memory>
 #include <vector>
-
-#include <LinearMath/btScalar.h>
 
 #include "vmath.h"
 
@@ -14,7 +10,8 @@ struct Polygon;
 struct Frustum;
 struct TransparentPolygonReference;
 
-struct BSPFaceRef {
+struct BSPFaceRef
+{
     btTransform transform;
     const TransparentPolygonReference* polygon;
 
@@ -59,6 +56,5 @@ public:
         m_root.reset(new BSPNode());
     }
 };
-
 
 #endif

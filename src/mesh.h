@@ -9,11 +9,8 @@
 
 #include "vertex_array.h"
 #include "object.h"
-#include "vmath.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
-
 
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
@@ -21,7 +18,6 @@
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
-
 
 class btCollisionShape;
 class btRigidBody;
@@ -35,7 +31,8 @@ struct Vertex;
 class Render;
 struct Entity;
 
-struct TransparentPolygonReference {
+struct TransparentPolygonReference
+{
     const struct Polygon *polygon;
     std::shared_ptr<VertexArray> used_vertex_array;
     size_t firstIndex;
@@ -46,9 +43,10 @@ struct TransparentPolygonReference {
 /*
  * Animated version of vertex. Does not contain texture coordinate, because that is in a different VBO.
  */
-struct AnimatedVertex {
+struct AnimatedVertex
+{
     btVector3 position;
-    std::array<float,4> color;
+    std::array<float, 4> color;
     btVector3 normal;
 };
 
@@ -83,8 +81,9 @@ struct BaseMesh
     btVector3 m_bbMax;                                            // AABB bounding volume
     btScalar m_radius;                                                    // radius of the bounding sphere
 #pragma pack(push,1)
-    struct MatrixIndex {
-        int8_t i=0, j=0;
+    struct MatrixIndex
+    {
+        int8_t i = 0, j = 0;
     };
 #pragma pack(pop)
     std::vector<MatrixIndex> m_matrixIndices;                                       // vertices map for skin mesh
@@ -102,7 +101,8 @@ struct BaseMesh
     GLuint                m_animatedVboIndexArray;
     std::shared_ptr<VertexArray> m_animatedVertexArray;
 
-    ~BaseMesh() {
+    ~BaseMesh()
+    {
         clear();
     }
 
@@ -114,7 +114,6 @@ struct BaseMesh
     uint32_t addAnimatedVertex(const Vertex& v);
     void polySortInMesh();
 };
-
 
 /*
  * base sprite structure
@@ -156,7 +155,6 @@ enum LightType
     LT_SUN,
     LT_SHADOW
 };
-
 
 struct Light
 {
@@ -207,7 +205,6 @@ struct AnimSeq
     std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
 };
 
-
 /*
  * room static mesh.
  */
@@ -219,7 +216,7 @@ struct StaticMesh : public Object
     bool hide;                                           // disable static mesh rendering
     btVector3 pos;                                         // model position
     btVector3 rot;                                         // model angles
-    std::array<float,4> tint;                                        // model tint
+    std::array<float, 4> tint;                                        // model tint
 
     btVector3 vbb_min;                                     // visible bounding box
     btVector3 vbb_max;
@@ -240,10 +237,10 @@ struct StaticMesh : public Object
  * thanks to Terry 'Mongoose' Hendrix II
  */
 
-/*
- * SMOOTHED ANIMATIONS STRUCTURES
- * stack matrices are needed for skinned mesh transformations.
- */
+ /*
+  * SMOOTHED ANIMATIONS STRUCTURES
+  * stack matrices are needed for skinned mesh transformations.
+  */
 struct SSBoneTag
 {
     SSBoneTag   *parent;
@@ -259,7 +256,6 @@ struct SSBoneTag
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 };
-
 
 struct SkeletalModel;
 struct Character;
@@ -281,7 +277,7 @@ struct SSAnimation
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 
-    void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
+    void(*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;

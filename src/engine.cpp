@@ -1,11 +1,9 @@
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
@@ -37,8 +35,6 @@
 #include "system.h"
 #include "common.h"
 #include "script.h"
-#include "frustum.h"
-#include "portal.h"
 #include "render.h"
 #include "game.h"
 #include "world.h"
@@ -46,25 +42,21 @@
 #include "mesh.h"
 #include "entity.h"
 #include "resource.h"
-#include "anim_state_control.h"
 #include "gui.h"
 #include "audio.h"
 #include "character_controller.h"
 #include "gameflow.h"
-#include "gl_font.h"
 #include "strings.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
 
-
-SDL_Window             *sdl_window     = NULL;
-SDL_Joystick           *sdl_joystick   = NULL;
-SDL_GameController     *sdl_controller = NULL;
-SDL_Haptic             *sdl_haptic     = NULL;
-SDL_GLContext           sdl_gl_context = 0;
-ALCdevice              *al_device      = NULL;
-ALCcontext             *al_context     = NULL;
+SDL_Window             *sdl_window = nullptr;
+SDL_Joystick           *sdl_joystick = nullptr;
+SDL_GameController     *sdl_controller = nullptr;
+SDL_Haptic             *sdl_haptic = nullptr;
+SDL_GLContext           sdl_gl_context = nullptr;
+ALCdevice              *al_device = nullptr;
+ALCcontext             *al_context = nullptr;
 
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
@@ -75,31 +67,28 @@ btScalar           engine_frame_time = 0.0;
 Camera             engine_camera;
 World              engine_world;
 
-static btScalar   *frame_vertex_buffer           = nullptr;
-static size_t      frame_vertex_buffer_size      = 0;
+static btScalar   *frame_vertex_buffer = nullptr;
+static size_t      frame_vertex_buffer_size = 0;
 static size_t      frame_vertex_buffer_size_left = 0;
 
 lua::State engine_lua;
 
 btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
-btCollisionDispatcher               *bt_engine_dispatcher             = nullptr;
-btGhostPairCallback                 *bt_engine_ghostPairCallback      = nullptr;
-btBroadphaseInterface               *bt_engine_overlappingPairCache   = nullptr;
-btSequentialImpulseConstraintSolver *bt_engine_solver                 = nullptr;
-btDiscreteDynamicsWorld             *bt_engine_dynamicsWorld          = nullptr;
-btOverlapFilterCallback             *bt_engine_filterCallback         = nullptr;
+btCollisionDispatcher               *bt_engine_dispatcher = nullptr;
+btGhostPairCallback                 *bt_engine_ghostPairCallback = nullptr;
+btBroadphaseInterface               *bt_engine_overlappingPairCache = nullptr;
+btSequentialImpulseConstraintSolver *bt_engine_solver = nullptr;
+btDiscreteDynamicsWorld             *bt_engine_dynamicsWorld = nullptr;
+btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 
 RenderDebugDrawer                    debugDrawer;
 
-
 // Debug globals.
 
-btVector3 light_position = {255.0, 255.0, 8.0};
-GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+btVector3 light_position = { 255.0, 255.0, 8.0 };
+GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 EngineContainer* last_cont = nullptr;
-
-
 
 void Engine_InitGL()
 {
@@ -124,13 +113,12 @@ void Engine_InitGL()
     {
         glDisable(GL_MULTISAMPLE);
     }
-
 }
 
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
+    Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -163,11 +151,11 @@ void Engine_InitSDLControls()
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
-                    sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
-                    if(!sdl_haptic)
-                    {
-                        Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
-                    }
+                sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
+                if(!sdl_haptic)
+                {
+                    Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                }
             }
         }
         else
@@ -218,7 +206,7 @@ void Engine_InitSDLVideo()
 
     ///@TODO: is it really needed for correct work?
 
-    if(SDL_GL_LoadLibrary(NULL) < 0)
+    if(SDL_GL_LoadLibrary(nullptr) < 0)
     {
         Sys_Error("Could not init OpenGL driver");
     }
@@ -234,7 +222,7 @@ void Engine_InitSDLVideo()
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
-        sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+        sdl_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
 
         if(!sdl_gl_context)
@@ -245,7 +233,7 @@ void Engine_InitSDLVideo()
 
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
+        maxSamples = (maxSamples > 16) ? (16) : (maxSamples);   // Fix for faulty GL max. sample number.
 
         if(renderer.settings().antialias_samples > maxSamples)
         {
@@ -285,19 +273,19 @@ void Engine_InitSDLVideo()
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
-    ConsoleInfo::instance().addLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
-    ConsoleInfo::instance().addLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), FONTSTYLE_CONSOLE_INFO);
     std::string version = "OpenGL version ";
-    version += (const char*)glGetString(GL_VERSION);
+    version += reinterpret_cast<const char*>(glGetString(GL_VERSION));
     ConsoleInfo::instance().addLine(version, FONTSTYLE_CONSOLE_INFO);
-    ConsoleInfo::instance().addLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), FONTSTYLE_CONSOLE_INFO);
 }
 
 #if !defined(__MACOSX__)
 void Engine_InitSDLImage()
 {
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
-    int init  = IMG_Init(flags);
+    int init = IMG_Init(flags);
 
     if((init & flags) != flags)
     {
@@ -313,14 +301,13 @@ void Engine_InitAL()
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
-        ALC_FREQUENCY,       44100, 0};
-
+        ALC_FREQUENCY,       44100, 0 };
 
     Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
 
     const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
 
-    if (!devlist)
+    if(!devlist)
     {
         Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
@@ -333,7 +320,7 @@ void Engine_InitAL()
 
         if(audio_settings.use_effects)
         {
-            if( alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE )
+            if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
                 Sys_DebugLog(LOG_FILENAME, " EFX supported!");
                 al_device = dev;
@@ -345,7 +332,7 @@ void Engine_InitAL()
                 }
             }
             alcCloseDevice(dev);
-            devlist += std::strlen(devlist)+1;
+            devlist += std::strlen(devlist) + 1;
         }
         else
         {
@@ -376,7 +363,6 @@ void Engine_InitAL()
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 #endif
 }
-
 
 void Engine_Start()
 {
@@ -419,7 +405,7 @@ void Engine_Start()
 #ifdef NDEBUG
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+    SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
     SDL_ShowCursor(0);
 #endif
 
@@ -429,7 +415,6 @@ void Engine_Start()
 
     luaL_dofile(engine_lua.getState(), "autoexec.lua");
 }
-
 
 void Engine_Display()
 {
@@ -480,13 +465,13 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.w = nominalW;
     screen_info.h = nominalH;
 
-    screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
-    screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
-    screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+    screen_info.w_unit = static_cast<float>(nominalW) / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.h_unit = static_cast<float>(nominalH) / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
 
     Gui_Resize();
 
-    engine_camera.setFovAspect(screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
+    engine_camera.setFovAspect(screen_info.fov, static_cast<btScalar>(nominalW) / static_cast<btScalar>(nominalH));
     engine_camera.recalcClipPlanes();
 
     glViewport(0, 0, pixelsW, pixelsH);
@@ -520,10 +505,9 @@ void Engine_Frame(btScalar time)
     Gameflow_Do();
 }
 
-
 void Engine_ShowDebugInfo()
 {
-    GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
+    GLfloat color_array[] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
     light_position = engine_camera.m_pos;
 
@@ -566,21 +550,19 @@ void Engine_ShowDebugInfo()
                 Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", static_cast<Room*>(last_cont->object)->id);
                 break;
         }
-
     }
 
-    if(engine_camera.m_currentRoom != NULL)
+    if(engine_camera.m_currentRoom != nullptr)
     {
         RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.m_pos);
-        if(rs != NULL)
+        if(rs != nullptr)
         {
             Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+            Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
         }
     }
     Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.m_pos[0], engine_camera.m_pos[1], engine_camera.m_pos[2]);
 }
-
 
 /**
  * overlapping room collision filter
@@ -589,15 +571,15 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 {
     EngineContainer* c0, *c1;
 
-    c0 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->getUserPointer();
+    c0 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
     Room* r0 = c0 ? c0->room : nullptr;
-    c1 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
+    c1 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
     Room* r1 = c1 ? c1->room : nullptr;
 
     if(c1 && c1 == c0)
     {
-        if(((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
-                ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
+        if(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
+           static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
         {
             return;                                                             // No self interaction
         }
@@ -630,16 +612,16 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
  */
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 {
-    for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
+    for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        assert( i>=0 && i<bt_engine_dynamicsWorld->getCollisionObjectArray().size() );
+        assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && !body->isStaticObject() && body->getMotionState())
+        if(body && !body->isStaticObject() && body->getMotionState())
         {
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
-            EngineContainer* cont = (EngineContainer*)body->getUserPointer();
+            EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
             if(cont && (cont->object_type == OBJECT_BULLET_MISC))
             {
                 cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
@@ -672,13 +654,13 @@ void Engine_Init_Pre()
 
     Gameflow_Init();
 
-    frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
+    frame_vertex_buffer = static_cast<btScalar*>(malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE));
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
     Com_Init();
     renderer.init();
-    renderer.setCamera( &engine_camera );
+    renderer.setCamera(&engine_camera);
 
     Engine_InitBullet();
 }
@@ -723,13 +705,12 @@ void Engine_InitBullet()
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
-
 void Engine_DumpRoom(Room* r)
 {
     if(r != nullptr)
     {
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->id) : (-1), (r->base_room != nullptr) ? (r->base_room->id) : (-1));
         for(const RoomSector& rs : r->sectors)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs.index_x, rs.index_y, rs.floor, rs.ceiling, rs.portal_to_room);
@@ -775,7 +756,6 @@ void Engine_Destroy()
     Gui_Destroy();
 }
 
-
 void Engine_Shutdown(int val)
 {
     Script_LuaClearTasks();
@@ -804,7 +784,7 @@ void Engine_Shutdown(int val)
 
     if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
     {
-        alcMakeContextCurrent(NULL);
+        alcMakeContextCurrent(nullptr);
         alcDestroyContext(al_context);
     }
 
@@ -818,7 +798,7 @@ void Engine_Shutdown(int val)
     {
         free(frame_vertex_buffer);
     }
-    frame_vertex_buffer = NULL;
+    frame_vertex_buffer = nullptr;
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
 
@@ -829,7 +809,6 @@ void Engine_Shutdown(int val)
 
     exit(val);
 }
-
 
 bool Engine_FileFound(const std::string& name, bool Write)
 {
@@ -862,7 +841,6 @@ int Engine_GetLevelFormat(const std::string& /*name*/)
     return LEVEL_FORMAT_PC;
 }
 
-
 int Engine_GetPCLevelVersion(const std::string& name)
 {
     int ret = TR_UNKNOWN;
@@ -879,10 +857,10 @@ int Engine_GetPCLevelVersion(const std::string& name)
         char ext[5];
         uint8_t check[4];
 
-        ext[0] = name[name.length()-4];                                                   // .
-        ext[1] = toupper(name[name.length()-3]);                                          // P
-        ext[2] = toupper(name[name.length()-2]);                                          // H
-        ext[3] = toupper(name[name.length()-1]);                                          // D
+        ext[0] = name[name.length() - 4];                                                   // .
+        ext[1] = toupper(name[name.length() - 3]);                                          // P
+        ext[2] = toupper(name[name.length() - 2]);                                          // H
+        ext[3] = toupper(name[name.length() - 1]);                                          // D
         ext[4] = 0;
         fread(check, 4, 1, ff);
 
@@ -988,14 +966,12 @@ int Engine_GetPCLevelVersion(const std::string& name)
     return ret;
 }
 
-
 std::string Engine_GetLevelName(const std::string& path)
 {
     if(path.empty())
     {
-        return {};
+        return{};
     }
-
 
     size_t ext = path.find_last_of(".");
     assert(ext != std::string::npos);
@@ -1006,7 +982,7 @@ std::string Engine_GetLevelName(const std::string& path)
     else
         ++start;
 
-    return path.substr(start, ext-start);
+    return path.substr(start, ext - start);
 }
 
 std::string Engine_GetLevelScriptName(int game_version, const std::string& postfix)
@@ -1097,30 +1073,29 @@ int Engine_LoadMap(const std::string& name)
 
     Gui_DrawLoadScreen(100);
 
-
     // Here we can place different platform-specific level loading routines.
 
     switch(Engine_GetLevelFormat(name))
     {
-    case LEVEL_FORMAT_PC:
-        if(Engine_LoadPCLevel(name) == false) return 0;
-        break;
+        case LEVEL_FORMAT_PC:
+            if(Engine_LoadPCLevel(name) == false) return 0;
+            break;
 
-    case LEVEL_FORMAT_PSX:
-        break;
+        case LEVEL_FORMAT_PSX:
+            break;
 
-    case LEVEL_FORMAT_DC:
-        break;
+        case LEVEL_FORMAT_DC:
+            break;
 
-    case LEVEL_FORMAT_OPENTOMB:
-        break;
+        case LEVEL_FORMAT_OPENTOMB:
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
-    engine_world.id   = 0;
-    engine_world.name = 0;
+    engine_world.id = 0;
+    engine_world.name = nullptr;
     engine_world.type = 0;
 
     Game_Prepare();
@@ -1144,14 +1119,16 @@ int Engine_ExecCmd(const char *ch)
     RoomSector* sect;
     FILE *f;
 
-    while(ch!=NULL)
+    while(ch != nullptr)
     {
         pch = ch;
         ch = parse_token(ch, token.data());
         if(!strcmp(token.data(), "help"))
         {
             for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
-            { ConsoleInfo::instance().notify(i); }
+            {
+                ConsoleInfo::instance().notify(i);
+            }
         }
         else if(!strcmp(token.data(), "goto"))
         {
@@ -1213,8 +1190,8 @@ int Engine_ExecCmd(const char *ch)
                 const auto val = atoi(token.data());
                 if((val >=2 ) && (val <= screen_info.h/ConsoleInfo::instance().lineHeight()))
                 {
-                    ConsoleInfo::instance().setVisibleLines( val );
-                    ConsoleInfo::instance().setCursorY( screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines() );
+                    ConsoleInfo::instance().setVisibleLines(val);
+                    ConsoleInfo::instance().setCursorY(screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines());
                 }
                 else
                 {
@@ -1292,8 +1269,8 @@ int Engine_ExecCmd(const char *ch)
                 if(sect)
                 {
                     ConsoleInfo::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                                                   (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    for(uint32_t i=0;i<sect->owner_room->static_mesh.size();i++)
+                                                   static_cast<int>(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
+                    for(uint32_t i = 0; i < sect->owner_room->static_mesh.size(); i++)
                     {
                         ConsoleInfo::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
                     }
@@ -1302,7 +1279,7 @@ int Engine_ExecCmd(const char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             Entity* e = static_cast<Entity*>(cont->object);
-                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->m_transform.getOrigin()[0], (int)e->m_transform.getOrigin()[1], (int)e->m_transform.getOrigin()[2], e->id());
+                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
                         }
                     }
                 }
@@ -1317,8 +1294,8 @@ int Engine_ExecCmd(const char *ch)
                 long int size;
                 char *buf;
                 fseek(f, 0, SEEK_END);
-                size= ftell(f);
-                buf = (char*) malloc((size+1)*sizeof(char));
+                size = ftell(f);
+                buf = static_cast<char*>(malloc((size + 1)*sizeof(char)));
 
                 fseek(f, 0, SEEK_SET);
                 fread(buf, size, sizeof(char), f);
@@ -1337,13 +1314,16 @@ int Engine_ExecCmd(const char *ch)
         else if(token[0])
         {
             ConsoleInfo::instance().addLine(pch, FONTSTYLE_CONSOLE_EVENT);
-            try {
+            try
+            {
                 engine_lua.doString(pch);
             }
-            catch(lua::RuntimeError& error) {
+            catch(lua::RuntimeError& error)
+            {
                 ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
             }
-            catch(lua::LoadError& error) {
+            catch(lua::LoadError& error)
+            {
                 ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
             }
             return 0;
@@ -1353,23 +1333,25 @@ int Engine_ExecCmd(const char *ch)
     return 0;
 }
 
-
 void Engine_InitConfig(const char *filename)
 {
     Engine_InitDefaultGlobals();
 
-    if((filename != NULL) && Engine_FileFound(filename))
+    if((filename != nullptr) && Engine_FileFound(filename))
     {
         lua::State state;
         lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
-        try {
+        try
+        {
             state.doFile(filename);
         }
-        catch(lua::RuntimeError& error) {
+        catch(lua::RuntimeError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
             return;
         }
-        catch(lua::LoadError& error) {
+        catch(lua::LoadError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
             return;
         }
@@ -1386,13 +1368,11 @@ void Engine_InitConfig(const char *filename)
     }
 }
 
-
 int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
     ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
     return static_cast<int>(strlen(str));
 }
-
 
 int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 {
@@ -1413,7 +1393,6 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 
     return ret;
 }
-
 
 int engine_lua_printf(const char *fmt, ...)
 {

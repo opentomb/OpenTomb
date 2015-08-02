@@ -1,4 +1,3 @@
-#include <cmath>
 #include <LinearMath/btScalar.h>
 
 #include "helpers.h"

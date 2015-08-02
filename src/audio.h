@@ -1,13 +1,10 @@
-
 #ifndef AUDIO_H
 #define AUDIO_H
 
 #include <cstdio>
-#include <cstdlib>
 
 #include <AL/al.h>
 #include <AL/alext.h>
-#include <AL/efx.h>
 #include <AL/efx-presets.h>
 #include <AL/efx-creative.h>
 
@@ -15,8 +12,6 @@
 
 #include "vt/vt_level.h"
 #include "game.h"
-#include "script.h"
-#include "system.h"
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid
@@ -46,8 +41,8 @@
 // Also, underwater environment can be considered as additional
 // reverb flag, so overall amount is 6.
 
-enum TR_AUDIO_FX {
-
+enum TR_AUDIO_FX
+{
     TR_AUDIO_FX_OUTSIDE,         // EFX_REVERB_PRESET_CITY
     TR_AUDIO_FX_SMALLROOM,       // EFX_REVERB_PRESET_LIVINGROOM
     TR_AUDIO_FX_MEDIUMROOM,      // EFX_REVERB_PRESET_WOODEN_LONGPASSAGE
@@ -167,7 +162,6 @@ enum TR_AUDIO_SOUND_GLOBALID
     TR_AUDIO_SOUND_GLOBALID_LASTINDEX
 };
 
-
 // NUMBUFFERS is a number of buffers cyclically used for each stream.
 // Double is enough, but we use quad for further stability.
 
@@ -205,7 +199,6 @@ enum TR_AUDIO_STREAM_METHOD
     TR_AUDIO_STREAM_METHOD_TRACK,  // Separate tracks. Used in TR 1, 2, 4, 5.
     TR_AUDIO_STREAM_METHOD_WAD,    // WAD file.  Used in TR3.
     TR_AUDIO_STREAM_METHOD_LASTINDEX
-
 };
 
 // Audio stream type defines stream behaviour. While background track
@@ -220,7 +213,6 @@ enum TR_AUDIO_STREAM_TYPE
     TR_AUDIO_STREAM_TYPE_ONESHOT,       // One-shot music pieces.
     TR_AUDIO_STREAM_TYPE_CHAT,          // Chat tracks.
     TR_AUDIO_STREAM_TYPE_LASTINDEX
-
 };
 
 // Crossfades for different track types are also different,
@@ -256,7 +248,6 @@ enum TR_AUDIO_STREAM_TYPE
 // really wrong with audio subsystem; usually five seconds is enough.
 
 #define TR_AUDIO_DEINIT_DELAY 5.0
-
 
 struct Camera;
 struct Entity;
@@ -327,7 +318,6 @@ struct AudioEmitter
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
 };
 
-
 // Main audio source class.
 
 // Sound source is a complex class, each member of which is linked with
@@ -339,7 +329,7 @@ class AudioSource
 {
 public:
     AudioSource();  // Audio source constructor.
-   ~AudioSource();  // Audio source destructor.
+    ~AudioSource();  // Audio source destructor.
 
     void Play();    // Make source active and play it.
     void Pause();   // Pause source (leaving it active).
@@ -377,7 +367,6 @@ private:
     void SetVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };
 
-
 // Main stream track class is used to create multi-channel soundtrack player,
 // which differs from classic TR scheme, where each new soundtrack interrupted
 // previous one. With flexible class handling, we now can implement multitrack
@@ -387,11 +376,11 @@ class StreamTrack
 {
 public:
     StreamTrack();      // Stream track constructor.
-   ~StreamTrack();      // Stream track destructor.
+    ~StreamTrack();      // Stream track destructor.
 
-    // Load routine prepares track for playing. Arguments are track index,
-    // stream type (background, one-shot or chat) and load method, which
-    // differs for TR1-2, TR3 and TR4-5.
+     // Load routine prepares track for playing. Arguments are track index,
+     // stream type (background, one-shot or chat) and load method, which
+     // differs for TR1-2, TR3 and TR4-5.
 
     bool Load(const char *path, const int index, const int type, const int load_method);
     bool Unload();

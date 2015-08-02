@@ -3,8 +3,6 @@
 #include <cstdint>
 #include <LinearMath/btScalar.h>
 
-#include "gl_util.h"
-
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"
 #define GL_LOG_FILENAME  "gl.log"

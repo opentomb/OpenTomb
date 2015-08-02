@@ -1,4 +1,3 @@
-
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
@@ -6,7 +5,6 @@
 #include "entity.h"
 #include "render.h"
 #include "character_controller.h"
-
 
 #define GUI_MAX_TEMP_LINES   (256)
 
@@ -51,21 +49,21 @@ enum font_Type
 ///@TODO: add system message console style
 enum font_Style
 {
-        FONTSTYLE_CONSOLE_INFO,
-        FONTSTYLE_CONSOLE_WARNING,
-        FONTSTYLE_CONSOLE_EVENT,
-        FONTSTYLE_CONSOLE_NOTIFY,
-        FONTSTYLE_MENU_TITLE,
-        FONTSTYLE_MENU_HEADING1,
-        FONTSTYLE_MENU_HEADING2,
-        FONTSTYLE_MENU_ITEM_ACTIVE,
-        FONTSTYLE_MENU_ITEM_INACTIVE,
-        FONTSTYLE_MENU_CONTENT,
-        FONTSTYLE_STATS_TITLE,
-        FONTSTYLE_STATS_CONTENT,
-        FONTSTYLE_NOTIFIER,
-        FONTSTYLE_SAVEGAMELIST,
-        FONTSTYLE_GENERIC
+    FONTSTYLE_CONSOLE_INFO,
+    FONTSTYLE_CONSOLE_WARNING,
+    FONTSTYLE_CONSOLE_EVENT,
+    FONTSTYLE_CONSOLE_NOTIFY,
+    FONTSTYLE_MENU_TITLE,
+    FONTSTYLE_MENU_HEADING1,
+    FONTSTYLE_MENU_HEADING2,
+    FONTSTYLE_MENU_ITEM_ACTIVE,
+    FONTSTYLE_MENU_ITEM_INACTIVE,
+    FONTSTYLE_MENU_CONTENT,
+    FONTSTYLE_STATS_TITLE,
+    FONTSTYLE_STATS_CONTENT,
+    FONTSTYLE_NOTIFIER,
+    FONTSTYLE_SAVEGAMELIST,
+    FONTSTYLE_GENERIC
 };
 
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
@@ -111,7 +109,6 @@ typedef struct gui_fontstyle_s
 #define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9f
 #define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7f
 
-
 // Font manager is a singleton class which is used to manage all in-game fonts
 // and font styles. Every time you want to change font or style, font manager
 // functions should be used.
@@ -120,7 +117,7 @@ class gui_FontManager
 {
 public:
     gui_FontManager();
-   ~gui_FontManager();
+    ~gui_FontManager();
 
     bool             AddFont(const font_Type index,
                              const uint32_t size,
@@ -200,7 +197,6 @@ typedef struct gui_text_line_s
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
 
-
 typedef struct gui_rect_s
 {
     GLfloat                     rect[4];
@@ -229,7 +225,6 @@ typedef struct gui_rect_s
 
     char                       *lua_click_function;
 } gui_rect_t, *gui_rect_p;
-
 
 // Fader is a simple full-screen rectangle, which always sits above the scene,
 // and, when activated, either shows or hides gradually - hence, creating illusion
@@ -300,7 +295,7 @@ public:
     void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
-    void SetAlpha(uint8_t alpha  = 255);
+    void SetAlpha(uint8_t alpha = 255);
     void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
     void SetDelay(uint32_t delay_msec);
 
@@ -336,7 +331,6 @@ private:
     float           mCurrentTime;           // Current fader time.
     float           mMaxTime;               // Maximum delay time.
 };
-
 
 // Immutable bars enumeration.
 // These are the bars that are always exist in GUI.
@@ -602,7 +596,7 @@ public:
     }
     bool IsMoving()
     {
-        if (mMovementH!=0 || mMovementDirectionV!=0 || mMovementDirectionC!=0)
+        if(mMovementH != 0 || mMovementDirectionV != 0 || mMovementDirectionC != 0)
             return true;
         return false;
     }
@@ -637,7 +631,7 @@ private:
     int                         mCurrentItemsType;
     int                         mCurrentItemsCount;
     int                         mItemsOffset;
-    
+
     float                       mRingRotatePeriod;
     float                       mRingTime;
     float                       mRingAngle;
@@ -646,14 +640,14 @@ private:
     float                       mBaseRingRadius;
     float                       mRingRadius;
     float                       mVerticalOffset;
-    
+
     float                       mItemRotatePeriod;
     float                       mItemTime;
     float                       mItemAngle;
-    
+
     int getItemsTypeCount(int type);
     void restoreItemAngle(float time);
-    
+
 public:
     enum inventoryState
     {
@@ -674,7 +668,7 @@ public:
     char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
     gui_InventoryManager();
-   ~gui_InventoryManager();
+    ~gui_InventoryManager();
 
     int getCurrentState()
     {
@@ -695,14 +689,13 @@ public:
     {
         return mCurrentItemsType;
     }
-    
+
     int setItemsType(int type);
     void setInventory(std::list<InventoryNode> *i);
     void setTitle(int items_type);
     void frame(float time);
     void render();
 };
-
 
 extern gui_InventoryManager  *main_inventory_manager;
 //extern gui_InventoryMenu     *main_inventory_menu;
@@ -764,7 +757,7 @@ bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeStop(int fader);
 bool Gui_FadeAssignPic(int fader, const std::string &pic_name);
 int  Gui_FadeCheck(int fader);
-void Gui_FadeSetup(int fader, 
+void Gui_FadeSetup(int fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed);
 

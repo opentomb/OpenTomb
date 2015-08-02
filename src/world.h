@@ -1,4 +1,3 @@
-
 #ifndef WORLD_H
 #define WORLD_H
 
@@ -13,7 +12,6 @@
 #include "audio.h"
 #include "camera.h"
 #include "bordered_texture_atlas.h"
-
 
 // Native TR floor data functions
 
@@ -182,7 +180,6 @@ struct Entity;
 struct SkeletalModel;
 struct RedBlackHeader_s;
 struct SSBoneFrame;
-
 
 struct BaseItem
 {
@@ -353,15 +350,13 @@ struct Room : public Object
     bool isPointIn(const btVector3& dot)
     {
         return (dot[0] >= bb_min[0]) && (dot[0] < bb_max[0]) &&
-                (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
-                (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
+            (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
+            (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
     }
 
     RoomSector* getSectorRaw(const btVector3 &pos);
-    RoomSector* getSectorCheckFlip(const btVector3& pos);
     RoomSector* getSectorXYZ(const btVector3 &pos);
 };
-
 
 struct World
 {
@@ -373,7 +368,8 @@ struct World
 
     std::vector<RoomBox> room_boxes;
 
-    struct FlipInfo {
+    struct FlipInfo
+    {
         uint8_t map = 0; // Flipped room activity
         uint8_t state = 0; // Flipped room state
     };

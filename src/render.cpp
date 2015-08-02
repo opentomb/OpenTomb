@@ -1,6 +1,4 @@
-
 #include <cmath>
-#include <cstdlib>
 #include <algorithm>
 
 #include <LinearMath/btScalar.h>
@@ -13,7 +11,6 @@
 #include "frustum.h"
 #include "polygon.h"
 #include "camera.h"
-#include "script.h"
 #include "vmath.h"
 #include "mesh.h"
 #include "hair.h"
@@ -36,9 +33,8 @@ void Render::initGlobals()
 
 void Render::doShaders()
 {
-    m_shaderManager.reset( new ShaderManager() );
+    m_shaderManager.reset(new ShaderManager());
 }
-
 
 void Render::init()
 {
@@ -66,7 +62,6 @@ void Render::init()
     m_drawPoints = false;
 }
 
-
 void Render::empty()
 {
     m_world = nullptr;
@@ -76,15 +71,14 @@ void Render::empty()
     m_shaderManager.reset();
 }
 
-
 void Render::renderSkyBox(const matrix4& modelViewProjectionMatrix)
 {
-    if(m_drawSkybox && (m_world != NULL) && (m_world->sky_box != NULL))
+    if(m_drawSkybox && (m_world != nullptr) && (m_world->sky_box != nullptr))
     {
         glDepthMask(GL_FALSE);
         btTransform tr;
         tr.getOrigin() = m_cam->m_pos + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset;
-        tr.setRotation( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
+        tr.setRotation(m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
         matrix4 fullView = modelViewProjectionMatrix * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -109,40 +103,40 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
         // Respecify the tex coord buffer
         glBindBuffer(GL_ARRAY_BUFFER, mesh->m_animatedVboTexCoordArray);
         // Tell OpenGL to discard the old values
-        glBufferData(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat[2]), nullptr, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
-        GLfloat *data = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        GLfloat *data = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
 
         size_t offset = 0;
         for(const struct Polygon& p : mesh->m_polygons)
         {
-            if (p.anim_id == 0 || p.isBroken())
+            if(p.anim_id == 0 || p.isBroken())
             {
                 continue;
             }
 
-            AnimSeq* seq = &engine_world.anim_sequences[ p.anim_id - 1 ];
+            AnimSeq* seq = &engine_world.anim_sequences[p.anim_id - 1];
 
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
             TexFrame* tf = &seq->frames[frame];
             for(const Vertex& vert : p.vertices)
             {
                 const auto& v = vert.tex_coord;
-                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+                data[offset + 0] = tf->mat[0 + 0 * 2] * v[0] + tf->mat[0 + 1 * 2] * v[1] + tf->move[0];
+                data[offset + 1] = tf->mat[1 + 0 * 2] * v[0] + tf->mat[1 + 1 * 2] * v[1] + tf->move[1];
 
                 offset += 2;
             }
         }
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
-        if (mesh->m_animatedElementCount > 0)
+        if(mesh->m_animatedElementCount > 0)
         {
             mesh->m_animatedVertexArray->bind();
 
             //! @bug textures[0] only works if all animated textures are on the first page
             glBindTexture(GL_TEXTURE_2D, m_world->textures[0]);
-            glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, nullptr);
         }
     }
 
@@ -167,7 +161,6 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
     }
 }
 
-
 /**
  * draw transparency polygons
  */
@@ -179,7 +172,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     // them if you will force type via TRTextur utility.
     const TransparentPolygonReference* ref = bsp_ref.polygon;
     const struct Polygon *p = ref->polygon;
-    if (currentTransparency != p->transparency)
+    if(currentTransparency != p->transparency)
     {
         currentTransparency = p->transparency;
         switch(p->transparency)
@@ -216,9 +209,8 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
 
-    glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, (GLvoid *) (sizeof(GLuint) * ref->firstIndex));
+    glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * ref->firstIndex));
 }
-
 
 void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
@@ -226,7 +218,7 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
 
     if(d >= 0)
     {
-        if(root->front != NULL)
+        if(root->front != nullptr)
         {
             renderBSPFrontToBack(currentTransparency, root->front, shader);
         }
@@ -240,14 +232,14 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
             renderPolygonTransparency(currentTransparency, p, shader);
         }
 
-        if(root->back != NULL)
+        if(root->back != nullptr)
         {
             renderBSPFrontToBack(currentTransparency, root->back, shader);
         }
     }
     else
     {
-        if(root->back != NULL)
+        if(root->back != nullptr)
         {
             renderBSPFrontToBack(currentTransparency, root->back, shader);
         }
@@ -261,7 +253,7 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
             renderPolygonTransparency(currentTransparency, p, shader);
         }
 
-        if(root->front != NULL)
+        if(root->front != nullptr)
         {
             renderBSPFrontToBack(currentTransparency, root->front, shader);
         }
@@ -274,7 +266,7 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
 
     if(d >= 0)
     {
-        if(root->back != NULL)
+        if(root->back != nullptr)
         {
             renderBSPBackToFront(currentTransparency, root->back, shader);
         }
@@ -288,14 +280,14 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
             renderPolygonTransparency(currentTransparency, p, shader);
         }
 
-        if(root->front != NULL)
+        if(root->front != nullptr)
         {
             renderBSPBackToFront(currentTransparency, root->front, shader);
         }
     }
     else
     {
-        if(root->front != NULL)
+        if(root->front != nullptr)
         {
             renderBSPBackToFront(currentTransparency, root->front, shader);
         }
@@ -309,7 +301,7 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
             renderPolygonTransparency(currentTransparency, p, shader);
         }
 
-        if(root->back != NULL)
+        if(root->back != nullptr)
         {
             renderBSPBackToFront(currentTransparency, root->back, shader);
         }
@@ -321,7 +313,8 @@ void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::uniq
  */
 void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame *bframe, const matrix4& mvMatrix, const matrix4& mvpMatrix)
 {
-    for(const SSBoneTag& btag : bframe->bone_tags) {
+    for(const SSBoneTag& btag : bframe->bone_tags)
+    {
         matrix4 mvTransform = mvMatrix * btag.full_transform;
         glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
 
@@ -329,7 +322,8 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame
         glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform.c_ptr());
 
         renderMesh(btag.mesh_base);
-        if(btag.mesh_slot) {
+        if(btag.mesh_slot)
+        {
             renderMesh(btag.mesh_slot);
         }
     }
@@ -341,7 +335,7 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, Entity*
 
     glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
 
-    for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++,btag++)
+    for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++, btag++)
     {
         GLfloat transforms[32];
         matrix4 mvTransforms = mvMatrix * btag->full_transform;
@@ -371,11 +365,11 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
 {
     glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
 
-    for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++)
+    for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++)
     {
         matrix4 mvTransforms[2];
 
-        matrix4 tr0( ent->m_bt.bt_body[i]->getWorldTransform() );
+        matrix4 tr0(ent->m_bt.bt_body[i]->getWorldTransform());
         matrix4 tr1;
 
         mvTransforms[0] = mvMatrix * tr0;
@@ -383,14 +377,16 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
         // Calculate parent transform
         SSBoneTag &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
-        for (size_t j = 0; j < ent->m_bf.bone_tags.size(); j++) {
-            if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
+        for(size_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
+        {
+            if(&(ent->m_bf.bone_tags[j]) == btag.parent)
+            {
                 tr1 = matrix4(ent->m_bt.bt_body[j]->getWorldTransform());
                 foundParentTransform = true;
                 break;
             }
         }
-        if (!foundParentTransform)
+        if(!foundParentTransform)
             tr1 = matrix4(ent->m_transform);
 
         btTransform translate;
@@ -420,7 +416,8 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, Entity*
 const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matrix4 &modelViewMatrix, bool skin)
 {
     // Calculate lighting
-    if(!entity->m_self || !entity->m_self->room) {
+    if(!entity->m_self || !entity->m_self->room)
+    {
         const LitShaderDescription *shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgram(shader->program);
         return shader;
@@ -440,19 +437,18 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
     }
 
     GLenum current_light_number = 0;
-    Light *current_light = NULL;
 
-    GLfloat positions[MAX_NUM_LIGHTS*3];
-    GLfloat colors[MAX_NUM_LIGHTS*4];
-    GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
-    GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
+    GLfloat positions[MAX_NUM_LIGHTS * 3];
+    GLfloat colors[MAX_NUM_LIGHTS * 4];
+    GLfloat innerRadiuses[1 * MAX_NUM_LIGHTS];
+    GLfloat outerRadiuses[1 * MAX_NUM_LIGHTS];
     memset(colors, 0, sizeof(colors));
     memset(innerRadiuses, 0, sizeof(innerRadiuses));
     memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
     for(uint32_t i = 0; i < room->lights.size() && current_light_number < MAX_NUM_LIGHTS; i++)
     {
-        current_light = &room->lights[i];
+        Light *current_light = &room->lights[i];
 
         btVector3 xyz = entity->m_transform.getOrigin() - current_light->pos;
         btScalar distance = xyz.length();
@@ -465,14 +461,14 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
 
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            engine_world.calculateWaterTint(&colors[current_light_number*4], false);
+            engine_world.calculateWaterTint(&colors[current_light_number * 4], false);
         }
 
         // Find position
         float4 tmpPos = modelViewMatrix * current_light->pos;
-        positions[current_light_number*3 + 0] = tmpPos[0];
-        positions[current_light_number*3 + 1] = tmpPos[1];
-        positions[current_light_number*3 + 2] = tmpPos[2];
+        positions[current_light_number * 3 + 0] = tmpPos[0];
+        positions[current_light_number * 3 + 1] = tmpPos[1];
+        positions[current_light_number * 3 + 2] = tmpPos[2];
 
         // Find fall-off
         if(current_light->light_type == LT_SUN)
@@ -516,7 +512,7 @@ void Render::renderEntity(Entity* entity, const matrix4 &modelViewMatrix, const 
         {
             renderDynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
-            if (entity->m_bf.bone_tags[0].mesh_skin)
+            if(entity->m_bf.bone_tags[0].mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderDynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
@@ -524,12 +520,13 @@ void Render::renderEntity(Entity* entity, const matrix4 &modelViewMatrix, const 
         }
         else
         {
-            matrix4 scaledTransform( entity->m_transform );
+            matrix4 scaledTransform(entity->m_transform);
             scaledTransform *= matrix4::diagonal(float4(entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z()));
             matrix4 subModelView = modelViewMatrix * scaledTransform;
             matrix4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
-            if (entity->m_bf.bone_tags[0].mesh_skin) {
+            if(entity->m_bf.bone_tags[0].mesh_skin)
+            {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderSkeletalModelSkin(skinShader, entity, subModelView, projection);
             }
@@ -541,9 +538,9 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* ent
 {
     SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
-    for(uint16_t i=0; i<entity->m_bf.bone_tags.size(); i++,btag++)
+    for(uint16_t i = 0; i < entity->m_bf.bone_tags.size(); i++, btag++)
     {
-        matrix4 tr( entity->m_bt.bt_body[i]->getWorldTransform() );
+        matrix4 tr(entity->m_bt.bt_body[i]->getWorldTransform());
         matrix4 mvTransform = modelViewMatrix * tr;
 
         glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
@@ -568,11 +565,10 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity.get(), modelViewMatrix, true);
 
-
-    for(size_t h=0; h<entity->m_hairs.size(); h++)
+    for(size_t h = 0; h < entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        matrix4 globalHead( entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform );
+        matrix4 globalHead(entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform);
         matrix4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
@@ -581,9 +577,9 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
         std::copy_n((modelViewMatrix * globalAttachment).c_ptr(), 16, &hairModelToGlobalMatrices[0][0]);
 
         // Then: Individual hair pieces
-        for(size_t i=0; i<entity->m_hairs[h]->m_elements.size(); i++)
+        for(size_t i = 0; i < entity->m_hairs[h]->m_elements.size(); i++)
         {
-            assert(i+1 < MatrixCount);
+            assert(i + 1 < MatrixCount);
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
              * (translated)
@@ -607,12 +603,12 @@ void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelV
             // Simplification: Always translation matrix, no invert needed
             invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
 
-            matrix4 globalFromHair( entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel );
+            matrix4 globalFromHair(entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel);
 
-            std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i+1][0]);
+            std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i + 1][0]);
         }
 
-        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, &hairModelToGlobalMatrices[0][0]);
+        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size() + 1, GL_FALSE, &hairModelToGlobalMatrices[0][0]);
 
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projection.c_ptr());
 
@@ -628,7 +624,8 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
 #if STENCIL_FRUSTUM
     ////start test stencil test code
     bool need_stencil = false;
-    if(!room->frustum.empty()) {
+    if(!room->frustum.empty())
+    {
         for(const std::shared_ptr<Room>& r : room->overlapped_room_list)
         {
             if(std::find(m_renderList.begin(), m_renderList.end(), r.get()) != m_renderList.end())
@@ -652,19 +649,21 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
             glGenBuffers(1, &stencilVBO);
 
             VertexArrayAttribute attribs[] = {
-                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat[3]), 0)
             };
 
-            std::unique_ptr<VertexArray> array( new VertexArray(0, 1, attribs) );
+            std::unique_ptr<VertexArray> array(new VertexArray(0, 1, attribs));
             array->bind();
 
-            for(const auto& f : room->frustum) {
+            for(const auto& f : room->frustum)
+            {
                 glBindBuffer(GL_ARRAY_BUFFER, stencilVBO);
                 glBufferData(GL_ARRAY_BUFFER, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW);
 
-                GLfloat *v = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+                GLfloat *v = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
 
-                for(int16_t i=f->vertices.size()-1;i>=0;i--) {
+                for(int16_t i = f->vertices.size() - 1; i >= 0; i--)
+                {
                     *v++ = f->vertices[i].x();
                     *v++ = f->vertices[i].y();
                     *v++ = f->vertices[i].z();
@@ -691,13 +690,13 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
         glUseProgram(shader->program);
 
         glUniform4fv(shader->tint_mult, 1, tint);
-        glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
+        glUniform1f(shader->current_tick, static_cast<GLfloat>(SDL_GetTicks()));
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform.c_ptr());
         renderMesh(room->mesh);
     }
 
-    if (!room->static_mesh.empty())
+    if(!room->static_mesh.empty())
     {
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
@@ -728,23 +727,23 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
         }
     }
 
-    if (!room->containers.empty())
+    if(!room->containers.empty())
     {
         for(const std::shared_ptr<EngineContainer>& cont : room->containers)
         {
             switch(cont->object_type)
             {
-            case OBJECT_ENTITY:
-                Entity* ent = static_cast<Entity*>(cont->object);
-                if(!ent->m_wasRendered)
-                {
-                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
+                case OBJECT_ENTITY:
+                    Entity* ent = static_cast<Entity*>(cont->object);
+                    if(!ent->m_wasRendered)
                     {
-                        renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
+                        if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
+                        {
+                            renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
+                        }
+                        ent->m_wasRendered = true;
                     }
-                    ent->m_wasRendered = true;
-                }
-                break;
+                    break;
             };
         }
     }
@@ -756,10 +755,9 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
 #endif
 }
 
-
 void Render::renderRoomSprites(const Room* room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix)
 {
-    if (!room->sprites.empty() && room->sprite_buffer)
+    if(!room->sprites.empty() && room->sprite_buffer)
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
@@ -778,12 +776,11 @@ void Render::renderRoomSprites(const Room* room, const matrix4 &modelViewMatrix,
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
+            glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
     }
 }
-
 
 /**
  * Add a room to the render list.
@@ -811,10 +808,10 @@ bool Render::addRoom(Room* room)
     {
         switch(cont->object_type)
         {
-        case OBJECT_ENTITY:
-            static_cast<Entity*>(cont->object)->m_wasRendered = false;
-            static_cast<Entity*>(cont->object)->m_wasRenderedLines = false;
-            break;
+            case OBJECT_ENTITY:
+                static_cast<Entity*>(cont->object)->m_wasRendered = false;
+                static_cast<Entity*>(cont->object)->m_wasRenderedLines = false;
+                break;
         };
     }
 
@@ -826,7 +823,6 @@ bool Render::addRoom(Room* room)
     return true;
 }
 
-
 void Render::cleanList()
 {
     if(m_world->character)
@@ -835,7 +831,8 @@ void Render::cleanList()
         m_world->character->m_wasRenderedLines = false;
     }
 
-    for(Room* room : m_renderList) {
+    for(Room* room : m_renderList)
+    {
         room->frustum.clear();
     }
 
@@ -889,7 +886,7 @@ void Render::drawList()
     {
         if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, {m_cam->frustum});
+            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, { m_cam->frustum });
         }
     }
 
@@ -900,7 +897,7 @@ void Render::drawList()
         {
             if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *room))
             {
-                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, {m_cam->frustum});
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum });
             }
         }
 
@@ -912,12 +909,12 @@ void Render::drawList()
                 Entity* ent = static_cast<Entity*>(cont->object);
                 if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room)))
                 {
-                    for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
+                    for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
                     {
                         if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                         {
                             auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {m_cam->frustum});
+                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum });
                         }
                     }
                 }
@@ -925,15 +922,15 @@ void Render::drawList()
         }
     }
 
-    if((engine_world.character != NULL) && (engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine_world.character != nullptr) && (engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         Entity *ent = engine_world.character.get();
-        for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
+        for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
         {
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
             {
                 auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {m_cam->frustum});
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum });
             }
         }
     }
@@ -956,7 +953,7 @@ void Render::drawList()
 
 void Render::drawListDebugLines()
 {
-    if (!m_world || !(m_drawBoxes || m_drawRoomBoxes || m_drawPortals || m_drawFrustums || m_drawAxis || m_drawNormals || m_drawColl))
+    if(!m_world || !(m_drawBoxes || m_drawRoomBoxes || m_drawPortals || m_drawFrustums || m_drawAxis || m_drawNormals || m_drawColl))
     {
         return;
     }
@@ -995,8 +992,8 @@ void Render::drawListDebugLines()
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
         glBindTexture(GL_TEXTURE_2D, engine_world.textures.back());
-        glPointSize( 6.0f );
-        glLineWidth( 3.0f );
+        glPointSize(6.0f);
+        glLineWidth(3.0f);
         debugDrawer.render();
     }
 }
@@ -1023,7 +1020,8 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
         if(p.dest_room && p.dest_room->active && p.dest_room != current)
         {
             auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);             // Главная ф-я портального рендерера. Тут и проверка
-            if(gen_frus) {
+            if(gen_frus)
+            {
                 ret++;
                 addRoom(p.dest_room.get());
                 processRoom(&p, gen_frus);
@@ -1038,7 +1036,7 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
  */
 void Render::genWorldList()
 {
-    if(m_world == NULL)
+    if(m_world == nullptr)
     {
         return;
     }
@@ -1050,7 +1048,7 @@ void Render::genWorldList()
     Room* curr_room = Room_FindPosCogerrence(m_cam->m_pos, m_cam->m_currentRoom);                // find room that contains camera
 
     m_cam->m_currentRoom = curr_room;                                     // set camera's cuttent room pointer
-    if(curr_room != NULL)                                                       // camera located in some room
+    if(curr_room != nullptr)                                                       // camera located in some room
     {
         curr_room->frustum.clear();                                              // room with camera inside has no frustums!
         curr_room->max_path = 0;
@@ -1058,7 +1056,8 @@ void Render::genWorldList()
         for(Portal& p : curr_room->portals)                   // go through all start room portals
         {
             auto last_frus = Frustum::portalFrustumIntersect(&p, m_cam->frustum, this);
-            if(last_frus) {
+            if(last_frus)
+            {
                 addRoom(p.dest_room.get());                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
                 processRoom(&p, last_frus);                               // next start reccursion algorithm
@@ -1096,7 +1095,7 @@ void Render::setWorld(World *world)
 
     m_cam = &engine_camera;
     //engine_camera.frustum->next = NULL;
-    engine_camera.m_currentRoom = NULL;
+    engine_camera.m_currentRoom = nullptr;
 }
 
 /**
@@ -1116,19 +1115,19 @@ void RenderDebugDrawer::reset()
     m_buffer.clear();
 }
 
-void RenderDebugDrawer::addLine(const std::array<GLfloat,3>& start, const std::array<GLfloat,3>& end)
+void RenderDebugDrawer::addLine(const std::array<GLfloat, 3>& start, const std::array<GLfloat, 3>& end)
 {
     addLine(start, m_color, end, m_color);
 }
 
 void RenderDebugDrawer::addLine(const btVector3& start, const btVector3& end)
 {
-    std::array<GLfloat,3> startA{{start.x(), start.y(), start.z()}};
-    std::array<GLfloat,3> endA{{end.x(), end.y(), end.z()}};
+    std::array<GLfloat, 3> startA{ {start.x(), start.y(), start.z()} };
+    std::array<GLfloat, 3> endA{ {end.x(), end.y(), end.z()} };
     addLine(startA, m_color, endA, m_color);
 }
 
-void RenderDebugDrawer::addLine(const std::array<GLfloat,3>& start, const std::array<GLfloat,3>& startColor, const std::array<GLfloat,3>& end, const std::array<GLfloat,3>& endColor)
+void RenderDebugDrawer::addLine(const std::array<GLfloat, 3>& start, const std::array<GLfloat, 3>& startColor, const std::array<GLfloat, 3>& end, const std::array<GLfloat, 3>& endColor)
 {
     m_buffer.emplace_back(start);
     m_buffer.emplace_back(startColor);
@@ -1138,26 +1137,26 @@ void RenderDebugDrawer::addLine(const std::array<GLfloat,3>& start, const std::a
 
 void RenderDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3 &color)
 {
-    std::array<GLfloat,3> fromA{{from.x(), from.y(), from.z()}};
-    std::array<GLfloat,3> toA{{to.x(), to.y(), to.z()}};
-    std::array<GLfloat,3> colorA{{color.x(), color.y(), color.z()}};
+    std::array<GLfloat, 3> fromA{ {from.x(), from.y(), from.z()} };
+    std::array<GLfloat, 3> toA{ {to.x(), to.y(), to.z()} };
+    std::array<GLfloat, 3> colorA{ {color.x(), color.y(), color.z()} };
     addLine(fromA, colorA, toA, colorA);
 }
 
 void RenderDebugDrawer::setDebugMode(int debugMode)
 {
-   m_debugMode = debugMode;
+    m_debugMode = debugMode;
 }
 
 void RenderDebugDrawer::draw3dText(const btVector3& /*location*/, const char* /*textString*/)
 {
-   //glRasterPos3f(location.x(),  location.y(),  location.z());
-   //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
+    //glRasterPos3f(location.x(),  location.y(),  location.z());
+    //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
 }
 
 void RenderDebugDrawer::reportErrorWarning(const char* warningString)
 {
-   ConsoleInfo::instance().addLine(warningString, FONTSTYLE_CONSOLE_WARNING);
+    ConsoleInfo::instance().addLine(warningString, FONTSTYLE_CONSOLE_WARNING);
 }
 
 void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB, const btVector3& normalOnB, btScalar distance, int /*lifeTime*/, const btVector3& color)
@@ -1169,24 +1168,25 @@ void RenderDebugDrawer::render()
 {
     if(!m_buffer.empty())
     {
-        if (m_glbuffer == 0) {
+        if(m_glbuffer == 0)
+        {
             glGenBuffers(1, &m_glbuffer);
             VertexArrayAttribute attribs[] = {
                 VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), 0),
                 VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
             };
-            m_vertexArray.reset( new VertexArray(0, 2, attribs) );
+            m_vertexArray.reset(new VertexArray(0, 2, attribs));
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, m_glbuffer);
         glBufferData(GL_ARRAY_BUFFER, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
 
-        std::array<GLfloat,3>* data = static_cast<std::array<GLfloat,3>*>( glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY) );
+        std::array<GLfloat, 3>* data = static_cast<std::array<GLfloat, 3>*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
         std::copy(m_buffer.begin(), m_buffer.end(), data);
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
         m_vertexArray->bind();
-        glDrawArrays(GL_LINES, 0, m_buffer.size()/2);
+        glDrawArrays(GL_LINES, 0, m_buffer.size() / 2);
     }
 
     m_color.fill(0);
@@ -1195,35 +1195,35 @@ void RenderDebugDrawer::render()
 
 void RenderDebugDrawer::drawAxis(btScalar r, const btTransform &transform)
 {
-    std::array<GLfloat,3> origin{{ transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() }};
+    std::array<GLfloat, 3> origin{ { transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() } };
 
     btVector3 v = transform.getBasis().getColumn(0) * r;
     v += transform.getOrigin();
     m_buffer.push_back(origin);
-    m_buffer.push_back({{1.0, 0.0, 0.0}});
-    m_buffer.push_back({{v.x(), v.y(), v.z()}});
-    m_buffer.push_back({{1.0, 0.0, 0.0}});
+    m_buffer.push_back({ {1.0, 0.0, 0.0} });
+    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {1.0, 0.0, 0.0} });
 
     v = transform.getBasis().getColumn(1) * r;
     v += transform.getOrigin();
     m_buffer.push_back(origin);
-    m_buffer.push_back({{0.0, 1.0, 0.0}});
-    m_buffer.push_back({{v.x(), v.y(), v.z()}});
-    m_buffer.push_back({{0.0, 1.0, 0.0}});
+    m_buffer.push_back({ {0.0, 1.0, 0.0} });
+    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {0.0, 1.0, 0.0} });
 
     v = transform.getBasis().getColumn(2) * r;
     v += transform.getOrigin();
     m_buffer.push_back(origin);
-    m_buffer.push_back({{0.0, 0.0, 1.0}});
-    m_buffer.push_back({{v.x(), v.y(), v.z()}});
-    m_buffer.push_back({{0.0, 0.0, 1.0}});
+    m_buffer.push_back({ {0.0, 0.0, 1.0} });
+    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {0.0, 0.0, 1.0} });
 }
 
 void RenderDebugDrawer::drawFrustum(const Frustum& f)
 {
-    for(size_t i=0; i<f.vertices.size()-1; i++)
+    for(size_t i = 0; i < f.vertices.size() - 1; i++)
     {
-        addLine(f.vertices[i], f.vertices[i+1]);
+        addLine(f.vertices[i], f.vertices[i + 1]);
     }
 
     addLine(f.vertices.back(), f.vertices.front());
@@ -1231,9 +1231,9 @@ void RenderDebugDrawer::drawFrustum(const Frustum& f)
 
 void RenderDebugDrawer::drawPortal(const Portal& p)
 {
-    for(size_t i=0; i<p.vertices.size()-1; i++)
+    for(size_t i = 0; i < p.vertices.size() - 1; i++)
     {
-        addLine(p.vertices[i], p.vertices[i+1]);
+        addLine(p.vertices[i], p.vertices[i + 1]);
     }
 
     addLine(p.vertices.back(), p.vertices.front());
@@ -1250,16 +1250,16 @@ void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_ma
 void RenderDebugDrawer::drawOBB(OBB *obb)
 {
     struct Polygon *p = obb->polygons;
-    addLine(p->vertices[0].position, (p+1)->vertices[0].position);
-    addLine(p->vertices[1].position, (p+1)->vertices[3].position);
-    addLine(p->vertices[2].position, (p+1)->vertices[2].position);
-    addLine(p->vertices[3].position, (p+1)->vertices[1].position);
+    addLine(p->vertices[0].position, (p + 1)->vertices[0].position);
+    addLine(p->vertices[1].position, (p + 1)->vertices[3].position);
+    addLine(p->vertices[2].position, (p + 1)->vertices[2].position);
+    addLine(p->vertices[3].position, (p + 1)->vertices[1].position);
 
-    for(uint16_t i=0; i<2; i++,p++)
+    for(uint16_t i = 0; i < 2; i++, p++)
     {
-        for(size_t j=0; j<p->vertices.size()-1; j++)
+        for(size_t j = 0; j < p->vertices.size() - 1; j++)
         {
-            addLine(p->vertices[j].position, p->vertices[j+1].position);
+            addLine(p->vertices[j].position, p->vertices[j + 1].position);
         }
         addLine(p->vertices.back().position, p->vertices.front().position);
     }
@@ -1274,26 +1274,26 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh
         {
             const btVector3* ov = &overrideVertices.front();
             const btVector3* on = &overrideNormals.front();
-            for(uint32_t i=0; i<mesh->m_vertices.size(); i++,ov++,on++)
+            for(uint32_t i = 0; i < mesh->m_vertices.size(); i++, ov++, on++)
             {
                 btVector3 v = transform * *ov;
-                m_buffer.push_back({{v.x(), v.y(), v.z()}});
-                m_buffer.emplace_back( m_color );
+                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                m_buffer.emplace_back(m_color);
                 v += transform.getBasis() * *on * 128;
-                m_buffer.push_back({{v.x(), v.y(), v.z()}});
-                m_buffer.emplace_back( m_color );
+                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                m_buffer.emplace_back(m_color);
             }
         }
         else
         {
             Vertex* mv = mesh->m_vertices.data();
-            for (uint32_t i = 0; i < mesh->m_vertices.size(); i++,mv++)
+            for(uint32_t i = 0; i < mesh->m_vertices.size(); i++, mv++)
             {
                 btVector3 v = transform * mv->position;
-                m_buffer.push_back({{v.x(), v.y(), v.z()}});
+                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
                 m_buffer.emplace_back(m_color);
                 v += transform.getBasis() * mv->normal * 128;
-                m_buffer.push_back({{v.x(), v.y(), v.z()}});
+                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
                 m_buffer.emplace_back(m_color);
             }
         }
@@ -1305,7 +1305,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const b
     if(render->m_drawNormals)
     {
         SSBoneTag* btag = bframe->bone_tags.data();
-        for(uint16_t i=0; i<bframe->bone_tags.size(); i++,btag++)
+        for(uint16_t i = 0; i < bframe->bone_tags.size(); i++, btag++)
         {
             btTransform tr = transform * btag->full_transform;
             drawMeshDebugLines(btag->mesh_base, tr, {}, {}, render);
@@ -1341,22 +1341,20 @@ void RenderDebugDrawer::drawEntityDebugLines(Entity* entity, Render* render)
     entity->m_wasRenderedLines = true;
 }
 
-
 void RenderDebugDrawer::drawSectorDebugLines(RoomSector *rs)
 {
-    btVector3 bb_min = {(btScalar)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->floor};
-    btVector3 bb_max = {(btScalar)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->ceiling};
+    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->floor) };
+    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->ceiling) };
 
-    drawBBox(bb_min, bb_max, NULL);
+    drawBBox(bb_min, bb_max, nullptr);
 }
-
 
 void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {
-        debugDrawer.setColor(0.0f, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
+        debugDrawer.setColor(0.0, 0.1, 0.9);
+        debugDrawer.drawBBox(room->bb_min, room->bb_max, nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
@@ -1375,12 +1373,13 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
     if(render->m_drawFrustums)
     {
         debugDrawer.setColor(1.0, 0.0, 0.0);
-        for(const auto& frus : room->frustum) {
+        for(const auto& frus : room->frustum)
+        {
             debugDrawer.drawFrustum(*frus);
         }
     }
 
-    if(!render->m_skipRoom && (room->mesh != NULL))
+    if(!render->m_skipRoom && (room->mesh != nullptr))
     {
         debugDrawer.drawMeshDebugLines(room->mesh, room->transform, {}, {}, render);
     }
@@ -1388,7 +1387,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
     for(auto sm : room->static_mesh)
     {
         if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, *room) ||
-          (sm->hide && !render->m_drawDummyStatics))
+           (sm->hide && !render->m_drawDummyStatics))
         {
             continue;
         }
@@ -1413,7 +1412,8 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY: {
+            case OBJECT_ENTITY:
+            {
                 Entity* ent = static_cast<Entity*>(cont->object);
                 if(!ent->m_wasRenderedLines)
                 {

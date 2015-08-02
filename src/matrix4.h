@@ -39,10 +39,10 @@
 #undef min
 #endif
 #else
-// Mac OS X or iPhone or something else (that hopefully has this)
+ // Mac OS X or iPhone or something else (that hopefully has this)
 static inline int _finite(float a)
 {
-	return std::isfinite(a);
+    return std::isfinite(a);
 }
 #endif
 
@@ -51,243 +51,263 @@ struct matrix4;
 
 union uint4
 {
-	struct
-	{
-		unsigned x;
-		unsigned y;
-		unsigned z;
-		unsigned w;
-	};
+    struct
+    {
+        unsigned x;
+        unsigned y;
+        unsigned z;
+        unsigned w;
+    };
 #ifdef __SSE__
-	__m128 v; // The type for bitwise operations is the one for floating point
-	// because integer operations and types were a later addition to SSE.
+    __m128 v; // The type for bitwise operations is the one for floating point
+    // because integer operations and types were a later addition to SSE.
 #endif
-	
-	uint4(bool a, bool b, bool c, bool d)
+
+    uint4(bool a, bool b, bool c, bool d)
 #if defined(__SSE__)
-	: x(std::numeric_limits<unsigned>::max() * a), y(std::numeric_limits<unsigned>::max() * b), z(std::numeric_limits<unsigned>::max() * c), w(std::numeric_limits<unsigned>::max() * d) {}
+        : x(std::numeric_limits<unsigned>::max() * a), y(std::numeric_limits<unsigned>::max() * b), z(std::numeric_limits<unsigned>::max() * c), w(std::numeric_limits<unsigned>::max() * d)
+    {
+    }
 #else
-	: x(a), y(b), z(c), w(d) {}
+        : x(a), y(b), z(c), w(d) {}
 #endif
 #ifdef __SSE__
-	uint4(__m128 vec) : v(vec) {}
+    uint4(__m128 vec) : v(vec)
+    {
+    }
 #endif
-	
-	bool any() const
-	{
+
+    bool any() const
+    {
 #ifdef __SSE__
-		return _mm_movemask_ps(v) != 0;
+        return _mm_movemask_ps(v) != 0;
 #else
-		return x || y || z || w;
+        return x || y || z || w;
 #endif
-	}
-	
-	bool all() const
-	{
+    }
+
+    bool all() const
+    {
 #ifdef __SSE__
-		return _mm_movemask_ps(v) == 0xF;
+        return _mm_movemask_ps(v) == 0xF;
 #else
-		return x && y && z && w;
+        return x && y && z && w;
 #endif
-	}
-	
-	uint4 operator&&(const uint4 &other)
-	{
+    }
+
+    uint4 operator&&(const uint4 &other)
+    {
 #ifdef __SSE__
-		return _mm_and_ps(v, other.v);
+        return _mm_and_ps(v, other.v);
 #else
-		return uint4(x && other.x, y && other.y, z && other.z, w && other.w);
+        return uint4(x && other.x, y && other.y, z && other.z, w && other.w);
 #endif
-	}
-	uint4 operator||(const uint4 &other)
-	{
+    }
+    uint4 operator||(const uint4 &other)
+    {
 #ifdef __SSE__
-		return _mm_or_ps(v, other.v);
+        return _mm_or_ps(v, other.v);
 #else
-		return uint4(x || other.x, y || other.y, z || other.z, w || other.w);
+        return uint4(x || other.x, y || other.y, z || other.z, w || other.w);
 #endif
-	}
-	uint4 operator!()
-	{
+    }
+    uint4 operator!()
+    {
 #if defined(__VEC__)
         // !v = v NOR 0 = v = v NOR (x XOR x) = v NOR (v XOR v)
         return vec_nor(v, vec_xor(v, v));
 #else
-		return uint4(!x, !y, !z, !w);
+        return uint4(!x, !y, !z, !w);
 #endif
-	}
-		
-	float4 select(const float4 &a, const float4 &b) const;
+    }
+
+    float4 select(const float4 &a, const float4 &b) const;
 };
 
 union float4
 {
-	// Data storage
-	struct
-	{
-		float x;
-		float y;
-		float z;
-		float w;
-	};
+    // Data storage
+    struct
+    {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
 #if defined(__SSE__)
-	__m128 v;
-#endif /* SSE */ 
-	float4() {}
-	float4(float anX, float anY, float aZ, float aW = 1.0f) : x(anX), y(anY), z(aZ), w(aW) {}
-	float4(float s) : x(s), y(s), z(s), w(s) {}
-	float4(const float4 &other)
+    __m128 v;
+#endif /* SSE */
+    float4()
+    {
+    }
+    float4(float anX, float anY, float aZ, float aW = 1.0f) : x(anX), y(anY), z(aZ), w(aW)
+    {
+    }
+    float4(float s) : x(s), y(s), z(s), w(s)
+    {
+    }
+    float4(const float4 &other)
 #if defined(__SSE__)
-	: v(other.v)
+        : v(other.v)
 #else
-	: x(other.x), y(other.y), z(other.z), w(other.w)
+        : x(other.x), y(other.y), z(other.z), w(other.w)
 #endif
-	{}
-    
+    {
+    }
+
     /*!
      * Create a float4 from a btVector3. This throws away the w component of the btVector3 and instead uses 1 (Aside: Gotta love a class that is called vector3 and contains four components. Awesome, bullet guys, just awesome).
      */
     float4(const btVector3 &b)
-    : x(b.x()), y(b.y()), z(b.z()), w(1.0)
-    {}
-	
+        : x(b.x()), y(b.y()), z(b.z()), w(1.0)
+    {
+    }
+
 #ifdef __SSE__
-	float4(__m128 vec) : v(vec) {}
+    float4(__m128 vec) : v(vec)
+    {
+    }
 #endif
-	
-	// Arithmetic
-	
-	float4 operator+(const float4 &other) const
-	{
+
+    // Arithmetic
+
+    float4 operator+(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_add_ps(v, other.v);
+        return _mm_add_ps(v, other.v);
 #else
-		return float4(x+other.x, y+other.y, z+other.z, w+other.w);
+        return float4(x + other.x, y + other.y, z + other.z, w + other.w);
 #endif
-	}
-	
-	void operator+=(const float4 &other)
-	{
+    }
+
+    void operator+=(const float4 &other)
+    {
 #ifdef __SSE__
-		v = _mm_add_ps(v, other.v);
+        v = _mm_add_ps(v, other.v);
 #else
-		*this = *this + other;
+        *this = *this + other;
 #endif
-	}
-	
-	float4 operator-(const float4 &other) const
-	{
+    }
+
+    float4 operator-(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_sub_ps(v, other.v);
+        return _mm_sub_ps(v, other.v);
 #else
-		return float4(x-other.x, y-other.y, z-other.z, w-other.w);
+        return float4(x - other.x, y - other.y, z - other.z, w - other.w);
 #endif
-	}
-	float4 operator/(const float4 &other) const
-	{
+    }
+    float4 operator/(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_div_ps(v, other.v);
+        return _mm_div_ps(v, other.v);
 #else
-		return float4(x/other.x, y/other.y, z/other.z, w/other.w);
+        return float4(x / other.x, y / other.y, z / other.z, w / other.w);
 #endif
-	}
-	
-	float4 operator-() const
-	{
+    }
+
+    float4 operator-() const
+    {
 #ifdef __SSE__
-		return _mm_sub_ps(_mm_setzero_ps(), v);
+        return _mm_sub_ps(_mm_setzero_ps(), v);
 #else
-		return float4(-x, -y, -z, -w);
+        return float4(-x, -y, -z, -w);
 #endif
-	}
-	
-	float4 operator*(float s) const { return float4(x*s, y*s, z*s, w*s); }
-	float4 operator/(float s) const { return *this * (1.0f/s); }
-	
-	float operator*(const float4 &other) const
-	{
-		return x*other.x + y*other.y + z*other.z + w*other.w;
-	}
-	
-	//   Used for quaternion multiplication. For directions, will give the same
-	//   result as operator* (and vdot).
-	float dot3(const float4 &other) const
-	{
-		return x*other.x + y*other.y + z*other.z;
-	}
-	
-	float4 prod(const float4 &other) const
-	{
+    }
+
+    float4 operator*(float s) const
+    {
+        return float4(x*s, y*s, z*s, w*s);
+    }
+    float4 operator/(float s) const
+    {
+        return *this * (1.0f / s);
+    }
+
+    float operator*(const float4 &other) const
+    {
+        return x*other.x + y*other.y + z*other.z + w*other.w;
+    }
+
+    //   Used for quaternion multiplication. For directions, will give the same
+    //   result as operator* (and vdot).
+    float dot3(const float4 &other) const
+    {
+        return x*other.x + y*other.y + z*other.z;
+    }
+
+    float4 prod(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_mul_ps(v, other.v);
+        return _mm_mul_ps(v, other.v);
 #else
-		return float4(x*other.x, y*other.y, z*other.z, w*other.w);
+        return float4(x*other.x, y*other.y, z*other.z, w*other.w);
 #endif
-	}
-	
-	//   Sets all elements of the result to the dot product.
-	//   This allows to keep some algorithms float4-only.
-	float4 vdot(const float4 &other) const
-	{
+    }
+
+    //   Sets all elements of the result to the dot product.
+    //   This allows to keep some algorithms float4-only.
+    float4 vdot(const float4 &other) const
+    {
 #ifdef __SSE4_1__
-		return _mm_dp_ps(v, other.v, 0xFF);
+        return _mm_dp_ps(v, other.v, 0xFF);
 #elif defined(__SSE__)
-		__m128 c = _mm_mul_ps(v, other.v);
-		c = _mm_hadd_ps(c, c);
-		c = _mm_hadd_ps(c, c);
-		return _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0));
+        __m128 c = _mm_mul_ps(v, other.v);
+        c = _mm_hadd_ps(c, c);
+        c = _mm_hadd_ps(c, c);
+        return _mm_shuffle_ps(c, c, _MM_SHUFFLE(0, 0, 0, 0));
 #else
-		float dot = *this * other;
-		return float4(dot);
+        float dot = *this * other;
+        return float4(dot);
 #endif
-	}
-	
-	float4 cross(const float4 &o) const
-	{
+    }
+
+    float4 cross(const float4 &o) const
+    {
 #ifdef __SSE__
-		// Remember: _MM_SHUFFLE takes arguments in reverse order
-		return _mm_sub_ps(_mm_mul_ps(_mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 0, 2, 1)),
-									 _mm_shuffle_ps(o.v, o.v, _MM_SHUFFLE(3, 1, 0, 2))),
-						  _mm_mul_ps(_mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 1, 0, 2)), 
-									 _mm_shuffle_ps(o.v, o.v, _MM_SHUFFLE(3, 0, 2, 1))));
+        // Remember: _MM_SHUFFLE takes arguments in reverse order
+        return _mm_sub_ps(_mm_mul_ps(_mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 0, 2, 1)),
+                                     _mm_shuffle_ps(o.v, o.v, _MM_SHUFFLE(3, 1, 0, 2))),
+                          _mm_mul_ps(_mm_shuffle_ps(v, v, _MM_SHUFFLE(3, 1, 0, 2)),
+                                     _mm_shuffle_ps(o.v, o.v, _MM_SHUFFLE(3, 0, 2, 1))));
 #else
-		return float4(y*o.z - z*o.y,
-					  z*o.x - x*o.z,
-					  x*o.y - y*o.x,
-					  0.0f);
+        return float4(y*o.z - z*o.y,
+                      z*o.x - x*o.z,
+                      x*o.y - y*o.x,
+                      0.0f);
 #endif
-	}
-	
-	matrix4 transposeMult(const float4 &other) const;
-	
-	float4 squared() const
-	{
+    }
+
+    matrix4 transposeMult(const float4 &other) const;
+
+    float4 squared() const
+    {
 #ifdef __SSE__
-		return _mm_mul_ps(v, v);
+        return _mm_mul_ps(v, v);
 #else
-		return float4(x*x, y*y, z*z, w*w);
+        return float4(x*x, y*y, z*z, w*w);
 #endif
-	}
-	
-	void operator*=(float s)
-	{
-		*this = *this * s;
-	}
-	
-	void operator/=(const float4 &other)
-	{
+    }
+
+    void operator*=(float s)
+    {
+        *this = *this * s;
+    }
+
+    void operator/=(const float4 &other)
+    {
 #ifdef __SSE__
-		v = _mm_div_ps(v, other.v);
+        v = _mm_div_ps(v, other.v);
 #else
-		*this = *this / other;
+        *this = *this / other;
 #endif
-	}
-	void operator-=(const float4 &other)
-	{
+    }
+    void operator-=(const float4 &other)
+    {
 #ifdef __SSE__
-		v = _mm_sub_ps(v, other.v);
+        v = _mm_sub_ps(v, other.v);
 #else
-		*this = *this - other;
+        *this = *this - other;
 #endif
 	}
 	
@@ -297,297 +317,352 @@ union float4
 	float4 min(const float4 &other) const
 	{
 #ifdef __SSE__
-		return _mm_min_ps(v, other.v);
+        return _mm_min_ps(v, other.v);
 #else
-		return float4(fminf(x, other.x), fminf(y, other.y), fminf(z, other.z), fminf(w, other.w));
+        return float4(fminf(x, other.x), fminf(y, other.y), fminf(z, other.z), fminf(w, other.w));
 #endif
-	}
-	float4 max(const float4 &other) const
-	{
+    }
+    float4 max(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_max_ps(v, other.v);
+        return _mm_max_ps(v, other.v);
 #else
-		return float4(fmaxf(x, other.x), fmaxf(y, other.y), fmaxf(z, other.z), fmaxf(w, other.w));
+        return float4(fmaxf(x, other.x), fmaxf(y, other.y), fmaxf(z, other.z), fmaxf(w, other.w));
 #endif
-	}
-	float4 abs() const
-	{
+    }
+    float4 abs() const
+    {
 #ifdef __SSE__
-		// Shift once to the left (losing sign bit), once to the right (highest
-		// bit then gets set to 0). Trick found in Apple sample code.
-		return (__m128) _mm_srli_epi32( _mm_slli_epi32( (__m128i) v, 1 ), 1 );
+        // Shift once to the left (losing sign bit), once to the right (highest
+        // bit then gets set to 0). Trick found in Apple sample code.
+        return (__m128) _mm_srli_epi32(_mm_slli_epi32((__m128i) v, 1), 1);
 #else
         return float4(std::abs(x), std::abs(y), std::abs(z), std::abs(w));
 #endif
-	}
-	
-	float4 floor() const
-	{
-#if defined(__SSE4_1__)
-		return _mm_floor_ps(v);
-#elif defined(__SSE__)
-		// Source: http://developer.apple.com/hardwaredrivers/ve/sse.html#Translation
-		
-		const __m128 twoTo23 = _mm_set1_ps(0x1.0p23f);
-		__m128 b = (__m128) _mm_srli_epi32( _mm_slli_epi32( (__m128i) v, 1 ), 1 ); //fabs(v)
-		__m128 d = _mm_sub_ps( _mm_add_ps( _mm_add_ps( _mm_sub_ps( v, twoTo23 ), twoTo23 ), twoTo23 ), twoTo23 ); //the meat of floor
-		__m128 largeMaskE = (__m128) _mm_cmpgt_ps( b, twoTo23 ); //-1 if v >= 2**23
-		__m128 g = (__m128) _mm_cmplt_ps( v, d ); //check for possible off by one error
-		__m128 h = _mm_cvtepi32_ps( (__m128i) g ); //convert positive check result to -1.0, negative to 0.0
-		__m128 t = _mm_add_ps( d, h ); //add in the error if there is one
-		
-		//Select between output result and input value based on v >= 2**23
-		__m128 newV = _mm_and_ps( v, largeMaskE );
-		t = _mm_andnot_ps( largeMaskE, t );
-		
-		return _mm_or_ps( t, newV );
-#else
-		return float4(std::floor(x), std::floor(y), std::floor(z), std::floor(w));
-#endif
-	}
+    }
 
-	float length() const { return std::sqrt(*this * *this); }
-	float4 normalized() const
-	{
-#ifdef __SSE__
-		__m128 dot = v*v;
-		dot = _mm_add_ps(_mm_add_ps(_mm_shuffle_ps(dot, dot, _MM_SHUFFLE(0,0,0,0)), _mm_shuffle_ps(dot, dot, _MM_SHUFFLE(1,1,1,1))), _mm_add_ps(_mm_shuffle_ps(dot, dot, _MM_SHUFFLE(2,2,2,2)), _mm_shuffle_ps(dot, dot, _MM_SHUFFLE(3,3,3,3))));
-		__m128 scale = _mm_rsqrt_ps(dot);
-		// Newton-Rhapson-Iteration
-		// scale *= 1.5 - 0.5 * dot * scale^2
-		scale = _mm_mul_ps(scale, _mm_sub_ps(_mm_set1_ps(1.5f), _mm_mul_ps(_mm_mul_ps(_mm_set1_ps(0.5f), dot), _mm_mul_ps(scale, scale))));
-		return v * scale;
+    float4 floor() const
+    {
+#if defined(__SSE4_1__)
+        return _mm_floor_ps(v);
+#elif defined(__SSE__)
+        // Source: http://developer.apple.com/hardwaredrivers/ve/sse.html#Translation
+
+        const __m128 twoTo23 = _mm_set1_ps(0x1.0p23f);
+        __m128 b = (__m128) _mm_srli_epi32(_mm_slli_epi32((__m128i) v, 1), 1); //fabs(v)
+        __m128 d = _mm_sub_ps(_mm_add_ps(_mm_add_ps(_mm_sub_ps(v, twoTo23), twoTo23), twoTo23), twoTo23); //the meat of floor
+        __m128 largeMaskE = (__m128) _mm_cmpgt_ps(b, twoTo23); //-1 if v >= 2**23
+        __m128 g = (__m128) _mm_cmplt_ps(v, d); //check for possible off by one error
+        __m128 h = _mm_cvtepi32_ps((__m128i) g); //convert positive check result to -1.0, negative to 0.0
+        __m128 t = _mm_add_ps(d, h); //add in the error if there is one
+
+        //Select between output result and input value based on v >= 2**23
+        __m128 newV = _mm_and_ps(v, largeMaskE);
+        t = _mm_andnot_ps(largeMaskE, t);
+
+        return _mm_or_ps(t, newV);
 #else
-		return *this / length();
+        return float4(std::floor(x), std::floor(y), std::floor(z), std::floor(w));
 #endif
-	}
-	
-	// Array and pointer access
-	const float *c_ptr() const { return &x; }
-	float *c_ptr() { return &x; }
-	
-	const float &operator[](int i) const { return this->c_ptr()[i]; }
-	float &operator[](int i) { return this->c_ptr()[i]; }
-	
-	// Comparison
-	uint4 operator>(const float4 &other) const
-	{
+    }
+
+    float length() const
+    {
+        return std::sqrt(*this * *this);
+    }
+    float4 normalized() const
+    {
 #ifdef __SSE__
-		return _mm_cmpgt_ps(v, other.v);
+        __m128 dot = v*v;
+        dot = _mm_add_ps(_mm_add_ps(_mm_shuffle_ps(dot, dot, _MM_SHUFFLE(0, 0, 0, 0)), _mm_shuffle_ps(dot, dot, _MM_SHUFFLE(1, 1, 1, 1))), _mm_add_ps(_mm_shuffle_ps(dot, dot, _MM_SHUFFLE(2, 2, 2, 2)), _mm_shuffle_ps(dot, dot, _MM_SHUFFLE(3, 3, 3, 3))));
+        __m128 scale = _mm_rsqrt_ps(dot);
+        // Newton-Rhapson-Iteration
+        // scale *= 1.5 - 0.5 * dot * scale^2
+        scale = _mm_mul_ps(scale, _mm_sub_ps(_mm_set1_ps(1.5f), _mm_mul_ps(_mm_mul_ps(_mm_set1_ps(0.5f), dot), _mm_mul_ps(scale, scale))));
+        return v * scale;
 #else
-		return uint4(x > other.x, y > other.y, z > other.z, w > other.w);
+        return *this / length();
 #endif
-	}
-	uint4 operator<(const float4 &other) const
-	{
+    }
+
+    // Array and pointer access
+    const float *c_ptr() const
+    {
+        return &x;
+    }
+    float *c_ptr()
+    {
+        return &x;
+    }
+
+    const float &operator[](int i) const
+    {
+        return this->c_ptr()[i];
+    }
+    float &operator[](int i)
+    {
+        return this->c_ptr()[i];
+    }
+
+    // Comparison
+    uint4 operator>(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_cmplt_ps(v, other.v);
+        return _mm_cmpgt_ps(v, other.v);
 #else
-		return uint4(x < other.x, y < other.y, z < other.z, w < other.w);
+        return uint4(x > other.x, y > other.y, z > other.z, w > other.w);
 #endif
-	}
-	uint4 operator>=(const float4 &other) const
-	{
+    }
+    uint4 operator<(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_cmpge_ps(v, other.v);
+        return _mm_cmplt_ps(v, other.v);
 #else
-		return uint4(x >= other.x, y >= other.y, z >= other.z, w >= other.w);
+        return uint4(x < other.x, y < other.y, z < other.z, w < other.w);
 #endif
-	}
-	uint4 operator<=(const float4 &other) const
-	{
+    }
+    uint4 operator>=(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_cmple_ps(v, other.v);
+        return _mm_cmpge_ps(v, other.v);
 #else
-		return uint4(x <= other.x, y <= other.y, z <= other.z, w <= other.w);
+        return uint4(x >= other.x, y >= other.y, z >= other.z, w >= other.w);
 #endif
-	}
-	uint4 operator==(const float4 &other) const
-	{
+    }
+    uint4 operator<=(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_cmpeq_ps(v, other.v);
+        return _mm_cmple_ps(v, other.v);
 #else
-		return uint4(x == other.x, y == other.y, z == other.z, w == other.w);
+        return uint4(x <= other.x, y <= other.y, z <= other.z, w <= other.w);
 #endif
-	}
-	uint4 operator!=(const float4 &other) const
-	{
+    }
+    uint4 operator==(const float4 &other) const
+    {
 #ifdef __SSE__
-		return _mm_cmpneq_ps(v, other.v);
+        return _mm_cmpeq_ps(v, other.v);
 #else
-		return uint4(x != other.x, y != other.y, z != other.z, w != other.w);
+        return uint4(x == other.x, y == other.y, z == other.z, w == other.w);
 #endif
-	}
-	
-	uint4 is_finite() const { return uint4(_finite(x), _finite(y), _finite(z), _finite(w)); }
-	
-	bool isOnTriangle(const float4 *points) const;
-	
-	// Treat as quaternion
-	// Note: We use the final component as w (not the first), mainly because it
-	// already has that name in the struct.
-	float4 quatMul(const float4 &otherQuat) const
-	{
-		float4 result(cross(otherQuat));
-		result += otherQuat * w;
-		result += *this * otherQuat.w;
-		
-		result.w = w*otherQuat.w - dot3(otherQuat);
-		return result;
-	}
-	float4 quatConjugated() const
-	{
-		return float4(-x, -y, -z, w);
-	}
-	float4 quatRotate(const float4 &vec) const
-	{
-		// Assumes that quaternion is unit length and that vec.w == 0
-		float4 result = quatMul(vec).quatMul(quatConjugated());
-		return float4(result.x, result.y, result.z, 0.0f);
-	}
-	float4 quatNormalized() const
-	{
-		return normalized();
-	}
+    }
+    uint4 operator!=(const float4 &other) const
+    {
+#ifdef __SSE__
+        return _mm_cmpneq_ps(v, other.v);
+#else
+        return uint4(x != other.x, y != other.y, z != other.z, w != other.w);
+#endif
+    }
+
+    uint4 is_finite() const
+    {
+        return uint4(_finite(x), _finite(y), _finite(z), _finite(w));
+    }
+
+    bool isOnTriangle(const float4 *points) const;
+
+    // Treat as quaternion
+    // Note: We use the final component as w (not the first), mainly because it
+    // already has that name in the struct.
+    float4 quatMul(const float4 &otherQuat) const
+    {
+        float4 result(cross(otherQuat));
+        result += otherQuat * w;
+        result += *this * otherQuat.w;
+
+        result.w = w*otherQuat.w - dot3(otherQuat);
+        return result;
+    }
+    float4 quatConjugated() const
+    {
+        return float4(-x, -y, -z, w);
+    }
+    float4 quatRotate(const float4 &vec) const
+    {
+        // Assumes that quaternion is unit length and that vec.w == 0
+        float4 result = quatMul(vec).quatMul(quatConjugated());
+        return float4(result.x, result.y, result.z, 0.0f);
+    }
+    float4 quatNormalized() const
+    {
+        return normalized();
+    }
 };
 
 inline float4 operator*(float s, float4 v)
 {
-	return v * s;
+    return v * s;
 }
 
 inline float4 uint4::select(const float4 &a, const float4 &b) const
 {
 #if defined(__SSE4_1__)
-	return _mm_blendv_ps(a.v, b.v, v);
+    return _mm_blendv_ps(a.v, b.v, v);
 #elif defined(__SSE__)
-	return _mm_or_ps(_mm_and_ps(v, a.v), _mm_andnot_ps(v, b.v));
+    return _mm_or_ps(_mm_and_ps(v, a.v), _mm_andnot_ps(v, b.v));
 #else
-	return float4(x ? a.x : b.x, y ? a.y : b.y, z ? a.z : b.z, w ? a.w : b.w);
+    return float4(x ? a.x : b.x, y ? a.y : b.y, z ? a.z : b.z, w ? a.w : b.w);
 #endif
 }
 
 class ray4
 {
-	float4 s;
-	float4 e;
-	
+    float4 s;
+    float4 e;
+
 public:
-	ray4(const float4 &start, const float4 &end)
-	: s(start), e(end) {}
-	
-	float4 &start() { return s; }
-	const float4 &start() const { return s; }
-	
-	float4 &end() { return e; }
-	const float4 &end() const { return e; }
-	
-	float4 direction() const { return e-s; };
-	
-	float4 point(float t) const { return s + t*direction(); }
-	
-	ray4 reverse() const { return ray4(end(), start()); }
-	
-	bool hitsAABB(const float4 &min, const float4 &max, float4 &point) const;
-	
-	ray4 operator/(float4 f) const { return ray4(s/f, e/f); }
-	
-	float planeIntersection(const float4 &planeNormal, const float4 &planePoint) const
-	{
-		return (planeNormal*(planePoint - start()))/(planeNormal*direction());
-	}
-	float4 planeIntersectionPoint(const float4 &planeNormal, const float4 &planePoint) const
-	{
-		return point(planeIntersection(planeNormal, planePoint));
-	}
-	bool hitsTriangle(const float4 *points, float &length) const;
+    ray4(const float4 &start, const float4 &end)
+        : s(start), e(end)
+    {
+    }
+
+    float4 &start()
+    {
+        return s;
+    }
+    const float4 &start() const
+    {
+        return s;
+    }
+
+    float4 &end()
+    {
+        return e;
+    }
+    const float4 &end() const
+    {
+        return e;
+    }
+
+    float4 direction() const
+    {
+        return e - s;
+    };
+
+    float4 point(float t) const
+    {
+        return s + t*direction();
+    }
+
+    ray4 reverse() const
+    {
+        return ray4(end(), start());
+    }
+
+    bool hitsAABB(const float4 &min, const float4 &max, float4 &point) const;
+
+    ray4 operator/(float4 f) const
+    {
+        return ray4(s / f, e / f);
+    }
+
+    float planeIntersection(const float4 &planeNormal, const float4 &planePoint) const
+    {
+        return (planeNormal*(planePoint - start())) / (planeNormal*direction());
+    }
+    float4 planeIntersectionPoint(const float4 &planeNormal, const float4 &planePoint) const
+    {
+        return point(planeIntersection(planeNormal, planePoint));
+    }
+    bool hitsTriangle(const float4 *points, float &length) const;
 };
 
 struct matrix4
 {
-	float4 x;
-	float4 y;
-	float4 z;
-	float4 w;
-	
-	matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f) {}
-	matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW) {}
-	explicit matrix4(const float *matrix4) { memcpy(c_ptr(), matrix4, sizeof(float [16])); }
+    float4 x;
+    float4 y;
+    float4 z;
+    float4 w;
+
+    matrix4() : x(1.0f, 0.0f, 0.0f, 0.0f), y(0.0f, 1.0f, 0.0f, 0.0f), z(0.0f, 0.0f, 1.0f, 0.0f), w(0.0f, 0.0f, 0.0f, 1.0f)
+    {
+    }
+    matrix4(float4 anX, float4 anY, float4 aZ, float4 aW) : x(anX), y(anY), z(aZ), w(aW)
+    {
+    }
+    explicit matrix4(const float *matrix4)
+    {
+        memcpy(c_ptr(), matrix4, sizeof(float[16]));
+    }
     matrix4(const matrix4 &) = default;
     matrix4& operator=(const matrix4&) = default;
-    
+
     /*!
      * Create a matrix4 from a btTransform. Note that the reverse is not
      * possible in the general case, and hence not supported.
      */
-    explicit matrix4(const btTransform &b) {
+    explicit matrix4(const btTransform &b)
+    {
         b.getOpenGLMatrix(&x.x);
     }
-	
-	static matrix4 position(const float4 &position) { return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position); }
+
+    static matrix4 position(const float4 &position)
+    {
+        return matrix4(float4(1.f, 0.f, 0.f, 0.f), float4(0.f, 1.f, 0.f, 0.f), float4(0.f, 0.f, 1.f, 0.f), position);
+    }
     static matrix4 rotation(float4 vector, float angleInRadian);
-	static matrix4 frustum(float angle, float aspect, float near, float far);
-	static matrix4 inverseFrustum(float angle, float aspect, float near, float far);
-	static matrix4 lookat(const float4 &eye, const float4 &center, const float4 &up);
-	static matrix4 fromQuaternion(const float4 &quaternion);
-	static matrix4 diagonal(const float4 &diagonal);
-	
-	matrix4 transposed() const;
-	
-	matrix4 operator+(const matrix4 &other) const
-	{
+    static matrix4 frustum(float angle, float aspect, float near, float far);
+    static matrix4 inverseFrustum(float angle, float aspect, float near, float far);
+    static matrix4 lookat(const float4 &eye, const float4 &center, const float4 &up);
+    static matrix4 fromQuaternion(const float4 &quaternion);
+    static matrix4 diagonal(const float4 &diagonal);
+
+    matrix4 transposed() const;
+
+    matrix4 operator+(const matrix4 &other) const
+    {
 #ifdef __SSE__
-		return matrix4(_mm_add_ps(x.v, other.x.v),
-					  _mm_add_ps(y.v, other.y.v),
-					  _mm_add_ps(z.v, other.z.v),
-					  _mm_add_ps(w.v, other.w.v));
+        return matrix4(_mm_add_ps(x.v, other.x.v),
+                       _mm_add_ps(y.v, other.y.v),
+                       _mm_add_ps(z.v, other.z.v),
+                       _mm_add_ps(w.v, other.w.v));
 #else
-		return matrix4(x + other.x, y + other.y, z + other.z, w + other.w);
+        return matrix4(x + other.x, y + other.y, z + other.z, w + other.w);
 #endif
-	}
-	
-	void operator+=(const matrix4 &other)
-	{
+    }
+
+    void operator+=(const matrix4 &other)
+    {
 #ifdef __SSE__
-		x.v = _mm_add_ps(x.v, other.x.v);
-		y.v = _mm_add_ps(y.v, other.y.v);
-		z.v = _mm_add_ps(z.v, other.z.v);
-		w.v = _mm_add_ps(w.v, other.w.v);
+        x.v = _mm_add_ps(x.v, other.x.v);
+        y.v = _mm_add_ps(y.v, other.y.v);
+        z.v = _mm_add_ps(z.v, other.z.v);
+        w.v = _mm_add_ps(w.v, other.w.v);
 #else
-		*this = *this + other;
+        *this = *this + other;
 #endif
-	}
-	matrix4 operator-(const matrix4 &other) const
-	{
+    }
+    matrix4 operator-(const matrix4 &other) const
+    {
 #ifdef __SSE__
-		return matrix4(_mm_sub_ps(x.v, other.x.v),
-					  _mm_sub_ps(y.v, other.y.v),
-					  _mm_sub_ps(z.v, other.z.v),
-					  _mm_sub_ps(w.v, other.w.v));
+        return matrix4(_mm_sub_ps(x.v, other.x.v),
+                       _mm_sub_ps(y.v, other.y.v),
+                       _mm_sub_ps(z.v, other.z.v),
+                       _mm_sub_ps(w.v, other.w.v));
 #else
-		return matrix4(x - other.x, y - other.y, z - other.z, w - other.w);
+        return matrix4(x - other.x, y - other.y, z - other.z, w - other.w);
 #endif
-	}
-	
-	float4 operator*(const float4 &vec) const
-	{
+    }
+
+    float4 operator*(const float4 &vec) const
+    {
 #ifdef __SSE__
-		// vec.x * x + vec.y * y + vec.z * z + vec.w * w
-		return _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(0,0,0,0)), x.v), _mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(1,1,1,1)), y.v)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(2,2,2,2)), z.v), _mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(3,3,3,3)), w.v)));
+        // vec.x * x + vec.y * y + vec.z * z + vec.w * w
+        return _mm_add_ps(_mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(0, 0, 0, 0)), x.v), _mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(1, 1, 1, 1)), y.v)), _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(2, 2, 2, 2)), z.v), _mm_mul_ps(_mm_shuffle_ps(vec.v, vec.v, _MM_SHUFFLE(3, 3, 3, 3)), w.v)));
 #else
-		return float4(vec.x * x.x + vec.y * y.x + vec.z * z.x + vec.w * w.x,
-					  vec.x * x.y + vec.y * y.y + vec.z * z.y + vec.w * w.y,
-					  vec.x * x.z + vec.y * y.z + vec.z * z.z + vec.w * w.z,
-					  vec.x * x.w + vec.y * y.w + vec.z * z.w + vec.w * w.w);
+        return float4(vec.x * x.x + vec.y * y.x + vec.z * z.x + vec.w * w.x,
+                      vec.x * x.y + vec.y * y.y + vec.z * z.y + vec.w * w.y,
+                      vec.x * x.z + vec.y * y.z + vec.z * z.z + vec.w * w.z,
+                      vec.x * x.w + vec.y * y.w + vec.z * z.w + vec.w * w.w);
 #endif
-	}
-	ray4 operator*(const ray4 &ray) const
-	{
-		return ray4(*this * ray.start(), *this * ray.end());
-	}
-	matrix4 operator*(const matrix4 &other) const
-	{
-		return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
+    }
+    ray4 operator*(const ray4 &ray) const
+    {
+        return ray4(*this * ray.start(), *this * ray.end());
+    }
+    matrix4 operator*(const matrix4 &other) const
+    {
+        return matrix4(*this * other.x, *this * other.y, *this * other.z, *this * other.w);
     }
     /*!
      * Allow multiplication with btTransform.
@@ -599,22 +674,33 @@ struct matrix4
     {
         return *this * matrix4(other);
     };
-	matrix4 mulRotationOnly(const matrix4 &other) const
-	{
-		return matrix4(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));
-	};
-	void operator*=(const matrix4 &other)
-	{
-		*this = *this * other;
-	}
-	matrix4 affineInverse() const;
-	
-	const float *c_ptr() const { return x.c_ptr(); }
-	float *c_ptr() { return x.c_ptr(); }
-	
-	const float4 &operator[](int i) const { return (&x)[i]; }
-	float4 &operator[](int i) { return (&x)[i]; }
-	
+    matrix4 mulRotationOnly(const matrix4 &other) const
+    {
+        return matrix4(*this * other.x, *this * other.y, *this * other.z, float4(0.0f, 0.0f, 0.0f, 1.0f));
+    };
+    void operator*=(const matrix4 &other)
+    {
+        *this = *this * other;
+    }
+    matrix4 affineInverse() const;
+
+    const float *c_ptr() const
+    {
+        return x.c_ptr();
+    }
+    float *c_ptr()
+    {
+        return x.c_ptr();
+    }
+
+    const float4 &operator[](int i) const
+    {
+        return (&x)[i];
+    }
+    float4 &operator[](int i)
+    {
+        return (&x)[i];
+    }
 };
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec);

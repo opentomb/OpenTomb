@@ -4,7 +4,6 @@
 
 #include "gl_util.h"
 #include "system.h"
-#include "console.h"
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
@@ -13,7 +12,7 @@
  */
 int checkOpenGLErrorDetailed(const char *file, int line)
 {
-    for( ; ; )
+    for(; ; )
     {
         GLenum  glErr = glGetError();
         if(glErr == GL_NO_ERROR)
@@ -25,56 +24,56 @@ int checkOpenGLErrorDetailed(const char *file, int line)
         {
             case GL_INVALID_VALUE:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE in %s:%d", file, line);
-                break;
+                return 1;
 
             case GL_INVALID_ENUM:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM in %s:%d", file, line);
-                break;
+                return 1;
 
             case GL_INVALID_OPERATION:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION in %s:%d", file, line);
-                break;
+                return 1;
 
             case GL_STACK_OVERFLOW:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW in %s:%d", file, line);
-                break;
+                return 1;
 
             case GL_STACK_UNDERFLOW:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW in %s:%d", file, line);
-                break;
+                return 1;
 
             case GL_OUT_OF_MEMORY:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY in %s:%d", file, line);
-                break;
+                return 1;
 
-               /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
-                  GL_LOSE_CONTEXT_ON_RESET_ARB
-                  GL_GUILTY_CONTEXT_RESET_ARB
-                  GL_INNOCENT_CONTEXT_RESET_ARB
-                  GL_UNKNOWN_CONTEXT_RESET_ARB
-                  GL_RESET_NOTIFICATION_STRATEGY_ARB
-                  GL_NO_RESET_NOTIFICATION_ARB*/
+                /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
+                   GL_LOSE_CONTEXT_ON_RESET_ARB
+                   GL_GUILTY_CONTEXT_RESET_ARB
+                   GL_INNOCENT_CONTEXT_RESET_ARB
+                   GL_UNKNOWN_CONTEXT_RESET_ARB
+                   GL_RESET_NOTIFICATION_STRATEGY_ARB
+                   GL_NO_RESET_NOTIFICATION_ARB*/
 
             default:
                 Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X in %s:%d", file, line, glErr);
-                break;
+                return 1;
         };
     }
-    return 1;
 }
 
-void printShaderInfoLog (GLuint object)
+void printShaderInfoLog(GLuint object)
 {
     const auto isProgram = glIsProgram(object);
     const auto isShader = glIsShader(object);
 
-    if(!(isProgram^isShader)) {
+    if(!(isProgram^isShader))
+    {
         Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
         return;
     }
 
-    GLint       logLength     = 0;
-    GLint       charsWritten  = 0;
+    GLint       logLength = 0;
+    GLint       charsWritten = 0;
     GLchar * infoLog;
 
     checkOpenGLError();                         // check for OpenGL errors
@@ -83,15 +82,15 @@ void printShaderInfoLog (GLuint object)
     else
         glGetShaderiv(object, GL_INFO_LOG_LENGTH, &logLength);
 
-    if (logLength > 0)
+    if(logLength > 0)
     {
-        infoLog = (GLchar*)malloc(logLength);
+        infoLog = static_cast<GLchar*>(malloc(logLength));
         if(isProgram)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
         else
             glGetShaderInfoLog(object, logLength, &charsWritten, infoLog);
         Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
-        Sys_DebugLog(GL_LOG_FILENAME, "%s", (const char*)infoLog);
+        Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog));
         free(infoLog);
     }
 }
@@ -101,7 +100,7 @@ int loadShaderFromBuff(GLuint ShaderObj, char * source)
     int size;
     GLint compileStatus = 0;
     size = strlen(source);
-    glShaderSource(ShaderObj, 1, (const char **) &source, &size);
+    glShaderSource(ShaderObj, 1, const_cast<const char **>(&source), &size);
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
@@ -125,8 +124,8 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     int size;
     FILE * file;
     Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
-    file = fopen (fileName, "rb");
-    if (file == NULL)
+    file = fopen(fileName, "rb");
+    if(file == nullptr)
     {
         Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
         return 0;
@@ -142,7 +141,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
         return 0;
     }
 
-    char *buf = (char*)malloc(size);
+    char *buf = static_cast<char*>(malloc(size));
     fseek(file, 0, SEEK_SET);
     fread(buf, 1, size, file);
     fclose(file);
@@ -150,15 +149,14 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     //printf ( "source = %s\n", buf );
     static const char* version = "#version 150\n";
     static const GLint versionLen = strlen(version);
-    if (additionalDefines)
+    if(additionalDefines)
     {
         const char *bufs[3] = { version, additionalDefines, buf };
-        const GLint lengths[3] = { versionLen, (GLint) strlen(additionalDefines), size };
+        const GLint lengths[3] = { versionLen, static_cast<GLint>(strlen(additionalDefines)), size };
         glShaderSource(ShaderObj, 3, bufs, lengths);
     }
     else
     {
-
         const char *bufs[2] = { version, buf };
         const GLint lengths[2] = { versionLen, size };
         glShaderSource(ShaderObj, 2, bufs, lengths);

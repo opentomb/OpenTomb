@@ -1,8 +1,6 @@
 #pragma once
 
-#include <memory>
 #include <cassert>
-#include <vector>
 
 #include "shader_description.h"
 
@@ -13,13 +11,14 @@
  * Class containing all shaders used by OpenTomb. The shader objects
  * are owned by this manager and must not be deleted by anyone.
  */
-class ShaderManager {
+class ShaderManager
+{
 private:
     UnlitTintedShaderDescription    *m_roomShaders[2][2];
     UnlitTintedShaderDescription    *m_staticMeshShader;
     UnlitShaderDescription          *m_stencil;
     UnlitShaderDescription          *m_debugline;
-    LitShaderDescription            *m_entityShader[MAX_NUM_LIGHTS+1][2];
+    LitShaderDescription            *m_entityShader[MAX_NUM_LIGHTS + 1][2];
     GuiShaderDescription            *m_gui;
     GuiShaderDescription            *m_guiTextured;
     TextShaderDescription           *m_text;
@@ -37,17 +36,27 @@ public:
      */
     ~ShaderManager() = default;
 
-    LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const {
+    LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const
+    {
         assert(numberOfLights <= MAX_NUM_LIGHTS);
 
         return m_entityShader[numberOfLights][skin ? 1 : 0];
     }
 
-    UnlitTintedShaderDescription *getStaticMeshShader() const { return m_staticMeshShader; }
+    UnlitTintedShaderDescription *getStaticMeshShader() const
+    {
+        return m_staticMeshShader;
+    }
 
-    UnlitShaderDescription *getStencilShader() const { return m_stencil; }
+    UnlitShaderDescription *getStencilShader() const
+    {
+        return m_stencil;
+    }
 
-    UnlitShaderDescription *getDebugLineShader() const { return m_debugline; }
+    UnlitShaderDescription *getDebugLineShader() const
+    {
+        return m_debugline;
+    }
 
     UnlitTintedShaderDescription *getRoomShader(bool isFlickering, bool isWater) const
     {
@@ -56,11 +65,17 @@ public:
 
     GuiShaderDescription *getGuiShader(bool includingTexture) const
     {
-        if (includingTexture)
+        if(includingTexture)
             return m_guiTextured;
         else
             return m_gui;
     }
-    TextShaderDescription *getTextShader() const { return m_text; }
-    SpriteShaderDescription *getSpriteShader() const { return m_sprites; }
+    TextShaderDescription *getTextShader() const
+    {
+        return m_text;
+    }
+    SpriteShaderDescription *getSpriteShader() const
+    {
+        return m_sprites;
+    }
 };

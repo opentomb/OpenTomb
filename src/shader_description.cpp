@@ -14,7 +14,7 @@
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShader(type);
-    if (!loadShaderFromFile(shader, filename, additionalDefines))
+    if(!loadShaderFromFile(shader, filename, additionalDefines))
         abort();
 }
 
@@ -45,7 +45,7 @@ ShaderDescription::~ShaderDescription()
 }
 
 GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: ShaderDescription(vertex, fragment)
+    : ShaderDescription(vertex, fragment)
 {
     offset = glGetUniformLocation(program, "offset");
     factor = glGetUniformLocation(program, "factor");
@@ -61,7 +61,7 @@ GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const Shad
 }
 
 TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: ShaderDescription(vertex, fragment)
+    : ShaderDescription(vertex, fragment)
 {
     glBindAttribLocation(program, vertex_attribs::position, "position");
     glBindAttribLocation(program, vertex_attribs::color, "color");
@@ -79,7 +79,7 @@ TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const Sh
 }
 
 SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: ShaderDescription(vertex, fragment)
+    : ShaderDescription(vertex, fragment)
 {
     model_view = glGetUniformLocation(program, "modelView");
     projection = glGetUniformLocation(program, "projection");
@@ -96,7 +96,7 @@ SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, cons
 }
 
 UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: ShaderDescription(vertex, fragment)
+    : ShaderDescription(vertex, fragment)
 {
     glBindAttribLocation(program, VertexAttribs::Position, "position");
     glBindAttribLocation(program, VertexAttribs::Color, "color");
@@ -116,7 +116,7 @@ UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const 
 }
 
 LitShaderDescription::LitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: UnlitShaderDescription(vertex, fragment)
+    : UnlitShaderDescription(vertex, fragment)
 {
     model_view = glGetUniformLocation(program, "modelView");
     projection = glGetUniformLocation(program, "projection");
@@ -129,7 +129,7 @@ LitShaderDescription::LitShaderDescription(const ShaderStage &vertex, const Shad
 }
 
 UnlitTintedShaderDescription::UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
-: UnlitShaderDescription(vertex, fragment)
+    : UnlitShaderDescription(vertex, fragment)
 {
     current_tick = glGetUniformLocation(program, "fCurrentTick");
     tint_mult = glGetUniformLocation(program, "tintMult");

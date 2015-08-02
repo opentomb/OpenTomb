@@ -2,14 +2,10 @@
 
 #include <cstdint>
 #include <string>
-#include <memory>
 #include <vector>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
-
-#include <lua.hpp>
-
 
 #define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
@@ -18,7 +14,8 @@
 
 struct RDJointSetup
 {
-    enum Type {
+    enum Type
+    {
         Point = 0,
         Hinge = 1,
         Cone = 2
@@ -34,9 +31,7 @@ struct RDJointSetup
     btVector3 body2_angle; // Secondary pivot point angle
 
     btScalar        joint_limit[3]; // Only first two are used for hinge constraint.
-
 };
-
 
 // Ragdoll body setup is used to modify body properties for ragdoll needs.
 
@@ -47,9 +42,7 @@ struct RDBodySetup
     btScalar        damping[2];
     btScalar        restitution;
     btScalar        friction;
-
 };
-
 
 // Ragdoll setup struct is an unified structure which contains settings
 // for ALL joints and bodies of a given ragdoll.

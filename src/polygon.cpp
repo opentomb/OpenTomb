@@ -3,9 +3,6 @@
 
 #include "polygon.h"
 #include "vmath.h"
-#include "camera.h"
-#include "portal.h"
-#include "engine.h"
 
 /*
  * POLYGONS
@@ -39,14 +36,12 @@ bool Polygon::isBroken() const
     return 0;
 }
 
-
 void Polygon::findNormal()
 {
     auto v1 = vertices[0].position - vertices[1].position;
     auto v2 = vertices[2].position - vertices[1].position;
-    plane.assign(v1, v2, {0,0,0});
+    plane.assign(v1, v2, { 0,0,0 });
 }
-
 
 void Polygon::moveSelf(const btVector3& move)
 {
@@ -57,10 +52,9 @@ void Polygon::moveSelf(const btVector3& move)
     plane.moveTo(vertices[0].position);
 }
 
-
 void Polygon::move(Polygon* src, const btVector3& move)
 {
-    for(size_t i=0; i<src->vertices.size(); i++)
+    for(size_t i = 0; i < src->vertices.size(); i++)
     {
         vertices[i].position = src->vertices[i].position + move;
     }
@@ -68,7 +62,6 @@ void Polygon::move(Polygon* src, const btVector3& move)
     plane = src->plane;
     plane.moveTo(vertices[0].position);
 }
-
 
 void Polygon::transformSelf(const btTransform& tr)
 {
@@ -82,13 +75,12 @@ void Polygon::transformSelf(const btTransform& tr)
     plane.moveTo(vertices[0].position);
 }
 
-
 void Polygon::transform(const Polygon& src, const btTransform& tr)
 {
     vertices.resize(src.vertices.size());
 
     plane.normal = tr.getBasis() * src.plane.normal;
-    for(size_t i=0; i<src.vertices.size(); i++)
+    for(size_t i = 0; i < src.vertices.size(); i++)
     {
         vertices[i].position = tr * src.vertices[i].position;
         vertices[i].normal = tr.getBasis() * src.vertices[i].normal;
@@ -97,18 +89,16 @@ void Polygon::transform(const Polygon& src, const btTransform& tr)
     plane.moveTo(vertices[0].position);
 }
 
-
 void Polygon::vTransform(Polygon* src, const btTransform& tr)
 {
     plane.normal = tr.getBasis() * src->plane.normal;
-    for(size_t i=0; i<src->vertices.size(); i++)
+    for(size_t i = 0; i < src->vertices.size(); i++)
     {
         vertices[i].position = tr * src->vertices[i].position;
     }
 
     plane.moveTo(vertices[0].position);
 }
-
 
 bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScalar* lambda) const
 {
@@ -123,7 +113,7 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
     btVector3 T = dot - vp[0].position;
 
     btVector3 E2 = vp[1].position - vp[0].position;
-    for(size_t i=0; i<vertices.size()-2; i++,vp++)
+    for(size_t i = 0; i < vertices.size() - 2; i++, vp++)
     {
         btVector3 E1 = E2;                           // PREV
         E2 = vp[2].position - vertices[0].position;  // NEXT
@@ -145,7 +135,6 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
     return false;
 }
 
-
 bool Polygon::intersectPolygon(Polygon* p2)
 {
     if(SPLIT_IN_BOTH != splitClassify(p2->plane) || (SPLIT_IN_BOTH != p2->splitClassify(plane)))
@@ -161,23 +150,23 @@ bool Polygon::intersectPolygon(Polygon* p2)
     auto prev_v = &vertices.back();
     auto curr_v = &vertices.front();
     btScalar dist0 = p2->plane.distance(prev_v->position);
-    for(size_t i=0; i<vertices.size(); i++)
+    for(size_t i = 0; i < vertices.size(); i++)
     {
         btScalar dist1 = p2->plane.distance(curr_v->position);
         if(dist1 > SPLIT_EPSILON)
         {
             if(dist0 < -SPLIT_EPSILON)
             {
-                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position,
-                                                                curr_v->position - prev_v->position) );
+                result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
+                                                               curr_v->position - prev_v->position));
             }
         }
         else if(dist1 < -SPLIT_EPSILON)
         {
             if(dist0 > SPLIT_EPSILON)
             {
-                result_buf.emplace_back( p2->plane.rayIntersect(prev_v->position,
-                                                                curr_v->position - prev_v->position) );
+                result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
+                                                               curr_v->position - prev_v->position));
             }
         }
         else
@@ -200,23 +189,23 @@ bool Polygon::intersectPolygon(Polygon* p2)
     prev_v = &p2->vertices.back();
     curr_v = &p2->vertices.front();
     dist0 = plane.distance(prev_v->position);
-    for(size_t i=0; i<p2->vertices.size(); i++)
+    for(size_t i = 0; i < p2->vertices.size(); i++)
     {
         btScalar dist1 = plane.distance(curr_v->position);
         if(dist1 > SPLIT_EPSILON)
         {
             if(dist0 < -SPLIT_EPSILON)
             {
-                result_buf.emplace_back( plane.rayIntersect(prev_v->position,
-                                                            curr_v->position - prev_v->position) );
+                result_buf.emplace_back(plane.rayIntersect(prev_v->position,
+                                                           curr_v->position - prev_v->position));
             }
         }
         else if(dist1 < -SPLIT_EPSILON)
         {
             if(dist0 > SPLIT_EPSILON)
             {
-                result_buf.emplace_back( plane.rayIntersect(prev_v->position,
-                                                            curr_v->position - prev_v->position) );
+                result_buf.emplace_back(plane.rayIntersect(prev_v->position,
+                                                           curr_v->position - prev_v->position));
             }
         }
         else
@@ -230,7 +219,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
         }
         dist0 = dist1;
         prev_v = curr_v;
-        curr_v ++;
+        curr_v++;
     }
 
     auto dir = plane.normal.cross(p2->plane.normal);  // vector of two planes intersection line
@@ -252,21 +241,21 @@ bool Polygon::intersectPolygon(Polygon* p2)
     switch(pn)
     {
         case PLANE_X:
-            dist0 = (result_buf[1][0] -  result_buf[0][0]) / dir[0];
-            dist1 = (result_buf[2][0] -  result_buf[0][0]) / dir[0];
-            dist2 = (result_buf[3][0] -  result_buf[0][0]) / dir[0];
+            dist0 = (result_buf[1][0] - result_buf[0][0]) / dir[0];
+            dist1 = (result_buf[2][0] - result_buf[0][0]) / dir[0];
+            dist2 = (result_buf[3][0] - result_buf[0][0]) / dir[0];
             break;
 
         case PLANE_Y:
-            dist0 = (result_buf[1][1] -  result_buf[0][1]) / dir[1];
-            dist1 = (result_buf[2][1] -  result_buf[0][1]) / dir[1];
-            dist2 = (result_buf[3][1] -  result_buf[0][1]) / dir[1];
+            dist0 = (result_buf[1][1] - result_buf[0][1]) / dir[1];
+            dist1 = (result_buf[2][1] - result_buf[0][1]) / dir[1];
+            dist2 = (result_buf[3][1] - result_buf[0][1]) / dir[1];
             break;
 
         case PLANE_Z:
-            dist0 = (result_buf[1][2] -  result_buf[0][2]) / dir[2];
-            dist1 = (result_buf[2][2] -  result_buf[0][2]) / dir[2];
-            dist2 = (result_buf[3][2] -  result_buf[0][2]) / dir[2];
+            dist0 = (result_buf[1][2] - result_buf[0][2]) / dir[2];
+            dist1 = (result_buf[2][2] - result_buf[0][2]) / dir[2];
+            dist2 = (result_buf[3][2] - result_buf[0][2]) / dir[2];
             break;
     };
 
@@ -277,18 +266,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
     return !((dist1 < dist0 && dist2 < dist0) || (dist1 > 0.0 && dist2 > 0.0));
 }
 
-
 int Polygon::splitClassify(const Plane& plane)
 {
-    size_t positive=0, negative=0;
-    for (const auto& v : vertices)
+    size_t positive = 0, negative = 0;
+    for(const auto& v : vertices)
     {
         auto dist = plane.distance(v.position);
-        if (dist > SPLIT_EPSILON)
+        if(dist > SPLIT_EPSILON)
         {
             positive++;
         }
-        else if (dist < -SPLIT_EPSILON)
+        else if(dist < -SPLIT_EPSILON)
         {
             negative++;
         }
@@ -302,7 +290,7 @@ int Polygon::splitClassify(const Plane& plane)
     {
         return SPLIT_BACK;
     }
-    else if (positive < 1 && negative < 1)
+    else if(positive < 1 && negative < 1)
     {
         return SPLIT_IN_PLANE;
     }
@@ -333,7 +321,7 @@ void Polygon::split(const Plane& n, Polygon* front, Polygon* back)
     auto prev_v = &vertices.back();
 
     auto dist0 = n.distance(prev_v->position);
-    for(size_t i=0; i<vertices.size(); ++i)
+    for(size_t i = 0; i < vertices.size(); ++i)
     {
         auto dist1 = n.distance(curr_v->position);
 
@@ -390,11 +378,10 @@ void Polygon::split(const Plane& n, Polygon* front, Polygon* back)
         }
 
         prev_v = curr_v;
-        curr_v ++;
+        curr_v++;
         dist0 = dist1;
     }
 }
-
 
 bool Polygon::isInsideBBox(const btVector3& bb_min, const btVector3& bb_max)
 {
@@ -410,7 +397,6 @@ bool Polygon::isInsideBBox(const btVector3& bb_min, const btVector3& bb_max)
 
     return 1;
 }
-
 
 bool Polygon::isInsideBQuad(const btVector3& bb_min, const btVector3& bb_max)
 {

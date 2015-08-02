@@ -1,8 +1,6 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstdint>
+#pragma once
 
-#include "engine.h"
+#include <cstdint>
 
 #define TR_GAMEFLOW_MAX_ACTIONS 32
 #define TR_GAMEFLOW_MAX_SECRETS 256

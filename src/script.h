@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cctype>
-
 #include <LinearMath/btScalar.h>
 
 #include <lua.hpp>
@@ -17,8 +16,9 @@ struct AudioSettings;
 struct ControlSettings;
 struct RenderSettings;
 
-namespace lua {
-class State;
+namespace lua
+{
+    class State;
 }
 
 struct lua_State;
@@ -42,7 +42,7 @@ inline void lua_registerc(lua::State& state, const std::string& func_name, Funct
 }
 
 template<>
-inline void lua_registerc(lua::State& state, const std::string& func_name, int (*func)(lua_State*))
+inline void lua_registerc(lua::State& state, const std::string& func_name, int(*func)(lua_State*))
 {
     std::string uc, lc;
     for(char c : func_name)
