@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <LinearMath/btScalar.h>
+#include <GL/glew.h>
 
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"

@@ -21,6 +21,7 @@
 
 #include <SDL2/SDL.h>
 #include <string.h>
+#include <GL/glew.h>
 
 #include "l_main.h"
 #include "../system.h"

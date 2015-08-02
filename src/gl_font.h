@@ -7,8 +7,8 @@
  */
 
 #include <cstdint>
-
-#include <freetype.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include <GL/glew.h>
 
 typedef struct char_info_s
