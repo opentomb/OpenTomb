@@ -54,12 +54,14 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
 elseif(MSVC)
-	add_definitions(-D_USE_MATH_DEFINES)
+    add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11 -Wall -Wextra -msse3)
 endif()
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(Bullet)
 if(BULLET_FOUND)
@@ -109,6 +111,17 @@ target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 target_compile_definitions(Lua INTERFACE -DLUA_COMPAT_APIINTCASTS)
 target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 
+find_package(SDL2 REQUIRED)
+add_library(SDL2 INTERFACE)
+target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
+target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
+        
+find_package(SDL2Image REQUIRED)
+add_library(SDL2_IMAGE INTERFACE)
+target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
+target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
+target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
+
 target_include_directories(${PROJECT_NAME} PRIVATE 3rdparty/LuaState/include)
 
 if(APPLE)
@@ -126,8 +139,6 @@ option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 if(USE_OPENAL_FLOAT)
     target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
@@ -179,30 +190,9 @@ if(MINGW)
         # We are probably creating project files for CodeBlocks on Windows
         message(STATUS "MinGW Compilation")
 
-        # SDL2 must be installed in the MinGW directory
-        set(SDL2_INCLUDE_DIRS "/include/SDL2")
-        set(SDL2_LIBRARIES SDL2 pthread)
-        set(SDL2_IMAGE_INCLUDE_DIRS "/include/SDL2")
-        set(SDL2_IMAGE_LIBRARIES SDL2_image)
         add_definitions("-DSDL_MAIN_HANDLED")
     endif()
 else()
-    find_package(PkgConfig)
-    if(PKG_CONFIG_FOUND)
-        pkg_search_module(SDL2 REQUIRED sdl2)
-        pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
-    else()
-        find_package(SDL2 REQUIRED)
-		add_library(SDL2 INTERFACE)
-		target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
-		target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
-        
-		find_package(SDL2IMAGE REQUIRED)
-		add_library(SDL2IMAGE INTERFACE)
-		target_include_directories(SDL2IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
-		target_include_directories(SDL2IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
-		target_link_libraries(SDL2IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
-    endif()
     # disable glext prototypes
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
 endif()
@@ -217,7 +207,7 @@ target_link_libraries(
     Bullet
     GLEW
     SDL2
-    SDL2IMAGE
+    SDL2_IMAGE
     ZLIB
     Lua
     Freetype
