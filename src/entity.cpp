@@ -18,6 +18,7 @@
 #include "obb.h"
 #include "ragdoll.h"
 #include "helpers.h"
+#include "system.h"
 
 #include "LuaState.h"
 
