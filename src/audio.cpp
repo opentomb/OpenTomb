@@ -677,7 +677,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 
             fseek(wad_file, offset, 0);
 
-            if(!(snd_file = sf_open_fd(_fileno(wad_file), SFM_READ, &sf_info, false)))
+            if(!(snd_file = sf_open_fd(fileno(wad_file), SFM_READ, &sf_info, false)))
             {
                 ConsoleInfo::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
                 method = -1;

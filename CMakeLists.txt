@@ -160,7 +160,7 @@ function(trylinklib LIBNAME ATTRIBS)
         mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 
-find_package(Ogg REQUIRED)
+find_package(OGG REQUIRED)
 include_directories(${OGG_INCLUDE_DIR})
 find_package(Vorbis REQUIRED)
 include_directories(${VORBIS_INCLUDE_DIR})
