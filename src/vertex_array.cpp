@@ -1,5 +1,4 @@
 #include <cassert>
-#include <cstring>
 
 #include "vertex_array.h"
 
@@ -12,7 +11,7 @@ VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexA
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_vbo);
 
-    for (size_t i = 0; i < numAttributes; i++)
+    for(size_t i = 0; i < numAttributes; i++)
     {
         assert(attributes[i].m_vbo != 0);
         assert(attributes[i].m_stride != 0);
@@ -20,9 +19,9 @@ VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexA
         glBindBuffer(GL_ARRAY_BUFFER, attributes[i].m_vbo);
         glEnableVertexAttribArray(attributes[i].m_index);
         glVertexAttribPointer(attributes[i].m_index, attributes[i].m_size,
-                                 attributes[i].m_type, attributes[i].m_normalized,
-                                 attributes[i].m_stride,
-                                 (const GLvoid *) attributes[i].m_offset);
+                              attributes[i].m_type, attributes[i].m_normalized,
+                              attributes[i].m_stride,
+                              reinterpret_cast<const GLvoid *>(attributes[i].m_offset));
     }
 
     glBindVertexArray(0);

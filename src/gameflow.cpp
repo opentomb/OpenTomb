@@ -1,7 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <cctype>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -9,19 +7,16 @@
 #include "console.h"
 #include "engine.h"
 #include "gameflow.h"
-#include "engine.h"
 #include "gui.h"
-#include "anim_state_control.h"
 #include "world.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
 
 gameflow_manager_s gameflow_manager;
 
 void Gameflow_Init()
 {
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
     }
@@ -34,7 +29,7 @@ void Gameflow_Do()
 
     bool completed = true;
 
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         if(gameflow_manager.Actions[i].opcode == TR_GAMEFLOW_NOENTRY) continue;
         completed = false;
@@ -43,7 +38,7 @@ void Gameflow_Do()
         {
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
-                if( (Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE) && (!Audio_IsTrackPlaying()) )
+                if((Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE) && (!Audio_IsTrackPlaying()))
                 {
                     const char* levelName;
                     const char* levelPath;
@@ -64,7 +59,6 @@ void Gameflow_Do()
             default:
                 gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 break;  ///@FIXME: Implement all other gameflow opcodes here!
-
         }   // end switch(gameflow_manager.Operand)
     }
 
@@ -73,15 +67,15 @@ void Gameflow_Do()
 
 bool Gameflow_Send(int opcode, int operand)
 {
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         if(gameflow_manager.Actions[i].opcode == opcode) return false;
 
         if(gameflow_manager.Actions[i].opcode == TR_GAMEFLOW_NOENTRY)
         {
-            gameflow_manager.Actions[i].opcode  = opcode;
+            gameflow_manager.Actions[i].opcode = opcode;
             gameflow_manager.Actions[i].operand = operand;
-            gameflow_manager.NextAction         = true;
+            gameflow_manager.NextAction = true;
             return true;
         }
     }

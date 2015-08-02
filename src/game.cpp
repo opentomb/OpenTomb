@@ -15,23 +15,18 @@
 #include "entity.h"
 #include "camera.h"
 #include "render.h"
-#include "portal.h"
 #include "system.h"
 #include "script.h"
 #include "console.h"
 #include "anim_state_control.h"
-#include "obb.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
-#include "hair.h"
-#include "ragdoll.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
 
-btVector3 cam_angles = {0.0, 0.0, 0.0};
+btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 
 extern btScalar time_scale;
 extern lua::State engine_lua;
@@ -145,7 +140,6 @@ void Game_RegisterLuaFunctions(lua::State& state)
     state.set("timescale", lua_timescale);
 }
 
-
 /**
  * Load game state
  */
@@ -155,7 +149,7 @@ int Game_Load(const char* name)
     char *ch, local;
 
     local = 1;
-    for(ch=(char*)name;*ch;ch++)
+    for(ch = const_cast<char*>(name); *ch; ch++)
     {
         if((*ch == '\\') || (*ch == '/'))
         {
@@ -169,40 +163,46 @@ int Game_Load(const char* name)
         char token[512];
         snprintf(token, 512, "save/%s", name);
         f = fopen(token, "rb");
-        if(f == NULL)
+        if(f == nullptr)
         {
             Sys_extWarn("Can not read file \"%s\"", token);
             return 0;
         }
         fclose(f);
         Script_LuaClearTasks();
-        try {
+        try
+        {
             engine_lua.doFile(token);
         }
-        catch(lua::RuntimeError& error) {
+        catch(lua::RuntimeError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
-        catch(lua::LoadError& error) {
+        catch(lua::LoadError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
     else
     {
         f = fopen(name, "rb");
-        if(f == NULL)
+        if(f == nullptr)
         {
             Sys_extWarn("Can not read file \"%s\"", name);
             return 0;
         }
         fclose(f);
         Script_LuaClearTasks();
-        try {
+        try
+        {
             engine_lua.doFile(name);
         }
-        catch(lua::RuntimeError& error) {
+        catch(lua::RuntimeError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
-        catch(lua::LoadError& error) {
+        catch(lua::LoadError& error)
+        {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
@@ -210,12 +210,12 @@ int Game_Load(const char* name)
     return 1;
 }
 
-
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> >& map)
 {
     for(std::map<uint32_t, std::shared_ptr<Entity> >::const_iterator it = map.begin();
-        it != map.end();
-        ++it) {
+    it != map.end();
+        ++it)
+    {
         Save_Entity(f, it->second);
     }
 }
@@ -225,14 +225,14 @@ void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> 
  */
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
 {
-    if(ent == NULL)
+    if(ent == nullptr)
     {
         return;
     }
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->m_self->room)?(ent->m_self->room->id):(0xFFFFFFFF);
+        uint32_t room_id = (ent->m_self->room) ? (ent->m_self->room->id) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->id());
@@ -247,7 +247,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id(), ent->m_self->collision_type, ent->m_self->collision_shape);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %lld, %lld);", ent->id(), ent->m_self->collision_type, ent->m_self->collision_shape);
 
     if(ent->m_enabled)
     {
@@ -263,7 +263,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
-    if(ent->m_self->room != NULL)
+    if(ent->m_self->room != nullptr)
     {
         fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
     }
@@ -280,7 +280,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
             fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
         }
 
-        for(int i=0;i<PARAM_SENTINEL;i++)
+        for(int i = 0; i < PARAM_SENTINEL; i++)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
         }
@@ -296,7 +296,7 @@ int Game_Save(const char* name)
     char local, *ch, token[512];
 
     local = 1;
-    for(ch=(char*)name;*ch;ch++)
+    for(ch = const_cast<char*>(name); *ch; ch++)
     {
         if((*ch == '\\') || (*ch == '/'))
         {
@@ -325,10 +325,10 @@ int Game_Save(const char* name)
 
     // Save flipmap and flipped room states.
 
-    for(uint32_t i=0; i < engine_world.flip_data.size(); i++)
+    for(uint32_t i = 0; i < engine_world.flip_data.size(); i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
-        fprintf(f, "setFlipState(%d, %s);\n", i, engine_world.flip_data[i].state?"true":"false");
+        fprintf(f, "setFlipState(%d, %s);\n", i, engine_world.flip_data[i].state ? "true" : "false");
     }
 
     Save_Entity(&f, engine_world.character);    // Save Lara.
@@ -346,7 +346,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     // Keyboard move logic
 
-    std::array<int8_t,3> move_logic;
+    std::array<int8_t, 3> move_logic;
     move_logic[0] = control_states.move_forward - control_states.move_backward;
     move_logic[1] = control_states.move_right - control_states.move_left;
     move_logic[2] = control_states.move_up - control_states.move_down;
@@ -369,12 +369,11 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                cam_angles[0] -=0.015 * engine_frame_time * control_mapper.joy_look_x;
-
+                cam_angles[0] -= 0.015 * engine_frame_time * control_mapper.joy_look_x;
             }
             if(control_mapper.joy_look_y != 0)
             {
-                cam_angles[1] -=0.015 * engine_frame_time * control_mapper.joy_look_y;
+                cam_angles[1] -= 0.015 * engine_frame_time * control_mapper.joy_look_y;
             }
         }
 
@@ -387,7 +386,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         }
 
         renderer.camera()->setRotation(cam_angles);
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
         renderer.camera()->moveVertical(dist * move_logic[2]);
@@ -399,11 +398,11 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     {
         if(control_mapper.joy_look_x != 0)
         {
-            cam_angles[0] -=engine_frame_time * control_mapper.joy_look_x;
+            cam_angles[0] -= engine_frame_time * control_mapper.joy_look_x;
         }
         if(control_mapper.joy_look_y != 0)
         {
-            cam_angles[1] -=engine_frame_time * control_mapper.joy_look_y;
+            cam_angles[1] -= engine_frame_time * control_mapper.joy_look_y;
         }
     }
 
@@ -417,7 +416,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
     {
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -427,7 +426,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     else if(control_states.noclip)
     {
         btVector3 pos;
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -480,28 +479,27 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             control_states.use_big_medi = !control_states.use_big_medi;
         }
 
-        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
+        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
         {
             ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * (btScalar)move_logic[1];
+            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
         }
 
-        if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
+        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0))
         {
             ch->m_command.rot[1] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ch->m_command.rot[1] = 2 * DegPerRad * engine_frame_time * (btScalar)move_logic[0];
+            ch->m_command.rot[1] = 2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
         }
 
         ch->m_command.move = move_logic;
     }
 }
-
 
 bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
@@ -512,7 +510,6 @@ bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTrans
     bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
     return cb->hasHit();
 }
-
 
 void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btScalar dz)
 {
@@ -530,7 +527,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     if(!control_states.mouse_look)//If mouse look is off
     {
         float currentAngle = cam_angles[0] * RadPerDeg;  //Current is the current cam angle
-        float targetAngle  = ent->m_angles[0] * RadPerDeg; //Target is the target angle which is the entity's angle itself
+        float targetAngle = ent->m_angles[0] * RadPerDeg; //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
 
         ///@FIXME
@@ -580,21 +577,21 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
         {
             switch(cam->m_targetDir)
             {
-            case TR_CAM_TARG_BACK:
-                targetAngle = (ent->m_angles[0]) * RadPerDeg;
-                break;
-            case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->m_angles[0] - 180.0) * RadPerDeg;
-                break;
-            case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->m_angles[0] - 75.0) * RadPerDeg;
-                break;
-            case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->m_angles[0] + 75.0) * RadPerDeg;
-                break;
-            default:
-                targetAngle = (ent->m_angles[0]) * RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
-                break;
+                case TR_CAM_TARG_BACK:
+                    targetAngle = (ent->m_angles[0]) * RadPerDeg;
+                    break;
+                case TR_CAM_TARG_FRONT:
+                    targetAngle = (ent->m_angles[0] - 180.0) * RadPerDeg;
+                    break;
+                case TR_CAM_TARG_LEFT:
+                    targetAngle = (ent->m_angles[0] - 75.0) * RadPerDeg;
+                    break;
+                case TR_CAM_TARG_RIGHT:
+                    targetAngle = (ent->m_angles[0] + 75.0) * RadPerDeg;
+                    break;
+                default:
+                    targetAngle = (ent->m_angles[0]) * RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
+                    break;
             }
 
             float d_angle = cam_angles[0] - targetAngle;
@@ -618,7 +615,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
         cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
         cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
         cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0):(renderer.camera()->m_shakeTime)-engine_frame_time;
+        renderer.camera()->m_shakeTime = (renderer.camera()->m_shakeTime < 0.0) ? (0.0) : (renderer.camera()->m_shakeTime) - engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -630,7 +627,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-    if (dx != 0.0)
+    if(dx != 0.0)
     {
         cameraFrom.setOrigin(cam_pos);
         cam_pos += dx * cam->m_rightDir;
@@ -659,7 +656,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_pos[2] -= 128.0;
     cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
     cam->m_pos[2] += 128.0;
-    if((cam->m_currentRoom != NULL) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
+    if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0 * 64.0;
     }
@@ -668,10 +665,10 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
 }
 
-
 void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    for(auto entityPair : entities) {
+    for(auto entityPair : entities)
+    {
         std::shared_ptr<Entity> entity = entityPair.second;
         if(entity->m_enabled)
         {
@@ -684,10 +681,10 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
     }
 }
 
-
 void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    for(auto entityPair : entities) {
+    for(auto entityPair : entities)
+    {
         std::shared_ptr<Entity> entity = entityPair.second;
         if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
@@ -700,19 +697,18 @@ void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
     }
 }
 
-
 void Game_UpdateAI()
 {
     //for(ALL CHARACTERS, EXCEPT PLAYER)
     {
-            // UPDATE AI commands
+        // UPDATE AI commands
     }
 }
 
-
 void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> >& entities)
 {
-    for(const auto& entPair : entities) {
+    for(const auto& entPair : entities)
+    {
         std::shared_ptr<Character> ent = std::dynamic_pointer_cast<Character>(entPair.second);
         if(!ent)
             continue;
@@ -729,7 +725,6 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> 
         ent->updateHair();
     }
 }
-
 
 void Game_UpdateCharacters()
 {
@@ -754,18 +749,17 @@ void Game_UpdateCharacters()
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
     int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    btScalar dt = static_cast<btScalar>(t) * GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= dt;
     return dt;
 }
 
-
 void Game_Frame(btScalar time)
 {
-    static btScalar game_logic_time  = 0.0;
-                    game_logic_time += time;
+    static btScalar game_logic_time = 0.0;
+    game_logic_time += time;
 
-    const bool is_character  = (engine_world.character != NULL);
+    const bool is_character = (engine_world.character != nullptr);
 
     // GUI and controls should be updated at all times!
 
@@ -799,7 +793,6 @@ void Game_Frame(btScalar time)
         return;
     }
 
-
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
@@ -819,7 +812,6 @@ void Game_Frame(btScalar time)
 
         Game_LoopEntities(engine_world.entity_tree);
     }
-
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
@@ -852,34 +844,33 @@ void Game_Frame(btScalar time)
     engine_world.updateAnimTextures();
 }
 
-
 void Game_Prepare()
 {
     if(engine_world.character)
     {
         // Set character values to default.
 
-        engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        engine_world.character->setParam       (PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        engine_world.character->setParam       (PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        engine_world.character->setParamMaximum(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine_world.character->setParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine_world.character->setParamMaximum(PARAM_AIR, LARA_PARAM_AIR_MAX);
+        engine_world.character->setParam(PARAM_AIR, LARA_PARAM_AIR_MAX);
         engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParam       (PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParamMaximum(PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-        engine_world.character->setParam       (PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
-        engine_world.character->setParamMaximum(PARAM_POISON,  LARA_PARAM_POISON_MAX );
-        engine_world.character->setParam       (PARAM_POISON , 0                     );
+        engine_world.character->setParam(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParamMaximum(PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine_world.character->setParam(PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine_world.character->setParamMaximum(PARAM_POISON, LARA_PARAM_POISON_MAX);
+        engine_world.character->setParam(PARAM_POISON, 0);
 
         // Set character statistics to default.
 
-        engine_world.character->m_statistics.distance       = 0.0;
-        engine_world.character->m_statistics.ammo_used      = 0;
-        engine_world.character->m_statistics.hits           = 0;
-        engine_world.character->m_statistics.kills          = 0;
+        engine_world.character->m_statistics.distance = 0.0;
+        engine_world.character->m_statistics.ammo_used = 0;
+        engine_world.character->m_statistics.hits = 0;
+        engine_world.character->m_statistics.kills = 0;
         engine_world.character->m_statistics.medipacks_used = 0;
-        engine_world.character->m_statistics.saves_used     = 0;
-        engine_world.character->m_statistics.secrets_game   = 0;
-        engine_world.character->m_statistics.secrets_level  = 0;
+        engine_world.character->m_statistics.saves_used = 0;
+        engine_world.character->m_statistics.secrets_game = 0;
+        engine_world.character->m_statistics.secrets_level = 0;
     }
     else if(!engine_world.rooms.empty())
     {
@@ -896,7 +887,6 @@ void Game_Prepare()
 
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
 }
-
 
 void Game_LevelTransition(uint16_t level_index)
 {

@@ -1,7 +1,6 @@
 #include "console.h"
 
 #include <cstdio>
-#include <cstdlib>
 #include <iostream>
 
 #include <SDL2/SDL_keycode.h>
@@ -13,7 +12,6 @@
 #include "script.h"
 #include "shader_manager.h"
 #include "gui.h"
-#include "vmath.h"
 
 ConsoleInfo::ConsoleInfo()
 {
@@ -40,24 +38,27 @@ void ConsoleInfo::init()
     inited = true;
 }
 
-void ConsoleInfo::initFonts() {
+void ConsoleInfo::initFonts()
+{
     m_font = FontManager->GetFont(FONT_CONSOLE);
     setLineInterval(m_spacing);
 }
 
-void ConsoleInfo::initGlobals() {
+void ConsoleInfo::initGlobals()
+{
     m_backgroundColor[0] = 1.0;
     m_backgroundColor[1] = 0.9;
     m_backgroundColor[2] = 0.7;
     m_backgroundColor[3] = 0.4;
 
-    m_spacing         = CON_MIN_LINE_INTERVAL;
-    m_lineSize       = CON_MIN_LINE_SIZE;
+    m_spacing = CON_MIN_LINE_INTERVAL;
+    m_lineSize = CON_MIN_LINE_SIZE;
 
     m_blinkPeriod = 0.5;
 }
 
-void ConsoleInfo::setLineInterval(float interval) {
+void ConsoleInfo::setLineInterval(float interval)
+{
     if(!inited || !FontManager ||
        (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
@@ -77,7 +78,8 @@ void ConsoleInfo::setLineInterval(float interval) {
     inited = true;
 }
 
-void ConsoleInfo::draw() {
+void ConsoleInfo::draw()
+{
     if(!FontManager || !inited || !m_isVisible)
         return;
 
@@ -102,18 +104,19 @@ void ConsoleInfo::draw() {
     {
         GLfloat *col = FontManager->GetFontStyle(line.styleId)->real_color;
         y += m_lineHeight;
-        std::copy(col, col+4, m_font->gl_font_color);
-        glf_render_str(m_font, (GLfloat)x, (GLfloat)y, line.text.c_str());
+        std::copy(col, col + 4, m_font->gl_font_color);
+        glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(y), line.text.c_str());
         ++n;
-        if( n >= m_visibleLines )
+        if(n >= m_visibleLines)
             break;
     }
     GLfloat *col = FontManager->GetFontStyle(FONTSTYLE_CONSOLE_INFO)->real_color;
-    std::copy(col, col+4, m_font->gl_font_color);
-    glf_render_str(m_font, (GLfloat)x, (GLfloat)m_cursorY + m_lineHeight, m_editingLine.c_str());
+    std::copy(col, col + 4, m_font->gl_font_color);
+    glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(m_cursorY) + m_lineHeight, m_editingLine.c_str());
 }
 
-void ConsoleInfo::drawBackground() {
+void ConsoleInfo::drawBackground()
+{
     /*
          * Draw console background to see the text
          */
@@ -126,7 +129,8 @@ void ConsoleInfo::drawBackground() {
     Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
 }
 
-void ConsoleInfo::drawCursor() {
+void ConsoleInfo::drawCursor()
+{
     GLint y = m_cursorY;
 
     if(m_blinkPeriod)
@@ -151,13 +155,16 @@ void ConsoleInfo::drawCursor() {
     }
 }
 
-void ConsoleInfo::filter(const std::string &text) {
-    for(char c : text) {
+void ConsoleInfo::filter(const std::string &text)
+{
+    for(char c : text)
+    {
         edit(c);
     }
 }
 
-void ConsoleInfo::edit(int key) {
+void ConsoleInfo::edit(int key)
+{
     if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
         return;
@@ -166,7 +173,7 @@ void ConsoleInfo::edit(int key) {
     if(key == SDLK_RETURN)
     {
         addLog(m_editingLine);
-        addLine(std::string("> ") +  m_editingLine, FONTSTYLE_CONSOLE_INFO);
+        addLine(std::string("> ") + m_editingLine, FONTSTYLE_CONSOLE_INFO);
         Engine_ExecCmd(m_editingLine.c_str());
         m_editingLine.clear();
         m_cursorPos = 0;
@@ -181,100 +188,111 @@ void ConsoleInfo::edit(int key) {
 
     switch(key)
     {
-    case SDLK_UP:
-    case SDLK_DOWN:
-        if( m_historyLines.empty() )
+        case SDLK_UP:
+        case SDLK_DOWN:
+            if(m_historyLines.empty())
+                break;
+            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
+            if(key == SDLK_UP && m_historyPos < m_historyLines.size())
+                ++m_historyPos;
+            else if(key == SDLK_DOWN && m_historyPos > 0)
+                --m_historyPos;
+            if(m_historyPos > 0)
+                m_editingLine = m_historyLines[m_historyPos - 1];
+            else
+                m_editingLine.clear();
+            m_cursorPos = utf8_strlen(m_editingLine.c_str());
             break;
-        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-        if( key==SDLK_UP && m_historyPos < m_historyLines.size() )
-            ++m_historyPos;
-        else if( key==SDLK_DOWN && m_historyPos > 0 )
-            --m_historyPos;
-        if(m_historyPos > 0)
-            m_editingLine = m_historyLines[m_historyPos-1];
-        else
-            m_editingLine.clear();
-        m_cursorPos = utf8_strlen(m_editingLine.c_str());
-        break;
 
-    case SDLK_LEFT:
-        if(m_cursorPos > 0)
-        {
-            m_cursorPos--;
-        }
-        break;
+        case SDLK_LEFT:
+            if(m_cursorPos > 0)
+            {
+                m_cursorPos--;
+            }
+            break;
 
-    case SDLK_RIGHT:
-        if(m_cursorPos < oldLength)
-        {
-            m_cursorPos++;
-        }
-        break;
+        case SDLK_RIGHT:
+            if(m_cursorPos < oldLength)
+            {
+                m_cursorPos++;
+            }
+            break;
 
-    case SDLK_HOME:
-        m_cursorPos = 0;
-        break;
+        case SDLK_HOME:
+            m_cursorPos = 0;
+            break;
 
-    case SDLK_END:
-        m_cursorPos = oldLength;
-        break;
+        case SDLK_END:
+            m_cursorPos = oldLength;
+            break;
 
-    case SDLK_BACKSPACE:
-        if(m_cursorPos > 0) {
-            m_editingLine.erase(m_cursorPos-1, 1);
-            m_cursorPos--;
-        }
-        break;
+        case SDLK_BACKSPACE:
+            if(m_cursorPos > 0)
+            {
+                m_editingLine.erase(m_cursorPos - 1, 1);
+                m_cursorPos--;
+            }
+            break;
 
-    case SDLK_DELETE:
-        if(m_cursorPos < oldLength) {
-            m_editingLine.erase(m_cursorPos, 1);
-        }
-        break;
+        case SDLK_DELETE:
+            if(m_cursorPos < oldLength)
+            {
+                m_editingLine.erase(m_cursorPos, 1);
+            }
+            break;
 
-    default:
-        if((oldLength < m_lineSize-1) && (key >= SDLK_SPACE)) {
-            m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
-            m_cursorPos++;
-        }
-        break;
+        default:
+            if((oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
+            {
+                m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
+                m_cursorPos++;
+            }
+            break;
     }
 
     calcCursorPosition();
 }
 
-void ConsoleInfo::calcCursorPosition() {
-    if(m_font) {
+void ConsoleInfo::calcCursorPosition()
+{
+    if(m_font)
+    {
         m_cursorX = 8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos);
     }
 }
 
-void ConsoleInfo::addLog(const std::string &text) {
-    if(inited && !text.empty()) {
+void ConsoleInfo::addLog(const std::string &text)
+{
+    if(inited && !text.empty())
+    {
         m_historyLines.insert(m_historyLines.begin(), text);
-        if( m_historyLines.size() > m_bufferSize)
+        if(m_historyLines.size() > m_bufferSize)
             m_historyLines.resize(m_bufferSize);
         m_historyPos = 0;
     }
 }
 
-void ConsoleInfo::addLine(const std::string &text, font_Style style) {
-    if(inited && !text.empty()) {
+void ConsoleInfo::addLine(const std::string &text, font_Style style)
+{
+    if(inited && !text.empty())
+    {
         std::cout << "LOG: " << text << std::endl;
         m_lines.emplace_front(text, style);
         m_historyPos = 0;
     }
 }
 
-void ConsoleInfo::addText(const std::string &text, font_Style style) {
+void ConsoleInfo::addText(const std::string &text, font_Style style)
+{
     size_t pos = 0;
-    while(pos != std::string::npos) {
+    while(pos != std::string::npos)
+    {
         size_t end = text.find_first_of("\r\n", pos);
-        if( end != pos+1 )
-            addLine(text.substr(pos, end-pos-1), style);
-        if( end == std::string::npos )
+        if(end != pos + 1)
+            addLine(text.substr(pos, end - pos - 1), style);
+        if(end == std::string::npos)
             break;
-        pos = end+1;
+        pos = end + 1;
     }
 }
 
@@ -285,7 +303,7 @@ void ConsoleInfo::printf(const char *fmt, ...)
 
     va_start(argptr, fmt);
     vsnprintf(buf, 4096, fmt, argptr);
-    buf[4096-1] = 0;
+    buf[4096 - 1] = 0;
     va_end(argptr);
     addLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
 }
@@ -299,8 +317,8 @@ void ConsoleInfo::warning(int warn_string_index, ...)
     lua_GetSysNotify(engine_lua, warn_string_index, 256, fmt);
 
     va_start(argptr, warn_string_index);
-    vsnprintf(buf, 4096, (const char*)fmt, argptr);
-    buf[4096-1] = 0;
+    vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
+    buf[4096 - 1] = 0;
     va_end(argptr);
     addLine(buf, FONTSTYLE_CONSOLE_WARNING);
 }
@@ -314,12 +332,13 @@ void ConsoleInfo::notify(int notify_string_index, ...)
     lua_GetSysNotify(engine_lua, notify_string_index, 256, fmt);
 
     va_start(argptr, notify_string_index);
-    vsnprintf(buf, 4096, (const char*)fmt, argptr);
-    buf[4096-1] = 0;
+    vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
+    buf[4096 - 1] = 0;
     va_end(argptr);
     addLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
 }
 
-void ConsoleInfo::clean() {
+void ConsoleInfo::clean()
+{
     m_lines.clear();
 }
