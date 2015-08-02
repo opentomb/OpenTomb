@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <GL/glew.h>
 
 #include "script.h"
 #include "system.h"

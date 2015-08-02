@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <cmath>
 
 #include <LinearMath/btScalar.h>
 

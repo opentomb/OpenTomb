@@ -21,6 +21,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
+#include <GL/glew.h>
 #include "l_main.h"
 #include "../system.h"
 #include "../audio.h"
