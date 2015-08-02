@@ -477,29 +477,39 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
+extern gui_text_line_t system_fps;
+
+namespace
+{
+    int fpsCycles = 0;
+    btScalar fpsTime = 0;
+
+    void fpsCycle(btScalar time)
+    {
+        if(fpsCycles < 20)
+        {
+            fpsCycles++;
+            fpsTime += time;
+        }
+        else
+        {
+            screen_info.fps = (20.0f / fpsTime);
+            snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
+            fpsCycles = 0;
+            fpsTime = 0.0;
+        }
+    }
+}
+
 void Engine_Frame(btScalar time)
 {
-    static int cycles = 0;
-    static btScalar time_cycl = 0.0;
-    extern gui_text_line_t system_fps;
     if(time > 0.1)
     {
         time = 0.1f;
     }
 
     engine_frame_time = time;
-    if(cycles < 20)
-    {
-        cycles++;
-        time_cycl += time;
-    }
-    else
-    {
-        screen_info.fps = (20.0f / time_cycl);
-        snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
-        cycles = 0;
-        time_cycl = 0.0;
-    }
+    fpsCycle(time);
 
     Game_Frame(time);
     Gameflow_Do();

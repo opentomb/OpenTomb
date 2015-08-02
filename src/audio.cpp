@@ -16,6 +16,7 @@
 
 #ifndef AL_ALEXT_PROTOTYPES
 #include "script.h"
+#include <chrono>
 
 extern "C"
 {
@@ -1714,11 +1715,11 @@ int Audio_DeInit()
 
 bool Audio_DeInitDelay()
 {
-    auto begin_time = Sys_FloatTime();
+    const std::chrono::high_resolution_clock::time_point begin_time = std::chrono::high_resolution_clock::now();
 
     while((Audio_IsTrackPlaying()) || (Audio_IsEffectPlaying() >= 0))
     {
-        auto curr_time = Sys_FloatTime() - begin_time;
+        auto curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1000.0f;
 
         if(curr_time > TR_AUDIO_DEINIT_DELAY)
         {
