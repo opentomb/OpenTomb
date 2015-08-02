@@ -1,12 +1,12 @@
 #pragma once
 
-#include <cstdint>
 #include <memory>
 
 /**
  * @brief A Binary Space Partition Tree for 2D space.
  */
-struct BSPTree2DNode {
+struct BSPTree2DNode
+{
     std::unique_ptr<BSPTree2DNode> left;
     std::unique_ptr<BSPTree2DNode> right;
 
@@ -32,7 +32,8 @@ struct BSPTree2DNode {
     {
     }
 
-    bool isSplit() const {
+    bool isSplit() const
+    {
         return left && right;
     }
 
@@ -40,18 +41,20 @@ struct BSPTree2DNode {
      * @brief Split this node along its Y axis (X is split).
      * @param splitLocation Local X coordinate of the split point
      */
-    void splitHorizontally(size_t splitLocation) {
-        assert( splitLocation < width );
-        left.reset( new BSPTree2DNode(x, y, splitLocation, height) );
-        right.reset( new BSPTree2DNode(x + splitLocation, y, width - splitLocation, height) );
+    void splitHorizontally(size_t splitLocation)
+    {
+        assert(splitLocation < width);
+        left.reset(new BSPTree2DNode(x, y, splitLocation, height));
+        right.reset(new BSPTree2DNode(x + splitLocation, y, width - splitLocation, height));
     }
 
     /**
      * @brief Split this node along its X axis (Y is split).
      * @param splitLocation Local Y coordinate of the split point
      */
-    void splitVertically(size_t splitLocation) {
-        assert( splitLocation < height );
+    void splitVertically(size_t splitLocation)
+    {
+        assert(splitLocation < height);
         left.reset(new BSPTree2DNode(x, y, width, splitLocation));
         right.reset(new BSPTree2DNode(x, y + splitLocation, width, height - splitLocation));
     }
@@ -69,27 +72,28 @@ struct BSPTree2DNode {
      * @param destY
      * @return
      */
-    bool findSpaceFor(size_t needleWidth, size_t needleHeight, size_t *destX, size_t *destY) {
+    bool findSpaceFor(size_t needleWidth, size_t needleHeight, size_t *destX, size_t *destY)
+    {
         // Could this possibly fit?
         if(!fits(needleWidth, needleHeight))
             return false;
 
-        if (isSplit())
+        if(isSplit())
         {
             // This node is already split => Recurse!
             bool found = false;
-            if (needleWidth <= left->width && needleHeight <= left->height)
+            if(needleWidth <= left->width && needleHeight <= left->height)
             {
                 found = left->findSpaceFor(needleWidth, needleHeight, destX, destY);
             }
-            if (!found && needleWidth <= right->width && needleHeight <= right->height)
+            if(!found && needleWidth <= right->width && needleHeight <= right->height)
             {
                 found = right->findSpaceFor(needleWidth, needleHeight, destX, destY);
             }
 
             // If both children are filled, mark this as filled and discard the
             // children.
-            if (left->isFilled && right->isFilled)
+            if(left->isFilled && right->isFilled)
             {
                 isFilled = true;
                 left.reset();
@@ -100,7 +104,7 @@ struct BSPTree2DNode {
         }
 
         // We may split this node
-        if (height == needleHeight && width == needleWidth)
+        if(height == needleHeight && width == needleWidth)
         {
             // Perfect match
             isFilled = true;
@@ -108,7 +112,7 @@ struct BSPTree2DNode {
             *destY = y;
             return true;
         }
-        else if (height == needleHeight)
+        else if(height == needleHeight)
         {
             // Split horizontally
             splitHorizontally(needleWidth);

@@ -5,13 +5,13 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
-#include "anim_state_control.h"
 #include "engine.h"
 #include "controls.h"
 #include "console.h"
 #include "common.h"
 #include "game.h"
 #include "script.h"
+#include "system.h"
 
 extern int done;
 

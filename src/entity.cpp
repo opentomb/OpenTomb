@@ -17,7 +17,6 @@
 #include "character_controller.h"
 #include "obb.h"
 #include "ragdoll.h"
-#include "hair.h"
 #include "helpers.h"
 
 #include "LuaState.h"

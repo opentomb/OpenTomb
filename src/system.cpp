@@ -5,8 +5,6 @@
 #include "console.h"
 #include "engine.h"
 #include "system.h"
-#include "script.h"
-#include "gl_util.h"
 #include "gui.h"
 
 ScreenInfo screen_info;

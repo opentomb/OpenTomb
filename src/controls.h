@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <SDL2/SDL.h>
 
 #define JOY_BUTTON_MASK  1000
@@ -10,7 +9,8 @@
 #define JOY_TRIGGER_DEADZONE 10000
 
 // Action mapper index constants
-enum ACTIONS {
+enum ACTIONS
+{
     // Movement directions
     ACT_UP,                     // 0
     ACT_DOWN,                   // 1
@@ -65,7 +65,8 @@ enum ACTIONS {
     ACT_LASTINDEX               // 43
 };
 
-enum AXES {
+enum AXES
+{
     AXIS_LOOK_X,        // Look axes
     AXIS_LOOK_Y,
     AXIS_MOVE_X,        // Move axes
@@ -108,11 +109,10 @@ struct ControlSettings
     btScalar joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 
-    int      joy_axis_map[AXIS_LASTINDEX] = {0};      // Axis array for action mapper.
+    int      joy_axis_map[AXIS_LASTINDEX] = { 0 };      // Axis array for action mapper.
 
     ControlAction  action_map[ACT_LASTINDEX]{};         // Actions array for action mapper.
 };
-
 
 void Controls_PollSDLInput();
 void Controls_DebugKeys(int button, int state);

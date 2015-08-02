@@ -36,6 +36,7 @@
 #include "strings.h"
 
 #include "LuaState.h"
+#include "script.h"
 
 lua::State objects_flags_conf;
 lua::State ent_ID_override;

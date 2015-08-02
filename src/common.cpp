@@ -10,8 +10,7 @@
 #endif
 
 #include "vt/vt_level.h"
-
-#include "system.h"
+#include <GL/glew.h>
 
 static int screenshot_cnt = 0;
 

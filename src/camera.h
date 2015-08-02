@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include <cmath>
 
 #include <GL/glew.h>
 
@@ -39,11 +37,11 @@ struct Frustum;
 
 struct Camera
 {
-    btVector3 m_pos{0,0,0};                 // camera position
-    btVector3 m_prevPos{0,0,0};            // previous camera position
-    btVector3 m_viewDir{0,0,1};            // view cameradirection
-    btVector3 m_upDir{0,1,0};              // up vector
-    btVector3 m_rightDir{1,0,0};           // strafe vector
+    btVector3 m_pos{ 0,0,0 };                 // camera position
+    btVector3 m_prevPos{ 0,0,0 };            // previous camera position
+    btVector3 m_viewDir{ 0,0,1 };            // view cameradirection
+    btVector3 m_upDir{ 0,1,0 };              // up vector
+    btVector3 m_rightDir{ 1,0,0 };           // strafe vector
     btVector3 m_ang;                 // camera orientation
 
     matrix4 m_glViewMat = matrix4();

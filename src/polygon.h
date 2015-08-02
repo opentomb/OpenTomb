@@ -1,4 +1,3 @@
-
 #ifndef POLYGON_H
 #define POLYGON_H
 
@@ -24,16 +23,15 @@
  */
 struct Vertex
 {
-    btVector3 position = {0,0,0};
-    btVector3 normal = {0,0,0};
-    std::array<GLfloat,4> color{{0,0,0,0}};
-    std::array<GLfloat,2> tex_coord{{0,0}};
+    btVector3 position = { 0,0,0 };
+    btVector3 normal = { 0,0,0 };
+    std::array<GLfloat, 4> color{ {0,0,0,0} };
+    std::array<GLfloat, 2> tex_coord{ {0,0} };
 };
-
 
 struct Polygon
 {
-    std::vector<Vertex> vertices{4};                                               // vertices data
+    std::vector<Vertex> vertices{ 4 };                                               // vertices data
     uint16_t            tex_index = 0;                                              // texture index
     uint16_t            anim_id = 0;                                                // anim texture ID
     uint16_t            frame_offset = 0;                                           // anim texture frame offset

@@ -7,7 +7,6 @@
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btIDebugDraw.h>
-#include <btBulletDynamicsCommon.h>
 
 #include "matrix4.h"
 #include "vertex_array.h"
@@ -35,14 +34,14 @@ class RenderDebugDrawer : public btIDebugDraw
 {
     uint32_t m_debugMode = 0;
 
-    std::array<GLfloat,3> m_color{{0,0,0}};
-    std::vector<std::array<GLfloat,3>> m_buffer;
+    std::array<GLfloat, 3> m_color{ {0,0,0} };
+    std::vector<std::array<GLfloat, 3>> m_buffer;
 
     std::unique_ptr<OBB> m_obb;
 
-    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &end);
+    void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &end);
     void addLine(const btVector3& start, const btVector3& end);
-    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &startColor, const std::array<GLfloat,3> &end, const std::array<GLfloat,3> &endColor);
+    void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &startColor, const std::array<GLfloat, 3> &end, const std::array<GLfloat, 3> &endColor);
 
     std::unique_ptr<VertexArray> m_vertexArray{};
     GLuint m_glbuffer = 0;
@@ -75,14 +74,16 @@ public:
     void drawRoomDebugLines(const Room *room, Render *render);
 
     // bullet's debug interface
-    virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
-    virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
-    virtual void   reportErrorWarning(const char* warningString);
-    virtual void   draw3dText(const btVector3& location, const char* textString);
-    virtual void   setDebugMode(int debugMode);
-    virtual int    getDebugMode() const {return m_debugMode;}
+    virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;
+    virtual void   drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override;
+    virtual void   reportErrorWarning(const char* warningString) override;
+    virtual void   draw3dText(const btVector3& location, const char* textString) override;
+    virtual void   setDebugMode(int debugMode) override;
+    virtual int    getDebugMode() const override
+    {
+        return m_debugMode;
+    }
 };
-
 
 // Native TR blending modes.
 
@@ -108,7 +109,6 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_BACKWARD          1
 #define TR_ANIMTEXTURE_REVERSE           2
 
-
 struct RenderSettings
 {
     float     lod_bias = 0;
@@ -121,7 +121,7 @@ struct RenderSettings
     bool      save_texture_memory = false;
     int       z_depth = 16;
     bool      fog_enabled = true;
-    GLfloat   fog_color[4]{0,0,0,1};
+    GLfloat   fog_color[4]{ 0,0,0,1 };
     float     fog_start_depth = 10000;
     float     fog_end_depth = 16000;
 };
@@ -171,68 +171,88 @@ public:
     void empty();
     bool addRoom(Room *room);
     void setWorld(World* m_world);
-    void resetWorld() {
+    void resetWorld()
+    {
         m_world = nullptr;
         m_renderList.clear();
     }
 
-    const std::unique_ptr<ShaderManager>& shaderManager() {
+    const std::unique_ptr<ShaderManager>& shaderManager()
+    {
         return m_shaderManager;
     }
-    Camera* camera() {
+    Camera* camera()
+    {
         return m_cam;
     }
-    void setCamera(Camera* cam) {
+    void setCamera(Camera* cam)
+    {
         m_cam = cam;
     }
 
-    World* world() {
+    World* world()
+    {
         return m_world;
     }
-    const RenderSettings& settings() const {
+    const RenderSettings& settings() const
+    {
         return m_settings;
     }
-    RenderSettings& settings() {
+    RenderSettings& settings()
+    {
         return m_settings;
     }
 
-    void hideSkyBox() {
+    void hideSkyBox()
+    {
         m_drawSkybox = false;
     }
-    void toggleWireframe() {
+    void toggleWireframe()
+    {
         m_drawWire = !m_drawWire;
     }
-    void toggleDrawPoints() {
+    void toggleDrawPoints()
+    {
         m_drawPoints = !m_drawPoints;
     }
-    void toggleDrawColl() {
+    void toggleDrawColl()
+    {
         m_drawColl = !m_drawColl;
     }
-    void toggleDrawNormals() {
+    void toggleDrawNormals()
+    {
         m_drawNormals = !m_drawNormals;
     }
-    void toggleDrawPortals() {
+    void toggleDrawPortals()
+    {
         m_drawPortals = !m_drawPortals;
     }
-    void toggleDrawFrustums() {
+    void toggleDrawFrustums()
+    {
         m_drawFrustums = !m_drawFrustums;
     }
-    void toggleDrawRoomBoxes() {
+    void toggleDrawRoomBoxes()
+    {
         m_drawRoomBoxes = !m_drawRoomBoxes;
     }
-    void toggleDrawBoxes() {
+    void toggleDrawBoxes()
+    {
         m_drawBoxes = !m_drawBoxes;
     }
-    void toggleDrawAxis() {
+    void toggleDrawAxis()
+    {
         m_drawAxis = !m_drawAxis;
     }
-    void toggleDrawNullMeshes() {
+    void toggleDrawNullMeshes()
+    {
         m_drawNullMeshes = !m_drawNullMeshes;
     }
-    void toggleDrawDummyStatics() {
+    void toggleDrawDummyStatics()
+    {
         m_drawDummyStatics = !m_drawDummyStatics;
     }
-    void toggleSkipRoom() {
+    void toggleSkipRoom()
+    {
         m_skipRoom = !m_skipRoom;
     }
 
@@ -250,9 +270,7 @@ public:
     void renderRoom(const Room *room, const matrix4 &matrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
     void renderRoomSprites(const Room *room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix);
 
-    int haveFrustumParent(Room *room, Frustum *frus);
     int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
-    void renderSkyBoxDebugLines();
 
 private:
     const LitShaderDescription *setupEntityLight(Entity *entity, const matrix4 &modelViewMatrix, bool skin);

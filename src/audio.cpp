@@ -15,6 +15,8 @@
 #include "helpers.h"
 
 #ifndef AL_ALEXT_PROTOTYPES
+#include "script.h"
+
 extern "C"
 {
     // Effect objects
@@ -540,7 +542,7 @@ StreamTrack::~StreamTrack()
 
 bool StreamTrack::Load(const char *path, const int index, const int type, const int load_method)
 {
-    if((path == NULL) ||
+    if((path == nullptr) ||
        (load_method >= TR_AUDIO_STREAM_METHOD_LASTINDEX) ||
        (type >= TR_AUDIO_STREAM_TYPE_LASTINDEX))
     {
@@ -560,7 +562,7 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
     }
     else
     {
-        return (Load_Wad((uint8_t)index, path));
+        return (Load_Wad(static_cast<uint8_t>(index), path));
     }
 }
 
@@ -649,11 +651,11 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
             uint32_t offset = 0;
             uint32_t length = 0;
 
-            setbuf(wad_file, NULL);
+            setbuf(wad_file, nullptr);
             fseek(wad_file, (index * TR_AUDIO_STREAM_WAD_STRIDE), 0);
-            fread((void*)track_name, TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, wad_file);
-            fread((void*)&length, sizeof(uint32_t), 1, wad_file);
-            fread((void*)&offset, sizeof(uint32_t), 1, wad_file);
+            fread(static_cast<void*>(track_name), TR_AUDIO_STREAM_WAD_NAMELENGTH, 1, wad_file);
+            fread(static_cast<void*>(&length), sizeof(uint32_t), 1, wad_file);
+            fread(static_cast<void*>(&offset), sizeof(uint32_t), 1, wad_file);
 
             fseek(wad_file, offset, 0);
 
@@ -1270,7 +1272,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            if((uint32_t)entity_ID + 1 > engine_world.audio_emitters.size())
+            if(static_cast<uint32_t>(entity_ID) + 1 > engine_world.audio_emitters.size())
             {
                 return false;
             }
@@ -1361,9 +1363,9 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
 {
     for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
-        if(((entity_type == -1) || (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type)) &&
-           ((entity_ID == -1) || (engine_world.audio_sources[i].emitter_ID == (int32_t)entity_ID)) &&
-           ((effect_ID == -1) || (engine_world.audio_sources[i].effect_index == (uint32_t)effect_ID)))
+        if(((entity_type == -1) || (engine_world.audio_sources[i].emitter_type == static_cast<uint32_t>(entity_type))) &&
+           ((entity_ID == -1) || (engine_world.audio_sources[i].emitter_ID == static_cast<int32_t>(entity_ID))) &&
+           ((effect_ID == -1) || (engine_world.audio_sources[i].effect_index == static_cast<uint32_t>(effect_ID))))
         {
             if(engine_world.audio_sources[i].IsPlaying()) return i;
         }
@@ -1386,12 +1388,12 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // Remap global engine effect ID to local effect ID.
 
-    if((uint32_t)effect_ID >= engine_world.audio_map.size())
+    if(static_cast<uint32_t>(effect_ID) >= engine_world.audio_map.size())
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
 
-    int real_ID = (int)engine_world.audio_map[effect_ID];
+    int real_ID = static_cast<int>(engine_world.audio_map[effect_ID]);
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
@@ -1892,7 +1894,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
             fxManager.current_room_type = cam->m_currentRoom->reverb_info;
         }
 
-        if(fxManager.water_state != (int8_t)(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != static_cast<int8_t>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
         {
             fxManager.water_state = cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER;
 

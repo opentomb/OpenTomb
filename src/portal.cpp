@@ -1,12 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
+#include <cassert>
 
 #include <LinearMath/btScalar.h>
 
 #include "polygon.h"
 #include "portal.h"
 #include "vmath.h"
-#include "world.h"
 
 /*
  * CLIP PLANES

@@ -21,6 +21,7 @@
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "vertex_array.h"
+#include "script.h"
 
 extern SDL_Window  *sdl_window;
 

@@ -1,4 +1,3 @@
-
 #ifndef GAME_H
 #define GAME_H
 
@@ -8,10 +7,6 @@
 
 #include <LinearMath/btScalar.h>
 #include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-
-#include <lua.hpp>
-
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
@@ -19,8 +14,9 @@
 
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
-namespace lua {
-class State;
+namespace lua
+{
+    class State;
 }
 
 class VT_Level;
@@ -58,4 +54,3 @@ void Cam_FollowEntity(struct Camera *cam, struct Entity *ent, btScalar dx, btSca
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
 
 #endif
-

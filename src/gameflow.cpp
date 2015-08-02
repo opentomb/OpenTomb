@@ -11,6 +11,7 @@
 #include "world.h"
 
 #include "LuaState.h"
+#include "script.h"
 
 gameflow_manager_s gameflow_manager;
 

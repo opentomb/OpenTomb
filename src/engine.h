@@ -1,25 +1,17 @@
-
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include <cstdint>
 #include <cstdio>
-#include <cstring>
-#include <ctime>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_video.h>
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
 #include "world.h"
-#include "script.h"
 #include "controls.h"
 #include "object.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
 
 #define MAX_ENGINE_PATH                         (1024)
@@ -122,9 +114,7 @@ struct EngineControlState
     bool     use_small_medi = false;
 
     bool     gui_inventory = false;
-
 };
-
 
 extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
@@ -135,14 +125,11 @@ extern btScalar                                 engine_frame_time;
 extern Camera                          engine_camera;
 extern World                           engine_world;
 
-
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
 extern btCollisionDispatcher                   *bt_engine_dispatcher;
 extern btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-extern btSequentialImpulseConstraintSolver     *bt_engine_solver ;
+extern btSequentialImpulseConstraintSolver     *bt_engine_solver;
 extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
-
-
 
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
@@ -190,7 +177,6 @@ public:
     const bool m_skip_ghost;
 };
 
-
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
@@ -201,7 +187,7 @@ public:
     {
     }
 
-    virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
+    virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
     {
         const Room* r0 = m_container ? m_container->room : nullptr;
         const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
@@ -301,7 +287,7 @@ int  Engine_LoadMap(const std::string &name);
 // String getters.
 
 std::string Engine_GetLevelName(const std::string &path);
-std::string Engine_GetLevelScriptName(int game_version, const std::string &postfix = NULL);
+std::string Engine_GetLevelScriptName(int game_version, const std::string &postfix = nullptr);
 
 // Console command parser.
 

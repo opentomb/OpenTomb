@@ -8,19 +8,15 @@
 #ifndef OBB_H
 #define OBB_H
 
-#include <cstdint>
-#include <memory>
-
 #include <LinearMath/btScalar.h>
 
 #include "polygon.h"
 
 #define DEFAULT_OBB_TEST_OVERLAP (1.2)
 
-
-/*
- * In base_edges we safe the initial shape polygons
- */
+ /*
+  * In base_edges we safe the initial shape polygons
+  */
 
 struct Entity;
 
@@ -42,4 +38,3 @@ struct OBB
 int OBB_OBB_Test(const Entity &e1, const Entity &e2, btScalar overlap = DEFAULT_OBB_TEST_OVERLAP);
 
 #endif /* OBB_H */
-

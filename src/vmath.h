@@ -1,13 +1,8 @@
-
 #ifndef VMATH_H
 #define VMATH_H
 
-#include <cmath>
-#include <array>
-
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
-#include <LinearMath/btMatrix3x3.h>
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
 
@@ -17,11 +12,11 @@
 
 namespace
 {
-constexpr const float DegPerRad = 180 / M_PI;
-constexpr const float RadPerDeg = M_PI / 180;
-constexpr const float Rad90 = 0.5*M_PI;
-constexpr const float Rad180 = M_PI;
-constexpr const float Rad360 = 2*M_PI;
+    constexpr const float DegPerRad = 180 / M_PI;
+    constexpr const float RadPerDeg = M_PI / 180;
+    constexpr const float Rad90 = 0.5*M_PI;
+    constexpr const float Rad180 = M_PI;
+    constexpr const float Rad360 = 2 * M_PI;
 }
 
 /**
@@ -30,7 +25,7 @@ constexpr const float Rad360 = 2*M_PI;
 struct Plane
 {
     //! The plane's normal
-    btVector3 normal = {0,0,0};
+    btVector3 normal = { 0,0,0 };
     //! The plane's distance to the origin
     btScalar dot = 0;
 
@@ -60,13 +55,13 @@ struct Plane
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
         normal = v1.cross(v2).normalized();
-        dot = normal.dot( pos );
+        dot = normal.dot(pos);
     }
 
     void assign(const btVector3& n, const btVector3& pos)
     {
         normal = n.normalized();
-        dot = normal.dot( pos );
+        dot = normal.dot(pos);
     }
 
     void mirrorNormal()

@@ -8,6 +8,7 @@
 #include "render.h"
 
 #include "LuaState.h"
+#include "script.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
