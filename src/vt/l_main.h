@@ -4,6 +4,7 @@
 #include <SDL2/SDL_rwops.h>
 #include <vector>
 #include <string>
+#include <cstring>
 
 #include "tr_types.h"
 #include "tr_versions.h"
