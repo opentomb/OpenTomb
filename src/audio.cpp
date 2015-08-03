@@ -1719,7 +1719,7 @@ bool Audio_DeInitDelay()
 
     while((Audio_IsTrackPlaying()) || (Audio_IsEffectPlaying() >= 0))
     {
-        auto curr_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1000.0f;
+        auto curr_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1.0e6;
 
         if(curr_time > TR_AUDIO_DEINIT_DELAY)
         {

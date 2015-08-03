@@ -52,7 +52,7 @@ int main(int /*argc*/, char** /*argv*/)
     while(!done)
     {
         std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - prev_time).count() / 1000.0f;
+        auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
         prev_time = now;
 
         Engine_Frame(delta * time_scale);
