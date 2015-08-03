@@ -6,6 +6,8 @@
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
 
+#include <cmath>
+
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
