@@ -16,17 +16,19 @@ dofile("scripts/entity/script_switch.lua");     -- Additional switch scripts.
 
 -- Erase single entity function.
 
-function efuncs_EraseEntity(index)
+function entfuncs_EraseEntity(index)
     if(entity_funcs[index] ~= nil) then
         if(entity_funcs[index].onDelete ~= nil) then    -- Entity-specific clean-up.
             entity_funcs[index].onDelete(index);
             entity_funcs[index].onDelete = nil;
         end;
+        
         entity_funcs[index].onActivate       = nil;
         entity_funcs[index].onDeactivate     = nil;
         entity_funcs[index].onCollide        = nil;
         entity_funcs[index].onStand          = nil;
         entity_funcs[index].onHit            = nil;
+        entity_funcs[index].onRoomCollide    = nil;
         entity_funcs[index].onLoop           = nil;
         entity_funcs[index].onSave           = nil;
         entity_funcs[index].onLoad           = nil;
@@ -38,7 +40,7 @@ end;
 
 function entfuncs_Clear()
     for k,v in pairs(entity_funcs) do
-        efuncs_EraseEntity(k);
+        entfuncs_EraseEntity(k);
     end;
     print("Entity function table cleaned");
 end;
@@ -50,22 +52,55 @@ end;
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(object_id, true);
+    setEntityActivity(id, true);
+    
+    entity_funcs[id].open_state   = 1;
+    entity_funcs[id].closed_state = 0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        swapEntityState(object_id, 0, 1);
+        entity_funcs[object_id].must_open  = true;
+        entity_funcs[object_id].must_close = false;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        entity_funcs[object_id].must_open  = false;
+        entity_funcs[object_id].must_close = true;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
+        local a,f,n = getEntityAnim(object_id);
+        if((a ~= 1) and (a ~= 3)) then
+            local st = getEntityState(object_id);
+            if((entity_funcs[object_id].must_open  == true) and (entity_funcs[object_id].open_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].open_state);
+                entity_funcs[object_id].must_open  = false;
+            elseif((entity_funcs[object_id].must_close == true) and (entity_funcs[object_id].closed_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].closed_state);
+                entity_funcs[object_id].must_close = false;
+            end;
+        end;    
+    
         if(tickEntity(object_id) == TICK_STOPPED) then
-            swapEntityState(object_id, 0, 1);
-            setEntityEvent(object_id, false);
+            entity_funcs[object_id].must_open  = false;
+            entity_funcs[object_id].must_close = true;
         end;
     end
     
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].open_state   = nil;
+        entity_funcs[object_id].closed_state = nil;
+        entity_funcs[object_id].must_open    = nil;
+        entity_funcs[object_id].must_close   = nil;
+    end;
+    
     prepareEntity(id);
+    
+    if(entity_funcs[id].must_open == true) then
+        entity_funcs[id].onLoop(id);
+        entity_funcs[id].open_state   = 0;
+        entity_funcs[id].closed_state = 1;
+    end;
+    
 end
 
 function keyhole_init(id)    -- Key and puzzle holes
@@ -74,7 +109,7 @@ function keyhole_init(id)    -- Key and puzzle holes
     setEntityActivity(id, false);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or getEntityActivity(object_id) >= 1 or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
+        if(object_id == nil or getEntityActivity(object_id) or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
             return;
         end
         
@@ -112,12 +147,10 @@ function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
-    disableEntity(id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         swapEntityState(object_id, 1, 0);
         swapEntityActivity(object_id);
-        swapEntityEnability(object_id);
     end    
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
@@ -241,6 +274,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     setEntityVisibility(id, false);
     
     entity_funcs[id].distance_passed = 0;
+    entity_funcs[id].distance_to_pass = 30720.0;
+    entity_funcs[id].speed = 40.0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
@@ -255,9 +290,9 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + 40.0;
-        moveEntityLocal(object_id, 0.0, 40.0, 0.0);
-        if(entity_funcs[object_id].distance_passed > 30720) then
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + entity_funcs[object_id].speed;
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
+        if(entity_funcs[object_id].distance_passed > entity_funcs[object_id].distance_to_pass) then
             stopSound(297, object_id);
             disableEntity(object_id);
         end;
@@ -265,6 +300,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
+        entity_funcs[object_id].distance_to_pass = nil;
+        entity_funcs[object_id].speed = nil;
     end
     
     prepareEntity(id);
@@ -282,7 +319,7 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        if(getEntityLock(object_id) == 1) then
+        if(getEntityLock(object_id)) then
             if(getEntityState(object_id) ~= 2) then
                 setEntityState(object_id, 2);
             else
@@ -382,8 +419,8 @@ end
 function sethblade_init(id)      -- Seth blades (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    setEntityActivity(id, 1);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
+    setEntityActivity(id, true);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         swapEntityState(object_id, 1, 2);
@@ -394,7 +431,7 @@ function sethblade_init(id)      -- Seth blades (TR4)
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
             setEntityState(object_id, 2)
-            setEntityActivity(object_id, 0);
+            setEntityActivity(object_id, false);
         end;
     end
     
@@ -410,7 +447,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
 
     disableEntity(id);
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     
     entity_funcs[id].current_angle =  0.0;
     entity_funcs[id].speed         = -0.5;  -- Full turn in 14 seconds, clockwise.
@@ -419,14 +456,14 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     moveEntityLocal(id, 512.0, 0.0, 0.0);  -- Fix position
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 0) then enableEntity(object_id) else disableEntity(object_id) end;
+        if(not getEntityActivity(object_id)) then enableEntity(object_id) else disableEntity(object_id) end;
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityActivity(object_id, 0);
+            setEntityActivity(object_id, false);
         end;
         
         entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed;
@@ -442,7 +479,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -35.0) end;
+        if(getEntityActivity(object_id)) then changeCharacterParam(activator_id, PARAM_HEALTH, -35.0) end;
     end
     
     
@@ -459,8 +496,8 @@ end
 function lasersweep_init(id)      -- Laser sweeper (TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    setEntityActivity(id, 0);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
+    setEntityActivity(id, false);
     
     entity_funcs[id].speed         = 1.0;
     entity_funcs[id].phase_length  = math.abs(2048.0 * FRAME_TIME * entity_funcs[id].speed);
@@ -471,8 +508,8 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
     entity_funcs[id].max_wait      = 1.5;    -- Sweeper will wait for 1.5 seconds at both ends.
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 0) then
-            setEntityActivity(id, 1);
+        if(not getEntityActivity(object_id)) then
+            setEntityActivity(id, true);
         else
             entity_funcs[object_id].stopping = true;
         end;
@@ -482,7 +519,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityActivity(object_id, 0);
+            setEntityActivity(object_id, false);
             return;
         end;
         
@@ -503,7 +540,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
             moveEntityLocal(object_id, 0.0, math.cos(math.rad(entity_funcs[object_id].current_phase)) * entity_funcs[object_id].phase_length, 0.0);
         else
             if(entity_funcs[object_id].stopping == true) then
-                setEntityActivity(object_id, 0);
+                setEntityActivity(object_id, false);
                 entity_funcs[object_id].stopping = false;
             else
                 entity_funcs[object_id].current_wait = entity_funcs[object_id].current_wait + FRAME_TIME;
@@ -516,7 +553,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -15.0) end;
+        if(getEntityActivity(object_id)) then changeCharacterParam(activator_id, PARAM_HEALTH, -15.0) end;
     end
     
     entity_funcs[id].onDelete = function(object_id)
@@ -628,13 +665,125 @@ function boulder_init(id)
             end;
         end;
     end
-
 end
+
+function dart_init(id)  -- TR1 dart / TR2 flying disks
+
+    setEntityTypeFlag(id, ENTITY_TYPE_COLLCHECK);
+    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityBodyPartFlag(id, 0, 0x01);
+    setEntityCollisionFlags(id, COLLISION_TYPE_GHOST, COLLISION_SHAPE_BOX);
+    
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_ROOMCOLLISION, true);
+    
+    createEntityGhosts(id);
+    
+    entity_funcs[id].speed       = 100.0;
+    entity_funcs[id].damage      = 50.0;
+    entity_funcs[id].poison      = 0.0;   -- Poison appeared only in TR3.
+    entity_funcs[id].coll_sound  = -1;
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+            changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
+            removeEntity(object_id);
+        end;
+    end
+    
+    entity_funcs[id].onRoomCollide = function(object_id, activator_id)
+        playSound(entity_funcs[object_id].coll_sound, object_id);
+        removeEntity(object_id);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
+        if(not isInRoom(object_id)) then entity_funcs[object_id].onRoomCollide(object_id) end;   -- Penetration fix
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].damage      = nil;
+        entity_funcs[object_id].poison      = nil;
+        entity_funcs[object_id].speed       = nil;
+        entity_funcs[object_id].coll_sound  = nil;
+    end
+end
+
+function dartgun_init(id)  -- TR1 dartgun
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, false);
+    
+    entity_funcs[id].dart_model     = 39;   -- TR1 default, TR2 will override it.
+    entity_funcs[id].shoot_sound    = 151;  -- TR1 default, TR2 will override it.
+    entity_funcs[id].shoot_interval = 1;
+    entity_funcs[id].current_time   = entity_funcs[id].shoot_interval;  -- To activate first dart.
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        swapEntityActivity(object_id);
+    end
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(entity_funcs[object_id].current_time >= entity_funcs[object_id].shoot_interval) then
+            entity_funcs[object_id].current_time = 0;
+            local x,y,z,ax,ay,az,r = getEntityPos(object_id);
+            playSound(entity_funcs[object_id].shoot_sound, object_id);
+            local dart = spawnEntity(entity_funcs[object_id].dart_model,x,y,z,ax,ay,az,r);
+            moveEntityLocal(dart,0,-256,512);
+        end;
+        
+        entity_funcs[object_id].current_time = entity_funcs[object_id].current_time + FRAME_TIME;
+        
+        if(tickEntity(object_id) == TICK_STOPPED) then 
+            swapEntityActivity(object_id);
+            swapEntityEvent(object_id);
+            entity_funcs[object_id].current_time = entity_funcs[object_id].shoot_interval;
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].dart_model     = nil;
+        entity_funcs[object_id].shoot_sound    = nil;
+        entity_funcs[object_id].shoot_interval = nil;
+        entity_funcs[object_id].current_time   = nil;
+    end
+end
+
+function discgun_init(id)
+    dartgun_init(id);
+    entity_funcs[id].dart_model  = 61;
+    entity_funcs[id].shoot_sound = 254;
+end;
+
+function disc_init(id)
+    dart_init(id);
+    entity_funcs[id].coll_sound = 258;
+    entity_funcs[id].speed       = 80.0;
+end;
+
+function dartgun_tr3_init(id)
+    dartgun_init(id);
+    rotateEntity(id, 180.0);    -- In TR3, dartguns must be inverted.
+    moveEntityLocal(id, 0,-256,0);
+    entity_funcs[id].dart_model  = 90;
+    entity_funcs[id].shoot_sound = 325;
+    entity_funcs[id].shoot_interval = 0.8;
+end;
+
+function dart_tr3_init(id)
+    dart_init(id);
+    entity_funcs[id].speed      = 150.0;
+    entity_funcs[id].poison     = 0.03;
+end;
 
 function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
+    setEntityAnimFlag(id, ANIM_LOCK);
     setEntityActivity(id, false);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -703,10 +852,11 @@ end
 function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     setEntityActivity(id, true);
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(getEntityDistance(player, object_id) < 512.0) then
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(activator_id == player) then
             playSound(SOUND_MEDIPACK);
             changeCharacterParam(player, PARAM_HEALTH, 200);
             disableEntity(object_id);
@@ -739,7 +889,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     setEntityCollision(object_id, false);
                     once = false;
                 end;
-                if(dropEntity(object_id, FRAME_TIME)) then
+                if(dropEntity(object_id, FRAME_TIME, nil)) then
                     setEntityAnim(object_id, 3);
                     return false;
                 end;
@@ -768,7 +918,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             setEntityVisibility(object_id, true);
             addTask(
             function()
-                if(dropEntity(object_id, FRAME_TIME)) then
+                if(dropEntity(object_id, FRAME_TIME, nil)) then
                     setEntityAnim(object_id, 2);
                     setEntityCollision(object_id, false);
                     return false;
@@ -831,8 +981,8 @@ end
 function twobp_init(id)        -- Two-block platform
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityCallbackFlag(id, ENTITY_CALLBACK_STAND, 1);
-    setEntityActivity(id, 0);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_STAND, true);
+    setEntityActivity(id, false);
     
     entity_funcs[id].push_height    = 128.0;
     entity_funcs[id].push_speed     = 2.0;
@@ -851,15 +1001,15 @@ function twobp_init(id)        -- Two-block platform
     if(curr_OCB == 0) then entity_funcs[id].mode = 2 else entity_funcs[id].mode = 0 end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityActivity(object_id) == 1) then
+        if(getEntityActivity(object_id)) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
                 entity_funcs[object_id].current_height = entity_funcs[object_id].raise_height - entity_funcs[object_id].current_height;
             else
-                setEntityActivity(object_id, 0);
+                setEntityActivity(object_id, false);
             end;
         else
-            setEntityActivity(object_id, 1);
+            setEntityActivity(object_id, true);
         end;
         
         entity_funcs[object_id].waiting = false;
@@ -882,7 +1032,7 @@ function twobp_init(id)        -- Two-block platform
                     if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
                     entity_funcs[object_id].waiting = true;
                     entity_funcs[object_id].current_height = 0.0; -- Reset height counter.
-                    setEntityActivity(object_id, 0);
+                    setEntityActivity(object_id, false);
                 end;
             elseif(entity_funcs[object_id].mode == 2) then
                 if(entity_funcs[object_id].push == true) then
@@ -907,7 +1057,7 @@ function twobp_init(id)        -- Two-block platform
     end;
     
     entity_funcs[id].onStand = function(object_id, activator_id)
-        if((getEntityActivity(object_id) == 1) and (getEntityModel(activator_id) == 0)) then  -- Lara
+        if(getEntityActivity(object_id) and (getEntityModel(activator_id) == 0)) then  -- Lara
             entity_funcs[object_id].push = true;
         end;
     end;
@@ -1068,7 +1218,7 @@ function oldspike_init(id)  -- Teeth spikes
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 end;
             elseif(ls > 512.0) then
-                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
+                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 1024.0));
             end;
         end;
     end
@@ -1434,7 +1584,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                     setEntityPos(object_id, px,py,pz,ax,ay,az);
                     entity_funcs[object_id].distance_traveled = 0.0;
                 elseif((entity_funcs[object_id].loop_count > 3) or
-                   (similarSector(object_id, 0.0, 520.0, 0.0, false) == false)) then   -- Rotate right
+                   (not similarSector(object_id, 0.0, 520.0, 0.0, false))) then   -- Rotate right
                     entity_funcs[object_id].loop_count = 0;
                     entity_funcs[object_id].rotating = 2;
                     entity_funcs[object_id].current_angle = 0.0;    -- DO NOT CHANGE!!!
@@ -1504,7 +1654,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 playSound(131, object_id);
             elseif(a_model == 354) then -- Fuse box - DOESN'T WORK FOR A MOMENT! (no collision callback from fusebox).
                 if(not entity_funcs[object_id].dead) then
-                    setEntityTypeFlag(object_id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+                    setEntityTypeFlag(object_id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, true);
                     stopSound(191, object_id);
                     entity_funcs[object_id].dead = true;
                 elseif(entity_funcs[object_id].dead) then

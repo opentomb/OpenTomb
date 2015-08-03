@@ -1,21 +1,22 @@
 #include <algorithm>
 #include <cmath>
-#include <bullet/LinearMath/btScalar.h>
+
+#include <LinearMath/btScalar.h>
 
 #include "hair.h"
 #include "mesh.h"
 #include "render.h"
 
-#include <lua.hpp>
 #include "LuaState.h"
+#include "script.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
-    if( (!parent_entity) || (!setup)                           ||
-        (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
-        (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))         ) return false;
+    if((!parent_entity) || (!setup) ||
+       (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
+       (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))) return false;
 
     SkeletalModel* model = engine_world.getModelByID(setup->m_model);
 
@@ -25,7 +26,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    m_container.reset( new EngineContainer() );
+    m_container.reset(new EngineContainer());
     m_container->room = parent_entity->m_self->room;
     m_container->object_type = OBJECT_HAIR;
     m_container->object = this;
@@ -48,7 +49,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // last element of the hair, as it indicates absence of "child" constraint.
 
     m_rootIndex = 0;
-    m_tailIndex = m_elements.size()-1;
+    m_tailIndex = m_elements.size() - 1;
 
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
@@ -56,7 +57,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     btScalar weight_step = ((setup->m_rootWeight - setup->m_tailWeight) / m_elements.size());
     btScalar current_weight = setup->m_rootWeight;
 
-    for(size_t i=0; i<m_elements.size(); i++)
+    for(size_t i = 0; i < m_elements.size(); i++)
     {
         // Point to corresponding mesh.
 
@@ -69,7 +70,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Make collision shape out of mesh.
 
-        m_elements[i].shape.reset( BT_CSfromMesh(m_elements[i].mesh, true, true, false) );
+        m_elements[i].shape.reset(BT_CSfromMesh(m_elements[i].mesh, true, true, false));
         m_elements[i].shape->calculateLocalInertia((current_weight * setup->m_hairInertia), localInertia);
 
         // Decrease next body weight to weight_step parameter.
@@ -83,7 +84,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Make rigid body.
 
-        m_elements[i].body.reset( new btRigidBody(current_weight, motionState, m_elements[i].shape.get(), localInertia) );
+        m_elements[i].body.reset(new btRigidBody(current_weight, motionState, m_elements[i].shape.get(), localInertia));
 
         // Damping makes body stop in space by itself, to prevent it from continous movement.
 
@@ -123,7 +124,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     int curr_joint = 0;
 
-    for(size_t i=0; i<m_elements.size(); i++)
+    for(size_t i = 0; i < m_elements.size(); i++)
     {
         btScalar     body_length;
         btTransform localA; localA.setIdentity();
@@ -143,7 +144,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
             m_ownerBodyHairRoot = localA;
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-            localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
+            localB.getBasis().setEulerZYX(0, -SIMD_HALF_PI, 0);
 
             prev_body = parent_entity->m_bt.bt_body[m_ownerBody];   // Previous body is parent body.
         }
@@ -151,27 +152,27 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = fabs(m_elements[i-1].mesh->m_bbMax[1] - m_elements[i-1].mesh->m_bbMin[1]) * setup->m_jointOverlap;
+            body_length = std::abs(m_elements[i - 1].mesh->m_bbMax[1] - m_elements[i - 1].mesh->m_bbMin[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
-            localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+            localA.getBasis().setEulerZYX(0, SIMD_HALF_PI, 0);
 
             // Pivot point B is automatically adjusted by Bullet.
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-            localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+            localB.getBasis().setEulerZYX(0, SIMD_HALF_PI, 0);
 
-            prev_body = m_elements[i-1].body;   // Previous body is preceiding hair mesh.
+            prev_body = m_elements[i - 1].body;   // Previous body is preceiding hair mesh.
         }
 
         // Create 6DOF constraint.
 
-        m_joints[curr_joint].reset( new btGeneric6DofConstraint(*prev_body, *(m_elements[i].body), localA, localB, true) );
+        m_joints[curr_joint].reset(new btGeneric6DofConstraint(*prev_body, *(m_elements[i].body), localA, localB, true));
 
         // CFM and ERP parameters are critical for making joint "hard" and link
         // to Lara's head. With wrong values, constraints may become "elastic".
 
-        for(int axis=0;axis<=5;axis++)
+        for(int axis = 0; axis <= 5; axis++)
         {
             m_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->m_jointCfm, axis);
             m_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->m_jointErp, axis);
@@ -184,8 +185,8 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
             m_joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
             m_joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-            m_joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
-            m_joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
+            m_joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI, 0., -SIMD_HALF_PI*0.4));
+            m_joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0., SIMD_HALF_PI*0.4));
 
             // Increased solver iterations make constraint even more stable.
 
@@ -198,8 +199,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
             m_joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
             m_joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
             m_joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
-            m_joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
-
+            m_joints[curr_joint]->setAngularUpperLimit(btVector3(SIMD_HALF_PI*0.5, 0., SIMD_HALF_PI*0.5));
         }
 
         m_joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
@@ -226,12 +226,14 @@ void Hair::createHairMesh(const SkeletalModel *model)
     size_t totalElements = 0;
 
     // Gather size information
-    for (int i = 0; i < model->mesh_count; i++) {
+    for(int i = 0; i < model->mesh_count; i++)
+    {
         const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
 
         m_mesh->m_texturePageCount = std::max(m_mesh->m_texturePageCount, original->m_texturePageCount);
 
-        for (size_t j = 0; j < original->m_texturePageCount; j++) {
+        for(size_t j = 0; j < original->m_texturePageCount; j++)
+        {
             m_mesh->m_elementsPerTexture[j] += original->m_elementsPerTexture[j];
             totalElements += original->m_elementsPerTexture[j];
         }
@@ -241,12 +243,12 @@ void Hair::createHairMesh(const SkeletalModel *model)
     m_mesh->m_elements.resize(totalElements, 0);
 
     // - with matrix index information
-    m_mesh->m_matrixIndices.resize( m_mesh->m_vertices.size() );
+    m_mesh->m_matrixIndices.resize(m_mesh->m_vertices.size());
 
     // Copy information
     std::vector<uint32_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
     m_mesh->m_vertices.clear();
-    for (int i = 0; i < model->mesh_count; i++)
+    for(int i = 0; i < model->mesh_count; i++)
     {
         const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
 
@@ -256,12 +258,13 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
         // Copy elements
         uint32_t originalElementsStart = 0;
-        for (size_t page = 0; page < original->m_texturePageCount; page++)
+        for(size_t page = 0; page < original->m_texturePageCount; page++)
         {
             memcpy(&m_mesh->m_elements[elementsStartPerTexture[page]],
                    &original->m_elements[originalElementsStart],
                    sizeof(uint32_t) * original->m_elementsPerTexture[page]);
-            for (size_t j = 0; j < original->m_elementsPerTexture[page]; j++) {
+            for(size_t j = 0; j < original->m_elementsPerTexture[page]; j++)
+            {
                 m_mesh->m_elements[elementsStartPerTexture[page]] = verticesStart + original->m_elements[originalElementsStart];
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;
@@ -275,7 +278,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
          * correctly.
          */
         m_elements[i].position = model->mesh_tree[i].offset;
-        if (i > 0)
+        if(i > 0)
         {
             // TODO: This assumes the parent is always the preceding mesh.
             // True for hair, obviously wrong for everything else. Can stay
@@ -284,29 +287,30 @@ void Hair::createHairMesh(const SkeletalModel *model)
         }
 
         // And create vertex data (including matrix indices)
-        for (size_t j = 0; j < original->m_vertices.size(); j++) {
+        for(size_t j = 0; j < original->m_vertices.size(); j++)
+        {
             m_mesh->m_matrixIndices.emplace_back();
-            assert( m_mesh->m_matrixIndices.size() > verticesStart+j );
-            if (original->m_vertices[j].position[1] <= 0)
+            assert(m_mesh->m_matrixIndices.size() > verticesStart + j);
+            if(original->m_vertices[j].position[1] <= 0)
             {
-                m_mesh->m_matrixIndices[verticesStart+j].i = i;
-                m_mesh->m_matrixIndices[verticesStart+j].j = i+1;
+                m_mesh->m_matrixIndices[verticesStart + j].i = i;
+                m_mesh->m_matrixIndices[verticesStart + j].j = i + 1;
             }
             else
             {
-                m_mesh->m_matrixIndices[verticesStart+j].i = i+1;
-                m_mesh->m_matrixIndices[verticesStart+j].j = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
+                m_mesh->m_matrixIndices[verticesStart + j].i = i + 1;
+                m_mesh->m_matrixIndices[verticesStart + j].j = std::min(static_cast<int8_t>(i + 2), static_cast<int8_t>(model->mesh_count));
             }
 
             // Now move all the hair vertices
-            m_mesh->m_vertices[verticesStart+j].position += m_elements[i].position;
+            m_mesh->m_vertices[verticesStart + j].position += m_elements[i].position;
 
             // If the normal isn't fully in y direction, cancel its y component
             // This is perhaps a bit dubious.
-            if (m_mesh->m_vertices[verticesStart+j].normal[0] != 0 || m_mesh->m_vertices[verticesStart+j].normal[2] != 0)
+            if(m_mesh->m_vertices[verticesStart + j].normal[0] != 0 || m_mesh->m_vertices[verticesStart + j].normal[2] != 0)
             {
-                m_mesh->m_vertices[verticesStart+j].normal[1] = 0;
-                m_mesh->m_vertices[verticesStart+j].normal.normalize();
+                m_mesh->m_vertices[verticesStart + j].normal[1] = 0;
+                m_mesh->m_vertices[verticesStart + j].normal.normalize();
             }
         }
     }
@@ -332,20 +336,22 @@ void HairSetup::getSetup(uint32_t hair_entry_index)
     m_jointErp = res["props"]["joint_erp"];
     m_hairDamping[0] = res["props"]["hair_damping"][1];
     m_hairDamping[1] = res["props"]["hair_damping"][2];
-    m_headOffset = {res["offset"][1], res["offset"][2], res["offset"][3]};
-    m_rootAngle = {res["root_angle"][1], res["root_angle"][2], res["root_angle"][3]};
+    m_headOffset = { res["offset"][1], res["offset"][2], res["offset"][3] };
+    m_rootAngle = { res["root_angle"][1], res["root_angle"][2], res["root_angle"][3] };
 }
-
 
 Hair::~Hair()
 {
-    for(auto& joint : m_joints) {
+    for(auto& joint : m_joints)
+    {
         if(joint)
             bt_engine_dynamicsWorld->removeConstraint(joint.get());
     }
 
-    for(auto& element : m_elements) {
-        if(element.body) {
+    for(auto& element : m_elements)
+    {
+        if(element.body)
+        {
             element.body->setUserPointer(nullptr);
             bt_engine_dynamicsWorld->removeRigidBody(element.body.get());
         }

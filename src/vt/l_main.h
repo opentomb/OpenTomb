@@ -2,9 +2,6 @@
 #define _L_MAIN_H_
 
 #include <SDL2/SDL_rwops.h>
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
 #include <vector>
 #include <string>
 
@@ -18,497 +15,497 @@
   * All indexes are converted, so they can be used directly.
   * Endian conversion is done at the lowest possible layer, most of the time this is in the read_bitxxx functions.
   */
-class TR_Level {
-      public:
-        TR_Level()
-        {
-            this->game_version = TR_UNKNOWN;
-            strncpy(this->sfx_path, "MAIN.SFX", 256);
+class TR_Level
+{
+public:
+    TR_Level()
+    {
+        this->game_version = TR_UNKNOWN;
+        strncpy(this->sfx_path, "MAIN.SFX", 256);
 
+        this->textile8_count = 0;
+        this->textile16_count = 0;
+        this->textile8 = nullptr;
+        this->textile16 = nullptr;
+        this->textile32.clear();
+
+        this->floor_data_size = 0;          // destroyed
+        this->floor_data = nullptr;            // destroyed
+        this->mesh_indices_count = 0;       // destroyed
+        this->mesh_indices = nullptr;          // destroyed
+
+        this->animations_count = 0;         // destroyed
+        this->animations = nullptr;            // destroyed
+        this->state_changes_count = 0;      // destroyed
+        this->state_changes = nullptr;         // destroyed
+        this->anim_dispatches_count = 0;    // destroyed
+        this->anim_dispatches = nullptr;       // destroyed
+        this->anim_commands_count = 0;      // destroyed
+        this->anim_commands = nullptr;         // destroyeds
+
+        this->moveables_count = 0;          // destroyed
+        this->moveables = nullptr;             // destroyed
+        this->static_meshes_count = 0;      // destroyed
+        this->static_meshes = nullptr;         // destroyed
+        this->object_textures.clear();       // destroyed
+        this->animated_textures_count = 0;  // destroyed
+        this->animated_textures_uv_count = 0; // destroyed
+        this->animated_textures = nullptr;     // destroyed
+        this->sprite_textures.clear();       // destroyed
+        this->sprite_sequences_count = 0;   // destroyed
+        this->sprite_sequences = nullptr;      // destroyed
+        this->cameras_count = 0;            // destroyed
+        this->cameras = nullptr;               // destroyed
+        this->flyby_cameras_count = 0;      // destroyed
+        this->flyby_cameras = nullptr;         // destroyed
+        this->sound_sources_count = 0;      // destroyed
+        this->sound_sources = nullptr;         // destroyed
+
+        this->boxes_count = 0;              // destroyed
+        this->boxes = nullptr;                 // destroyed
+        this->overlaps_count = 0;           // destroyed
+        this->overlaps = nullptr;              // destroyed
+        this->zones_count = 0;              // destroyed
+        this->zones = nullptr;                 // destroyed
+        this->items_count = 0;              // destroyed
+        this->items = nullptr;                 // destroyed
+        this->ai_objects_count = 0;         // destroyed
+        this->ai_objects = nullptr;            // destroyed
+        this->cinematic_frames_count = 0;   // destroyed
+        this->cinematic_frames = nullptr;      // destroyed
+
+        this->demo_data_count = 0;          // destroyed
+        this->demo_data = nullptr;             // destroyed
+        this->soundmap = nullptr;              // destroyed
+        this->sound_details_count = 0;      // destroyed
+        this->sound_details = nullptr;         // destroyed
+        this->sample_indices_count = 0;     // destroyed
+        this->sample_indices = nullptr;        // destroyed
+        this->samples_count = 0;            // destroyed
+        this->samples_data.clear();               // destroyed
+
+        this->frame_data_size = 0;          // destroyed
+        this->frame_data = nullptr;            // destroyed
+        this->mesh_tree_data_size = 0;      // destroyed
+        this->mesh_tree_data = nullptr;        // destroyed
+
+        this->meshes_count = 0;             // destroyed
+        this->meshes = nullptr;                // destroyed
+        this->rooms_count = 0;              // destroyed
+        this->rooms = nullptr;                 // destroyed
+    }
+
+    ~TR_Level()
+    {
+        uint32_t i;
+
+        /**destroy all textiles**/
+        if(this->textile8_count)
+        {
             this->textile8_count = 0;
-            this->textile16_count = 0;
-            this->textile8 = NULL;
-            this->textile16 = NULL;
-            this->textile32.clear();
-
-            this->floor_data_size = 0;          // destroyed
-            this->floor_data = NULL;            // destroyed
-            this->mesh_indices_count = 0;       // destroyed
-            this->mesh_indices = NULL;          // destroyed
-
-            this->animations_count = 0;         // destroyed
-            this->animations = NULL;            // destroyed
-            this->state_changes_count = 0;      // destroyed
-            this->state_changes = NULL;         // destroyed
-            this->anim_dispatches_count = 0;    // destroyed
-            this->anim_dispatches = NULL;       // destroyed
-            this->anim_commands_count = 0;      // destroyed
-            this->anim_commands = NULL;         // destroyeds
-
-            this->moveables_count = 0;          // destroyed
-            this->moveables = NULL;             // destroyed
-            this->static_meshes_count = 0;      // destroyed
-            this->static_meshes = NULL;         // destroyed
-            this->object_textures.clear();       // destroyed
-            this->animated_textures_count = 0;  // destroyed
-            this->animated_textures_uv_count = 0; // destroyed
-            this->animated_textures = NULL;     // destroyed
-            this->sprite_textures.clear();       // destroyed
-            this->sprite_sequences_count = 0;   // destroyed
-            this->sprite_sequences = NULL;      // destroyed
-            this->cameras_count = 0;            // destroyed
-            this->cameras = NULL;               // destroyed
-            this->flyby_cameras_count = 0;      // destroyed
-            this->flyby_cameras = NULL;         // destroyed
-            this->sound_sources_count = 0;      // destroyed
-            this->sound_sources = NULL;         // destroyed
-
-            this->boxes_count = 0;              // destroyed
-            this->boxes = NULL;                 // destroyed
-            this->overlaps_count = 0;           // destroyed
-            this->overlaps = NULL;              // destroyed
-            this->zones_count = 0;              // destroyed
-            this->zones = NULL;                 // destroyed
-            this->items_count = 0;              // destroyed
-            this->items = NULL;                 // destroyed
-            this->ai_objects_count = 0;         // destroyed
-            this->ai_objects = NULL;            // destroyed
-            this->cinematic_frames_count = 0;   // destroyed
-            this->cinematic_frames = NULL;      // destroyed
-
-            this->demo_data_count = 0;          // destroyed
-            this->demo_data = NULL;             // destroyed
-            this->soundmap = NULL;              // destroyed
-            this->sound_details_count = 0;      // destroyed
-            this->sound_details = NULL;         // destroyed
-            this->sample_indices_count = 0;     // destroyed
-            this->sample_indices = NULL;        // destroyed
-            this->samples_count = 0;            // destroyed
-            this->samples_data.clear();               // destroyed
-
-            this->frame_data_size = 0;          // destroyed
-            this->frame_data = NULL;            // destroyed
-            this->mesh_tree_data_size = 0;      // destroyed
-            this->mesh_tree_data = NULL;        // destroyed
-
-            this->meshes_count = 0;             // destroyed
-            this->meshes = NULL;                // destroyed
-            this->rooms_count = 0;              // destroyed
-            this->rooms = NULL;                 // destroyed
+            free(this->textile8);
+            this->textile8 = nullptr;
         }
 
-        ~TR_Level()
+        if(this->textile16_count)
         {
-            uint32_t i;
-
-            /**destroy all textiles**/
-            if(this->textile8_count)
-            {
-                this->textile8_count = 0;
-                free(this->textile8);
-                this->textile8 = NULL;
-            }
-
-            if(this->textile16_count)
-            {
-                this->textile16_count = 0;
-                free(this->textile16);
-                this->textile16 = NULL;
-            }
-
-            this->textile32.clear();
-
-            /**destroy other data**/
-            if(this->floor_data_size)
-            {
-                this->floor_data_size = 0;
-                free(this->floor_data);
-                this->floor_data = NULL;
-            }
-
-            if(this->mesh_indices_count)
-            {
-                this->mesh_indices_count = 0;
-                free(this->mesh_indices);
-                this->mesh_indices = NULL;
-            }
-
-            if(this->animations_count)
-            {
-                this->animations_count = 0;
-                free(this->animations);
-                this->animations = NULL;
-            }
-
-            if(this->state_changes_count)
-            {
-                this->state_changes_count = 0;
-                free(this->state_changes);
-                this->state_changes = NULL;
-            }
-
-            if(this->anim_dispatches_count)
-            {
-                this->anim_dispatches_count = 0;
-                free(this->anim_dispatches);
-                this->anim_dispatches = NULL;
-            }
-
-            if(this->anim_commands_count)
-            {
-                this->anim_commands_count = 0;
-                free(this->anim_commands);
-                this->anim_commands = NULL;
-            }
-
-            if(this->moveables_count)
-            {
-                this->moveables_count = 0;
-                free(this->moveables);
-                this->moveables = NULL;
-            }
-
-            if(this->static_meshes_count)
-            {
-                this->static_meshes_count = 0;
-                free(this->static_meshes);
-                this->static_meshes = NULL;
-            }
-
-            this->object_textures.clear();
-
-            if(this->animated_textures_count)
-            {
-                this->animated_textures_count = 0;
-                free(this->animated_textures);
-                this->animated_textures = NULL;
-            }
-
-            this->sprite_textures.clear();
-
-            if(this->sprite_sequences_count)
-            {
-                this->sprite_sequences_count = 0;
-                free(this->sprite_sequences);
-                this->sprite_sequences = NULL;
-            }
-
-            if(this->cameras_count)
-            {
-                this->cameras_count = 0;
-                free(this->cameras);
-                this->cameras = NULL;
-            }
-
-            if(this->flyby_cameras_count)
-            {
-                this->flyby_cameras_count = 0;
-                free(this->flyby_cameras);
-                this->flyby_cameras = NULL;
-            }
-
-            if(this->sound_sources_count)
-            {
-                this->sound_sources_count = 0;
-                free(this->sound_sources);
-                this->sound_sources = NULL;
-            }
-
-            if(this->boxes_count)
-            {
-                this->boxes_count = 0;
-                free(this->boxes);
-                this->boxes = NULL;
-            }
-
-            if(this->overlaps_count)
-            {
-                this->overlaps_count = 0;
-                free(this->overlaps);
-                this->overlaps = NULL;
-            }
-
-            if(this->zones_count)
-            {
-                this->zones_count = 0;
-                free(this->zones);
-                this->zones = NULL;
-            }
-
-            if(this->items_count)
-            {
-                this->items_count = 0;
-                free(this->items);
-                this->items = NULL;
-            }
-
-            if(this->ai_objects_count)
-            {
-                this->ai_objects_count = 0;
-                free(this->ai_objects);
-                this->ai_objects = NULL;
-            }
-
-            if(this->cinematic_frames_count)
-            {
-                this->cinematic_frames_count = 0;
-                free(this->cinematic_frames);
-                this->cinematic_frames = NULL;
-            }
-
-            if(this->demo_data_count)
-            {
-                this->demo_data_count = 0;
-                free(this->demo_data);
-                this->demo_data = NULL;
-            }
-
-            if(this->soundmap)
-            {
-                free(this->soundmap);
-                this->soundmap = NULL;
-            }
-
-            if(this->sound_details_count)
-            {
-                this->sound_details_count = 0;
-                free(this->sound_details);
-                this->sound_details = NULL;
-            }
-
-            if(!this->samples_data.empty())
-            {
-                this->samples_count = 0;
-                this->samples_data.clear();
-            }
-
-            if(this->sample_indices_count)
-            {
-                this->sample_indices_count = 0;
-                free(this->sample_indices);
-                this->sample_indices = NULL;
-            }
-
-            if(this->frame_data_size)
-            {
-                this->frame_data_size = 0;
-                free(this->frame_data);
-                this->frame_data = NULL;
-            }
-
-            if(this->mesh_tree_data_size)
-            {
-                this->mesh_tree_data_size = 0;
-                free(this->mesh_tree_data);
-                this->mesh_tree_data = NULL;
-            }
-
-
-            if(this->meshes_count)
-            {
-                for(i = 0; i < this->meshes_count; i ++)
-                {
-                    if(this->meshes[i].lights)
-                    {
-                        free(this->meshes[i].lights);
-                        this->meshes[i].lights = NULL;
-                    }
-
-                    if(this->meshes[i].num_textured_triangles)
-                    {
-                        free(this->meshes[i].textured_triangles);
-                        this->meshes[i].textured_triangles = NULL;
-                        this->meshes[i].num_textured_triangles = 0;
-                    }
-
-                    if(this->meshes[i].num_textured_rectangles)
-                    {
-                        free(this->meshes[i].textured_rectangles);
-                        this->meshes[i].textured_rectangles = NULL;
-                        this->meshes[i].num_textured_rectangles = 0;
-                    }
-
-                    if(this->meshes[i].num_coloured_triangles)
-                    {
-                        free(this->meshes[i].coloured_triangles);
-                        this->meshes[i].coloured_triangles = NULL;
-                        this->meshes[i].num_coloured_triangles = 0;
-                    }
-
-                    if(this->meshes[i].num_coloured_rectangles)
-                    {
-                        free(this->meshes[i].coloured_rectangles);
-                        this->meshes[i].coloured_rectangles = NULL;
-                        this->meshes[i].num_coloured_rectangles = 0;
-                    }
-
-                    if(this->meshes[i].normals)
-                    {
-                        free(this->meshes[i].normals);
-                        this->meshes[i].normals = NULL;
-                    }
-
-                    if(this->meshes[i].vertices)
-                    {
-                        free(this->meshes[i].vertices);
-                        this->meshes[i].vertices = NULL;
-                    }
-                }
-                this->meshes_count = 0;
-                free(this->meshes);
-                this->meshes = NULL;
-            }
-
-            if(this->rooms_count)
-            {
-                for(i = 0; i < this->rooms_count; i ++)
-                {
-                    if(this->rooms[i].num_layers)
-                    {
-                        this->rooms[i].num_layers = 0;
-                        free(this->rooms[i].layers);
-                        this->rooms[i].layers = NULL;
-                    }
-
-                    if(this->rooms[i].num_lights)
-                    {
-                        this->rooms[i].num_lights = 0;
-                        free(this->rooms[i].lights);
-                        this->rooms[i].lights = NULL;
-                    }
-
-                    if(this->rooms[i].num_portals)
-                    {
-                        this->rooms[i].num_portals = 0;
-                        free(this->rooms[i].portals);
-                        this->rooms[i].portals = NULL;
-                    }
-
-                    if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
-                    {
-                        this->rooms[i].num_xsectors = 0;
-                        this->rooms[i].num_zsectors = 0;
-                        free(this->rooms[i].sector_list);
-                        this->rooms[i].sector_list = NULL;
-                    }
-
-                    if(this->rooms[i].num_sprites)
-                    {
-                        this->rooms[i].num_sprites = 0;
-                        free(this->rooms[i].sprites);
-                        this->rooms[i].sprites = NULL;
-                    }
-
-                    if(this->rooms[i].num_static_meshes)
-                    {
-                        this->rooms[i].num_static_meshes = 0;
-                        free(this->rooms[i].static_meshes);
-                        this->rooms[i].static_meshes = NULL;
-                    }
-
-                    if(this->rooms[i].num_triangles)
-                    {
-                        this->rooms[i].num_triangles = 0;
-                        free(this->rooms[i].triangles);
-                        this->rooms[i].triangles = NULL;
-                    }
-
-                    if(this->rooms[i].num_rectangles)
-                    {
-                        this->rooms[i].num_rectangles = 0;
-                        free(this->rooms[i].rectangles);
-                        this->rooms[i].rectangles = NULL;
-                    }
-
-                    if(this->rooms[i].num_vertices)
-                    {
-                        this->rooms[i].num_vertices = 0;
-                        free(this->rooms[i].vertices);
-                        this->rooms[i].vertices = NULL;
-                    }
-                }
-                this->rooms_count = 0;
-                free(this->rooms);
-                this->rooms = NULL;
-            }
+            this->textile16_count = 0;
+            free(this->textile16);
+            this->textile16 = nullptr;
         }
+
+        this->textile32.clear();
+
+        /**destroy other data**/
+        if(this->floor_data_size)
+        {
+            this->floor_data_size = 0;
+            free(this->floor_data);
+            this->floor_data = nullptr;
+        }
+
+        if(this->mesh_indices_count)
+        {
+            this->mesh_indices_count = 0;
+            free(this->mesh_indices);
+            this->mesh_indices = nullptr;
+        }
+
+        if(this->animations_count)
+        {
+            this->animations_count = 0;
+            free(this->animations);
+            this->animations = nullptr;
+        }
+
+        if(this->state_changes_count)
+        {
+            this->state_changes_count = 0;
+            free(this->state_changes);
+            this->state_changes = nullptr;
+        }
+
+        if(this->anim_dispatches_count)
+        {
+            this->anim_dispatches_count = 0;
+            free(this->anim_dispatches);
+            this->anim_dispatches = nullptr;
+        }
+
+        if(this->anim_commands_count)
+        {
+            this->anim_commands_count = 0;
+            free(this->anim_commands);
+            this->anim_commands = nullptr;
+        }
+
+        if(this->moveables_count)
+        {
+            this->moveables_count = 0;
+            free(this->moveables);
+            this->moveables = nullptr;
+        }
+
+        if(this->static_meshes_count)
+        {
+            this->static_meshes_count = 0;
+            free(this->static_meshes);
+            this->static_meshes = nullptr;
+        }
+
+        this->object_textures.clear();
+
+        if(this->animated_textures_count)
+        {
+            this->animated_textures_count = 0;
+            free(this->animated_textures);
+            this->animated_textures = nullptr;
+        }
+
+        this->sprite_textures.clear();
+
+        if(this->sprite_sequences_count)
+        {
+            this->sprite_sequences_count = 0;
+            free(this->sprite_sequences);
+            this->sprite_sequences = nullptr;
+        }
+
+        if(this->cameras_count)
+        {
+            this->cameras_count = 0;
+            free(this->cameras);
+            this->cameras = nullptr;
+        }
+
+        if(this->flyby_cameras_count)
+        {
+            this->flyby_cameras_count = 0;
+            free(this->flyby_cameras);
+            this->flyby_cameras = nullptr;
+        }
+
+        if(this->sound_sources_count)
+        {
+            this->sound_sources_count = 0;
+            free(this->sound_sources);
+            this->sound_sources = nullptr;
+        }
+
+        if(this->boxes_count)
+        {
+            this->boxes_count = 0;
+            free(this->boxes);
+            this->boxes = nullptr;
+        }
+
+        if(this->overlaps_count)
+        {
+            this->overlaps_count = 0;
+            free(this->overlaps);
+            this->overlaps = nullptr;
+        }
+
+        if(this->zones_count)
+        {
+            this->zones_count = 0;
+            free(this->zones);
+            this->zones = nullptr;
+        }
+
+        if(this->items_count)
+        {
+            this->items_count = 0;
+            free(this->items);
+            this->items = nullptr;
+        }
+
+        if(this->ai_objects_count)
+        {
+            this->ai_objects_count = 0;
+            free(this->ai_objects);
+            this->ai_objects = nullptr;
+        }
+
+        if(this->cinematic_frames_count)
+        {
+            this->cinematic_frames_count = 0;
+            free(this->cinematic_frames);
+            this->cinematic_frames = nullptr;
+        }
+
+        if(this->demo_data_count)
+        {
+            this->demo_data_count = 0;
+            free(this->demo_data);
+            this->demo_data = nullptr;
+        }
+
+        if(this->soundmap)
+        {
+            free(this->soundmap);
+            this->soundmap = nullptr;
+        }
+
+        if(this->sound_details_count)
+        {
+            this->sound_details_count = 0;
+            free(this->sound_details);
+            this->sound_details = nullptr;
+        }
+
+        if(!this->samples_data.empty())
+        {
+            this->samples_count = 0;
+            this->samples_data.clear();
+        }
+
+        if(this->sample_indices_count)
+        {
+            this->sample_indices_count = 0;
+            free(this->sample_indices);
+            this->sample_indices = nullptr;
+        }
+
+        if(this->frame_data_size)
+        {
+            this->frame_data_size = 0;
+            free(this->frame_data);
+            this->frame_data = nullptr;
+        }
+
+        if(this->mesh_tree_data_size)
+        {
+            this->mesh_tree_data_size = 0;
+            free(this->mesh_tree_data);
+            this->mesh_tree_data = nullptr;
+        }
+
+        if(this->meshes_count)
+        {
+            for(i = 0; i < this->meshes_count; i++)
+            {
+                if(this->meshes[i].lights)
+                {
+                    free(this->meshes[i].lights);
+                    this->meshes[i].lights = nullptr;
+                }
+
+                if(this->meshes[i].num_textured_triangles)
+                {
+                    free(this->meshes[i].textured_triangles);
+                    this->meshes[i].textured_triangles = nullptr;
+                    this->meshes[i].num_textured_triangles = 0;
+                }
+
+                if(this->meshes[i].num_textured_rectangles)
+                {
+                    free(this->meshes[i].textured_rectangles);
+                    this->meshes[i].textured_rectangles = nullptr;
+                    this->meshes[i].num_textured_rectangles = 0;
+                }
+
+                if(this->meshes[i].num_coloured_triangles)
+                {
+                    free(this->meshes[i].coloured_triangles);
+                    this->meshes[i].coloured_triangles = nullptr;
+                    this->meshes[i].num_coloured_triangles = 0;
+                }
+
+                if(this->meshes[i].num_coloured_rectangles)
+                {
+                    free(this->meshes[i].coloured_rectangles);
+                    this->meshes[i].coloured_rectangles = nullptr;
+                    this->meshes[i].num_coloured_rectangles = 0;
+                }
+
+                if(this->meshes[i].normals)
+                {
+                    free(this->meshes[i].normals);
+                    this->meshes[i].normals = nullptr;
+                }
+
+                if(this->meshes[i].vertices)
+                {
+                    free(this->meshes[i].vertices);
+                    this->meshes[i].vertices = nullptr;
+                }
+            }
+            this->meshes_count = 0;
+            free(this->meshes);
+            this->meshes = nullptr;
+        }
+
+        if(this->rooms_count)
+        {
+            for(i = 0; i < this->rooms_count; i++)
+            {
+                if(this->rooms[i].num_layers)
+                {
+                    this->rooms[i].num_layers = 0;
+                    free(this->rooms[i].layers);
+                    this->rooms[i].layers = nullptr;
+                }
+
+                if(this->rooms[i].num_lights)
+                {
+                    this->rooms[i].num_lights = 0;
+                    free(this->rooms[i].lights);
+                    this->rooms[i].lights = nullptr;
+                }
+
+                if(this->rooms[i].num_portals)
+                {
+                    this->rooms[i].num_portals = 0;
+                    free(this->rooms[i].portals);
+                    this->rooms[i].portals = nullptr;
+                }
+
+                if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
+                {
+                    this->rooms[i].num_xsectors = 0;
+                    this->rooms[i].num_zsectors = 0;
+                    free(this->rooms[i].sector_list);
+                    this->rooms[i].sector_list = nullptr;
+                }
+
+                if(this->rooms[i].num_sprites)
+                {
+                    this->rooms[i].num_sprites = 0;
+                    free(this->rooms[i].sprites);
+                    this->rooms[i].sprites = nullptr;
+                }
+
+                if(this->rooms[i].num_static_meshes)
+                {
+                    this->rooms[i].num_static_meshes = 0;
+                    free(this->rooms[i].static_meshes);
+                    this->rooms[i].static_meshes = nullptr;
+                }
+
+                if(this->rooms[i].num_triangles)
+                {
+                    this->rooms[i].num_triangles = 0;
+                    free(this->rooms[i].triangles);
+                    this->rooms[i].triangles = nullptr;
+                }
+
+                if(this->rooms[i].num_rectangles)
+                {
+                    this->rooms[i].num_rectangles = 0;
+                    free(this->rooms[i].rectangles);
+                    this->rooms[i].rectangles = nullptr;
+                }
+
+                if(this->rooms[i].num_vertices)
+                {
+                    this->rooms[i].num_vertices = 0;
+                    free(this->rooms[i].vertices);
+                    this->rooms[i].vertices = nullptr;
+                }
+            }
+            this->rooms_count = 0;
+            free(this->rooms);
+            this->rooms = nullptr;
+        }
+    }
 
     int32_t game_version;                   ///< \brief game engine version.
 
     uint32_t textile8_count;
     uint32_t textile16_count;
-    tr_textile8_t *textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
-    tr2_textile16_t *textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
+    tr_textile8_t *textile8 = nullptr;                ///< \brief 8-bit 256x256 textiles(TR1-3).
+    tr2_textile16_t *textile16 = nullptr;             ///< \brief 16-bit 256x256 textiles(TR2-5).
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     uint32_t rooms_count;
     tr5_room_t *rooms;                      ///< \brief all rooms (normal and alternate).
     uint32_t floor_data_size;               ///< \brief the floor data size
-    uint16_t *floor_data;                   ///< \brief the floor data.
+    uint16_t *floor_data = nullptr;                   ///< \brief the floor data.
     uint32_t meshes_count;
-    tr4_mesh_t *meshes;                     ///< \brief all meshes (static and moveables).
+    tr4_mesh_t *meshes = nullptr;                     ///< \brief all meshes (static and moveables).
     uint32_t mesh_indices_count;
-    uint32_t *mesh_indices;                 ///< \brief mesh index table.
+    uint32_t *mesh_indices = nullptr;                 ///< \brief mesh index table.
     uint32_t animations_count;
-    tr_animation_t *animations;             ///< \brief animations for moveables.
+    tr_animation_t *animations = nullptr;             ///< \brief animations for moveables.
     uint32_t state_changes_count;
-    tr_state_change_t *state_changes;       ///< \brief state changes for moveables.
+    tr_state_change_t *state_changes = nullptr;       ///< \brief state changes for moveables.
     uint32_t anim_dispatches_count;
-    tr_anim_dispatch_t *anim_dispatches;    ///< \brief animation dispatches for moveables.
+    tr_anim_dispatch_t *anim_dispatches = nullptr;    ///< \brief animation dispatches for moveables.
     uint32_t anim_commands_count;
-    int16_t *anim_commands;                 ///< \brief animation commands for moveables.
+    int16_t *anim_commands = nullptr;                 ///< \brief animation commands for moveables.
     uint32_t moveables_count;
     tr_moveable_t *moveables;               ///< \brief data for the moveables.
     uint32_t static_meshes_count;
-    tr_staticmesh_t *static_meshes;         ///< \brief data for the static meshes.
+    tr_staticmesh_t *static_meshes = nullptr;         ///< \brief data for the static meshes.
     std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
     uint32_t animated_textures_count;
-    uint16_t *animated_textures;            ///< \brief animated textures.
+    uint16_t *animated_textures = nullptr;            ///< \brief animated textures.
     uint32_t animated_textures_uv_count;
     std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
     uint32_t sprite_sequences_count;
     tr_sprite_sequence_t *sprite_sequences; ///< \brief sprite sequences for animation.
     uint32_t cameras_count;
-    tr_camera_t *cameras;                   ///< \brief cameras.
+    tr_camera_t *cameras = nullptr;                   ///< \brief cameras.
     uint32_t flyby_cameras_count;
-    tr4_flyby_camera_t *flyby_cameras;      ///< \brief flyby cameras.
+    tr4_flyby_camera_t *flyby_cameras = nullptr;      ///< \brief flyby cameras.
     uint32_t sound_sources_count;
-    tr_sound_source_t *sound_sources;       ///< \brief sound sources.
+    tr_sound_source_t *sound_sources = nullptr;       ///< \brief sound sources.
     uint32_t boxes_count;
-    tr_box_t *boxes;                        ///< \brief boxes.
+    tr_box_t *boxes = nullptr;                        ///< \brief boxes.
     uint32_t overlaps_count;
-    uint16_t *overlaps;                     ///< \brief overlaps.
+    uint16_t *overlaps = nullptr;                     ///< \brief overlaps.
     uint32_t zones_count;
-    int16_t *zones;                         ///< \brief zones.
+    int16_t *zones = nullptr;                         ///< \brief zones.
     uint32_t items_count;
-    tr2_item_t *items;                      ///< \brief items.
+    tr2_item_t *items = nullptr;                      ///< \brief items.
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
     tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
     tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).
     uint32_t ai_objects_count;
-    tr4_ai_object_t *ai_objects;            ///< \brief ai objects (TR4-5).
+    tr4_ai_object_t *ai_objects = nullptr;            ///< \brief ai objects (TR4-5).
     uint32_t cinematic_frames_count;
-    tr_cinematic_frame_t *cinematic_frames; ///< \brief cinematic frames (TR1-3).
+    tr_cinematic_frame_t *cinematic_frames = nullptr; ///< \brief cinematic frames (TR1-3).
     uint32_t demo_data_count;
-    uint8_t *demo_data;                     ///< \brief demo data.
-    int16_t *soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
+    uint8_t *demo_data = nullptr;                     ///< \brief demo data.
+    int16_t *soundmap = nullptr;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
     uint32_t sound_details_count;
     tr_sound_details_t *sound_details;      ///< \brief sound details.
     uint32_t samples_count;
     std::vector<uint8_t> samples_data;                  ///< \brief samples.
     uint32_t sample_indices_count;
-    uint32_t *sample_indices;               ///< \brief sample indices.
+    uint32_t *sample_indices = nullptr;               ///< \brief sample indices.
 
     uint32_t frame_data_size;               ///< \brief frame data array size
-    uint16_t *frame_data;                   ///< \brief frame data array
+    uint16_t *frame_data = nullptr;                   ///< \brief frame data array
     uint32_t mesh_tree_data_size;
-    uint32_t *mesh_tree_data;
+    uint32_t *mesh_tree_data = nullptr;
 
     char     sfx_path[256];
 
     void read_level(const std::string &filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
 
-    protected:
+protected:
     uint32_t num_textiles;          ///< \brief number of 256x256 textiles.
     uint32_t num_room_textiles;     ///< \brief number of 256x256 room textiles (TR4-5).
     uint32_t num_obj_textiles;      ///< \brief number of 256x256 object textiles (TR4-5).
@@ -582,7 +579,7 @@ class TR_Level {
     void read_tr4_face4(SDL_RWops * const src, tr4_face4_t & meshface);
     void read_tr4_room_light(SDL_RWops * const src, tr5_room_light_t & light);
     void read_tr4_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex);
-     void read_tr4_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh);
+    void read_tr4_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh);
     void read_tr4_room(SDL_RWops * const src, tr5_room_t & room);
     void read_tr4_item(SDL_RWops * const src, tr2_item_t & item);
     void read_tr4_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);

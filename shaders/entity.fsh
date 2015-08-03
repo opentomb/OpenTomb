@@ -43,5 +43,8 @@ void main()
     
     // Combine with color from texture and vertex
     vec4 texColor = texture(color_map, varying_texCoord);
-    color = texColor * lightColor * varying_color;
+    vec4 c = texColor * lightColor * varying_color;
+    if( c.a < 0.5 )
+        discard;
+    color = c;
 }

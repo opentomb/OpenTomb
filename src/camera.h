@@ -1,8 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
-#include <cmath>
 
 #include <GL/glew.h>
 
@@ -39,16 +37,16 @@ struct Frustum;
 
 struct Camera
 {
-    btVector3 m_pos{0,0,0};                 // camera position
-    btVector3 m_prevPos{0,0,0};            // previous camera position
-    btVector3 m_viewDir{0,0,1};            // view cameradirection
-    btVector3 m_upDir{0,1,0};              // up vector
-    btVector3 m_rightDir{1,0,0};           // strafe vector
+    btVector3 m_pos{ 0,0,0 };                 // camera position
+    btVector3 m_prevPos{ 0,0,0 };            // previous camera position
+    btVector3 m_viewDir{ 0,0,1 };            // view cameradirection
+    btVector3 m_upDir{ 0,1,0 };              // up vector
+    btVector3 m_rightDir{ 1,0,0 };           // strafe vector
     btVector3 m_ang;                 // camera orientation
 
-    matrix4 m_glViewMat;
-    matrix4 m_glProjMat;
-    matrix4 m_glViewProjMat;
+    matrix4 m_glViewMat = matrix4();
+    matrix4 m_glProjMat = matrix4();
+    matrix4 m_glViewProjMat = matrix4();
 
     Plane m_clipPlanes[4];        // frustum side clip planes
     std::shared_ptr<Frustum> frustum;               // camera frustum structure
@@ -65,11 +63,13 @@ struct Camera
     GLfloat m_shakeValue = 0;
     GLfloat m_shakeTime = 0;
 
-    int8_t m_targetDir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
+    int8_t m_targetDir = 1;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
     Room* m_currentRoom = nullptr;
 
     Camera();
+    Camera(const Camera&) = delete;
+    Camera& operator=(const Camera&) = delete;
 
     void apply();
     void setFovAspect(GLfloat fov, GLfloat aspect);

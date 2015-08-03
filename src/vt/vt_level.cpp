@@ -1,6 +1,8 @@
+#include <cstdio>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
-#include <stdio.h>
+
 #include "vt_level.h"
 
 #define RCSID "$Id: vt_level.cpp,v 1.1 2002/09/20 15:59:02 crow Exp $"
@@ -34,7 +36,7 @@ tr_staticmesh_t *VT_Level::find_staticmesh_id(uint32_t object_id)
     uint32_t i;
 
     for (i = 0; i < static_meshes_count; i++)
-        if (static_meshes[i].object_id == object_id)
+        if ((static_meshes[i].object_id == object_id) && (mesh_indices[static_meshes[i].mesh]))
             return &static_meshes[i];
 
     return NULL;
@@ -66,9 +68,9 @@ void VT_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t 
 {
     int x, y;
 
-    for (y = 0; y < 256; y++) 
+    for (y = 0; y < 256; y++)
     {
-        for (x = 0; x < 256; x++) 
+        for (x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
@@ -84,9 +86,9 @@ void VT_Level::convert_textile16_to_textile32(tr2_textile16_t & tex, tr4_textile
 {
     int x, y;
 
-    for (y = 0; y < 256; y++) 
+    for (y = 0; y < 256; y++)
     {
-        for (x = 0; x < 256; x++) 
+        for (x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
@@ -177,7 +179,7 @@ void VT_Level::dump_textures()
     uint32_t i;
     char buffer[1024];
 
-    for (i = 0; i < num_textiles; i++) 
+    for (i = 0; i < num_textiles; i++)
     {
         snprintf(buffer, 1024, "dump/%03i_32.tga", i);
         WriteTGAfile(buffer, (uint8_t *)&textile32[i].pixels, 256, 256, 0);

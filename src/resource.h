@@ -3,6 +3,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
@@ -38,19 +39,6 @@
 #define TR_SECTOR_DIAGONAL_TYPE_NONE            0
 #define TR_SECTOR_DIAGONAL_TYPE_NE              1
 #define TR_SECTOR_DIAGONAL_TYPE_NW              2
-
-// Tween is a short word for "inbeTWEEN vertical polygon", which is needed to fill
-// the gap between two sectors with different heights. If adjacent sector heights are
-// similar, it means that tween is degenerated (doesn't exist physically) - in that
-// case we use NONE type. If only one of two heights' pairs is similar, then tween is
-// either right or left pointed triangle (where "left" or "right" is derived by viewing
-// triangle from front side). If none of the heights are similar, we need quad tween.
-
-#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
-#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 ///@FIXME: Move skybox item IDs to script!
 
@@ -88,11 +76,11 @@ void Res_GenRoomFlipMap(World *world);
 void Res_GenBaseItems(World *world);
 void Res_GenVBOs(World *world);
 
-void     Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween);
-uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
 int      Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
+void     Res_Sector_FixHeights(RoomSector* sector);
 
 bool     Res_Poly_SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, World *world);
 
@@ -105,7 +93,7 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version);
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent);
 void Res_CreateEntityFunc(lua::State &lua, const std::string &func_name, int entity_id);
-void Res_GenEntityFunctions(std::map<uint32_t,std::shared_ptr<Entity>>& entities);
+void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity>>& entities);
 
 // Assign pickup functions to previously created base items.
 
@@ -126,7 +114,6 @@ bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 void Res_ScriptsOpen(int engine_version);
 void Res_ScriptsClose();
 void Res_AutoexecOpen(int engine_version);
-
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 

@@ -282,17 +282,19 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_room_vertex(src, room.vertices[i]);
 
     room.num_rectangles = read_bitu16(src);
-        room.rectangles = (tr4_face4_t*)malloc(room.num_rectangles * sizeof(tr4_face4_t));
+    room.rectangles = (tr4_face4_t*)malloc(room.num_rectangles * sizeof(tr4_face4_t));
     for (i = 0; i < room.num_rectangles; i++)
         read_tr_face4(src, room.rectangles[i]);
 
     room.num_triangles = read_bitu16(src);
-    room.triangles = (tr4_face3_t*)malloc(room.num_triangles * sizeof(tr4_face3_t));
+    if(room.num_triangles > 0)
+        room.triangles = (tr4_face3_t*)malloc(room.num_triangles * sizeof(tr4_face3_t));
     for (i = 0; i < room.num_triangles; i++)
         read_tr_face3(src, room.triangles[i]);
 
     room.num_sprites = read_bitu16(src);
-    room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
+    if(room.num_sprites > 0)
+        room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
     for (i = 0; i < room.num_sprites; i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
@@ -323,7 +325,8 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_room_light(src, room.lights[i]);
 
     room.num_static_meshes = read_bitu16(src);
-    room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
+    if(room.num_static_meshes > 0)
+        room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
     for (i = 0; i < room.num_static_meshes; i++)
         read_tr_room_staticmesh(src, room.static_meshes[i]);
 
@@ -454,22 +457,26 @@ void TR_Level::read_tr_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
     }
 
     mesh.num_textured_rectangles = read_bit16(src);
-    mesh.textured_rectangles = (tr4_face4_t*)malloc(mesh.num_textured_rectangles * sizeof(tr4_face4_t));
+    if(mesh.num_textured_rectangles > 0)
+        mesh.textured_rectangles = (tr4_face4_t*)malloc(mesh.num_textured_rectangles * sizeof(tr4_face4_t));
     for (i = 0; i < mesh.num_textured_rectangles; i++)
         read_tr_face4(src, mesh.textured_rectangles[i]);
 
     mesh.num_textured_triangles = read_bit16(src);
-    mesh.textured_triangles = (tr4_face3_t*)malloc(mesh.num_textured_triangles * sizeof(tr4_face3_t));
+    if(mesh.num_textured_triangles > 0)
+        mesh.textured_triangles = (tr4_face3_t*)malloc(mesh.num_textured_triangles * sizeof(tr4_face3_t));
     for (i = 0; i < mesh.num_textured_triangles; i++)
         read_tr_face3(src, mesh.textured_triangles[i]);
 
     mesh.num_coloured_rectangles = read_bit16(src);
-    mesh.coloured_rectangles = (tr4_face4_t*)malloc(mesh.num_coloured_rectangles * sizeof(tr4_face4_t));
+    if(mesh.num_coloured_rectangles > 0)
+        mesh.coloured_rectangles = (tr4_face4_t*)malloc(mesh.num_coloured_rectangles * sizeof(tr4_face4_t));
     for (i = 0; i < mesh.num_coloured_rectangles; i++)
         read_tr_face4(src, mesh.coloured_rectangles[i]);
 
     mesh.num_coloured_triangles = read_bit16(src);
-    mesh.coloured_triangles = (tr4_face3_t*)malloc(mesh.num_coloured_triangles * sizeof(tr4_face3_t));
+    if(mesh.num_coloured_triangles > 0)
+        mesh.coloured_triangles = (tr4_face3_t*)malloc(mesh.num_coloured_triangles * sizeof(tr4_face3_t));
     for (i = 0; i < mesh.num_coloured_triangles; i++)
         read_tr_face3(src, mesh.coloured_triangles[i]);
 }
@@ -693,7 +700,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     }
 
     this->sound_sources_count = read_bitu32(src);
-    this->sound_sources = (tr_sound_source_t*)malloc(this->sound_sources_count * sizeof(tr_sound_source_t));
+    if(this->sound_sources_count > 0)
+        this->sound_sources = (tr_sound_source_t*)malloc(this->sound_sources_count * sizeof(tr_sound_source_t));
     for(i = 0; i < this->sound_sources_count; i++)
     {
         this->sound_sources[i].x = read_bit32(src);
@@ -736,14 +744,16 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         read_tr_palette(src, this->palette);
 
     this->cinematic_frames_count = read_bitu16(src);
-    this->cinematic_frames = (tr_cinematic_frame_t*)malloc(this->cinematic_frames_count * sizeof(tr_cinematic_frame_t));
+    if(this->cinematic_frames_count > 0)
+        this->cinematic_frames = (tr_cinematic_frame_t*)malloc(this->cinematic_frames_count * sizeof(tr_cinematic_frame_t));
     for (i = 0; i < this->cinematic_frames_count; i++)
     {
         read_tr_cinematic_frame(src, this->cinematic_frames[i]);
     }
 
     this->demo_data_count = read_bitu16(src);
-    this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
+    if(this->demo_data_count > 0)
+        this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
     for(i=0; i < this->demo_data_count; i++)
         this->demo_data[i] = read_bitu8(src);
 

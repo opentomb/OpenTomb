@@ -1,11 +1,11 @@
 #ifndef _TR_TYPES_H_
 #define _TR_TYPES_H_
 
-#include <stdint.h>
 #include "glmath.h"
 
 /// \brief RGBA colour using bitu8. For palette etc.
-typedef struct {
+typedef struct
+{
     uint8_t r;        ///< \brief the red component.
     uint8_t g;        ///< \brief the green component.
     uint8_t b;        ///< \brief the blue component.
@@ -13,7 +13,8 @@ typedef struct {
 } tr2_colour_t;
 
 /// \brief RGBA colour using float. For single colours.
-typedef struct {
+typedef struct
+{
     float r;        ///< \brief the red component.
     float g;        ///< \brief the green component.
     float b;        ///< \brief the blue component.
@@ -24,7 +25,8 @@ typedef struct {
 typedef vec3_t tr5_vertex_t;
 
 /// \brief Definition for a triangle.
-typedef struct {
+typedef struct
+{
     uint16_t vertices[3];    ///< index into the appropriate list of vertices.
     uint16_t texture;        /**< \brief object-texture index or colour index.
                                * If the triangle is textured, then this is an index into the object-texture list.
@@ -38,7 +40,8 @@ typedef struct {
 } tr4_face3_t;
 
 /// \brief Definition for a rectangle.
-typedef struct {
+typedef struct
+{
     uint16_t vertices[4];    ///< index into the appropriate list of vertices.
     uint16_t texture;        /**< \brief object-texture index or colour index.
                                * If the rectangle is textured, then this is an index into the object-texture list.
@@ -57,7 +60,8 @@ typedef struct {
   *
   * Each pixel is an index into the colour palette.
   */
-typedef struct {
+typedef struct
+{
     uint8_t pixels[256][256];
 } tr_textile8_t;
 //typedef prtl::array < tr_textile8_t > tr_textile8_array_t;
@@ -70,7 +74,8 @@ typedef struct {
   * - 5-bit green channel (0x03e0)
   * - 5-bit blue channel (0x001f)
   */
-typedef struct {
+typedef struct
+{
     uint16_t pixels[256][256];
 } tr2_textile16_t;
 //typedef prtl::array < tr2_textile16_t > tr2_textile16_array_t;
@@ -79,14 +84,16 @@ typedef struct {
   *
   * Each pixel is an ABGR value.
   */
-typedef struct {
+typedef struct
+{
     uint32_t pixels[256][256];
 } tr4_textile32_t;
 //typedef prtl::array < tr4_textile32_t > tr4_textile32_array_t;
 
 /** \brief Room portal.
   */
-typedef struct {
+typedef struct
+{
     uint16_t adjoining_room;     ///< \brief which room this portal leads to.
     tr5_vertex_t normal;         /**< \brief which way the portal faces.
                                    * the normal points away from the adjacent room.
@@ -103,7 +110,8 @@ typedef struct {
 
 /** \brief Room sector.
   */
-typedef struct {
+typedef struct
+{
     uint16_t fd_index;     // Index into FloorData[]
     uint16_t box_index;    // Index into Boxes[]/Zones[] (-1 if none)
     uint8_t room_below;    // The number of the room below this one (-1 or 255 if none)
@@ -115,7 +123,8 @@ typedef struct {
 
 /** \brief Room light.
   */
-typedef struct {
+typedef struct
+{
     tr5_vertex_t pos;           // world coords
     tr2_colour_t color;         // three bytes rgb values
     float intensity;            // Calculated intensity
@@ -137,7 +146,8 @@ typedef struct {
 
 /** \brief Room sprite.
   */
-typedef struct {
+typedef struct
+{
     int16_t vertex;                 // offset into vertex list
     int16_t texture;                // offset into sprite texture list
 } tr_room_Sprite;
@@ -145,7 +155,8 @@ typedef struct {
 
 /** \brief Room layer (TR5).
   */
-typedef struct {
+typedef struct
+{
     uint16_t num_vertices;          // number of vertices in this layer (4 bytes)
     uint16_t unknown_l1;
     uint16_t unknown_l2;
@@ -171,7 +182,8 @@ typedef struct {
 
 /** \brief Room vertex.
   */
-typedef struct {
+typedef struct
+{
     tr5_vertex_t vertex;    // where this vertex lies (relative to tr2_room_info::x/z)
     int16_t lighting1;
     uint16_t attributes;    // A set of flags for special rendering effects [absent from TR1 data files]
@@ -188,7 +200,8 @@ typedef struct {
 
 /** \brief Room staticmesh.
   */
-typedef struct {
+typedef struct
+{
     tr5_vertex_t pos;       // world coords
     float rotation;         // high two bits (0xC000) indicate steps of
     // 90 degrees (e.g. (Rotation >> 14) * 90)
@@ -201,7 +214,8 @@ typedef struct {
 
 /** \brief Room.
   */
-typedef struct {
+typedef struct
+{
     tr5_vertex_t offset;            ///< \brief offset of room (world coordinates).
     float y_bottom;                 ///< \brief indicates lowest point in room.
     float y_top;                    ///< \brief indicates highest point in room.
@@ -232,7 +246,7 @@ typedef struct {
     int8_t  alternate_group;        // number of group which is used to switch alternate rooms
     // with (e.g. empty/filled with water is implemented as an empty room that alternates with a full room)
 
-        uint16_t flags;
+    uint16_t flags;
     // Flag bits:
     // 0x0001 - room is filled with water,
     // 0x0020 - Lara's ponytail gets blown by the wind;
@@ -240,7 +254,7 @@ typedef struct {
     // TR3 most likely has flags for "is raining", "is snowing", "water is cold", and "is
     // filled by quicksand", among others.
 
-        uint8_t water_scheme;
+    uint8_t water_scheme;
     // Water scheme is used with various room options, for example, R and M room flags in TRLE.
     // Also, it specifies lighting scheme, when 0x4000 vertex attribute is set.
 
@@ -270,7 +284,8 @@ typedef struct {
 
 /** \brief Mesh.
   */
-typedef struct {
+typedef struct
+{
     tr5_vertex_t centre;                // This is usually close to the mesh's centroid, and appears to be the center of a sphere used for collision testing.
     int32_t collision_size;             // This appears to be the radius of that aforementioned collisional sphere.
     int16_t num_vertices;               // number of vertices in this mesh
@@ -294,7 +309,8 @@ typedef struct {
 
 /** \brief Staticmesh.
   */
-typedef struct {                    // 32 bytes
+typedef struct
+{                    // 32 bytes
     uint32_t object_id;             // Object Identifier (matched in Items[])
     uint16_t mesh;                  // mesh (offset into MeshPointers[])
     tr5_vertex_t visibility_box[2];
@@ -314,7 +330,8 @@ typedef struct {                    // 32 bytes
   * When both are present, the bit-0 operation is always done before the bit-1 operation; in effect, read the stack but do not change it.
   * The next three bit32s are X, Y, Z offsets of the mesh's origin from the parent mesh's origin.
   */
-typedef struct {        // 4 bytes
+typedef struct
+{        // 4 bytes
     uint32_t flags;
     tr5_vertex_t offset;
 } tr_meshtree_t;
@@ -353,18 +370,19 @@ typedef struct {        // 4 bytes
   * sets in TR2/3, EXCEPT that the word order is reversed.
   *
   */
-/*typedef struct {
-    tr5_vertex_t bbox_low;
-    tr5_vertex_t bbox_high;
-    tr5_vertex_t offset;
-    tr5_vertex_array_t rotations;
-    int32_t byte_offset;
-} tr_frame_t;
-typedef prtl::array < tr_frame_t > tr_frame_array_t;*/
+  /*typedef struct {
+      tr5_vertex_t bbox_low;
+      tr5_vertex_t bbox_high;
+      tr5_vertex_t offset;
+      tr5_vertex_array_t rotations;
+      int32_t byte_offset;
+  } tr_frame_t;
+  typedef prtl::array < tr_frame_t > tr_frame_array_t;*/
 
-/** \brief Moveable.
-  */
-typedef struct {                // 18 bytes
+  /** \brief Moveable.
+    */
+typedef struct
+{                // 18 bytes
     uint32_t object_id;         // Item Identifier (matched in Items[])
     uint16_t num_meshes;        // number of meshes in this object
     uint16_t starting_mesh;     // stating mesh (offset into MeshPointers[])
@@ -377,7 +395,8 @@ typedef struct {                // 18 bytes
 
 /** \brief Item.
   */
-typedef struct {           // 24 bytes [TR1: 22 bytes]
+typedef struct
+{           // 24 bytes [TR1: 22 bytes]
     int16_t object_id;     // Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)
     int16_t room;          // which room contains this item
     tr5_vertex_t pos;      // world coords
@@ -393,7 +412,8 @@ typedef struct {           // 24 bytes [TR1: 22 bytes]
 
 /** \brief Sprite texture.
   */
-typedef struct {               // 16 bytes
+typedef struct
+{               // 16 bytes
     uint16_t        tile;
     int16_t         x0;        // tex coords
     int16_t         y0;        //
@@ -409,7 +429,8 @@ typedef struct {               // 16 bytes
 
 /** \brief Sprite sequence.
   */
-typedef struct {           // 8 bytes
+typedef struct
+{           // 8 bytes
     int32_t object_id;     // Item identifier (matched in Items[])
     int16_t length;        // negative of "how many sprites are in this sequence"
     int16_t offset;        // where (in sprite texture list) this sequence starts
@@ -424,7 +445,8 @@ typedef struct {           // 8 bytes
   * an animation's frame range may extend into the next animation's frame range,
   * and that may have a different FrameSize value.
   */
-typedef struct {                // 32 bytes TR1/2/3 40 bytes TR4
+typedef struct
+{                // 32 bytes TR1/2/3 40 bytes TR4
     uint32_t frame_offset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint8_t frame_rate;         // Engine ticks per frame
     uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
@@ -454,7 +476,8 @@ typedef struct {                // 32 bytes TR1/2/3 40 bytes TR4
   * to use; there may be more than one, with each separate one covering a different
   * range of frames.
   */
-typedef struct {                        // 6 bytes
+typedef struct
+{                        // 6 bytes
     uint16_t state_id;
     uint16_t num_anim_dispatches;       // number of ranges (seems to always be 1..5)
     uint16_t anim_dispatch;             // Offset into AnimDispatches[]
@@ -467,7 +490,8 @@ typedef struct {                        // 6 bytes
   * with some range of frames. This makes possible such specificity as one
   * animation for left foot forward and another animation for right foot forward.
   */
-typedef struct {                // 8 bytes
+typedef struct
+{                // 8 bytes
     int16_t low;                // Lowest frame that uses this range
     int16_t high;               // Highest frame (+1?) that uses this range
     int16_t next_animation;     // Animation to dispatch to
@@ -484,14 +508,15 @@ typedef struct {                // 8 bytes
   * (jump and grab points, etc.), while others of them are associated with
   * specific frames (sound, bubbles, etc.).
   */
-//typedef struct {        // 2 bytes
-//    int16_t value;
-//} tr_anim_command_t;
-//typedef prtl::array < tr_anim_command_t > tr_anim_command_array_t;
+  //typedef struct {        // 2 bytes
+  //    int16_t value;
+  //} tr_anim_command_t;
+  //typedef prtl::array < tr_anim_command_t > tr_anim_command_array_t;
 
-/** \brief Box.
-  */
-typedef struct {            // 8 bytes [TR1: 20 bytes] In TR1, the first four are bit32's instead of bitu8's, and are not scaled.
+  /** \brief Box.
+    */
+typedef struct
+{            // 8 bytes [TR1: 20 bytes] In TR1, the first four are bit32's instead of bitu8's, and are not scaled.
     uint32_t zmin;          // sectors (* 1024 units)
     uint32_t zmax;
     uint32_t xmin;
@@ -509,7 +534,8 @@ typedef struct {            // 8 bytes [TR1: 20 bytes] In TR1, the first four ar
   * seems to propagate omnidirectionally for about 10 horizontal-grid sizes
   * without regard for the presence of walls.
   */
-typedef struct {
+typedef struct
+{
     int32_t x;              // absolute X position of sound source (world coordinates)
     int32_t y;              // absolute Y position of sound source (world coordinates)
     int32_t z;              // absolute Z position of sound source (world coordinates)
@@ -526,7 +552,8 @@ typedef struct {
  * which is unnecessary, as it is managed internally by DirectSound.
  */
 
-typedef struct {                         // 8 bytes
+typedef struct
+{                         // 8 bytes
     uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
     uint16_t volume;                     // Global sample value
     uint16_t sound_range;                // Sound range
@@ -538,7 +565,6 @@ typedef struct {                         // 8 bytes
 } tr_sound_details_t;
 //typedef prtl::array < tr_sound_details_t > tr_sound_detail_array_t;
 
-
 /** \brief Object Texture Vertex.
   *
   * It specifies a vertex location in textile coordinates.
@@ -547,7 +573,8 @@ typedef struct {                         // 8 bytes
   * are in the object texture. And if the object texture is used to specify
   * a triangle, then the fourth vertex's values will all be zero.
   */
-typedef struct {            // 4 bytes
+typedef struct
+{            // 4 bytes
     int8_t xcoordinate;     // 1 if Xpixel is the low value, -1 if Xpixel is the high value in the object texture
     uint8_t xpixel;
     int8_t ycoordinate;     // 1 if Ypixel is the low value, -1 if Ypixel is the high value in the object texture
@@ -559,7 +586,8 @@ typedef struct {            // 4 bytes
   * These, thee contents of ObjectTextures[], are used for specifying texture
   * mapping for the world geometry and for mesh objects.
   */
-typedef struct {                    // 38 bytes TR4 - 20 in TR1/2/3
+typedef struct
+{                    // 38 bytes TR4 - 20 in TR1/2/3
     uint16_t transparency_flags;    // 0 means that a texture is all-opaque, and that transparency
     // information is ignored.
     // 1 means that transparency information is used. In 8-bit colour,
@@ -580,7 +608,8 @@ typedef struct {                    // 38 bytes TR4 - 20 in TR1/2/3
 
 /** \brief Animated Textures.
   */
-typedef struct {
+typedef struct
+{
     //int16_t num_texture_ids;    // Actually, this is the number of texture ID's - 1.
     int16_t  texture_ids_count;
     int16_t *texture_ids;       //[NumTextureIDs + 1]; // offsets into ObjectTextures[], in animation order.
@@ -589,7 +618,8 @@ typedef struct {
 
 /** \brief Camera.
   */
-typedef struct {
+typedef struct
+{
     int32_t x;
     int32_t y;
     int32_t z;
@@ -600,7 +630,8 @@ typedef struct {
 
 /** \brief Flyby Camera.
   */
-typedef struct {
+typedef struct
+{
     int32_t  cam_x;
     int32_t  cam_y;
     int32_t  cam_z;
@@ -620,7 +651,8 @@ typedef struct {
 
 /** \brief AI Object.
   */
-typedef struct {
+typedef struct
+{
     uint16_t object_id;    // the objectID from the AI object (AI_FOLLOW is 402)
     uint16_t room;
     int32_t x;
@@ -634,7 +666,8 @@ typedef struct {
 
 /** \brief Cinematic Frame.
   */
-typedef struct {
+typedef struct
+{
     int16_t roty;        // rotation about Y axis, +/- 32767 == +/- 180 degrees
     int16_t rotz;        // rotation about Z axis, +/- 32767 == +/- 180 degrees
     int16_t rotz2;       // seems to work a lot like rotZ;  I haven't yet been able to
@@ -649,13 +682,15 @@ typedef struct {
 
 /** \brief Lightmap.
   */
-typedef struct {
+typedef struct
+{
     uint8_t map[32 * 256];
 } tr_lightmap_t;
 
 /** \brief Palette.
   */
-typedef struct {
+typedef struct
+{
     tr2_colour_t colour[256];
 } tr2_palette_t;
 

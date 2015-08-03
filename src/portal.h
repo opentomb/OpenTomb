@@ -1,4 +1,3 @@
-
 #ifndef PORTAL_H
 #define PORTAL_H
 
@@ -8,7 +7,6 @@
 #define SPLIT_EMPTY 0x00
 #define SPLIT_SUCCES 0x01
 
-#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -25,12 +23,12 @@ struct Portal
 {
     std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
     Plane normal;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btVector3 centre = {0,0,0};                                                         // центр портала
+    btVector3 centre = { 0,0,0 };                                                         // центр портала
     std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
     unsigned int flag = 0;                                                          // хз, мб потом понадобится
 
-    Portal(size_t vcount = 0)
+    explicit Portal(size_t vcount = 0)
         : vertices(vcount)
     {
     }
@@ -42,7 +40,6 @@ struct Portal
 
     void genNormale();
 };
-
 
 /**
  * Draws wireframe of this portal.

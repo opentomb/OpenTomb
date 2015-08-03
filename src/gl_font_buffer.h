@@ -8,15 +8,13 @@
 //  a standard C interface.
 //
 
-#include <cstddef>
-
 #include <GL/glew.h>
 
 /*!
- * Sets the minimum size of the font buffer that is needed, in bytes, and 
+ * Sets the minimum size of the font buffer that is needed, in bytes, and
  * returns a write-only pointer to the new data.
  *
- * At least the given amount of bytes will be available after. The initial 
+ * At least the given amount of bytes will be available after. The initial
  * contents will be undefined.
  *
  * If the buffer's internal structures don't exist yet, they are created.

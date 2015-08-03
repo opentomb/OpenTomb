@@ -9,16 +9,16 @@
 
 keys_pressed = {};
 
-function addKey(code, event)
-    if(event >= 1) then
-        keys_pressed[code] = (keys_pressed[code] == nil);
+function addKey(code, pressed)
+    if(pressed) then
+        keys_pressed[code] = not keys_pressed[code];
     else
         keys_pressed[code] = nil;
     end;
 end
 
 function checkKey(code, once)
-    if(keys_pressed[code] ~= nil) then
+    if(keys_pressed[code]) then
         if(once) then
             return keys_pressed[code];
         else
@@ -31,7 +31,7 @@ end
 
 function clearKeys()
     for k,v in pairs(keys_pressed) do
-        keys_pressed[k] = nil;
+        keys_pressed[k] = false;
     end;
 end
 
@@ -99,6 +99,10 @@ function execEntity(callback_id, object_id, activator_id)
 
         if((bit32.band(callback_id, ENTITY_CALLBACK_HIT) ~= 0) and (entity_funcs[object_id].onHit ~= nil)) then
             entity_funcs[object_id].onHit(object_id, activator_id);
+        end;
+        
+        if((bit32.band(callback_id, ENTITY_CALLBACK_ROOMCOLLISION) ~= 0) and (entity_funcs[object_id].onRoomCollide ~= nil)) then
+            entity_funcs[object_id].onRoomCollide(object_id, activator_id);
         end;
     end;
 end

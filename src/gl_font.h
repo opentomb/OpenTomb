@@ -7,11 +7,9 @@
  */
 
 #include <cstdint>
-
 #include <ft2build.h>
-#include <freetype.h>
+#include FT_FREETYPE_H
 #include <GL/glew.h>
-
 
 typedef struct char_info_s
 {
@@ -46,7 +44,6 @@ typedef struct gl_tex_font_s
     GLint                    gl_tex_width;
     GLfloat                  gl_font_color[4];
 }gl_tex_font_t, *gl_tex_font_p;
-
 
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);

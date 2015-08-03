@@ -252,9 +252,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     if(m_id == nil or m_id < 0) then
         return false;
     end
+    
     local on  = {};
     local off = {};
     local key = nil;
+
     if(getLevelVersion() < TR_II) then
         if(tr1_switches[m_id] ~= nil) then
             on       = tr1_switches[m_id].on;
@@ -333,7 +335,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     if(on.ready_anim < 0 or on.ready_anim == t) then
         if(key ~= nil) then
             if(getItemsCount(player, key) <= 0) then
-                if(getActionChange(act.action) == 0) then
+                if(not getActionChange(act.action)) then
                     playSound(SOUND_NO);
                 end;
                 return false;
@@ -356,7 +358,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                     if(meshswap ~= nil) then
                         setEntityMeshswap(object_id, meshswap); -- only for puzzleholes - do a meshswap
                     end
-                    setEntityLock(object_id, 1);        -- lock filled hole
+                    setEntityLock(object_id, true);        -- lock filled hole
                 else
                     setEntitySectorStatus(object_id, true);        -- only for switches - turn on
                 end
@@ -364,10 +366,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
-    elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
+    -- Off case: Locked switches doesn't flip back, but only in TR3+
+    elseif(off.ready_anim == t and ((getLevelVersion() < TR_III) or (not getEntityLock(object_id)))) then
         setEntityAnim(object_id, off.trig_anim, 0);
         setEntityAnim(actor_id, off.actor_anim, 0);
-        --setEntityActivity(object_id, true);
+        setEntityActivity(object_id, true);
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id);
@@ -380,6 +383,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
+    else
+        return false;
     end
     
     return true;

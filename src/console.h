@@ -21,7 +21,8 @@
 struct ConsoleInfo
 {
 private:
-    struct Line {
+    struct Line
+    {
         std::string text{};
         font_Style styleId = FONTSTYLE_GENERIC;
 
@@ -34,23 +35,25 @@ private:
     };
 
     gl_tex_font_s *m_font = nullptr;                       // Texture font renderer
-    
+
     GLfloat m_backgroundColor[4];
 
-    size_t m_historyPos = 0;                    // Current log position
+    //! Current log position plus one
+    //! @note It's off-by-one, because line 0 is a virtual empty line.
+    size_t m_historyPos = 0;
     size_t m_historySize;
     //! The most recent entry is at the front.
     std::vector<std::string> m_historyLines;
-    
+
     std::list<Line> m_lines;
     size_t m_visibleLines = 40;
     size_t m_bufferSize;
-    
+
     uint16_t m_lineSize = CON_MAX_LINE_SIZE;                  // Console line size
     int16_t m_lineHeight;                // Height, including spacing
-    
+
     float m_spacing = CON_MIN_LINE_INTERVAL;                    // Line spacing
-    
+
     int16_t m_cursorPos;                 // Current cursor position, in symbols
     int16_t m_cursorX;                   // Cursor position in pixels
     int16_t m_cursorY;
@@ -68,7 +71,8 @@ private:
 public:
     void init();
 
-    static ConsoleInfo& instance() {
+    static ConsoleInfo& instance()
+    {
         static ConsoleInfo con_base;
         return con_base;
     }
@@ -107,64 +111,81 @@ public:
 
     void clean();
 
-    bool isVisible() const {
+    bool isVisible() const
+    {
         return m_isVisible;
     }
 
-    void toggleVisibility() {
+    void toggleVisibility()
+    {
         m_isVisible = !m_isVisible;
     }
 
-    int spacing() const {
+    float spacing() const
+    {
         return m_spacing;
     }
 
-    void setSpacing(float val) {
+    void setSpacing(float val)
+    {
+        if(val < CON_MIN_LINE_INTERVAL || val > CON_MAX_LINE_INTERVAL)
+            return;
         m_spacing = val;
     }
 
-    void setVisible(bool val) {
+    void setVisible(bool val)
+    {
         m_isVisible = val;
     }
 
-    void setShowCursorPeriod(float val) {
+    void setShowCursorPeriod(float val)
+    {
         m_blinkPeriod = val;
     }
 
-    void setLineSize(uint16_t val) {
+    void setLineSize(uint16_t val)
+    {
         m_lineSize = val;
     }
 
-    void setVisibleLines(size_t val) {
+    void setVisibleLines(size_t val)
+    {
         m_visibleLines = val;
         setCursorY(m_visibleLines * m_lineHeight);
     }
 
-    size_t visibleLines() const {
+    size_t visibleLines() const
+    {
         return m_visibleLines;
     }
 
-    void setBufferSize(size_t val) {
+    void setBufferSize(size_t val)
+    {
         m_bufferSize = val;
     }
 
-    void setHistorySize(size_t val) {
+    void setHistorySize(size_t val)
+    {
         m_historySize = val;
     }
 
-    uint16_t lineSize() const {
+    uint16_t lineSize() const
+    {
         return m_lineSize;
     }
 
-    int16_t lineHeight() const {
+    int16_t lineHeight() const
+    {
         return m_lineHeight;
     }
 
-    void setCursorY(int16_t y) {
+    void setCursorY(int16_t y)
+    {
         m_cursorY = y;
     }
 
-    void setBackgroundColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+    void setBackgroundColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+    {
         m_backgroundColor[0] = r;
         m_backgroundColor[1] = g;
         m_backgroundColor[2] = b;

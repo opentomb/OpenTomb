@@ -136,9 +136,9 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-                        struct Polygon* poly,
-                        int shift = 0,
-                        bool split = false) const;
+    struct Polygon* poly,
+        int shift = 0,
+        bool split = false) const;
 
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
@@ -167,5 +167,4 @@ public:
      * @param additionalTextureNames How many texture names to create in addition to the needed ones.
      */
     void createTextures(GLuint *textureNames, GLuint additionalTextureNames) const;
-
 };

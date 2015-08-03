@@ -1,1 +1,2 @@
-playStream(58)
+playStream(58);
+print("LEVEL7A _autoexec loaded");

@@ -36,6 +36,7 @@ ENTITY_TYPE_TRAVERSE                      = 0x0010;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0020;
 ENTITY_TYPE_DYNAMIC                       = 0x0040;
 ENTITY_TYPE_ACTOR                         = 0x0080;
+ENTITY_TYPE_COLLCHECK                     = 0x0100;
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;
 ENTITY_CALLBACK_ACTIVATE                  = 0x00000001;
@@ -43,6 +44,24 @@ ENTITY_CALLBACK_DEACTIVATE                = 0x00000002;
 ENTITY_CALLBACK_COLLISION                 = 0x00000004;
 ENTITY_CALLBACK_STAND                     = 0x00000008;
 ENTITY_CALLBACK_HIT                       = 0x00000010;
+ENTITY_CALLBACK_ROOMCOLLISION             = 0x00000020;
+
+-- This is DUBLICATED from entity_properties.lua, because this is in different environment.
+-- We must get rid of this nonsense with different environments some day.
+
+COLLISION_TYPE_NONE                    = 0x0000;
+COLLISION_TYPE_STATIC                  = 0x0001;
+COLLISION_TYPE_KINEMATIC               = 0x0003;
+COLLISION_TYPE_DYNAMIC                 = 0x0005;
+COLLISION_TYPE_ACTOR                   = 0x0007;
+COLLISION_TYPE_VEHICLE                 = 0x0009;
+COLLISION_TYPE_GHOST                   = 0x000B;
+
+COLLISION_SHAPE_BOX                    = 0x0001;
+COLLISION_SHAPE_BOX_BASE               = 0x0002;
+COLLISION_SHAPE_SPHERE                 = 0x0003;
+COLLISION_SHAPE_TRIMESH                = 0x0004;
+COLLISION_SHAPE_TRIMESH_CONVEX         = 0x0005;
 
 -- Animation mode constants
 
@@ -64,6 +83,23 @@ MOVE_CLIMBING      = 8;
 MOVE_MONKEYSWING   = 9;
 MOVE_WALLS_CLIMB   = 10;
 MOVE_DOZY          = 11;
+
+-- Sector material types
+
+SECTOR_MATERIAL_MUD      = 0
+SECTOR_MATERIAL_SNOW     = 1
+SECTOR_MATERIAL_SAND     = 2
+SECTOR_MATERIAL_GRAVEL   = 3
+SECTOR_MATERIAL_ICE      = 4
+SECTOR_MATERIAL_WATER    = 5
+SECTOR_MATERIAL_STONE    = 6
+SECTOR_MATERIAL_WOOD     = 7
+SECTOR_MATERIAL_METAL    = 8
+SECTOR_MATERIAL_MARBLE   = 9
+SECTOR_MATERIAL_GRASS    = 10
+SECTOR_MATERIAL_CONCRETE = 11
+SECTOR_MATERIAL_OLDWOOD  = 12
+SECTOR_MATERIAL_OLDMETAL = 13
 
 -- Response constants
 

@@ -14,8 +14,8 @@
 struct ShaderStage
 {
     GLuint shader;
-    
-    ShaderStage(GLenum type, const char *filename, const char *additionalDefines = 0);
+
+    ShaderStage(GLenum type, const char *filename, const char *additionalDefines = nullptr);
     ~ShaderStage();
 };
 
@@ -30,7 +30,7 @@ struct ShaderDescription
 {
     GLuint program;
     GLint sampler;
-    
+
     ShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
     ~ShaderDescription();
 };
@@ -42,12 +42,13 @@ struct GuiShaderDescription : public ShaderDescription
 {
     GLint offset;
     GLint factor;
-    
-    enum vertex_attribs {
+
+    enum vertex_attribs
+    {
         position = 0,
         color
     };
-    
+
     GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
@@ -58,13 +59,14 @@ struct SpriteShaderDescription : public ShaderDescription
 {
     GLint model_view;
     GLint projection;
-    
-    enum vertex_attribs {
+
+    enum vertex_attribs
+    {
         position = 0,
         corner_offset,
         tex_coord
     };
-    
+
     SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
@@ -74,13 +76,14 @@ struct SpriteShaderDescription : public ShaderDescription
 struct TextShaderDescription : public ShaderDescription
 {
     GLint screenSize;
-    
-    enum vertex_attribs {
+
+    enum vertex_attribs
+    {
         position = 0,
         color,
         tex_coord
     };
-    
+
     TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
@@ -90,15 +93,16 @@ struct TextShaderDescription : public ShaderDescription
 struct UnlitShaderDescription : public ShaderDescription
 {
     GLint model_view_projection;
-    
-    enum VertexAttribs {
+
+    enum VertexAttribs
+    {
         Position = 0,
         Color,
         TexCoord,
         Normal,
         MatrixIndex
     };
-    
+
     UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
@@ -117,7 +121,7 @@ struct LitShaderDescription : public UnlitShaderDescription
     GLint light_inner_radius;
     GLint light_outer_radius;
     GLint light_ambient;
-    
+
     LitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
@@ -125,6 +129,6 @@ struct UnlitTintedShaderDescription : public UnlitShaderDescription
 {
     GLint current_tick;
     GLint tint_mult;
-    
+
     UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };

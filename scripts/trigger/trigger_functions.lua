@@ -56,11 +56,16 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- Ignore activation, if activity lock is set.
-    -- This weird setup means that activity lock only takes action if current trigger itself is NOT
-    -- one-shot, else it has bigger priority than entity lock, and activation continues.
+    -- TR3 ONLY: If lock flag is set, bypass activation.
+    -- TR4-5 ONLY: If mask was already set and lock flag is set, bypass activation.
     
-    if((lock == 1) and (trigger_lock == 0)) then return end;
+    local game_ver = getLevelVersion();
+    
+    if(game_ver == TR_III) then
+        if(lock) then return end;
+    else
+        if((lock) and (mask == 0x1F)) then return end;
+    end;
     
     -- Apply trigger mask to entity mask.
 
@@ -70,16 +75,19 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
         mask = bit32.bor(mask, trigger_mask);    -- Other cases
     end;
     
+    -- Apply trigger lock to entity lock.
+    
+    lock = (lock or trigger_lock);
+    
     -- Full entity mask (11111) is always a reason to activate an entity.
     -- If mask is not full, entity won't activate - no exclusions.
-    
-    if((mask == 0x1F) and (event == 0)) then
+        
+    if((mask == 0x1F) and (not event)) then
         execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
-        event = 1;
-        lock = bit32.bor(lock, trigger_lock);
-    elseif((mask ~= 0x1F) and (event == 1)) then
+        event = true;
+    elseif((mask ~= 0x1F) and event) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
-        event = 0;
+        event = false;
     end;
     
     -- Update trigger layout.
@@ -91,26 +99,29 @@ end;
 
 -- Tries to deactivate entity. Doesn't work with certain kinds of entities (like enemies).
 
-function deactivateEntity(object_id, activator_id)
+function deactivateEntity(object_id, activator_id, trigger_lock)
 
     -- Get current trigger layout.
     
     local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- It seems that antitrigger event DOES NOT check lock state - however, it copies
+    -- TR3+ ONLY: It seems that antitrigger event DOES NOT check lock state - however, it copies
     -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
+    -- In TR1-2, antitriggers are ignored for locked entities.
     
-    -- if(lock == 1) then return end;
+    if((getLevelVersion() < TR_III) and (lock)) then return end;
+    
+    lock = (lock or trigger_lock);
     
     -- Execute entity deactivation function, only if activation was previously set.
     
-    if(event == 1) then
+    if(event) then
         execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         
         -- Activation mask and timer are forced to zero when entity is deactivated.
         -- Activity lock is ignored, since it can't be raised by antitriggers.
 
-        setEntityTriggerLayout(object_id, 0x00, 0, lock);
+        setEntityTriggerLayout(object_id, 0x00, false, lock);
         setEntityTimer(object_id, 0.0);
     end;    
 end
@@ -147,12 +158,8 @@ end
 
 -- Does specified flipeffect.
 
-function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
-    if(flipeffects[effect_index] ~= nil) then
-        return flipeffects[effect_index](parameter);
-    else
-        return nil; -- Add hardcoded flipeffect routine here
-    end;
+function doEffect(effect_index, caller, operand) -- operand is usually the timer field
+    execFlipeffect(effect_index, caller, operand);
 end
 
 

@@ -123,6 +123,9 @@ assets and where to get them:
    format to store all loading screen files. So, to ease your life, you can simply download the
    loading screen package here: https://www.dropbox.com/s/uycdw9x294ipc0r/loading_screens.zip?dl=0
    Just extract these files directly into the main OpenTomb directory, and that should do the trick.
+
+ * If you are looking for the soundtracks and loading screens of only a single Tomb Raider game, you
+   can also download them at [opentomb.earvillage.net](http://opentomb.earvillage.net/).
     
 8. Compiling
 ------------
@@ -144,7 +147,16 @@ To compile OpenTomb, primarily you need libs and defines for these external libr
 We recommend compiling using CMake. There is a CMakeLists.txt file provided with source code.
 You can automatically generate Visual Studio, Eclipse and Code::Blocks projects with CMake as well.
 
-On Linux, just download the source code and run in terminal:
+On Linux, there is an easy way to compile engine just in three steps. First of all, install all the
+necessary libraries with this command:
+
+    sudo apt-get install libbullet-dev libfreetype6-dev libglu1-mesa-dev libglew-dev liblua5.2-dev libopenal-dev libogg-dev libvorbis-dev libsndfile1-dev libsdl2-dev libsdl2-image-dev
+    
+Then, download the code with all third-party submodules:
+
+    git clone --recursive https://github.com/opentomb/OpenTomb.git
+    
+And then, compile it:
 
     cmake . && make
 
@@ -182,6 +194,7 @@ more developers getting involved in the development of OpenTomb so some recent o
 from this list!
 
 * TeslaRus: main developer.
+* ablepharus: compilation fix-ups and miscellaneous patches.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
 * Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state fix-ups, camera.
 * Lwmte: state fix-ups, controls, GUI and audio modules, trigger and entity scripts.
@@ -189,6 +202,7 @@ from this list!
 * pmatulka: Linux port and testing.
 * Richard_trle: Github migration, Github repo maintenance, website design.
 * Saracen: room and static mesh lighting.
+* stltomb: general code maintenance, enhancements and bugfixes.
 * stohrendorf: CXX-fication, general code refactoring and optimizing.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.

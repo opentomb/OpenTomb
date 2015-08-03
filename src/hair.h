@@ -1,21 +1,15 @@
 #pragma once
 
-#include <cassert>
 #include <cstdint>
 
-#include <lua.hpp>
-
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 
 #include "character_controller.h"
 #include "engine.h"
 #include "entity.h"
-#include "game.h"
 #include "mesh.h"
-#include "script.h"
-#include "vmath.h"
 #include "world.h"
 
 #define HAIR_TR1       0
@@ -50,7 +44,7 @@ struct Hair : public Object
 {
     std::unique_ptr<EngineContainer> m_container;
 
-    std::shared_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
+    std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
     uint32_t m_ownerBody;         // Owner entity's body ID.
     btTransform m_ownerBodyHairRoot; // transform from owner body to root of hair start
 

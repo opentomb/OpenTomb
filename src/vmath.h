@@ -1,19 +1,23 @@
-
 #ifndef VMATH_H
 #define VMATH_H
 
-#include <cmath>
-#include <array>
-
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/LinearMath/btMatrix3x3.h>
-#include <bullet/LinearMath/btQuaternion.h>
-#include <bullet/LinearMath/btTransform.h>
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btQuaternion.h>
+#include <LinearMath/btTransform.h>
 
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
+
+namespace
+{
+    constexpr const float DegPerRad = 180 / M_PI;
+    constexpr const float RadPerDeg = M_PI / 180;
+    constexpr const float Rad90 = 0.5*M_PI;
+    constexpr const float Rad180 = M_PI;
+    constexpr const float Rad360 = 2 * M_PI;
+}
 
 /**
  * A simple Hesse normal form plane
@@ -21,9 +25,9 @@
 struct Plane
 {
     //! The plane's normal
-    btVector3 normal;
+    btVector3 normal = { 0,0,0 };
     //! The plane's distance to the origin
-    btScalar dot;
+    btScalar dot = 0;
 
     /**
      * Calculates the normalized distance of an arbitrary point in terms of the normal
@@ -51,13 +55,13 @@ struct Plane
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
         normal = v1.cross(v2).normalized();
-        dot = normal.dot( pos );
+        dot = normal.dot(pos);
     }
 
     void assign(const btVector3& n, const btVector3& pos)
     {
         normal = n.normalized();
-        dot = normal.dot( pos );
+        dot = normal.dot(pos);
     }
 
     void mirrorNormal()

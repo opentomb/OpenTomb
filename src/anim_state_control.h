@@ -1,8 +1,5 @@
-
 #ifndef ANIM_STATE_CONTROL_H
 #define ANIM_STATE_CONTROL_H
-
-#include <memory>
 
 class VT_Level;
 struct Polygon;
@@ -15,15 +12,31 @@ struct Entity;
 struct RoomSector;
 struct CharacterCommand;
 
+#define LEFT_LEG                    (3)
+#define RIGHT_LEG                   (6)
+
+#define PENETRATION_TEST_OFFSET     (48.0)        ///@TODO: tune it!
+#define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
+#define WALK_BACK_OFFSET            (16.0)
+#define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
+#define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
+#define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
+#define CRAWL_FORWARD_OFFSET        (256.0)
+#define LARA_HANG_WALL_DISTANCE     (128.0 - 24.0)
+#define LARA_HANG_VERTICAL_EPSILON  (64.0)
+#define LARA_HANG_VERTICAL_OFFSET   (12.0)        // in original is 0, in real life hands are little more higher than edge
+#define LARA_TRY_HANG_WALL_OFFSET   (72.0)        // It works more stable than 32 or 128
+#define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
+
 /*
  * Animation control flags
  */
 #define ANIM_NORMAL_CONTROL             (0)
 #define ANIM_LOOP_LAST_FRAME            (1)
 #define ANIM_LOCK                       (2)
-/*
- * SURFACE MOVEMENT DIRECTIONS
- */
+ /*
+  * SURFACE MOVEMENT DIRECTIONS
+  */
 
 #define ENT_STAY 0x00000000
 #define ENT_MOVE_FORWARD 0x00000001
@@ -33,14 +46,14 @@ struct CharacterCommand;
 #define ENT_MOVE_JUMP 0x00000010
 #define ENT_MOVE_CROUCH 0x00000020
 
-/*
- *  ====== LARA'S ANIMATIONS ======
- *
- *  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
- *
- *
- *  TR1 AND ABOVE (0-159)
- */
+  /*
+   *  ====== LARA'S ANIMATIONS ======
+   *
+   *  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
+   *
+   *
+   *  TR1 AND ABOVE (0-159)
+   */
 #define TR_ANIMATION_LARA_RUN 0
 #define TR_ANIMATION_LARA_WALK_FORWARD 1
 #define TR_ANIMATION_LARA_END_WALK_RIGHT 2
@@ -206,9 +219,9 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_START_FLY_LIKE_FISH_RIGHT 157
 #define TR_ANIMATION_LARA_FREE_FALL_FISH_START 158
 #define TR_ANIMATION_LARA_CLIMB_ON2 159
-/*
- * TR2 AND ABOVE (160-216)
- */
+   /*
+    * TR2 AND ABOVE (160-216)
+    */
 #define TR_ANIMATION_LARA_STAND_TO_LADDER 160
 #define TR_ANIMATION_LARA_LADDER_UP 161
 #define TR_ANIMATION_LARA_LADDER_UP_STOP_RIGHT 162
@@ -224,7 +237,7 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_LADDER_HANG 172
 #define TR_ANIMATION_LARA_LADDER_HANG_TO_IDLE 173
 #define TR_ANIMATION_LARA_LADDER_TO_STAND 174
-// #define TR_ANIMATION_LARA_UNKNOWN5 175                   // Unknown use
+    // #define TR_ANIMATION_LARA_UNKNOWN5 175                   // Unknown use
 #define TR_ANIMATION_LARA_ONWATER_TO_WADE_SHALLOW 176
 #define TR_ANIMATION_LARA_WADE 177
 #define TR_ANIMATION_LARA_RUN_TO_WADE_LEFT 178
@@ -325,7 +338,6 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_MONKEY_TURN_RIGHT_EARLY_END 285
 #define TR_ANIMATION_LARA_MONKEY_TURN_RIGHT_LATE_END 286
 
-
 #define TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN 218     // Not used natively
 #define TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN_ALTERNATE 247    // Not used
 #define TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_CONTINUE 219  // Not used natively
@@ -385,9 +397,9 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_RIGHT_BEGIN 305
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_LEFT_END 306
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_RIGHT_END 307
-/*
- * TR4 AND ABOVE (313-444)
- */
+ /*
+  * TR4 AND ABOVE (313-444)
+  */
 #define TR_ANIMATION_LARA_DOOR_OPEN_FORWARD 313
 #define TR_ANIMATION_LARA_DOOR_OPEN_BACK 314
 #define TR_ANIMATION_LARA_DOOR_KICK 315
@@ -418,7 +430,7 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_PULLEY_PULL 340
 #define TR_ANIMATION_LARA_PULLEY_UNGRAB 341
 #define TR_ANIMATION_LARA_POLE_GRAB_TO_STAY 342
-// #define TR_ANIMATION_LARA_UNKNOWN8 343
+  // #define TR_ANIMATION_LARA_UNKNOWN8 343
 #define TR_ANIMATION_LARA_POLE_TURN_LEFT_END 344
 // #define TR_ANIMATION_LARA_UNKNOWN9 345
 #define TR_ANIMATION_LARA_POLE_TURN_RIGHT_END 346
@@ -480,8 +492,6 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_ROPE_SWING_BLOCK 408                          // Unused
 #define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_SEMIMIDDLE 409         // Not sure it's used?
 #define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_FRONT3 410             // Not sure it's used?
-
-
 
 #define TR_ANIMATION_LARA_DOUBLEDOORS_PUSH 412
 #define TR_ANIMATION_LARA_BIG_BUTTON_PUSH 413
@@ -552,7 +562,7 @@ struct CharacterCommand;
 #define TR_ANIMATION_LARA_LOOT_CHEST 472
 #define TR_ANIMATION_LARA_LADDER_TO_CROUCH 473
 
-//   ====== LARA'S STATES ======
+ //   ====== LARA'S STATES ======
 
 #define TR_STATE_CURRENT (-1)
 #define TR_STATE_LARA_WALK_FORWARD 0
@@ -574,7 +584,7 @@ struct CharacterCommand;
 #define TR_STATE_LARA_WALK_BACK 16
 #define TR_STATE_LARA_UNDERWATER_FORWARD 17
 #define TR_STATE_LARA_UNDERWATER_INERTIA 18
-#define TR_STATE_LARA_GRABBING 19
+#define TR_STATE_LARA_CLIMBING 19
 #define TR_STATE_LARA_TURN_FAST 20
 #define TR_STATE_LARA_WALK_RIGHT 21
 #define TR_STATE_LARA_WALK_LEFT 22
@@ -757,4 +767,3 @@ struct Character;
 int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
 
 #endif
-

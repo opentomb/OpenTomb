@@ -1,19 +1,14 @@
 #pragma once
 
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include <bullet/BulletCollision/CollisionShapes/btCapsuleShape.h>
-#include <bullet/BulletCollision/CollisionShapes/btSphereShape.h>
-#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
-#include <bullet/BulletCollision/CollisionShapes/btBoxShape.h>
-#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
-#include <bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h>
-#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
-
 #include <cstdint>
 #include <vector>
 #include <list>
+
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
 
 #include "engine.h"
 #include "entity.h"
@@ -73,7 +68,6 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-
 /*
  * default legs offsets
  */
@@ -82,9 +76,9 @@
 #define LEFT_HAND                   (13)
 #define RIGHT_HAND                  (10)
 
-/*
- * ENTITY MOVEMENT TYPES
- */
+ /*
+  * ENTITY MOVEMENT TYPES
+  */
 
 #define MOVE_STATIC_POS         (0)
 #define MOVE_KINEMATIC          (1)
@@ -101,11 +95,11 @@
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
-// Lara's character behavior constants
+  // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
-#define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
+#define DEFAULT_FALL_DOWN_HEIGHT                (320.0)                         ///@FIXME: check original
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
@@ -139,6 +133,7 @@
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
+#define CHARACTER_SLIDE_NONE                    (0x00)
 
 /*
  * Next step height information
@@ -158,7 +153,7 @@
 #define CLIMB_ALT_HEIGHT                        (0x02)
 #define CLIMB_FULL_HEIGHT                       (0x03)
 
-// CHARACTER PARAMETERS TYPES
+ // CHARACTER PARAMETERS TYPES
 
 enum CharParameters
 {
@@ -166,6 +161,7 @@ enum CharParameters
     PARAM_AIR,
     PARAM_STAMINA,
     PARAM_WARMTH,
+    PARAM_POISON,
     PARAM_EXTRA1,
     PARAM_EXTRA2,
     PARAM_EXTRA3,
@@ -181,6 +177,7 @@ enum CharParameters
 #define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
+#define LARA_PARAM_POISON_MAX             (5.0)
 
 struct EngineContainer;
 struct Entity;
@@ -213,41 +210,46 @@ struct ClimbInfo
 
 struct HeightInfo
 {
+    HeightInfo()
+    {
+        sp->setMargin(COLLISION_MARGIN_DEFAULT);
+    }
+
     std::shared_ptr<BtEngineClosestRayResultCallback> cb;
     std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
-    int8_t                                      ceiling_climb;
-    int8_t                                      walls_climb;
-    int8_t                                      walls_climb_dir;
+    bool                                        ceiling_climb = false;
+    bool                                        walls_climb = false;
+    int8_t                                      walls_climb_dir = 0;
 
-    btVector3                                   floor_normale;
-    btVector3                                   floor_point = {0,0,0};
-    int16_t                                     floor_hit = 0;
-    btCollisionObject                          *floor_obj;
+    btVector3                                   floor_normale = { 0,0,1 };
+    btVector3                                   floor_point = { 0,0,0 };
+    bool                                        floor_hit = false;
+    const btCollisionObject                    *floor_obj = nullptr;
 
-    btVector3                                   ceiling_normale;
-    btVector3                                   ceiling_point;
-    int16_t                                     ceiling_hit = 0;
-    btCollisionObject                          *ceiling_obj;
+    btVector3                                   ceiling_normale = { 0,0,-1 };
+    btVector3                                   ceiling_point = { 0,0,0 };
+    bool                                        ceiling_hit = false;
+    const btCollisionObject                    *ceiling_obj = nullptr;
 
     btScalar                                    transition_level;
-    int16_t                                     water = 0;
-    int16_t                                     quicksand;
+    bool                                        water = false;
+    int                                         quicksand = 0;
 };
 
 struct CharacterCommand
 {
     btVector3 rot;
-    std::array<int8_t,3> move{{0,0,0}};
+    std::array<int8_t, 3> move{ {0,0,0} };
 
-    int8_t      roll;
-    int8_t      jump;
-    int8_t      crouch = 0;
-    int8_t      shift = 0;
-    int8_t      action = 0;
-    int8_t      ready_weapon;
-    int8_t      sprint;
+    bool        roll = false;
+    bool        jump = false;
+    bool        crouch = false;
+    bool        shift = false;
+    bool        action = false;
+    bool        ready_weapon = false;
+    bool        sprint = false;
 
     int8_t      flags = 0;
 };
@@ -258,13 +260,13 @@ struct CharacterResponse
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
-    int8_t      slide = 0;
+    int8_t      slide = CHARACTER_SLIDE_NONE;
 };
 
 struct CharacterParam
 {
-    std::array<float,PARAM_SENTINEL> param{{}};
-    std::array<float,PARAM_SENTINEL> maximum{{}};
+    std::array<float, PARAM_SENTINEL> param{ {} };
+    std::array<float, PARAM_SENTINEL> maximum{ {} };
 
     CharacterParam()
     {
@@ -292,11 +294,11 @@ struct InventoryNode
     uint32_t                    max_count;
 };
 
-
 struct Hair;
 struct SSAnimation;
 
-enum class WeaponState {
+enum class WeaponState
+{
     Hide,
     HideToReady,
     Idle,
@@ -320,18 +322,18 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    int(*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
     btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
-    btScalar                     m_fallDownHeight = 0;
+    btScalar                     m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
     btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
     btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
-    btScalar                     m_forvardSize = 48;           // offset for climbing calculation
+    btScalar                     m_forwardSize = 48;           // offset for climbing calculation
     btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
     btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
     btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
@@ -354,7 +356,7 @@ struct Character : public Entity
 
     void doWeaponFrame(btScalar time);
 
-    void fixPenetrations(btVector3* move) override;
+    void fixPenetrations(const btVector3* move) override;
     btVector3 getRoomPos() const override
     {
         btVector3 pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
@@ -362,22 +364,26 @@ struct Character : public Entity
         pos[1] = m_transform.getOrigin()[1];
         return pos;
     }
-    void transferToRoom(Room* /*room*/) override {
+    void transferToRoom(Room* /*room*/) override
+    {
     }
     void updateHair() override;
     void frameImpl(btScalar time, int16_t frame, int state) override;
     void processSectorImpl() override;
-    void jump(btScalar vert, btScalar hor) override;
-    void kill() override {
+    void jump(btScalar vert, btScalar v_horizontal) override;
+    void kill() override
+    {
         m_response.kill = 1;
     }
     virtual Substance getSubstanceState() const override;
-    void updateTransform() override {
+    void updateTransform() override
+    {
         ghostUpdate();
         Entity::updateTransform();
     }
     void updateGhostRigidBody() override;
-    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override {
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override
+    {
         return m_convexCb;
     }
     btVector3 camPosForFollowing(btScalar dz) override;
@@ -389,7 +395,7 @@ struct Character : public Entity
 
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
     int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
-    int hasStopSlant(HeightInfo* next_fc);
+    bool hasStopSlant(const HeightInfo &next_fc);
     ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();
 
@@ -397,9 +403,8 @@ struct Character : public Entity
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void setToJump(btScalar v_vertical, btScalar v_horizontal);
     void lean(CharacterCommand* cmd, btScalar max_lean);
-    btScalar inertiaLinear(btScalar max_speed, btScalar accel, int8_t command);
+    btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 
     int moveOnFloor();
@@ -411,7 +416,11 @@ struct Character : public Entity
     int moveOnWater();
 
     int findTraverse();
-    int checkTraverse(Entity *obj);
+    int checkTraverse(const Entity &obj);
+
+    static constexpr const int TraverseNone = 0x00;
+    static constexpr const int TraverseForward = 0x01;
+    static constexpr const int TraverseBackward = 0x02;
 
     void applyCommands();
     void updateParams();
@@ -426,4 +435,3 @@ struct Character : public Entity
 
 bool IsCharacter(std::shared_ptr<Entity> ent);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
-

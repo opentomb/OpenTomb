@@ -1,19 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
 #include <sys/time.h>
 
 #include "console.h"
 #include "engine.h"
 #include "system.h"
-#include "script.h"
-#include "gl_util.h"
 #include "gui.h"
-
 
 ScreenInfo screen_info;
 gui_text_line_t system_fps;
-
 
 // =======================================================================
 // General routines
@@ -24,9 +19,9 @@ void Sys_Printf(char *fmt, ...)
     va_list     argptr;
     char        text[4096];
 
-    va_start (argptr,fmt);
-    vsnprintf (text, 4096, fmt,argptr);
-    va_end (argptr);
+    va_start(argptr, fmt);
+    vsnprintf(text, 4096, fmt, argptr);
+    va_end(argptr);
     fprintf(stderr, "%s", text);
 
     //Con_Print (text);
@@ -43,10 +38,10 @@ void Sys_Init()
     system_fps.Xanchor = GUI_ANCHOR_HOR_RIGHT;
     system_fps.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 
-    system_fps.font_id  = FONT_PRIMARY;
+    system_fps.font_id = FONT_PRIMARY;
     system_fps.style_id = FONTSTYLE_MENU_TITLE;
 
-    system_fps.show  = true;
+    system_fps.show = true;
 
     Gui_AddLine(&system_fps);
 }
@@ -67,7 +62,7 @@ void Sys_Destroy()
     system_fps.show = false;
     system_fps.text_size = 0;
     free(system_fps.text);
-    system_fps.text = NULL;
+    system_fps.text = nullptr;
 }
 
 void Sys_Error(const char *error, ...)
@@ -75,9 +70,9 @@ void Sys_Error(const char *error, ...)
     va_list     argptr;
     char        string[4096];
 
-    va_start (argptr,error);
-    vsnprintf (string, 4096, error, argptr);
-    va_end (argptr);
+    va_start(argptr, error);
+    vsnprintf(string, 4096, error, argptr);
+    va_end(argptr);
 
     Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
     Engine_Shutdown(1);
@@ -88,9 +83,9 @@ void Sys_Warn(const char *warning, ...)
     va_list     argptr;
     char        string[4096];
 
-    va_start (argptr, warning);
-    vsnprintf (string, 4096, warning, argptr);
-    va_end (argptr);
+    va_start(argptr, warning);
+    vsnprintf(string, 4096, warning, argptr);
+    va_end(argptr);
     Sys_DebugLog(LOG_FILENAME, "Warning: %s", string);
 }
 
@@ -105,11 +100,11 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
     vsnprintf(&data[1], 4095, fmt, argptr);
     va_end(argptr);
     fp = fopen(file, "a");
-    if(fp == NULL)
+    if(fp == nullptr)
     {
         fp = fopen(file, "w");
     }
-    if(fp != NULL)
+    if(fp != nullptr)
     {
         fwrite(data, strlen(data), 1, fp);
         fclose(fp);
@@ -131,9 +126,9 @@ void Sys_Strtime(char *buf, size_t buf_size)
     static time_t t_;
 
     time(&t_);
-    tm_=gmtime(&t_);
+    tm_ = gmtime(&t_);
 
-    snprintf(buf, buf_size, "%02d:%02d:%02d",tm_->tm_hour,tm_->tm_min,tm_->tm_sec);
+    snprintf(buf, buf_size, "%02d:%02d:%02d", tm_->tm_hour, tm_->tm_min, tm_->tm_sec);
 }
 
 void Sys_StrRunSec(char *buf, size_t buf_size)
@@ -141,24 +136,24 @@ void Sys_StrRunSec(char *buf, size_t buf_size)
     struct              timeval tp;
     static long int     secbase = 0;
 
-    gettimeofday(&tp, NULL);
+    gettimeofday(&tp, nullptr);
 
     if(!secbase)
     {
         secbase = tp.tv_sec;
     }
 
-    snprintf(buf, buf_size, "%06d.%03d", (int)(tp.tv_sec-secbase), (int)(tp.tv_usec/1000));
+    snprintf(buf, buf_size, "%06d.%03d", static_cast<int>(tp.tv_sec - secbase), static_cast<int>(tp.tv_usec / 1000));
 }
 
-btScalar Sys_FloatTime (void)
+btScalar Sys_FloatTime(void)
 {
     struct              timeval tp;
     static long int     secbase = 0;
 
-    gettimeofday(&tp, NULL);
+    gettimeofday(&tp, nullptr);
 
-    if (!secbase)
+    if(!secbase)
     {
         secbase = tp.tv_sec;
         return tp.tv_usec * 1.0e-6;
@@ -166,4 +161,3 @@ btScalar Sys_FloatTime (void)
 
     return (btScalar)(tp.tv_sec - secbase) + (btScalar)tp.tv_usec * 1.0e-6;
 }
-

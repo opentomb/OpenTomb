@@ -1,17 +1,17 @@
-
 #ifndef WORLD_H
 #define WORLD_H
 
 #include <cstdint>
+#include <memory>
+#include <vector>
+
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
+
+#include "object.h"
 #include "audio.h"
 #include "camera.h"
 #include "bordered_texture_atlas.h"
-#include <bullet/LinearMath/btScalar.h>
-#include <bullet/LinearMath/btVector3.h>
-#include "object.h"
-
-#include <memory>
-#include <vector>
 
 // Native TR floor data functions
 
@@ -181,7 +181,6 @@ struct SkeletalModel;
 struct RedBlackHeader_s;
 struct SSBoneFrame;
 
-
 struct BaseItem
 {
     uint32_t                    id;
@@ -248,14 +247,26 @@ struct RoomSector
     btVector3 getCeilingPoint();
 };
 
+// Tween is a short word for "inbeTWEEN vertical polygon", which is needed to fill
+// the gap between two sectors with different heights. If adjacent sector heights are
+// similar, it means that tween is degenerated (doesn't exist physically) - in that
+// case we use NONE type. If only one of two heights' pairs is similar, then tween is
+// either right or left pointed triangle (where "left" or "right" is derived by viewing
+// triangle from front side). If none of the heights are similar, we need quad tween.
+
+#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
+#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 struct SectorTween
 {
     btVector3                   floor_corners[4];
-    uint8_t                     floor_tween_type;
+    uint8_t                     floor_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
 
     btVector3                   ceiling_corners[4];
-    uint8_t                     ceiling_tween_type;
+    uint8_t                     ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
 };
 
 struct Sprite;
@@ -329,7 +340,7 @@ struct Room : public Object
 
     bool isJoined(Room *r2);
     bool isOverlapped(Room *r1);
-    bool isInNearRoomsList(const Room &r);
+    bool isInNearRoomsList(const Room &r) const;
     bool hasSector(int x, int y);//If this room contains a sector
     void empty();
     void addEntity(Entity *entity);
@@ -339,15 +350,13 @@ struct Room : public Object
     bool isPointIn(const btVector3& dot)
     {
         return (dot[0] >= bb_min[0]) && (dot[0] < bb_max[0]) &&
-                (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
-                (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
+            (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
+            (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
     }
 
     RoomSector* getSectorRaw(const btVector3 &pos);
-    RoomSector* getSectorCheckFlip(const btVector3& pos);
     RoomSector* getSectorXYZ(const btVector3 &pos);
 };
-
 
 struct World
 {
@@ -359,7 +368,8 @@ struct World
 
     std::vector<RoomBox> room_boxes;
 
-    struct FlipInfo {
+    struct FlipInfo
+    {
         uint8_t map = 0; // Flipped room activity
         uint8_t state = 0; // Flipped room state
     };
@@ -380,7 +390,8 @@ struct World
     std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
     SkeletalModel    *sky_box = nullptr;                // global skybox
 
-    std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
+    std::map<uint32_t, std::shared_ptr<Entity>   > entity_tree;            // tree of world active objects
+    uint32_t                                       next_entity_id = 0;
     std::map<uint32_t, std::shared_ptr<BaseItem> > items_tree;             // tree of world items
 
     uint32_t                    type = 0;
@@ -402,15 +413,18 @@ struct World
     void calculateWaterTint(float* tint, bool fixed_colour);
 
     void addEntity(std::shared_ptr<Entity> entity);
-    int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string &name);
+    bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
     Sprite* getSpriteByID(unsigned int ID);
     SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
 
     void prepare();
     void empty();
+
     uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
-    std::shared_ptr<Entity> getEntityByID(uint32_t id);
+    bool     deleteEntity(uint32_t id);
+
+    std::shared_ptr<Entity>    getEntityByID(uint32_t id);
     std::shared_ptr<Character> getCharacterByID(uint32_t id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);

@@ -1,17 +1,10 @@
 #include "camera.h"
 
-#include <cstdlib>
 #include <cmath>
 #include <cassert>
 
-#include "gl_util.h"
 #include "vmath.h"
-#include "polygon.h"
 #include "frustum.h"
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 void Camera::apply()
 {
@@ -19,17 +12,17 @@ void Camera::apply()
     m_glProjMat[0][1] = 0.0;
     m_glProjMat[0][2] = 0.0;
     m_glProjMat[0][3] = 0.0;
-    
+
     m_glProjMat[1][0] = 0.0;
     m_glProjMat[1][1] = m_f;
     m_glProjMat[1][2] = 0.0;
     m_glProjMat[1][3] = 0.0;
-    
+
     m_glProjMat[2][0] = 0.0;
     m_glProjMat[2][1] = 0.0;
     m_glProjMat[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
-    m_glProjMat[2][3] =-1.0;
-    
+    m_glProjMat[2][3] = -1.0;
+
     m_glProjMat[3][0] = 0.0;
     m_glProjMat[3][1] = 0.0;
     m_glProjMat[3][2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
@@ -38,19 +31,19 @@ void Camera::apply()
     m_glViewMat[0][0] = m_rightDir[0];
     m_glViewMat[1][0] = m_rightDir[1];
     m_glViewMat[2][0] = m_rightDir[2];
-    
+
     m_glViewMat[0][1] = m_upDir[0];
     m_glViewMat[1][1] = m_upDir[1];
     m_glViewMat[2][1] = m_upDir[2];
-    
+
     m_glViewMat[0][2] = -m_viewDir[0];
     m_glViewMat[1][2] = -m_viewDir[1];
     m_glViewMat[2][2] = -m_viewDir[2];
-    
-    m_glViewMat[3][0] = -(m_glViewMat[0][0] * m_pos[0] + m_glViewMat[1][0] * m_pos[1] + m_glViewMat[2][0]  * m_pos[2]);
-    m_glViewMat[3][1] = -(m_glViewMat[0][1] * m_pos[0] + m_glViewMat[1][1] * m_pos[1] + m_glViewMat[2][1]  * m_pos[2]);
+
+    m_glViewMat[3][0] = -(m_glViewMat[0][0] * m_pos[0] + m_glViewMat[1][0] * m_pos[1] + m_glViewMat[2][0] * m_pos[2]);
+    m_glViewMat[3][1] = -(m_glViewMat[0][1] * m_pos[0] + m_glViewMat[1][1] * m_pos[1] + m_glViewMat[2][1] * m_pos[2]);
     m_glViewMat[3][2] = -(m_glViewMat[0][2] * m_pos[0] + m_glViewMat[1][2] * m_pos[1] + m_glViewMat[2][2] * m_pos[2]);
-    
+
     m_glViewMat[0][3] = 0.0;
     m_glViewMat[1][3] = 0.0;
     m_glViewMat[2][3] = 0.0;
@@ -63,7 +56,7 @@ void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
 {
     m_fov = fov;
     m_aspect = aspect;
-    m_f = tanf(M_PI * m_fov / 360.0);
+    m_f = std::tan(m_fov * RadPerDeg / 2);
     m_height = 2.0 * m_distNear * m_f;
     m_width = m_height * aspect;
     m_f = 1.0 / m_f;
@@ -87,7 +80,7 @@ void Camera::moveVertical(GLfloat dist)
 void Camera::shake(GLfloat power, GLfloat time)
 {
     m_shakeValue = power;
-    m_shakeTime  = time;
+    m_shakeTime = time;
 }
 
 void Camera::deltaRotation(const btVector3& angles)                         //angles = {OX, OY, OZ}
@@ -107,10 +100,10 @@ void Camera::setRotation(const btVector3& angles)                          //ang
 {
     m_ang = angles;
 
-    m_upDir = {0,0,1};
+    m_upDir = { 0,0,1 };
 
-    m_viewDir = btVector3(0,1,0).rotate(m_upDir, angles.x());
-    m_rightDir = btVector3(1,0,0).rotate(m_upDir, angles.x());
+    m_viewDir = btVector3(0, 1, 0).rotate(m_upDir, angles.x());
+    m_rightDir = btVector3(1, 0, 0).rotate(m_upDir, angles.x());
 
     m_upDir = m_upDir.rotate(m_rightDir, angles.y());
     m_viewDir = m_viewDir.rotate(m_rightDir, angles.y());
@@ -125,7 +118,7 @@ void Camera::recalcClipPlanes()
 
     //==========================================================================
 
-    frustum->norm.assign( m_viewDir, m_pos );                               // Основная плоскость отсечения (что сзади - то не рисуем)
+    frustum->norm.assign(m_viewDir, m_pos);                               // Основная плоскость отсечения (что сзади - то не рисуем)
 
     //==========================================================================
 
@@ -150,23 +143,22 @@ void Camera::recalcClipPlanes()
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
     // Ensure that normals point outside
-    for(int i=0; i<4; ++i)
+    for(int i = 0; i < 4; ++i)
         if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
             m_clipPlanes[i].mirrorNormal();
 
-    assert( !frustum->vertices.empty() );
+    assert(!frustum->vertices.empty());
     frustum->vertices[0] = m_pos + m_viewDir;
 }
 
-
 Camera::Camera()
 {
-    m_f = 1.0 / std::tan(M_PI * m_fov / 360.0);
+    m_f = 1.0 / std::tan(m_fov * RadPerDeg / 2);
     m_height = 2.0 * m_distNear / m_f;
     m_width = m_height * m_aspect;
 
     frustum = std::make_shared<Frustum>();
     frustum->cam_pos = &m_pos;
-    frustum->vertices.resize(3, {0,0,0});
-    frustum->planes.assign( m_clipPlanes+0, m_clipPlanes+4 );
+    frustum->vertices.resize(3, { 0,0,0 });
+    frustum->planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
 }

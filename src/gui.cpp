@@ -1,5 +1,5 @@
-
 #include <cstdint>
+
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
 #else
@@ -21,10 +21,11 @@
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "vertex_array.h"
+#include "script.h"
 
 extern SDL_Window  *sdl_window;
 
-gui_text_line_p     gui_base_lines = NULL;
+gui_text_line_p     gui_base_lines = nullptr;
 gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
 uint16_t            temp_lines_used = 0;
 
@@ -32,13 +33,13 @@ gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 
-gui_FontManager       *FontManager = NULL;
-gui_InventoryManager  *main_inventory_manager = NULL;
+gui_FontManager       *FontManager = nullptr;
+gui_InventoryManager  *main_inventory_manager = nullptr;
 
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
 
-matrix4 guiProjectionMatrix;
+matrix4 guiProjectionMatrix = matrix4();
 
 void Gui_Init()
 {
@@ -61,17 +62,17 @@ void Gui_InitFontManager()
 
 void Gui_InitTempLines()
 {
-    for(int i=0;i<GUI_MAX_TEMP_LINES;i++)
+    for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
     {
         gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
-        gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
+        gui_temp_lines[i].text = static_cast<char*>(malloc(GUI_LINE_DEFAULTSIZE * sizeof(char)));
         gui_temp_lines[i].text[0] = 0;
         gui_temp_lines[i].show = false;
 
-        gui_temp_lines[i].next = NULL;
-        gui_temp_lines[i].prev = NULL;
+        gui_temp_lines[i].next = nullptr;
+        gui_temp_lines[i].prev = nullptr;
 
-        gui_temp_lines[i].font_id  = FONT_SECONDARY;
+        gui_temp_lines[i].font_id = FONT_SECONDARY;
         gui_temp_lines[i].style_id = FONTSTYLE_GENERIC;
     }
 }
@@ -83,111 +84,111 @@ void Gui_InitBars()
         switch(i)
         {
             case BAR_HEALTH:
-                {
-                    Bar[i].Visible =      false;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       false;
-                    Bar[i].Vertical =     false;
+            {
+                Bar[i].Visible = false;
+                Bar[i].Alternate = false;
+                Bar[i].Invert = false;
+                Bar[i].Vertical = false;
 
-                    Bar[i].SetSize(250, 15, 3);
-                    Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                    Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
-                    Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
-                    Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
-                    Bar[i].SetColor(ALT_FADE, 255, 255, 0, 255);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
-                    Bar[i].SetBlink(300);
-                    Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 2000, true, 400);
-                }
-                break;
+                Bar[i].SetSize(250, 15, 3);
+                Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
+                Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
+                Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
+                Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
+                Bar[i].SetColor(ALT_FADE, 255, 255, 0, 255);
+                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
+                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
+                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
+                Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
+                Bar[i].SetBlink(300);
+                Bar[i].SetExtrude(true, 100);
+                Bar[i].SetAutoshow(true, 2000, true, 400);
+            }
+            break;
             case BAR_AIR:
-                {
-                    Bar[i].Visible =      false;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       true;
-                    Bar[i].Vertical =     false;
+            {
+                Bar[i].Visible = false;
+                Bar[i].Alternate = false;
+                Bar[i].Invert = true;
+                Bar[i].Vertical = false;
 
-                    Bar[i].SetSize(250, 15, 3);
-                    Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                    Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
-                    Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
-                    Bar[i].SetBlink(300);
-                    Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 2000, true, 400);
-                }
-                break;
+                Bar[i].SetSize(250, 15, 3);
+                Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
+                Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
+                Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
+                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
+                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
+                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
+                Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
+                Bar[i].SetBlink(300);
+                Bar[i].SetExtrude(true, 100);
+                Bar[i].SetAutoshow(true, 2000, true, 400);
+            }
+            break;
             case BAR_STAMINA:
-                {
-                    Bar[i].Visible =      false;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       false;
-                    Bar[i].Vertical =     false;
+            {
+                Bar[i].Visible = false;
+                Bar[i].Alternate = false;
+                Bar[i].Invert = false;
+                Bar[i].Vertical = false;
 
-                    Bar[i].SetSize(250, 15, 3);
-                    Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
-                    Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
-                    Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
-                    Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
-                    Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
-                    Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 500, true, 300);
-                }
-                break;
+                Bar[i].SetSize(250, 15, 3);
+                Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
+                Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
+                Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
+                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
+                Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
+                Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
+                Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
+                Bar[i].SetExtrude(true, 100);
+                Bar[i].SetAutoshow(true, 500, true, 300);
+            }
+            break;
             case BAR_WARMTH:
-                {
-                    Bar[i].Visible =      false;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       true;
-                    Bar[i].Vertical =     false;
+            {
+                Bar[i].Visible = false;
+                Bar[i].Alternate = false;
+                Bar[i].Invert = true;
+                Bar[i].Vertical = false;
 
-                    Bar[i].SetSize(250, 15, 3);
-                    Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
-                    Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
-                    Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
-                    Bar[i].SetBlink(200);
-                    Bar[i].SetExtrude(true, 60);
-                    Bar[i].SetAutoshow(true, 500, true, 300);
-                }
-                break;
+                Bar[i].SetSize(250, 15, 3);
+                Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
+                Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
+                Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
+                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
+                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
+                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
+                Bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
+                Bar[i].SetBlink(200);
+                Bar[i].SetExtrude(true, 60);
+                Bar[i].SetAutoshow(true, 500, true, 300);
+            }
+            break;
 
             case BAR_LOADING:
-                {
-                    Bar[i].Visible =      true;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       false;
-                    Bar[i].Vertical =     false;
+            {
+                Bar[i].Visible = true;
+                Bar[i].Alternate = false;
+                Bar[i].Invert = false;
+                Bar[i].Vertical = false;
 
-                    Bar[i].SetSize(800, 25, 3);
-                    Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
-                    Bar[i].SetColor(BASE_MAIN, 255, 225, 127, 230);
-                    Bar[i].SetColor(BASE_FADE, 255, 187, 136, 230);
-                    Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 100);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 80);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 80);
-                    Bar[i].SetValues(1000, 0);
-                    Bar[i].SetExtrude(true, 70);
-                    Bar[i].SetAutoshow(false, 500, false, 300);
-                }
-                break;
+                Bar[i].SetSize(800, 25, 3);
+                Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
+                Bar[i].SetColor(BASE_MAIN, 255, 225, 127, 230);
+                Bar[i].SetColor(BASE_FADE, 255, 187, 136, 230);
+                Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
+                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 100);
+                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 80);
+                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 80);
+                Bar[i].SetValues(1000, 0);
+                Bar[i].SetExtrude(true, 70);
+                Bar[i].SetAutoshow(false, 500, false, 300);
+            }
+            break;
         } // end switch(i)
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
 }
@@ -199,32 +200,32 @@ void Gui_InitFaders()
         switch(i)
         {
             case FADER_LOADSCREEN:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(0, 0, 0);
-                    Fader[i].SetBlendingMode(BM_OPAQUE);
-                    Fader[i].SetSpeed(500);
-                    Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-                }
-                break;
+            {
+                Fader[i].SetAlpha(255);
+                Fader[i].SetColor(0, 0, 0);
+                Fader[i].SetBlendingMode(BM_OPAQUE);
+                Fader[i].SetSpeed(500);
+                Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+            }
+            break;
 
             case FADER_EFFECT:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(255,180,0);
-                    Fader[i].SetBlendingMode(BM_MULTIPLY);
-                    Fader[i].SetSpeed(10,800);
-                }
+            {
+                Fader[i].SetAlpha(255);
+                Fader[i].SetColor(255, 180, 0);
+                Fader[i].SetBlendingMode(BM_MULTIPLY);
+                Fader[i].SetSpeed(10, 800);
+            }
 
             case FADER_BLACK:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(0, 0, 0);
-                    Fader[i].SetBlendingMode(BM_OPAQUE);
-                    Fader[i].SetSpeed(500);
-                    Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-                }
-                break;
+            {
+                Fader[i].SetAlpha(255);
+                Fader[i].SetColor(0, 0, 0);
+                Fader[i].SetBlendingMode(BM_OPAQUE);
+                Fader[i].SetSpeed(500);
+                Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+            }
+            break;
         }
     }
 }
@@ -239,12 +240,12 @@ void Gui_InitNotifier()
 
 void Gui_Destroy()
 {
-    for(int i = 0; i < GUI_MAX_TEMP_LINES ;i++)
+    for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
     {
         gui_temp_lines[i].show = false;
         gui_temp_lines[i].text_size = 0;
         free(gui_temp_lines[i].text);
-        gui_temp_lines[i].text = NULL;
+        gui_temp_lines[i].text = nullptr;
     }
 
     for(int i = 0; i < FADER_LASTINDEX; i++)
@@ -263,27 +264,27 @@ void Gui_Destroy()
     if(main_inventory_manager)
     {
         delete main_inventory_manager;
-        main_inventory_manager = NULL;
+        main_inventory_manager = nullptr;
     }
 
     if(FontManager)
     {
         delete FontManager;
-        FontManager = NULL;
+        FontManager = nullptr;
     }
 }
 
 void Gui_AddLine(gui_text_line_p line)
 {
-    if(gui_base_lines == NULL)
+    if(gui_base_lines == nullptr)
     {
         gui_base_lines = line;
-        line->next = NULL;
-        line->prev = NULL;
+        line->next = nullptr;
+        line->prev = nullptr;
         return;
     }
 
-    line->prev = NULL;
+    line->prev = nullptr;
     line->next = gui_base_lines;
     gui_base_lines->prev = line;
     gui_base_lines = line;
@@ -295,9 +296,9 @@ void Gui_DeleteLine(gui_text_line_p line)
     if(line == gui_base_lines)
     {
         gui_base_lines = line->next;
-        if(gui_base_lines != NULL)
+        if(gui_base_lines != nullptr)
         {
-            gui_base_lines->prev = NULL;
+            gui_base_lines->prev = nullptr;
         }
         return;
     }
@@ -333,8 +334,8 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
         va_end(argptr);
 
-        l->next = NULL;
-        l->prev = NULL;
+        l->next = nullptr;
+        l->prev = nullptr;
 
         temp_lines_used++;
 
@@ -350,12 +351,12 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         return l;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void Gui_Update()
 {
-    if(FontManager != NULL)
+    if(FontManager != nullptr)
     {
         FontManager->Update();
     }
@@ -374,7 +375,7 @@ void Gui_Resize()
     }
 
     l = gui_temp_lines;
-    for(uint16_t i=0;i<temp_lines_used;i++,l++)
+    for(uint16_t i = 0; i < temp_lines_used; i++, l++)
     {
         l->absXoffset = l->X * screen_info.scale_factor;
         l->absYoffset = l->Y * screen_info.scale_factor;
@@ -403,7 +404,7 @@ void Gui_Render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    Gui_DrawCrosshair();
+    if(screen_info.show_debuginfo) Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
@@ -417,20 +418,20 @@ void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
-    if(FontManager == NULL)
+    if(FontManager == nullptr)
     {
         return;
     }
 
-    gl_tex_font_p gl_font = FontManager->GetFont((font_Type)l->font_id);
-    gui_fontstyle_p style = FontManager->GetFontStyle((font_Style)l->style_id);
+    gl_tex_font_p gl_font = FontManager->GetFont(static_cast<font_Type>(l->font_id));
+    gui_fontstyle_p style = FontManager->GetFontStyle(static_cast<font_Style>(l->style_id));
 
-    if((gl_font == NULL) || (style == NULL) || (!l->show) || (style->hidden))
+    if((gl_font == nullptr) || (style == nullptr) || (!l->show) || (style->hidden))
     {
         return;
     }
 
-    glf_get_string_bb(gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
+    glf_get_string_bb(gl_font, l->text, -1, l->rect + 0, l->rect + 1, l->rect + 2, l->rect + 3);
 
     switch(l->Xanchor)
     {
@@ -438,10 +439,10 @@ void Gui_RenderStringLine(gui_text_line_p l)
             real_x = l->absXoffset;   // Used with center and right alignments.
             break;
         case GUI_ANCHOR_HOR_RIGHT:
-            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->absXoffset;
+            real_x = static_cast<float>(screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
         case GUI_ANCHOR_HOR_CENTER:
-            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            real_x = (static_cast<float>(screen_info.w) / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
             break;
     }
 
@@ -451,10 +452,10 @@ void Gui_RenderStringLine(gui_text_line_p l)
             real_y += l->absYoffset;
             break;
         case GUI_ANCHOR_VERT_TOP:
-            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
+            real_y = static_cast<float>(screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = (static_cast<float>(screen_info.h) / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 
@@ -482,20 +483,20 @@ void Gui_RenderStringLine(gui_text_line_p l)
         gl_font->gl_font_color[0] = 0.0f;
         gl_font->gl_font_color[1] = 0.0f;
         gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = (float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
+        gl_font->gl_font_color[3] = static_cast<float>(style->color[3]) * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
         glf_render_str(gl_font,
                        (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
-                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
+                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT),
                        l->text);
     }
 
-    std::copy(style->real_color+0, style->real_color+4, gl_font->gl_font_color);
+    std::copy(style->real_color + 0, style->real_color + 4, gl_font->gl_font_color);
     glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
 void Gui_RenderStrings()
 {
-    if(FontManager != NULL)
+    if(FontManager != nullptr)
     {
         gui_text_line_p l = gui_base_lines;
 
@@ -504,8 +505,8 @@ void Gui_RenderStrings()
         TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
         glUseProgram(shader->program);
         GLfloat screenSize[2] = {
-            (GLfloat) screen_info.w,
-            (GLfloat) screen_info.h
+            static_cast<GLfloat>(screen_info.w),
+            static_cast<GLfloat>(screen_info.h)
         };
         glUniform2fv(shader->screenSize, 1, screenSize);
         glUniform1i(shader->sampler, 0);
@@ -517,7 +518,7 @@ void Gui_RenderStrings()
         }
 
         l = gui_temp_lines;
-        for(uint16_t i=0;i<temp_lines_used;i++,l++)
+        for(uint16_t i = 0; i < temp_lines_used; i++, l++)
         {
             if(l->show)
             {
@@ -529,7 +530,6 @@ void Gui_RenderStrings()
         temp_lines_used = 0;
     }
 }
-
 
 /**
  * That function updates item animation and rebuilds skeletal matrices;
@@ -571,13 +571,12 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
     bf->animations.frame_time += time;
 
     t = (bf->animations.frame_time) / bf->animations.period;
-    dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
-    bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
+    dt = bf->animations.frame_time - static_cast<btScalar>(t) * bf->animations.period;
+    bf->animations.frame_time = static_cast<btScalar>(frame) * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     Entity::updateCurrentBoneFrame(bf, nullptr);
 }
-
 
 /**
  * The base function, that draws one item by them id. Items may be animated.
@@ -598,11 +597,11 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         auto bb = bf->bb_max - bf->bb_min;
         if(bb[0] >= bb[1])
         {
-            size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+            size /= ((bb[0] >= bb[2]) ? (bb[0]) : (bb[2]));
         }
         else
         {
-            size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+            size /= ((bb[1] >= bb[2]) ? (bb[1]) : (bb[2]));
         }
         size *= 0.8;
 
@@ -612,17 +611,17 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        matrix4 scaledMvMatrix = mvMatrix * scaledMatrix;
+        matrix4 scaledMvMatrix(mvMatrix * scaledMatrix);
         matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -631,48 +630,49 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
  */
 gui_InventoryManager::gui_InventoryManager()
 {
-    mCurrentState               = INVENTORY_DISABLED;
-    mNextState                  = INVENTORY_DISABLED;
-    mCurrentItemsType           = GUI_MENU_ITEMTYPE_SYSTEM;
-    mCurrentItemsCount          = 0;
-    mItemsOffset                = 0;
-    mNextItemsCount             = 0;
+    mCurrentState = INVENTORY_DISABLED;
+    mNextState = INVENTORY_DISABLED;
+    mCurrentItemsType = GUI_MENU_ITEMTYPE_SYSTEM;
+    mCurrentItemsCount = 0;
+    mItemsOffset = 0;
+    mNextItemsCount = 0;
 
-    mRingRotatePeriod           = 0.5;
-    mRingTime                   = 0.0;
-    mRingAngle                  = 0.0;
-    mRingVerticalAngle          = 0.0;
-    mRingAngleStep              = 0.0;
-    mBaseRingRadius             = 600.0;
-    mRingRadius                 = 600.0;
-    mVerticalOffset             = 0.0;
+    mRingRotatePeriod = 0.5;
+    mRingTime = 0.0;
+    mRingAngle = 0.0;
+    mRingVerticalAngle = 0.0;
+    mRingAngleStep = 0.0;
+    mBaseRingRadius = 600.0;
+    mRingRadius = 600.0;
+    mVerticalOffset = 0.0;
 
-    mItemRotatePeriod           = 4.0;
-    mItemAngle                  = 0.0;
+    mItemRotatePeriod = 4.0;
+    mItemTime = 0.0;
+    mItemAngle = 0.0;
 
-    mInventory                  = NULL;
+    mInventory = nullptr;
 
-    mLabel_Title.X              = 0.0;
-    mLabel_Title.Y              = 30.0;
-    mLabel_Title.Xanchor        = GUI_ANCHOR_HOR_CENTER;
-    mLabel_Title.Yanchor        = GUI_ANCHOR_VERT_TOP;
+    mLabel_Title.X = 0.0;
+    mLabel_Title.Y = 30.0;
+    mLabel_Title.Xanchor = GUI_ANCHOR_HOR_CENTER;
+    mLabel_Title.Yanchor = GUI_ANCHOR_VERT_TOP;
 
-    mLabel_Title.font_id        = FONT_PRIMARY;
-    mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
-    mLabel_Title.text           = mLabel_Title_text;
-    mLabel_Title_text[0]        = 0;
-    mLabel_Title.show           = false;
+    mLabel_Title.font_id = FONT_PRIMARY;
+    mLabel_Title.style_id = FONTSTYLE_MENU_TITLE;
+    mLabel_Title.text = mLabel_Title_text;
+    mLabel_Title_text[0] = 0;
+    mLabel_Title.show = false;
 
-    mLabel_ItemName.X           = 0.0;
-    mLabel_ItemName.Y           = 50.0;
-    mLabel_ItemName.Xanchor     = GUI_ANCHOR_HOR_CENTER;
-    mLabel_ItemName.Yanchor     = GUI_ANCHOR_VERT_BOTTOM;
+    mLabel_ItemName.X = 0.0;
+    mLabel_ItemName.Y = 50.0;
+    mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
+    mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 
-    mLabel_ItemName.font_id     = FONT_PRIMARY;
-    mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
-    mLabel_ItemName.text        = mLabel_ItemName_text;
-    mLabel_ItemName_text[0]     = 0;
-    mLabel_ItemName.show        = false;
+    mLabel_ItemName.font_id = FONT_PRIMARY;
+    mLabel_ItemName.style_id = FONTSTYLE_MENU_CONTENT;
+    mLabel_ItemName.text = mLabel_ItemName_text;
+    mLabel_ItemName_text[0] = 0;
+    mLabel_ItemName.show = false;
 
     Gui_AddLine(&mLabel_ItemName);
     Gui_AddLine(&mLabel_Title);
@@ -682,7 +682,7 @@ gui_InventoryManager::~gui_InventoryManager()
 {
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
-    mInventory = NULL;
+    mInventory = nullptr;
 
     mLabel_ItemName.show = false;
     Gui_DeleteLine(&mLabel_ItemName);
@@ -930,7 +930,7 @@ void gui_InventoryManager::frame(float time)
             {
                 restoreItemAngle(time);
                 mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
-                mVerticalOffset = - mBaseRingRadius * mRingTime / mRingRotatePeriod;
+                mVerticalOffset = -mBaseRingRadius * mRingTime / mRingRotatePeriod;
                 mRingAngle += 180.0 * time / mRingRotatePeriod;
             }
             else if(mRingTime < 2.0 * mRingRotatePeriod)
@@ -1038,7 +1038,7 @@ void gui_InventoryManager::frame(float time)
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && !mInventory->empty() && (FontManager != NULL))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != nullptr) && !mInventory->empty() && (FontManager != nullptr))
     {
         int num = 0;
         for(InventoryNode& i : *mInventory)
@@ -1051,7 +1051,7 @@ void gui_InventoryManager::render()
 
             btTransform matrix;
             matrix.setIdentity();
-            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
+            Mat4_Translate(matrix, 0.0, 0.0, -mBaseRingRadius * 2.0);
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
             btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
@@ -1069,8 +1069,7 @@ void gui_InventoryManager::render()
                     {
                         char counter[32];
                         lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i.count);
-
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, static_cast<const char*>(counter), bi->name, i.count);
                     }
                 }
                 Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
@@ -1100,12 +1099,13 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix[0][0] = 2.0 / ((GLfloat)screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0 / ((GLfloat)screen_info.h);
-        guiProjectionMatrix[2][2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix[3][0] =-1.0;
-        guiProjectionMatrix[3][1] =-1.0;
-        guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        guiProjectionMatrix = matrix4{};                                        // identity matrix
+        guiProjectionMatrix[0][0] = 2.0 / static_cast<GLfloat>(screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0 / static_cast<GLfloat>(screen_info.h);
+        guiProjectionMatrix[2][2] = -2.0 / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] = -1.0;
+        guiProjectionMatrix[3][1] = -1.0;
+        guiProjectionMatrix[3][2] = -(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {
@@ -1113,7 +1113,8 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
-struct gui_buffer_entry_s {
+struct gui_buffer_entry_s
+{
     GLfloat position[2];
     uint8_t color[4];
 };
@@ -1121,10 +1122,10 @@ struct gui_buffer_entry_s {
 void Gui_FillCrosshairBuffer()
 {
     gui_buffer_entry_s crosshair_buf[4] = {
-        {{(GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
-        {{(GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f)}, {255, 0, 0, 255}},
-        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f)}, {255, 0, 0, 255}},
-        {{(GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)}, {255, 0, 0, 255}}
+        {{static_cast<GLfloat>(screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(screen_info.w / 2.0f + 5.f), (static_cast<GLfloat>(screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(screen_info.w / 2.0f), (static_cast<GLfloat>(screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(screen_info.w / 2.0f), (static_cast<GLfloat>(screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
@@ -1170,10 +1171,13 @@ void Gui_DrawBars()
         if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
-        Bar[BAR_AIR].Show    (engine_world.character->getParam( PARAM_AIR    ));
-        Bar[BAR_STAMINA].Show(engine_world.character->getParam( PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show (engine_world.character->getParam( PARAM_HEALTH ));
-        Bar[BAR_WARMTH].Show (engine_world.character->getParam( PARAM_WARMTH ));
+        if(engine_world.character->getParam(PARAM_POISON) > 0.0)
+            Bar[BAR_HEALTH].Alternate = true;
+
+        Bar[BAR_AIR].Show(engine_world.character->getParam(PARAM_AIR));
+        Bar[BAR_STAMINA].Show(engine_world.character->getParam(PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show(engine_world.character->getParam(PARAM_HEALTH));
+        Bar[BAR_WARMTH].Show(engine_world.character->getParam(PARAM_WARMTH));
     }
 }
 
@@ -1199,10 +1203,10 @@ void Gui_DrawInventory()
 
     // Background
 
-    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45};
-    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75};
+    GLfloat upper_color[4] = { 0.0,0.0,0.0,0.45 };
+    GLfloat lower_color[4] = { 0.0,0.0,0.0,0.75 };
 
-    Gui_DrawRect(0.0, 0.0, (GLfloat)screen_info.w, (GLfloat)screen_info.h,
+    Gui_DrawRect(0.0, 0.0, static_cast<GLfloat>(screen_info.w), static_cast<GLfloat>(screen_info.h),
                  upper_color, upper_color, lower_color, lower_color,
                  BM_OPAQUE);
 
@@ -1259,9 +1263,9 @@ void Gui_DrawLoadScreen(int value)
 
 namespace
 {
-GLuint rectanglePositionBuffer = 0;
-GLuint rectangleColorBuffer = 0;
-std::unique_ptr<VertexArray> rectangleArray = 0;
+    GLuint rectanglePositionBuffer = 0;
+    GLuint rectangleColorBuffer = 0;
+    std::unique_ptr<VertexArray> rectangleArray = nullptr;
 }
 
 /**
@@ -1293,7 +1297,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             break;
     };
 
-    if (rectanglePositionBuffer == 0)
+    if(rectanglePositionBuffer == 0)
     {
         glGenBuffers(1, &rectanglePositionBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
@@ -1306,18 +1310,18 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         glGenBuffers(1, &rectangleColorBuffer);
 
         VertexArrayAttribute attribs[] = {
-            VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
-            VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+            VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat[2]), 0),
+            VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat[4]), 0),
         };
-        rectangleArray.reset( new VertexArray(0, 2, attribs) );
+        rectangleArray.reset(new VertexArray(0, 2, attribs));
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
-    GLfloat *rectColors = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[4]) * 4, nullptr, GL_STREAM_DRAW);
+    GLfloat *rectColors = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+    memcpy(rectColors + 0, colorLowerLeft, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4, colorLowerRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8, colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
@@ -1327,7 +1331,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
-    if (texture)
+    if(texture)
     {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -1379,9 +1383,9 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
         strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
         if(!Engine_FileFound(buf, false))
         {
-            for(; ext_len+1<pic_name.length(); ext_len++)
+            for(; ext_len + 1 < pic_name.length(); ext_len++)
             {
-                if(buf[pic_name.length()-ext_len-1] == '.')
+                if(buf[pic_name.length() - ext_len - 1] == '.')
                 {
                     break;
                 }
@@ -1433,9 +1437,9 @@ void Gui_FadeSetup(int fader,
     if(fader >= FADER_LASTINDEX) return;
 
     Fader[fader].SetAlpha(alpha);
-    Fader[fader].SetColor(R,G,B);
+    Fader[fader].SetColor(R, G, B);
     Fader[fader].SetBlendingMode(blending_mode);
-    Fader[fader].SetSpeed(fadein_speed,fadeout_speed);
+    Fader[fader].SetSpeed(fadein_speed, fadeout_speed);
 }
 
 int Gui_FadeCheck(int fader)
@@ -1450,7 +1454,6 @@ int Gui_FadeCheck(int fader)
     }
 }
 
-
 // ===================================================================================
 // ============================ FADER CLASS IMPLEMENTATION ===========================
 // ===================================================================================
@@ -1463,16 +1466,16 @@ gui_Fader::gui_Fader()
     SetSpeed(500);
     SetDelay(0);
 
-    mActive             = false;
-    mComplete           = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
-    mDirection          = GUI_FADER_DIR_IN;
+    mActive = false;
+    mComplete = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
+    mDirection = GUI_FADER_DIR_IN;
 
-    mTexture            = 0;
+    mTexture = 0;
 }
 
 void gui_Fader::SetAlpha(uint8_t alpha)
 {
-    mMaxAlpha = (float)alpha / 255;
+    mMaxAlpha = static_cast<float>(alpha) / 255;
 }
 
 void gui_Fader::SetScaleMode(uint8_t mode)
@@ -1482,7 +1485,6 @@ void gui_Fader::SetScaleMode(uint8_t mode)
 
 void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
 {
-
     // Each corner of the fader could be colored independently, thus allowing
     // to create gradient faders. It is nifty yet not so useful feature, so
     // it is completely optional - if you won't specify corner, color will be
@@ -1491,39 +1493,39 @@ void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
     switch(corner)
     {
         case GUI_FADER_CORNER_TOPLEFT:
-            mTopLeftColor[0] = (GLfloat)R / 255;
-            mTopLeftColor[1] = (GLfloat)G / 255;
-            mTopLeftColor[2] = (GLfloat)B / 255;
+            mTopLeftColor[0] = static_cast<GLfloat>(R) / 255;
+            mTopLeftColor[1] = static_cast<GLfloat>(G) / 255;
+            mTopLeftColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
         case GUI_FADER_CORNER_TOPRIGHT:
-            mTopRightColor[0] = (GLfloat)R / 255;
-            mTopRightColor[1] = (GLfloat)G / 255;
-            mTopRightColor[2] = (GLfloat)B / 255;
+            mTopRightColor[0] = static_cast<GLfloat>(R) / 255;
+            mTopRightColor[1] = static_cast<GLfloat>(G) / 255;
+            mTopRightColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
         case GUI_FADER_CORNER_BOTTOMLEFT:
-            mBottomLeftColor[0] = (GLfloat)R / 255;
-            mBottomLeftColor[1] = (GLfloat)G / 255;
-            mBottomLeftColor[2] = (GLfloat)B / 255;
+            mBottomLeftColor[0] = static_cast<GLfloat>(R) / 255;
+            mBottomLeftColor[1] = static_cast<GLfloat>(G) / 255;
+            mBottomLeftColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
         case GUI_FADER_CORNER_BOTTOMRIGHT:
-            mBottomRightColor[0] = (GLfloat)R / 255;
-            mBottomRightColor[1] = (GLfloat)G / 255;
-            mBottomRightColor[2] = (GLfloat)B / 255;
+            mBottomRightColor[0] = static_cast<GLfloat>(R) / 255;
+            mBottomRightColor[1] = static_cast<GLfloat>(G) / 255;
+            mBottomRightColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
         default:
-            mTopRightColor[0] = (GLfloat)R / 255;
-            mTopRightColor[1] = (GLfloat)G / 255;
-            mTopRightColor[2] = (GLfloat)B / 255;
+            mTopRightColor[0] = static_cast<GLfloat>(R) / 255;
+            mTopRightColor[1] = static_cast<GLfloat>(G) / 255;
+            mTopRightColor[2] = static_cast<GLfloat>(B) / 255;
 
             // Copy top right corner color to all other corners.
 
-            memcpy(mTopLeftColor,     mTopRightColor, sizeof(GLfloat) * 4);
+            memcpy(mTopLeftColor, mTopRightColor, sizeof(GLfloat) * 4);
             memcpy(mBottomRightColor, mTopRightColor, sizeof(GLfloat) * 4);
-            memcpy(mBottomLeftColor,  mTopRightColor, sizeof(GLfloat) * 4);
+            memcpy(mBottomLeftColor, mTopRightColor, sizeof(GLfloat) * 4);
             break;
     }
 }
@@ -1535,28 +1537,28 @@ void gui_Fader::SetBlendingMode(uint32_t mode)
 
 void gui_Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
 {
-    mSpeed           = 1000.0 / (float)fade_speed;
-    mSpeedSecondary  = 1000.0 / (float)fade_speed_secondary;
+    mSpeed = 1000.0 / static_cast<float>(fade_speed);
+    mSpeedSecondary = 1000.0 / static_cast<float>(fade_speed_secondary);
 }
 
 void gui_Fader::SetDelay(uint32_t delay_msec)
 {
-    mMaxTime         = (float)delay_msec / 1000.0;
+    mMaxTime = static_cast<float>(delay_msec) / 1000.0;
 }
 
 void gui_Fader::SetAspect()
 {
     if(mTexture)
     {
-        if(((float)mTextureWidth / (float)screen_info.w) >= ((float)mTextureHeight / (float)screen_info.h))
+        if((static_cast<float>(mTextureWidth) / static_cast<float>(screen_info.w)) >= (static_cast<float>(mTextureHeight) / static_cast<float>(screen_info.h)))
         {
             mTextureWide = true;
-            mTextureAspectRatio = (float)mTextureHeight / (float)mTextureWidth;
+            mTextureAspectRatio = static_cast<float>(mTextureHeight) / static_cast<float>(mTextureWidth);
         }
         else
         {
             mTextureWide = false;
-            mTextureAspectRatio = (float)mTextureWidth  / (float)mTextureHeight;
+            mTextureAspectRatio = static_cast<float>(mTextureWidth) / static_cast<float>(mTextureHeight);
         }
     }
 }
@@ -1573,10 +1575,10 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     // Check whether loading succeeded
     CGImageSourceStatus status = CGImageSourceGetStatus(source);
-    if (status != kCGImageStatusComplete)
+    if(status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        ConsoleInfo::instance().printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        ConsoleInfo::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
         return false;
     }
 
@@ -1591,7 +1593,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
     // Write image to bytes. This is done by drawing it into an off-screen image context using our data as the backing store
     CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width*4, deviceRgb, kCGImageAlphaPremultipliedFirst);
+    CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width * 4, deviceRgb, kCGImageAlphaPremultipliedFirst);
     CGColorSpaceRelease(deviceRgb);
     assert(context);
 
@@ -1616,26 +1618,26 @@ bool gui_Fader::SetTexture(const char *texture_path)
     // Load texture. The weird format works out to ARGB8 in the end
     // (on little-endian systems), which is what we specified above and what
     // OpenGL prefers internally.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLuint) width, (GLuint) height, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLuint)width, (GLuint)height, 0,
                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
 
     // Cleanup
-    delete [] data;
+    delete[] data;
 
     // Setup the additional required information
-    mTextureWidth  = width;
+    mTextureWidth = width;
     mTextureHeight = height;
 
     SetAspect();
 
-    ConsoleInfo::instance().printf("Loaded fader picture: %s", texture_path);
+    ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);
     GLenum       texture_format;
     GLint        color_depth;
 
-    if(surface != NULL)
+    if(surface != nullptr)
     {
         // Get the color depth of the SDL surface
         color_depth = surface->format->BytesPerPixel;
@@ -1646,6 +1648,8 @@ bool gui_Fader::SetTexture(const char *texture_path)
                 texture_format = GL_RGBA;
             else
                 texture_format = GL_BGRA;
+
+            color_depth = GL_RGBA;
         }
         else if(color_depth == 3)   // No alpha channel
         {
@@ -1653,6 +1657,8 @@ bool gui_Fader::SetTexture(const char *texture_path)
                 texture_format = GL_RGB;
             else
                 texture_format = GL_BGR;
+
+            color_depth = GL_RGB;
         }
         else
         {
@@ -1676,7 +1682,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
         // Edit the texture object's image data using the information SDL_Surface gives us
         glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
-                          texture_format, GL_UNSIGNED_BYTE, surface->pixels);
+                     texture_format, GL_UNSIGNED_BYTE, surface->pixels);
     }
     else
     {
@@ -1691,7 +1697,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     if(surface)
     {
         // Set additional parameters
-        mTextureWidth  = surface->w;
+        mTextureWidth = surface->w;
         mTextureHeight = surface->h;
 
         SetAspect();
@@ -1733,10 +1739,10 @@ bool gui_Fader::DropTexture()
 
 void gui_Fader::Engage(int fade_dir)
 {
-    mDirection    = fade_dir;
-    mActive       = true;
-    mComplete     = false;
-    mCurrentTime  = 0.0;
+    mDirection = fade_dir;
+    mActive = true;
+    mComplete = false;
+    mCurrentTime = 0.0;
 
     if(mDirection == GUI_FADER_DIR_IN)
     {
@@ -1750,10 +1756,10 @@ void gui_Fader::Engage(int fade_dir)
 
 void gui_Fader::Cut()
 {
-    mActive        = false;
-    mComplete      = false;
-    mCurrentAlpha  = 0.0;
-    mCurrentTime   = 0.0;
+    mActive = false;
+    mComplete = false;
+    mCurrentAlpha = 0.0;
+    mCurrentTime = 0.0;
 
     DropTexture();
 }
@@ -1774,8 +1780,8 @@ void gui_Fader::Show()
         }
         else
         {
-            mComplete     = true;   // We've reached zero alpha, complete and disable fader.
-            mActive       = false;
+            mComplete = true;   // We've reached zero alpha, complete and disable fader.
+            mActive = false;
             mCurrentAlpha = 0.0;
             DropTexture();
         }
@@ -1821,10 +1827,10 @@ void gui_Fader::Show()
             }
             else
             {
-                mComplete     = true;          // We've reached zero alpha, complete and disable fader.
-                mActive       = false;
+                mComplete = true;          // We've reached zero alpha, complete and disable fader.
+                mActive = false;
                 mCurrentAlpha = 0.0;
-                mCurrentTime  = 0.0;
+                mCurrentTime = 0.0;
                 DropTexture();
             }
         }
@@ -1832,9 +1838,9 @@ void gui_Fader::Show()
 
     // Apply current alpha value to all vertices.
 
-    mTopLeftColor[3]     = mCurrentAlpha;
-    mTopRightColor[3]    = mCurrentAlpha;
-    mBottomLeftColor[3]  = mCurrentAlpha;
+    mTopLeftColor[3] = mCurrentAlpha;
+    mTopRightColor[3] = mCurrentAlpha;
+    mBottomLeftColor[3] = mCurrentAlpha;
     mBottomRightColor[3] = mCurrentAlpha;
 
     // Draw the rectangle.
@@ -1843,7 +1849,7 @@ void gui_Fader::Show()
     if(mTexture)
     {
         // Texture is always modulated with alpha!
-        GLfloat tex_color[4] = {mCurrentAlpha, mCurrentAlpha, mCurrentAlpha, mCurrentAlpha};
+        GLfloat tex_color[4] = { mCurrentAlpha, mCurrentAlpha, mCurrentAlpha, mCurrentAlpha };
 
         if(mTextureScaleMode == GUI_FADER_SCALE_LETTERBOX)
         {
@@ -1935,8 +1941,6 @@ void gui_Fader::Show()
                          mBlendingMode,
                          mTexture);
         }
-
-
     }
     else    // No texture, simply draw colored rect.
     {
@@ -1962,7 +1966,6 @@ int gui_Fader::IsFading()
     }
 }
 
-
 // ===================================================================================
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================
 // ===================================================================================
@@ -1970,11 +1973,11 @@ int gui_Fader::IsFading()
 gui_ProgressBar::gui_ProgressBar()
 {
     // Set up some defaults.
-    Visible   = false;
+    Visible = false;
     Alternate = false;
-    Invert    = false;
-    Vertical  = false;
-    Forced    = false;
+    Invert = false;
+    Vertical = false;
+    Forced = false;
 
     // Initialize parameters.
     // By default, bar is initialized with TR5-like health bar properties.
@@ -2005,66 +2008,66 @@ void gui_ProgressBar::Resize()
 
 // Set specified color.
 void gui_ProgressBar::SetColor(BarColorType colType,
-                           uint8_t R, uint8_t G, uint8_t B, uint8_t A)
+                               uint8_t R, uint8_t G, uint8_t B, uint8_t A)
 {
     float maxColValue = 255.0;
 
     switch(colType)
     {
         case BASE_MAIN:
-            mBaseMainColor[0] = (float)R / maxColValue;
-            mBaseMainColor[1] = (float)G / maxColValue;
-            mBaseMainColor[2] = (float)B / maxColValue;
-            mBaseMainColor[3] = (float)A / maxColValue;
+            mBaseMainColor[0] = static_cast<float>(R) / maxColValue;
+            mBaseMainColor[1] = static_cast<float>(G) / maxColValue;
+            mBaseMainColor[2] = static_cast<float>(B) / maxColValue;
+            mBaseMainColor[3] = static_cast<float>(A) / maxColValue;
             mBaseMainColor[4] = mBaseMainColor[3];
             return;
         case BASE_FADE:
-            mBaseFadeColor[0] = (float)R / maxColValue;
-            mBaseFadeColor[1] = (float)G / maxColValue;
-            mBaseFadeColor[2] = (float)B / maxColValue;
-            mBaseFadeColor[3] = (float)A / maxColValue;
+            mBaseFadeColor[0] = static_cast<float>(R) / maxColValue;
+            mBaseFadeColor[1] = static_cast<float>(G) / maxColValue;
+            mBaseFadeColor[2] = static_cast<float>(B) / maxColValue;
+            mBaseFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBaseFadeColor[4] = mBaseFadeColor[3];
             return;
         case ALT_MAIN:
-            mAltMainColor[0] = (float)R / maxColValue;
-            mAltMainColor[1] = (float)G / maxColValue;
-            mAltMainColor[2] = (float)B / maxColValue;
-            mAltMainColor[3] = (float)A / maxColValue;
+            mAltMainColor[0] = static_cast<float>(R) / maxColValue;
+            mAltMainColor[1] = static_cast<float>(G) / maxColValue;
+            mAltMainColor[2] = static_cast<float>(B) / maxColValue;
+            mAltMainColor[3] = static_cast<float>(A) / maxColValue;
             mAltMainColor[4] = mAltMainColor[3];
             return;
         case ALT_FADE:
-            mAltFadeColor[0] = (float)R / maxColValue;
-            mAltFadeColor[1] = (float)G / maxColValue;
-            mAltFadeColor[2] = (float)B / maxColValue;
-            mAltFadeColor[3] = (float)A / maxColValue;
+            mAltFadeColor[0] = static_cast<float>(R) / maxColValue;
+            mAltFadeColor[1] = static_cast<float>(G) / maxColValue;
+            mAltFadeColor[2] = static_cast<float>(B) / maxColValue;
+            mAltFadeColor[3] = static_cast<float>(A) / maxColValue;
             mAltFadeColor[4] = mAltFadeColor[3];
             return;
         case BACK_MAIN:
-            mBackMainColor[0] = (float)R / maxColValue;
-            mBackMainColor[1] = (float)G / maxColValue;
-            mBackMainColor[2] = (float)B / maxColValue;
-            mBackMainColor[3] = (float)A / maxColValue;
+            mBackMainColor[0] = static_cast<float>(R) / maxColValue;
+            mBackMainColor[1] = static_cast<float>(G) / maxColValue;
+            mBackMainColor[2] = static_cast<float>(B) / maxColValue;
+            mBackMainColor[3] = static_cast<float>(A) / maxColValue;
             mBackMainColor[4] = mBackMainColor[3];
             return;
         case BACK_FADE:
-            mBackFadeColor[0] = (float)R / maxColValue;
-            mBackFadeColor[1] = (float)G / maxColValue;
-            mBackFadeColor[2] = (float)B / maxColValue;
-            mBackFadeColor[3] = (float)A / maxColValue;
+            mBackFadeColor[0] = static_cast<float>(R) / maxColValue;
+            mBackFadeColor[1] = static_cast<float>(G) / maxColValue;
+            mBackFadeColor[2] = static_cast<float>(B) / maxColValue;
+            mBackFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBackFadeColor[4] = mBackFadeColor[3];
             return;
         case BORDER_MAIN:
-            mBorderMainColor[0] = (float)R / maxColValue;
-            mBorderMainColor[1] = (float)G / maxColValue;
-            mBorderMainColor[2] = (float)B / maxColValue;
-            mBorderMainColor[3] = (float)A / maxColValue;
+            mBorderMainColor[0] = static_cast<float>(R) / maxColValue;
+            mBorderMainColor[1] = static_cast<float>(G) / maxColValue;
+            mBorderMainColor[2] = static_cast<float>(B) / maxColValue;
+            mBorderMainColor[3] = static_cast<float>(A) / maxColValue;
             mBorderMainColor[4] = mBorderMainColor[3];
             return;
         case BORDER_FADE:
-            mBorderFadeColor[0] = (float)R / maxColValue;
-            mBorderFadeColor[1] = (float)G / maxColValue;
-            mBorderFadeColor[2] = (float)B / maxColValue;
-            mBorderFadeColor[3] = (float)A / maxColValue;
+            mBorderFadeColor[0] = static_cast<float>(R) / maxColValue;
+            mBorderFadeColor[1] = static_cast<float>(G) / maxColValue;
+            mBorderFadeColor[2] = static_cast<float>(B) / maxColValue;
+            mBorderFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBorderFadeColor[4] = mBorderFadeColor[3];
             return;
         default:
@@ -2086,7 +2089,7 @@ void gui_ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor
 void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 {
     // Absolute values are needed to recalculate actual bar size according to resolution.
-    mAbsWidth  = width;
+    mAbsWidth = width;
     mAbsHeight = height;
     mAbsBorderSize = borderSize;
 
@@ -2096,17 +2099,17 @@ void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 // Recalculate size, according to viewport resolution.
 void gui_ProgressBar::RecalculateSize()
 {
-    mWidth  = (float)mAbsWidth  * screen_info.scale_factor;
-    mHeight = (float)mAbsHeight * screen_info.scale_factor;
+    mWidth = static_cast<float>(mAbsWidth)  * screen_info.scale_factor;
+    mHeight = static_cast<float>(mAbsHeight) * screen_info.scale_factor;
 
-    mBorderWidth  = (float)mAbsBorderSize  * screen_info.scale_factor;
-    mBorderHeight = (float)mAbsBorderSize  * screen_info.scale_factor;
+    mBorderWidth = static_cast<float>(mAbsBorderSize)  * screen_info.scale_factor;
+    mBorderHeight = static_cast<float>(mAbsBorderSize)  * screen_info.scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
     // If bar is vertical, then calculate it from height.
 
-    mRangeUnit = (!Vertical)?( (mWidth) / mMaxValue ):( (mHeight) / mMaxValue );
+    mRangeUnit = (!Vertical) ? ((mWidth) / mMaxValue) : ((mHeight) / mMaxValue);
 }
 
 // Recalculate position, according to viewport resolution.
@@ -2115,25 +2118,25 @@ void gui_ProgressBar::RecalculatePosition()
     switch(mXanchor)
     {
         case GUI_ANCHOR_HOR_LEFT:
-            mX = (float)(mAbsXoffset+mAbsBorderSize) * screen_info.scale_factor;
+            mX = static_cast<float>(mAbsXoffset + mAbsBorderSize) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_HOR_CENTER:
-            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * screen_info.scale_factor)) / 2 +
-                 ((float)mAbsXoffset * screen_info.scale_factor);
+            mX = (static_cast<float>(screen_info.w) - (static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor)) / 2 +
+                (static_cast<float>(mAbsXoffset) * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_HOR_RIGHT:
-            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * screen_info.scale_factor;
+            mX = static_cast<float>(screen_info.w) - static_cast<float>(mAbsXoffset + mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor;
             break;
     }
 
     switch(mYanchor)
     {
         case GUI_ANCHOR_VERT_TOP:
-            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * screen_info.scale_factor;
+            mY = static_cast<float>(screen_info.h) - static_cast<float>(mAbsYoffset + mAbsHeight + mAbsBorderSize * 2) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
-                 ((float)mAbsYoffset * screen_info.scale_factor);
+            mY = (static_cast<float>(screen_info.h) - (static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * screen_info.h_unit)) / 2 +
+                (static_cast<float>(mAbsYoffset) * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_VERT_BOTTOM:
             mY = (mAbsYoffset + mAbsBorderSize) * screen_info.scale_factor;
@@ -2144,7 +2147,7 @@ void gui_ProgressBar::RecalculatePosition()
 // Set maximum and warning state values.
 void gui_ProgressBar::SetValues(float maxValue, float warnValue)
 {
-    mMaxValue  = maxValue;
+    mMaxValue = maxValue;
     mWarnValue = warnValue;
 
     RecalculateSize();  // We need to recalculate size, because max. value is changed.
@@ -2153,8 +2156,8 @@ void gui_ProgressBar::SetValues(float maxValue, float warnValue)
 // Set warning state blinking interval.
 void gui_ProgressBar::SetBlink(int interval)
 {
-    mBlinkInterval = (float)interval / 1000;
-    mBlinkCnt      = (float)interval / 1000;  // Also reset blink counter.
+    mBlinkInterval = static_cast<float>(interval) / 1000;
+    mBlinkCnt = static_cast<float>(interval) / 1000;  // Also reset blink counter.
 }
 
 // Set extrude overlay effect parameters.
@@ -2162,7 +2165,7 @@ void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
-    mExtrudeDepth[3] = (float)depth / 255.0;        // We need only alpha transparency.
+    mExtrudeDepth[3] = static_cast<float>(depth) / 255.0;        // We need only alpha transparency.
     mExtrudeDepth[4] = mExtrudeDepth[3];
 }
 
@@ -2172,11 +2175,11 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 {
     mAutoShow = enabled;
 
-    mAutoShowDelay = (float)delay / 1000;
-    mAutoShowCnt   = (float)delay / 1000;     // Also reset autoshow counter.
+    mAutoShowDelay = static_cast<float>(delay) / 1000;
+    mAutoShowCnt = static_cast<float>(delay) / 1000;     // Also reset autoshow counter.
 
     mAutoShowFade = fade;
-    mAutoShowFadeDelay = 1000 / (float)fadeDelay;
+    mAutoShowFadeDelay = 1000 / static_cast<float>(fadeDelay);
     mAutoShowFadeCnt = 0; // Initially, it's 0.
 }
 
@@ -2186,11 +2189,11 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 void gui_ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value  = (value >= 0)?(value):(0);
-    value  = (value > mMaxValue)?(mMaxValue):(value);
+    value = (value >= 0) ? (value) : (0);
+    value = (value > mMaxValue) ? (mMaxValue) : (value);
 
     // Enable blink mode, if value is gone below warning value.
-    mBlink = (value <= mWarnValue)?(true):(false);
+    mBlink = (value <= mWarnValue) ? (true) : (false);
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
@@ -2200,7 +2203,7 @@ void gui_ProgressBar::Show(float value)
         if(Forced)
         {
             Visible = true;
-            Forced  = false;
+            Forced = false;
         }
         else
         {
@@ -2236,7 +2239,6 @@ void gui_ProgressBar::Show(float value)
         }
     } // end if(AutoShow)
 
-
     if(mAutoShowFade)   // Process fade-in and fade-out effect, if enabled.
     {
         if(!Visible)
@@ -2267,16 +2269,15 @@ void gui_ProgressBar::Show(float value)
         } // end if(!Visible)
 
         // Multiply all layers' alpha by current fade counter.
-        mBaseMainColor[3]   = mBaseMainColor[4]   * mAutoShowFadeCnt;
-        mBaseFadeColor[3]   = mBaseFadeColor[4]   * mAutoShowFadeCnt;
-        mAltMainColor[3]    = mAltMainColor[4]    * mAutoShowFadeCnt;
-        mAltFadeColor[3]    = mAltFadeColor[4]    * mAutoShowFadeCnt;
-        mBackMainColor[3]   = mBackMainColor[4]   * mAutoShowFadeCnt;
-        mBackFadeColor[3]   = mBackFadeColor[4]   * mAutoShowFadeCnt;
+        mBaseMainColor[3] = mBaseMainColor[4] * mAutoShowFadeCnt;
+        mBaseFadeColor[3] = mBaseFadeColor[4] * mAutoShowFadeCnt;
+        mAltMainColor[3] = mAltMainColor[4] * mAutoShowFadeCnt;
+        mAltFadeColor[3] = mAltFadeColor[4] * mAutoShowFadeCnt;
+        mBackMainColor[3] = mBackMainColor[4] * mAutoShowFadeCnt;
+        mBackFadeColor[3] = mBackFadeColor[4] * mAutoShowFadeCnt;
         mBorderMainColor[3] = mBorderMainColor[4] * mAutoShowFadeCnt;
         mBorderFadeColor[3] = mBorderFadeColor[4] * mAutoShowFadeCnt;
-        mExtrudeDepth[3]    = mExtrudeDepth[4]    * mAutoShowFadeCnt;
-
+        mExtrudeDepth[3] = mExtrudeDepth[4] * mAutoShowFadeCnt;
     }
     else
     {
@@ -2312,16 +2313,16 @@ void gui_ProgressBar::Show(float value)
     // It is needed in case bar is used as a simple UI box to bypass unnecessary calculations.
     if(!value)
     {
-          // Draw full-sized background rect (instead of base bar rect)
-          Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
-                       mBackMainColor, (Vertical)?(mBackFadeColor):(mBackMainColor),
-                       (Vertical)?(mBackMainColor):(mBackFadeColor), mBackFadeColor,
-                       BM_OPAQUE);
-          return;
+        // Draw full-sized background rect (instead of base bar rect)
+        Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
+                     mBackMainColor, (Vertical) ? (mBackFadeColor) : (mBackMainColor),
+                     (Vertical) ? (mBackMainColor) : (mBackFadeColor), mBackFadeColor,
+                     BM_OPAQUE);
+        return;
     }
 
     // Calculate base bar width, according to current value and range unit.
-    mBaseSize  = mRangeUnit * value;
+    mBaseSize = mRangeUnit * value;
     mBaseRatio = value / mMaxValue;
 
     float RectAnchor;           // Anchor to stick base bar rect, according to Invert flag.
@@ -2333,43 +2334,45 @@ void gui_ProgressBar::Show(float value)
     if(Invert)
     {
         memcpy(RectFirstColor,
-               (Alternate)?(mAltMainColor):(mBaseMainColor),
+               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectSecondColor[i] = (Alternate)?((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
-                                            :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
-
+            RectSecondColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i]) + ((1 - mBaseRatio) * mAltMainColor[i]))
+            : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
     }
     else
     {
         memcpy(RectSecondColor,
-               (Alternate)?(mAltMainColor):(mBaseMainColor),
+               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectFirstColor[i] = (Alternate)?((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
-                                           :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
-
+            RectFirstColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i]) + ((1 - mBaseRatio) * mAltMainColor[i]))
+            : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
     } // end if(Invert)
+
+    // We need to reset Alternate flag each frame, cause behaviour is immediate.
+
+    Alternate = false;
 
     // If vertical style flag is set, we draw bar base top-bottom, else we draw it left-right.
     if(Vertical)
     {
-        RectAnchor = ( (Invert)?(mY + mHeight - mBaseSize):(mY) ) + mBorderHeight;
+        RectAnchor = ((Invert) ? (mY + mHeight - mBaseSize) : (mY)) + mBorderHeight;
 
         // Draw actual bar base.
         Gui_DrawRect(mX + mBorderWidth, RectAnchor,
                      mWidth, mBaseSize,
-                     RectFirstColor,  RectFirstColor,
+                     RectFirstColor, RectFirstColor,
                      RectSecondColor, RectSecondColor,
                      BM_OPAQUE);
 
         // Draw background rect.
         Gui_DrawRect(mX + mBorderWidth,
-                     (Invert)?(mY + mBorderHeight):(RectAnchor + mBaseSize),
+                     (Invert) ? (mY + mBorderHeight) : (RectAnchor + mBaseSize),
                      mWidth, mHeight - mBaseSize,
                      mBackMainColor, mBackFadeColor,
                      mBackMainColor, mBackFadeColor,
@@ -2377,7 +2380,7 @@ void gui_ProgressBar::Show(float value)
 
         if(mExtrude)    // Draw extrude overlay, if flag is set.
         {
-            float transparentColor[4] = {0};  // Used to set counter-shade to transparent.
+            float transparentColor[4] = { 0 };  // Used to set counter-shade to transparent.
 
             Gui_DrawRect(mX + mBorderWidth, RectAnchor,
                          mWidth / 2, mBaseSize,
@@ -2393,7 +2396,7 @@ void gui_ProgressBar::Show(float value)
     }
     else
     {
-        RectAnchor = ( (Invert)?(mX + mWidth - mBaseSize):(mX) ) + mBorderWidth;
+        RectAnchor = ((Invert) ? (mX + mWidth - mBaseSize) : (mX)) + mBorderWidth;
 
         // Draw actual bar base.
         Gui_DrawRect(RectAnchor, mY + mBorderHeight,
@@ -2403,7 +2406,7 @@ void gui_ProgressBar::Show(float value)
                      BM_OPAQUE);
 
         // Draw background rect.
-        Gui_DrawRect((Invert)?(mX + mBorderWidth):(RectAnchor + mBaseSize),
+        Gui_DrawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
                      mY + mBorderHeight,
                      mWidth - mBaseSize, mHeight,
                      mBackMainColor, mBackMainColor,
@@ -2412,7 +2415,7 @@ void gui_ProgressBar::Show(float value)
 
         if(mExtrude)    // Draw extrude overlay, if flag is set.
         {
-            float transparentColor[4] = {0};  // Used to set counter-shade to transparent.
+            float transparentColor[4] = { 0 };  // Used to set counter-shade to transparent.
 
             Gui_DrawRect(RectAnchor, mY + mBorderHeight,
                          mBaseSize, mHeight / 2,
@@ -2435,11 +2438,11 @@ void gui_ProgressBar::Show(float value)
 gui_ItemNotifier::gui_ItemNotifier()
 {
     SetPos(850, 850);
-    SetRot(0,0);
+    SetRot(0, 0);
     SetSize(1.0);
     SetRotateTime(1000.0);
 
-    mItem   = 0;
+    mItem = 0;
     mActive = false;
 }
 
@@ -2447,9 +2450,9 @@ void gui_ItemNotifier::Start(int item, float time)
 {
     Reset();
 
-    mItem     = item;
+    mItem = item;
     mShowTime = time;
-    mActive   = true;
+    mActive = true;
 }
 
 void gui_ItemNotifier::Animate()
@@ -2465,19 +2468,17 @@ void gui_ItemNotifier::Animate()
             mCurrRotX += (engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
 
-            mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0):(mCurrRotX);
+            mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0) : (mCurrRotX);
             //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
         }
 
-        float step = 0;
-
         if(mCurrTime == 0)
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            float step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
+            step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX -= step;
-            mCurrPosX  = (mCurrPosX < mEndPosX)?(mEndPosX):(mCurrPosX);
+            mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
 
             if(mCurrPosX == mEndPosX)
                 mCurrTime += engine_frame_time;
@@ -2488,11 +2489,11 @@ void gui_ItemNotifier::Animate()
         }
         else
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            float step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
+            step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX += step;
-            mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
+            mCurrPosX = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);
 
             if(mCurrPosX == mStartPosX)
                 Reset();
@@ -2507,9 +2508,9 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = ((float)screen_info.w / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
-    mPosY    = ((float)screen_info.h / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
-    mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
+    mEndPosX = (static_cast<float>(screen_info.w) / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
+    mPosY = (static_cast<float>(screen_info.h) / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mCurrPosX = screen_info.w + (static_cast<float>(screen_info.w) / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
 
@@ -2571,16 +2572,16 @@ void gui_ItemNotifier::SetRotateTime(float time)
 
 gui_FontManager::gui_FontManager()
 {
-    this->font_library   = NULL;
+    this->font_library = nullptr;
     FT_Init_FreeType(&this->font_library);
 
-    this->style_count     = 0;
-    this->styles          = NULL;
-    this->font_count      = 0;
-    this->fonts           = NULL;
+    this->style_count = 0;
+    this->styles = nullptr;
+    this->font_count = 0;
+    this->fonts = nullptr;
 
-    this->mFadeValue      = 0.0;
-    this->mFadeDirection  = true;
+    this->mFadeValue = 0.0;
+    this->mFadeDirection = true;
 }
 
 gui_FontManager::~gui_FontManager()
@@ -2588,31 +2589,31 @@ gui_FontManager::~gui_FontManager()
     this->font_count = 0;
     this->style_count = 0;
 
-    for(gui_font_p next_font;this->fonts!=NULL;)
+    for(gui_font_p next_font; this->fonts != nullptr;)
     {
-        next_font=this->fonts->next;
+        next_font = this->fonts->next;
         glf_free_font(this->fonts->gl_font);
-        this->fonts->gl_font = NULL;
+        this->fonts->gl_font = nullptr;
         free(this->fonts);
         this->fonts = next_font;
     }
-    this->fonts = NULL;
+    this->fonts = nullptr;
 
-    for(gui_fontstyle_p next_style;this->styles!=NULL;)
+    for(gui_fontstyle_p next_style; this->styles != nullptr;)
     {
-        next_style=this->styles->next;
+        next_style = this->styles->next;
         free(this->styles);
         this->styles = next_style;
     }
-    this->styles = NULL;
+    this->styles = nullptr;
 
     FT_Done_FreeType(this->font_library);
-    this->font_library = NULL;
+    this->font_library = nullptr;
 }
 
 gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
 {
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
+    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
     {
         if(current_font->index == index)
         {
@@ -2620,12 +2621,12 @@ gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
 {
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
+    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
     {
         if(current_font->index == index)
         {
@@ -2633,12 +2634,12 @@ gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
 {
-    for(gui_fontstyle_p current_style=this->styles;current_style!=NULL;current_style=current_style->next)
+    for(gui_fontstyle_p current_style = this->styles; current_style != nullptr; current_style = current_style->next)
     {
         if(current_style->index == index)
         {
@@ -2646,7 +2647,7 @@ gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const char* path)
@@ -2658,7 +2659,7 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
 
     gui_font_s* desired_font = GetFontAddress(index);
 
-    if(desired_font == NULL)
+    if(desired_font == nullptr)
     {
         if(this->font_count >= GUI_MAX_FONTS)
         {
@@ -2666,8 +2667,8 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
         }
 
         this->font_count++;
-        desired_font = (gui_font_p)malloc(sizeof(gui_font_t));
-        desired_font->size = (uint16_t)size;
+        desired_font = static_cast<gui_font_p>(malloc(sizeof(gui_font_t)));
+        desired_font->size = static_cast<uint16_t>(size);
         desired_font->index = index;
         desired_font->next = this->fonts;
         this->fonts = desired_font;
@@ -2691,7 +2692,7 @@ bool gui_FontManager::AddFontStyle(const font_Style index,
 {
     gui_fontstyle_p desired_style = GetFontStyle(index);
 
-    if(desired_style == NULL)
+    if(desired_style == nullptr)
     {
         if(this->style_count >= GUI_MAX_FONTSTYLES)
         {
@@ -2699,29 +2700,29 @@ bool gui_FontManager::AddFontStyle(const font_Style index,
         }
 
         this->style_count++;
-        desired_style = (gui_fontstyle_p)malloc(sizeof(gui_fontstyle_t));
+        desired_style = static_cast<gui_fontstyle_p>(malloc(sizeof(gui_fontstyle_t)));
         desired_style->index = index;
         desired_style->next = this->styles;
         this->styles = desired_style;
     }
 
-    desired_style->rect_border   = rect_border;
+    desired_style->rect_border = rect_border;
     desired_style->rect_color[0] = rect_R;
     desired_style->rect_color[1] = rect_G;
     desired_style->rect_color[2] = rect_B;
     desired_style->rect_color[3] = rect_A;
 
-    desired_style->color[0]  = R;
-    desired_style->color[1]  = G;
-    desired_style->color[2]  = B;
-    desired_style->color[3]  = A;
+    desired_style->color[0] = R;
+    desired_style->color[1] = G;
+    desired_style->color[2] = B;
+    desired_style->color[3] = A;
 
     memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
 
-    desired_style->fading    = fading;
-    desired_style->shadowed  = shadow;
-    desired_style->rect      = rect;
-    desired_style->hidden    = hide;
+    desired_style->fading = fading;
+    desired_style->shadowed = shadow;
+    desired_style->rect = rect;
+    desired_style->hidden = hide;
 
     return true;
 }
@@ -2730,7 +2731,7 @@ bool gui_FontManager::RemoveFont(const font_Type index)
 {
     gui_font_p previous_font, current_font;
 
-    if(this->fonts == NULL)
+    if(this->fonts == nullptr)
     {
         return false;
     }
@@ -2740,7 +2741,7 @@ bool gui_FontManager::RemoveFont(const font_Type index)
         previous_font = this->fonts;
         this->fonts = this->fonts->next;
         glf_free_font(previous_font->gl_font);
-        previous_font->gl_font = NULL;                                          ///@PARANOID
+        previous_font->gl_font = nullptr;                                          ///@PARANOID
         free(previous_font);
         this->font_count--;
         return true;
@@ -2748,13 +2749,13 @@ bool gui_FontManager::RemoveFont(const font_Type index)
 
     previous_font = this->fonts;
     current_font = this->fonts->next;
-    for(;current_font!=NULL;)
+    for(; current_font != nullptr;)
     {
         if(current_font->index == index)
         {
             previous_font->next = current_font->next;
             glf_free_font(current_font->gl_font);
-            current_font->gl_font = NULL;                                       ///@PARANOID
+            current_font->gl_font = nullptr;                                       ///@PARANOID
             free(current_font);
             this->font_count--;
             return true;
@@ -2771,7 +2772,7 @@ bool gui_FontManager::RemoveFontStyle(const font_Style index)
 {
     gui_fontstyle_p previous_style, current_style;
 
-    if(this->styles == NULL)
+    if(this->styles == nullptr)
     {
         return false;
     }
@@ -2787,7 +2788,7 @@ bool gui_FontManager::RemoveFontStyle(const font_Style index)
 
     previous_style = styles;
     current_style = styles->next;
-    for(;current_style!=NULL;)
+    for(; current_style != nullptr;)
     {
         if(current_style->index == index)
         {
@@ -2827,7 +2828,7 @@ void gui_FontManager::Update()
         }
     }
 
-    for(gui_fontstyle_p current_style=this->styles;current_style!=NULL;current_style=current_style->next)
+    for(gui_fontstyle_p current_style = this->styles; current_style != nullptr; current_style = current_style->next)
     {
         if(current_style->fading)
         {
@@ -2844,8 +2845,8 @@ void gui_FontManager::Update()
 
 void gui_FontManager::Resize()
 {
-    for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
+    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
     {
-        glf_resize(current_font->gl_font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor));
+        glf_resize(current_font->gl_font, static_cast<uint16_t>(static_cast<float>(current_font->size) * screen_info.scale_factor));
     }
 }

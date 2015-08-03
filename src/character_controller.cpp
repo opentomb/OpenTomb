@@ -1,10 +1,7 @@
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 #include "world.h"
-
-#include <bullet/btBulletCollisionCommon.h>
-#include <bullet/btBulletDynamicsCommon.h>
-#include <bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
-
 #include "character_controller.h"
 #include "obb.h"
 #include "anim_state_control.h"
@@ -16,29 +13,30 @@
 #include "vmath.h"
 #include "polygon.h"
 #include "resource.h"
-#include "console.h"
-#include "strings.h"
+#include "script.h"
 
 Character::Character(uint32_t id)
     : Entity(id)
 {
-    m_climbSensor.reset( new btSphereShape(m_climbR) );
+    m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self);
+    m_climbSensor.reset(new btSphereShape(m_climbR));
+    m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
+
+    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.cb = m_rayCb;
 
-    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
+    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
     m_dirFlag = ENT_STAY;
-
-    createGhosts();
 }
 
-Character::~Character() {
-    if((m_self->room != NULL) && (this != engine_world.character.get()))
+Character::~Character()
+{
+    if((m_self->room != nullptr) && (this != engine_world.character.get()))
     {
         m_self->room->removeEntity(this);
     }
@@ -52,10 +50,10 @@ int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items coun
     if(!item)
         return 0;
 
+    count = (count < 0) ? item->count : count;
 
-    count = (count == -1) ? item->count : count;
-
-    for(InventoryNode& i : m_inventory) {
+    for(InventoryNode& i : m_inventory)
+    {
         if(i.id == item_id)
         {
             i.count += count;
@@ -71,7 +69,6 @@ int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items coun
     return count;
 }
 
-
 int32_t Character::removeItem(uint32_t item_id, int32_t count) // returns items count after in the function's end
 {
     if(m_inventory.empty())
@@ -79,49 +76,29 @@ int32_t Character::removeItem(uint32_t item_id, int32_t count) // returns items 
         return 0;
     }
 
-    auto pi = m_inventory.begin();
-    if(pi->id == item_id)
+    for(auto it = std::begin(m_inventory); it != std::end(m_inventory); ++it)
     {
-        if(pi->count > count)
+        if(it->id == item_id)
         {
-            pi->count -= count;
-            return pi->count;
-        }
-        else if(pi->count == count)
-        {
-            m_inventory.pop_front();
-            return 0;
-        }
-        else // count_to_remove > current_items_count
-        {
-            return (int32_t)pi->count - (int32_t)count;
-        }
-    }
-
-    auto i = std::next(pi);
-
-    while(i != m_inventory.end()) {
-        // i = pi+1
-        if(i->id == item_id) {
-            if(i->count > count) {
-                i->count -= count;
-                return i->count;
+            if(it->count > count)
+            {
+                it->count -= count;
+                return it->count;
             }
-            else if(i->count == count) {
-                m_inventory.erase(i);
+            else if(it->count == count)
+            {
+                m_inventory.erase(it);
                 return 0;
             }
-            else { // count_to_remove > current_items_count
-                return (int32_t)i->count - (int32_t)count;
+            else // count_to_remove > current_items_count
+            {
+                return it->count - count;
             }
         }
-        pi = i;
-        ++i;
     }
 
     return -count;
 }
-
 
 int32_t Character::removeAllItems()
 {
@@ -134,10 +111,17 @@ int32_t Character::removeAllItems()
     return ret;
 }
 
-
-int32_t Character::getItemsCount(uint32_t /*item_id*/)         // returns items count
+int32_t Character::getItemsCount(uint32_t item_id)         // returns items count
 {
-    return m_inventory.size();
+    for(const auto& item : m_inventory)
+    {
+        if(item.id == item_id)
+        {
+            return item.count;
+        }
+    }
+
+    return 0;
 }
 
 /**
@@ -202,7 +186,7 @@ void Character::updatePlatformPostStep()
             break;
 
         default:
-            character->platform = NULL;
+            character->platform = nullptr;
             break;
     };
 
@@ -218,12 +202,11 @@ void Character::updatePlatformPostStep()
         }
         else
         {
-            character->platform = NULL;
+            character->platform = nullptr;
         }
     }
 #endif
 }
-
 
 /**
  * Start position are taken from transform
@@ -232,12 +215,12 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    Room* r = (cb->m_container)?(cb->m_container->room):(NULL);
+    Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
     RoomSector* rs;
 
-    fc->floor_hit = 0x00;
-    fc->ceiling_hit = 0x00;
-    fc->water = 0x00;
+    fc->floor_hit = false;
+    fc->ceiling_hit = false;
+    fc->water = false;
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
 
@@ -246,16 +229,18 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         r = r->checkFlip();
     if(r)
     {
-        rs = r->getSectorXYZ(pos);                                         // if r != NULL then rs can not been NULL!!!
+        rs = r->getSectorXYZ(pos);                                         // if r != nullptr then rs can not been nullptr!!!
         if(r->flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
         {
             while(rs->sector_above)
             {
+                assert(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
+                assert(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
-                    fc->transition_level = (btScalar)rs->floor;
-                    fc->water = 0x01;
+                    fc->transition_level = static_cast<btScalar>(rs->floor);
+                    fc->water = true;
                     break;
                 }
             }
@@ -264,10 +249,12 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_above)
             {
+                assert(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
+                assert(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
-                    fc->transition_level = (btScalar)rs->floor;
+                    fc->transition_level = static_cast<btScalar>(rs->floor);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
                     {
                         fc->quicksand = 0x02;
@@ -284,16 +271,18 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
         {
             while(rs->sector_below)
             {
+                assert(rs->sector_below != nullptr);
                 rs = rs->sector_below->checkFlip();
+                assert(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
-                    fc->transition_level = (btScalar)rs->ceiling;
-                    fc->water = 0x01;
+                    fc->transition_level = static_cast<btScalar>(rs->ceiling);
+                    fc->water = true;
                     break;
                 }
                 else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
                 {
-                    fc->transition_level = (btScalar)rs->ceiling;
+                    fc->transition_level = static_cast<btScalar>(rs->ceiling);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
                     {
                         fc->quicksand = 0x02;
@@ -315,33 +304,33 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     to = from;
     to[2] -= 4096.0;
     cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
+    cb->m_collisionObject = nullptr;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    fc->floor_hit = (int)cb->hasHit();
+    fc->floor_hit = cb->hasHit();
     if(fc->floor_hit)
     {
         fc->floor_normale = cb->m_hitNormalWorld;
         fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
+        fc->floor_obj = cb->m_collisionObject;
     }
 
     to = from;
     to[2] += 4096.0;
     cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
+    cb->m_collisionObject = nullptr;
     //cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    fc->ceiling_hit = (int)cb->hasHit();
+    fc->ceiling_hit = cb->hasHit();
     if(fc->ceiling_hit)
     {
         fc->ceiling_normale = cb->m_hitNormalWorld;
         fc->ceiling_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->ceiling_obj = (btCollisionObject*)cb->m_collisionObject;
+        fc->ceiling_obj = cb->m_collisionObject;
     }
 }
 
 /**
- * @function calculates next floor info + fantom filter + returns step info.
+ * Calculates next floor info + phantom filter + returns step info.
  * Current height info must be calculated!
  */
 int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
@@ -349,7 +338,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     btScalar delta;
     HeightInfo* fc = &m_heightInfo;
     btVector3 from, to;
-    int ret = CHARACTER_STEP_HORIZONTAL;
+    int ret;
     ///penetration test?
 
     auto pos = m_transform.getOrigin() + offset;
@@ -358,7 +347,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     if(fc->floor_hit && nfc->floor_hit)
     {
         delta = nfc->floor_point[2] - fc->floor_point[2];
-        if(fabs(delta) < SPLIT_EPSILON)
+        if(std::abs(delta) < SPLIT_EPSILON)
         {
             from[2] = fc->floor_point[2];
             ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
@@ -431,7 +420,7 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     to[0] = pos[0];
     to[1] = pos[1];
     fc->cb->m_closestHitFraction = 1.0;
-    fc->cb->m_collisionObject = NULL;
+    fc->cb->m_collisionObject = nullptr;
     bt_engine_dynamicsWorld->rayTest(from, to, *fc->cb);
     if(fc->cb->hasHit())
     {
@@ -442,18 +431,18 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
 }
 
 /**
- *
- * @param ent - entity
- * @param next_fc - next step floor / ceiling information
- * @return 1 if character can't run / walk next; in other cases returns 0
+ * @param next_fc  next step floor / ceiling information
+ * @retval @c true if character can't run / walk next; in other cases returns @c false
  */
-int Character::hasStopSlant(HeightInfo *next_fc)
+bool Character::hasStopSlant(const HeightInfo& next_fc)
 {
-    const auto& pos = m_transform.getOrigin();
-    const auto& v1 = m_transform.getBasis().getColumn(1);
-    const auto& v2 = next_fc->floor_normale;
-    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < m_criticalSlantZComponent) &&
-           (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
+    const btVector3& pos = m_transform.getOrigin();
+    const btVector3 forward = m_transform.getBasis().getColumn(1);
+    const btVector3& floor = next_fc.floor_normale;
+
+    return    next_fc.floor_point[2] > pos[2]
+        && next_fc.floor_normale[2] < m_criticalSlantZComponent
+        && (forward[0] * floor[0] + forward[1] * floor[1]) < 0.0;
 }
 
 /**
@@ -483,9 +472,9 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     offset[2] -= 128.0;
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
+    ret.edge_obj = nullptr;
+    ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
+    ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
     if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
     {
         ret.ceiling_limit = nfc->ceiling_point[2];
@@ -513,18 +502,19 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     t1.setIdentity();
     t2.setIdentity();
     up_founded = 0;
-    test_height = (test_height >= m_maxStepUpHeight)?(test_height):(m_maxStepUpHeight);
+    test_height = (test_height >= m_maxStepUpHeight) ? (test_height) : (m_maxStepUpHeight);
     d = pos[2] + m_bf.bb_max[2] - test_height;
-    std::copy(to+0, to+3, cast_ray+0);
-    std::copy(to+0, to+3, cast_ray+3);
+    std::copy(to + 0, to + 3, cast_ray + 0);
+    std::copy(to + 0, to + 3, cast_ray + 3);
     cast_ray[5] -= d;
-    btVector3 n0, n1;
+    btVector3 n0{ 0,0,0 }, n1{ 0,0,0 };
+    btScalar n0d{ 0 }, n1d{ 0 };
     do
     {
         t1.setOrigin(from);
         t2.setOrigin(to);
         nfc->ccb->m_closestHitFraction = 1.0;
-        nfc->ccb->m_hitCollisionObject = NULL;
+        nfc->ccb->m_hitCollisionObject = nullptr;
         bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
@@ -532,13 +522,13 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             {
                 up_founded = 1;
                 n0 = nfc->ccb->m_hitNormalWorld;
-                n0[3] = -n0.dot(nfc->ccb->m_hitPointWorld);
+                n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
             if(up_founded && (nfc->ccb->m_hitNormalWorld[2] < 0.001))
             {
                 n1 = nfc->ccb->m_hitNormalWorld;
-                n1[3] = -n1.dot(nfc->ccb->m_hitPointWorld);
-                m_climb.edge_obj = (btCollisionObject*)nfc->ccb->m_hitCollisionObject;
+                n1d = -n1.dot(nfc->ccb->m_hitPointWorld);
+                m_climb.edge_obj = const_cast<btCollisionObject*>(nfc->ccb->m_hitCollisionObject);
                 up_founded = 2;
                 break;
             }
@@ -553,13 +543,13 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
             //vec3_copy(cast_ray, to);
             //vec3_copy(cast_ray+3, tmp);
             nfc->ccb->m_closestHitFraction = 1.0;
-            nfc->ccb->m_hitCollisionObject = NULL;
+            nfc->ccb->m_hitCollisionObject = nullptr;
             bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
-                auto n0 = nfc->ccb->m_hitNormalWorld;
-                n0[3] = -n0.dot(nfc->ccb->m_hitPointWorld);
+                n0 = nfc->ccb->m_hitNormalWorld;
+                n0d = -n0.dot(nfc->ccb->m_hitPointWorld);
             }
             else
             {
@@ -573,8 +563,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
         // close to 0.5 - middle speed, good precision
         from[2] -= 0.66 * m_climbR;
         to[2] -= 0.66 * m_climbR;
-    }
-    while(to[2] >= d);                                                 // we can't climb under floor!
+    } while(to[2] >= d);                                                 // we can't climb under floor!
 
     if(up_founded != 2)
     {
@@ -582,39 +571,42 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     }
 
     // get the character plane equation
-    auto n2 = m_transform.getBasis().getColumn(0);
-    n2[3] = -n2.dot(pos);
+    btVector3 n2 = m_transform.getBasis().getColumn(0);
+    btScalar n2d = -n2.dot(pos);
 
+    assert(!n0.fuzzyZero());
+    assert(!n1.fuzzyZero());
+    assert(!n2.fuzzyZero());
     /*
      * Solve system of the linear equations by Kramer method!
      * I know - It may be slow, but it has a good precision!
      * The root is point of 3 planes intersection.
      */
-    d =-n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) +
+    d = -n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) +
         n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
         n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-    if(fabs(d) < 0.005)
+    if(std::abs(d) < 0.005)
     {
         return ret;
     }
 
-    ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                                  n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                                  n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
+    ret.edge_point[0] = n0d * (n1[1] * n2[2] - n1[2] * n2[1]) -
+        n1d * (n0[1] * n2[2] - n0[2] * n2[1]) +
+        n2d * (n0[1] * n1[2] - n0[2] * n1[1]);
     ret.edge_point[0] /= d;
 
-    ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
-                                  n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
-                                  n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
+    ret.edge_point[1] = n0[0] * (n1d * n2[2] - n1[2] * n2d) -
+        n1[0] * (n0d * n2[2] - n0[2] * n2d) +
+        n2[0] * (n0d * n1[2] - n0[2] * n1d);
     ret.edge_point[1] /= d;
 
-    ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
-                                  n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
-                                  n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
+    ret.edge_point[2] = n0[0] * (n1[1] * n2d - n1d * n2[1]) -
+        n1[0] * (n0[1] * n2d - n0d * n2[1]) +
+        n2[0] * (n0[1] * n1d - n0d * n1[1]);
     ret.edge_point[2] /= d;
     ret.point = ret.edge_point;
-    std::copy(ret.point+0, ret.point+3, cast_ray+3);
+    std::copy(ret.point + 0, ret.point + 3, cast_ray + 3);
     /*
      * unclimbable edge slant %)
      */
@@ -633,7 +625,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
 
     n2[2] = n2[0];
     n2[0] = n2[1];
-    n2[1] =-n2[2];
+    n2[1] = -n2[2];
     n2[2] = 0.0;
     if(n2[0] * m_transform.getBasis().getColumn(1)[0] + n2[1] * m_transform.getBasis().getColumn(1)[1] > 0)       // direction fixing
     {
@@ -645,7 +637,7 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     ret.up[0] = 0.0;
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
-    ret.edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
+    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
     ret.edge_tan_xy[0] = -n2[1];
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
@@ -666,62 +658,56 @@ ClimbInfo Character::checkClimbability(btVector3 offset, struct HeightInfo *nfc,
     return ret;
 }
 
-
 ClimbInfo Character::checkWallsClimbability()
 {
-    btVector3 from, to;
-    btTransform tr1, tr2;
-    btScalar wn2[2], t, *pos = m_transform.getOrigin();
-    auto ccb = m_convexCb;
-
     ClimbInfo ret;
     ret.can_hang = 0x00;
     ret.wall_hit = 0x00;
     ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (m_heightInfo.floor_hit)?(m_heightInfo.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit)?(m_heightInfo.ceiling_point[2]):(9E10);
+    ret.edge_obj = nullptr;
+    ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
+    ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
     ret.point = m_climb.point;
 
-    if(m_heightInfo.walls_climb == 0x00)
+    if(!m_heightInfo.walls_climb)
     {
         return ret;
     }
 
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
+    ret.up = { 0,0,1 };
 
-    from[0] = pos[0] + m_transform.getBasis().getColumn(2)[0] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[0] * m_climbR;
-    from[1] = pos[1] + m_transform.getBasis().getColumn(2)[1] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[1] * m_climbR;
-    from[2] = pos[2] + m_transform.getBasis().getColumn(2)[2] * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1)[2] * m_climbR;
-    to = from;
-    t = m_forvardSize + m_bf.bb_max[1];
-    to[0] += m_transform.getBasis().getColumn(1)[0] * t;
-    to[1] += m_transform.getBasis().getColumn(1)[1] * t;
-    to[2] += m_transform.getBasis().getColumn(1)[2] * t;
+    btVector3& pos = m_transform.getOrigin();
+    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    btVector3 to = from;
+    btScalar t = m_forwardSize + m_bf.bb_max[1];
+    to += m_transform.getBasis().getColumn(1) * t;
 
+    auto ccb = m_convexCb;
     ccb->m_closestHitFraction = 1.0;
-    ccb->m_hitCollisionObject = NULL;
+    ccb->m_hitCollisionObject = nullptr;
+
+    btTransform tr1;
     tr1.setIdentity();
     tr1.setOrigin(from);
+
+    btTransform tr2;
     tr2.setIdentity();
     tr2.setOrigin(to);
+
     bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
-    if(!(ccb->hasHit()))
+    if(!ccb->hasHit())
     {
         return ret;
     }
 
     ret.point = ccb->m_hitPointWorld;
     ret.n = ccb->m_hitNormalWorld;
-    wn2[0] = ret.n[0];
-    wn2[1] = ret.n[1];
+    btScalar wn2[2] = { ret.n[0], ret.n[1] };
     t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
     wn2[0] /= t;
-    wn2[0] /= t;
+    wn2[1] /= t;
 
-    ret.t[0] =-wn2[1];
+    ret.t[0] = -wn2[1];
     ret.t[1] = wn2[0];
     ret.t[2] = 0.0;
     // now we have wall normale in XOY plane. Let us check all flags
@@ -746,17 +732,13 @@ ClimbInfo Character::checkWallsClimbability()
     if(ret.wall_hit)
     {
         t = 0.67 * m_height;
-        from[0] -= m_transform.getBasis().getColumn(2)[0] * t;
-        from[1] -= m_transform.getBasis().getColumn(2)[1] * t;
-        from[2] -= m_transform.getBasis().getColumn(2)[2] * t;
+        from -= m_transform.getBasis().getColumn(2) * t;
         to = from;
-        t = m_forvardSize + m_bf.bb_max[1];
-        to[0] += m_transform.getBasis().getColumn(1)[0] * t;
-        to[1] += m_transform.getBasis().getColumn(1)[1] * t;
-        to[2] += m_transform.getBasis().getColumn(1)[2] * t;
+        t = m_forwardSize + m_bf.bb_max[1];
+        to += m_transform.getBasis().getColumn(1) * t;
 
         ccb->m_closestHitFraction = 1.0;
-        ccb->m_hitCollisionObject = NULL;
+        ccb->m_hitCollisionObject = nullptr;
         tr1.setIdentity();
         tr1.setOrigin(from);
         tr2.setIdentity();
@@ -774,7 +756,7 @@ ClimbInfo Character::checkWallsClimbability()
     from[2] += 520.0;                                                  ///@FIXME: magick;
     to[2] -= 520.0;                                                    ///@FIXME: magick... again...
     cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
+    cb->m_collisionObject = nullptr;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     if(cb->hasHit())
     {
@@ -785,54 +767,10 @@ ClimbInfo Character::checkWallsClimbability()
     return ret;
 }
 
-
-void Character::setToJump(btScalar v_vertical, btScalar v_horizontal)
-{
-    btScalar t;
-    btVector3 spd(0.0, 0.0, 0.0);
-
-    // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * m_speedMult;
-
-    // Calculate the direction of jump by vector multiplication.
-    if(m_dirFlag & ENT_MOVE_FORWARD)
-    {
-        spd = m_transform.getBasis().getColumn(1) * t;
-    }
-    else if(m_dirFlag & ENT_MOVE_BACKWARD)
-    {
-        spd = m_transform.getBasis().getColumn(1) * -t;
-    }
-    else if(m_dirFlag & ENT_MOVE_LEFT)
-    {
-        spd = m_transform.getBasis().getColumn(0) * -t;
-    }
-    else if(m_dirFlag & ENT_MOVE_RIGHT)
-    {
-        spd = m_transform.getBasis().getColumn(0) * t;
-    }
-    else
-    {
-        m_dirFlag = ENT_MOVE_FORWARD;
-    }
-
-    m_response.vertical_collide = 0x00;
-    m_response.slide = 0x00;
-
-    // Jump speed should NOT be added to current speed, as native engine
-    // fully replaces current speed with jump speed by anim command.
-    m_speed = spd;
-
-    // Apply vertical speed.
-    m_speed[2] = v_vertical * m_speedMult;
-    m_moveType = MOVE_FREE_FALLING;
-}
-
-
 void Character::lean(CharacterCommand *cmd, btScalar max_lean)
 {
-    btScalar neg_lean   = 360.0 - max_lean;
-    btScalar lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
+    btScalar neg_lean = 360.0 - max_lean;
+    btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
@@ -864,7 +802,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                m_angles[2] += ((360.0 - std::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
@@ -886,7 +824,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] += 360.0;
             }
             else    // Approaching from center
@@ -898,12 +836,11 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
     }
 }
 
-
 /*
  * Linear inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.
  */
-btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, int8_t command)
+btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool command)
 {
     if((accel == 0.0) || (accel >= max_speed))
     {
@@ -947,8 +884,14 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
     if(axis > 1) return 0.0;
 
     uint8_t curr_rot_dir = 0;
-    if     (m_command.rot[axis] < 0.0) { curr_rot_dir = 1; }
-    else if(m_command.rot[axis] > 0.0) { curr_rot_dir = 2; }
+    if(m_command.rot[axis] < 0.0)
+    {
+        curr_rot_dir = 1;
+    }
+    else if(m_command.rot[axis] > 0.0)
+    {
+        curr_rot_dir = 2;
+    }
 
     if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
     {
@@ -985,32 +928,25 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
         }
     }
 
-    return fabs(m_inertiaAngular[axis]) * m_command.rot[axis];
+    return std::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
 }
 
 /*
- * MOVE IN DIFFERENCE CONDITIONS
+ * MOVE IN DIFFERENT CONDITIONS
  */
 int Character::moveOnFloor()
 {
-    btVector3 tv, norm_move_xy, move, spd(0.0, 0.0, 0.0);
-    btScalar norm_move_xy_len, t, ang;
-    auto& pos = m_transform.getOrigin();
-
     /*
      * init height info structure
      */
-    HeightInfo nfc;
-    nfc.cb = m_rayCb;
-    nfc.ccb = m_convexCb;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.bb_min[2]))
     {
-        EngineContainer* cont = (EngineContainer*)m_heightInfo.floor_obj->getUserPointer();
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
+        EngineContainer* cont = static_cast<EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
+        if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY))
         {
             Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
@@ -1020,12 +956,15 @@ int Character::moveOnFloor()
         }
     }
 
+    btVector3& position = m_transform.getOrigin();
+    btVector3 speed(0.0, 0.0, 0.0);
+
     /*
      * check move type
      */
     if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight < pos[2])
+        if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
             m_moveType = MOVE_FREE_FALLING;
             m_speed[2] = 0.0;
@@ -1036,32 +975,33 @@ int Character::moveOnFloor()
             m_response.vertical_collide |= 0x01;
         }
 
-        tv = m_heightInfo.floor_normale;
-        if(tv[2] > 0.02 && tv[2] < m_criticalSlantZComponent)
+        btVector3 floorNormal = m_heightInfo.floor_normale;
+        if(floorNormal[2] > 0.02 && floorNormal[2] < m_criticalSlantZComponent)
         {
-            tv[2] = -tv[2];
-            spd = tv * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;       // from -180 deg to +180 deg
+            floorNormal[2] = -floorNormal[2];
+            speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * DegPerRad;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
-            t = tv[0] * m_transform.getBasis().getColumn(0)[1] + tv[1] * m_transform.getBasis().getColumn(1)[1];
+            btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
+                + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
             {
-                m_response.slide = CHARACTER_SLIDE_FRONT;
-                m_angles[0] = ang + 180.0;
                 // front forward slide down
+                m_response.slide = CHARACTER_SLIDE_FRONT;
+                m_angles[0] = zAngle + 180;
             }
             else
             {
-                m_response.slide = CHARACTER_SLIDE_BACK;
-                m_angles[0] = ang;
                 // back forward slide down
+                m_response.slide = CHARACTER_SLIDE_BACK;
+                m_angles[0] = zAngle;
             }
             updateTransform();
             m_response.vertical_collide |= 0x01;
         }
         else    // no slide - free to walk
         {
-            t = m_currentSpeed * m_speedMult;
+            const btScalar fullSpeed = m_currentSpeed * m_speedMult;
             m_response.vertical_collide |= 0x01;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
@@ -1070,30 +1010,30 @@ int Character::moveOnFloor()
 
             if(m_dirFlag & ENT_MOVE_FORWARD)
             {
-                spd = m_transform.getBasis().getColumn(1) * t;
+                speed = m_transform.getBasis().getColumn(1) * fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_BACKWARD)
             {
-                spd = m_transform.getBasis().getColumn(1) * -t;
+                speed = m_transform.getBasis().getColumn(1) * -fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_LEFT)
             {
-                spd = m_transform.getBasis().getColumn(0) * -t;
+                speed = m_transform.getBasis().getColumn(0) * -fullSpeed;
             }
             else if(m_dirFlag & ENT_MOVE_RIGHT)
             {
-                spd = m_transform.getBasis().getColumn(0) * t;
+                speed = m_transform.getBasis().getColumn(0) * fullSpeed;
             }
             else
             {
                 //dir_flag = ENT_MOVE_FORWARD;
             }
-            m_response.slide = 0x00;
+            m_response.slide = CHARACTER_SLIDE_NONE;
         }
     }
     else                                                                        // no hit to the floor
     {
-        m_response.slide = 0x00;
+        m_response.slide = CHARACTER_SLIDE_NONE;
         m_response.vertical_collide = 0x00;
         m_moveType = MOVE_FREE_FALLING;
         m_speed[2] = 0.0;
@@ -1103,40 +1043,37 @@ int Character::moveOnFloor()
     /*
      * now move normally
      */
-    m_speed = spd;
-    move = spd * engine_frame_time;
-    t = move.length();
+    m_speed = speed;
+    btVector3 positionDelta = speed * engine_frame_time;
+    const btScalar distance = positionDelta.length();
 
-    norm_move_xy[0] = move[0];
-    norm_move_xy[1] = move[1];
-    norm_move_xy[2] = 0.0;
-    norm_move_xy_len = norm_move_xy.length();
-    if(norm_move_xy_len > 0.2 * t)
+    btVector3 norm_move_xy(positionDelta[0], positionDelta[1], 0.0);
+    btScalar norm_move_xy_len = norm_move_xy.length();
+    if(norm_move_xy_len > 0.2 * distance)
     {
         norm_move_xy /= norm_move_xy_len;
     }
     else
     {
-        norm_move_xy_len = 32512.0;
         norm_move_xy.setZero();
     }
 
     ghostUpdate();
-    pos += move;
-    fixPenetrations(&move);
+    position += positionDelta;
+    fixPenetrations(&positionDelta);
     if(m_heightInfo.floor_hit)
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight > pos[2])
+        if(m_heightInfo.floor_point[2] + m_fallDownHeight > position[2])
         {
             btScalar dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
-            if(pos[2] > m_heightInfo.floor_point[2] + dz_to_land)
+            if(position[2] > m_heightInfo.floor_point[2] + dz_to_land)
             {
-                pos[2] -= dz_to_land;
+                position[2] -= dz_to_land;
                 fixPenetrations(nullptr);
             }
-            else if(pos[2] > m_heightInfo.floor_point[2])
+            else if(position[2] > m_heightInfo.floor_point[2])
             {
-                pos[2] = m_heightInfo.floor_point[2];
+                position[2] = m_heightInfo.floor_point[2];
                 fixPenetrations(nullptr);
             }
         }
@@ -1147,9 +1084,9 @@ int Character::moveOnFloor()
             updateRoomPos();
             return 2;
         }
-        if((pos[2] < m_heightInfo.floor_point[2]) && !m_bt.no_fix_all)
+        if((position[2] < m_heightInfo.floor_point[2]) && !m_bt.no_fix_all)
         {
-            pos[2] = m_heightInfo.floor_point[2];
+            position[2] = m_heightInfo.floor_point[2];
             fixPenetrations(nullptr);
             m_response.vertical_collide |= 0x01;
         }
@@ -1167,7 +1104,6 @@ int Character::moveOnFloor()
     return 1;
 }
 
-
 int Character::freeFalling()
 {
     btVector3 move;
@@ -1177,7 +1113,7 @@ int Character::freeFalling()
      * init height info structure
      */
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1191,8 +1127,8 @@ int Character::freeFalling()
     move = m_speed + grav * engine_frame_time * 0.5;
     move *= engine_frame_time;
     m_speed += grav * engine_frame_time;
-    m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(m_speed[2]);
-    m_speed = m_speed.rotate({0,0,1}, rot * M_PI/180);
+    m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
+    m_speed = m_speed.rotate({ 0,0,1 }, rot * RadPerDeg);
 
     updateCurrentHeight();
 
@@ -1289,7 +1225,7 @@ int Character::monkeyClimbing()
     auto& pos = m_transform.getOrigin();
 
     m_speed[2] = 0.0;
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1321,7 +1257,7 @@ int Character::monkeyClimbing()
     {
         //dir_flag = ENT_MOVE_FORWARD;
     }
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
 
     m_speed = spd;
     move = spd * engine_frame_time;
@@ -1332,7 +1268,7 @@ int Character::monkeyClimbing()
     pos += move;
     fixPenetrations(&move);                              // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.bb_max[2] - m_heightInfo.ceiling_point[2] > - 0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.bb_max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
         pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
     }
@@ -1358,20 +1294,20 @@ int Character::wallsClimbing()
     btScalar t;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    spd={0,0,0};
+    spd = { 0,0,0 };
     *climb = checkWallsClimbability();
     m_climb = *climb;
     if(!(climb->wall_hit))
     {
-        m_heightInfo.walls_climb = 0x00;
+        m_heightInfo.walls_climb = false;
         return 2;
     }
 
-    m_angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
+    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * DegPerRad;
     updateTransform();
     pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
     pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
@@ -1420,12 +1356,12 @@ int Character::wallsClimbing()
  */
 int Character::climbing()
 {
-    btVector3 move, spd(0.0, 0.0, 0.0);
+    btVector3 move, spd;
     btScalar t;
     auto& pos = m_transform.getOrigin();
     btScalar z = pos[2];
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1454,13 +1390,13 @@ int Character::climbing()
     }
     else
     {
-        m_response.slide = 0x00;
+        m_response.slide = CHARACTER_SLIDE_NONE;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_speed = spd;
     move = spd * engine_frame_time;
 
@@ -1492,7 +1428,7 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1504,11 +1440,11 @@ int Character::moveUnderWater()
     {
         m_angles[0] += inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 0);
         m_angles[1] -= inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 1);
-        m_angles[2]  = 0.0;
+        m_angles[2] = 0.0;
 
         if((m_angles[1] > 70.0) && (m_angles[1] < 180.0))                 // Underwater angle limiter.
         {
-           m_angles[1] = 70.0;
+            m_angles[1] = 70.0;
         }
         else if((m_angles[1] > 180.0) && (m_angles[1] < 270.0))
         {
@@ -1545,13 +1481,12 @@ int Character::moveUnderWater()
     return 1;
 }
 
-
 int Character::moveOnWater()
 {
-    btVector3 move, spd(0.0, 0.0, 0.0);
+    btVector3 move, spd;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1562,7 +1497,7 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, (std::abs(m_command.move[0]) || std::abs(m_command.move[1])));
+    btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, std::abs(m_command.move[0]) != 0 || std::abs(m_command.move[1]) != 0);
 
     if((m_dirFlag & ENT_MOVE_FORWARD) && (m_command.move[0] == 1))
     {
@@ -1622,36 +1557,36 @@ int Character::moveOnWater()
 
 int Character::findTraverse()
 {
-    RoomSector* ch_s, *obj_s = NULL;
+    RoomSector* ch_s, *obj_s = nullptr;
     ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
 
-    if(ch_s == NULL)
+    if(ch_s == nullptr)
     {
         return 0;
     }
 
-    m_traversedObject = NULL;
+    m_traversedObject = nullptr;
 
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
-    if(obj_s != NULL)
+    if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
         for(std::shared_ptr<EngineContainer>& cont : obj_s->owner_room->containers)
@@ -1659,7 +1594,7 @@ int Character::findTraverse()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (fabs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     int oz = (m_angles[0] + 45.0) / 90.0;
                     m_angles[0] = oz * 90.0;
@@ -1680,7 +1615,7 @@ int Character::findTraverse()
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& cont)
+int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& container)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -1689,12 +1624,12 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
         return 0x00;
     }
 
-    if((fabs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
+    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
     {
         return 0x01;
     }
 
-    BtEngineClosestRayResultCallback cb(cont);
+    BtEngineClosestRayResultCallback cb(container);
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
@@ -1705,10 +1640,10 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
     {
         btVector3 v;
         v.setInterpolate3(from, to, cb.m_closestHitFraction);
-        if(fabs(v[2] - floor) < 1.1)
+        if(std::abs(v[2] - floor) < 1.1)
         {
-            EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
-            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            EngineContainer* cont = static_cast<EngineContainer*>(cb.m_collisionObject->getUserPointer());
+            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -1720,51 +1655,48 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
 
 /**
  *
- * @param ch: character pointer
- * @param obj: traversed object pointer
- * @return: 0x01 if can traverse forvard; 0x02 if can traverse backvard; 0x03 can traverse in both directions; 0x00 - can't traverse
+ * @param obj Traversed object pointer
+ * @see TraverseNone TraverseForward TraverseBackward
  */
-int Character::checkTraverse(Entity* obj)
+int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s, *obj_s;
-
-    ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
-    obj_s = obj->m_self->room->getSectorRaw(obj->m_transform.getOrigin());
+    RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
+    RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
         if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         // OY move case
         else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
         }
         ch_s = ch_s->checkPortalPointer();
     }
 
-    if((ch_s == NULL) || (obj_s == NULL))
+    if((ch_s == nullptr) || (obj_s == nullptr))
     {
-        return 0x00;
+        return TraverseNone;
     }
 
     btScalar floor = m_transform.getOrigin()[2];
-    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, m_self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj->m_self) == 0x00))
+    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, m_self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj.m_self) == 0x00))
     {
-        return 0x00;
+        return TraverseNone;
     }
 
-    BtEngineClosestRayResultCallback cb(obj->m_self);
+    BtEngineClosestRayResultCallback cb(obj.m_self);
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
@@ -1773,104 +1705,106 @@ int Character::checkTraverse(Entity* obj)
     bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
-        EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
+        EngineContainer* cont = static_cast<EngineContainer*>(cb.m_collisionObject->getUserPointer());
+        if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
-            return 0x00;
+            return TraverseNone;
         }
     }
 
-    int ret = 0x00;
-    RoomSector* next_s = NULL;
+    int ret = TraverseNone;
+    RoomSector* next_s = nullptr;
 
     /*
      * PUSH MOVE CHECK
      */
-    // OX move case
+     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
-    next_s = next_s->checkPortalPointer();
-    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if(next_s)
+        next_s = next_s->checkPortalPointer();
+
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(obj->m_self);
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
-        btVector3 v;
-        btTransform from, to;
-        v[0] = obj_s->pos[0];
-        v[1] = obj_s->pos[1];
-        v[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        btTransform from;
         from.setIdentity();
-        from.setOrigin(v);
-        v[0] = next_s->pos[0];
-        v[1] = next_s->pos[1];
+        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btTransform to;
         to.setIdentity();
-        to.setOrigin(v);
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
+        sp.setMargin(COLLISION_MARGIN_DEFAULT);
+        BtEngineClosestConvexResultCallback ccb(obj.m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+
         if(!ccb.hasHit())
         {
-            ret |= 0x01;                                                        // can traverse forvard
+            ret |= TraverseForward;
         }
     }
 
     /*
      * PULL MOVE CHECK
      */
-    next_s = NULL;
+    next_s = nullptr;
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
-    next_s = next_s->checkPortalPointer();
-    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if(next_s)
+        next_s = next_s->checkPortalPointer();
+
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(m_self);
-        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
-        btVector3 v;
-        btTransform from, to;
-        v[0] = ch_s->pos[0];
-        v[1] = ch_s->pos[1];
-        v[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        btTransform from;
         from.setIdentity();
-        from.setOrigin(v);
-        v[0] = next_s->pos[0];
-        v[1] = next_s->pos[1];
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btTransform to;
         to.setIdentity();
-        to.setOrigin(v);
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
+
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
+        sp.setMargin(COLLISION_MARGIN_DEFAULT);
+        BtEngineClosestConvexResultCallback ccb(m_self);
         bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+
         if(!ccb.hasHit())
         {
-            ret |= 0x02;                                                        // can traverse backvard
+            ret |= TraverseBackward;
         }
     }
 
@@ -1935,6 +1869,16 @@ void Character::applyCommands()
 
 void Character::updateParams()
 {
+    // Poisoning is always global
+
+    float poison = getParam(PARAM_POISON);
+
+    if(poison)
+    {
+        changeParam(PARAM_POISON, 0.0001);
+        changeParam(PARAM_HEALTH, -poison);
+    }
+
     switch(m_moveType)
     {
         case MOVE_ON_FLOOR:
@@ -1958,7 +1902,6 @@ void Character::updateParams()
                 setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-
             if((m_bf.animations.last_state == TR_STATE_LARA_SPRINT) ||
                (m_bf.animations.last_state == TR_STATE_LARA_SPRINT_ROLL))
             {
@@ -1966,7 +1909,7 @@ void Character::updateParams()
             }
             else
             {
-                changeParam(PARAM_STAMINA,  0.5);
+                changeParam(PARAM_STAMINA, 0.5);
             }
             break;
 
@@ -1999,7 +1942,7 @@ int Character::setParamMaximum(int parameter, float max_value)
     if(parameter >= PARAM_SENTINEL)
         return 0;
 
-    max_value = (max_value < 0)?(0):(max_value);    // Clamp max. to at least zero
+    max_value = (max_value < 0) ? (0) : (max_value);    // Clamp max. to at least zero
     m_parameters.maximum[parameter] = max_value;
     return 1;
 }
@@ -2009,10 +1952,13 @@ int Character::setParam(int parameter, float value)
     if(parameter >= PARAM_SENTINEL)
         return 0;
 
+    if(value == m_parameters.param[parameter])
+        return 0;
+
     float maximum = m_parameters.maximum[parameter];
 
-    value = (value >= 0)?(value):(maximum); // Char params can't be less than zero.
-    value = (value <= maximum)?(value):(maximum);
+    value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
+    value = (value <= maximum) ? (value) : (maximum);
 
     m_parameters.param[parameter] = value;
     return 1;
@@ -2066,10 +2012,10 @@ int Character::setWeaponModel(int weapon_model, int armed)
 {
     SkeletalModel* sm = engine_world.getModelByID(weapon_model);
 
-    if((sm != NULL) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
+    if((sm != nullptr) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {
         SkeletalModel* bm = m_bf.animations.model;
-        if(m_bf.animations.next == NULL)
+        if(m_bf.animations.next == nullptr)
         {
             addOverrideAnim(weapon_model);
         }
@@ -2078,15 +2024,15 @@ int Character::setWeaponModel(int weapon_model, int armed)
             m_bf.animations.next->model = sm;
         }
 
-        for(int i=0;i<bm->mesh_count;i++)
+        for(int i = 0; i < bm->mesh_count; i++)
         {
             m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone_tags[i].mesh_slot = NULL;
+            m_bf.bone_tags[i].mesh_slot = nullptr;
         }
 
         if(armed != 0)
         {
-            for(int i=0;i<bm->mesh_count;i++)
+            for(int i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
@@ -2100,7 +2046,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
         }
         else
         {
-            for(int i=0;i<bm->mesh_count;i++)
+            for(int i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
@@ -2111,7 +2057,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
                     m_bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
-            m_bf.animations.next->model = NULL;
+            m_bf.animations.next->model = nullptr;
         }
 
         return 1;
@@ -2120,29 +2066,29 @@ int Character::setWeaponModel(int weapon_model, int armed)
     {
         // do unarmed default model
         SkeletalModel* bm = m_bf.animations.model;
-        for(int i=0;i<bm->mesh_count;i++)
+        for(int i = 0; i < bm->mesh_count; i++)
         {
             m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone_tags[i].mesh_slot = NULL;
+            m_bf.bone_tags[i].mesh_slot = nullptr;
         }
-        if(m_bf.animations.next != NULL)
+        if(m_bf.animations.next != nullptr)
         {
-            m_bf.animations.next->model = NULL;
+            m_bf.animations.next->model = nullptr;
         }
     }
 
     return 0;
 }
 
-void Character::fixPenetrations(btVector3* move)
+void Character::fixPenetrations(const btVector3* move)
 {
     if(m_bt.ghostObjects.empty())
         return;
 
     if(move != nullptr)
     {
-        m_response.horizontal_collide    = 0x00;
-        m_response.vertical_collide      = 0x00;
+        m_response.horizontal_collide = 0x00;
+        m_response.vertical_collide = 0x00;
     }
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -2157,11 +2103,11 @@ void Character::fixPenetrations(btVector3* move)
     }
 
     btVector3 reaction;
-    int numPenetrationLoops = getPenetrationFixVector(&reaction, move!=nullptr);
+    int numPenetrationLoops = getPenetrationFixVector(&reaction, move != nullptr);
     m_transform.getOrigin() += reaction;
 
     updateCurrentHeight();
-    if((move != NULL) && (numPenetrationLoops > 0))
+    if((move != nullptr) && (numPenetrationLoops > 0))
     {
         btScalar t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         btScalar t2 = move->x() * move->x() + move->y() * move->y();
@@ -2201,11 +2147,9 @@ void Character::fixPenetrations(btVector3* move)
 }
 
 /**
- * we check walls and other collision objects reaction. if reaction more then critacal
+ * we check walls and other collision objects reaction. if reaction more than critical
  * then cmd->horizontal_collide |= 0x01;
- * @param ent - cheked entity
- * @param cmd - here we fill cmd->horizontal_collide field
- * @param move - absolute 3d move vector
+ * @param move absolute 3d move vector
  */
 int Character::checkNextPenetration(const btVector3& move)
 {
@@ -2217,13 +2161,16 @@ int Character::checkNextPenetration(const btVector3& move)
     //resp->horizontal_collide = 0x00;
     btVector3 reaction;
     int ret = getPenetrationFixVector(&reaction, true);
-    if(ret > 0) {
+    if(ret > 0)
+    {
         btScalar t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         btScalar t2 = move[0] * move[0] + move[1] * move[1];
-        if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2)) {
+        if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))
+        {
             t2 *= t1;
             t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-            if(t1 < m_criticalWallComponent) {
+            if(t1 < m_criticalWallComponent)
+            {
                 m_response.horizontal_collide |= 0x01;
             }
         }
@@ -2284,24 +2231,27 @@ void Character::updateHair()
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
-        hair->m_container->room = hair->m_ownerChar->m_self->room;
+        if(auto ownerChar = hair->m_ownerChar.lock())
+        {
+            hair->m_container->room = ownerChar->m_self->room;
+        }
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, int state) {
+void Character::frameImpl(btScalar time, int16_t frame, int state)
+{
     // Update acceleration.
     // With variable framerate, we don't know when we'll reach final
     // frame for sure, so we use native frame number check to increase acceleration.
 
     if(m_bf.animations.current_frame != frame)
     {
-
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
 
-        auto af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
+        auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
         if((af->accel_x == 0) || (frame < m_bf.animations.current_frame))
         {
-            m_currentSpeed  = af->speed_x;
+            m_currentSpeed = af->speed_x;
         }
         else
         {
@@ -2313,37 +2263,41 @@ void Character::frameImpl(btScalar time, int16_t frame, int state) {
 
     doWeaponFrame(time);
 
-    if(m_bf.animations.onFrame != NULL)
+    if(m_bf.animations.onFrame != nullptr)
     {
         m_bf.animations.onFrame(this, &m_bf.animations, state);
     }
 }
 
-void Character::processSectorImpl() {
+void Character::processSectorImpl()
+{
+    assert(m_currentSector != nullptr);
     RoomSector* highest_sector = m_currentSector->getHighestSector();
-    RoomSector* lowest_sector  = m_currentSector->getLowestSector();
+    assert(highest_sector != nullptr);
+    RoomSector* lowest_sector = m_currentSector->getLowestSector();
+    assert(lowest_sector != nullptr);
 
-    m_heightInfo.walls_climb_dir  = 0;
-    m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                            SECTOR_FLAG_CLIMB_EAST  |
+    m_heightInfo.walls_climb_dir = 0;
+    m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST |
+                                                            SECTOR_FLAG_CLIMB_EAST |
                                                             SECTOR_FLAG_CLIMB_NORTH |
-                                                            SECTOR_FLAG_CLIMB_SOUTH );
+                                                            SECTOR_FLAG_CLIMB_SOUTH);
 
-    m_heightInfo.walls_climb     = (m_heightInfo.walls_climb_dir > 0);
-    m_heightInfo.ceiling_climb   = 0x00;
+    m_heightInfo.walls_climb = (m_heightInfo.walls_climb_dir > 0);
+    m_heightInfo.ceiling_climb = false;
 
     if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
     {
-        m_heightInfo.ceiling_climb = 0x01;
+        m_heightInfo.ceiling_climb = true;
     }
 
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
-        if((m_moveType == MOVE_ON_FLOOR)    ||
-                (m_moveType == MOVE_UNDERWATER) ||
-                (m_moveType == MOVE_WADE)        ||
-                (m_moveType == MOVE_ON_WATER)    ||
-                (m_moveType == MOVE_QUICKSAND))
+        if((m_moveType == MOVE_ON_FLOOR) ||
+           (m_moveType == MOVE_UNDERWATER) ||
+           (m_moveType == MOVE_WADE) ||
+           (m_moveType == MOVE_ON_WATER) ||
+           (m_moveType == MOVE_QUICKSAND))
         {
             setParam(PARAM_HEALTH, 0.0);
             m_response.kill = 1;
@@ -2351,11 +2305,50 @@ void Character::processSectorImpl() {
     }
 }
 
-void Character::jump(btScalar vert, btScalar hor) {
-    setToJump(vert, hor);
+void Character::jump(btScalar v_vertical, btScalar v_horizontal)
+{
+    btScalar t;
+    btVector3 spd(0.0, 0.0, 0.0);
+
+    // Jump length is a speed value multiplied by global speed coefficient.
+    t = v_horizontal * m_speedMult;
+
+    // Calculate the direction of jump by vector multiplication.
+    if(m_dirFlag & ENT_MOVE_FORWARD)
+    {
+        spd = m_transform.getBasis().getColumn(1) * t;
+    }
+    else if(m_dirFlag & ENT_MOVE_BACKWARD)
+    {
+        spd = m_transform.getBasis().getColumn(1) * -t;
+    }
+    else if(m_dirFlag & ENT_MOVE_LEFT)
+    {
+        spd = m_transform.getBasis().getColumn(0) * -t;
+    }
+    else if(m_dirFlag & ENT_MOVE_RIGHT)
+    {
+        spd = m_transform.getBasis().getColumn(0) * t;
+    }
+    else
+    {
+        m_dirFlag = ENT_MOVE_FORWARD;
+    }
+
+    m_response.vertical_collide = 0x00;
+    m_response.slide = CHARACTER_SLIDE_NONE;
+
+    // Jump speed should NOT be added to current speed, as native engine
+    // fully replaces current speed with jump speed by anim command.
+    m_speed = spd;
+
+    // Apply vertical speed.
+    m_speed[2] = v_vertical * m_speedMult;
+    m_moveType = MOVE_FREE_FALLING;
 }
 
-Substance Character::getSubstanceState() const {
+Substance Character::getSubstanceState() const
+{
     if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_height)
@@ -2371,14 +2364,14 @@ Substance Character::getSubstanceState() const {
     {
         return Substance::None;
     }
-    else if( m_heightInfo.water &&
-             (m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
-             (m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_wadeDepth) )
+    else if(m_heightInfo.water &&
+            (m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
+            (m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_wadeDepth))
     {
         return Substance::WaterShallow;
     }
-    else if( m_heightInfo.water &&
-             (m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_wadeDepth) )
+    else if(m_heightInfo.water &&
+            (m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_wadeDepth))
     {
         return Substance::WaterWade;
     }
@@ -2388,10 +2381,13 @@ Substance Character::getSubstanceState() const {
     }
 }
 
-void Character::updateGhostRigidBody() {
-    if(!m_bt.ghostObjects.empty()) {
-        assert( m_bf.bone_tags.size() == m_bt.ghostObjects.size() );
-        for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
+void Character::updateGhostRigidBody()
+{
+    if(!m_bt.ghostObjects.empty())
+    {
+        assert(m_bf.bone_tags.size() == m_bt.ghostObjects.size());
+        for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+        {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
             tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->m_center);
             m_bt.ghostObjects[i]->getWorldTransform() = tr;
@@ -2399,8 +2395,10 @@ void Character::updateGhostRigidBody() {
     }
 }
 
-btVector3 Character::camPosForFollowing(btScalar dz) {
-    if(m_camFollowCenter > 0) {
+btVector3 Character::camPosForFollowing(btScalar dz)
+{
+    if(m_camFollowCenter > 0)
+    {
         m_camFollowCenter--;
         return m_obb->centre;
     }
@@ -2426,7 +2424,7 @@ void Character::doWeaponFrame(btScalar time)
      * 3: hide weapon;
      * 4: idle to fire (targeted);
      */
-    if((m_command.ready_weapon != 0x00) && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
+    if(m_command.ready_weapon && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
     {
         setWeaponModel(m_currentWeapon, 1);
     }
@@ -2434,137 +2432,101 @@ void Character::doWeaponFrame(btScalar time)
     btScalar dt;
     int t;
 
-    for(SSAnimation* ss_anim=m_bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
+    for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
-        if((ss_anim->model != NULL) && (ss_anim->model->animations.size() > 4))
+        if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
             switch(m_weaponCurrentState)
             {
-            case WeaponState::Hide:
-                if(m_command.ready_weapon)   // ready weapon
-                {
-                    ss_anim->current_animation = 1;
-                    ss_anim->next_animation = 1;
-                    ss_anim->current_frame = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::HideToReady;
-                }
-                break;
+                case WeaponState::Hide:
+                    if(m_command.ready_weapon)   // ready weapon
+                    {
+                        ss_anim->current_animation = 1;
+                        ss_anim->next_animation = 1;
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::HideToReady;
+                    }
+                    break;
 
-            case WeaponState::HideToReady:
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                case WeaponState::HideToReady:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-                if(ss_anim->current_frame < t - 1)
-                {
-                    ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else if(ss_anim->current_frame < t)
-                {
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                }
-                else
-                {
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                    }
+                    else
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::Idle;
+                    }
+                    break;
+
+                case WeaponState::Idle:
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
                     ss_anim->next_frame = 0;
                     ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::Idle;
-                }
-                break;
+                    if(m_command.ready_weapon)
+                    {
+                        ss_anim->current_animation = 3;
+                        ss_anim->next_animation = 3;
+                        ss_anim->current_frame = ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::IdleToHide;
+                    }
+                    else if(m_command.action)
+                    {
+                        m_weaponCurrentState = WeaponState::IdleToFire;
+                    }
+                    else
+                    {
+                        // do nothing here, may be;
+                    }
+                    break;
 
-            case WeaponState::Idle:
-                ss_anim->current_frame = 0;
-                ss_anim->current_animation = 0;
-                ss_anim->next_frame = 0;
-                ss_anim->next_animation = 0;
-                ss_anim->frame_time = 0.0;
-                if(m_command.ready_weapon)
-                {
-                    ss_anim->current_animation = 3;
-                    ss_anim->next_animation = 3;
-                    ss_anim->current_frame = ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::IdleToHide;
-                }
-                else if(m_command.action)
-                {
-                    m_weaponCurrentState = WeaponState::IdleToFire;
-                }
-                else
-                {
-                    // do nothing here, may be;
-                }
-                break;
-
-            case WeaponState::FireToIdle:
-                // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                if(ss_anim->current_frame > 0)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame - 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else
-                {
-                    ss_anim->next_frame = ss_anim->current_frame = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Idle;
-                }
-                break;
-
-            case WeaponState::IdleToFire:
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                if(ss_anim->current_frame < t - 1)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame + 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else if(ss_anim->current_frame < t)
-                {
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 2;
-                }
-                else if(m_command.action)
-                {
-                    ss_anim->current_frame = 0;
-                    ss_anim->next_frame = 1;
-                    ss_anim->current_animation = 2;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Fire;
-                }
-                else
-                {
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                    m_weaponCurrentState = WeaponState::FireToIdle;
-                }
-                break;
-
-            case WeaponState::Fire:
-                if(m_command.action)
-                {
-                    // inc time, loop;
+                case WeaponState::FireToIdle:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Idle;
+                    }
+                    break;
+
+                case WeaponState::IdleToFire:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2576,176 +2538,176 @@ void Character::doWeaponFrame(btScalar time)
                     else if(ss_anim->current_frame < t)
                     {
                         ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 2;
+                    }
+                    else if(m_command.action)
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 1;
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Fire;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        m_weaponCurrentState = WeaponState::FireToIdle;
+                    }
+                    break;
+
+                case WeaponState::Fire:
+                    if(m_command.action)
+                    {
+                        // inc time, loop;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = dt;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                        }
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        m_weaponCurrentState = WeaponState::FireToIdle;
+                    }
+                    break;
+
+                case WeaponState::IdleToHide:
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
                         ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else
                     {
-                        ss_anim->frame_time = dt;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Hide;
+                        setWeaponModel(m_currentWeapon, 0);
                     }
-                }
-                else
-                {
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                    ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                    m_weaponCurrentState = WeaponState::FireToIdle;
-                }
-                break;
-
-            case WeaponState::IdleToHide:
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                if(ss_anim->current_frame < t - 1)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame + 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else
-                {
-                    ss_anim->next_frame = ss_anim->current_frame = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Hide;
-                    setWeaponModel(m_currentWeapon, 0);
-                }
-                break;
+                    break;
             };
         }
-        else if((ss_anim->model != NULL) && (ss_anim->model->animations.size() == 4))
+        else if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() == 4))
         {
             switch(m_weaponCurrentState)
             {
-            case WeaponState::Hide:
-                if(m_command.ready_weapon)   // ready weapon
-                {
-                    ss_anim->current_animation = 2;
-                    ss_anim->next_animation = 2;
-                    ss_anim->current_frame = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::HideToReady;
-                }
-                break;
+                case WeaponState::Hide:
+                    if(m_command.ready_weapon)   // ready weapon
+                    {
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = 2;
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::HideToReady;
+                    }
+                    break;
 
-            case WeaponState::HideToReady:
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                case WeaponState::HideToReady:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-                if(ss_anim->current_frame < t - 1)
-                {
-                    ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else if(ss_anim->current_frame < t)
-                {
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                }
-                else
-                {
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                    }
+                    else
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::Idle;
+                    }
+                    break;
+
+                case WeaponState::Idle:
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
                     ss_anim->next_frame = 0;
                     ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::Idle;
-                }
-                break;
+                    if(m_command.ready_weapon)
+                    {
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = 2;
+                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->frame_time = 0.0;
+                        m_weaponCurrentState = WeaponState::IdleToHide;
+                    }
+                    else if(m_command.action)
+                    {
+                        m_weaponCurrentState = WeaponState::IdleToFire;
+                    }
+                    else
+                    {
+                        // do nothing here, may be;
+                    }
+                    break;
 
-            case WeaponState::Idle:
-                ss_anim->current_frame = 0;
-                ss_anim->current_animation = 0;
-                ss_anim->next_frame = 0;
-                ss_anim->next_animation = 0;
-                ss_anim->frame_time = 0.0;
-                if(m_command.ready_weapon)
-                {
-                    ss_anim->current_animation = 2;
-                    ss_anim->next_animation = 2;
-                    ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                    ss_anim->frame_time = 0.0;
-                    m_weaponCurrentState = WeaponState::IdleToHide;
-                }
-                else if(m_command.action)
-                {
-                    m_weaponCurrentState = WeaponState::IdleToFire;
-                }
-                else
-                {
-                    // do nothing here, may be;
-                }
-                break;
-
-            case WeaponState::FireToIdle:
-                // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                if(ss_anim->current_frame > 0)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame - 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else
-                {
-                    ss_anim->next_frame = ss_anim->current_frame = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Idle;
-                }
-                break;
-
-            case WeaponState::IdleToFire:
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                if(ss_anim->current_frame < t - 1)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame + 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else if(ss_anim->current_frame < t)
-                {
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 3;
-                }
-                else if(m_command.action)
-                {
-                    ss_anim->current_frame = 0;
-                    ss_anim->next_frame = 1;
-                    ss_anim->current_animation = 3;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Fire;
-                }
-                else
-                {
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                    m_weaponCurrentState = WeaponState::FireToIdle;
-                }
-                break;
-
-            case WeaponState::Fire:
-                if(m_command.action)
-                {
-                    // inc time, loop;
+                case WeaponState::FireToIdle:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Idle;
+                    }
+                    break;
+
+                case WeaponState::IdleToFire:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2757,47 +2719,83 @@ void Character::doWeaponFrame(btScalar time)
                     else if(ss_anim->current_frame < t)
                     {
                         ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 3;
+                    }
+                    else if(m_command.action)
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 1;
+                        ss_anim->current_animation = 3;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Fire;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        m_weaponCurrentState = WeaponState::FireToIdle;
+                    }
+                    break;
+
+                case WeaponState::Fire:
+                    if(m_command.action)
+                    {
+                        // inc time, loop;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = dt;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                        }
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        m_weaponCurrentState = WeaponState::FireToIdle;
+                    }
+                    break;
+
+                case WeaponState::IdleToHide:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
                         ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else
                     {
-                        ss_anim->frame_time = dt;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_weaponCurrentState = WeaponState::Hide;
+                        setWeaponModel(m_currentWeapon, 0);
                     }
-                }
-                else
-                {
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                    ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                    m_weaponCurrentState = WeaponState::FireToIdle;
-                }
-                break;
-
-            case WeaponState::IdleToHide:
-                // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                ss_anim->frame_time += time;
-                ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                if(ss_anim->current_frame > 0)
-                {
-                    ss_anim->next_frame = ss_anim->current_frame - 1;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                }
-                else
-                {
-                    ss_anim->next_frame = ss_anim->current_frame = 0;
-                    ss_anim->next_animation = ss_anim->current_animation;
-                    m_weaponCurrentState = WeaponState::Hide;
-                    setWeaponModel(m_currentWeapon, 0);
-                }
-                break;
+                    break;
             };
         }
 
