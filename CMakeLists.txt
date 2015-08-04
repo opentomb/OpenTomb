@@ -7,6 +7,39 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
+#prepare bullet
+set(BULLET_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/bullet3/install)
+if(NOT BULLET_BUILT)
+    set(BULLET_BUILD ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/bullet3/build)
+    message(STATUS "Bootstrapping Bullet in ${BULLET_BUILD}...")
+    file(MAKE_DIRECTORY ${BULLET_BUILD})
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${BULLET_ROOT} -DBUILD_BULLET3=OFF -DBUILD_CPU_DEMOS=OFF -DBUILD_EXTRAS=OFF -DBUILD_OPENGL3_DEMOS=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_UNIT_TESTS=OFF -DBUILD_BULLET2_DEMOS=OFF ..
+      WORKING_DIRECTORY ${BULLET_BUILD}
+      RESULT_VARIABLE BULLET_CMD
+    )
+    if(NOT BULLET_CMD EQUAL 0)
+        message(FATAL_ERROR "Failed to configure Bullet")
+    endif()
+    execute_process(
+      COMMAND ${CMAKE_MAKE_PROGRAM}
+      WORKING_DIRECTORY ${BULLET_BUILD}
+      RESULT_VARIABLE BULLET_CMD
+    )
+    if(NOT BULLET_CMD EQUAL 0)
+        message(FATAL_ERROR "Failed to build Bullet")
+    endif()
+    execute_process(
+      COMMAND ${CMAKE_MAKE_PROGRAM} install
+      WORKING_DIRECTORY ${BULLET_BUILD}
+      RESULT_VARIABLE BULLET_CMD
+    )
+    if(NOT BULLET_CMD EQUAL 0)
+        message(FATAL_ERROR "Failed to install Bullet into ${BULLET_ROOT}")
+    endif()
+    set(BULLET_BUILD TRUE CACHE INTERNAL "Whether bullet is successfully built in-tree")
+endif()
+
 if(APPLE)
     file(GLOB PRJ_SRC
         src/*.c*

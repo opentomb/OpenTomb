@@ -4,3 +4,6 @@
 [submodule "3rdparty/al"]
 	path = 3rdparty/al
 	url = git://repo.or.cz/openal-soft.git
+[submodule "3rdparty/bullet3"]
+	path = 3rdparty/bullet3
+	url = https://github.com/bulletphysics/bullet3.git
