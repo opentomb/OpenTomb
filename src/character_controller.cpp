@@ -985,13 +985,13 @@ int Character::moveOnFloor()
             if(t >= 0.0)
             {
                 // front forward slide down
-                m_response.slide = CHARACTER_SLIDE_FRONT;
+                m_response.slide = SlideType::Front;
                 m_angles[0] = zAngle + 180;
             }
             else
             {
                 // back forward slide down
-                m_response.slide = CHARACTER_SLIDE_BACK;
+                m_response.slide = SlideType::Back;
                 m_angles[0] = zAngle;
             }
             updateTransform();
@@ -1026,12 +1026,12 @@ int Character::moveOnFloor()
             {
                 //dir_flag = ENT_MOVE_FORWARD;
             }
-            m_response.slide = CHARACTER_SLIDE_NONE;
+            m_response.slide = SlideType::None;
         }
     }
     else                                                                        // no hit to the floor
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
+        m_response.slide = SlideType::None;
         m_response.vertical_collide = 0x00;
         m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
@@ -1111,7 +1111,7 @@ int Character::freeFalling()
      * init height info structure
      */
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1223,7 +1223,7 @@ int Character::monkeyClimbing()
     auto& pos = m_transform.getOrigin();
 
     m_speed[2] = 0.0;
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1255,7 +1255,7 @@ int Character::monkeyClimbing()
     {
         //dir_flag = ENT_MOVE_FORWARD;
     }
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
 
     m_speed = spd;
     move = spd * engine_frame_time;
@@ -1292,7 +1292,7 @@ int Character::wallsClimbing()
     btScalar t;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1359,7 +1359,7 @@ int Character::climbing()
     auto& pos = m_transform.getOrigin();
     btScalar z = pos[2];
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1388,13 +1388,13 @@ int Character::climbing()
     }
     else
     {
-        m_response.slide = CHARACTER_SLIDE_NONE;
+        m_response.slide = SlideType::None;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_speed = spd;
     move = spd * engine_frame_time;
 
@@ -1426,7 +1426,7 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1484,7 +1484,7 @@ int Character::moveOnWater()
     btVector3 move, spd;
     auto& pos = m_transform.getOrigin();
 
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -2334,7 +2334,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     }
 
     m_response.vertical_collide = 0x00;
-    m_response.slide = CHARACTER_SLIDE_NONE;
+    m_response.slide = SlideType::None;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.

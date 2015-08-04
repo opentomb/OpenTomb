@@ -102,7 +102,7 @@ void ent_set_cmd_slide(Character* ent, SSAnimation* ss_anim, int state)
 {
     if(state == ENTITY_ANIM_NEWANIM)
     {
-        ent->m_response.slide = CHARACTER_SLIDE_BACK;
+        ent->m_response.slide = SlideType::Back;
         ss_anim->onFrame = nullptr;
     }
 }
@@ -274,7 +274,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
-            else if(resp->slide == CHARACTER_SLIDE_FRONT)
+            else if(resp->slide == SlideType::Front)
             {
                 Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, character->id());
 
@@ -288,7 +288,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     character->setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
                 }
             }
-            else if(resp->slide == CHARACTER_SLIDE_BACK)
+            else if(resp->slide == SlideType::Back)
             {
                 if(cmd->jump)
                 {
@@ -539,12 +539,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] = 0;
             character->lean(cmd, 0.0);
 
-            if(resp->slide == CHARACTER_SLIDE_BACK)      // Slide checking is only for jumps direction correction!
+            if(resp->slide == SlideType::Back)      // Slide checking is only for jumps direction correction!
             {
                 character->setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
                 cmd->move[0] = -1;
             }
-            else if(resp->slide == CHARACTER_SLIDE_FRONT)
+            else if(resp->slide == SlideType::Front)
             {
                 character->setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
                 cmd->move[0] = 1;
@@ -784,11 +784,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
-            else if(resp->slide == CHARACTER_SLIDE_FRONT)
+            else if(resp->slide == SlideType::Front)
             {
                 character->setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
             }
-            else if(resp->slide == CHARACTER_SLIDE_BACK)
+            else if(resp->slide == SlideType::Back)
             {
                 character->setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
                 character->m_dirFlag = ENT_MOVE_BACKWARD;
@@ -904,11 +904,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;    // Normal run then die
             }
-            else if(resp->slide == CHARACTER_SLIDE_FRONT)
+            else if(resp->slide == SlideType::Front)
             {
                 character->setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
             }
-            else if(resp->slide == CHARACTER_SLIDE_BACK)
+            else if(resp->slide == SlideType::Back)
             {
                 character->setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
             }
@@ -1291,11 +1291,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(resp->slide == CHARACTER_SLIDE_NONE)
+            else if(resp->slide == SlideType::None)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            else if(resp->slide != CHARACTER_SLIDE_NONE && cmd->jump)
+            else if(resp->slide != SlideType::None && cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;
             }
@@ -1318,7 +1318,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->m_speed[1] *= 0.2f;
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(resp->slide == CHARACTER_SLIDE_NONE)
+            else if(resp->slide == SlideType::None)
             {
                 if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
                 {
@@ -1329,7 +1329,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_STOP;                  // stop
                 }
             }
-            else if(resp->slide != CHARACTER_SLIDE_NONE && cmd->jump)
+            else if(resp->slide != SlideType::None && cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;               // jump
             }
@@ -1564,11 +1564,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 character->m_dirFlag = ENT_STAY;
             }
-            else if(resp->slide == CHARACTER_SLIDE_FRONT)
+            else if(resp->slide == SlideType::Front)
             {
                 character->setAnimation(TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
             }
-            else if(resp->slide == CHARACTER_SLIDE_BACK)
+            else if(resp->slide == SlideType::Back)
             {
                 character->setAnimation(TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
             }

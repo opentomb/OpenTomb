@@ -1818,7 +1818,7 @@ int lua_GetEntityResponse(int id, int response)
             case 0: return (ent->m_response.killed ? 1 : 0);
             case 1: return ent->m_response.vertical_collide;
             case 2: return ent->m_response.horizontal_collide;
-            case 3: return ent->m_response.slide;
+            case 3: return static_cast<int>(ent->m_response.slide);
             default: return 0;
         }
     }
@@ -1847,7 +1847,7 @@ void lua_SetEntityResponse(int id, int response, int value)
                 ent->m_response.horizontal_collide = value;
                 break;
             case 3:
-                ent->m_response.slide = value;
+                ent->m_response.slide = static_cast<SlideType>(value);
                 break;
             default:
                 break;

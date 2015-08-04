@@ -117,9 +117,12 @@ constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
 }
 
 // flags constants
-#define CHARACTER_SLIDE_FRONT                   (0x02)
-#define CHARACTER_SLIDE_BACK                    (0x01)
-#define CHARACTER_SLIDE_NONE                    (0x00)
+enum class SlideType
+{
+    None,
+    Back,
+    Front
+};
 
 /*
  * Next step height information
@@ -246,7 +249,7 @@ struct CharacterResponse
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
-    int8_t      slide = CHARACTER_SLIDE_NONE;
+    SlideType   slide = SlideType::None;
 };
 
 struct CharacterParam
