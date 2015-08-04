@@ -58,6 +58,7 @@ inline void lua_registerc(lua::State& state, const std::string& func_name, int(*
 
 // Source-level system routines.
 
+void  Script_ExposeConstants(lua::State &state);
 void  Script_LuaInit();
 void  Script_LuaClearTasks();
 void  Script_LuaRegisterFuncs(lua::State &state);

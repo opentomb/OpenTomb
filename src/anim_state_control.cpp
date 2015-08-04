@@ -2308,7 +2308,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if(curr_fc->quicksand != QuicksandPosition::None)
                 {
-                    resp->killed;
+                    resp->killed = true;
                     character->setParam(PARAM_HEALTH, 0.0);
                     character->setParam(PARAM_AIR, 0.0);
                     character->setAnimation(TR_ANIMATION_LARA_LANDING_DEATH, -1);

@@ -127,7 +127,7 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
 		return;
     }
 
-    if((arg >= 0) && (arg < model->collision_map.size()) &&
+    if((arg >= 0) && (static_cast<size_t>(arg) < model->collision_map.size()) &&
        (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
@@ -2591,30 +2591,25 @@ static int lua_Panic(lua_State *lua)
     return 0;
 }
 
-void Script_LuaInit()
+void Script_ExposeConstants(lua::State& state)
 {
-    Script_LuaRegisterFuncs(engine_lua);
-    lua_atpanic(engine_lua.getState(), lua_Panic);
-
-    // Load script loading order (sic!)
-
-    engine_lua.set("MOVE_STATIC_POS", static_cast<int>(MoveType::StaticPos));
-    engine_lua.set("MOVE_KINEMATIC", static_cast<int>(MoveType::Kinematic));
-    engine_lua.set("MOVE_ON_FLOOR", static_cast<int>(MoveType::OnFloor));
-    engine_lua.set("MOVE_WADE", static_cast<int>(MoveType::Wade));
-    engine_lua.set("MOVE_QUICKSAND", static_cast<int>(MoveType::Quicksand));
-    engine_lua.set("MOVE_ON_WATER", static_cast<int>(MoveType::OnWater));
-    engine_lua.set("MOVE_UNDERWATER", static_cast<int>(MoveType::Underwater));
-    engine_lua.set("MOVE_FREE_FALLING", static_cast<int>(MoveType::FreeFalling));
-    engine_lua.set("MOVE_CLIMBING", static_cast<int>(MoveType::Climbing));
-    engine_lua.set("MOVE_MONKEYSWING", static_cast<int>(MoveType::Monkeyswing));
-    engine_lua.set("MOVE_WALLS_CLIMB", static_cast<int>(MoveType::WallsClimb));
-    engine_lua.set("MOVE_DOZY", static_cast<int>(MoveType::Dozy));
+    state.set("MOVE_STATIC_POS", static_cast<int>(MoveType::StaticPos));
+    state.set("MOVE_KINEMATIC", static_cast<int>(MoveType::Kinematic));
+    state.set("MOVE_ON_FLOOR", static_cast<int>(MoveType::OnFloor));
+    state.set("MOVE_WADE", static_cast<int>(MoveType::Wade));
+    state.set("MOVE_QUICKSAND", static_cast<int>(MoveType::Quicksand));
+    state.set("MOVE_ON_WATER", static_cast<int>(MoveType::OnWater));
+    state.set("MOVE_UNDERWATER", static_cast<int>(MoveType::Underwater));
+    state.set("MOVE_FREE_FALLING", static_cast<int>(MoveType::FreeFalling));
+    state.set("MOVE_CLIMBING", static_cast<int>(MoveType::Climbing));
+    state.set("MOVE_MONKEYSWING", static_cast<int>(MoveType::Monkeyswing));
+    state.set("MOVE_WALLS_CLIMB", static_cast<int>(MoveType::WallsClimb));
+    state.set("MOVE_DOZY", static_cast<int>(MoveType::Dozy));
 
     // exposes a constant
-#define EXPOSE_C(name) engine_lua.set(#name, name)
+#define EXPOSE_C(name) state.set(#name, name)
     // exposes a casted constant
-#define EXPOSE_CC(name) engine_lua.set(#name, static_cast<int>(name))
+#define EXPOSE_CC(name) state.set(#name, static_cast<int>(name))
 
     EXPOSE_C(TR_I);
     EXPOSE_C(TR_I_DEMO);
@@ -2629,9 +2624,9 @@ void Script_LuaInit()
 
 #if 0
     // Unused, but kept here for reference
-    engine_lua.set("ENTITY_STATE_ENABLED", 0x0001);
-    engine_lua.set("ENTITY_STATE_ACTIVE",  0x0002);
-    engine_lua.set("ENTITY_STATE_VISIBLE", 0x0004);
+    state.set("ENTITY_STATE_ENABLED", 0x0001);
+    state.set("ENTITY_STATE_ACTIVE",  0x0002);
+    state.set("ENTITY_STATE_VISIBLE", 0x0004);
 #endif
 
     EXPOSE_C(ENTITY_TYPE_GENERIC);
@@ -2686,8 +2681,8 @@ void Script_LuaInit()
     EXPOSE_C(ANIM_LOOP_LAST_FRAME);
     EXPOSE_C(ANIM_LOCK);
 
-#define EXPOSE_KEY(name) engine_lua.set("KEY_" #name, static_cast<int>(SDLK_##name))
-#define EXPOSE_KEY2(name,value) engine_lua.set("KEY_" #name, static_cast<int>(SDLK_##value))
+#define EXPOSE_KEY(name) state.set("KEY_" #name, static_cast<int>(SDLK_##name))
+#define EXPOSE_KEY2(name,value) state.set("KEY_" #name, static_cast<int>(SDLK_##value))
 
     EXPOSE_KEY(BACKSPACE);
     EXPOSE_KEY(TAB);
@@ -2928,45 +2923,45 @@ void Script_LuaInit()
 #undef EXPOSE_KEY
 #undef EXPOSE_KEY2
 
-    engine_lua.set("JOY_1", 1000);
-    engine_lua.set("JOY_2", 1001);
-    engine_lua.set("JOY_3", 1002);
-    engine_lua.set("JOY_4", 1003);
-    engine_lua.set("JOY_5", 1004);
-    engine_lua.set("JOY_6", 1005);
-    engine_lua.set("JOY_7", 1006);
-    engine_lua.set("JOY_8", 1007);
-    engine_lua.set("JOY_9", 1008);
-    engine_lua.set("JOY_10", 1009);
-    engine_lua.set("JOY_11", 1010);
-    engine_lua.set("JOY_12", 1011);
-    engine_lua.set("JOY_13", 1012);
-    engine_lua.set("JOY_14", 1013);
-    engine_lua.set("JOY_15", 1014);
-    engine_lua.set("JOY_16", 1015);
-    engine_lua.set("JOY_17", 1016);
-    engine_lua.set("JOY_18", 1017);
-    engine_lua.set("JOY_19", 1018);
-    engine_lua.set("JOY_20", 1019);
-    engine_lua.set("JOY_21", 1020);
-    engine_lua.set("JOY_22", 1021);
-    engine_lua.set("JOY_23", 1022);
-    engine_lua.set("JOY_24", 1023);
-    engine_lua.set("JOY_25", 1024);
-    engine_lua.set("JOY_26", 1025);
-    engine_lua.set("JOY_27", 1026);
-    engine_lua.set("JOY_28", 1027);
-    engine_lua.set("JOY_29", 1028);
-    engine_lua.set("JOY_30", 1029);
-    engine_lua.set("JOY_31", 1030);
-    engine_lua.set("JOY_32", 1031);
-    engine_lua.set("JOY_POVUP", 1101);
-    engine_lua.set("JOY_POVDOWN", 1104);
-    engine_lua.set("JOY_POVLEFT", 1108);
-    engine_lua.set("JOY_POVRIGHT", 1102);
+    state.set("JOY_1", 1000);
+    state.set("JOY_2", 1001);
+    state.set("JOY_3", 1002);
+    state.set("JOY_4", 1003);
+    state.set("JOY_5", 1004);
+    state.set("JOY_6", 1005);
+    state.set("JOY_7", 1006);
+    state.set("JOY_8", 1007);
+    state.set("JOY_9", 1008);
+    state.set("JOY_10", 1009);
+    state.set("JOY_11", 1010);
+    state.set("JOY_12", 1011);
+    state.set("JOY_13", 1012);
+    state.set("JOY_14", 1013);
+    state.set("JOY_15", 1014);
+    state.set("JOY_16", 1015);
+    state.set("JOY_17", 1016);
+    state.set("JOY_18", 1017);
+    state.set("JOY_19", 1018);
+    state.set("JOY_20", 1019);
+    state.set("JOY_21", 1020);
+    state.set("JOY_22", 1021);
+    state.set("JOY_23", 1022);
+    state.set("JOY_24", 1023);
+    state.set("JOY_25", 1024);
+    state.set("JOY_26", 1025);
+    state.set("JOY_27", 1026);
+    state.set("JOY_28", 1027);
+    state.set("JOY_29", 1028);
+    state.set("JOY_30", 1029);
+    state.set("JOY_31", 1030);
+    state.set("JOY_32", 1031);
+    state.set("JOY_POVUP", 1101);
+    state.set("JOY_POVDOWN", 1104);
+    state.set("JOY_POVLEFT", 1108);
+    state.set("JOY_POVRIGHT", 1102);
 
-    engine_lua.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
-    engine_lua.set("JOY_TRIGGERRIGHT", 1205);
+    state.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
+    state.set("JOY_TRIGGERRIGHT", 1205);
 
     EXPOSE_C(COLLISION_TYPE_NONE);
     EXPOSE_C(COLLISION_TYPE_STATIC);
@@ -3046,7 +3041,15 @@ void Script_LuaInit()
 
 #undef EXPOSE_C
 #undef EXPOSE_CC
+}
 
+void Script_LuaInit()
+{
+    Script_LuaRegisterFuncs(engine_lua);
+    lua_atpanic(engine_lua.getState(), lua_Panic);
+    Script_ExposeConstants(engine_lua);
+
+    // Load script loading order (sic!)
     luaL_dofile(engine_lua.getState(), "scripts/loadscript.lua");
 }
 

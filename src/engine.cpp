@@ -1350,6 +1350,7 @@ void Engine_InitConfig(const char *filename)
     if((filename != nullptr) && Engine_FileFound(filename))
     {
         lua::State state;
+        Script_ExposeConstants(state);
         lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
         try
         {
