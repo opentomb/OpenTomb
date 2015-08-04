@@ -467,8 +467,8 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
 
     ClimbInfo ret;
     ret.height_info = checkNextStep(offset + btVector3{0, 0, 128}, nfc); ///@FIXME: stick for big slant
-    ret.can_hang = 0;
-    ret.edge_hit = 0x00;
+    ret.can_hang = false;
+    ret.edge_hit = false;
     ret.edge_obj = nullptr;
     ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
     ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
@@ -618,7 +618,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     /*
      * Now, let us calculate z_angle
      */
-    ret.edge_hit = 0x01;
+    ret.edge_hit = true;
 
     n2[2] = n2[0];
     n2[0] = n2[1];
@@ -639,11 +639,11 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
     ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
-    ret.t = ret.edge_tan_xy;
+    ret.right = ret.edge_tan_xy;
 
     if(!m_heightInfo.floor_hit || (ret.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
     {
-        ret.can_hang = 1;
+        ret.can_hang = true;
     }
 
     ret.next_z_space = 2.0f * m_height;
@@ -658,9 +658,9 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
 ClimbInfo Character::checkWallsClimbability()
 {
     ClimbInfo ret;
-    ret.can_hang = 0x00;
-    ret.wall_hit = 0x00;
-    ret.edge_hit = 0x00;
+    ret.can_hang = false;
+    ret.wall_hit = ClimbType::None;
+    ret.edge_hit = false;
     ret.edge_obj = nullptr;
     ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
     ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
@@ -704,29 +704,29 @@ ClimbInfo Character::checkWallsClimbability()
     wn2[0] /= t;
     wn2[1] /= t;
 
-    ret.t[0] = -wn2[1];
-    ret.t[1] = wn2[0];
-    ret.t[2] = 0.0;
+    ret.right[0] = -wn2[1];
+    ret.right[1] = wn2[0];
+    ret.right[2] = 0.0;
     // now we have wall normale in XOY plane. Let us check all flags
 
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, -1, 0);
+        ret.wall_hit = ClimbType::HandsOnly;                                    // nW = (0, -1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
+        ret.wall_hit = ClimbType::HandsOnly;                                    // nW = (-1, 0, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, 1, 0);
+        ret.wall_hit = ClimbType::HandsOnly;                                    // nW = (0, 1, 0);
     }
     if((m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (1, 0, 0);
+        ret.wall_hit = ClimbType::HandsOnly;                                    // nW = (1, 0, 0);
     }
 
-    if(ret.wall_hit)
+    if(ret.wall_hit != ClimbType::None)
     {
         t = 0.67f * m_height;
         from -= m_transform.getBasis().getColumn(2) * t;
@@ -743,7 +743,7 @@ ClimbInfo Character::checkWallsClimbability()
         bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
         if(ccb->hasHit())
         {
-            ret.wall_hit = 0x02;
+            ret.wall_hit = ClimbType::FullBody;
         }
     }
 
@@ -1298,7 +1298,7 @@ int Character::wallsClimbing()
     spd = { 0,0,0 };
     *climb = checkWallsClimbability();
     m_climb = *climb;
-    if(!(climb->wall_hit))
+    if(climb->wall_hit == ClimbType::None)
     {
         m_heightInfo.walls_climb = false;
         return 2;
@@ -1319,11 +1319,11 @@ int Character::wallsClimbing()
     }
     else if(m_dirFlag == ENT_MOVE_RIGHT)
     {
-        spd += climb->t;
+        spd += climb->right;
     }
     else if(m_dirFlag == ENT_MOVE_LEFT)
     {
-        spd -= climb->t;
+        spd -= climb->right;
     }
     t = spd.length();
     if(t > 0.01)

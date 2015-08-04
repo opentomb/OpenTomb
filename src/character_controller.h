@@ -185,21 +185,28 @@ class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
+enum class ClimbType
+{
+    None,
+    HandsOnly,
+    FullBody
+};
+
 struct ClimbInfo
 {
     StepType                       height_info = StepType::Horizontal;
-    int8_t                         can_hang = 0;
+    bool                           can_hang = false;
 
     btVector3 point;
     btVector3 n;
-    btVector3 t;
+    btVector3 right;
     btVector3 up;
     btScalar                       floor_limit;
     btScalar                       ceiling_limit;
     btScalar                       next_z_space = 0;
 
-    int8_t                         wall_hit = 0;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit = 0;
+    ClimbType                      wall_hit = ClimbType::None;
+    bool                           edge_hit = false;
     btVector3                      edge_point;
     btVector3                      edge_normale;
     btVector3                      edge_tan_xy;
