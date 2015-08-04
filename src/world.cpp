@@ -568,11 +568,10 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
 
         ent->m_self->collision_type = COLLISION_NONE;
         ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        ent->m_moveType = 0x0000;
+        ent->m_moveType = MoveType::StaticPos;
         ent->m_inertiaLinear = 0.0;
         ent->m_inertiaAngular[0] = 0.0;
         ent->m_inertiaAngular[1] = 0.0;
-        ent->m_moveType = 0;
 
         ent->m_bf.fromModel(model);
 

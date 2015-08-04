@@ -767,7 +767,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     case TR_FD_TRIGTYPE_PAD:
                     case TR_FD_TRIGTYPE_ANTIPAD:
                         // Check move type for triggering entity.
-                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
+                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MoveType::OnFloor);
                         if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
                         condition = 1;  // Set additional condition.
                         break;
@@ -815,7 +815,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
                     case TR_FD_TRIGTYPE_MONKEY:
                     case TR_FD_TRIGTYPE_CLIMB:
                         // Check move type for triggering entity.
-                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY) ? MOVE_MONKEYSWING : MOVE_CLIMBING);
+                        snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY) ? MoveType::Monkeyswing : MoveType::Climbing);
                         condition = 1;  // Set additional condition.
                         break;
 
@@ -3760,11 +3760,10 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
         entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
         entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        entity->m_moveType = 0x0000;
+        entity->m_moveType = MoveType::StaticPos;
         entity->m_inertiaLinear = 0.0;
         entity->m_inertiaAngular[0] = 0.0;
         entity->m_inertiaAngular[1] = 0.0;
-        entity->m_moveType = 0;
 
         entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
 
@@ -3810,7 +3809,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             std::shared_ptr<Character> lara = std::dynamic_pointer_cast<Character>(entity);
             assert(lara != nullptr);
 
-            lara->m_moveType = MOVE_ON_FLOOR;
+            lara->m_moveType = MoveType::OnFloor;
             world->character = lara;
             lara->m_self->collision_type = COLLISION_TYPE_ACTOR;
             lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;

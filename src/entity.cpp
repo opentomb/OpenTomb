@@ -1110,7 +1110,7 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
             m_angles[0] += 180.0;
-            if(m_moveType == MOVE_UNDERWATER)
+            if(m_moveType == MoveType::Underwater)
             {
                 m_angles[1] = -m_angles[1];                         // for underwater case
             }
@@ -1275,7 +1275,7 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_moveType(MOVE_ON_FLOOR)
+    , m_moveType(MoveType::OnFloor)
     , m_obb(new OBB())
     , m_self(new EngineContainer())
 {

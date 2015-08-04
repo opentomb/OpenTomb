@@ -76,23 +76,6 @@
 #define LEFT_HAND                   (13)
 #define RIGHT_HAND                  (10)
 
- /*
-  * ENTITY MOVEMENT TYPES
-  */
-
-#define MOVE_STATIC_POS         (0)
-#define MOVE_KINEMATIC          (1)
-#define MOVE_ON_FLOOR           (2)
-#define MOVE_WADE               (3)
-#define MOVE_QUICKSAND          (4)
-#define MOVE_ON_WATER           (5)
-#define MOVE_UNDERWATER         (6)
-#define MOVE_FREE_FALLING       (7)
-#define MOVE_CLIMBING           (8)
-#define MOVE_MONKEYSWING        (9)
-#define MOVE_WALLS_CLIMB        (10)
-#define MOVE_DOZY               (11)
-
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
   // Lara's character behavior constants

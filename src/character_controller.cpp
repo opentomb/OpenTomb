@@ -171,14 +171,14 @@ void Character::updatePlatformPostStep()
 #if 0
     switch(move_type)
     {
-        case MOVE_ON_FLOOR:
+        case MoveType::OnFloor:
             if(character->height_info.floor_hit)
             {
                 character->platform = character->height_info.floor_obj;
             }
             break;
 
-        case MOVE_CLIMBING:
+        case MoveType::Climbing:
             if(character->climb.edge_hit)
             {
                 character->platform = character->climb.edge_obj;
@@ -964,7 +964,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
-            m_moveType = MOVE_FREE_FALLING;
+            m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
             return -1;                                                          // nothing to do here
         }
@@ -1033,7 +1033,7 @@ int Character::moveOnFloor()
     {
         m_response.slide = CHARACTER_SLIDE_NONE;
         m_response.vertical_collide = 0x00;
-        m_moveType = MOVE_FREE_FALLING;
+        m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
         return -1;                                                              // nothing to do here
     }
@@ -1077,7 +1077,7 @@ int Character::moveOnFloor()
         }
         else
         {
-            m_moveType = MOVE_FREE_FALLING;
+            m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
             updateRoomPos();
             return 2;
@@ -1091,7 +1091,7 @@ int Character::moveOnFloor()
     }
     else if(!(m_response.vertical_collide & 0x01))
     {
-        m_moveType = MOVE_FREE_FALLING;
+        m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
         updateRoomPos();
         return 2;
@@ -1143,7 +1143,7 @@ int Character::freeFalling()
         {
             if(!m_heightInfo.water || (m_currentSector->floor <= m_heightInfo.transition_level))
             {
-                m_moveType = MOVE_UNDERWATER;
+                m_moveType = MoveType::Underwater;
                 return 2;
             }
         }
@@ -1151,7 +1151,7 @@ int Character::freeFalling()
         {
             if(!m_heightInfo.water || (m_currentSector->floor + m_height <= m_heightInfo.transition_level))
             {
-                m_moveType = MOVE_UNDERWATER;
+                m_moveType = MoveType::Underwater;
                 return 2;
             }
         }
@@ -1175,7 +1175,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = MOVE_ON_FLOOR;
+            m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1201,7 +1201,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = MOVE_ON_FLOOR;
+            m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1272,7 +1272,7 @@ int Character::monkeyClimbing()
     }
     else
     {
-        m_moveType = MOVE_FREE_FALLING;
+        m_moveType = MoveType::FreeFalling;
         updateRoomPos();
         return 2;
     }
@@ -1422,7 +1422,7 @@ int Character::moveUnderWater()
 
     if(m_self->room && !(m_self->room->flags & TR_ROOM_FLAG_WATER))
     {
-        m_moveType = MOVE_FREE_FALLING;
+        m_moveType = MoveType::FreeFalling;
         return 2;
     }
 
@@ -1466,7 +1466,7 @@ int Character::moveUnderWater()
     {
         if(/*(spd[2] > 0.0)*/m_transform.getBasis().getColumn(1)[2] > 0.67)             ///@FIXME: magick!
         {
-            m_moveType = MOVE_ON_WATER;
+            m_moveType = MoveType::OnWater;
             //pos[2] = fc.transition_level;
             return 2;
         }
@@ -1524,7 +1524,7 @@ int Character::moveOnWater()
         }
         else
         {
-            m_moveType = MOVE_ON_FLOOR;
+            m_moveType = MoveType::OnFloor;
             return 2;
         }
         return 1;
@@ -1546,7 +1546,7 @@ int Character::moveOnWater()
     }
     else
     {
-        m_moveType = MOVE_ON_FLOOR;
+        m_moveType = MoveType::OnFloor;
         return 2;
     }
 
@@ -1828,36 +1828,36 @@ void Character::applyCommands()
 
     switch(m_moveType)
     {
-        case MOVE_ON_FLOOR:
+        case MoveType::OnFloor:
             moveOnFloor();
             break;
 
-        case MOVE_FREE_FALLING:
+        case MoveType::FreeFalling:
             freeFalling();
             break;
 
-        case MOVE_CLIMBING:
+        case MoveType::Climbing:
             climbing();
             break;
 
-        case MOVE_MONKEYSWING:
+        case MoveType::Monkeyswing:
             monkeyClimbing();
             break;
 
-        case MOVE_WALLS_CLIMB:
+        case MoveType::WallsClimb:
             wallsClimbing();
             break;
 
-        case MOVE_UNDERWATER:
+        case MoveType::Underwater:
             moveUnderWater();
             break;
 
-        case MOVE_ON_WATER:
+        case MoveType::OnWater:
             moveOnWater();
             break;
 
         default:
-            m_moveType = MOVE_ON_FLOOR;
+            m_moveType = MoveType::OnFloor;
             break;
     };
 
@@ -1879,14 +1879,14 @@ void Character::updateParams()
 
     switch(m_moveType)
     {
-        case MOVE_ON_FLOOR:
-        case MOVE_FREE_FALLING:
-        case MOVE_CLIMBING:
-        case MOVE_MONKEYSWING:
-        case MOVE_WALLS_CLIMB:
+        case MoveType::OnFloor:
+        case MoveType::FreeFalling:
+        case MoveType::Climbing:
+        case MoveType::Monkeyswing:
+        case MoveType::WallsClimb:
 
             if((m_heightInfo.quicksand == 0x02) &&
-               (m_moveType == MOVE_ON_FLOOR))
+               (m_moveType == MoveType::OnFloor))
             {
                 if(!changeParam(PARAM_AIR, -3.0))
                     changeParam(PARAM_HEALTH, -3.0);
@@ -1911,11 +1911,11 @@ void Character::updateParams()
             }
             break;
 
-        case MOVE_ON_WATER:
+        case MoveType::OnWater:
             changeParam(PARAM_AIR, 3.0);;
             break;
 
-        case MOVE_UNDERWATER:
+        case MoveType::Underwater:
             if(!changeParam(PARAM_AIR, -1.0))
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
@@ -2291,11 +2291,11 @@ void Character::processSectorImpl()
 
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
-        if((m_moveType == MOVE_ON_FLOOR) ||
-           (m_moveType == MOVE_UNDERWATER) ||
-           (m_moveType == MOVE_WADE) ||
-           (m_moveType == MOVE_ON_WATER) ||
-           (m_moveType == MOVE_QUICKSAND))
+        if((m_moveType == MoveType::OnFloor) ||
+           (m_moveType == MoveType::Underwater) ||
+           (m_moveType == MoveType::Wade) ||
+           (m_moveType == MoveType::OnWater) ||
+           (m_moveType == MoveType::Quicksand))
         {
             setParam(PARAM_HEALTH, 0.0);
             m_response.kill = 1;
@@ -2342,7 +2342,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
 
     // Apply vertical speed.
     m_speed[2] = v_vertical * m_speedMult;
-    m_moveType = MOVE_FREE_FALLING;
+    m_moveType = MoveType::FreeFalling;
 }
 
 Substance Character::getSubstanceState() const

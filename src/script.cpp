@@ -1795,7 +1795,7 @@ uint16_t lua_GetEntityMoveType(int id)
         return -1;
     }
 
-    return ent->m_moveType;
+    return static_cast<uint16_t>(ent->m_moveType);
 }
 
 void lua_SetEntityMoveType(int id, uint16_t type)
@@ -1804,7 +1804,7 @@ void lua_SetEntityMoveType(int id, uint16_t type)
 
     if(ent == nullptr)
         return;
-    ent->m_moveType = type;
+    ent->m_moveType = static_cast<MoveType>(type);
 }
 
 int lua_GetEntityResponse(int id, int response)
@@ -1927,7 +1927,7 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
     }
     ent->updateRoomPos();
 
-    ent->m_moveType = moveType;
+    ent->m_moveType = static_cast<MoveType>(moveType);
     ent->m_dirFlag = dirFlag;
 }
 
