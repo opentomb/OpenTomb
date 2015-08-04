@@ -5,19 +5,6 @@
 -- This script contains hair properties for all TR1-5 games.
 --------------------------------------------------------------------------------
 
-HAIR_TR1       = 0
-HAIR_TR2       = 1
-HAIR_TR3       = 2
-HAIR_TR4_KID_1 = 3
-HAIR_TR4_KID_2 = 4
-HAIR_TR4_OLD   = 5
-HAIR_TR5_KID_1 = 6
-HAIR_TR5_KID_2 = 7
-HAIR_TR5_OLD   = 8
-
-M_PI = 3.141592653;   -- Needed for hair alignment
-
-
 hair_properties = {
 
     root_weight     = 10.0,
