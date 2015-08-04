@@ -1815,7 +1815,7 @@ int lua_GetEntityResponse(int id, int response)
     {
         switch(response)
         {
-            case 0: return ent->m_response.kill;
+            case 0: return (ent->m_response.killed ? 1 : 0);
             case 1: return ent->m_response.vertical_collide;
             case 2: return ent->m_response.horizontal_collide;
             case 3: return ent->m_response.slide;
@@ -1838,7 +1838,7 @@ void lua_SetEntityResponse(int id, int response, int value)
         switch(response)
         {
             case 0:
-                ent->m_response.kill = value;
+                ent->m_response.killed = (value!=0);
                 break;
             case 1:
                 ent->m_response.vertical_collide = value;

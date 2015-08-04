@@ -242,7 +242,7 @@ struct CharacterCommand
 
 struct CharacterResponse
 {
-    int8_t      kill = 0;
+    bool        killed = false;
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
@@ -359,7 +359,7 @@ struct Character : public Entity
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override
     {
-        m_response.kill = 1;
+        m_response.killed = true;
     }
     virtual Substance getSubstanceState() const override;
     void updateTransform() override

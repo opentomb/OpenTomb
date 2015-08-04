@@ -1434,7 +1434,7 @@ int Character::moveUnderWater()
 
     btScalar t = inertiaLinear(MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, m_command.jump);
 
-    if(!m_response.kill)   // Block controls if Lara is dead.
+    if(!m_response.killed)   // Block controls if Lara is dead.
     {
         m_angles[0] += inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 0);
         m_angles[1] -= inertiaAngular(1.0, ROT_SPEED_UNDERWATER, 1);
@@ -1920,7 +1920,7 @@ void Character::updateParams()
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
                 {
-                    m_response.kill = 1;
+                    m_response.killed = true;
                 }
             }
             break;
@@ -2298,7 +2298,7 @@ void Character::processSectorImpl()
            (m_moveType == MoveType::Quicksand))
         {
             setParam(PARAM_HEALTH, 0.0);
-            m_response.kill = 1;
+            m_response.killed = true;
         }
     }
 }
