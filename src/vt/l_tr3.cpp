@@ -140,7 +140,7 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
     room.num_lights = read_bitu16(src);
     room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
     for (i = 0; i < room.num_lights; i++)
-        read_tr2_room_light(src, room.lights[i]);
+        read_tr3_room_light(src, room.lights[i]);
 
     room.num_static_meshes = read_bitu16(src);
     room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
