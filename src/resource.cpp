@@ -38,23 +38,36 @@
 #include "LuaState.h"
 #include "script.h"
 
-lua::State objects_flags_conf;
-lua::State ent_ID_override;
-lua::State level_script;
+namespace
+{
+struct ScriptInitHelper
+{
+    lua::State state;
+
+    ScriptInitHelper()
+    {
+        Script_ExposeConstants(state);
+    }
+};
+
+ScriptInitHelper objects_flags_conf;
+ScriptInitHelper ent_ID_override;
+ScriptInitHelper level_script;
+}
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_bf.animations.model != nullptr && objects_flags_conf.state["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf.state["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
         ent->m_typeFlags |= flg;
     }
 
-    if(ent->m_bf.animations.model != nullptr && level_script["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_bf.animations.model != nullptr && level_script.state["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script.state["getEntityModelProperties"](engine_world.version, ent->m_bf.animations.model->id);
         ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
         ent->m_typeFlags |= flg;                 // get traverse information
     }
@@ -64,7 +77,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        const char* funcName = objects_flags_conf["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
+        const char* funcName = objects_flags_conf.state["getEntityFunction"](engine_world.version, ent->m_bf.animations.model->id);
         if(funcName)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
@@ -87,7 +100,7 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
 
 void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
-    lua::tie(r_static->self->collision_type, r_static->self->collision_shape, r_static->hide) = level_script["getStaticMeshProperties"](r_static->object_id);
+    lua::tie(r_static->self->collision_type, r_static->self->collision_shape, r_static->hide) = level_script.state["getStaticMeshProperties"](r_static->object_id);
 }
 
 /*
@@ -1642,17 +1655,17 @@ void Res_ScriptsOpen(int engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
-    lua_register(level_script.getState(), "print", lua_Print);
-    Script_ExposeConstants(level_script);
+    lua_register(level_script.state.getState(), "print", lua_Print);
+    Script_ExposeConstants(level_script.state);
 
-    level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
-    level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-    level_script.set("setSectorPortal", lua_SetSectorPortal);
-    level_script.set("setSectorFlags", lua_SetSectorFlags);
+    level_script.state.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
+    level_script.state.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+    level_script.state.set("setSectorPortal", lua_SetSectorPortal);
+    level_script.state.set("setSectorFlags", lua_SetSectorFlags);
 
     try
     {
-        level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
+        level_script.state.doFile("scripts/staticmesh/staticmesh_script.lua");
     }
     catch(lua::RuntimeError& error)
     {
@@ -1667,7 +1680,7 @@ void Res_ScriptsOpen(int engine_version)
     {
         try
         {
-            level_script.doFile(temp_script_name);
+            level_script.state.doFile(temp_script_name);
         }
         catch(lua::RuntimeError& error)
         {
@@ -1681,7 +1694,7 @@ void Res_ScriptsOpen(int engine_version)
 
     try
     {
-        objects_flags_conf.doFile("scripts/entity/entity_properties.lua");
+        objects_flags_conf.state.doFile("scripts/entity/entity_properties.lua");
     }
     catch(lua::RuntimeError& error)
     {
@@ -1694,7 +1707,7 @@ void Res_ScriptsOpen(int engine_version)
 
     try
     {
-        ent_ID_override.doFile("scripts/entity/entity_model_ID_override.lua");
+        ent_ID_override.state.doFile("scripts/entity/entity_model_ID_override.lua");
     }
     catch(lua::RuntimeError& error)
     {
@@ -2277,9 +2290,9 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
 void Res_GenRoomCollision(World *world)
 {
     /*
-    if(level_script != nullptr)
+    if(level_script.state != nullptr)
     {
-        lua_CallVoidFunc(level_script, "doTuneSector");
+        lua_CallVoidFunc(level_script.state, "doTuneSector");
     }
     */
 
@@ -2538,7 +2551,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
 
-        level_script["UVRotate"].get(uvrotate_script);
+        level_script.state["UVRotate"].get(uvrotate_script);
 
         if(i < num_uvrotates)
         {
@@ -3770,11 +3783,11 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
         if(entity->m_bf.animations.model == nullptr)
         {
-            int id = ent_ID_override["getOverridedID"](tr->game_version, tr_item->object_id);
+            int id = ent_ID_override.state["getOverridedID"](tr->game_version, tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
-        int replace_anim_id = ent_ID_override["getOverridedAnim"](tr->game_version, tr_item->object_id);
+        int replace_anim_id = ent_ID_override.state["getOverridedAnim"](tr->game_version, tr_item->object_id);
         if(replace_anim_id > 0)
         {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
