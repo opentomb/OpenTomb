@@ -64,10 +64,6 @@
 #define BODY_PART_HANDS          (BODY_PART_HANDS_1 | BODY_PART_HANDS_2 | BODY_PART_HANDS_3)
 #define BODY_PART_LEGS           (BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3)
 
-#define CHARACTER_BOX_HALF_SIZE (128.0)
-#define CHARACTER_BASE_RADIUS   (128.0)
-#define CHARACTER_BASE_HEIGHT   (512.0)
-
 /*
  * default legs offsets
  */
@@ -125,6 +121,10 @@ constexpr float LARA_PARAM_AIR_MAX                = 3600.0f;      //!< 60 secs o
 constexpr float LARA_PARAM_STAMINA_MAX            = 120.0f;       //!< 4  secs of sprint
 constexpr float LARA_PARAM_WARMTH_MAX             = 240.0f;       //!< 8  secs of freeze
 constexpr float LARA_PARAM_POISON_MAX             = 5.0f;
+
+constexpr float CHARACTER_BOX_HALF_SIZE = 128.0f;
+constexpr float CHARACTER_BASE_RADIUS   = 128.0f;
+constexpr float CHARACTER_BASE_HEIGHT   = 512.0f;
 }
 
 // flags constants
@@ -253,7 +253,7 @@ struct HeightInfo
 
 struct CharacterCommand
 {
-    btVector3 rot;
+    btVector3 rot = {0,0,0};
     std::array<int8_t, 3> move{ {0,0,0} };
 
     bool        roll = false;
@@ -263,8 +263,6 @@ struct CharacterCommand
     bool        action = false;
     bool        ready_weapon = false;
     bool        sprint = false;
-
-    int8_t      flags = 0;
 };
 
 struct CharacterResponse
