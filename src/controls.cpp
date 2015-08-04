@@ -13,7 +13,7 @@
 #include "script.h"
 #include "system.h"
 
-extern int done;
+extern bool done;
 
 extern SDL_Joystick         *sdl_joystick;
 extern SDL_GameController   *sdl_controller;
@@ -465,8 +465,8 @@ void Controls_PollSDLInput()
                 {
                     if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01f;
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01f;
                     }
 
                     if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
@@ -538,7 +538,7 @@ void Controls_PollSDLInput()
                    (event.key.state == SDL_PRESSED) &&
                    (event.key.keysym.mod & KMOD_ALT))
                 {
-                    done = 1;
+                    done = true;
                     break;
                 }
 
@@ -571,7 +571,7 @@ void Controls_PollSDLInput()
                 break;
 
             case SDL_QUIT:
-                done = 1;
+                done = true;
                 break;
 
             case SDL_WINDOWEVENT:
@@ -681,10 +681,10 @@ void Controls_SecondaryMouseDown()
 
         btVector3 place;
         place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        std::copy(place + 0, place + 3, cast_ray);
-        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld[2];
+        std::copy(place+0, place+3, cast_ray);
+        cast_ray[3] = cast_ray[0] + 100.0f * cbc.m_hitNormalWorld[0];
+        cast_ray[4] = cast_ray[1] + 100.0f * cbc.m_hitNormalWorld[1];
+        cast_ray[5] = cast_ray[2] + 100.0f * cbc.m_hitNormalWorld[2];
 
         if(EngineContainer* c0 = static_cast<EngineContainer*>(cbc.m_collisionObject->getUserPointer()))
         {

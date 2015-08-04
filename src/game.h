@@ -12,7 +12,7 @@
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
 
-#define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
+#define GAME_LOGIC_REFRESH_INTERVAL (1.0f / 60.0f)
 
 namespace lua
 {

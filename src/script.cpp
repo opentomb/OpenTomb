@@ -123,9 +123,10 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
     if(model == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+		return;
     }
 
-    if((arg >= 0) && (arg < model->mesh_count) &&
+    if((arg >= 0) && (arg < model->collision_map.size()) &&
        (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
@@ -429,8 +430,6 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     {
         if(value.is<lua::Number>())
             ent->changeParam(parameter, value.to<lua::Number>());
-        else
-            ent->changeParam(parameter, value.to<lua::Integer>());
     }
     else
     {
@@ -539,7 +538,8 @@ bool lua_GetSecretStatus(int secret_number)
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return;   // No such secret - return
+    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
+		return;   // No such secret - return
 
     gameflow_manager.SecretsTriggerMap[secret_number] = status;
 }
@@ -1150,7 +1150,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     btVector3 sink_pos; sink_pos[0] = sink->x;
     sink_pos[1] = sink->y;
-    sink_pos[2] = sink->z + 256.0;
+    sink_pos[2] = sink->z + 256.0f;
 
     assert(ent->m_currentSector != nullptr);
     RoomSector* ls = ent->m_currentSector->getLowestSector();
@@ -1170,7 +1170,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     ent->m_transform.getOrigin()[0] += speed[0];
     ent->m_transform.getOrigin()[1] += speed[1];
-    ent->m_transform.getOrigin()[2] += speed[2] * 16.0;
+    ent->m_transform.getOrigin()[2] += speed[2] * 16.0f;
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1569,7 +1569,7 @@ bool lua_GetEntitySectorStatus(int id)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7;
     }
-    return -1;
+    return true;
 }
 
 void lua_SetEntitySectorStatus(int id, bool status)
@@ -2526,9 +2526,9 @@ void lua_genUVRotateAnimation(int id)
     seq->frame_lock = false; // by default anim is playing
     seq->uvrotate = true;
     seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-    seq->frame_rate = 0.025;  // Should be passed as 1 / FPS.
-    seq->frame_time = 0.0;   // Reset frame time to initial state.
-    seq->current_frame = 0;     // Reset current frame to zero.
+    seq->frame_rate        = 0.025f;  // Should be passed as 1 / FPS.
+    seq->frame_time        = 0.0;   // Reset frame time to initial state.
+    seq->current_frame     = 0;     // Reset current frame to zero.
     seq->frames.resize(16);
     seq->frame_list.resize(16);
     seq->frame_list[0] = 0;

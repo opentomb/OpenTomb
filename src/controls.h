@@ -109,9 +109,9 @@ struct ControlSettings
     btScalar joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 
-    int      joy_axis_map[AXIS_LASTINDEX] = { 0 };      // Axis array for action mapper.
+    int      joy_axis_map[AXIS_LASTINDEX+1] = {0};      // Axis array for action mapper.
 
-    ControlAction  action_map[ACT_LASTINDEX]{};         // Actions array for action mapper.
+    ControlAction  action_map[ACT_LASTINDEX+1]{};         // Actions array for action mapper.
 };
 
 void Controls_PollSDLInput();

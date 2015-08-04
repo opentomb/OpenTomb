@@ -351,6 +351,7 @@ btVector3 RoomSector::getCeilingPoint()
 
 bool Room::isOverlapped(Room* r1)
 {
+	assert( r1 != nullptr );
     if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
     {
         return false;

@@ -12,7 +12,7 @@
 // which are not dependent on screen resolution. They're primarily used to parse
 // bar and string dimensions.
 
-#define GUI_SCREEN_METERING_RESOLUTION 1000.0
+#define GUI_SCREEN_METERING_RESOLUTION 1000.0f
 
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
@@ -102,12 +102,12 @@ typedef struct gui_fontstyle_s
     struct gui_fontstyle_s     *next;
 } gui_fontstyle_t, *gui_fontstyle_p;
 
-#define GUI_FONT_FADE_SPEED 1.0                 // Global fading style speed.
-#define GUI_FONT_FADE_MIN   0.3                 // Minimum fade multiplier.
+#define GUI_FONT_FADE_SPEED 1.0f                 // Global fading style speed.
+#define GUI_FONT_FADE_MIN   0.3f                 // Minimum fade multiplier.
 
-#define GUI_FONT_SHADOW_TRANSPARENCY     0.7
-#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
-#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
+#define GUI_FONT_SHADOW_TRANSPARENCY     0.7f
+#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9f
+#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7f
 
 // Font manager is a singleton class which is used to manage all in-game fonts
 // and font styles. Every time you want to change font or style, font manager
@@ -446,12 +446,12 @@ private:
 // width, but if you want to increase or decrease notifier size, you must
 // change this value properly.
 
-#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0
+#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0f
 
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
 
-#define GUI_NOTIFIER_SHOWTIME 2.0
+#define GUI_NOTIFIER_SHOWTIME 2.0f
 
 class gui_ItemNotifier
 {

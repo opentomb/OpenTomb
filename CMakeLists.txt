@@ -53,14 +53,18 @@ endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
+elseif(MSVC)
+    add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
-if( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
+if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
     target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11 -Wall -Wextra -msse3)
 endif()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
 find_package(Bullet)
-if(BULLET_INCLUDE_DIR)
+if(BULLET_FOUND)
     add_library(Bullet INTERFACE)
     target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
     target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
@@ -98,14 +102,25 @@ target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
 find_package(ZLIB REQUIRED)
 add_library(ZLIB INTERFACE)
-target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARIES})
+target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
+target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARY})
 
 find_package(Lua REQUIRED)
 add_library(Lua INTERFACE)
 target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 target_compile_definitions(Lua INTERFACE -DLUA_COMPAT_APIINTCASTS)
 target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
+
+find_package(SDL2 REQUIRED)
+add_library(SDL2 INTERFACE)
+target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
+target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
+        
+find_package(SDL2Image REQUIRED)
+add_library(SDL2_IMAGE INTERFACE)
+target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
+target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
+target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 3rdparty/LuaState/include)
 
@@ -145,10 +160,14 @@ function(trylinklib LIBNAME ATTRIBS)
         mark_as_advanced(FORCE "${LIBNAME}_LIB")
 endfunction(trylinklib)
 
-trylinklib("ogg" SHARED)
-trylinklib("vorbis" SHARED)
-trylinklib("vorbisfile" SHARED)
-trylinklib("sndfile" SHARED)
+find_package(OGG REQUIRED)
+include_directories(${OGG_INCLUDE_DIR})
+find_package(Vorbis REQUIRED)
+include_directories(${VORBIS_INCLUDE_DIR})
+find_package(VorbisFile REQUIRED)
+include_directories(${VORBISFILE_INCLUDE_DIR})
+find_package(SndFile REQUIRED)
+include_directories(${SNDFILE_INCLUDE_DIR})
 
 if(MINGW)
     if(CMAKE_CROSSCOMPILING)
@@ -171,28 +190,9 @@ if(MINGW)
         # We are probably creating project files for CodeBlocks on Windows
         message(STATUS "MinGW Compilation")
 
-        # SDL2 must be installed in the MinGW directory
-        set(SDL2_INCLUDE_DIRS "/include/SDL2")
-        set(SDL2_LIBRARIES SDL2 pthread)
-        set(SDL2_IMAGE_INCLUDE_DIRS "/include/SDL2")
-        set(SDL2_IMAGE_LIBRARIES SDL2_image)
         add_definitions("-DSDL_MAIN_HANDLED")
     endif()
 else()
-    include(FindPkgConfig)
-    if(PKG_CONFIG_FOUND)
-        pkg_search_module(SDL2 REQUIRED sdl2)
-        pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
-    else()
-        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-        find_package(SDL2 REQUIRED)
-        find_package(SDL2IMAGE REQUIRED)
-        
-        set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})
-        # This is a workaround. SDL headers are included in two ways: mentioning the SDL 
-        # directory (which is uncommon) and directly (SDL/SDL.h vs SDL.h)
-        set(SDL2_IMAGE_INCLUDE_DIRS "${SDL2IMAGE_INCLUDE_DIR};${SDL2_INCLUDE_DIR}/SDL2")
-    endif()
     # disable glext prototypes
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
 endif()
@@ -206,16 +206,16 @@ target_link_libraries(
     OpenGL
     Bullet
     GLEW
-    ${SDL2_LIBRARIES}
-    ${SDL2_IMAGE_LIBRARIES}
+    SDL2
+    SDL2_IMAGE
     ZLIB
     Lua
     Freetype
     OpenAL
-    ${ogg_LIB}
-    ${vorbis_LIB}
-    ${vorbisfile_LIB}
-    ${sndfile_LIB}
+    ${OGG_LIBRARIES}
+    ${VORBIS_LIBRARIES}
+    ${VORBISFILE_LIBRARIES}
+    ${SNDFILE_LIBRARIES}
     # efence
 )
 

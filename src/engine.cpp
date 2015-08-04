@@ -88,7 +88,7 @@ RenderDebugDrawer                    debugDrawer;
 btVector3 light_position = { 255.0, 255.0, 8.0 };
 GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-std::shared_ptr<EngineContainer> last_cont = nullptr;
+EngineContainer* last_cont = nullptr;
 
 void Engine_InitGL()
 {
@@ -477,29 +477,39 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
+extern gui_text_line_t system_fps;
+
+namespace
+{
+    int fpsCycles = 0;
+    btScalar fpsTime = 0;
+
+    void fpsCycle(btScalar time)
+    {
+        if(fpsCycles < 20)
+        {
+            fpsCycles++;
+            fpsTime += time;
+        }
+        else
+        {
+            screen_info.fps = (20.0f / fpsTime);
+            snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
+            fpsCycles = 0;
+            fpsTime = 0.0;
+        }
+    }
+}
+
 void Engine_Frame(btScalar time)
 {
-    static int cycles = 0;
-    static btScalar time_cycl = 0.0;
-    extern gui_text_line_t system_fps;
     if(time > 0.1)
     {
-        time = 0.1;
+        time = 0.1f;
     }
 
     engine_frame_time = time;
-    if(cycles < 20)
-    {
-        cycles++;
-        time_cycl += time;
-    }
-    else
-    {
-        screen_info.fps = (20.0 / time_cycl);
-        snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
-        cycles = 0;
-        time_cycl = 0.0;
-    }
+    fpsCycle(time);
 
     Game_Frame(time);
     Gameflow_Do();
@@ -1114,7 +1124,7 @@ int Engine_LoadMap(const std::string& name)
 
 int Engine_ExecCmd(const char *ch)
 {
-    char token[ConsoleInfo::instance().lineSize()];
+    std::vector<char> token(ConsoleInfo::instance().lineSize());
     const char *pch;
     RoomSector* sect;
     FILE *f;
@@ -1122,15 +1132,15 @@ int Engine_ExecCmd(const char *ch)
     while(ch != nullptr)
     {
         pch = ch;
-        ch = parse_token(ch, token);
-        if(!strcmp(token, "help"))
+        ch = parse_token(ch, token.data());
+        if(!strcmp(token.data(), "help"))
         {
             for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
             {
                 ConsoleInfo::instance().notify(i);
             }
         }
-        else if(!strcmp(token, "goto"))
+        else if(!strcmp(token.data(), "goto"))
         {
             control_states.free_look = true;
             renderer.camera()->m_pos[0] = Script_ParseFloat(&ch);
@@ -1138,48 +1148,48 @@ int Engine_ExecCmd(const char *ch)
             renderer.camera()->m_pos[2] = Script_ParseFloat(&ch);
             return 1;
         }
-        else if(!strcmp(token, "save"))
+        else if(!strcmp(token.data(), "save"))
         {
-            ch = parse_token(ch, token);
+            ch = parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Save(token);
+                Game_Save(token.data());
             }
             return 1;
         }
-        else if(!strcmp(token, "load"))
+        else if(!strcmp(token.data(), "load"))
         {
-            ch = parse_token(ch, token);
+            ch = parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Load(token);
+                Game_Load(token.data());
             }
             return 1;
         }
-        else if(!strcmp(token, "exit"))
+        else if(!strcmp(token.data(), "exit"))
         {
             Engine_Shutdown(0);
             return 1;
         }
-        else if(!strcmp(token, "cls"))
+        else if(!strcmp(token.data(), "cls"))
         {
             ConsoleInfo::instance().clean();
             return 1;
         }
-        else if(!strcmp(token, "spacing"))
+        else if(!strcmp(token.data(), "spacing"))
         {
-            ch = parse_token(ch, token);
+            ch = parse_token(ch, token.data());
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_SPACING, ConsoleInfo::instance().spacing());
                 return 1;
             }
-            ConsoleInfo::instance().setLineInterval(atof(token));
+            ConsoleInfo::instance().setLineInterval(atof(token.data()));
             return 1;
         }
-        else if(!strcmp(token, "showing_lines"))
+        else if(!strcmp(token.data(), "showing_lines"))
         {
-            ch = parse_token(ch, token);
+            ch = parse_token(ch, token.data());
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, ConsoleInfo::instance().visibleLines());
@@ -1187,8 +1197,8 @@ int Engine_ExecCmd(const char *ch)
             }
             else
             {
-                const auto val = atoi(token);
-                if((val >= 2) && (val <= screen_info.h / ConsoleInfo::instance().lineHeight()))
+                const auto val = atoi(token.data());
+                if((val >=2 ) && (val <= screen_info.h/ConsoleInfo::instance().lineHeight()))
                 {
                     ConsoleInfo::instance().setVisibleLines(val);
                     ConsoleInfo::instance().setCursorY(screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines());
@@ -1200,67 +1210,67 @@ int Engine_ExecCmd(const char *ch)
             }
             return 1;
         }
-        else if(!strcmp(token, "r_wireframe"))
+        else if(!strcmp(token.data(), "r_wireframe"))
         {
             renderer.toggleWireframe();
             return 1;
         }
-        else if(!strcmp(token, "r_points"))
+        else if(!strcmp(token.data(), "r_points"))
         {
             renderer.toggleDrawPoints();
             return 1;
         }
-        else if(!strcmp(token, "r_coll"))
+        else if(!strcmp(token.data(), "r_coll"))
         {
             renderer.toggleDrawColl();
             return 1;
         }
-        else if(!strcmp(token, "r_normals"))
+        else if(!strcmp(token.data(), "r_normals"))
         {
             renderer.toggleDrawNormals();
             return 1;
         }
-        else if(!strcmp(token, "r_portals"))
+        else if(!strcmp(token.data(), "r_portals"))
         {
             renderer.toggleDrawPortals();
             return 1;
         }
-        else if(!strcmp(token, "r_frustums"))
+        else if(!strcmp(token.data(), "r_frustums"))
         {
             renderer.toggleDrawFrustums();
             return 1;
         }
-        else if(!strcmp(token, "r_room_boxes"))
+        else if(!strcmp(token.data(), "r_room_boxes"))
         {
             renderer.toggleDrawRoomBoxes();
             return 1;
         }
-        else if(!strcmp(token, "r_boxes"))
+        else if(!strcmp(token.data(), "r_boxes"))
         {
             renderer.toggleDrawBoxes();
             return 1;
         }
-        else if(!strcmp(token, "r_axis"))
+        else if(!strcmp(token.data(), "r_axis"))
         {
             renderer.toggleDrawAxis();
             return 1;
         }
-        else if(!strcmp(token, "r_nullmeshes"))
+        else if(!strcmp(token.data(), "r_nullmeshes"))
         {
             renderer.toggleDrawNullMeshes();
             return 1;
         }
-        else if(!strcmp(token, "r_dummy_statics"))
+        else if(!strcmp(token.data(), "r_dummy_statics"))
         {
             renderer.toggleDrawDummyStatics();
             return 1;
         }
-        else if(!strcmp(token, "r_skip_room"))
+        else if(!strcmp(token.data(), "r_skip_room"))
         {
             renderer.toggleSkipRoom();
             return 1;
         }
-        else if(!strcmp(token, "room_info"))
+        else if(!strcmp(token.data(), "room_info"))
         {
             if(Room* r = renderer.camera()->m_currentRoom)
             {
@@ -1286,7 +1296,7 @@ int Engine_ExecCmd(const char *ch)
             }
             return 1;
         }
-        else if(!strcmp(token, "xxx"))
+        else if(!strcmp(token.data(), "xxx"))
         {
             f = fopen("ascII.txt", "r");
             if(f)
@@ -1371,7 +1381,7 @@ void Engine_InitConfig(const char *filename)
 int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
     ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
-    return strlen(str);
+    return static_cast<int>(strlen(str));
 }
 
 int engine_lua_fprintf(FILE *f, const char *fmt, ...)

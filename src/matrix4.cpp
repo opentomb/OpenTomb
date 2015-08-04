@@ -133,7 +133,7 @@ matrix4 matrix4::rotation(float4 axis, float angle)
 
 matrix4 matrix4::frustum(float angle, float aspect, float near, float far)
 {
-    float ymax = near * std::tan(angle * RadPerDeg) * 0.5;
+    float ymax = near * std::tan(angle * RadPerDeg) * 0.5f;
     float xmax = ymax * aspect;
 
     matrix4 result;

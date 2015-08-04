@@ -18,6 +18,7 @@
 #include "obb.h"
 #include "ragdoll.h"
 #include "helpers.h"
+#include "system.h"
 
 #include "LuaState.h"
 
@@ -369,8 +370,8 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         {
             break;
         }
-        int iter = static_cast<btScalar>(4.0 * move_len / btag->mesh_base->m_radius) + 1;     ///@FIXME (not a critical): magick const 4.0!
-        move /= static_cast<btScalar>(iter);
+        int iter = static_cast<int>((4.0 * move_len / btag->mesh_base->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
+        move /= (btScalar)iter;
 
         for(int j = 0; j <= iter; j++)
         {
@@ -728,7 +729,7 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0 / 30.0;;
+        ss_anim->period = 1.0f / 30.0f;
     }
 }
 
@@ -918,7 +919,15 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-        engine_lua["tlist_RunTrigger"](lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+		try
+		{
+			if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+				engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+		}
+		catch (lua::RuntimeError& error)
+		{
+			Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+		}
     }
 }
 
@@ -1210,33 +1219,39 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-    if(m_self->room != nullptr)
+	if (m_self->room == nullptr)
+		return;
+
+    btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
+	auto containers = m_self->room->containers;
+    for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
-        btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
-        for(const std::shared_ptr<EngineContainer>& cont : m_self->room->containers)
+		if (cont->object_type != OBJECT_ENTITY || !cont->object)
+			continue;
+
+        Entity* e = static_cast<Entity*>(cont->object);
+		if (!e->m_enabled)
+			continue;
+
+        if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
-            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+            //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+            if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
             {
-                Entity* e = static_cast<Entity*>(cont->object);
-                btScalar r = e->m_activationRadius;
-                r *= r;
-                if((e->m_typeFlags & ENTITY_TYPE_INTERACTIVE) && e->m_enabled)
-                {
-                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
-                    {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
-                    }
-                }
-                else if((e->m_typeFlags & ENTITY_TYPE_PICKABLE) && e->m_enabled)
-                {
-                    const btVector3& v = e->m_transform.getOrigin();
-                    if((e != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                       (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
-                    {
-                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
-                    }
-                }
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+            }
+        }
+        else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
+        {
+			btScalar r = e->m_activationRadius;
+			r *= r;
+			const btVector3& v = e->m_transform.getOrigin();
+            if(    (e != this)
+				&& ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
+				&& (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2])
+				&& (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
+            {
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
         }
     }
@@ -1416,7 +1431,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         if(!m_bf.bone_tags[i].parent)
         {
             btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
-            m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
+            m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
         }
     }

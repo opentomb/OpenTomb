@@ -4,6 +4,7 @@
 #include "system.h"
 
 #define NO_AUDIO  0
+#include <chrono>
 
 bool done = false;
 btScalar time_scale = 1.0;
@@ -42,20 +43,19 @@ btScalar time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    btScalar time, newtime;
-    static btScalar oldtime = 0.0;
-
     Engine_Start();
 
     // Entering main loop.
 
+    std::chrono::high_resolution_clock::time_point prev_time = std::chrono::high_resolution_clock::now();
+
     while(!done)
     {
-        newtime = Sys_FloatTime();
-        time = newtime - oldtime;
-        oldtime = newtime;
+        std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
+        auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
+        prev_time = now;
 
-        Engine_Frame(time * time_scale);
+        Engine_Frame(delta * time_scale);
         Engine_Display();
     }
 

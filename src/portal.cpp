@@ -56,7 +56,7 @@ bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
         btScalar t = P.dot(prevEdge);
         btScalar u = P.dot(T) / t;
         btScalar v = Q.dot(ray) / t;
-        t = 1.0 - u - v;
+        t = 1.0f - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (t <= 1.0) && (t >= 0.0))
         {
             return true;

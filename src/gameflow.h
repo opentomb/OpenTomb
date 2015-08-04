@@ -21,9 +21,10 @@ typedef struct gameflow_manager_s
     int CurrentLevelID;
 
     bool                NextAction;
-    gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
+    gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS+1];
 
-    bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
+    bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS+1];                     //Info for what secrets have been triggered in a level
+
 } gameflow_manager_t, *gameflow_manager_p;
 
 enum TR_GAMEFLOW_OP
