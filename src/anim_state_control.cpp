@@ -305,12 +305,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(cmd->jump)
             {
-                if(!curr_fc->quicksand)
+                if(curr_fc->quicksand == QuicksandPosition::None)
                     ss_anim->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
             }
             else if(cmd->roll)
             {
-                if(!curr_fc->quicksand && ss_anim->current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
+                if(curr_fc->quicksand == QuicksandPosition::None && ss_anim->current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
                 {
                     character->m_dirFlag = ENT_MOVE_FORWARD;
                     character->setAnimation(TR_ANIMATION_LARA_ROLL_BEGIN, 0);
@@ -318,7 +318,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(cmd->crouch)
             {
-                if(!curr_fc->quicksand)
+                if(curr_fc->quicksand == QuicksandPosition::None)
                     ss_anim->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
             else if(cmd->action && character->findTraverse())
@@ -362,7 +362,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     {
                         character->m_moveType = MoveType::OnFloor;
                         character->m_dirFlag = ENT_MOVE_FORWARD;
-                        if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+                        if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
                         {
                             ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
                         }
@@ -382,7 +382,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     {
                         character->m_moveType = MoveType::OnFloor;
                         character->m_dirFlag = ENT_MOVE_FORWARD;
-                        if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+                        if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
                         {
                             ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
                         }
@@ -478,7 +478,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00))
                     {
                         character->m_dirFlag = ENT_MOVE_BACKWARD;
-                        if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+                        if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
                         {
                             ss_anim->next_state = TR_STATE_LARA_WALK_BACK;
                         }
@@ -549,7 +549,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
                 cmd->move[0] = 1;
             }
-            if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+            if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
             {
                 //Stay, directional jumps are not allowed whilst in wade depth
             }
@@ -595,7 +595,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
-                if(curr_fc->quicksand)
+                if(curr_fc->quicksand != QuicksandPosition::None)
                 {
                     character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
                 }
@@ -625,7 +625,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
-                if(curr_fc->quicksand)
+                if(curr_fc->quicksand != QuicksandPosition::None)
                 {
                     character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
                 }
@@ -651,7 +651,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
-                if(curr_fc->quicksand)
+                if(curr_fc->quicksand != QuicksandPosition::None)
                 {
                     character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
                 }
@@ -852,7 +852,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(cmd->move[0] == 1)                                          // If we continue running...
             {
-                if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+                if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
                 {
                     ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
                 }
@@ -1049,7 +1049,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            else if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
+            else if((curr_fc->water || curr_fc->quicksand != QuicksandPosition::None) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point[2] > character->m_wadeDepth))
             {
                 ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
             }
@@ -1063,7 +1063,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] *= 0.4f;
             character->m_dirFlag = ENT_MOVE_FORWARD;
 
-            if(character->m_heightInfo.quicksand)
+            if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
                 character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
             }
@@ -1123,7 +1123,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if((cmd->move[0] == 1) && (resp->horizontal_collide == 0))
                 {
-                    if(!curr_fc->quicksand)
+                    if(curr_fc->quicksand == QuicksandPosition::None)
                     {
                         ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
                     }
@@ -1139,7 +1139,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             cmd->rot[0] *= 0.4f;
             character->m_dirFlag = ENT_MOVE_BACKWARD;
 
-            if(character->m_heightInfo.quicksand)
+            if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
                 character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
             }
@@ -1188,7 +1188,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
             }
-            else if((cmd->move[0] == -1) && (cmd->shift || character->m_heightInfo.quicksand))
+            else if((cmd->move[0] == -1) && (cmd->shift || character->m_heightInfo.quicksand != QuicksandPosition::None))
             {
                 character->m_dirFlag = ENT_MOVE_BACKWARD;
                 ss_anim->next_state = TR_STATE_LARA_WALK_BACK;
@@ -2306,7 +2306,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if((resp->vertical_collide & 0x01) || (character->m_moveType == MoveType::OnFloor))
             {
-                if(curr_fc->quicksand)
+                if(curr_fc->quicksand != QuicksandPosition::None)
                 {
                     resp->killed;
                     character->setParam(PARAM_HEALTH, 0.0);

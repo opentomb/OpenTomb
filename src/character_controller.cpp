@@ -221,7 +221,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     fc->floor_hit = false;
     fc->ceiling_hit = false;
     fc->water = false;
-    fc->quicksand = 0x00;
+    fc->quicksand = QuicksandPosition::None;
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(pos, r);
@@ -257,11 +257,11 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
                     fc->transition_level = static_cast<btScalar>(rs->floor);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
                     {
-                        fc->quicksand = 0x02;
+                        fc->quicksand = QuicksandPosition::Drowning;
                     }
                     else
                     {
-                        fc->quicksand = 0x01;
+                        fc->quicksand = QuicksandPosition::Sinking;
                     }
                     break;
                 }
@@ -285,11 +285,11 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
                     fc->transition_level = static_cast<btScalar>(rs->ceiling);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
                     {
-                        fc->quicksand = 0x02;
+                        fc->quicksand = QuicksandPosition::Drowning;
                     }
                     else
                     {
-                        fc->quicksand = 0x01;
+                        fc->quicksand = QuicksandPosition::Sinking;
                     }
                     break;
                 }
@@ -1884,13 +1884,13 @@ void Character::updateParams()
         case MoveType::Monkeyswing:
         case MoveType::WallsClimb:
 
-            if((m_heightInfo.quicksand == 0x02) &&
-               (m_moveType == MoveType::OnFloor))
+            if(m_heightInfo.quicksand == QuicksandPosition::Drowning &&
+               m_moveType == MoveType::OnFloor)
             {
                 if(!changeParam(PARAM_AIR, -3.0))
                     changeParam(PARAM_HEALTH, -3.0);
             }
-            else if(m_heightInfo.quicksand == 0x01)
+            else if(m_heightInfo.quicksand == QuicksandPosition::Sinking)
             {
                 changeParam(PARAM_AIR, 3.0);
             }

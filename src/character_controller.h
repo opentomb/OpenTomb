@@ -214,6 +214,13 @@ struct ClimbInfo
     btCollisionObject             *edge_obj = nullptr;
 };
 
+enum class QuicksandPosition
+{
+    None,
+    Sinking,
+    Drowning
+};
+
 struct HeightInfo
 {
     HeightInfo()
@@ -241,7 +248,7 @@ struct HeightInfo
 
     btScalar                                    transition_level;
     bool                                        water = false;
-    int                                         quicksand = 0;
+    QuicksandPosition                           quicksand = QuicksandPosition::None;
 };
 
 struct CharacterCommand
