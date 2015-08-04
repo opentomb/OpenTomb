@@ -1643,6 +1643,7 @@ void Res_ScriptsOpen(int engine_version)
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
     lua_register(level_script.getState(), "print", lua_Print);
+    Script_ExposeConstants(level_script);
 
     level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
     level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);

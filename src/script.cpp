@@ -3050,7 +3050,7 @@ void Script_LuaInit()
     Script_ExposeConstants(engine_lua);
 
     // Load script loading order (sic!)
-    luaL_dofile(engine_lua.getState(), "scripts/loadscript.lua");
+    engine_lua.doFile("scripts/loadscript.lua");
 }
 
 void Script_LuaClearTasks()
