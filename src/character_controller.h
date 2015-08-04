@@ -78,24 +78,10 @@
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
-  // Lara's character behavior constants
-#define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
-#define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0f)                         ///@FIXME: check original
-#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0f + 32.0f)                  ///@FIXME: check original
-#define DEFAULT_FALL_DOWN_HEIGHT                (320.0f)                         ///@FIXME: check original
-#define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0f)                        ///@FIXME: check original
-#define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810f)                         ///@FIXME: cos(alpha = 30 deg)
-#define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707f)                        ///@FIXME: cos(alpha = 45 deg)
-#define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0f)                          ///@FIXME: magic - not like in original
-#define DEFAULT_CHARACTER_CLIMB_R               (32.0f)
-#define DEFAULT_CHARACTER_WADE_DEPTH            (256.0f)
-// If less than this much of Lara is looking out of the water, she goes from wading to swimming.
-#define DEFAULT_CHARACTER_SWIM_DEPTH            (100.0f) ///@FIXME: Guess
-
-// Speed limits
 
 namespace
 {
+// Speed limits
 constexpr float FREE_FALL_SPEED_1        = 2000.0f;
 constexpr float FREE_FALL_SPEED_2        = 4500.0f;
 constexpr float FREE_FALL_SPEED_MAXSAFE  = 5500.0f;
@@ -114,6 +100,31 @@ constexpr float ROT_SPEED_MONKEYSWING    = 3.5f;
 
 constexpr float INERTIA_SPEED_UNDERWATER = 1.0f;
 constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
+
+// Lara's character behavior constants
+constexpr int   DEFAULT_MAX_MOVE_ITERATIONS             = 3;                              //!< @fixme magic
+constexpr float DEFAULT_MIN_STEP_UP_HEIGHT              = 128.0f;                         //!< @fixme check original
+constexpr float DEFAULT_MAX_STEP_UP_HEIGHT              = 256.0f + 32.0f;                 //!< @fixme check original
+constexpr float DEFAULT_FALL_DOWN_HEIGHT                = 320.0f;                         //!< @fixme check original
+constexpr float DEFAULT_CLIMB_UP_HEIGHT                 = 1920.0f;                        //!< @fixme check original
+constexpr float DEFAULT_CRITICAL_SLANT_Z_COMPONENT      = 0.810f;                         //!< @fixme cos(alpha = 30 deg)
+constexpr float DEFAULT_CRITICAL_WALL_COMPONENT         = -0.707f;                        //!< @fixme cos(alpha = 45 deg)
+constexpr float DEFAULT_CHARACTER_SLIDE_SPEED_MULT      = 75.0f;                          //!< @fixme magic - not like in original
+constexpr float DEFAULT_CHARACTER_CLIMB_R               = 32.0f;
+constexpr float DEFAULT_CHARACTER_WADE_DEPTH            = 256.0f;
+
+//! If less than this much of Lara is looking out of the water, she goes from wading to swimming.
+//! @fixme Guess
+constexpr float DEFAULT_CHARACTER_SWIM_DEPTH            = 100.0f;
+
+// CHARACTER PARAMETERS DEFAULTS
+constexpr float PARAM_ABSOLUTE_MAX                = -1;
+
+constexpr float LARA_PARAM_HEALTH_MAX             = 1000.0f;      //!< 1000 HP
+constexpr float LARA_PARAM_AIR_MAX                = 3600.0f;      //!< 60 secs of air
+constexpr float LARA_PARAM_STAMINA_MAX            = 120.0f;       //!< 4  secs of sprint
+constexpr float LARA_PARAM_WARMTH_MAX             = 240.0f;       //!< 8  secs of freeze
+constexpr float LARA_PARAM_POISON_MAX             = 5.0f;
 }
 
 // flags constants
@@ -124,23 +135,32 @@ enum class SlideType
     Front
 };
 
-/*
+/**
  * Next step height information
  */
-#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
-#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
-#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
-#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
-#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
-#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
-#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
-#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
-#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
+enum class StepType
+{
+    DownCanHang, //!< enough height to hang here
+    DownDrop,    //!< big height, cannot walk next, drop only
+    DownBig,     //!< enough height change, step down is needed
+    DownLittle,  //!< too little height change, step down is not needed
+    Horizontal,  //!< horizontal plane
+    UpLittle,    //!< too little height change, step up is not needed
+    UpBig,       //!< enough height change, step up is needed
+    UpClimb,     //!< big height, cannot walk next, climb only
+    UpImpossible //!< too big height, no one ways here, or phantom case
+};
 
-#define CLIMB_ABSENT                            (0x00)
-#define CLIMB_HANG_ONLY                         (0x01)
-#define CLIMB_ALT_HEIGHT                        (0x02)
-#define CLIMB_FULL_HEIGHT                       (0x03)
+inline constexpr bool isLittleStep(StepType type)
+{
+    return type >= StepType::DownLittle && type <= StepType::UpLittle;
+}
+
+//! Check if the step type doesn't require a drop or a climb
+inline constexpr bool isWakableStep(StepType type)
+{
+    return type >= StepType::DownBig && type <= StepType::UpBig;
+}
 
  // CHARACTER PARAMETERS TYPES
 
@@ -158,16 +178,6 @@ enum CharParameters
     PARAM_SENTINEL
 };
 
-// CHARACTER PARAMETERS DEFAULTS
-
-#define PARAM_ABSOLUTE_MAX                (-1)
-
-#define LARA_PARAM_HEALTH_MAX             (1000.0f)      // 1000 HP
-#define LARA_PARAM_AIR_MAX                (3600.0f)      // 60 secs of air
-#define LARA_PARAM_STAMINA_MAX            (120.0f)       // 4  secs of sprint
-#define LARA_PARAM_WARMTH_MAX             (240.0f)       // 8  secs of freeze
-#define LARA_PARAM_POISON_MAX             (5.0f)
-
 struct EngineContainer;
 struct Entity;
 class BtEngineClosestConvexResultCallback;
@@ -177,7 +187,7 @@ class btConvexShape;
 
 struct ClimbInfo
 {
-    int8_t                         height_info = 0;
+    StepType                       height_info = StepType::Horizontal;
     int8_t                         can_hang = 0;
 
     btVector3 point;
@@ -383,7 +393,7 @@ struct Character : public Entity
     int32_t getItemsCount(uint32_t item_id);                // returns items count
 
     static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-    int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
+    StepType checkNextStep(const btVector3 &offset, HeightInfo *nfc) const;
     bool hasStopSlant(const HeightInfo &next_fc);
     ClimbInfo checkClimbability(const btVector3& offset, HeightInfo *nfc, btScalar test_height);
     ClimbInfo checkWallsClimbability();

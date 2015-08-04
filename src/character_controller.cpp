@@ -333,44 +333,43 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
  * Calculates next floor info + phantom filter + returns step info.
  * Current height info must be calculated!
  */
-int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
+StepType Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc) const
 {
     btScalar delta;
-    HeightInfo* fc = &m_heightInfo;
     btVector3 from, to;
-    int ret;
+    StepType ret;
     ///penetration test?
 
     auto pos = m_transform.getOrigin() + offset;
     Character::getHeightInfo(pos, nfc);
 
-    if(fc->floor_hit && nfc->floor_hit)
+    if(m_heightInfo.floor_hit && nfc->floor_hit)
     {
-        delta = nfc->floor_point[2] - fc->floor_point[2];
+        delta = nfc->floor_point[2] - m_heightInfo.floor_point[2];
         if(std::abs(delta) < SPLIT_EPSILON)
         {
-            from[2] = fc->floor_point[2];
-            ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
+            from[2] = m_heightInfo.floor_point[2];
+            ret = StepType::Horizontal;                                    // horizontal
         }
         else if(delta < 0.0)                                                    // down way
         {
             delta = -delta;
-            from[2] = fc->floor_point[2];
+            from[2] = m_heightInfo.floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_LITTLE;
+                ret = StepType::DownLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_DOWN_BIG;
+                ret = StepType::DownBig;
             }
             else if(delta <= m_height)
             {
-                ret = CHARACTER_STEP_DOWN_DROP;
+                ret = StepType::DownDrop;
             }
             else
             {
-                ret = CHARACTER_STEP_DOWN_CAN_HANG;
+                ret = StepType::DownCanHang;
             }
         }
         else                                                                    // up way
@@ -378,36 +377,36 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
             from[2] = nfc->floor_point[2];
             if(delta <= m_minStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_LITTLE;
+                ret = StepType::UpLittle;
             }
             else if(delta <= m_maxStepUpHeight)
             {
-                ret = CHARACTER_STEP_UP_BIG;
+                ret = StepType::UpBig;
             }
             else if(delta <= m_maxClimbHeight)
             {
-                ret = CHARACTER_STEP_UP_CLIMB;
+                ret = StepType::UpClimb;
             }
             else
             {
-                ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+                ret = StepType::UpImpossible;
             }
         }
     }
-    else if(!fc->floor_hit && !nfc->floor_hit)
+    else if(!m_heightInfo.floor_hit && !nfc->floor_hit)
     {
         from[2] = pos[2];
-        ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
+        ret = StepType::Horizontal;                                        // horizontal? yes no maybe...
     }
-    else if(!fc->floor_hit && nfc->floor_hit)                                   // strange case
+    else if(!m_heightInfo.floor_hit && nfc->floor_hit)                                   // strange case
     {
         from[2] = nfc->floor_point[2];
-        ret = 0x00;
+        ret = StepType::Horizontal;
     }
-    else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless
+    else //if(m_heightInfo.floor_hit && !nfc->floor_hit)                                 // bottomless
     {
-        from[2] = fc->floor_point[2];
-        ret = CHARACTER_STEP_DOWN_CAN_HANG;
+        from[2] = m_heightInfo.floor_point[2];
+        ret = StepType::DownCanHang;
     }
 
     /*
@@ -419,12 +418,12 @@ int Character::checkNextStep(const btVector3& offset, struct HeightInfo *nfc)
     from[1] = m_transform.getOrigin()[1];
     to[0] = pos[0];
     to[1] = pos[1];
-    fc->cb->m_closestHitFraction = 1.0;
-    fc->cb->m_collisionObject = nullptr;
-    bt_engine_dynamicsWorld->rayTest(from, to, *fc->cb);
-    if(fc->cb->hasHit())
+    m_heightInfo.cb->m_closestHitFraction = 1.0;
+    m_heightInfo.cb->m_collisionObject = nullptr;
+    bt_engine_dynamicsWorld->rayTest(from, to, *m_heightInfo.cb);
+    if(m_heightInfo.cb->hasHit())
     {
-        ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+        ret = StepType::UpImpossible;
     }
 
     return ret;
