@@ -3053,6 +3053,21 @@ void Script_LuaInit()
     engine_lua.doFile("scripts/loadscript.lua");
 }
 
+std::vector<std::string> Script_GetGlobals(lua::State& state)
+{
+    std::vector<std::string> result;
+    auto L = state.getState();
+    lua_pushglobaltable(L);
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0)
+    {
+        result.emplace_back(lua_tostring(L, -2));
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    return result;
+}
+
 void Script_LuaClearTasks()
 {
     engine_lua["clearTasks"]();

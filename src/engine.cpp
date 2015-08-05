@@ -668,6 +668,8 @@ void Engine_Init_Pre()
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
+    ConsoleInfo::instance().setCompletionItems(Script_GetGlobals(engine_lua));
+
     Com_Init();
     renderer.init();
     renderer.setCamera(&engine_camera);

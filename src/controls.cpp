@@ -555,7 +555,9 @@ void Controls_PollSDLInput()
                         case SDLK_END:
                         case SDLK_BACKSPACE:
                         case SDLK_DELETE:
-                            ConsoleInfo::instance().edit(event.key.keysym.sym);
+                        case SDLK_TAB:
+                        case SDLK_v: // for Ctrl+V
+                            ConsoleInfo::instance().edit(event.key.keysym.sym, event.key.keysym.mod);
                             break;
                         default:
                             break;
