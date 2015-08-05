@@ -20,6 +20,7 @@
 #include "strings.h"
 #include "hair.h"
 #include "ragdoll.h"
+#include "helpers.h"
 
 #include "LuaState.h"
 
@@ -1216,10 +1217,129 @@ void lua_RotateEntity(int id, float rx, lua::Value ry, lua::Value rz)
             ent->m_angles += {rx, 0, 0};
         else
             ent->m_angles += {rx, ry, rz};
+
         ent->updateTransform();
         ent->updateRigidBody(true);
     }
 }
+
+void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua::Value smooth_, lua::Value add_angle_)
+{
+    std::shared_ptr<Entity> ent1 = engine_world.getEntityByID(id1);
+    std::shared_ptr<Entity> ent2 = engine_world.getEntityByID(id2);
+
+    if((!ent1) || (!ent2))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+    }
+    else if((axis < 0) || (axis > 2))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_AXIS, ((!ent1)?id1:id2));
+    }
+    else
+    {
+        btVector3 ent1_pos = ent1->m_transform.getOrigin();
+        btVector3 ent2_pos = ent2->m_transform.getOrigin();
+        btVector3 facing   = (ent1_pos - ent2_pos);
+
+        btScalar *targ_angle;
+        btScalar  theta;
+
+        switch(axis)
+        {
+            case 0:
+                targ_angle = ent1->m_angles + 0;
+                theta      = btAtan2(-facing.x(), facing.y());
+                break;
+            case 1:
+                targ_angle = ent1->m_angles + 1;
+                theta      = btAtan2(facing.z(), facing.y());
+                break;
+            case 2:
+                targ_angle = ent1->m_angles + 2;
+                theta      = btAtan2(facing.x(), facing.z());
+                break;
+        }
+
+        theta = btDegrees(theta);
+        if(add_angle_.is<lua::Number>()) theta += static_cast<btScalar>(add_angle_);
+
+        btScalar delta = *targ_angle - theta;
+
+        if(ceil(delta) != 180.0)
+        {
+            if(speed_.is<lua::Number>())
+            {
+                btScalar speed = static_cast<btScalar>(speed_);
+
+                if(fabs(delta) > speed)
+                {
+                    // Solve ~0-360 rotation cases.
+
+                    if(abs(delta) > 180.0)
+                    {
+                        if(*targ_angle > theta)
+                        {
+                            delta = -((360.0 - *targ_angle) + theta);
+                        }
+                        else
+                        {
+                            delta = (360.0 - theta) + *targ_angle;
+                        }
+                    }
+
+                    if(delta > 180.0)
+                    {
+                        *targ_angle = theta + 180.0;
+                    }
+                    else if((delta >= 0.0) && (delta < 180.0))
+                    {
+                        *targ_angle += speed;
+                    }
+                    else
+                    {
+                        *targ_angle -= speed;
+                    }
+                }
+
+                if(fabs(delta) + speed >= 180.0)
+                    *targ_angle = floor(theta) + 180.0;
+            }
+            else
+            {
+                *targ_angle = theta + 180.0;
+            }
+        }
+
+        ent1->updateTransform();
+        ent1->updateRigidBody(true);
+    }
+}
+
+
+
+float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
+{
+    std::shared_ptr<Entity> ent1 = engine_world.getEntityByID(id1);
+    std::shared_ptr<Entity> ent2 = engine_world.getEntityByID(id2);
+
+    if((!ent1) || (!ent2))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+    }
+    else
+    {
+        btVector3 ent1_pos = ent1->m_transform.getOrigin();
+        btVector3 ent2_pos = ent2->m_transform.getOrigin();
+        btVector3 facing   = (ent2_pos - ent1_pos);
+
+        btScalar theta = btDegrees(btAtan2(-facing.x(), facing.y()));
+        if(add_angle_.is<lua::Number>()) theta += static_cast<btScalar>(add_angle_);
+
+        return WrapAngle(ent2->m_angles[0] - theta);
+    }
+}
+
 
 std::tuple<float, float, float> lua_GetEntitySpeed(int id)
 {
@@ -2682,11 +2802,13 @@ void Script_LuaRegisterFuncs(lua::State& state)
     lua_registerc(state, "moveEntityToSink", lua_MoveEntityToSink);
     lua_registerc(state, "moveEntityToEntity", lua_MoveEntityToEntity);
     lua_registerc(state, "rotateEntity", lua_RotateEntity);
+    lua_registerc(state, "rotateEntityToEntity", lua_RotateEntityToEntity);
 
     lua_registerc(state, "getEntityModelID", lua_GetEntityModelID);
 
     lua_registerc(state, "getEntityVector", lua_GetEntityVector);
     lua_registerc(state, "getEntityDirDot", lua_GetEntityDirDot);
+    lua_registerc(state, "getEntityOrientation", lua_GetEntityOrientation);
     lua_registerc(state, "getEntityDistance", lua_GetEntityDistance);
     lua_registerc(state, "getEntityPos", lua_GetEntityPosition);
     lua_registerc(state, "setEntityPos", lua_SetEntityPosition);

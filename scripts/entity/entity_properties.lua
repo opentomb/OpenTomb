@@ -484,7 +484,7 @@ tr3_entity_tbl[65] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 tr3_entity_tbl[66] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true};  -- Kind of tripwire
 tr3_entity_tbl[67] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true};  -- Electrified wire
 tr3_entity_tbl[68] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true};  -- Killer tripwire
-tr3_entity_tbl[69] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Cobra / Rattlesnake
+tr3_entity_tbl[69] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "snake"};               -- Cobra / Rattlesnake
 tr3_entity_tbl[70] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};               -- Temple statue
 tr3_entity_tbl[71] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Monkey
 tr3_entity_tbl[73] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tony Firehands

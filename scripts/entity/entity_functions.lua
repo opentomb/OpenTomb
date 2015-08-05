@@ -1744,6 +1744,146 @@ function damocles_init(id)      -- Sword of Damocles
     end
 end
 
+function snake_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
+    disableEntity(id);
+    
+    entity_funcs[id].damage = 50.0;
+    entity_funcs[id].poison =  0.3;
+    entity_funcs[id].disturb_speed = 500.0;
+    entity_funcs[id].time_since_disturb = 0.0;
+    
+    entity_funcs[id].poisoning = true;
+    entity_funcs[id].disturbed = false;
+    entity_funcs[id].bitten    = false;
+    
+    -- Some initialization parameters are slightly varied - it is done to create more realistic
+    -- approach, where each snake in a level has slightly different character.
+    
+    entity_funcs[id].disturb_timeout = 3.0 + ((math.random(100) / 100) - 0.5);
+    entity_funcs[id].disturb_dist    = 1536.0 + (math.random(256) - 128);
+    entity_funcs[id].guard_dist      = 1024.0 + (math.random(256) - 128);
+    entity_funcs[id].suspend_dist    = 2048.0 + (math.random(512) - 256);
+    
+    -- Snake mood here primarily specifies how frequently she will try to bite Lara. If snake is
+    -- suspended, mood is retained until mood release interval is reached.
+    
+    entity_funcs[id].min_mood = 8;
+    entity_funcs[id].max_mood = 15;
+    entity_funcs[id].mood = entity_funcs[id].min_mood;
+    entity_funcs[id].mood_release_interval = 5.0 + ((math.random(100) / 25) - 2.0);
+    entity_funcs[id].current_mood_interval = entity_funcs[id].mood_release_interval;
+    
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(not getEntityActivity(object_id)) then enableEntity(object_id) end;
+        setEntityAnim(object_id, 2, 45);    -- Force lying state on activation.
+    end;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        local dist_to_Lara = getEntityDistance(player, object_id);
+        
+        if(dist_to_Lara < entity_funcs[object_id].disturb_dist) then
+            entity_funcs[object_id].disturbed = true;
+        end;
+        
+        if(entity_funcs[object_id].disturbed) then
+            local speed_Lara = getEntitySpeedLinear(player);
+        
+            setEntityAnimFlag(object_id, ANIM_NORMAL_CONTROL);  -- Unfreeze anim
+            
+            setEntityState(object_id, 0);   -- Protect
+            rotateEntityToEntity(object_id, player, 0, 1.5, true, -20.0);
+            
+            if( (dist_to_Lara <= entity_funcs[object_id].guard_dist) or (speed_Lara > 512.0) ) then
+                if( (getEntityState(object_id) ~= 2) and (math.random(1000) > (1000 - entity_funcs[object_id].mood)) ) then
+                    setEntityState(object_id, 2);   -- Bite
+                    
+                    if((entity_funcs[object_id].mood < entity_funcs[object_id].max_mood) and (dist_to_Lara < entity_funcs[object_id].disturb_dist)) then
+                        entity_funcs[object_id].mood = entity_funcs[object_id].mood + 1;
+                        --print("got creature mood: " .. entity_funcs[object_id].mood);
+                    end;
+                end;
+            end;
+        
+            if(dist_to_Lara < entity_funcs[object_id].suspend_dist) then
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].disturb_timeout;
+            else
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - frame_time;
+                
+                if((entity_funcs[object_id].time_since_disturb <= 0.0) or (dist_to_Lara > entity_funcs[object_id].suspend_dist * 2) ) then
+                    entity_funcs[object_id].time_since_disturb = 0.0;
+                    entity_funcs[object_id].disturbed = false;
+                end;
+            end;
+        else
+            if(entity_funcs[object_id].mood > entity_funcs[object_id].min_mood) then
+                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - frame_time;
+                if(entity_funcs[object_id].current_mood_interval <= 0) then
+                    entity_funcs[object_id].mood = entity_funcs[object_id].mood - 1;
+                    entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].mood_release_interval;
+                    --print("released creature mood: " .. entity_funcs[object_id].mood);
+                    
+                end;
+            end;
+            setEntityState(object_id, 3);   -- Suspend
+            
+            local a,f,c = getEntityAnim(object_id);
+            if(f == 45) then setEntityAnimFlag(object_id, ANIM_LOCK) end; -- Prevent shaking
+        end;
+    end;
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)        
+        if( (getEntityModelID(object_id) ~= getEntityModelID(activator_id)) and (getEntityState(object_id) == 2) ) then
+            local a,f,c = getEntityAnim(object_id);
+            
+            if((a == 3) and (f == 8)) then
+                if(entity_funcs[object_id].bitten == false) then
+                    if(entity_funcs[object_id].poisoning) then
+                        changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
+                    end;
+                    changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+                    entity_funcs[object_id].bitten = true;
+                    
+                    local angle = getEntityOrientation(object_id, activator_id, -25.0);
+                    
+                        if((angle >= 45.0 ) and (angle < 135.0)) then setEntityAnim(activator_id, 127);    -- Left
+                    elseif((angle >= 135.0) and (angle < 225.0)) then setEntityAnim(activator_id, 125);    -- Right
+                    elseif((angle >= 225.0) and (angle < 315.0)) then setEntityAnim(activator_id, 128);    -- Forward
+                    else                                              setEntityAnim(activator_id, 126);    -- Back
+                    end;
+                end;
+            else
+                entity_funcs[object_id].bitten = false;
+            end;
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[id].damage = nil;
+        entity_funcs[id].poison = nil;
+        entity_funcs[id].disturb_speed = nil;
+        entity_funcs[id].time_since_disturb = nil;
+        
+        entity_funcs[id].poisoning = nil;
+        entity_funcs[id].disturbed = nil;
+        entity_funcs[id].bitten    = nil;
+        
+        entity_funcs[id].disturb_timeout = nil;
+        entity_funcs[id].disturb_dist    = nil;
+        entity_funcs[id].guard_dist      = nil;
+        entity_funcs[id].suspend_dist    = nil;
+        
+        entity_funcs[id].mood = nil;
+        entity_funcs[id].min_mood = nil;
+        entity_funcs[id].max_mood = nil;
+        entity_funcs[id].mood_release_interval = nil;
+        entity_funcs[id].current_mood_interval = nil;
+    end
+end
+
 function baddie_init(id)    -- INVALID!
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
@@ -1751,6 +1891,5 @@ function baddie_init(id)    -- INVALID!
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then enableEntity(object_id) end;
-    end;
-    
+    end;    
 end

@@ -3031,6 +3031,14 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 character->m_speed[1] = -character->m_speed[1];
             }
             break;
+
+        case TR_ANIMATION_LARA_AH_BACKWARD:
+        case TR_ANIMATION_LARA_AH_FORWARD:
+        case TR_ANIMATION_LARA_AH_LEFT:
+        case TR_ANIMATION_LARA_AH_RIGHT:
+            if(ss_anim->current_frame > 12)
+                character->setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
+            break;
     };
 
     return 0;

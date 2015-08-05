@@ -57,6 +57,7 @@ sys_notify[048]     = "Warning: image %s could not be loaded, status is %d.";
 sys_notify[049]     = "Wrong model ID: %d";
 sys_notify[050]     = "Can't find entity %d or body number is more than %d!";
 sys_notify[051]     = "Can't apply force to entity %d - no entity, body, or entity is not dynamic!";
+sys_notify[052]     = "Axis number %d is wrong!";
 
 
 sys_notify[1000]    = "Track opened (%s): channels = %d, sample rate = %d";

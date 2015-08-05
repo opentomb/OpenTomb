@@ -129,6 +129,7 @@
 #define SYSWARN_WRONG_MODEL_ID           49
 #define SYSWARN_WRONG_ENTITY_OR_BODY     50
 #define SYSWARN_CANT_APPLY_FORCE         51
+#define SYSWARN_WRONG_AXIS               52
 
 #define SYSNOTE_TRACK_OPENED             1000
 #define SYSNOTE_READING_FILE             1001
