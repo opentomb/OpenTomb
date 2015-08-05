@@ -770,7 +770,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
         if(k == 0)
         {
             btag->transform.getOrigin() += bf->pos;
-            btag->qrotate = src_btag->qrotate.slerp(next_btag->qrotate, bf->animations.lerp);
+            btag->qrotate = Quat_Slerp(src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
         }
         else
         {
@@ -789,7 +789,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
                     break;
                 }
             }
-            btag->qrotate = ov_src_btag->qrotate.slerp(ov_next_btag->qrotate, ov_lerp);
+            btag->qrotate = Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
         }
         btag->transform.setRotation(btag->qrotate);
     }
