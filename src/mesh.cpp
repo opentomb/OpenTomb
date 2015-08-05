@@ -284,7 +284,7 @@ void SkeletalModel::interpolateFrames()
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
                         bf->bone_tags[k].offset = anim->frames[j - 1].bone_tags[k].offset.lerp(anim->frames[j].bone_tags[k].offset, lerp);
-                        bf->bone_tags[k].qrotate = anim->frames[j - 1].bone_tags[k].qrotate.slerp(anim->frames[j].bone_tags[k].qrotate, lerp);
+                        bf->bone_tags[k].qrotate = Quat_Slerp(anim->frames[j - 1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
                     }
                     bf++;
                 }

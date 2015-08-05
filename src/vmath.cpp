@@ -69,3 +69,33 @@ void Mat4_RotateZ(btTransform& mat, btScalar ang)
 
     mat.getBasis() = m.transpose();
 }
+
+btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const btScalar& t)
+{
+    const btScalar magnitude = btSqrt(q1.length2() * q2.length2());
+    btAssert(magnitude > btScalar(0));
+
+    const btScalar product = q1.dot(q2) / magnitude;
+    const btScalar absproduct = btFabs(product);
+
+    if(absproduct < btScalar(1.0 - SIMD_EPSILON))
+    {
+        const btScalar theta = btAcos(absproduct);
+        const btScalar d = btSin(theta);
+        btAssert(d > btScalar(0))
+
+        const btScalar sign = (product < 0) ? btScalar(-1) : btScalar(1);
+        const btScalar s0 = btSin((btScalar(1.0) - t) * theta) / d;
+        const btScalar s1 = btSin(sign * t * theta) / d;
+
+        return btQuaternion(
+            (q1.x() * s0 + q2.x() * s1),
+            (q1.y() * s0 + q2.y() * s1),
+            (q1.z() * s0 + q2.z() * s1),
+            (q1.w() * s0 + q2.w() * s1));
+    }
+    else
+    {
+        return btQuaternion(q1);
+    }
+}
