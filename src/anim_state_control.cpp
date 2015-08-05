@@ -889,7 +889,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_moveType == MoveType::OnFloor)
             {
-                character->m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+                character->m_bt.no_fix_body_parts = BODY_PART_LEGS;
             }
 
             if(!character->getParam(PARAM_STAMINA))
@@ -980,7 +980,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_moveType == MoveType::OnFloor)
             {
-                character->m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+                character->m_bt.no_fix_body_parts = BODY_PART_LEGS;
             }
 
             if(character->m_moveType == MoveType::FreeFalling)
@@ -1289,7 +1289,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     character->m_speed[1] = -character->m_transform.getBasis().getColumn(1)[1] * 128.0f;
                 }
 
-                character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+                character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_BACK, 0);
             }
             else if(resp->slide == SlideType::None)
             {
@@ -1666,6 +1666,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_REACH:
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS_1 | BODY_PART_HANDS_2;
             cmd->rot[0] = 0.0;
             if(character->m_moveType == MoveType::Underwater)
             {
@@ -2018,7 +2019,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_LEFT:
-            character->m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS;
 
             cmd->rot[0] = 0.0;
             character->m_dirFlag = ENT_MOVE_LEFT;
@@ -2078,7 +2079,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_RIGHT:
-            character->m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS;
 
             cmd->rot[0] = 0.0;
             character->m_dirFlag = ENT_MOVE_RIGHT;
@@ -2145,7 +2146,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
         case TR_STATE_LARA_JUMP_FORWARD:
         case TR_STATE_LARA_FALL_BACKWARD:
-            character->m_bt.no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             character->lean(cmd, 4.0);
 
             if((resp->vertical_collide & 0x01) || (character->m_moveType == MoveType::OnFloor))
@@ -2210,6 +2211,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_FREEFALL:
+            character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             character->lean(cmd, 1.0);
 
             if((int(character->m_speed[2]) <= -FREE_FALL_SPEED_CRITICAL) &&
