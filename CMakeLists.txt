@@ -86,17 +86,11 @@ if(APPLE)
         src/*.c*
         src/vt/*.cpp
         src/mac/*.m
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
     )
     file(GLOB PRJ_HDR
         src/*.h*
         src/vt/*.h
         src/mac/*.h
-        3rdparty/al/*.h
-        3rdparty/al/*/*.h
-        3rdparty/al/*/*/*.h
     )
 else()
     file(GLOB PRJ_SRC
@@ -137,27 +131,10 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-find_package(Bullet)
-if(BULLET_FOUND)
-    add_library(Bullet INTERFACE)
-    target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
-    target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
-else()
-    set(BULLET_DIR 3rdparty/bullet/src)
-
-    file(GLOB BULLET_FILES
-        ${BULLET_DIR}/*.h
-        ${BULLET_DIR}/*/*.h
-        ${BULLET_DIR}/*/*/*.h
-        ${BULLET_DIR}/*.cpp
-        ${BULLET_DIR}/*/*.cpp
-        ${BULLET_DIR}/*/*/*.cpp
-    )
-
-    add_library(Bullet ${BULLET_FILES})
-    target_compile_options(Bullet PRIVATE -O2)
-    target_include_directories(Bullet PUBLIC ${BULLET_DIR})
-endif()
+find_package(Bullet REQUIRED)
+add_library(Bullet INTERFACE)
+target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
+target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
 find_package(Freetype REQUIRED)
 add_library(Freetype INTERFACE)
@@ -198,15 +175,10 @@ target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 3rdparty/LuaState/include)
 
-if(APPLE)
-    # Don’t attempt to find AL anywhere, just use ours directly.
-    include_directories(3rdparty/al/)
-else()
-    find_package(OpenAL REQUIRED)
-    add_library(OpenAL INTERFACE)
-    target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
-    target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
-endif()
+find_package(OpenAL REQUIRED)
+add_library(OpenAL INTERFACE)
+target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
+target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 
@@ -214,32 +186,15 @@ if(USE_OPENAL_FLOAT)
     target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)
 
-function(trylinklib LIBNAME ATTRIBS)
-        find_library(
-                "${LIBNAME}_LIB"
-                NAMES "${LIBNAME}"
-                HINTS
-                PATH_SUFFIXES lib64 lib32 lib
-                PATHS
-                /sw
-                /opt/local
-                /opt/csw
-                /opt
-        )
-        if(${LIBNAME}_LIB)
-                add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
-        else()
-            message(FATAL_ERROR "Missing library: ${LIBNAME}")
-        endif()
-        mark_as_advanced(FORCE "${LIBNAME}_LIB")
-endfunction(trylinklib)
-
 find_package(OGG REQUIRED)
 include_directories(${OGG_INCLUDE_DIR})
+
 find_package(Vorbis REQUIRED)
 include_directories(${VORBIS_INCLUDE_DIR})
+
 find_package(VorbisFile REQUIRED)
 include_directories(${VORBISFILE_INCLUDE_DIR})
+
 find_package(SndFile REQUIRED)
 include_directories(${SNDFILE_INCLUDE_DIR})
 
