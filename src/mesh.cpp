@@ -166,10 +166,10 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     bone_tags.resize(model->mesh_count);
 
     int stack = 0;
-    SSBoneTag* parents[bone_tags.size()];
-    parents[0] = nullptr;
-    bone_tags[0].parent = nullptr;                                             // root
-    for(uint16_t i = 0; i < bone_tags.size(); i++)
+    std::vector<SSBoneTag*> parents(bone_tags.size());
+    parents[0] = NULL;
+    bone_tags[0].parent = NULL;                                             // root
+    for(uint16_t i=0;i<bone_tags.size();i++)
     {
         bone_tags[i].index = i;
         bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
@@ -829,21 +829,21 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
         switch(tween.ceiling_tween_type)
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
-            {
-                btScalar t = std::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
-                                      (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
-                t = 1.0 / (1.0 + t);
-                btVector3 o;
-                o.setInterpolate3(tween.ceiling_corners[0], tween.ceiling_corners[2], t);
-                trimesh->addTriangle(tween.ceiling_corners[0],
-                                     tween.ceiling_corners[1],
-                                     o, true);
-                trimesh->addTriangle(tween.ceiling_corners[3],
-                                     tween.ceiling_corners[2],
-                                     o, true);
-                cnt += 2;
-            }
-            break;
+                {
+                    btScalar t = std::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
+                                          (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
+                    t = 1.0f / (1.0f + t);
+                    btVector3 o;
+                    o.setInterpolate3(tween.ceiling_corners[0], tween.ceiling_corners[2], t);
+                    trimesh->addTriangle(tween.ceiling_corners[0],
+                                         tween.ceiling_corners[1],
+                                         o, true);
+                    trimesh->addTriangle(tween.ceiling_corners[3],
+                                         tween.ceiling_corners[2],
+                                         o, true);
+                    cnt += 2;
+                }
+                break;
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
                 trimesh->addTriangle(tween.ceiling_corners[0],

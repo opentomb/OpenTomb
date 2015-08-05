@@ -6,6 +6,8 @@
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
 
+#include <cmath>
+
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
@@ -54,7 +56,9 @@ struct Plane
 
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
-        normal = v1.cross(v2).normalized();
+        normal = v1.cross(v2);
+        // assert(!normal.fuzzyZero());
+        normal.safeNormalize();
         dot = normal.dot(pos);
     }
 

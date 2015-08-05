@@ -51,11 +51,11 @@
 #define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
 #define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
 
-#define COLLISION_MARGIN_DEFAULT                (2.0)
-#define COLLISION_MARGIN_RIGIDBODY              (0.5)
-#define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4)
-#define COLLISION_CAMERA_SPHERE_RADIUS          (16.0)
-#define COLLISION_TRAVERSE_TEST_RADIUS          (0.48)
+#define COLLISION_MARGIN_DEFAULT                (2.0f)
+#define COLLISION_MARGIN_RIGIDBODY              (0.5f)
+#define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4f)
+#define COLLISION_CAMERA_SPHERE_RADIUS          (16.0f)
+#define COLLISION_TRAVERSE_TEST_RADIUS          (0.48f)
 
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
@@ -233,7 +233,11 @@ int engine_lua_printf(const char *fmt, ...);
 
 void Engine_Start();
 void Engine_Destroy();
+#ifdef __GNUC__
 void Engine_Shutdown(int val) __attribute__((noreturn));
+#else
+void Engine_Shutdown(int val);
+#endif
 
 // Initializers
 

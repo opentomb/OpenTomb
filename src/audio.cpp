@@ -16,6 +16,7 @@
 
 #ifndef AL_ALEXT_PROTOTYPES
 #include "script.h"
+#include <chrono>
 
 extern "C"
 {
@@ -215,11 +216,11 @@ AudioSource::AudioSource()
             alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1f);
         }
         else
         {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0f);
         }
     }
 }
@@ -391,19 +392,19 @@ void AudioSource::SetLooping(ALboolean is_looping)
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
-    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0, 1.0) * audio_settings.sound_volume);
+    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
 }
 
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
-    alSourcef(source_index, AL_PITCH, Clamp(pitch_value, 0.1, 2.0));
+    alSourcef(source_index, AL_PITCH, Clamp(pitch_value, 0.1f, 2.0f));
 }
 
 void AudioSource::SetRange(ALfloat range_value)
 {
     // Source will become fully audible on 1/6 of overall position.
-    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6.0);
+    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6.0f);
     alSourcef(source_index, AL_MAX_DISTANCE, range_value);
 }
 
@@ -793,16 +794,16 @@ bool StreamTrack::Update()
             damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = Clamp(damped_volume, 0.0, TR_AUDIO_STREAM_DAMP_LEVEL);
-            change_gain = true;
+            damped_volume = Clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
+            change_gain   = true;
         }
         else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
         {
             damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = Clamp(damped_volume, 0.0, TR_AUDIO_STREAM_DAMP_LEVEL);
-            change_gain = true;
+            damped_volume = Clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
+            change_gain   = true;
         }
     }
 
@@ -855,8 +856,8 @@ bool StreamTrack::Update()
             }
 
             // Clamp volume.
-            current_volume = Clamp(current_volume, 0.0, 1.0);
-            change_gain = true;
+            current_volume = Clamp(current_volume, 0.0f, 1.0f);
+            change_gain    = true;
         }
     }
 
@@ -1291,7 +1292,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
 
-    dist /= (gain + 1.25);
+    dist /= (gain + 1.25f);
 
     return dist < range * range;
 }
@@ -1494,8 +1495,8 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
         if(effect->rand_pitch)  // Vary pitch, if flag is set.
         {
-            random_float = rand() % effect->rand_pitch_var;
-            random_float = effect->pitch + ((random_float - 25.0) / 200.0);
+            random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
+            random_float = effect->pitch + ((random_float - 25.0f) / 200.0f);
             source->SetPitch(random_float);
         }
         else
@@ -1505,8 +1506,8 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
         if(effect->rand_gain)   // Vary gain, if flag is set.
         {
-            random_float = rand() % effect->rand_gain_var;
-            random_float = effect->gain + (random_float - 25.0) / 200.0;
+            random_float = static_cast<ALfloat>( rand() % effect->rand_gain_var );
+            random_float = effect->gain + (random_float - 25.0f) / 200.0f;
             source->SetGain(random_float);
         }
         else
@@ -1576,9 +1577,9 @@ void Audio_LoadOverridedSamples(struct World *world)
 
 void Audio_InitGlobals()
 {
-    audio_settings.music_volume = 0.7;
-    audio_settings.sound_volume = 0.8;
-    audio_settings.use_effects = true;
+    audio_settings.music_volume = 0.7f;
+    audio_settings.sound_volume = 0.8f;
+    audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
     audio_settings.stream_buffer_size = 32;
 }
@@ -1687,7 +1688,7 @@ int Audio_DeInit()
 
     ///@CRITICAL: You must delete all sources before deleting buffers!
 
-    alDeleteBuffers(engine_world.audio_buffers.size(), engine_world.audio_buffers.data());
+    alDeleteBuffers(static_cast<ALsizei>(engine_world.audio_buffers.size()), engine_world.audio_buffers.data());
     engine_world.audio_buffers.clear();
 
     engine_world.audio_effects.clear();
@@ -1714,11 +1715,11 @@ int Audio_DeInit()
 
 bool Audio_DeInitDelay()
 {
-    auto begin_time = Sys_FloatTime();
+    const std::chrono::high_resolution_clock::time_point begin_time = std::chrono::high_resolution_clock::now();
 
     while((Audio_IsTrackPlaying()) || (Audio_IsEffectPlaying() >= 0))
     {
-        auto curr_time = Sys_FloatTime() - begin_time;
+        auto curr_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1.0e6;
 
         if(curr_time > TR_AUDIO_DEINIT_DELAY)
         {
@@ -1791,7 +1792,7 @@ int Audio_LoadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32
     // than native wav length, because for some reason many TR5 uncomp sizes
     // are messed up and actually more than actual sample size.
 
-    uint32_t real_size = sfInfo.frames * sizeof(uint16_t);
+    size_t real_size = sfInfo.frames * sizeof(uint16_t);
 
     if((uncomp_sample_size == 0) || (real_size < uncomp_sample_size))
     {
@@ -1878,7 +1879,7 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
     alListenerfv(AL_POSITION, cam->m_pos);
 
     btVector3 v2 = cam->m_pos - cam->m_prevPos;
-    v2[3] = 1.0 / engine_frame_time;
+    v2[3] = 1.0f / engine_frame_time;
     v2 *= v2[3];
     alListenerfv(AL_VELOCITY, v2);
     cam->m_prevPos = cam->m_pos;

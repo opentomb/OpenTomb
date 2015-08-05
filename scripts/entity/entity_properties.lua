@@ -13,22 +13,6 @@
 --   0x10    - Object is pushable, but can't be floor for other pushable
 --   0x18    - Object is pushable, and can be floor for other pushable
 
--- [ coll ] flag values:
-COLLISION_TYPE_NONE                    = 0x0000;
-COLLISION_TYPE_STATIC                  = 0x0001;     -- static object - never moved
-COLLISION_TYPE_KINEMATIC               = 0x0003;     -- doors and other moveable statics
-COLLISION_TYPE_DYNAMIC                 = 0x0005;     -- hellow full physics interaction
-COLLISION_TYPE_ACTOR                   = 0x0007;     -- actor, enemies, NPC, animals
-COLLISION_TYPE_VEHICLE                 = 0x0009;     -- car, moto, bike
-COLLISION_TYPE_GHOST                   = 0x000B;     -- no fix character position, but works in collision callbacks and interacts with dynamic objects
-
--- [ shape ] flag values:
-COLLISION_SHAPE_BOX                    = 0x0001;
-COLLISION_SHAPE_BOX_BASE               = 0x0002;
-COLLISION_SHAPE_SPHERE                 = 0x0003;
-COLLISION_SHAPE_TRIMESH                = 0x0004;
-COLLISION_SHAPE_TRIMESH_CONVEX         = 0x0005;
-
 -- [ func ] :
 
 -- Function which spawns a scripted behaviour for ALL entities sharing the same

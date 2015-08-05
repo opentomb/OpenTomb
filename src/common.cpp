@@ -65,12 +65,12 @@ void Com_TakeScreenShot()
     CFRelease(imageDestination);
 
 #else
-    GLubyte buf[str_size];
+    std::vector<GLubyte> buf(str_size);
     for(int h = 0; h < ViewPort[3] / 2; h++)
     {
-        memcpy(buf, pixels + h * str_size, str_size);
+        memcpy(buf.data(), pixels + h * str_size, str_size);
         memcpy(pixels + h * str_size, pixels + (ViewPort[3] - h - 1) * str_size, str_size);
-        memcpy(pixels + (ViewPort[3] - h - 1) * str_size, buf, str_size);
+        memcpy(pixels + (ViewPort[3] - h - 1) * str_size, buf.data(), str_size);
     }
     surface = SDL_CreateRGBSurfaceFrom(nullptr, ViewPort[2], ViewPort[3], 32, str_size, 0x000000FF, 0x00000FF00, 0x00FF0000, 0xFF000000);
     surface->format->format = SDL_PIXELFORMAT_RGBA8888;

@@ -44,12 +44,11 @@ void ConsoleInfo::initFonts()
     setLineInterval(m_spacing);
 }
 
-void ConsoleInfo::initGlobals()
-{
-    m_backgroundColor[0] = 1.0;
-    m_backgroundColor[1] = 0.9;
-    m_backgroundColor[2] = 0.7;
-    m_backgroundColor[3] = 0.4;
+void ConsoleInfo::initGlobals() {
+    m_backgroundColor[0] = 1.0f;
+    m_backgroundColor[1] = 0.9f;
+    m_backgroundColor[2] = 0.7f;
+    m_backgroundColor[3] = 0.4f;
 
     m_spacing = CON_MIN_LINE_INTERVAL;
     m_lineSize = CON_MIN_LINE_SIZE;
@@ -68,7 +67,7 @@ void ConsoleInfo::setLineInterval(float interval)
     inited = false;
     m_spacing = interval;
     // font->font_size has absolute size (after scaling)
-    m_lineHeight = (1.0 + m_spacing) * m_font->font_size;
+    m_lineHeight = (1 + m_spacing) * m_font->font_size;
     m_cursorX = 8 + 1;
     m_cursorY = screen_info.h - m_lineHeight * m_visibleLines;
     if(m_cursorY < 8)
@@ -125,7 +124,7 @@ void ConsoleInfo::drawBackground()
     /*
          * Draw finalise line
          */
-    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
     Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
 }
 
@@ -145,11 +144,11 @@ void ConsoleInfo::drawCursor()
 
     if(m_showCursor)
     {
-        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
         Gui_DrawRect(m_cursorX,
-                     y + m_lineHeight * 0.9,
+                     y + m_lineHeight * 0.9f,
                      1,
-                     m_lineHeight * 0.8,
+                     m_lineHeight * 0.8f,
                      white, white, white, white,
                      BM_SCREEN);
     }
@@ -163,7 +162,22 @@ void ConsoleInfo::filter(const std::string &text)
     }
 }
 
-void ConsoleInfo::edit(int key)
+namespace
+{
+std::string toLower(std::string str)
+{
+    for(char& c : str)
+        c = std::tolower(c);
+    return str;
+}
+
+bool startsWithLowercase(const std::string& haystack, const std::string& needle)
+{
+    return toLower(haystack.substr(0, needle.length())) == toLower(needle);
+}
+}
+
+void ConsoleInfo::edit(int key, int mod)
 {
     if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
@@ -241,8 +255,77 @@ void ConsoleInfo::edit(int key)
             }
             break;
 
+        case SDLK_TAB:
+            {
+                std::string needle = m_editingLine.substr(0, m_cursorPos);
+                // find auto-completion terms, case-insensitive
+                std::vector<std::string> found;
+                std::copy_if(m_completionItems.begin(), m_completionItems.end(), std::back_inserter(found),
+                             [needle](const std::string& completion){ return startsWithLowercase(completion, needle); });
+                if(found.empty())
+                {
+                    // no completion, do nothing
+                }
+                else if(found.size() == 1)
+                {
+                    // if we have only one term found, use it!
+                    m_editingLine.erase(0, found[0].length());
+                    m_editingLine.insert(0, found[0]);
+                    m_cursorPos = found[0].length();
+                }
+                else
+                {
+                    // else we must find the common completion string
+                    for(std::string& term : found)
+                    {
+                        // cut off the needle part
+                        term.erase(0, needle.length());
+                    }
+                    // now find a common start
+                    std::string common = found[0];
+                    for(size_t i=1; !common.empty() && i<found.size(); ++i)
+                    {
+                        // cut off from the end that's not common with current
+                        for(size_t j=0; j<std::min(common.length(), found[i].length()); ++j)
+                        {
+                            if(std::tolower(common[j]) != std::tolower(found[i][j]))
+                            {
+                                common.erase(j);
+                                break;
+                            }
+                        }
+                    }
+                    if(common.empty())
+                    {
+                        // nothing common, print possible completions
+                        addLine("Possible completions:", font_Style::FONTSTYLE_CONSOLE_INFO);
+                        for(const std::string& term : found)
+                            addLine(std::string("* ") + needle + term, font_Style::FONTSTYLE_CONSOLE_INFO);
+                    }
+                    else
+                    {
+                        m_editingLine.insert(m_cursorPos, common);
+                        m_cursorPos += common.length();
+                    }
+                }
+            }
+            break;
+
         default:
-            if((oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
+            if( key == SDLK_v && mod>0 && (mod & KMOD_CTRL) )
+            {
+                if(char* clipboard = SDL_GetClipboardText())
+                {
+                    const int16_t textLength = utf8_strlen(clipboard);
+                    if(oldLength < m_lineSize - textLength)
+                    {
+                        m_editingLine.insert(m_cursorPos, clipboard);
+                        m_cursorPos += textLength;
+                    }
+                    SDL_free(clipboard);
+                }
+            }
+            else if(mod<0 && (oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
             {
                 m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
                 m_cursorPos++;

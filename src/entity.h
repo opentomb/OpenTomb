@@ -88,6 +88,25 @@ struct BtEntityData
 
 class BtEngineClosestConvexResultCallback;
 
+/*
+ * ENTITY MOVEMENT TYPES
+ */
+enum class MoveType
+{
+   StaticPos,
+   Kinematic,
+   OnFloor,
+   Wade,
+   Quicksand,
+   OnWater,
+   Underwater,
+   FreeFalling,
+   Climbing,
+   Monkeyswing,
+   WallsClimb,
+   Dozy
+};
+
 struct Entity : public Object
 {
 private:
@@ -109,7 +128,7 @@ public:
     bool m_visible = true;
 
     uint8_t                             m_dirFlag = 0;           // (move direction)
-    uint16_t                            m_moveType;          // on floor / free fall / swim ....
+    MoveType                            m_moveType = MoveType::StaticPos;          // on floor / free fall / swim ....
 
     bool m_wasRendered;       // render once per frame trigger
     bool m_wasRenderedLines; // same for debug lines

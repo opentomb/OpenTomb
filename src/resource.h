@@ -15,8 +15,11 @@
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
 
-#define TR_METERING_STEP        (256.0)
-#define TR_METERING_SECTORSIZE  (1024.0)
+namespace
+{
+constexpr float TR_METERING_STEP = 256.0f;
+constexpr float TR_METERING_SECTORSIZE = 1024.0f;
+}
 
 // Wall height is a magical constant which specifies that sector with such
 // height contains impassable wall.

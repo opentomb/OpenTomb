@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/time.h>
 
 #include "console.h"
 #include "engine.h"
@@ -110,54 +109,4 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
         fclose(fp);
     }
     fwrite(data, strlen(data), 1, stderr);
-}
-
-/*
-===============================================================================
-
-SYS TIME
-
-===============================================================================
-*/
-
-void Sys_Strtime(char *buf, size_t buf_size)
-{
-    struct tm *tm_;
-    static time_t t_;
-
-    time(&t_);
-    tm_ = gmtime(&t_);
-
-    snprintf(buf, buf_size, "%02d:%02d:%02d", tm_->tm_hour, tm_->tm_min, tm_->tm_sec);
-}
-
-void Sys_StrRunSec(char *buf, size_t buf_size)
-{
-    struct              timeval tp;
-    static long int     secbase = 0;
-
-    gettimeofday(&tp, nullptr);
-
-    if(!secbase)
-    {
-        secbase = tp.tv_sec;
-    }
-
-    snprintf(buf, buf_size, "%06d.%03d", static_cast<int>(tp.tv_sec - secbase), static_cast<int>(tp.tv_usec / 1000));
-}
-
-btScalar Sys_FloatTime(void)
-{
-    struct              timeval tp;
-    static long int     secbase = 0;
-
-    gettimeofday(&tp, nullptr);
-
-    if(!secbase)
-    {
-        secbase = tp.tv_sec;
-        return tp.tv_usec * 1.0e-6;
-    }
-
-    return (btScalar)(tp.tv_sec - secbase) + (btScalar)tp.tv_usec * 1.0e-6;
 }

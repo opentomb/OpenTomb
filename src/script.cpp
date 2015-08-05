@@ -21,6 +21,7 @@
 #include "hair.h"
 #include "ragdoll.h"
 #include "helpers.h"
+#include "anim_state_control.h"
 
 #include "LuaState.h"
 
@@ -124,9 +125,10 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
     if(model == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+		return;
     }
 
-    if((arg >= 0) && (arg < model->mesh_count) &&
+    if((arg >= 0) && (static_cast<size_t>(arg) < model->collision_map.size()) &&
        (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
@@ -430,8 +432,6 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     {
         if(value.is<lua::Number>())
             ent->changeParam(parameter, value.to<lua::Number>());
-        else
-            ent->changeParam(parameter, value.to<lua::Integer>());
     }
     else
     {
@@ -540,7 +540,8 @@ bool lua_GetSecretStatus(int secret_number)
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return;   // No such secret - return
+    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
+		return;   // No such secret - return
 
     gameflow_manager.SecretsTriggerMap[secret_number] = status;
 }
@@ -1151,7 +1152,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     btVector3 sink_pos; sink_pos[0] = sink->x;
     sink_pos[1] = sink->y;
-    sink_pos[2] = sink->z + 256.0;
+    sink_pos[2] = sink->z + 256.0f;
 
     assert(ent->m_currentSector != nullptr);
     RoomSector* ls = ent->m_currentSector->getLowestSector();
@@ -1171,7 +1172,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
 
     ent->m_transform.getOrigin()[0] += speed[0];
     ent->m_transform.getOrigin()[1] += speed[1];
-    ent->m_transform.getOrigin()[2] += speed[2] * 16.0;
+    ent->m_transform.getOrigin()[2] += speed[2] * 16.0f;
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1689,7 +1690,7 @@ bool lua_GetEntitySectorStatus(int id)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7;
     }
-    return -1;
+    return true;
 }
 
 void lua_SetEntitySectorStatus(int id, bool status)
@@ -1915,7 +1916,7 @@ uint16_t lua_GetEntityMoveType(int id)
         return -1;
     }
 
-    return ent->m_moveType;
+    return static_cast<uint16_t>(ent->m_moveType);
 }
 
 void lua_SetEntityMoveType(int id, uint16_t type)
@@ -1924,7 +1925,7 @@ void lua_SetEntityMoveType(int id, uint16_t type)
 
     if(ent == nullptr)
         return;
-    ent->m_moveType = type;
+    ent->m_moveType = static_cast<MoveType>(type);
 }
 
 int lua_GetEntityResponse(int id, int response)
@@ -1935,10 +1936,10 @@ int lua_GetEntityResponse(int id, int response)
     {
         switch(response)
         {
-            case 0: return ent->m_response.kill;
+            case 0: return (ent->m_response.killed ? 1 : 0);
             case 1: return ent->m_response.vertical_collide;
             case 2: return ent->m_response.horizontal_collide;
-            case 3: return ent->m_response.slide;
+            case 3: return static_cast<int>(ent->m_response.slide);
             default: return 0;
         }
     }
@@ -1958,7 +1959,7 @@ void lua_SetEntityResponse(int id, int response, int value)
         switch(response)
         {
             case 0:
-                ent->m_response.kill = value;
+                ent->m_response.killed = (value!=0);
                 break;
             case 1:
                 ent->m_response.vertical_collide = value;
@@ -1967,7 +1968,7 @@ void lua_SetEntityResponse(int id, int response, int value)
                 ent->m_response.horizontal_collide = value;
                 break;
             case 3:
-                ent->m_response.slide = value;
+                ent->m_response.slide = static_cast<SlideType>(value);
                 break;
             default:
                 break;
@@ -2047,7 +2048,7 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
     }
     ent->updateRoomPos();
 
-    ent->m_moveType = moveType;
+    ent->m_moveType = static_cast<MoveType>(moveType);
     ent->m_dirFlag = dirFlag;
 }
 
@@ -2646,9 +2647,9 @@ void lua_genUVRotateAnimation(int id)
     seq->frame_lock = false; // by default anim is playing
     seq->uvrotate = true;
     seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-    seq->frame_rate = 0.025;  // Should be passed as 1 / FPS.
-    seq->frame_time = 0.0;   // Reset frame time to initial state.
-    seq->current_frame = 0;     // Reset current frame to zero.
+    seq->frame_rate        = 0.025f;  // Should be passed as 1 / FPS.
+    seq->frame_time        = 0.0;   // Reset frame time to initial state.
+    seq->current_frame     = 0;     // Reset current frame to zero.
     seq->frames.resize(16);
     seq->frame_list.resize(16);
     seq->frame_list[0] = 0;
@@ -2710,14 +2711,481 @@ static int lua_Panic(lua_State *lua)
     return 0;
 }
 
+void Script_ExposeConstants(lua::State& state)
+{
+    state.set("MOVE_STATIC_POS", static_cast<int>(MoveType::StaticPos));
+    state.set("MOVE_KINEMATIC", static_cast<int>(MoveType::Kinematic));
+    state.set("MOVE_ON_FLOOR", static_cast<int>(MoveType::OnFloor));
+    state.set("MOVE_WADE", static_cast<int>(MoveType::Wade));
+    state.set("MOVE_QUICKSAND", static_cast<int>(MoveType::Quicksand));
+    state.set("MOVE_ON_WATER", static_cast<int>(MoveType::OnWater));
+    state.set("MOVE_UNDERWATER", static_cast<int>(MoveType::Underwater));
+    state.set("MOVE_FREE_FALLING", static_cast<int>(MoveType::FreeFalling));
+    state.set("MOVE_CLIMBING", static_cast<int>(MoveType::Climbing));
+    state.set("MOVE_MONKEYSWING", static_cast<int>(MoveType::Monkeyswing));
+    state.set("MOVE_WALLS_CLIMB", static_cast<int>(MoveType::WallsClimb));
+    state.set("MOVE_DOZY", static_cast<int>(MoveType::Dozy));
+
+    // exposes a constant
+#define EXPOSE_C(name) state.set(#name, name)
+    // exposes a casted constant
+#define EXPOSE_CC(name) state.set(#name, static_cast<int>(name))
+
+    EXPOSE_C(TR_I);
+    EXPOSE_C(TR_I_DEMO);
+    EXPOSE_C(TR_I_UB);
+    EXPOSE_C(TR_II);
+    EXPOSE_C(TR_II_DEMO);
+    EXPOSE_C(TR_III);
+    EXPOSE_C(TR_IV);
+    EXPOSE_C(TR_IV_DEMO);
+    EXPOSE_C(TR_V);
+    EXPOSE_C(TR_UNKNOWN);
+
+#if 0
+    // Unused, but kept here for reference
+    state.set("ENTITY_STATE_ENABLED", 0x0001);
+    state.set("ENTITY_STATE_ACTIVE",  0x0002);
+    state.set("ENTITY_STATE_VISIBLE", 0x0004);
+#endif
+
+    EXPOSE_C(ENTITY_TYPE_GENERIC);
+    EXPOSE_C(ENTITY_TYPE_INTERACTIVE);
+    EXPOSE_C(ENTITY_TYPE_TRIGGER_ACTIVATOR);
+    EXPOSE_C(ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    EXPOSE_C(ENTITY_TYPE_PICKABLE);
+    EXPOSE_C(ENTITY_TYPE_TRAVERSE);
+    EXPOSE_C(ENTITY_TYPE_TRAVERSE_FLOOR);
+    EXPOSE_C(ENTITY_TYPE_DYNAMIC);
+    EXPOSE_C(ENTITY_TYPE_ACTOR);
+    EXPOSE_C(ENTITY_TYPE_COLLCHECK);
+
+    EXPOSE_C(ENTITY_CALLBACK_NONE);
+    EXPOSE_C(ENTITY_CALLBACK_ACTIVATE);
+    EXPOSE_C(ENTITY_CALLBACK_DEACTIVATE);
+    EXPOSE_C(ENTITY_CALLBACK_COLLISION);
+    EXPOSE_C(ENTITY_CALLBACK_STAND);
+    EXPOSE_C(ENTITY_CALLBACK_HIT);
+    EXPOSE_C(ENTITY_CALLBACK_ROOMCOLLISION);
+
+    EXPOSE_C(COLLISION_TYPE_NONE);
+    EXPOSE_C(COLLISION_TYPE_STATIC);
+    EXPOSE_C(COLLISION_TYPE_KINEMATIC);
+    EXPOSE_C(COLLISION_TYPE_DYNAMIC);
+    EXPOSE_C(COLLISION_TYPE_ACTOR);
+    EXPOSE_C(COLLISION_TYPE_VEHICLE);
+    EXPOSE_C(COLLISION_TYPE_GHOST);
+
+    EXPOSE_C(COLLISION_SHAPE_BOX);
+    EXPOSE_C(COLLISION_SHAPE_BOX_BASE);
+    EXPOSE_C(COLLISION_SHAPE_SPHERE);
+    EXPOSE_C(COLLISION_SHAPE_TRIMESH);
+    EXPOSE_C(COLLISION_SHAPE_TRIMESH_CONVEX);
+
+    EXPOSE_C(SECTOR_MATERIAL_MUD);
+    EXPOSE_C(SECTOR_MATERIAL_SNOW);
+    EXPOSE_C(SECTOR_MATERIAL_SAND);
+    EXPOSE_C(SECTOR_MATERIAL_GRAVEL);
+    EXPOSE_C(SECTOR_MATERIAL_ICE);
+    EXPOSE_C(SECTOR_MATERIAL_WATER);
+    EXPOSE_C(SECTOR_MATERIAL_STONE);
+    EXPOSE_C(SECTOR_MATERIAL_WOOD);
+    EXPOSE_C(SECTOR_MATERIAL_METAL);
+    EXPOSE_C(SECTOR_MATERIAL_MARBLE);
+    EXPOSE_C(SECTOR_MATERIAL_GRASS);
+    EXPOSE_C(SECTOR_MATERIAL_CONCRETE);
+    EXPOSE_C(SECTOR_MATERIAL_OLDWOOD);
+    EXPOSE_C(SECTOR_MATERIAL_OLDMETAL);
+
+    EXPOSE_C(ANIM_NORMAL_CONTROL);
+    EXPOSE_C(ANIM_LOOP_LAST_FRAME);
+    EXPOSE_C(ANIM_LOCK);
+
+#define EXPOSE_KEY(name) state.set("KEY_" #name, static_cast<int>(SDLK_##name))
+#define EXPOSE_KEY2(name,value) state.set("KEY_" #name, static_cast<int>(SDLK_##value))
+
+    EXPOSE_KEY(BACKSPACE);
+    EXPOSE_KEY(TAB);
+    EXPOSE_KEY(RETURN);
+    EXPOSE_KEY(ESCAPE);
+    EXPOSE_KEY(SPACE);
+    EXPOSE_KEY(EXCLAIM);
+    EXPOSE_KEY(QUOTEDBL);
+    EXPOSE_KEY(HASH);
+    EXPOSE_KEY(DOLLAR);
+    EXPOSE_KEY(PERCENT);
+    EXPOSE_KEY(AMPERSAND);
+    EXPOSE_KEY(QUOTE);
+    EXPOSE_KEY(LEFTPAREN);
+    EXPOSE_KEY(RIGHTPAREN);
+    EXPOSE_KEY(ASTERISK);
+    EXPOSE_KEY(PLUS);
+    EXPOSE_KEY(COMMA);
+    EXPOSE_KEY(MINUS);
+    EXPOSE_KEY(PERIOD);
+    EXPOSE_KEY(SLASH);
+    EXPOSE_KEY(0);
+    EXPOSE_KEY(1);
+    EXPOSE_KEY(2);
+    EXPOSE_KEY(3);
+    EXPOSE_KEY(4);
+    EXPOSE_KEY(5);
+    EXPOSE_KEY(6);
+    EXPOSE_KEY(7);
+    EXPOSE_KEY(8);
+    EXPOSE_KEY(9);
+    EXPOSE_KEY(COLON);
+    EXPOSE_KEY(SEMICOLON);
+    EXPOSE_KEY(LESS);
+    EXPOSE_KEY(EQUALS);
+    EXPOSE_KEY(GREATER);
+    EXPOSE_KEY(QUESTION);
+    EXPOSE_KEY(AT);
+    EXPOSE_KEY(LEFTBRACKET);
+    EXPOSE_KEY(BACKSLASH);
+    EXPOSE_KEY(RIGHTBRACKET);
+    EXPOSE_KEY(CARET);
+    EXPOSE_KEY(UNDERSCORE);
+    EXPOSE_KEY(BACKQUOTE);
+    EXPOSE_KEY2(A,a);
+    EXPOSE_KEY2(B,b);
+    EXPOSE_KEY2(C,c);
+    EXPOSE_KEY2(D,d);
+    EXPOSE_KEY2(E,e);
+    EXPOSE_KEY2(F,f);
+    EXPOSE_KEY2(G,g);
+    EXPOSE_KEY2(H,h);
+    EXPOSE_KEY2(I,i);
+    EXPOSE_KEY2(J,j);
+    EXPOSE_KEY2(K,k);
+    EXPOSE_KEY2(L,l);
+    EXPOSE_KEY2(M,m);
+    EXPOSE_KEY2(N,n);
+    EXPOSE_KEY2(O,o);
+    EXPOSE_KEY2(P,p);
+    EXPOSE_KEY2(Q,q);
+    EXPOSE_KEY2(R,r);
+    EXPOSE_KEY2(S,s);
+    EXPOSE_KEY2(T,t);
+    EXPOSE_KEY2(U,u);
+    EXPOSE_KEY2(V,v);
+    EXPOSE_KEY2(W,w);
+    EXPOSE_KEY2(X,x);
+    EXPOSE_KEY2(Y,y);
+    EXPOSE_KEY2(Z,z);
+    EXPOSE_KEY(DELETE);
+    EXPOSE_KEY(CAPSLOCK);
+    EXPOSE_KEY(F1);
+    EXPOSE_KEY(F2);
+    EXPOSE_KEY(F3);
+    EXPOSE_KEY(F4);
+    EXPOSE_KEY(F5);
+    EXPOSE_KEY(F6);
+    EXPOSE_KEY(F7);
+    EXPOSE_KEY(F8);
+    EXPOSE_KEY(F9);
+    EXPOSE_KEY(F10);
+    EXPOSE_KEY(F11);
+    EXPOSE_KEY(F12);
+    EXPOSE_KEY(PRINTSCREEN);
+    EXPOSE_KEY(SCROLLLOCK);
+    EXPOSE_KEY(PAUSE);
+    EXPOSE_KEY(INSERT);
+    EXPOSE_KEY(HOME);
+    EXPOSE_KEY(PAGEUP);
+    EXPOSE_KEY(END);
+    EXPOSE_KEY(PAGEDOWN);
+    EXPOSE_KEY(RIGHT);
+    EXPOSE_KEY(LEFT);
+    EXPOSE_KEY(DOWN);
+    EXPOSE_KEY(UP);
+    EXPOSE_KEY(NUMLOCKCLEAR);
+    EXPOSE_KEY(KP_DIVIDE);
+    EXPOSE_KEY(KP_MULTIPLY);
+    EXPOSE_KEY(KP_MINUS);
+    EXPOSE_KEY(KP_PLUS);
+    EXPOSE_KEY(KP_ENTER);
+    EXPOSE_KEY(KP_1);
+    EXPOSE_KEY(KP_2);
+    EXPOSE_KEY(KP_3);
+    EXPOSE_KEY(KP_4);
+    EXPOSE_KEY(KP_5);
+    EXPOSE_KEY(KP_6);
+    EXPOSE_KEY(KP_7);
+    EXPOSE_KEY(KP_8);
+    EXPOSE_KEY(KP_9);
+    EXPOSE_KEY(KP_0);
+    EXPOSE_KEY(KP_PERIOD);
+    EXPOSE_KEY(APPLICATION);
+    EXPOSE_KEY(POWER);
+    EXPOSE_KEY(KP_EQUALS);
+    EXPOSE_KEY(F13);
+    EXPOSE_KEY(F14);
+    EXPOSE_KEY(F15);
+    EXPOSE_KEY(F16);
+    EXPOSE_KEY(F17);
+    EXPOSE_KEY(F18);
+    EXPOSE_KEY(F19);
+    EXPOSE_KEY(F20);
+    EXPOSE_KEY(F21);
+    EXPOSE_KEY(F22);
+    EXPOSE_KEY(F23);
+    EXPOSE_KEY(F24);
+    EXPOSE_KEY(EXECUTE);
+    EXPOSE_KEY(HELP);
+    EXPOSE_KEY(MENU);
+    EXPOSE_KEY(SELECT);
+    EXPOSE_KEY(STOP);
+    EXPOSE_KEY(AGAIN);
+    EXPOSE_KEY(UNDO);
+    EXPOSE_KEY(CUT);
+    EXPOSE_KEY(COPY);
+    EXPOSE_KEY(PASTE);
+    EXPOSE_KEY(FIND);
+    EXPOSE_KEY(MUTE);
+    EXPOSE_KEY(VOLUMEUP);
+    EXPOSE_KEY(VOLUMEDOWN);
+    EXPOSE_KEY(KP_COMMA);
+    EXPOSE_KEY(KP_EQUALSAS400);
+    EXPOSE_KEY(ALTERASE);
+    EXPOSE_KEY(SYSREQ);
+    EXPOSE_KEY(CANCEL);
+    EXPOSE_KEY(CLEAR);
+    EXPOSE_KEY(PRIOR);
+    EXPOSE_KEY(RETURN2);
+    EXPOSE_KEY(SEPARATOR);
+    EXPOSE_KEY(OUT);
+    EXPOSE_KEY(OPER);
+    EXPOSE_KEY(CLEARAGAIN);
+    EXPOSE_KEY(CRSEL);
+    EXPOSE_KEY(EXSEL);
+    EXPOSE_KEY(KP_00);
+    EXPOSE_KEY(KP_000);
+    EXPOSE_KEY(THOUSANDSSEPARATOR);
+    EXPOSE_KEY(DECIMALSEPARATOR);
+    EXPOSE_KEY(CURRENCYUNIT);
+    EXPOSE_KEY(CURRENCYSUBUNIT);
+    EXPOSE_KEY(KP_LEFTPAREN);
+    EXPOSE_KEY(KP_RIGHTPAREN);
+    EXPOSE_KEY(KP_LEFTBRACE);
+    EXPOSE_KEY(KP_RIGHTBRACE);
+    EXPOSE_KEY(KP_TAB);
+    EXPOSE_KEY(KP_BACKSPACE);
+    EXPOSE_KEY(KP_A);
+    EXPOSE_KEY(KP_B);
+    EXPOSE_KEY(KP_C);
+    EXPOSE_KEY(KP_D);
+    EXPOSE_KEY(KP_E);
+    EXPOSE_KEY(KP_F);
+    EXPOSE_KEY(KP_XOR);
+    EXPOSE_KEY(KP_POWER);
+    EXPOSE_KEY(KP_PERCENT);
+    EXPOSE_KEY(KP_LESS);
+    EXPOSE_KEY(KP_GREATER);
+    EXPOSE_KEY(KP_AMPERSAND);
+    EXPOSE_KEY(KP_DBLAMPERSAND);
+    EXPOSE_KEY(KP_VERTICALBAR);
+    EXPOSE_KEY(KP_DBLVERTICALBAR);
+    EXPOSE_KEY(KP_COLON);
+    EXPOSE_KEY(KP_HASH);
+    EXPOSE_KEY(KP_SPACE);
+    EXPOSE_KEY(KP_AT);
+    EXPOSE_KEY(KP_EXCLAM);
+    EXPOSE_KEY(KP_MEMSTORE);
+    EXPOSE_KEY(KP_MEMRECALL);
+    EXPOSE_KEY(KP_MEMCLEAR);
+    EXPOSE_KEY(KP_MEMADD);
+    EXPOSE_KEY(KP_MEMSUBTRACT);
+    EXPOSE_KEY(KP_MEMMULTIPLY);
+    EXPOSE_KEY(KP_MEMDIVIDE);
+    EXPOSE_KEY(KP_PLUSMINUS);
+    EXPOSE_KEY(KP_CLEAR);
+    EXPOSE_KEY(KP_CLEARENTRY);
+    EXPOSE_KEY(KP_BINARY);
+    EXPOSE_KEY(KP_OCTAL);
+    EXPOSE_KEY(KP_DECIMAL);
+    EXPOSE_KEY(KP_HEXADECIMAL);
+    EXPOSE_KEY(LCTRL);
+    EXPOSE_KEY(LSHIFT);
+    EXPOSE_KEY(LALT);
+    EXPOSE_KEY(LGUI);
+    EXPOSE_KEY(RCTRL);
+    EXPOSE_KEY(RSHIFT);
+    EXPOSE_KEY(RALT);
+    EXPOSE_KEY(RGUI);
+    EXPOSE_KEY(MODE);
+    EXPOSE_KEY(AUDIONEXT);
+    EXPOSE_KEY(AUDIOPREV);
+    EXPOSE_KEY(AUDIOSTOP);
+    EXPOSE_KEY(AUDIOPLAY);
+    EXPOSE_KEY(AUDIOMUTE);
+    EXPOSE_KEY(MEDIASELECT);
+    EXPOSE_KEY(WWW);
+    EXPOSE_KEY(MAIL);
+    EXPOSE_KEY(CALCULATOR);
+    EXPOSE_KEY(COMPUTER);
+    EXPOSE_KEY(AC_SEARCH);
+    EXPOSE_KEY(AC_HOME);
+    EXPOSE_KEY(AC_BACK);
+    EXPOSE_KEY(AC_FORWARD);
+    EXPOSE_KEY(AC_STOP);
+    EXPOSE_KEY(AC_REFRESH);
+    EXPOSE_KEY(AC_BOOKMARKS);
+    EXPOSE_KEY(BRIGHTNESSDOWN);
+    EXPOSE_KEY(BRIGHTNESSUP);
+    EXPOSE_KEY(DISPLAYSWITCH);
+    EXPOSE_KEY(KBDILLUMTOGGLE);
+    EXPOSE_KEY(KBDILLUMDOWN);
+    EXPOSE_KEY(KBDILLUMUP);
+    EXPOSE_KEY(EJECT);
+    EXPOSE_KEY(SLEEP);
+
+#undef EXPOSE_KEY
+#undef EXPOSE_KEY2
+
+    state.set("JOY_1", 1000);
+    state.set("JOY_2", 1001);
+    state.set("JOY_3", 1002);
+    state.set("JOY_4", 1003);
+    state.set("JOY_5", 1004);
+    state.set("JOY_6", 1005);
+    state.set("JOY_7", 1006);
+    state.set("JOY_8", 1007);
+    state.set("JOY_9", 1008);
+    state.set("JOY_10", 1009);
+    state.set("JOY_11", 1010);
+    state.set("JOY_12", 1011);
+    state.set("JOY_13", 1012);
+    state.set("JOY_14", 1013);
+    state.set("JOY_15", 1014);
+    state.set("JOY_16", 1015);
+    state.set("JOY_17", 1016);
+    state.set("JOY_18", 1017);
+    state.set("JOY_19", 1018);
+    state.set("JOY_20", 1019);
+    state.set("JOY_21", 1020);
+    state.set("JOY_22", 1021);
+    state.set("JOY_23", 1022);
+    state.set("JOY_24", 1023);
+    state.set("JOY_25", 1024);
+    state.set("JOY_26", 1025);
+    state.set("JOY_27", 1026);
+    state.set("JOY_28", 1027);
+    state.set("JOY_29", 1028);
+    state.set("JOY_30", 1029);
+    state.set("JOY_31", 1030);
+    state.set("JOY_32", 1031);
+    state.set("JOY_POVUP", 1101);
+    state.set("JOY_POVDOWN", 1104);
+    state.set("JOY_POVLEFT", 1108);
+    state.set("JOY_POVRIGHT", 1102);
+
+    state.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
+    state.set("JOY_TRIGGERRIGHT", 1205);
+
+    EXPOSE_C(COLLISION_TYPE_NONE);
+    EXPOSE_C(COLLISION_TYPE_STATIC);
+    EXPOSE_C(COLLISION_TYPE_KINEMATIC);
+    EXPOSE_C(COLLISION_TYPE_DYNAMIC);
+    EXPOSE_C(COLLISION_TYPE_ACTOR);
+    EXPOSE_C(COLLISION_TYPE_VEHICLE);
+    EXPOSE_C(COLLISION_TYPE_GHOST);
+
+    EXPOSE_C(COLLISION_SHAPE_BOX);
+    EXPOSE_C(COLLISION_SHAPE_BOX_BASE);
+    EXPOSE_C(COLLISION_SHAPE_SPHERE);
+    EXPOSE_C(COLLISION_SHAPE_TRIMESH);
+    EXPOSE_C(COLLISION_SHAPE_TRIMESH_CONVEX);
+
+    EXPOSE_CC(PARAM_HEALTH);
+    EXPOSE_CC(PARAM_AIR);
+    EXPOSE_CC(PARAM_STAMINA);
+    EXPOSE_CC(PARAM_WARMTH);
+    EXPOSE_CC(PARAM_POISON);
+    EXPOSE_CC(PARAM_EXTRA1);
+    EXPOSE_CC(PARAM_EXTRA2);
+    EXPOSE_CC(PARAM_EXTRA3);
+    EXPOSE_CC(PARAM_EXTRA4);
+
+    EXPOSE_C(PARAM_ABSOLUTE_MAX);
+
+    EXPOSE_C(BODY_PART_BODY_LOW);
+    EXPOSE_C(BODY_PART_BODY_UPPER);
+    EXPOSE_C(BODY_PART_HEAD);
+
+    EXPOSE_C(BODY_PART_LEFT_HAND_1);
+    EXPOSE_C(BODY_PART_LEFT_HAND_2);
+    EXPOSE_C(BODY_PART_LEFT_HAND_3);
+    EXPOSE_C(BODY_PART_RIGHT_HAND_1);
+    EXPOSE_C(BODY_PART_RIGHT_HAND_2);
+    EXPOSE_C(BODY_PART_RIGHT_HAND_3);
+
+    EXPOSE_C(BODY_PART_LEFT_LEG_1);
+    EXPOSE_C(BODY_PART_LEFT_LEG_2);
+    EXPOSE_C(BODY_PART_LEFT_LEG_3);
+    EXPOSE_C(BODY_PART_RIGHT_LEG_1);
+    EXPOSE_C(BODY_PART_RIGHT_LEG_2);
+    EXPOSE_C(BODY_PART_RIGHT_LEG_3);
+
+    EXPOSE_C(HAIR_TR1);
+    EXPOSE_C(HAIR_TR2);
+    EXPOSE_C(HAIR_TR3);
+    EXPOSE_C(HAIR_TR4_KID_1);
+    EXPOSE_C(HAIR_TR4_KID_2);
+    EXPOSE_C(HAIR_TR4_OLD);
+    EXPOSE_C(HAIR_TR5_KID_1);
+    EXPOSE_C(HAIR_TR5_KID_2);
+    EXPOSE_C(HAIR_TR5_OLD);
+
+    EXPOSE_C(M_PI);
+
+    EXPOSE_CC(FONTSTYLE_CONSOLE_INFO);
+    EXPOSE_CC(FONTSTYLE_CONSOLE_WARNING);
+    EXPOSE_CC(FONTSTYLE_CONSOLE_EVENT);
+    EXPOSE_CC(FONTSTYLE_CONSOLE_NOTIFY);
+    EXPOSE_CC(FONTSTYLE_MENU_TITLE);
+    EXPOSE_CC(FONTSTYLE_MENU_HEADING1);
+    EXPOSE_CC(FONTSTYLE_MENU_HEADING2);
+    EXPOSE_CC(FONTSTYLE_MENU_ITEM_ACTIVE);
+    EXPOSE_CC(FONTSTYLE_MENU_ITEM_INACTIVE);
+    EXPOSE_CC(FONTSTYLE_MENU_CONTENT);
+    EXPOSE_CC(FONTSTYLE_STATS_TITLE);
+    EXPOSE_CC(FONTSTYLE_STATS_CONTENT);
+    EXPOSE_CC(FONTSTYLE_NOTIFIER);
+    EXPOSE_CC(FONTSTYLE_SAVEGAMELIST);
+    EXPOSE_CC(FONTSTYLE_GENERIC);
+
+    EXPOSE_CC(FONT_PRIMARY);
+    EXPOSE_CC(FONT_SECONDARY);
+    EXPOSE_CC(FONT_CONSOLE);
+
+#undef EXPOSE_C
+#undef EXPOSE_CC
+}
+
 void Script_LuaInit()
 {
     Script_LuaRegisterFuncs(engine_lua);
     lua_atpanic(engine_lua.getState(), lua_Panic);
+    Script_ExposeConstants(engine_lua);
 
     // Load script loading order (sic!)
+    engine_lua.doFile("scripts/loadscript.lua");
+}
 
-    luaL_dofile(engine_lua.getState(), "scripts/loadscript.lua");
+std::vector<std::string> Script_GetGlobals(lua::State& state)
+{
+    std::vector<std::string> result;
+    auto L = state.getState();
+    lua_pushglobaltable(L);
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0)
+    {
+        result.emplace_back(lua_tostring(L, -2));
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    return result;
 }
 
 void Script_LuaClearTasks()
