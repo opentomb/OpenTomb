@@ -20,7 +20,7 @@ audio =
 
 render =
 {
-    use_gl3 = false;                            -- Disable if you have old videocard or driver.
+    use_gl3 = true;                             -- Disable if you have old videocard or driver.
     mipmap_mode = 3;                            -- 0 = no filter, 1/2 = bilinear filter, 3 = trilinear filter.
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
