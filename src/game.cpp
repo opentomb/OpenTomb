@@ -29,7 +29,7 @@
 btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 
 extern btScalar time_scale;
-extern lua::State engine_lua;
+extern script::MainEngine engine_lua;
 
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
@@ -106,7 +106,7 @@ void lua_timescale(lua::Value scale)
     {
         if(time_scale == 1.0)
         {
-            time_scale = 0.033;
+            time_scale = 0.033f;
         }
         else
         {
@@ -130,7 +130,7 @@ void Game_InitGlobals()
     control_states.cam_distance = 800.0;
 }
 
-void Game_RegisterLuaFunctions(lua::State& state)
+void Game_RegisterLuaFunctions(script::ScriptEngine& state)
 {
     state.set("debuginfo", lua_debuginfo);
     state.set("mlook", lua_mlook);
@@ -169,7 +169,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Script_LuaClearTasks();
+        engine_lua.clearTasks();
         try
         {
             engine_lua.doFile(token);
@@ -192,7 +192,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Script_LuaClearTasks();
+        engine_lua.clearTasks();
         try
         {
             engine_lua.doFile(name);
@@ -359,9 +359,9 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     // APPLY CONTROLS
 
-    cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
-    cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
-    cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
+    cam_angles[0] += 2.2f * engine_frame_time * look_logic[0];
+    cam_angles[1] += 2.2f * engine_frame_time * look_logic[1];
+    cam_angles[2] += 2.2f * engine_frame_time * look_logic[2];
 
     if(!renderer.world())
     {
@@ -379,8 +379,8 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if(control_states.mouse_look)
         {
-            cam_angles[0] -= 0.015 * control_states.look_axis_x;
-            cam_angles[1] -= 0.015 * control_states.look_axis_y;
+            cam_angles[0] -= 0.015f * control_states.look_axis_x;
+            cam_angles[1] -= 0.015f * control_states.look_axis_y;
             control_states.look_axis_x = 0.0;
             control_states.look_axis_y = 0.0;
         }
@@ -408,8 +408,8 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
     if(control_states.mouse_look)
     {
-        cam_angles[0] -= 0.015 * control_states.look_axis_x;
-        cam_angles[1] -= 0.015 * control_states.look_axis_y;
+        cam_angles[0] -= 0.015f * control_states.look_axis_x;
+        cam_angles[1] -= 0.015f * control_states.look_axis_y;
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
@@ -538,8 +538,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
             {
                 btVector3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
-                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
-                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0) * RadPerDeg) * control_states.cam_distance;
+                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0f) * RadPerDeg) * control_states.cam_distance;
+                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0f) * RadPerDeg) * control_states.cam_distance;
                 cameraTo.setOrigin(cam_pos2);
 
                 //If collided we want to go right otherwise stay left
@@ -547,8 +547,8 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
-                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0) * RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0f) * RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0f) * RadPerDeg) * control_states.cam_distance;
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
@@ -612,10 +612,10 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     //Code to manage screen shaking effects
     if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
-        renderer.camera()->m_shakeTime = (renderer.camera()->m_shakeTime < 0.0) ? (0.0) : (renderer.camera()->m_shakeTime) - engine_frame_time;
+        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
+        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0f):(renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -658,7 +658,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_pos[2] += 128.0;
     if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0 * 64.0;
+        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0f * 64.0f;
     }
 
     cam->setRotation(cam_angles);
@@ -673,7 +673,7 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
         if(entity->m_enabled)
         {
             entity->processSector();
-            lua_LoopEntity(engine_lua, entity->id());
+            engine_lua.loopEntity(entity->id());
 
             if(entity->m_typeFlags & ENTITY_TYPE_COLLCHECK)
                 entity->checkCollisionCallbacks();
@@ -719,7 +719,7 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> 
         }
         if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
-            ent->m_response.kill = 1;                                      // Kill, if no HP.
+            ent->m_response.killed = true;                                      // Kill, if no HP.
         }
         ent->applyCommands();
         ent->updateHair();
@@ -738,7 +738,7 @@ void Game_UpdateCharacters()
         }
         if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
-            ent->m_response.kill = 1;   // Kill, if no HP.
+            ent->m_response.killed = true;   // Kill, if no HP.
         }
         ent->updateHair();
     }
@@ -748,8 +748,8 @@ void Game_UpdateCharacters()
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
-    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    btScalar dt = static_cast<btScalar>(t) * GAME_LOGIC_REFRESH_INTERVAL;
+    int t = static_cast<int>(*game_logic_time / GAME_LOGIC_REFRESH_INTERVAL);
+    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= dt;
     return dt;
 }
@@ -799,7 +799,7 @@ void Game_Frame(btScalar time)
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         btScalar dt = Game_Tick(&game_logic_time);
-        lua_DoTasks(engine_lua, dt);
+        engine_lua.doTasks(dt);
         Game_UpdateAI();
         Audio_Update();
 
@@ -837,8 +837,8 @@ void Game_Frame(btScalar time)
 
     Game_UpdateAllEntities(engine_world.entity_tree);
 
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();
@@ -892,7 +892,7 @@ void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];
 
-    lua_GetLoadingScreen(engine_lua, level_index, file_path);
+    engine_lua.getLoadingScreen(level_index, file_path);
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 

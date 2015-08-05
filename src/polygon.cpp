@@ -127,7 +127,7 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
         u /= tt;
         btScalar v = Q.dot(rayDir);
         v /= tt;
-        tt = 1.0 - u - v;
+        tt = 1.0f - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (tt <= 1.0) && (tt >= 0.0))
         {
             return true;

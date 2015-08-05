@@ -2,8 +2,8 @@ screen =
 {
     x = 50;
     y = 20;
-    width = 1200;
-    height = 800;
+    width = 720;
+    height = 400;
     fullscreen = false;
     fov = 75.0;
     debug_info = false;
@@ -20,6 +20,7 @@ audio =
 
 render =
 {
+    use_gl3 = true;                             -- Disable if you have old videocard or driver.
     mipmap_mode = 3;                            -- 0 = no filter, 1/2 = bilinear filter, 3 = trilinear filter.
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
@@ -95,7 +96,7 @@ bind(act.lookright, KEY_RIGHT, JOY_POVRIGHT);
 
 bind(act.inventory, KEY_ESCAPE);
 bind(act.screenshot, KEY_PRINTSCREEN);
-bind(act.console, KEY_F12);
+bind(act.console, KEY_BACKQUOTE);
 bind(act.savegame, KEY_F5);
 bind(act.loadgame, KEY_F6);
 

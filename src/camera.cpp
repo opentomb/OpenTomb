@@ -25,7 +25,7 @@ void Camera::apply()
 
     m_glProjMat[3][0] = 0.0;
     m_glProjMat[3][1] = 0.0;
-    m_glProjMat[3][2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat[3][2] = 2.0f * m_distNear * m_distFar / (m_distNear - m_distFar);
     m_glProjMat[3][3] = 0.0;
 
     m_glViewMat[0][0] = m_rightDir[0];
@@ -57,9 +57,9 @@ void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
     m_fov = fov;
     m_aspect = aspect;
     m_f = std::tan(m_fov * RadPerDeg / 2);
-    m_height = 2.0 * m_distNear * m_f;
+    m_height = 2.0f * m_distNear * m_f;
     m_width = m_height * aspect;
-    m_f = 1.0 / m_f;
+    m_f = 1.0f / m_f;
 }
 
 void Camera::moveAlong(GLfloat dist)
@@ -124,21 +124,21 @@ void Camera::recalcClipPlanes()
 
     //   DOWN
     btVector3 LU;
-    LU = nearViewPoint - m_height / 2.0 * m_upDir;                                       // вектор нижней плоскости отсечения
+    LU = nearViewPoint - m_height / 2.0f * m_upDir;                                       // вектор нижней плоскости отсечения
     m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //   UP
-    LU = nearViewPoint + m_height / 2.0 * m_upDir;                                       // вектор верхней плоскости отсечения
+    LU = nearViewPoint + m_height / 2.0f * m_upDir;                                       // вектор верхней плоскости отсечения
     m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //==========================================================================
 
     //   LEFT
-    LU = nearViewPoint - m_width / 2.0 * m_rightDir;                                    // вектор левой плоскости отсечения
+    LU = nearViewPoint - m_width / 2.0f * m_rightDir;                                    // вектор левой плоскости отсечения
     m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     //   RIGHT
-    LU = nearViewPoint + m_width / 2.0 * m_rightDir;                                    // вектор правой плоскости отсечения
+    LU = nearViewPoint + m_width / 2.0f * m_rightDir;                                    // вектор правой плоскости отсечения
     m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
@@ -153,8 +153,8 @@ void Camera::recalcClipPlanes()
 
 Camera::Camera()
 {
-    m_f = 1.0 / std::tan(m_fov * RadPerDeg / 2);
-    m_height = 2.0 * m_distNear / m_f;
+    m_f = 1.0f / std::tan(m_fov * RadPerDeg / 2);
+    m_height = 2.0f * m_distNear / m_f;
     m_width = m_height * m_aspect;
 
     frustum = std::make_shared<Frustum>();

@@ -66,6 +66,8 @@ private:
 
     std::string m_editingLine;
 
+    std::vector<std::string> m_completionItems;
+
     ConsoleInfo();
 
 public:
@@ -93,7 +95,7 @@ public:
 
     void filter(const std::string& text);
 
-    void edit(int key);
+    void edit(int key, int mod = -1);
 
     void calcCursorPosition();
 
@@ -190,5 +192,10 @@ public:
         m_backgroundColor[1] = g;
         m_backgroundColor[2] = b;
         m_backgroundColor[3] = a;
+    }
+
+    void setCompletionItems(const std::vector<std::string>& items)
+    {
+        m_completionItems = items;
     }
 };

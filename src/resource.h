@@ -5,6 +5,9 @@
 #include <memory>
 #include <vector>
 
+#include "entity.h"
+#include "world.h"
+
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
 // (derived from actual room mesh).
@@ -15,8 +18,11 @@
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
 
-#define TR_METERING_STEP        (256.0)
-#define TR_METERING_SECTORSIZE  (1024.0)
+namespace
+{
+constexpr float TR_METERING_STEP = 256.0f;
+constexpr float TR_METERING_SECTORSIZE = 1024.0f;
+}
 
 // Wall height is a magical constant which specifies that sector with such
 // height contains impassable wall.
@@ -92,7 +98,7 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version);
 // Create entity function from script, if exists.
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent);
-void Res_CreateEntityFunc(lua::State &lua, const std::string &func_name, int entity_id);
+void Res_CreateEntityFunc(script::ScriptEngine &lua, const std::string &func_name, int entity_id);
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity>>& entities);
 
 // Assign pickup functions to previously created base items.

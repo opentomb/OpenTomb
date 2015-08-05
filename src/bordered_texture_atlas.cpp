@@ -181,7 +181,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         for(const tr_sprite_texture_t& t : sprite_textures)
             areaSum += std::abs((t.x1 - t.x0) * (t.y1 - t.y0));
 
-        m_resultPageWidth = std::min(max_texture_edge_length, GLint(NextPowerOf2(std::sqrt(areaSum)*1.41)));
+        m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
     }
     else
     {
@@ -337,8 +337,8 @@ struct Polygon *poly,
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = canonical.new_page;
-    for(size_t i = 0; i < poly->vertices.size(); i++)
+    poly->tex_index = static_cast<uint16_t>( canonical.new_page );
+    for (size_t i = 0; i < poly->vertices.size(); i++)
     {
         unsigned x_coord = 0;
         unsigned y_coord = 0;

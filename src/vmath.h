@@ -56,7 +56,9 @@ struct Plane
 
     void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
     {
-        normal = v1.cross(v2).normalized();
+        normal = v1.cross(v2);
+        // assert(!normal.fuzzyZero());
+        normal.safeNormalize();
         dot = normal.dot(pos);
     }
 
@@ -90,5 +92,6 @@ void Mat4_Scale(btTransform &mat, btScalar x, btScalar y, btScalar z);
 void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
+btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const btScalar& t);
 
 #endif  // VMATH_H

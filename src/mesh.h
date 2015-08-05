@@ -273,7 +273,7 @@ struct SSAnimation
 
     uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period = 1.0 / 30;                                         // one frame change period
+    btScalar                    period = 1.0f / 30;                                 // one frame change period
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 

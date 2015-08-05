@@ -6,9 +6,6 @@
 --------------------------------------------------------------------------------
 
 
-M_PI = 3.141592653;   -- Needed for alignment
-
-
 -- Point constraint is usually used for multi-mesh dynamic entities, like
 -- multiple boulders / barrels, etc. Hinge and cone constraints could be used
 -- for actual character ragdolls. 

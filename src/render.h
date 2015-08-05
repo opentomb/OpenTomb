@@ -115,15 +115,21 @@ struct RenderSettings
     uint32_t  mipmap_mode = 3;
     uint32_t  mipmaps = 3;
     uint32_t  anisotropy = 0;
+
     bool      antialias = false;
     int       antialias_samples = 0;
+
     int       texture_border = 8;
     bool      save_texture_memory = false;
+
     int       z_depth = 16;
+
     bool      fog_enabled = true;
     GLfloat   fog_color[4]{ 0,0,0,1 };
     float     fog_start_depth = 10000;
     float     fog_end_depth = 16000;
+
+    bool      use_gl3 = false;
 };
 
 class ShaderManager;
