@@ -948,7 +948,7 @@ int Character::moveOnFloor()
             Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id(), id());
+                engine_lua.execEntity(ENTITY_CALLBACK_STAND, e->id(), id());
             }
         }
     }

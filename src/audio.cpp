@@ -1057,7 +1057,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
+    if(!engine_lua.getSoundtrack(track_index, file_path, &load_method, &stream_type))
     {
         ConsoleInfo::instance().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
@@ -1547,7 +1547,7 @@ void Audio_LoadOverridedSamples(struct World *world)
     char sample_name_mask[256];
     char sample_name[256];
 
-    if(lua_GetOverridedSamplesInfo(engine_lua, &num_samples, &num_sounds, sample_name_mask))
+    if(engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))
     {
         int buffer_counter = 0;
 
@@ -1555,7 +1555,7 @@ void Audio_LoadOverridedSamples(struct World *world)
         {
             if(world->audio_map[i] != -1)
             {
-                if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
+                if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
                 {
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {

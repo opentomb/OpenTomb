@@ -71,7 +71,7 @@ static btScalar   *frame_vertex_buffer = nullptr;
 static size_t      frame_vertex_buffer_size = 0;
 static size_t      frame_vertex_buffer_size_left = 0;
 
-lua::State engine_lua;
+script::MainEngine engine_lua;
 
 btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
 btCollisionDispatcher               *bt_engine_dispatcher = nullptr;
@@ -420,7 +420,7 @@ void Engine_Start()
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
-    luaL_dofile(engine_lua.getState(), "autoexec.lua");
+    engine_lua.doFile("autoexec.lua");
 }
 
 void Engine_Display()
@@ -665,7 +665,6 @@ void Engine_Init_Pre()
 
     Gui_InitFontManager();
     ConsoleInfo::instance().init();
-    Script_LuaInit();
 
     engine_lua["loadscript_pre"]();
 
@@ -675,7 +674,7 @@ void Engine_Init_Pre()
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
-    ConsoleInfo::instance().setCompletionItems(Script_GetGlobals(engine_lua));
+    ConsoleInfo::instance().setCompletionItems(engine_lua.getGlobals());
 
     Com_Init();
     renderer.init();
@@ -777,7 +776,7 @@ void Engine_Destroy()
 
 void Engine_Shutdown(int val)
 {
-    Script_LuaClearTasks();
+    engine_lua.clearTasks();
     renderer.empty();
     engine_world.empty();
     Engine_Destroy();
@@ -1086,7 +1085,7 @@ int Engine_LoadMap(const std::string& name)
     engine_world.empty();
     engine_world.prepare();
 
-    lua_Clean(engine_lua);
+    engine_lua.clean();
 
     Audio_Init();
 
@@ -1119,7 +1118,7 @@ int Engine_LoadMap(const std::string& name)
 
     Game_Prepare();
 
-    lua_Prepare(engine_lua);
+    engine_lua.prepare();
 
     renderer.setWorld(&engine_world);
 
@@ -1141,7 +1140,7 @@ int Engine_ExecCmd(const char *ch)
     while(ch != nullptr)
     {
         pch = ch;
-        ch = parse_token(ch, token.data());
+        ch = script::MainEngine::parse_token(ch, token.data());
         if(!strcmp(token.data(), "help"))
         {
             for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
@@ -1152,14 +1151,14 @@ int Engine_ExecCmd(const char *ch)
         else if(!strcmp(token.data(), "goto"))
         {
             control_states.free_look = true;
-            renderer.camera()->m_pos[0] = Script_ParseFloat(&ch);
-            renderer.camera()->m_pos[1] = Script_ParseFloat(&ch);
-            renderer.camera()->m_pos[2] = Script_ParseFloat(&ch);
+            renderer.camera()->m_pos[0] = script::MainEngine::parseFloat(&ch);
+            renderer.camera()->m_pos[1] = script::MainEngine::parseFloat(&ch);
+            renderer.camera()->m_pos[2] = script::MainEngine::parseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token.data(), "save"))
         {
-            ch = parse_token(ch, token.data());
+            ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
                 Game_Save(token.data());
@@ -1168,7 +1167,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "load"))
         {
-            ch = parse_token(ch, token.data());
+            ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
                 Game_Load(token.data());
@@ -1187,7 +1186,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "spacing"))
         {
-            ch = parse_token(ch, token.data());
+            ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_SPACING, ConsoleInfo::instance().spacing());
@@ -1198,7 +1197,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "showing_lines"))
         {
-            ch = parse_token(ch, token.data());
+            ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
                 ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, ConsoleInfo::instance().visibleLines());
@@ -1358,9 +1357,8 @@ void Engine_InitConfig(const char *filename)
 
     if((filename != nullptr) && Engine_FileFound(filename))
     {
-        lua::State state;
-        Script_ExposeConstants(state);
-        lua_registerc(state, "bind", lua_BindKey);                             // get and set key bindings
+        script::ScriptEngine state;
+        state.registerC("bind", &script::MainEngine::bindKey);                             // get and set key bindings
         try
         {
             state.doFile(filename);
@@ -1376,12 +1374,11 @@ void Engine_InitConfig(const char *filename)
             return;
         }
 
-        lua_ParseScreen(state, &screen_info);
-        lua_ParseRender(state, &renderer.settings());
-        lua_ParseAudio(state, &audio_settings);
-        lua_ParseConsole(state, &ConsoleInfo::instance());
-        lua_ParseControls(state, &control_mapper);
-    }
+        state.parseScreen(&screen_info);
+        state.parseRender(&renderer.settings());
+        state.parseAudio(&audio_settings);
+        state.parseConsole(&ConsoleInfo::instance());
+        state.parseControls(&control_mapper);    }
     else
     {
         Sys_Warn("Could not find \"%s\"", filename);

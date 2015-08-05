@@ -461,7 +461,7 @@ void Entity::checkCollisionCallbacks()
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
@@ -469,7 +469,7 @@ void Entity::checkCollisionCallbacks()
                 (type == OBJECT_ROOM_BASE))
         {
             Room* activator = static_cast<Room*>(cont->object);
-            lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
+            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
         }
     }
 }
@@ -888,7 +888,8 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                     if(ss_anim->current_frame == pointer[0])
                     {
                         uint16_t effect_id = pointer[1] & 0x3FFF;
-                        if(effect_id > 0) lua_ExecEffect(engine_lua, effect_id, m_id);
+                        if(effect_id > 0)
+                            engine_lua.execEffect(effect_id, m_id);
                     }
                     pointer += 2;
                     break;
@@ -1238,7 +1239,7 @@ void Entity::checkActivators()
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
             if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
@@ -1251,7 +1252,7 @@ void Entity::checkActivators()
 				&& (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2])
 				&& (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
         }
     }

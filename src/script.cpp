@@ -29,27 +29,9 @@
  * debug functions
  */
 
-void lua_CheckStack()
+void script::ScriptEngine::checkStack()
 {
-    ConsoleInfo::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(engine_lua.getState()));
-}
-
-int lua_Print(lua_State* state)
-{
-    const int top = lua_gettop(state);
-
-    if(top == 0)
-    {
-        ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
-        return 0;
-    }
-
-    for(int i = 1; i <= top; i++)
-    {
-        const char* str = lua_tostring(state, i);
-        ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
-    }
-    return 0;
+    ConsoleInfo::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
 }
 
 void lua_DumpModel(int id)
@@ -577,7 +559,7 @@ int lua_GetLevelVersion()
     return engine_world.version;
 }
 
-void lua_BindKey(int act, int primary, lua::Value secondary)
+void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 {
     if(act < 0 || act >= ACT_LASTINDEX)
     {
@@ -1327,6 +1309,7 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
     if((!ent1) || (!ent2))
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        return 0;
     }
     else
     {
@@ -2527,7 +2510,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
             gameflow_manager.CurrentLevelID = mapId;
         }
         char file_path[MAX_ENGINE_PATH];
-        lua_GetLoadingScreen(engine_lua, gameflow_manager.CurrentLevelID, file_path);
+        engine_lua.getLoadingScreen(gameflow_manager.CurrentLevelID, file_path);
         Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
         Engine_LoadMap(mapName);
@@ -2693,43 +2676,27 @@ void lua_genUVRotateAnimation(int id)
     return;
 }
 
-// Called when something goes absolutely horribly wrong in Lua, and tries
-// to produce some debug output. Lua calls abort afterwards, so sending
-// the output to the internal console is not an option.
-
-static int lua_Panic(lua_State *lua)
+namespace script
 {
-    if(lua_gettop(lua) < 1)
-    {
-        fprintf(stderr, "Fatal lua error (no details provided).\n");
-    }
-    else
-    {
-        fprintf(stderr, "Fatal lua error: %s\n", lua_tostring(lua, 1));
-    }
-    fflush(stderr);
-    return 0;
-}
-
-void Script_ExposeConstants(lua::State& state)
+void ScriptEngine::exposeConstants()
 {
-    state.set("MOVE_STATIC_POS", static_cast<int>(MoveType::StaticPos));
-    state.set("MOVE_KINEMATIC", static_cast<int>(MoveType::Kinematic));
-    state.set("MOVE_ON_FLOOR", static_cast<int>(MoveType::OnFloor));
-    state.set("MOVE_WADE", static_cast<int>(MoveType::Wade));
-    state.set("MOVE_QUICKSAND", static_cast<int>(MoveType::Quicksand));
-    state.set("MOVE_ON_WATER", static_cast<int>(MoveType::OnWater));
-    state.set("MOVE_UNDERWATER", static_cast<int>(MoveType::Underwater));
-    state.set("MOVE_FREE_FALLING", static_cast<int>(MoveType::FreeFalling));
-    state.set("MOVE_CLIMBING", static_cast<int>(MoveType::Climbing));
-    state.set("MOVE_MONKEYSWING", static_cast<int>(MoveType::Monkeyswing));
-    state.set("MOVE_WALLS_CLIMB", static_cast<int>(MoveType::WallsClimb));
-    state.set("MOVE_DOZY", static_cast<int>(MoveType::Dozy));
+    m_state.set("MOVE_STATIC_POS", static_cast<int>(MoveType::StaticPos));
+    m_state.set("MOVE_KINEMATIC", static_cast<int>(MoveType::Kinematic));
+    m_state.set("MOVE_ON_FLOOR", static_cast<int>(MoveType::OnFloor));
+    m_state.set("MOVE_WADE", static_cast<int>(MoveType::Wade));
+    m_state.set("MOVE_QUICKSAND", static_cast<int>(MoveType::Quicksand));
+    m_state.set("MOVE_ON_WATER", static_cast<int>(MoveType::OnWater));
+    m_state.set("MOVE_UNDERWATER", static_cast<int>(MoveType::Underwater));
+    m_state.set("MOVE_FREE_FALLING", static_cast<int>(MoveType::FreeFalling));
+    m_state.set("MOVE_CLIMBING", static_cast<int>(MoveType::Climbing));
+    m_state.set("MOVE_MONKEYSWING", static_cast<int>(MoveType::Monkeyswing));
+    m_state.set("MOVE_WALLS_CLIMB", static_cast<int>(MoveType::WallsClimb));
+    m_state.set("MOVE_DOZY", static_cast<int>(MoveType::Dozy));
 
     // exposes a constant
-#define EXPOSE_C(name) state.set(#name, name)
+#define EXPOSE_C(name) m_state.set(#name, name)
     // exposes a casted constant
-#define EXPOSE_CC(name) state.set(#name, static_cast<int>(name))
+#define EXPOSE_CC(name) m_state.set(#name, static_cast<int>(name))
 
     EXPOSE_C(TR_I);
     EXPOSE_C(TR_I_DEMO);
@@ -2744,9 +2711,9 @@ void Script_ExposeConstants(lua::State& state)
 
 #if 0
     // Unused, but kept here for reference
-    state.set("ENTITY_STATE_ENABLED", 0x0001);
-    state.set("ENTITY_STATE_ACTIVE",  0x0002);
-    state.set("ENTITY_STATE_VISIBLE", 0x0004);
+    m_state.set("ENTITY_STATE_ENABLED", 0x0001);
+    m_state.set("ENTITY_STATE_ACTIVE",  0x0002);
+    m_state.set("ENTITY_STATE_VISIBLE", 0x0004);
 #endif
 
     EXPOSE_C(ENTITY_TYPE_GENERIC);
@@ -2801,8 +2768,8 @@ void Script_ExposeConstants(lua::State& state)
     EXPOSE_C(ANIM_LOOP_LAST_FRAME);
     EXPOSE_C(ANIM_LOCK);
 
-#define EXPOSE_KEY(name) state.set("KEY_" #name, static_cast<int>(SDLK_##name))
-#define EXPOSE_KEY2(name,value) state.set("KEY_" #name, static_cast<int>(SDLK_##value))
+#define EXPOSE_KEY(name) m_state.set("KEY_" #name, static_cast<int>(SDLK_##name))
+#define EXPOSE_KEY2(name,value) m_state.set("KEY_" #name, static_cast<int>(SDLK_##value))
 
     EXPOSE_KEY(BACKSPACE);
     EXPOSE_KEY(TAB);
@@ -3043,45 +3010,45 @@ void Script_ExposeConstants(lua::State& state)
 #undef EXPOSE_KEY
 #undef EXPOSE_KEY2
 
-    state.set("JOY_1", 1000);
-    state.set("JOY_2", 1001);
-    state.set("JOY_3", 1002);
-    state.set("JOY_4", 1003);
-    state.set("JOY_5", 1004);
-    state.set("JOY_6", 1005);
-    state.set("JOY_7", 1006);
-    state.set("JOY_8", 1007);
-    state.set("JOY_9", 1008);
-    state.set("JOY_10", 1009);
-    state.set("JOY_11", 1010);
-    state.set("JOY_12", 1011);
-    state.set("JOY_13", 1012);
-    state.set("JOY_14", 1013);
-    state.set("JOY_15", 1014);
-    state.set("JOY_16", 1015);
-    state.set("JOY_17", 1016);
-    state.set("JOY_18", 1017);
-    state.set("JOY_19", 1018);
-    state.set("JOY_20", 1019);
-    state.set("JOY_21", 1020);
-    state.set("JOY_22", 1021);
-    state.set("JOY_23", 1022);
-    state.set("JOY_24", 1023);
-    state.set("JOY_25", 1024);
-    state.set("JOY_26", 1025);
-    state.set("JOY_27", 1026);
-    state.set("JOY_28", 1027);
-    state.set("JOY_29", 1028);
-    state.set("JOY_30", 1029);
-    state.set("JOY_31", 1030);
-    state.set("JOY_32", 1031);
-    state.set("JOY_POVUP", 1101);
-    state.set("JOY_POVDOWN", 1104);
-    state.set("JOY_POVLEFT", 1108);
-    state.set("JOY_POVRIGHT", 1102);
+    m_state.set("JOY_1", 1000);
+    m_state.set("JOY_2", 1001);
+    m_state.set("JOY_3", 1002);
+    m_state.set("JOY_4", 1003);
+    m_state.set("JOY_5", 1004);
+    m_state.set("JOY_6", 1005);
+    m_state.set("JOY_7", 1006);
+    m_state.set("JOY_8", 1007);
+    m_state.set("JOY_9", 1008);
+    m_state.set("JOY_10", 1009);
+    m_state.set("JOY_11", 1010);
+    m_state.set("JOY_12", 1011);
+    m_state.set("JOY_13", 1012);
+    m_state.set("JOY_14", 1013);
+    m_state.set("JOY_15", 1014);
+    m_state.set("JOY_16", 1015);
+    m_state.set("JOY_17", 1016);
+    m_state.set("JOY_18", 1017);
+    m_state.set("JOY_19", 1018);
+    m_state.set("JOY_20", 1019);
+    m_state.set("JOY_21", 1020);
+    m_state.set("JOY_22", 1021);
+    m_state.set("JOY_23", 1022);
+    m_state.set("JOY_24", 1023);
+    m_state.set("JOY_25", 1024);
+    m_state.set("JOY_26", 1025);
+    m_state.set("JOY_27", 1026);
+    m_state.set("JOY_28", 1027);
+    m_state.set("JOY_29", 1028);
+    m_state.set("JOY_30", 1029);
+    m_state.set("JOY_31", 1030);
+    m_state.set("JOY_32", 1031);
+    m_state.set("JOY_POVUP", 1101);
+    m_state.set("JOY_POVDOWN", 1104);
+    m_state.set("JOY_POVLEFT", 1108);
+    m_state.set("JOY_POVRIGHT", 1102);
 
-    state.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
-    state.set("JOY_TRIGGERRIGHT", 1205);
+    m_state.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
+    m_state.set("JOY_TRIGGERRIGHT", 1205);
 
     EXPOSE_C(COLLISION_TYPE_NONE);
     EXPOSE_C(COLLISION_TYPE_STATIC);
@@ -3163,20 +3130,10 @@ void Script_ExposeConstants(lua::State& state)
 #undef EXPOSE_CC
 }
 
-void Script_LuaInit()
-{
-    Script_LuaRegisterFuncs(engine_lua);
-    lua_atpanic(engine_lua.getState(), lua_Panic);
-    Script_ExposeConstants(engine_lua);
-
-    // Load script loading order (sic!)
-    engine_lua.doFile("scripts/loadscript.lua");
-}
-
-std::vector<std::string> Script_GetGlobals(lua::State& state)
+std::vector<std::string> ScriptEngine::getGlobals()
 {
     std::vector<std::string> result;
-    auto L = state.getState();
+    auto L = m_state.getState();
     lua_pushglobaltable(L);
     lua_pushnil(L);
     while (lua_next(L, -2) != 0)
@@ -3188,204 +3145,234 @@ std::vector<std::string> Script_GetGlobals(lua::State& state)
     return result;
 }
 
-void Script_LuaClearTasks()
+int ScriptEngine::print(lua_State* state)
 {
-    engine_lua["clearTasks"]();
+    const int top = lua_gettop(state);
+
+    if(top == 0)
+    {
+        ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
+        return 0;
+    }
+
+    for(int i = 1; i <= top; i++)
+    {
+        const char* str = lua_tostring(state, i);
+        ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
+    }
+    return 0;
 }
 
-void Script_LuaRegisterFuncs(lua::State& state)
+// Called when something goes absolutely horribly wrong in Lua, and tries
+// to produce some debug output. Lua calls abort afterwards, so sending
+// the output to the internal console is not an option.
+
+int ScriptEngine::panic(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        fprintf(stderr, "Fatal lua error (no details provided).\n");
+    }
+    else
+    {
+        fprintf(stderr, "Fatal lua error: %s\n", lua_tostring(lua, 1));
+    }
+    fflush(stderr);
+    return 0;
+}
+
+void MainEngine::registerMainFunctions()
 {
     /*
      * register globals
      */
-    state.set(CVAR_LUA_TABLE_NAME, lua::Table());
+    set(CVAR_LUA_TABLE_NAME, lua::Table());
 
-    Game_RegisterLuaFunctions(state);
+    Game_RegisterLuaFunctions(*this);
 
     // Register script functions
 
-    lua_registerc(state, "print", lua_Print);
+    registerC("checkStack", std::function<void()>(std::bind(&MainEngine::checkStack, this)));
+    registerC("dumpModel", lua_DumpModel);
+    registerC("dumpRoom", lua_DumpRoom);
+    registerC("setRoomEnabled", lua_SetRoomEnabled);
 
-    lua_registerc(state, "checkStack", lua_CheckStack);
-    lua_registerc(state, "dumpModel", lua_DumpModel);
-    lua_registerc(state, "dumpRoom", lua_DumpRoom);
-    lua_registerc(state, "setRoomEnabled", lua_SetRoomEnabled);
+    registerC("playSound", lua_PlaySound);
+    registerC("stopSound", lua_StopSound);
 
-    lua_registerc(state, "playSound", lua_PlaySound);
-    lua_registerc(state, "stopSound", lua_StopSound);
+    registerC("playStream", lua_PlayStream);
+    registerC("stopStreams", lua_StopStreams);
 
-    lua_registerc(state, "playStream", lua_PlayStream);
-    lua_registerc(state, "stopStreams", lua_StopStreams);
+    registerC("setLevel", lua_SetLevel);
+    registerC("getLevel", lua_GetLevel);
 
-    lua_registerc(state, "setLevel", lua_SetLevel);
-    lua_registerc(state, "getLevel", lua_GetLevel);
+    registerC("setGame", lua_SetGame);
+    registerC("loadMap", lua_LoadMap);
 
-    lua_registerc(state, "setGame", lua_SetGame);
-    lua_registerc(state, "loadMap", lua_LoadMap);
+    registerC("camShake", lua_CamShake);
 
-    lua_registerc(state, "camShake", lua_CamShake);
+    registerC("fadeOut", lua_FadeOut);
+    registerC("fadeIn", lua_FadeIn);
+    registerC("fadeCheck", lua_FadeCheck);
 
-    lua_registerc(state, "fadeOut", lua_FadeOut);
-    lua_registerc(state, "fadeIn", lua_FadeIn);
-    lua_registerc(state, "fadeCheck", lua_FadeCheck);
+    registerC("flashSetup", lua_FlashSetup);
+    registerC("flashStart", lua_FlashStart);
 
-    lua_registerc(state, "flashSetup", lua_FlashSetup);
-    lua_registerc(state, "flashStart", lua_FlashStart);
+    registerC("getLevelVersion", lua_GetLevelVersion);
 
-    lua_registerc(state, "getLevelVersion", lua_GetLevelVersion);
+    registerC("setFlipMap", lua_SetFlipMap);
+    registerC("getFlipMap", lua_GetFlipMap);
+    registerC("setFlipState", lua_SetFlipState);
+    registerC("getFlipState", lua_GetFlipState);
 
-    lua_registerc(state, "setFlipMap", lua_SetFlipMap);
-    lua_registerc(state, "getFlipMap", lua_GetFlipMap);
-    lua_registerc(state, "setFlipState", lua_SetFlipState);
-    lua_registerc(state, "getFlipState", lua_GetFlipState);
+    registerC("setModelCollisionMapSize", lua_SetModelCollisionMapSize);
+    registerC("setModelCollisionMap", lua_SetModelCollisionMap);
+    registerC("getAnimCommandTransform", lua_GetAnimCommandTransform);
+    registerC("setAnimCommandTransform", lua_SetAnimCommandTransform);
+    registerC("setStateChangeRange", lua_SetStateChangeRange);
 
-    lua_registerc(state, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
-    lua_registerc(state, "setModelCollisionMap", lua_SetModelCollisionMap);
-    lua_registerc(state, "getAnimCommandTransform", lua_GetAnimCommandTransform);
-    lua_registerc(state, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-    lua_registerc(state, "setStateChangeRange", lua_SetStateChangeRange);
+    registerC("addItem", lua_AddItem);
+    registerC("removeItem", lua_RemoveItem);
+    registerC("removeAllItems", lua_RemoveAllItems);
+    registerC("getItemsCount", lua_GetItemsCount);
+    registerC("createBaseItem", lua_CreateBaseItem);
+    registerC("deleteBaseItem", lua_DeleteBaseItem);
+    registerC("printItems", lua_PrintItems);
 
-    lua_registerc(state, "addItem", lua_AddItem);
-    lua_registerc(state, "removeItem", lua_RemoveItem);
-    lua_registerc(state, "removeAllItems", lua_RemoveAllItems);
-    lua_registerc(state, "getItemsCount", lua_GetItemsCount);
-    lua_registerc(state, "createBaseItem", lua_CreateBaseItem);
-    lua_registerc(state, "deleteBaseItem", lua_DeleteBaseItem);
-    lua_registerc(state, "printItems", lua_PrintItems);
+    registerC("canTriggerEntity", lua_CanTriggerEntity);
+    registerC("spawnEntity", lua_SpawnEntity);
+    registerC("deleteEntity", lua_DeleteEntity);
+    registerC("enableEntity", lua_EnableEntity);
+    registerC("disableEntity", lua_DisableEntity);
 
-    lua_registerc(state, "canTriggerEntity", lua_CanTriggerEntity);
-    lua_registerc(state, "spawnEntity", lua_SpawnEntity);
-    lua_registerc(state, "deleteEntity", lua_DeleteEntity);
-    lua_registerc(state, "enableEntity", lua_EnableEntity);
-    lua_registerc(state, "disableEntity", lua_DisableEntity);
+    registerC("isInRoom", lua_IsInRoom);
+    registerC("sameRoom", lua_SameRoom);
+    registerC("newSector", lua_NewSector);
+    registerC("similarSector", lua_SimilarSector);
+    registerC("getSectorHeight", lua_GetSectorHeight);
 
-    lua_registerc(state, "isInRoom", lua_IsInRoom);
-    lua_registerc(state, "sameRoom", lua_SameRoom);
-    lua_registerc(state, "newSector", lua_NewSector);
-    lua_registerc(state, "similarSector", lua_SimilarSector);
-    lua_registerc(state, "getSectorHeight", lua_GetSectorHeight);
+    registerC("moveEntityGlobal", lua_MoveEntityGlobal);
+    registerC("moveEntityLocal", lua_MoveEntityLocal);
+    registerC("moveEntityToSink", lua_MoveEntityToSink);
+    registerC("moveEntityToEntity", lua_MoveEntityToEntity);
+    registerC("rotateEntity", lua_RotateEntity);
+    registerC("rotateEntityToEntity", lua_RotateEntityToEntity);
 
-    lua_registerc(state, "moveEntityGlobal", lua_MoveEntityGlobal);
-    lua_registerc(state, "moveEntityLocal", lua_MoveEntityLocal);
-    lua_registerc(state, "moveEntityToSink", lua_MoveEntityToSink);
-    lua_registerc(state, "moveEntityToEntity", lua_MoveEntityToEntity);
-    lua_registerc(state, "rotateEntity", lua_RotateEntity);
-    lua_registerc(state, "rotateEntityToEntity", lua_RotateEntityToEntity);
+    registerC("getEntityModelID", lua_GetEntityModelID);
 
-    lua_registerc(state, "getEntityModelID", lua_GetEntityModelID);
+    registerC("getEntityVector", lua_GetEntityVector);
+    registerC("getEntityDirDot", lua_GetEntityDirDot);
+    registerC("getEntityOrientation", lua_GetEntityOrientation);
+    registerC("getEntityDistance", lua_GetEntityDistance);
+    registerC("getEntityPos", lua_GetEntityPosition);
+    registerC("setEntityPos", lua_SetEntityPosition);
+    registerC("getEntityAngles", lua_GetEntityAngles);
+    registerC("setEntityAngles", lua_SetEntityAngles);
+    registerC("getEntityScaling", lua_GetEntityScaling);
+    registerC("setEntityScaling", lua_SetEntityScaling);
+    registerC("getEntitySpeed", lua_GetEntitySpeed);
+    registerC("setEntitySpeed", lua_SetEntitySpeed);
+    registerC("getEntitySpeedLinear", lua_GetEntitySpeedLinear);
+    registerC("setEntityCollision", lua_SetEntityCollision);
+    registerC("setEntityCollisionFlags", lua_SetEntityCollisionFlags);
+    registerC("getEntityAnim", lua_GetEntityAnim);
+    registerC("setEntityAnim", lua_SetEntityAnim);
+    registerC("setEntityAnimFlag", lua_SetEntityAnimFlag);
+    registerC("setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
+    registerC("setModelBodyPartFlag", lua_SetModelBodyPartFlag);
+    registerC("getEntityModel", lua_GetEntityModel);
+    registerC("getEntityVisibility", lua_GetEntityVisibility);
+    registerC("setEntityVisibility", lua_SetEntityVisibility);
+    registerC("getEntityActivity", lua_GetEntityActivity);
+    registerC("setEntityActivity", lua_SetEntityActivity);
+    registerC("getEntityEnability", lua_GetEntityEnability);
+    registerC("getEntityOCB", lua_GetEntityOCB);
+    registerC("setEntityOCB", lua_SetEntityOCB);
+    registerC("getEntityTimer", lua_GetEntityTimer);
+    registerC("setEntityTimer", lua_SetEntityTimer);
+    registerC("getEntityFlags", lua_GetEntityFlags);
+    registerC("setEntityFlags", lua_SetEntityFlags);
+    registerC("getEntityTypeFlag", lua_GetEntityTypeFlag);
+    registerC("setEntityTypeFlag", lua_SetEntityTypeFlag);
+    registerC("getEntityStateFlag", lua_GetEntityStateFlag);
+    registerC("setEntityStateFlag", lua_SetEntityStateFlag);
+    registerC("getEntityCallbackFlag", lua_GetEntityCallbackFlag);
+    registerC("setEntityCallbackFlag", lua_SetEntityCallbackFlag);
+    registerC("getEntityState", lua_GetEntityState);
+    registerC("setEntityState", lua_SetEntityState);
+    registerC("setEntityRoomMove", lua_SetEntityRoomMove);
+    registerC("getEntityMoveType", lua_GetEntityMoveType);
+    registerC("setEntityMoveType", lua_SetEntityMoveType);
+    registerC("getEntityResponse", lua_GetEntityResponse);
+    registerC("setEntityResponse", lua_SetEntityResponse);
+    registerC("getEntityMeshCount", lua_GetEntityMeshCount);
+    registerC("setEntityMeshswap", lua_SetEntityMeshswap);
+    registerC("setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
+    registerC("setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
+    registerC("copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
-    lua_registerc(state, "getEntityVector", lua_GetEntityVector);
-    lua_registerc(state, "getEntityDirDot", lua_GetEntityDirDot);
-    lua_registerc(state, "getEntityOrientation", lua_GetEntityOrientation);
-    lua_registerc(state, "getEntityDistance", lua_GetEntityDistance);
-    lua_registerc(state, "getEntityPos", lua_GetEntityPosition);
-    lua_registerc(state, "setEntityPos", lua_SetEntityPosition);
-    lua_registerc(state, "getEntityAngles", lua_GetEntityAngles);
-    lua_registerc(state, "setEntityAngles", lua_SetEntityAngles);
-    lua_registerc(state, "getEntityScaling", lua_GetEntityScaling);
-    lua_registerc(state, "setEntityScaling", lua_SetEntityScaling);
-    lua_registerc(state, "getEntitySpeed", lua_GetEntitySpeed);
-    lua_registerc(state, "setEntitySpeed", lua_SetEntitySpeed);
-    lua_registerc(state, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
-    lua_registerc(state, "setEntityCollision", lua_SetEntityCollision);
-    lua_registerc(state, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
-    lua_registerc(state, "getEntityAnim", lua_GetEntityAnim);
-    lua_registerc(state, "setEntityAnim", lua_SetEntityAnim);
-    lua_registerc(state, "setEntityAnimFlag", lua_SetEntityAnimFlag);
-    lua_registerc(state, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
-    lua_registerc(state, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
-    lua_registerc(state, "getEntityModel", lua_GetEntityModel);
-    lua_registerc(state, "getEntityVisibility", lua_GetEntityVisibility);
-    lua_registerc(state, "setEntityVisibility", lua_SetEntityVisibility);
-    lua_registerc(state, "getEntityActivity", lua_GetEntityActivity);
-    lua_registerc(state, "setEntityActivity", lua_SetEntityActivity);
-    lua_registerc(state, "getEntityEnability", lua_GetEntityEnability);
-    lua_registerc(state, "getEntityOCB", lua_GetEntityOCB);
-    lua_registerc(state, "setEntityOCB", lua_SetEntityOCB);
-    lua_registerc(state, "getEntityTimer", lua_GetEntityTimer);
-    lua_registerc(state, "setEntityTimer", lua_SetEntityTimer);
-    lua_registerc(state, "getEntityFlags", lua_GetEntityFlags);
-    lua_registerc(state, "setEntityFlags", lua_SetEntityFlags);
-    lua_registerc(state, "getEntityTypeFlag", lua_GetEntityTypeFlag);
-    lua_registerc(state, "setEntityTypeFlag", lua_SetEntityTypeFlag);
-    lua_registerc(state, "getEntityStateFlag", lua_GetEntityStateFlag);
-    lua_registerc(state, "setEntityStateFlag", lua_SetEntityStateFlag);
-    lua_registerc(state, "getEntityCallbackFlag", lua_GetEntityCallbackFlag);
-    lua_registerc(state, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
-    lua_registerc(state, "getEntityState", lua_GetEntityState);
-    lua_registerc(state, "setEntityState", lua_SetEntityState);
-    lua_registerc(state, "setEntityRoomMove", lua_SetEntityRoomMove);
-    lua_registerc(state, "getEntityMoveType", lua_GetEntityMoveType);
-    lua_registerc(state, "setEntityMoveType", lua_SetEntityMoveType);
-    lua_registerc(state, "getEntityResponse", lua_GetEntityResponse);
-    lua_registerc(state, "setEntityResponse", lua_SetEntityResponse);
-    lua_registerc(state, "getEntityMeshCount", lua_GetEntityMeshCount);
-    lua_registerc(state, "setEntityMeshswap", lua_SetEntityMeshswap);
-    lua_registerc(state, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
-    lua_registerc(state, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
-    lua_registerc(state, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
+    registerC("createEntityGhosts", lua_CreateEntityGhosts);
+    registerC("setEntityBodyMass", lua_SetEntityBodyMass);
+    registerC("pushEntityBody", lua_PushEntityBody);
+    registerC("lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
 
-    lua_registerc(state, "createEntityGhosts", lua_CreateEntityGhosts);
-    lua_registerc(state, "setEntityBodyMass", lua_SetEntityBodyMass);
-    lua_registerc(state, "pushEntityBody", lua_PushEntityBody);
-    lua_registerc(state, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
+    registerC("getEntityTriggerLayout", lua_GetEntityTriggerLayout);
+    registerC("setEntityTriggerLayout", lua_SetEntityTriggerLayout);
+    registerC("getEntityMask", lua_GetEntityMask);
+    registerC("setEntityMask", lua_SetEntityMask);
+    registerC("getEntityEvent", lua_GetEntityEvent);
+    registerC("setEntityEvent", lua_SetEntityEvent);
+    registerC("getEntityLock", lua_GetEntityLock);
+    registerC("setEntityLock", lua_SetEntityLock);
+    registerC("getEntitySectorStatus", lua_GetEntitySectorStatus);
+    registerC("setEntitySectorStatus", lua_SetEntitySectorStatus);
 
-    lua_registerc(state, "getEntityTriggerLayout", lua_GetEntityTriggerLayout);
-    lua_registerc(state, "setEntityTriggerLayout", lua_SetEntityTriggerLayout);
-    lua_registerc(state, "getEntityMask", lua_GetEntityMask);
-    lua_registerc(state, "setEntityMask", lua_SetEntityMask);
-    lua_registerc(state, "getEntityEvent", lua_GetEntityEvent);
-    lua_registerc(state, "setEntityEvent", lua_SetEntityEvent);
-    lua_registerc(state, "getEntityLock", lua_GetEntityLock);
-    lua_registerc(state, "setEntityLock", lua_SetEntityLock);
-    lua_registerc(state, "getEntitySectorStatus", lua_GetEntitySectorStatus);
-    lua_registerc(state, "setEntitySectorStatus", lua_SetEntitySectorStatus);
+    registerC("getEntityActivationOffset", lua_GetEntityActivationOffset);
+    registerC("setEntityActivationOffset", lua_SetEntityActivationOffset);
+    registerC("getEntitySectorIndex", lua_GetEntitySectorIndex);
+    registerC("getEntitySectorFlags", lua_GetEntitySectorFlags);
+    registerC("getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    registerC("getEntitySubstanceState", lua_GetEntitySubstanceState);
 
-    lua_registerc(state, "getEntityActivationOffset", lua_GetEntityActivationOffset);
-    lua_registerc(state, "setEntityActivationOffset", lua_SetEntityActivationOffset);
-    lua_registerc(state, "getEntitySectorIndex", lua_GetEntitySectorIndex);
-    lua_registerc(state, "getEntitySectorFlags", lua_GetEntitySectorFlags);
-    lua_registerc(state, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
-    lua_registerc(state, "getEntitySubstanceState", lua_GetEntitySubstanceState);
+    registerC("addEntityRagdoll", lua_AddEntityRagdoll);
+    registerC("removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
-    lua_registerc(state, "addEntityRagdoll", lua_AddEntityRagdoll);
-    lua_registerc(state, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
+    registerC("getCharacterParam", lua_GetCharacterParam);
+    registerC("setCharacterParam", lua_SetCharacterParam);
+    registerC("changeCharacterParam", lua_ChangeCharacterParam);
+    registerC("getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
+    registerC("setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
+    registerC("setCharacterWeaponModel", lua_SetCharacterWeaponModel);
+    registerC("getCharacterCombatMode", lua_GetCharacterCombatMode);
 
-    lua_registerc(state, "getCharacterParam", lua_GetCharacterParam);
-    lua_registerc(state, "setCharacterParam", lua_SetCharacterParam);
-    lua_registerc(state, "changeCharacterParam", lua_ChangeCharacterParam);
-    lua_registerc(state, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
-    lua_registerc(state, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
-    lua_registerc(state, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
-    lua_registerc(state, "getCharacterCombatMode", lua_GetCharacterCombatMode);
+    registerC("addCharacterHair", lua_AddCharacterHair);
+    registerC("resetCharacterHair", lua_ResetCharacterHair);
 
-    lua_registerc(state, "addCharacterHair", lua_AddCharacterHair);
-    lua_registerc(state, "resetCharacterHair", lua_ResetCharacterHair);
+    registerC("getSecretStatus", lua_GetSecretStatus);
+    registerC("setSecretStatus", lua_SetSecretStatus);
 
-    lua_registerc(state, "getSecretStatus", lua_GetSecretStatus);
-    lua_registerc(state, "setSecretStatus", lua_SetSecretStatus);
+    registerC("getActionState", lua_GetActionState);
+    registerC("getActionChange", lua_GetActionChange);
 
-    lua_registerc(state, "getActionState", lua_GetActionState);
-    lua_registerc(state, "getActionChange", lua_GetActionChange);
+    registerC("genUVRotateAnimation", lua_genUVRotateAnimation);
 
-    lua_registerc(state, "genUVRotateAnimation", lua_genUVRotateAnimation);
+    registerC("getGravity", lua_GetGravity);
+    registerC("setGravity", lua_SetGravity);
+    registerC("dropEntity", lua_DropEntity);
+    registerC("bind", &MainEngine::bindKey);
 
-    lua_registerc(state, "getGravity", lua_GetGravity);
-    lua_registerc(state, "setGravity", lua_SetGravity);
-    lua_registerc(state, "dropEntity", lua_DropEntity);
-    lua_registerc(state, "bind", lua_BindKey);
-
-    lua_registerc(state, "addFont", lua_AddFont);
-    lua_registerc(state, "deleteFont", lua_DeleteFont);
-    lua_registerc(state, "addFontStyle", lua_AddFontStyle);
-    lua_registerc(state, "deleteFontStyle", lua_DeleteFontStyle);
+    registerC("addFont", lua_AddFont);
+    registerC("deleteFont", lua_DeleteFont);
+    registerC("addFontStyle", lua_AddFontStyle);
+    registerC("deleteFontStyle", lua_DeleteFontStyle);
+}
 }
 
 /*
  * MISC
  */
 
-const char *parse_token(const char *data, char *token)
+const char *script::MainEngine::parse_token(const char *data, char *token)
 {
     ///@FIXME: token may be overflowed
     int c;
@@ -3459,7 +3446,7 @@ skipwhite:
     return data;
 }
 
-float Script_ParseFloat(const char **ch)
+float script::MainEngine::parseFloat(const char **ch)
 {
     char token[64];
     (*ch) = parse_token(*ch, token);
@@ -3470,7 +3457,7 @@ float Script_ParseFloat(const char **ch)
     return 0.0;
 }
 
-int Script_ParseInt(char **ch)
+int script::MainEngine::parseInt(char **ch)
 {
     char token[64];
     (*ch) = const_cast<char*>(parse_token(*ch, token));
@@ -3485,66 +3472,66 @@ int Script_ParseInt(char **ch)
  *   Specific functions to get specific parameters from script.
  */
 
-int lua_GetGlobalSound(lua::State& state, int global_sound_id)
+int script::MainEngine::getGlobalSound(int global_sound_id)
 {
-    return state["getGlobalSound"](engine_world.version, global_sound_id);
+    return call("getGlobalSound", engine_world.version, global_sound_id);
 }
 
-int lua_GetSecretTrackNumber(lua::State& state)
+int script::MainEngine::getSecretTrackNumber()
 {
-    return state["getSecretTrackNumber"](engine_world.version);
+    return call("getSecretTrackNumber", engine_world.version);
 }
 
-int lua_GetNumTracks(lua::State& state)
+int script::MainEngine::getNumTracks()
 {
-    return state["getNumTracks"](engine_world.version);
+    return call("getNumTracks", engine_world.version);
 }
 
-bool lua_GetOverridedSamplesInfo(lua::State& state, int *num_samples, int *num_sounds, char *sample_name_mask)
+bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, char *sample_name_mask)
 {
     const char* realPath;
-    lua::tie(realPath, *num_sounds, *num_samples) = state["getOverridedSamplesInfo"](engine_world.version);
+    lua::tie(realPath, *num_sounds, *num_samples) = call("getOverridedSamplesInfo", engine_world.version);
 
     strcpy(sample_name_mask, realPath);
 
     return *num_sounds != -1 && *num_samples != -1 && strcmp(realPath, "NONE") != 0;
 }
 
-bool lua_GetOverridedSample(lua::State& state, int sound_id, int *first_sample_number, int *samples_count)
+bool script::MainEngine::getOverridedSample(int sound_id, int *first_sample_number, int *samples_count)
 {
-    lua::tie(*first_sample_number, *samples_count) = state["getOverridedSample"](engine_world.version, int(gameflow_manager.CurrentLevelID), sound_id);
+    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", engine_world.version, int(gameflow_manager.CurrentLevelID), sound_id);
     return *first_sample_number != -1 && *samples_count != -1;
 }
 
-bool lua_GetSoundtrack(lua::State& state, int track_index, char *file_path, int *load_method, int *stream_type)
+bool script::MainEngine::getSoundtrack(int track_index, char *file_path, int *load_method, int *stream_type)
 {
     const char* realPath;
     int _load_method, _stream_type;
 
-    lua::tie(realPath, _stream_type, _load_method) = state["getTrackInfo"](engine_world.version, track_index);
+    lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", engine_world.version, track_index);
     if(file_path) strcpy(file_path, realPath);
     if(load_method) *load_method = _load_method;
     if(stream_type) *stream_type = _stream_type;
     return _stream_type != -1;
 }
 
-bool lua_GetString(lua::State& state, int string_index, size_t string_size, char *buffer)
+bool script::MainEngine::getString(int string_index, size_t string_size, char *buffer)
 {
-    const char* str = state["getString"](string_index);
+    const char* str = call("getString", string_index);
     strncpy(buffer, str, string_size);
     return true;
 }
 
-bool lua_GetSysNotify(lua::State& state, int string_index, size_t string_size, char *buffer)
+bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char *buffer)
 {
-    const char* str = state["getSysNotify"](string_index);
+    const char* str = call("getSysNotify", string_index);
     strncpy(buffer, str, string_size);
     return true;
 }
 
-bool lua_GetLoadingScreen(lua::State& state, int level_index, char *pic_path)
+bool script::MainEngine::getLoadingScreen(int level_index, char *pic_path)
 {
-    const char* realPath = state["getLoadingScreen"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), level_index);
+    const char* realPath = call("getLoadingScreen", int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), level_index);
     strncpy(pic_path, realPath, MAX_ENGINE_PATH);
     return true;
 }
@@ -3553,163 +3540,145 @@ bool lua_GetLoadingScreen(lua::State& state, int level_index, char *pic_path)
  * System lua functions
  */
 
-void lua_Clean(lua::State& state)
+void script::MainEngine::addKey(int keycode, bool state)
 {
-    state["tlist_Clear"]();
-    state["entfuncs_Clear"]();
-    state["fe_Clear"]();
+    call("addKey", keycode, state);
 }
 
-void lua_Prepare(lua::State& state)
-{
-    state["fe_Prepare"]();
-}
-
-void lua_DoTasks(lua::State& state, btScalar time)
-{
-    state.set("frame_time", time);
-    state["doTasks"]();
-    state["clearKeys"]();
-}
-
-void lua_AddKey(lua::State& lstate, int keycode, bool state)
-{
-    lstate["addKey"](keycode, state);
-}
-
-void lua_ExecEntity(lua::State& state, int id_callback, int id_object, int id_activator)
+void script::MainEngine::execEntity(int id_callback, int id_object, int id_activator)
 {
     if(id_activator >= 0)
-        state["execEntity"](id_callback, id_object, id_activator);
+        call("execEntity", id_callback, id_object, id_activator);
     else
-        state["execEntity"](id_callback, id_object);
+        call("execEntity", id_callback, id_object);
 }
 
-void lua_LoopEntity(lua::State& state, int object_id)
+void script::MainEngine::loopEntity(int object_id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(object_id);
     if(ent && ent->m_active)
     {
-        state["loopEntity"](object_id);
+        call("loopEntity", object_id);
     }
 }
 
-void lua_ExecEffect(lua::State& state, int id, int caller, int operand)
+void script::MainEngine::execEffect(int id, int caller, int operand)
 {
-    state["execFlipeffect"](id, caller, operand);
+    call("execFlipeffect", id, caller, operand);
 }
 
 /*
  * Game structures parse
  */
 
-void lua_ParseControls(lua::State& state, struct ControlSettings *cs)
+void script::ScriptEngine::parseControls(struct ControlSettings *cs)
 {
-    cs->mouse_sensitivity = state["controls"]["mouse_sensitivity"];
-    cs->use_joy = state["controls"]["use_joy"];
-    cs->joy_number = state["controls"]["joy_number"];
-    cs->joy_rumble = state["controls"]["joy_rumble"];
-    cs->joy_axis_map[AXIS_MOVE_X] = state["controls"]["joy_look_axis_x"];
-    cs->joy_axis_map[AXIS_MOVE_Y] = state["controls"]["joy_look_axis_y"];
-    cs->joy_look_invert_x = state["controls"]["joy_look_invert_x"];
-    cs->joy_look_invert_y = state["controls"]["joy_look_invert_y"];
-    cs->joy_look_sensitivity = state["controls"]["joy_look_sensitivity"];
-    cs->joy_look_deadzone = state["controls"]["joy_look_deadzone"];
-    cs->joy_move_invert_x = state["controls"]["joy_move_invert_x"];
-    cs->joy_move_invert_y = state["controls"]["joy_move_invert_y"];
-    cs->joy_move_sensitivity = state["controls"]["joy_move_sensitivity"];
-    cs->joy_move_deadzone = state["controls"]["joy_move_deadzone"];
+    cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"];
+    cs->use_joy = (*this)["controls"]["use_joy"];
+    cs->joy_number = (*this)["controls"]["joy_number"];
+    cs->joy_rumble = (*this)["controls"]["joy_rumble"];
+    cs->joy_axis_map[AXIS_MOVE_X] = (*this)["controls"]["joy_look_axis_x"];
+    cs->joy_axis_map[AXIS_MOVE_Y] = (*this)["controls"]["joy_look_axis_y"];
+    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"];
+    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"];
+    cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"];
+    cs->joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"];
+    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"];
+    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"];
+    cs->joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"];
+    cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"];
 }
 
-void lua_ParseScreen(lua::State& state, struct ScreenInfo *sc)
+void script::ScriptEngine::parseScreen(struct ScreenInfo *sc)
 {
-    sc->x = state["screen"]["x"];
-    sc->y = state["screen"]["y"];
-    sc->w = state["screen"]["width"];
-    sc->h = state["screen"]["height"];
-    sc->w = state["screen"]["width"];
+    sc->x = (*this)["screen"]["x"];
+    sc->y = (*this)["screen"]["y"];
+    sc->w = (*this)["screen"]["width"];
+    sc->h = (*this)["screen"]["height"];
+    sc->w = (*this)["screen"]["width"];
     sc->w_unit = sc->w / GUI_SCREEN_METERING_RESOLUTION;
-    sc->h = state["screen"]["height"];
+    sc->h = (*this)["screen"]["height"];
     sc->h_unit = sc->h / GUI_SCREEN_METERING_RESOLUTION;
-    sc->FS_flag = state["screen"]["fullscreen"];
-    sc->show_debuginfo = state["screen"]["debug_info"];
-    sc->fov = state["screen"]["fov"];
+    sc->FS_flag = (*this)["screen"]["fullscreen"];
+    sc->show_debuginfo = (*this)["screen"]["debug_info"];
+    sc->fov = (*this)["screen"]["fov"];
 }
 
-void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
+void script::ScriptEngine::parseRender(struct RenderSettings *rs)
 {
-    rs->mipmap_mode = state["render"]["mipmap_mode"];
-    rs->mipmaps = state["render"]["mipmaps"];
-    rs->lod_bias = state["render"]["lod_bias"];
-    rs->anisotropy = state["render"]["anisotropy"];
-    rs->antialias = state["render"]["antialias"];
-    rs->antialias_samples = state["render"]["antialias_samples"];
-    rs->texture_border = state["render"]["texture_border"];
-    rs->save_texture_memory = state["render"]["save_texture_memory"];
-    rs->z_depth = state["render"]["z_depth"];
-    rs->fog_enabled = state["render"]["fog_enabled"];
-    rs->fog_start_depth = state["render"]["fog_start_depth"];
-    rs->fog_end_depth = state["render"]["fog_end_depth"];
-    rs->fog_color[0] = state["render"]["fog_color"]["r"];
+    rs->mipmap_mode = (*this)["render"]["mipmap_mode"];
+    rs->mipmaps = (*this)["render"]["mipmaps"];
+    rs->lod_bias = (*this)["render"]["lod_bias"];
+    rs->anisotropy = (*this)["render"]["anisotropy"];
+    rs->antialias = (*this)["render"]["antialias"];
+    rs->antialias_samples = (*this)["render"]["antialias_samples"];
+    rs->texture_border = (*this)["render"]["texture_border"];
+    rs->save_texture_memory = (*this)["render"]["save_texture_memory"];
+    rs->z_depth = (*this)["render"]["z_depth"];
+    rs->fog_enabled = (*this)["render"]["fog_enabled"];
+    rs->fog_start_depth = (*this)["render"]["fog_start_depth"];
+    rs->fog_end_depth = (*this)["render"]["fog_end_depth"];
+    rs->fog_color[0] = (*this)["render"]["fog_color"]["r"];
     rs->fog_color[0] /= 255.0;
-    rs->fog_color[1] = state["render"]["fog_color"]["g"];
+    rs->fog_color[1] = (*this)["render"]["fog_color"]["g"];
     rs->fog_color[1] /= 255.0;
-    rs->fog_color[2] = state["render"]["fog_color"]["b"];
+    rs->fog_color[2] = (*this)["render"]["fog_color"]["b"];
     rs->fog_color[2] /= 255.0;
     rs->fog_color[3] = 1;
 
-    rs->use_gl3 = state["render"]["use_gl3"];
+    rs->use_gl3 = (*this)["render"]["use_gl3"];
 
-    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24) rs->z_depth = 24;
+    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
+        rs->z_depth = 24;
 }
 
-void lua_ParseAudio(lua::State& state, struct AudioSettings *as)
+void script::ScriptEngine::parseAudio(struct AudioSettings *as)
 {
-    as->music_volume = state["audio"]["music_volume"];
-    as->sound_volume = state["audio"]["sound_volume"];
-    as->use_effects = state["audio"]["use_effects"].to<bool>();
-    as->listener_is_player = state["audio"]["listener_is_player"].to<bool>();
-    as->stream_buffer_size = state["audio"]["stream_buffer_size"];
+    as->music_volume = (*this)["audio"]["music_volume"];
+    as->sound_volume = (*this)["audio"]["sound_volume"];
+    as->use_effects = (*this)["audio"]["use_effects"].to<bool>();
+    as->listener_is_player = (*this)["audio"]["listener_is_player"].to<bool>();
+    as->stream_buffer_size = (*this)["audio"]["stream_buffer_size"];
     as->stream_buffer_size *= 1024;
     if(as->stream_buffer_size <= 0)
         as->stream_buffer_size = 128 * 1024;
-    as->music_volume = state["audio"]["music_volume"];
-    as->music_volume = state["audio"]["music_volume"];
+    as->music_volume = (*this)["audio"]["music_volume"];
+    as->music_volume = (*this)["audio"]["music_volume"];
 }
 
-void lua_ParseConsole(lua::State& state, ConsoleInfo *cn)
+void script::ScriptEngine::parseConsole(ConsoleInfo *cn)
 {
     {
-        float r = state["console"]["background_color"]["r"];
-        float g = state["console"]["background_color"]["g"];
-        float b = state["console"]["background_color"]["b"];
-        float a = state["console"]["background_color"]["a"];
+        float r = (*this)["console"]["background_color"]["r"];
+        float g = (*this)["console"]["background_color"]["g"];
+        float b = (*this)["console"]["background_color"]["b"];
+        float a = (*this)["console"]["background_color"]["a"];
         cn->setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
     }
 
-    float tmpF = state["console"]["spacing"];
+    float tmpF = (*this)["console"]["spacing"];
     if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
         cn->setSpacing(tmpF);
 
-    int tmpI = state["console"]["line_size"];
+    int tmpI = (*this)["console"]["line_size"];
     if(tmpI >= CON_MIN_LINE_SIZE && tmpI <= CON_MAX_LINE_SIZE)
         cn->setLineSize(tmpI);
 
-    tmpI = state["console"]["showing_lines"];
+    tmpI = (*this)["console"]["showing_lines"];
     if(tmpI >= CON_MIN_LINES && tmpI <= CON_MIN_LINES)
         cn->setVisibleLines(tmpI);
 
-    tmpI = state["console"]["log_size"];
+    tmpI = (*this)["console"]["log_size"];
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn->setHistorySize(tmpI);
 
-    tmpI = state["console"]["lines_count"];
+    tmpI = (*this)["console"]["lines_count"];
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn->setBufferSize(tmpI);
 
-    bool tmpB = state["console"]["show"];
+    bool tmpB = (*this)["console"]["show"];
     cn->setVisible(tmpB);
 
-    tmpF = state["console"]["show_cursor_period"];
+    tmpF = (*this)["console"]["show_cursor_period"];
     cn->setShowCursorPeriod(tmpF);
 }

@@ -84,7 +84,7 @@ struct BtEntityData
     std::vector<EntityCollisionNode> last_collisions;
 };
 
-#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
+#define DEFAULT_CHARACTER_SPEED_MULT            (30)                          ///@FIXME: magic - not like in original
 
 class BtEngineClosestConvexResultCallback;
 

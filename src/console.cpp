@@ -206,7 +206,7 @@ void ConsoleInfo::edit(int key, int mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
+            Audio_Send(engine_lua.getGlobalSound(TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)
@@ -397,7 +397,7 @@ void ConsoleInfo::warning(int warn_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    lua_GetSysNotify(engine_lua, warn_string_index, 256, fmt);
+    engine_lua.getSysNotify(warn_string_index, 256, fmt);
 
     va_start(argptr, warn_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
@@ -412,7 +412,7 @@ void ConsoleInfo::notify(int notify_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    lua_GetSysNotify(engine_lua, notify_string_index, 256, fmt);
+    engine_lua.getSysNotify(notify_string_index, 256, fmt);
 
     va_start(argptr, notify_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);

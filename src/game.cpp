@@ -29,7 +29,7 @@
 btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 
 extern btScalar time_scale;
-extern lua::State engine_lua;
+extern script::MainEngine engine_lua;
 
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
@@ -130,7 +130,7 @@ void Game_InitGlobals()
     control_states.cam_distance = 800.0;
 }
 
-void Game_RegisterLuaFunctions(lua::State& state)
+void Game_RegisterLuaFunctions(script::ScriptEngine& state)
 {
     state.set("debuginfo", lua_debuginfo);
     state.set("mlook", lua_mlook);
@@ -169,7 +169,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Script_LuaClearTasks();
+        engine_lua.clearTasks();
         try
         {
             engine_lua.doFile(token);
@@ -192,7 +192,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Script_LuaClearTasks();
+        engine_lua.clearTasks();
         try
         {
             engine_lua.doFile(name);
@@ -673,7 +673,7 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
         if(entity->m_enabled)
         {
             entity->processSector();
-            lua_LoopEntity(engine_lua, entity->id());
+            engine_lua.loopEntity(entity->id());
 
             if(entity->m_typeFlags & ENTITY_TYPE_COLLCHECK)
                 entity->checkCollisionCallbacks();
@@ -799,7 +799,7 @@ void Game_Frame(btScalar time)
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         btScalar dt = Game_Tick(&game_logic_time);
-        lua_DoTasks(engine_lua, dt);
+        engine_lua.doTasks(dt);
         Game_UpdateAI();
         Audio_Update();
 
@@ -892,7 +892,7 @@ void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];
 
-    lua_GetLoadingScreen(engine_lua, level_index, file_path);
+    engine_lua.getLoadingScreen(level_index, file_path);
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 

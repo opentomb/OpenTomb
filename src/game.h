@@ -14,9 +14,9 @@
 
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0f / 60.0f)
 
-namespace lua
+namespace script
 {
-    class State;
+    class ScriptEngine;
 }
 
 class VT_Level;
@@ -33,7 +33,7 @@ class BtEngineClosestConvexResultCallback;
 extern btVector3 cam_angles;
 
 void Game_InitGlobals();
-void Game_RegisterLuaFunctions(lua::State &state);
+void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 
