@@ -3657,10 +3657,10 @@ void lua_ParseRender(lua::State& state, struct RenderSettings *rs)
     rs->fog_color[2] = state["render"]["fog_color"]["b"];
     rs->fog_color[2] /= 255.0;
     rs->fog_color[3] = 1;
-    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
-    {
-        rs->z_depth = 24;
-    }
+
+    rs->use_gl3 = state["render"]["use_gl3"];
+
+    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24) rs->z_depth = 24;
 }
 
 void lua_ParseAudio(lua::State& state, struct AudioSettings *as)

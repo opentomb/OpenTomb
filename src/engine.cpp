@@ -211,26 +211,31 @@ void Engine_InitSDLVideo()
         Sys_Error("Could not init OpenGL driver");
     }
 
-    // Check for correct number of antialias samples.
-
-    if(renderer.settings().antialias)
+    if(renderer.settings().use_gl3)
     {
         /* Request opengl 3.2 context. */
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    }
 
-        /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
-        sdl_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-        sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+    // Create temporary SDL window and GL context for checking capabilities.
 
-        if(!sdl_gl_context)
-            Sys_Error("Can't create OpenGL 3.2 context - shutting down.");
+    sdl_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
 
-        assert(sdl_gl_context);
-        SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+    if(!sdl_gl_context)
+        Sys_Error("Can't create OpenGL context - shutting down. Try to disable use_gl3 option in config.");
 
+
+    assert(sdl_gl_context);
+    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
+    // Check for correct number of antialias samples.
+
+    if(renderer.settings().antialias)
+    {
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         maxSamples = (maxSamples > 16) ? (16) : (maxSamples);   // Fix for faulty GL max. sample number.
@@ -250,9 +255,6 @@ void Engine_InitSDLVideo()
             }
         }
 
-        SDL_GL_DeleteContext(sdl_gl_context);
-        SDL_DestroyWindow(sdl_window);
-
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings().antialias);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings().antialias_samples);
     }
@@ -261,6 +263,11 @@ void Engine_InitSDLVideo()
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
     }
+
+    // Remove temporary GL context and SDL window.
+
+    SDL_GL_DeleteContext(sdl_gl_context);
+    SDL_DestroyWindow(sdl_window);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
