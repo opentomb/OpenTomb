@@ -1560,3 +1560,12 @@ bool Entity::deleteRagdoll()
     // NB! Bodies remain in the same state!
     // To make them static again, additionally call setEntityBodyMass script function.
 }
+
+btVector3 Entity::applyGravity(btScalar time)
+{
+    const btVector3 gravityAccelleration = bt_engine_dynamicsWorld->getGravity();
+    const btVector3 gravitySpeed = gravityAccelleration * time;
+    btVector3 move = (m_speed + gravitySpeed/2) * time;
+    m_speed += gravitySpeed;
+    return move;
+}

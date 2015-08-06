@@ -570,7 +570,7 @@ tr5_track_tbl[122] = {file = "xa16_Joby10", mode = ONCE};
 tr5_track_tbl[123] = {file = "xa16_A_Harbour_out", mode = LOOP};
 tr5_track_tbl[124] = {file = "xa16_A_Andy_Out_Norm", mode = LOOP};
 tr5_track_tbl[125] = {file = "xa16_A_Andy_Out_Spooky", mode = LOOP};
-tr5_track_tbl[126] = {file = "xa16_A_Rome_Dag", mode = LOOP}
+tr5_track_tbl[126] = {file = "xa16_A_Rome_Day", mode = LOOP}
 tr5_track_tbl[127] = {file = "xa16_A_Underwater", mode = LOOP};
 tr5_track_tbl[128] = {file = "xa17_A_Rome_Night", mode = LOOP};
 tr5_track_tbl[129] = {file = "xa17_A_VC_Saga", mode = LOOP};
