@@ -1103,8 +1103,7 @@ int Character::moveOnFloor()
 
 int Character::freeFalling()
 {
-    btVector3 move;
-    auto& pos = m_transform.getOrigin();
+    btVector3& pos = m_transform.getOrigin();
 
     /*
      * init height info structure
@@ -1121,9 +1120,7 @@ int Character::freeFalling()
     updateTransform();                                                 // apply rotations
 
     const btVector3 grav = bt_engine_dynamicsWorld->getGravity();
-    move = m_speed + grav * engine_frame_time * 0.5;
-    move *= engine_frame_time;
-    m_speed += grav * engine_frame_time;
+    btVector3 move = applyGravity(engine_frame_time);
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
     m_speed = m_speed.rotate({ 0,0,1 }, rot * RadPerDeg);
 

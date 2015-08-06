@@ -262,10 +262,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
         return false;
     }
 
-    btVector3 g = bt_engine_dynamicsWorld->getGravity();
-    btVector3 move = ent->m_speed * time;
-    move += g * 0.5 * time * time;
-    ent->m_speed += g * time;
+    btVector3 move = ent->applyGravity(time);
 
     BtEngineClosestRayResultCallback cb(ent->m_self);
     btVector3 from, to;
