@@ -1379,12 +1379,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    ///@FIXME: Ridiculous speed override for reach jump animation. All hail to Core Design!
-                    if(anim == 26)
-                        af->frames[af->frames.size() - 1].v_Vertical = -116;
-                    else
-                        af->frames[af->frames.size() - 1].v_Vertical = pointer[0];
-
+                    af->frames[af->frames.size() - 1].v_Vertical = pointer[0];
                     af->frames[af->frames.size() - 1].v_Horizontal = pointer[1];
                     af->frames[af->frames.size() - 1].command |= ANIM_CMD_JUMP;
                     pointer += 2;

@@ -798,6 +798,35 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
         model->animations[anim].frames[frame].move = { dx,dy,dz };
 }
 
+void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
+{
+    SkeletalModel* model = engine_world.getModelByID(id);
+    if(model == nullptr)
+    {
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        return;
+    }
+
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        return;
+    }
+
+    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    {
+        frame = static_cast<int>(model->animations[anim].frames.size()) + frame;
+    }
+
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        return;
+    }
+
+    model->animations[anim].frames[frame].v_Vertical = static_cast<btScalar>(speed);
+}
+
 uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
     btVector3 pos{ x,y,z }, ang{ ax,ay,az };
@@ -3227,6 +3256,7 @@ void MainEngine::registerMainFunctions()
     registerC("getAnimCommandTransform", lua_GetAnimCommandTransform);
     registerC("setAnimCommandTransform", lua_SetAnimCommandTransform);
     registerC("setStateChangeRange", lua_SetStateChangeRange);
+    registerC("setAnimVerticalSpeed", lua_SetAnimVerticalSpeed);
 
     registerC("addItem", lua_AddItem);
     registerC("removeItem", lua_RemoveItem);
@@ -3363,7 +3393,7 @@ void MainEngine::registerMainFunctions()
     registerC("addFontStyle", lua_AddFontStyle);
     registerC("deleteFontStyle", lua_DeleteFontStyle);
 }
-}
+}   // end namespace script
 
 /*
  * MISC

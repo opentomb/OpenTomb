@@ -243,6 +243,10 @@ if(getLevelVersion() >= TR_II) then
     setAnimCommandTransform(0, 203, -2, 0x03);
 end
 
+-- Fix for reach jump height (was hardcoded in originals)
+
+setAnimVerticalSpeed(0, 26, -1, -116);
+
 -- Generate UV rotation texture animations for waterfalls in TR4+ versions
 
 if (getLevelVersion() == TR_IV) then
