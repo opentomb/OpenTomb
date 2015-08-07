@@ -19,31 +19,35 @@
 
 extern SDL_Window  *sdl_window;
 
-gui_text_line_p     gui_base_lines = NULL;
-gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
-uint16_t            temp_lines_used = 0;
+static gui_text_line_p     gui_base_lines = NULL;
+static gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
+static uint16_t            temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
-//gui_Fader           Fader[FADER_LASTINDEX];
 
 gui_InventoryManager  *main_inventory_manager = NULL;
 
-GLuint crosshairBuffer;
+static GLuint crosshairBuffer = 0;
+static GLuint backgroundBuffer = 0;
 
-GLfloat guiProjectionMatrix[16];
+static GLfloat guiProjectionMatrix[16];
 
 static GLfloat screenSize[2];
+
+static void Gui_FillCrosshairBuffer();
+static void Gui_FillBackgroundBuffer();
 
 void Gui_Init()
 {
     Gui_InitBars();
-    Gui_InitFaders();
     Gui_InitNotifier();
     Gui_InitTempLines();
 
     glGenBuffersARB(1, &crosshairBuffer);
+    glGenBuffersARB(1, &backgroundBuffer);
     Gui_FillCrosshairBuffer();
+    Gui_FillBackgroundBuffer();
 
     main_inventory_manager = new gui_InventoryManager();
 }
@@ -181,43 +185,6 @@ void Gui_InitBars()
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
 }
 
-void Gui_InitFaders()
-{
-    /*for(int i = 0; i < FADER_LASTINDEX; i++)
-    {
-        switch(i)
-        {
-            case FADER_LOADSCREEN:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(0, 0, 0);
-                    Fader[i].SetBlendingMode(BM_OPAQUE);
-                    Fader[i].SetSpeed(500);
-                    Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-                }
-                break;
-
-            case FADER_EFFECT:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(255,180,0);
-                    Fader[i].SetBlendingMode(BM_MULTIPLY);
-                    Fader[i].SetSpeed(10,800);
-                }
-
-            case FADER_BLACK:
-                {
-                    Fader[i].SetAlpha(255);
-                    Fader[i].SetColor(0, 0, 0);
-                    Fader[i].SetBlendingMode(BM_OPAQUE);
-                    Fader[i].SetSpeed(500);
-                    Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-                }
-                break;
-        }
-    }*/
-}
-
 void Gui_InitNotifier()
 {
     Notifier.SetPos(850.0, 850.0);
@@ -236,11 +203,6 @@ void Gui_Destroy()
         gui_temp_lines[i].text = NULL;
     }
 
-    /*for(int i = 0; i < FADER_LASTINDEX; i++)
-    {
-        Fader[i].Cut();
-    }*/
-
     temp_lines_used = GUI_MAX_TEMP_LINES;
 
     if(main_inventory_manager)
@@ -248,6 +210,9 @@ void Gui_Destroy()
         delete main_inventory_manager;
         main_inventory_manager = NULL;
     }
+
+    glDeleteBuffersARB(1, &crosshairBuffer);
+    glDeleteBuffersARB(1, &backgroundBuffer);
 }
 
 void Gui_AddLine(gui_text_line_p line)
@@ -359,6 +324,7 @@ void Gui_Resize()
 
     Con_SetScaleFonts(screen_info.scale_factor);
     Gui_FillCrosshairBuffer();
+    Gui_FillBackgroundBuffer();
 }
 
 void Gui_Render()
@@ -393,7 +359,6 @@ void Gui_Render()
 
     Gui_DrawCrosshair();
     Gui_DrawBars();
-    Gui_DrawFaders();
 
     Gui_RenderStrings();
     Con_Draw(engine_frame_time);
@@ -1148,6 +1113,40 @@ void Gui_FillCrosshairBuffer()
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
 }
 
+void Gui_FillBackgroundBuffer()
+{
+    GLfloat x0 = 0.0f;
+    GLfloat y0 = 0.0f;
+    GLfloat x1 = screen_info.w;
+    GLfloat y1 = screen_info.h;
+    GLfloat *v, backgroundArray[32];
+    GLfloat color[4] = {0.0f, 0.0f, 0.0f, 0.5f};
+
+    v = backgroundArray;
+   *v++ = x0; *v++ = y0;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0f; *v++ = 0.0f;
+
+   *v++ = x1; *v++ = y0;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 1.0f; *v++ = 0.0f;
+
+   *v++ = x1; *v++ = y1;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 1.0f; *v++ = 1.0f;
+
+   *v++ = x0; *v++ = y1;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0f; *v++ = 1.0f;
+   
+    glBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
+}
+
 void Gui_DrawCrosshair()
 {
     BindWhiteTexture();
@@ -1156,14 +1155,6 @@ void Gui_DrawCrosshair()
     glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
     glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
     glDrawArrays(GL_LINES, 0, 4);
-}
-
-void Gui_DrawFaders()
-{
-    /*for(int i = 0; i < FADER_LASTINDEX; i++)
-    {
-        Fader[i].Show();
-    }*/
 }
 
 void Gui_DrawBars()
@@ -1188,41 +1179,13 @@ void Gui_DrawInventory()
         return;
     }
 
-    Render_ResetActiveTexture();
     glDepthMask(GL_FALSE);
     {
         BindWhiteTexture();
-        GLfloat x0 = 0.0f;
-        GLfloat y0 = 0.0f;
-        GLfloat x1 = screen_info.w;
-        GLfloat y1 = screen_info.h;
-        GLfloat *v, backgroundArray[32];
-        GLfloat color[4] = {0.0f, 0.0f, 0.0f, 0.5f};
-
-        v = backgroundArray;
-       *v++ = x0; *v++ = y0;
-        vec4_copy(v, color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y0;
-        vec4_copy(v, color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y1;
-        vec4_copy(v, color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x0; *v++ = y1;
-        vec4_copy(v, color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
-        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
-        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
+        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
+        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     glDepthMask(GL_TRUE);
@@ -1351,39 +1314,9 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-bool Gui_FadeStart(int fader, int fade_direction)
+/*bool Gui_FadeAssignPic(int fader, const char* pic_name)
 {
-    // If fader exists, and is not active, we engage it.
-
-    /*if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_FADING))
-    {
-        Fader[fader].Engage(fade_direction);
-        return true;
-    }
-    else
-    {
-        return false;
-    }*/
-    return true;
-}
-
-bool Gui_FadeStop(int fader)
-{
-    /*if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_IDLE))
-    {
-        Fader[fader].Cut();
-        return true;
-    }
-    else
-    {
-        return false;
-    }*/
-    return true;
-}
-
-bool Gui_FadeAssignPic(int fader, const char* pic_name)
-{
-    /*if((fader >= 0) && (fader < FADER_LASTINDEX))
+    if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
         size_t len = strlen(pic_name);
@@ -1436,479 +1369,9 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
 
         //return Fader[fader].SetTexture(buf);
     }
-*/
+
     return false;
-}
-
-void Gui_FadeSetup(int fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
-                   uint16_t fadein_speed, uint16_t fadeout_speed)
-{
-    /*if(fader >= FADER_LASTINDEX) return;
-
-    Fader[fader].SetAlpha(alpha);
-    Fader[fader].SetColor(R,G,B);
-    Fader[fader].SetBlendingMode(blending_mode);
-    Fader[fader].SetSpeed(fadein_speed,fadeout_speed);*/
-}
-
-int Gui_FadeCheck(int fader)
-{
-    /*if((fader >= 0) && (fader < FADER_LASTINDEX))
-    {
-        return Fader[fader].IsFading();
-    }
-    else
-    {
-        return false;
-    }*/
-}
-
-
-// ===================================================================================
-// ============================ FADER CLASS IMPLEMENTATION ===========================
-// ===================================================================================
-#if 0
-gui_Fader::gui_Fader()
-{
-    SetColor(0, 0, 0);
-    SetBlendingMode(BM_OPAQUE);
-    SetAlpha(255);
-    SetSpeed(500);
-    SetDelay(0);
-
-    mActive             = false;
-    mComplete           = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
-    mDirection          = GUI_FADER_DIR_IN;
-
-    mTexture            = 0;
-}
-
-void gui_Fader::SetAlpha(uint8_t alpha)
-{
-    mMaxAlpha = (float)alpha / 255;
-}
-
-void gui_Fader::SetScaleMode(uint8_t mode)
-{
-    mTextureScaleMode = mode;
-}
-
-void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
-{
-
-    // Each corner of the fader could be colored independently, thus allowing
-    // to create gradient faders. It is nifty yet not so useful feature, so
-    // it is completely optional - if you won't specify corner, color will be
-    // set for the whole fader.
-
-    switch(corner)
-    {
-        case GUI_FADER_CORNER_TOPLEFT:
-            mTopLeftColor[0] = (GLfloat)R / 255;
-            mTopLeftColor[1] = (GLfloat)G / 255;
-            mTopLeftColor[2] = (GLfloat)B / 255;
-            break;
-
-        case GUI_FADER_CORNER_TOPRIGHT:
-            mTopRightColor[0] = (GLfloat)R / 255;
-            mTopRightColor[1] = (GLfloat)G / 255;
-            mTopRightColor[2] = (GLfloat)B / 255;
-            break;
-
-        case GUI_FADER_CORNER_BOTTOMLEFT:
-            mBottomLeftColor[0] = (GLfloat)R / 255;
-            mBottomLeftColor[1] = (GLfloat)G / 255;
-            mBottomLeftColor[2] = (GLfloat)B / 255;
-            break;
-
-        case GUI_FADER_CORNER_BOTTOMRIGHT:
-            mBottomRightColor[0] = (GLfloat)R / 255;
-            mBottomRightColor[1] = (GLfloat)G / 255;
-            mBottomRightColor[2] = (GLfloat)B / 255;
-            break;
-
-        default:
-            mTopRightColor[0] = (GLfloat)R / 255;
-            mTopRightColor[1] = (GLfloat)G / 255;
-            mTopRightColor[2] = (GLfloat)B / 255;
-
-            // Copy top right corner color to all other corners.
-
-            memcpy(mTopLeftColor,     mTopRightColor, sizeof(GLfloat) * 4);
-            memcpy(mBottomRightColor, mTopRightColor, sizeof(GLfloat) * 4);
-            memcpy(mBottomLeftColor,  mTopRightColor, sizeof(GLfloat) * 4);
-            break;
-    }
-}
-
-void gui_Fader::SetBlendingMode(uint32_t mode)
-{
-    mBlendingMode = mode;
-}
-
-void gui_Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
-{
-    mSpeed           = 1000.0 / (float)fade_speed;
-    mSpeedSecondary  = 1000.0 / (float)fade_speed_secondary;
-}
-
-void gui_Fader::SetDelay(uint32_t delay_msec)
-{
-    mMaxTime         = (float)delay_msec / 1000.0;
-}
-
-void gui_Fader::SetAspect()
-{
-    if(mTexture)
-    {
-        if(((float)mTextureWidth / (float)screen_info.w) >= ((float)mTextureHeight / (float)screen_info.h))
-        {
-            mTextureWide = true;
-            mTextureAspectRatio = (float)mTextureHeight / (float)mTextureWidth;
-        }
-        else
-        {
-            mTextureWide = false;
-            mTextureAspectRatio = (float)mTextureWidth  / (float)mTextureHeight;
-        }
-    }
-}
-
-bool gui_Fader::SetTexture(const char *texture_path)
-{
-    SDL_Surface *surface = IMG_Load(texture_path);
-    GLenum       texture_format;
-    GLint        color_depth;
-
-    if(surface != NULL)
-    {
-        // Get the color depth of the SDL surface
-        color_depth = surface->format->BytesPerPixel;
-
-        if(color_depth == 4)        // Contains an alpha channel
-        {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGBA;
-            else
-                texture_format = GL_BGRA;
-        }
-        else if(color_depth == 3)   // No alpha channel
-        {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGB;
-            else
-                texture_format = GL_BGR;
-        }
-        else
-        {
-            Con_Warning("image \"%s\" is not truecolor", texture_path);
-            SDL_FreeSurface(surface);
-            return false;
-        }
-
-        // Drop previously assigned texture, if it exists.
-        DropTexture();
-
-        // Have OpenGL generate a texture object handle for us
-        glGenTextures(1, &mTexture);
-
-        // Bind the texture object
-        glBindTexture(GL_TEXTURE_2D, mTexture);
-
-        // Set the texture's stretching properties
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Edit the texture object's image data using the information SDL_Surface gives us
-        glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
-                          texture_format, GL_UNSIGNED_BYTE, surface->pixels);
-    }
-    else
-    {
-        Con_Warning("image \"%s\" loading error: \"%s\"", SDL_GetError(), texture_path);
-        return false;
-    }
-
-    // Unbind the texture - is it really necessary?
-    // glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Free the SDL_Surface only if it was successfully created
-    if(surface)
-    {
-        // Set additional parameters
-        mTextureWidth  = surface->w;
-        mTextureHeight = surface->h;
-
-        SetAspect();
-
-        Con_Warning("fail to load fader image \"%s\"", texture_path);
-        SDL_FreeSurface(surface);
-        return true;
-    }
-    else
-    {
-        /// if mTexture == 0 then trouble
-        if(glIsTexture(mTexture))
-        {
-            glDeleteTextures(1, &mTexture);
-        }
-        mTexture = 0;
-        return false;
-    }
-}
-
-bool gui_Fader::DropTexture()
-{
-    if(mTexture)
-    {
-        glBindTexture(GL_TEXTURE_2D, 0);
-        /// if mTexture is incorrect then maybe trouble
-        if(glIsTexture(mTexture))
-        {
-            glDeleteTextures(1, &mTexture);
-        }
-        mTexture = 0;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-void gui_Fader::Engage(int fade_dir)
-{
-    mDirection    = fade_dir;
-    mActive       = true;
-    mComplete     = false;
-    mCurrentTime  = 0.0;
-
-    if(mDirection == GUI_FADER_DIR_IN)
-    {
-        mCurrentAlpha = mMaxAlpha;      // Fade in: set alpha to maximum.
-    }
-    else
-    {
-        mCurrentAlpha = 0.0;            // Fade out or timed: set alpha to zero.
-    }
-}
-
-void gui_Fader::Cut()
-{
-    mActive        = false;
-    mComplete      = false;
-    mCurrentAlpha  = 0.0;
-    mCurrentTime   = 0.0;
-
-    DropTexture();
-}
-
-void gui_Fader::Show()
-{
-    if(!mActive)
-    {
-        mComplete = true;
-        return;                                 // If fader is not active, don't render it.
-    }
-
-    if(mDirection == GUI_FADER_DIR_IN)          // Fade in case
-    {
-        if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
-        {
-            mCurrentAlpha -= engine_frame_time * mSpeed;
-        }
-        else
-        {
-            mComplete     = true;   // We've reached zero alpha, complete and disable fader.
-            mActive       = false;
-            mCurrentAlpha = 0.0;
-            DropTexture();
-        }
-    }
-    else if(mDirection == GUI_FADER_DIR_OUT)  // Fade out case
-    {
-        if(mCurrentAlpha < mMaxAlpha)   // If alpha is less than maximum, continue to fade.
-        {
-            mCurrentAlpha += engine_frame_time * mSpeed;
-        }
-        else
-        {
-            // We've reached maximum alpha, so complete fader but leave it active.
-            // This is needed for engine to receive proper callback in case some events are
-            // delayed to the next frame - e.g., level loading.
-
-            mComplete = true;
-            mCurrentAlpha = mMaxAlpha;
-        }
-    }
-    else    // Timed fader case
-    {
-        if(mCurrentTime <= mMaxTime)
-        {
-            if(mCurrentAlpha == mMaxAlpha)
-            {
-                mCurrentTime += engine_frame_time;
-            }
-            else if(mCurrentAlpha < mMaxAlpha)
-            {
-                mCurrentAlpha += engine_frame_time * mSpeed;
-            }
-            else
-            {
-                mCurrentAlpha = mMaxAlpha;
-            }
-        }
-        else
-        {
-            if(mCurrentAlpha > 0.0)
-            {
-                mCurrentAlpha -= engine_frame_time * mSpeedSecondary;
-            }
-            else
-            {
-                mComplete     = true;          // We've reached zero alpha, complete and disable fader.
-                mActive       = false;
-                mCurrentAlpha = 0.0;
-                mCurrentTime  = 0.0;
-                DropTexture();
-            }
-        }
-    }
-
-    // Apply current alpha value to all vertices.
-
-    mTopLeftColor[3]     = mCurrentAlpha;
-    mTopRightColor[3]    = mCurrentAlpha;
-    mBottomLeftColor[3]  = mCurrentAlpha;
-    mBottomRightColor[3] = mCurrentAlpha;
-
-    // Draw the rectangle.
-    // We draw it from the very top left corner to the end of the screen.
-
-    if(mTexture)
-    {
-        // Texture is always modulated with alpha!
-        GLfloat tex_color[4] = {mCurrentAlpha, mCurrentAlpha, mCurrentAlpha, mCurrentAlpha};
-
-        if(mTextureScaleMode == GUI_FADER_SCALE_LETTERBOX)
-        {
-            if(mTextureWide)        // Texture is wider than the screen... Do letterbox.
-            {
-                // Draw lower letterbox.
-                Gui_DrawRect(0.0,
-                             0.0,
-                             screen_info.w,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             mBottomLeftColor, mBottomRightColor, mBottomLeftColor, mBottomRightColor,
-                             mBlendingMode);
-
-                // Draw texture.
-                Gui_DrawRect(0.0,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             screen_info.w,
-                             screen_info.w * mTextureAspectRatio,
-                             tex_color, tex_color, tex_color, tex_color,
-                             mBlendingMode,
-                             mTexture);
-
-                // Draw upper letterbox.
-                Gui_DrawRect(0.0,
-                             screen_info.h - (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             screen_info.w,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             mTopLeftColor, mTopRightColor, mTopLeftColor, mTopRightColor,
-                             mBlendingMode);
-            }
-            else        // Texture is taller than the screen... Do pillarbox.
-            {
-                // Draw left pillarbox.
-                Gui_DrawRect(0.0,
-                             0.0,
-                             (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             screen_info.h,
-                             mTopLeftColor, mTopLeftColor, mBottomLeftColor, mBottomLeftColor,
-                             mBlendingMode);
-
-                // Draw texture.
-                Gui_DrawRect((screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             0.0,
-                             screen_info.h / mTextureAspectRatio,
-                             screen_info.h,
-                             tex_color, tex_color, tex_color, tex_color,
-                             mBlendingMode,
-                             mTexture);
-
-                // Draw right pillarbox.
-                Gui_DrawRect(screen_info.w - (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             0.0,
-                             (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             screen_info.h,
-                             mTopRightColor, mTopRightColor, mBottomRightColor, mBottomRightColor,
-                             mBlendingMode);
-            }
-        }
-        else if(mTextureScaleMode == GUI_FADER_SCALE_ZOOM)
-        {
-            if(mTextureWide)    // Texture is wider than the screen - scale vertical.
-            {
-                Gui_DrawRect(-(((screen_info.h / mTextureAspectRatio) - screen_info.w) / 2),
-                             0.0,
-                             screen_info.h / mTextureAspectRatio,
-                             screen_info.h,
-                             tex_color, tex_color, tex_color, tex_color,
-                             mBlendingMode,
-                             mTexture);
-            }
-            else                // Texture is taller than the screen - scale horizontal.
-            {
-                Gui_DrawRect(0.0,
-                             -(((screen_info.w / mTextureAspectRatio) - screen_info.h) / 2),
-                             screen_info.w,
-                             screen_info.w / mTextureAspectRatio,
-                             tex_color, tex_color, tex_color, tex_color,
-                             mBlendingMode,
-                             mTexture);
-            }
-        }
-        else    // Simple stretch!
-        {
-            Gui_DrawRect(0.0,
-                         0.0,
-                         screen_info.w,
-                         screen_info.h,
-                         tex_color, tex_color, tex_color, tex_color,
-                         mBlendingMode,
-                         mTexture);
-        }
-
-
-    }
-    else    // No texture, simply draw colored rect.
-    {
-        Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h,
-                     mTopLeftColor, mTopRightColor, mBottomLeftColor, mBottomRightColor,
-                     mBlendingMode);
-    }   // end if(mTexture)
-}
-
-int gui_Fader::IsFading()
-{
-    if(mComplete)
-    {
-        return GUI_FADER_STATUS_COMPLETE;
-    }
-    else if(mActive)
-    {
-        return GUI_FADER_STATUS_FADING;
-    }
-    else
-    {
-        return GUI_FADER_STATUS_IDLE;
-    }
-}
-#endif
-
+}*/
 // ===================================================================================
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================
 // ===================================================================================

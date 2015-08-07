@@ -1116,6 +1116,7 @@ void Render_DrawList()
     }
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
+    active_texture = 0;
 }
 
 void Render_DrawList_DebugLines()

@@ -249,7 +249,7 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
@@ -954,7 +954,6 @@ void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];
     lua_GetLoadingScreen(engine_lua, level_index, file_path);
-    Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    //Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
     Audio_EndStreams();
 }

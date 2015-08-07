@@ -23,13 +23,12 @@ struct frustum_s;
  */
 typedef struct portal_s                                                         
 {
-    uint16_t vertex_count;     
-    btScalar *vertex;                                                           // Оригинальные вершины портала
-    btScalar norm[4];                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btScalar centre[3];                                                         // центр портала
-    struct room_s *dest_room;                                                   // куда ведет портал
-    struct room_s *current_room;                                                // комната, где нааходится портал
-    unsigned int flag;                                                          // хз, мб потом понадобится
+    uint16_t        vertex_count;     
+    btScalar       *vertex;                                                     // Оригинальные вершины портала
+    btScalar        norm[4];                                                    // уравнение плоскости оригинальных вершин (оно же нормаль)
+    btScalar        centre[3];                                                  // центр портала
+    struct room_s  *dest_room;                                                  // куда ведет портал
+    struct room_s  *current_room;                                               // комната, где нааходится портал
 }portal_t, *portal_p;
 
 

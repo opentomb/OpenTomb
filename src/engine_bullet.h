@@ -12,6 +12,12 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
+/*
+ * ADD IT HERE
+ */
+///@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
+///@ bt_engine_dynamicsWorld->getGravity()
+
 struct entity_s;
 
 class btDefaultCollisionConfiguration;

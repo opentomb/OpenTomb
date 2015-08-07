@@ -399,8 +399,7 @@ void Engine_Start()
     SDL_ShowCursor(0);
 
     // Make splash screen.
-    Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    //Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
 
     luaL_dofile(engine_lua, "autoexec.lua");
 }

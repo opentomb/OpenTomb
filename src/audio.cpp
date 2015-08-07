@@ -328,7 +328,7 @@ void AudioSource::LinkEmitter()
             {
                 vec3_copy(vec, ent->transform + 12);
                 SetPosition(vec);
-                vec3_copy(vec, ent->speed.m_floats);
+                vec3_copy(vec, ent->speed);
                 SetVelocity(vec);
             }
             return;

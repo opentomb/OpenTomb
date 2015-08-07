@@ -2412,7 +2412,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_dest = world->rooms + tr_portal->adjoining_room;
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
         p->vertex = (btScalar*)malloc(3*p->vertex_count*sizeof(btScalar));
-        p->flag = 0;
         p->dest_room = r_dest;
         p->current_room = room;
         TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);

@@ -89,7 +89,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     {
         bt_engine_dynamicsWorld->addRigidBody(entity->physics.bt_body[i]);
         entity->physics.bt_body[i]->activate();
-        entity->physics.bt_body[i]->setLinearVelocity(entity->speed);
+        entity->physics.bt_body[i]->setLinearVelocity(btVector3(entity->speed[0], entity->speed[1], entity->speed[2]));
         if(entity->physics.ghostObjects[i])
         {
             bt_engine_dynamicsWorld->removeCollisionObject(entity->physics.ghostObjects[i]);

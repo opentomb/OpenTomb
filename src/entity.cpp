@@ -76,7 +76,7 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.centre);
     vec3_set_zero(ret->bf.pos);
     vec3_set_zero(ret->angles);
-    vec4_set_zero(ret->speed.m_floats);
+    vec4_set_zero(ret->speed);
     vec3_set_one(ret->scaling);
 
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
@@ -578,30 +578,30 @@ void Entity_UpdateTransform(entity_p entity)
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
 {
     btScalar t  = entity->current_speed * entity->speed_mult;
-    btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
+    btScalar vz = (zeroVz)?(0.0):(entity->speed[2]);
 
     if(entity->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4, t);
+        vec3_mul_scalar(entity->speed, entity->transform+4, t);
     }
     else if(entity->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4,-t);
+        vec3_mul_scalar(entity->speed, entity->transform+4,-t);
     }
     else if(entity->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0,-t);
+        vec3_mul_scalar(entity->speed, entity->transform+0,-t);
     }
     else if(entity->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0, t);
+        vec3_mul_scalar(entity->speed, entity->transform+0, t);
     }
     else
     {
-        vec3_set_zero(entity->speed.m_floats);
+        vec3_set_zero(entity->speed);
     }
 
-    entity->speed.m_floats[2] = vz;
+    entity->speed[2] = vz;
 }
 
 

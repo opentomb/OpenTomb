@@ -100,112 +100,9 @@ typedef struct gui_rect_s
 } gui_rect_t, *gui_rect_p;
 
 
-// Fader is a simple full-screen rectangle, which always sits above the scene,
-// and, when activated, either shows or hides gradually - hence, creating illusion
-// of fade in and fade out effects.
-// TR1-3 had only one type of fader - black one, which was activated on level
-// transitions. Since TR4, additional colored fader was introduced to emulate
-// various full-screen effects (flashes, flares, and so on).
-// With OpenTomb, we extend fader functionality to support not only simple dip to
-// color effect, but also various advanced parameters - texture, delay and variable
-// fade-in and fade-out speeds.
-
-// Immutable fader enumeration.
-// These faders always exist in engine, and rarely you will need more than these.
-
-enum Faders
-{
-    FADER_EFFECT,       // Effect fader (flashes, etc.)
-    FADER_SUN,          // Sun fader (engages on looking at the sun)
-    FADER_VIGNETTE,     // Just for fun - death fader.
-    FADER_LOADSCREEN,   // Loading screen
-    FADER_BLACK,        // Classic black fader
-    FADER_LASTINDEX
-};
-
-#define GUI_FADER_DIR_IN    0    // Normal fade-in.
-#define GUI_FADER_DIR_OUT   1    // Normal fade-out.
-#define GUI_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
-
-// Scale type specifies how textures with various aspect ratios will be
-// handled. If scale type is set to ZOOM, texture will be zoomed up to
-// current screen's aspect ratio. If type is LETTERBOX, empty spaces
-// will be filled with bars of fader's color. If type is STRETCH, image
-// will be simply stretched across whole screen.
-// ZOOM type is the best shot for loading screens, while LETTERBOX is
-// needed for pictures with crucial info that shouldn't be cut by zoom,
-// and STRETCH type is usable for full-screen effects, like vignette.
-
-#define GUI_FADER_SCALE_ZOOM      0
-#define GUI_FADER_SCALE_LETTERBOX 1
-#define GUI_FADER_SCALE_STRETCH   2
-
-#define GUI_FADER_STATUS_IDLE     0
-#define GUI_FADER_STATUS_FADING   1
-#define GUI_FADER_STATUS_COMPLETE 2
-
-#define GUI_FADER_CORNER_TOPLEFT     0
-#define GUI_FADER_CORNER_TOPRIGHT    1
-#define GUI_FADER_CORNER_BOTTOMLEFT  2
-#define GUI_FADER_CORNER_BOTTOMRIGHT 3
-
 #define GUI_MENU_ITEMTYPE_SYSTEM 0
 #define GUI_MENU_ITEMTYPE_SUPPLY 1
 #define GUI_MENU_ITEMTYPE_QUEST  2
-
-// Main fader class.
-#if 0
-class gui_Fader
-{
-public:
-    gui_Fader();                  // Fader constructor.
-
-    void Show();                  // Shows and updates fader.
-    void Engage(int fade_dir);    // Resets and starts fader.
-    void Cut();                   // Immediately cuts fader.
-
-    int  IsFading();              // Get current state of the fader.
-
-    void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
-    void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
-    void SetBlendingMode(uint32_t mode = BM_OPAQUE);
-    void SetAlpha(uint8_t alpha  = 255);
-    void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
-    void SetDelay(uint32_t delay_msec);
-
-    bool SetTexture(const char* texture_path);
-
-private:
-    void SetAspect();
-    bool DropTexture();
-
-    GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
-    GLfloat         mTopRightColor[4];      // further possibility of advanced full
-    GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
-    GLfloat         mBottomRightColor[4];
-
-    uint32_t        mBlendingMode;          // Fader's blending mode.
-
-    GLfloat         mCurrentAlpha;          // Current alpha value.
-    GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
-    GLfloat         mSpeed;                 // Fade speed.
-    GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
-
-    GLuint          mTexture;               // Texture (optional).
-    uint16_t        mTextureWidth;
-    uint16_t        mTextureHeight;
-    bool            mTextureWide;           // Set, if texture width is greater than height.
-    float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
-    uint8_t         mTextureScaleMode;      // Fader texture's scale mode.
-
-    bool            mActive;                // Specifies if fader active or not.
-    bool            mComplete;              // Specifies if fading is complete or not.
-    int8_t          mDirection;             // Specifies fade direction.
-
-    float           mCurrentTime;           // Current fader time.
-    float           mMaxTime;               // Maximum delay time.
-};
-#endif
 
 // Immutable bars enumeration.
 // These are the bars that are always exist in GUI.
@@ -371,10 +268,8 @@ void Gui_Init();
 void Gui_Destroy();
 
 void Gui_InitBars();
-void Gui_InitFaders();
 void Gui_InitNotifier();
 void Gui_InitTempLines();
-void Gui_FillCrosshairBuffer();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
@@ -520,17 +415,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLuint texture = 0);
 
 /**
- *  Fader functions.
- */
-bool Gui_FadeStart(int fader, int fade_direction);
-bool Gui_FadeStop(int fader);
-bool Gui_FadeAssignPic(int fader, const char* pic_name);
-int  Gui_FadeCheck(int fader);
-void Gui_FadeSetup(int fader, 
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
-                   uint16_t fadein_speed, uint16_t fadeout_speed);
-
-/**
  * Item notifier functions.
  */
 void Gui_NotifierStart(int item);
@@ -540,7 +424,6 @@ void Gui_NotifierStop();
  * General GUI drawing routines.
  */
 void Gui_DrawCrosshair();
-void Gui_DrawFaders();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
 void Gui_DrawInventory();

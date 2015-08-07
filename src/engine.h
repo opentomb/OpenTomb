@@ -61,16 +61,14 @@ typedef struct engine_container_s
 
 typedef struct engine_control_state_s
 {
-    int8_t   free_look;
     btScalar free_look_speed;
-
-    int8_t   mouse_look;
     btScalar cam_distance;
-    int8_t   noclip;
-
     btScalar look_axis_x;                       // Unified look axis data.
     btScalar look_axis_y;
-
+    
+    int8_t   free_look;
+    int8_t   mouse_look;
+    int8_t   noclip;
     int8_t   move_forward;                      // Directional movement keys.
     int8_t   move_backward;
     int8_t   move_left;

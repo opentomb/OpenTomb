@@ -243,7 +243,7 @@ typedef struct sector_tween_s
 
 typedef struct room_sprite_s
 {
-    struct sprite_s             *sprite;
+    struct sprite_s            *sprite;
     btScalar                    pos[3];
     int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;

@@ -203,9 +203,9 @@ typedef struct climb_info_s
 
     int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
     int8_t                         edge_hit;
-    btVector3                      edge_point;
-    btVector3                      edge_normale;
-    btVector3                      edge_tan_xy;
+    btScalar                       edge_point[3];
+    btScalar                       edge_normale[3];
+    btScalar                       edge_tan_xy[2];
     btScalar                       edge_z_ang;
     btCollisionObject             *edge_obj;
 }climb_info_t, *climb_info_p;
@@ -220,13 +220,13 @@ typedef struct height_info_s
     int8_t                                      walls_climb;
     int8_t                                      walls_climb_dir;
 
-    btVector3                                   floor_normale;
-    btVector3                                   floor_point;
+    btScalar                                    floor_normale[3];
+    btScalar                                    floor_point[3];
     int16_t                                     floor_hit;
     btCollisionObject                          *floor_obj;
 
-    btVector3                                   ceiling_normale;
-    btVector3                                   ceiling_point;
+    btScalar                                    ceiling_normale[3];
+    btScalar                                    ceiling_point[3];
     int16_t                                     ceiling_hit;
     btCollisionObject                          *ceiling_obj;
 

@@ -33,7 +33,6 @@ portal_p Portal_Create(unsigned int vcount)
     portal_p p = (portal_p)malloc(sizeof(portal_t));
     p->vertex_count = vcount;
     p->vertex = (btScalar*)malloc(3*vcount*sizeof(btScalar));
-    p->flag = 0;
     p->dest_room = NULL;
     return p;
 }
@@ -48,7 +47,6 @@ void Portal_Clear(portal_p p)
             p->vertex = NULL;
         }
         p->vertex_count = 0;
-        p->flag = 0;
         p->dest_room = NULL;
     }
 }

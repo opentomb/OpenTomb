@@ -466,8 +466,6 @@ int Engine_LoadMap(const char *name)
     Render_SetWorld(&engine_world);
 
     Gui_DrawLoadScreen(1000);
-
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
     Gui_NotifierStop();
 
     return 1;

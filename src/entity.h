@@ -3,8 +3,6 @@
 #define ENTITY_H
 
 #include <stdint.h>
-
-#include "bullet/LinearMath/btVector3.h"
 #include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
@@ -13,6 +11,7 @@
 
 class btCollisionShape;
 class btRigidBody;
+class btPairCachingGhostObject;
 class bt_engine_ClosestRayResultCallback;
 class bt_engine_ClosestConvexResultCallback;
 
@@ -161,7 +160,7 @@ typedef struct entity_s
     uint16_t                            move_type;          // on floor / free fall / swim ....    
     btScalar                            current_speed;      // current linear speed from animation info
     btScalar                            speed_mult;
-    btVector3                           speed;              // speed of the entity XYZ
+    btScalar                            speed[3];           // speed of the entity XYZ
     
     btScalar                            inertia_linear;     // linear inertia
     btScalar                            inertia_angular[2]; // angular inertia - X and Y axes

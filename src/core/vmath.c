@@ -125,8 +125,8 @@ void vec3_RotateX(btScalar res[3], btScalar src[3], btScalar ang)
     sint = sin(ang);
     cost = cos(ang);
     res[0] = src[0];
-    t[0] = src[1]*cost - src[2]*sint;
-    t[1] = src[1]*sint + src[2]*cost;
+    t[0] = src[1] * cost - src[2] * sint;
+    t[1] = src[1] * sint + src[2] * cost;
 
     res[1] = t[0];
     res[2] = t[1];
@@ -140,8 +140,8 @@ void vec3_RotateY(btScalar res[3], btScalar src[3], btScalar ang)
     sint = sin(ang);
     cost = cos(ang);
     res[1] = src[1];
-    t[0] = src[0]*cost + src[2]*sint;
-    t[1] =-src[0]*sint + src[2]*cost;
+    t[0] = src[0] * cost + src[2] * sint;
+    t[1] =-src[0] * sint + src[2] * cost;
 
     res[0] = t[0];
     res[2] = t[1];
@@ -155,8 +155,8 @@ void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang)
     sint = sin(ang);
     cost = cos(ang);
     res[2] = src[2];
-    t[0] = src[0]*cost - src[1]*sint;
-    t[1] = src[0]*sint + src[1]*cost;
+    t[0] = src[0]*cost - src[1] * sint;
+    t[1] = src[0]*sint + src[1] * cost;
 
     res[0] = t[0];
     res[1] = t[1];

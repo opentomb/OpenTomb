@@ -510,9 +510,11 @@ int lua_DropEntity(lua_State * lua)
     btScalar time = lua_tonumber(lua, 2);
 
     btVector3 g = bt_engine_dynamicsWorld->getGravity();
-    btVector3 move = ent->speed * time;;
+    btVector3 move(ent->speed[0] * time, ent->speed[1] * time, ent->speed[2] * time);
     move += g * 0.5 * time * time;
-    ent->speed += g * time;
+    ent->speed[0] += g.m_floats[0] * time;
+    ent->speed[1] += g.m_floats[1] * time;
+    ent->speed[2] += g.m_floats[2] * time;
 
     bt_engine_ClosestRayResultCallback cb(ent->self);
     btVector3 from, to;
@@ -3478,38 +3480,20 @@ int lua_CamShake(lua_State *lua)
 
 int lua_FlashSetup(lua_State *lua)
 {
-    if(lua_gettop(lua) != 6) return 0;
+    /*if(lua_gettop(lua) != 6) return 0;
 
     Gui_FadeSetup(FADER_EFFECT,
                   (uint8_t)(lua_tointeger(lua, 1)),
                   (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
                   BM_MULTIPLY,
-                  (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
+                  (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));*/
     return 0;
 }
 
 int lua_FlashStart(lua_State *lua)
 {
-    Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
+    //Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
     return 0;
-}
-
-int lua_FadeOut(lua_State *lua)
-{
-    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_OUT);
-    return 0;
-}
-
-int lua_FadeIn(lua_State *lua)
-{
-    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_IN);
-    return 0;
-}
-
-int lua_FadeCheck(lua_State *lua)
-{
-    lua_pushinteger(lua, Gui_FadeCheck(FADER_BLACK));
-    return 1;
 }
 
 /*
@@ -3687,9 +3671,8 @@ int lua_SetGame(lua_State *lua)
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);
         if (lua_CallAndLog(lua, 1, 1, 0))
         {
-            Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
+            //Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
             lua_pop(lua, 1);
-            Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
         }
     }
     lua_settop(lua, top);
@@ -3724,8 +3707,7 @@ int lua_LoadMap(lua_State *lua)
             }
             char file_path[MAX_ENGINE_PATH];
             lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
-            Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-            Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
+            //Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
             Engine_LoadMap(s);
         }
     }
@@ -4021,10 +4003,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "loadMap", lua_LoadMap);
 
     lua_register(lua, "camShake", lua_CamShake);
-
-    lua_register(lua, "fadeOut", lua_FadeOut);
-    lua_register(lua, "fadeIn", lua_FadeIn);
-    lua_register(lua, "fadeCheck", lua_FadeCheck);
 
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);

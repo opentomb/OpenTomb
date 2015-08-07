@@ -99,7 +99,7 @@ typedef struct render_s
     struct world_s             *world;
     struct camera_s            *cam;
     struct render_settings_s    settings;
-    class shader_manager *shader_manager;
+    class shader_manager       *shader_manager;
 
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
