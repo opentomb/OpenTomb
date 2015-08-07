@@ -2288,10 +2288,22 @@ void Character::processSectorImpl()
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
         if((m_moveType == MoveType::OnFloor) ||
-           (m_moveType == MoveType::Underwater) ||
-           (m_moveType == MoveType::Wade) ||
-           (m_moveType == MoveType::OnWater) ||
+           (m_moveType == MoveType::Wade)    ||
            (m_moveType == MoveType::Quicksand))
+        {
+            if(m_heightInfo.floor_hit)
+            {
+                EngineContainer* cont = static_cast<EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
+
+                if((cont != nullptr) && (cont->object_type == OBJECT_ROOM_BASE))
+                {
+                    setParam(PARAM_HEALTH, 0.0);
+                    m_response.killed = true;
+                }
+            }
+        }
+        else if((m_moveType == MoveType::Underwater) ||
+                (m_moveType == MoveType::OnWater))
         {
             setParam(PARAM_HEALTH, 0.0);
             m_response.killed = true;
