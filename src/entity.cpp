@@ -729,7 +729,7 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0f / 30.0f;
+        ss_anim->period = 1.0f / TR_FRAME_RATE;
     }
 }
 
@@ -955,7 +955,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
     frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0 / 30.0;
+    m_bf.animations.period = 1.0 / TR_FRAME_RATE;
 
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;

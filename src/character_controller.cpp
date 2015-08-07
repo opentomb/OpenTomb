@@ -1117,9 +1117,8 @@ int Character::freeFalling()
     m_angles[0] += rot;
     m_angles[1] = 0.0;
 
-    updateTransform();                                                 // apply rotations
+    updateTransform();  // apply rotations
 
-    const btVector3 grav = bt_engine_dynamicsWorld->getGravity();
     btVector3 move = applyGravity(engine_frame_time);
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
     m_speed = m_speed.rotate({ 0,0,1 }, rot * RadPerDeg);
@@ -1154,12 +1153,13 @@ int Character::freeFalling()
     }
 
     ghostUpdate();
+
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
         if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
-            m_speed[2] = 0.0;
+            m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1187,7 +1187,7 @@ int Character::freeFalling()
         if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
         {
             pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
-            m_speed[2] = 0.0;
+            m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }

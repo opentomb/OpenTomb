@@ -9,6 +9,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
+#include "game.h"
 #include "object.h"
 #include "mesh.h"
 
@@ -84,8 +85,6 @@ struct BtEntityData
     std::vector<EntityCollisionNode> last_collisions;
 };
 
-#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
-
 class BtEngineClosestConvexResultCallback;
 
 /*
@@ -135,7 +134,7 @@ public:
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
-    btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;
+    btScalar                            m_speedMult = TR_FRAME_RATE;
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
