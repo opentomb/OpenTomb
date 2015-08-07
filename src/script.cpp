@@ -3604,8 +3604,10 @@ void script::ScriptEngine::parseControls(struct ControlSettings *cs)
     cs->use_joy = (*this)["controls"]["use_joy"];
     cs->joy_number = (*this)["controls"]["joy_number"];
     cs->joy_rumble = (*this)["controls"]["joy_rumble"];
-    cs->joy_axis_map[AXIS_MOVE_X] = (*this)["controls"]["joy_look_axis_x"];
-    cs->joy_axis_map[AXIS_MOVE_Y] = (*this)["controls"]["joy_look_axis_y"];
+    cs->joy_axis_map[AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"];
+    cs->joy_axis_map[AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"];
+    cs->joy_axis_map[AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"];
+    cs->joy_axis_map[AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"];
     cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"];
     cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"];
     cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"];
