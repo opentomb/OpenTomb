@@ -441,6 +441,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     {
                         if(pos[2] + 1920.0 >= next_fc.floor_point[2])
                         {
+                            // MAGIC: Vertical speed override is based on ledge height - thanks to T4Larson!
+                            ss_anim->model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames[ss_anim->model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames.size()-1].v_Vertical = -3 - (int)sqrt(-9600 - 12 * -(next_fc.floor_point[2]-pos[2]));
                             ss_anim->next_state = TR_STATE_LARA_JUMP_UP;
                             break;
                         }

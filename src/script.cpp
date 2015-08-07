@@ -798,6 +798,35 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
         model->animations[anim].frames[frame].move = { dx,dy,dz };
 }
 
+void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
+{
+    SkeletalModel* model = engine_world.getModelByID(id);
+    if(model == nullptr)
+    {
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        return;
+    }
+
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        return;
+    }
+
+    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    {
+        frame = static_cast<int>(model->animations[anim].frames.size()) + frame;
+    }
+
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
+    {
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        return;
+    }
+
+    model->animations[anim].frames[frame].v_Vertical = static_cast<btScalar>(speed);
+}
+
 uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
     btVector3 pos{ x,y,z }, ang{ ax,ay,az };
@@ -3227,6 +3256,7 @@ void MainEngine::registerMainFunctions()
     registerC("getAnimCommandTransform", lua_GetAnimCommandTransform);
     registerC("setAnimCommandTransform", lua_SetAnimCommandTransform);
     registerC("setStateChangeRange", lua_SetStateChangeRange);
+    registerC("setAnimVerticalSpeed", lua_SetAnimVerticalSpeed);
 
     registerC("addItem", lua_AddItem);
     registerC("removeItem", lua_RemoveItem);
@@ -3363,7 +3393,7 @@ void MainEngine::registerMainFunctions()
     registerC("addFontStyle", lua_AddFontStyle);
     registerC("deleteFontStyle", lua_DeleteFontStyle);
 }
-}
+}   // end namespace script
 
 /*
  * MISC
@@ -3574,8 +3604,10 @@ void script::ScriptEngine::parseControls(struct ControlSettings *cs)
     cs->use_joy = (*this)["controls"]["use_joy"];
     cs->joy_number = (*this)["controls"]["joy_number"];
     cs->joy_rumble = (*this)["controls"]["joy_rumble"];
-    cs->joy_axis_map[AXIS_MOVE_X] = (*this)["controls"]["joy_look_axis_x"];
-    cs->joy_axis_map[AXIS_MOVE_Y] = (*this)["controls"]["joy_look_axis_y"];
+    cs->joy_axis_map[AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"];
+    cs->joy_axis_map[AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"];
+    cs->joy_axis_map[AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"];
+    cs->joy_axis_map[AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"];
     cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"];
     cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"];
     cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"];
