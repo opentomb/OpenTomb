@@ -90,7 +90,15 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
 
 void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
-    lua::tie(r_static->self->collision_type, r_static->self->collision_shape, r_static->hide) = level_script.call("getStaticMeshProperties", r_static->object_id);
+    lua::Integer _collision_type, _collision_shape, _hide;
+    lua::tie(_collision_type, _collision_shape, _hide) = level_script.call("getStaticMeshProperties", r_static->object_id);
+
+    if(_collision_type > 0)
+    {
+        r_static->self->collision_type = _collision_type;
+        r_static->self->collision_shape = _collision_shape;
+        r_static->hide = _hide;
+    }
 }
 
 /*
@@ -1959,6 +1967,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
         else
         {
             r_static->self->collision_type = COLLISION_TYPE_STATIC;
+            r_static->self->collision_shape = COLLISION_SHAPE_BOX_BASE;
         }
 
         // Set additional static mesh properties from level script override.
