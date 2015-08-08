@@ -53,8 +53,7 @@ public:
         this->zones.clear();
         this->items.clear();
         this->ai_objects.clear();
-        this->cinematic_frames_count = 0;   // destroyed
-        this->cinematic_frames = nullptr;      // destroyed
+        this->cinematic_frames.clear();
 
         this->demo_data_count = 0;          // destroyed
         this->demo_data = nullptr;             // destroyed
@@ -137,12 +136,7 @@ public:
 
         this->ai_objects.clear();
 
-        if(this->cinematic_frames_count)
-        {
-            this->cinematic_frames_count = 0;
-            free(this->cinematic_frames);
-            this->cinematic_frames = nullptr;
-        }
+        this->cinematic_frames.clear();
 
         if(this->demo_data_count)
         {
@@ -349,8 +343,7 @@ public:
     tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
     tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).
     std::vector<tr4_ai_object_t> ai_objects;            ///< \brief ai objects (TR4-5).
-    uint32_t cinematic_frames_count;
-    tr_cinematic_frame_t *cinematic_frames = nullptr; ///< \brief cinematic frames (TR1-3).
+    std::vector<tr_cinematic_frame_t> cinematic_frames; ///< \brief cinematic frames (TR1-3).
     uint32_t demo_data_count;
     uint8_t *demo_data = nullptr;                     ///< \brief demo data.
     int16_t *soundmap = nullptr;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).

@@ -728,10 +728,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     if (!demo_or_ub)
         read_tr_palette(src, this->palette);
 
-    this->cinematic_frames_count = read_bitu16(src);
-    if(this->cinematic_frames_count > 0)
-        this->cinematic_frames = (tr_cinematic_frame_t*)malloc(this->cinematic_frames_count * sizeof(tr_cinematic_frame_t));
-    for (i = 0; i < this->cinematic_frames_count; i++)
+    this->cinematic_frames.resize(read_bitu16(src));
+    for (i = 0; i < this->cinematic_frames.size(); i++)
     {
         read_tr_cinematic_frame(src, this->cinematic_frames[i]);
     }
