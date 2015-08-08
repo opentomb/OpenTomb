@@ -52,8 +52,7 @@ public:
         this->overlaps.clear();
         this->zones.clear();
         this->items.clear();
-        this->ai_objects_count = 0;         // destroyed
-        this->ai_objects = nullptr;            // destroyed
+        this->ai_objects.clear();
         this->cinematic_frames_count = 0;   // destroyed
         this->cinematic_frames = nullptr;      // destroyed
 
@@ -136,12 +135,7 @@ public:
 
         this->items.clear();
 
-        if(this->ai_objects_count)
-        {
-            this->ai_objects_count = 0;
-            free(this->ai_objects);
-            this->ai_objects = nullptr;
-        }
+        this->ai_objects.clear();
 
         if(this->cinematic_frames_count)
         {
@@ -354,8 +348,7 @@ public:
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
     tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
     tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).
-    uint32_t ai_objects_count;
-    tr4_ai_object_t *ai_objects = nullptr;            ///< \brief ai objects (TR4-5).
+    std::vector<tr4_ai_object_t> ai_objects;            ///< \brief ai objects (TR4-5).
     uint32_t cinematic_frames_count;
     tr_cinematic_frame_t *cinematic_frames = nullptr; ///< \brief cinematic frames (TR1-3).
     uint32_t demo_data_count;
