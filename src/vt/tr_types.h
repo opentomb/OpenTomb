@@ -2,6 +2,8 @@
 
 #include "glmath.h"
 
+#include <vector>
+
 /// \brief RGBA colour using bitu8. For palette etc.
 struct tr2_colour_t
 {
@@ -287,23 +289,14 @@ struct tr4_mesh_t
 {
     tr5_vertex_t centre;                // This is usually close to the mesh's centroid, and appears to be the center of a sphere used for collision testing.
     int32_t collision_size;             // This appears to be the radius of that aforementioned collisional sphere.
-    int16_t num_vertices;               // number of vertices in this mesh
-    uint32_t vertices_count;
-    tr5_vertex_t *vertices;             //[NumVertices]; // list of vertices (relative coordinates)
-    int16_t num_normals;                // If positive, number of normals in this mesh.
-    // If negative, number of vertex lighting elements (* (-1))
-    int16_t num_lights;                 // Engine internal for above
-    tr5_vertex_t *normals;              //[NumNormals]; // list of normals (if NumNormals is positive)
-    int16_t *lights;                    //[-NumNormals]; // list of light values (if NumNormals is negative)
-    int16_t num_textured_rectangles;    // number of textured rectangles in this mesh
-    tr4_face4_t *textured_rectangles;   //[NumTexturedRectangles]; // list of textured rectangles
-    int16_t num_textured_triangles;      // number of textured triangles in this mesh
-    tr4_face3_t *textured_triangles;    //[NumTexturedTriangles]; // list of textured triangles
+    std::vector<tr5_vertex_t> vertices;             //[NumVertices]; // list of vertices (relative coordinates)
+    std::vector<tr5_vertex_t> normals;              //[NumNormals]; // list of normals (if NumNormals is positive)
+    std::vector<int16_t> lights;                    //[-NumNormals]; // list of light values (if NumNormals is negative)
+    std::vector<tr4_face4_t> textured_rectangles;   //[NumTexturedRectangles]; // list of textured rectangles
+    std::vector<tr4_face3_t> textured_triangles;    //[NumTexturedTriangles]; // list of textured triangles
     // the rest is not present in TR4
-    int16_t num_coloured_rectangles;    // number of coloured rectangles in this mesh
-    tr4_face4_t *coloured_rectangles;   //[NumColouredRectangles]; // list of coloured rectangles
-    int16_t num_coloured_triangles;     // number of coloured triangles in this mesh
-    tr4_face3_t *coloured_triangles;    //[NumColouredTriangles]; // list of coloured triangles
+    std::vector<tr4_face4_t> coloured_rectangles;   //[NumColouredRectangles]; // list of coloured rectangles
+    std::vector<tr4_face3_t> coloured_triangles;    //[NumColouredTriangles]; // list of coloured triangles
 };
 
 /** \brief Staticmesh.

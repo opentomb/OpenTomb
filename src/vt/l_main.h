@@ -20,55 +20,6 @@ class TR_Level
 public:
     ~TR_Level()
     {
-        for(size_t i = 0; i < this->meshes.size(); i++)
-        {
-            if(this->meshes[i].lights)
-            {
-                free(this->meshes[i].lights);
-                this->meshes[i].lights = nullptr;
-            }
-
-            if(this->meshes[i].num_textured_triangles)
-            {
-                free(this->meshes[i].textured_triangles);
-                this->meshes[i].textured_triangles = nullptr;
-                this->meshes[i].num_textured_triangles = 0;
-            }
-
-            if(this->meshes[i].num_textured_rectangles)
-            {
-                free(this->meshes[i].textured_rectangles);
-                this->meshes[i].textured_rectangles = nullptr;
-                this->meshes[i].num_textured_rectangles = 0;
-            }
-
-            if(this->meshes[i].num_coloured_triangles)
-            {
-                free(this->meshes[i].coloured_triangles);
-                this->meshes[i].coloured_triangles = nullptr;
-                this->meshes[i].num_coloured_triangles = 0;
-            }
-
-            if(this->meshes[i].num_coloured_rectangles)
-            {
-                free(this->meshes[i].coloured_rectangles);
-                this->meshes[i].coloured_rectangles = nullptr;
-                this->meshes[i].num_coloured_rectangles = 0;
-            }
-
-            if(this->meshes[i].normals)
-            {
-                free(this->meshes[i].normals);
-                this->meshes[i].normals = nullptr;
-            }
-
-            if(this->meshes[i].vertices)
-            {
-                free(this->meshes[i].vertices);
-                this->meshes[i].vertices = nullptr;
-            }
-        }
-
         for(size_t i = 0; i < this->rooms.size(); i++)
         {
             if(this->rooms[i].num_layers)

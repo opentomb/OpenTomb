@@ -2702,7 +2702,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
         p->vertices[i].color[2] = tr->palette.colour[color].b / 255.0f;
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
+        if(tr_mesh->lights.size() == tr_mesh->vertices.size())
         {
             p->vertices[i].color[0] = p->vertices[i].color[0] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[1] = p->vertices[i].color[1] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
@@ -2720,7 +2720,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *v
 {
     for(size_t i = 0; i < p->vertices.size(); i++)
     {
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
+        if(tr_mesh->lights.size() == tr_mesh->vertices.size())
         {
             p->vertices[i].color[0] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[1] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
@@ -2763,7 +2763,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     mesh->m_radius = tr_mesh->collision_size;
     mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
 
-    mesh->m_vertices.resize(tr_mesh->num_vertices);
+    mesh->m_vertices.resize(tr_mesh->vertices.size());
     auto vertex = mesh->m_vertices.data();
     for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
     {
@@ -2778,7 +2778,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured triangles
      */
-    for(int i = 0; i < tr_mesh->num_textured_triangles; ++i)
+    for(int i = 0; i < tr_mesh->textured_triangles.size(); ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2808,7 +2808,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured triangles
      */
-    for(int i = 0; i < tr_mesh->num_coloured_triangles; ++i)
+    for(int i = 0; i < tr_mesh->coloured_triangles.size(); ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2826,7 +2826,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * textured rectangles
      */
-    for(int i = 0; i < tr_mesh->num_textured_rectangles; ++i)
+    for(int i = 0; i < tr_mesh->textured_rectangles.size(); ++i)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2856,7 +2856,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * coloured rectangles
      */
-    for(int16_t i = 0; i < tr_mesh->num_coloured_rectangles; i++)
+    for(int16_t i = 0; i < tr_mesh->coloured_rectangles.size(); i++)
     {
         mesh->m_polygons.emplace_back();
         struct Polygon &p = mesh->m_polygons.back();
@@ -2884,12 +2884,12 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
      * triangles
      */
     auto p = mesh->m_polygons.begin();
-    for(int16_t i = 0; i < tr_mesh->num_textured_triangles; i++, ++p)
+    for(int16_t i = 0; i < tr_mesh->textured_triangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->textured_triangles[i].vertices);
     }
 
-    for(int16_t i = 0; i < tr_mesh->num_coloured_triangles; i++, ++p)
+    for(int16_t i = 0; i < tr_mesh->coloured_triangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->coloured_triangles[i].vertices);
     }
@@ -2897,12 +2897,12 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     /*
      * rectangles
      */
-    for(int16_t i = 0; i < tr_mesh->num_textured_rectangles; i++, ++p)
+    for(int16_t i = 0; i < tr_mesh->textured_rectangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->textured_rectangles[i].vertices);
     }
 
-    for(int16_t i = 0; i < tr_mesh->num_coloured_rectangles; i++, ++p)
+    for(int16_t i = 0; i < tr_mesh->coloured_rectangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }

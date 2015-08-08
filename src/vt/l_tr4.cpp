@@ -282,40 +282,31 @@ void TR_Level::read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
     read_tr_vertex16(src, mesh.centre);
     mesh.collision_size = read_bit32(src);
 
-    mesh.num_vertices = read_bit16(src);
-    mesh.vertices = (tr5_vertex_t*)malloc(mesh.num_vertices * sizeof(tr5_vertex_t));
-    for (i = 0; i < mesh.num_vertices; i++)
+    mesh.vertices.resize( read_bit16(src) );
+    for (i = 0; i < mesh.vertices.size(); i++)
         read_tr_vertex16(src, mesh.vertices[i]);
 
-    mesh.num_normals = read_bit16(src);
-    if (mesh.num_normals >= 0)
+    auto num_normals = read_bit16(src);
+    if (num_normals >= 0)
     {
-        mesh.num_lights = 0;
-        mesh.normals = (tr5_vertex_t*)malloc(mesh.num_normals * sizeof(tr5_vertex_t));
-        for (i = 0; i < mesh.num_normals; i++)
+        mesh.normals.resize( num_normals );
+        for (i = 0; i < mesh.normals.size(); i++)
             read_tr_vertex16(src, mesh.normals[i]);
     }
     else
     {
-        mesh.num_lights = -mesh.num_normals;
-        mesh.num_normals = 0;
-        mesh.lights = (int16_t*)malloc(mesh.num_lights * sizeof(int16_t));
-        for (i = 0; i < mesh.num_lights; i++)
+        mesh.lights.resize( -num_normals );
+        for (i = 0; i < mesh.lights.size(); i++)
             mesh.lights[i] = read_bit16(src);
     }
 
-    mesh.num_textured_rectangles = read_bit16(src);
-    mesh.textured_rectangles = (tr4_face4_t*)malloc(mesh.num_textured_rectangles * sizeof(tr4_face4_t));
-    for (i = 0; i < mesh.num_textured_rectangles; i++)
+    mesh.textured_rectangles.resize( read_bit16(src) );
+    for (i = 0; i < mesh.textured_rectangles.size(); i++)
         read_tr4_face4(src, mesh.textured_rectangles[i]);
 
-    mesh.num_textured_triangles = read_bit16(src);
-    mesh.textured_triangles = (tr4_face3_t*)malloc(mesh.num_textured_triangles * sizeof(tr4_face3_t));
-    for (i = 0; i < mesh.num_textured_triangles; i++)
+    mesh.textured_triangles.resize( read_bit16(src) );
+    for (i = 0; i < mesh.textured_triangles.size(); i++)
         read_tr4_face3(src, mesh.textured_triangles[i]);
-
-    mesh.num_coloured_rectangles = 0;
-    mesh.num_coloured_triangles = 0;
 }
 
 /// \brief reads an animation definition.
