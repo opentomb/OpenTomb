@@ -48,8 +48,7 @@ public:
         this->flyby_cameras.clear();
         this->sound_sources.clear();
 
-        this->boxes_count = 0;              // destroyed
-        this->boxes = nullptr;                 // destroyed
+        this->boxes.clear();
         this->overlaps_count = 0;           // destroyed
         this->overlaps = nullptr;              // destroyed
         this->zones_count = 0;              // destroyed
@@ -132,12 +131,7 @@ public:
 
         this->sound_sources.clear();
 
-        if(this->boxes_count)
-        {
-            this->boxes_count = 0;
-            free(this->boxes);
-            this->boxes = nullptr;
-        }
+        this->boxes.clear();
 
         if(this->overlaps_count)
         {
@@ -371,8 +365,7 @@ public:
     std::vector<tr_camera_t> cameras;                   ///< \brief cameras.
     std::vector<tr4_flyby_camera_t> flyby_cameras;      ///< \brief flyby cameras.
     std::vector<tr_sound_source_t> sound_sources;       ///< \brief sound sources.
-    uint32_t boxes_count;
-    tr_box_t *boxes = nullptr;                        ///< \brief boxes.
+    std::vector<tr_box_t> boxes;                        ///< \brief boxes.
     uint32_t overlaps_count;
     uint16_t *overlaps = nullptr;                     ///< \brief overlaps.
     uint32_t zones_count;

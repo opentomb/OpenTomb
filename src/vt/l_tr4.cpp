@@ -629,9 +629,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         this->sound_sources[i].flags = read_bitu16(newsrc);
     }
 
-    this->boxes_count = read_bitu32(newsrc);
-    this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
-    for (i = 0; i < this->boxes_count; i++)
+    this->boxes.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->boxes.size(); i++)
         read_tr2_box(newsrc, this->boxes[i]);
 
     this->overlaps_count = read_bitu32(newsrc);
@@ -640,7 +639,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         this->overlaps[i] = read_bitu16(newsrc);
 
     // Zones
-    SDL_RWseek(newsrc, this->boxes_count * 20, SEEK_CUR);
+    SDL_RWseek(newsrc, this->boxes.size() * 20, SEEK_CUR);
 
     this->animated_textures.resize( read_bitu32(newsrc) );
     for (i = 0; i < this->animated_textures.size(); i++)

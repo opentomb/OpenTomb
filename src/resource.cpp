@@ -2362,7 +2362,7 @@ void TR_GenBoxes(World *world, class VT_Level *tr)
 {
     world->room_boxes.clear();
 
-    for(uint32_t i = 0; i < tr->boxes_count; i++)
+    for(uint32_t i = 0; i < tr->boxes.size(); i++)
     {
         world->room_boxes.emplace_back();
         auto& room = world->room_boxes.back();

@@ -701,9 +701,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         this->sound_sources[i].flags = read_bitu16(src);
     }
 
-    this->boxes_count = read_bitu32(src);
-    this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
-    for (i = 0; i < this->boxes_count; i++)
+    this->boxes.resize( read_bitu32(src) );
+    for (i = 0; i < this->boxes.size(); i++)
         read_tr_box(src, this->boxes[i]);
 
     this->overlaps_count = read_bitu32(src);
@@ -712,7 +711,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         this->overlaps[i] = read_bitu16(src);
 
     // Zones
-    SDL_RWseek(src, this->boxes_count * 12, RW_SEEK_CUR);
+    SDL_RWseek(src, this->boxes.size() * 12, RW_SEEK_CUR);
 
     this->animated_textures.resize( read_bitu32(src) );
     this->animated_textures_uv_count = 0; // No UVRotate in TR1
