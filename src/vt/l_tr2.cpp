@@ -278,9 +278,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     for (i = 0; i < this->state_changes.size(); i++)
         read_tr_state_changes(src, this->state_changes[i]);
 
-    this->anim_dispatches_count = read_bitu32(src);
-    this->anim_dispatches = (tr_anim_dispatch_t*)malloc(this->anim_dispatches_count * sizeof(tr_anim_dispatch_t));
-    for (i = 0; i < this->anim_dispatches_count; i++)
+    this->anim_dispatches.resize( read_bitu32(src) );
+    for (i = 0; i < this->anim_dispatches.size(); i++)
         read_tr_anim_dispatches(src, this->anim_dispatches[i]);
 
     this->anim_commands_count = read_bitu32(src);
