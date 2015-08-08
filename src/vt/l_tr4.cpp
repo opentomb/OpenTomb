@@ -555,9 +555,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for (i = 0; i < this->anim_commands.size(); i++)
         this->anim_commands[i] = read_bit16(newsrc);
 
-    this->mesh_tree_data_size = read_bitu32(newsrc);
-    this->mesh_tree_data = (uint32_t*)malloc(this->mesh_tree_data_size * sizeof(uint32_t));
-    for (i = 0; i < this->mesh_tree_data_size; i++)
+    this->mesh_tree_data.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->mesh_tree_data.size(); i++)
         this->mesh_tree_data[i] = read_bitu32(newsrc);                     // 4 bytes
 
     read_frame_moveable_data(newsrc);

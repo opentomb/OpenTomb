@@ -63,8 +63,7 @@ public:
         this->samples_data.clear();               // destroyed
 
         this->frame_data.clear();
-        this->mesh_tree_data_size = 0;      // destroyed
-        this->mesh_tree_data = nullptr;        // destroyed
+        this->mesh_tree_data.clear();
 
         this->meshes.clear();
         this->rooms.clear();
@@ -150,12 +149,7 @@ public:
 
         this->frame_data.clear();
 
-        if(this->mesh_tree_data_size)
-        {
-            this->mesh_tree_data_size = 0;
-            free(this->mesh_tree_data);
-            this->mesh_tree_data = nullptr;
-        }
+        this->mesh_tree_data.clear();
 
         if(!this->meshes.empty())
         {
@@ -324,8 +318,7 @@ public:
     std::vector<uint32_t> sample_indices;               ///< \brief sample indices.
 
     std::vector<uint16_t> frame_data;                   ///< \brief frame data array
-    uint32_t mesh_tree_data_size;
-    uint32_t *mesh_tree_data = nullptr;
+    std::vector<uint32_t> mesh_tree_data;
 
     char     sfx_path[256];
 

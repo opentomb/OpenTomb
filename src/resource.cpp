@@ -3283,7 +3283,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         }
         else
         {
-            uint32_t *tr_mesh_tree = tr->mesh_tree_data + tr_moveable->mesh_tree_index + (k - 1) * 4;
+            uint32_t *tr_mesh_tree = tr->mesh_tree_data.data() + tr_moveable->mesh_tree_index + (k - 1) * 4;
             tree_tag->flag = (tr_mesh_tree[0] & 0xFF);
             tree_tag->offset[0] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[1]));
             tree_tag->offset[1] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[3]));
