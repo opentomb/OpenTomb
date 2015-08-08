@@ -1369,7 +1369,7 @@ tr5_entity_tbl[151] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr5_entity_tbl[152] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Security camera board
 
 tr5_entity_tbl[153] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true}; -- Motion sensor
-tr5_entity_tbl[154] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true}; -- Tight rope
+tr5_entity_tbl[154] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = true, func = "tightrope"}; -- Tight rope
 
 tr5_entity_tbl[155] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Parallel bars
 

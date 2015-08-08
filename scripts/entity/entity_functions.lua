@@ -962,12 +962,8 @@ function midastouch_init(id)    -- Midas gold touch
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onLoop = function(object_id)
-        if(getEntityDistance(player, object_id) < 1024.0) then
-            local lara_anim, frame, count = getEntityAnim(player);
-            local lara_sector = getEntitySectorIndex(player);
-            local hand_sector = getEntitySectorIndex(object_id);
-            
-            if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
+        if(sameSector(player, object_id)) then            
+            if((getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 setEntityAnim(player, 1, 0, 5);
                 disableEntity(object_id);
@@ -1742,6 +1738,33 @@ function damocles_init(id)      -- Sword of Damocles
         entity_funcs[object_id].rot_speed = nil;
         entity_funcs[object_id].falling = nil;
     end
+end
+
+function tightrope_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onLoop = function(object_id)
+    
+        local dist_to_Lara = getEntityDistance(player, object_id);
+        
+        if(dist_to_Lara < 512.0) then
+            local orient = getEntityOrientation(object_id, player);
+            
+            if(getActionState(ACT_ACTION) and ((orient > 320.0) or (orient < 40.0))) then
+                if(getEntityState(player) == 2) then
+                    setEntityPos(player, getEntityPos(object_id));
+                    rotateEntity(player,180);
+                    moveEntityLocal(player,0,384,0);
+                    setEntityState(player, 124);
+                end;
+            elseif((orient < 220.0) and (orient > 140.0)) then
+                if(getEntityState(player) == 121) then setEntityState(player, 125) end;
+            end;
+        end;
+    end;
+    
+    prepareEntity(id);
 end
 
 function snake_init(id)
