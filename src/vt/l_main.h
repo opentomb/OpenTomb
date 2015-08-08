@@ -62,8 +62,7 @@ public:
         this->samples_count = 0;            // destroyed
         this->samples_data.clear();               // destroyed
 
-        this->frame_data_size = 0;          // destroyed
-        this->frame_data = nullptr;            // destroyed
+        this->frame_data.clear();
         this->mesh_tree_data_size = 0;      // destroyed
         this->mesh_tree_data = nullptr;        // destroyed
 
@@ -149,12 +148,7 @@ public:
 
         this->sample_indices.clear();
 
-        if(this->frame_data_size)
-        {
-            this->frame_data_size = 0;
-            free(this->frame_data);
-            this->frame_data = nullptr;
-        }
+        this->frame_data.clear();
 
         if(this->mesh_tree_data_size)
         {
@@ -329,8 +323,7 @@ public:
     std::vector<uint8_t> samples_data;                  ///< \brief samples.
     std::vector<uint32_t> sample_indices;               ///< \brief sample indices.
 
-    uint32_t frame_data_size;               ///< \brief frame data array size
-    uint16_t *frame_data = nullptr;                   ///< \brief frame data array
+    std::vector<uint16_t> frame_data;                   ///< \brief frame data array
     uint32_t mesh_tree_data_size;
     uint32_t *mesh_tree_data = nullptr;
 

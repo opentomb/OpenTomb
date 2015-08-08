@@ -3433,7 +3433,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
-            if(frame_offset >= tr->frame_data_size)
+            if(frame_offset >= tr->frame_data.size())
             {
                 for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
                 {
@@ -3675,7 +3675,7 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 
     if(animation_ind == tr->animations.size() - 1)
     {
-        ret = 2 * tr->frame_data_size - curr_anim->frame_offset;
+        ret = 2 * tr->frame_data.size() - curr_anim->frame_offset;
         ret /= curr_anim->frame_size * 2;                                       /// it is fully correct!
         return ret;
     }
@@ -3691,9 +3691,9 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
 {
     unsigned short int *frame;
 
-    if(frame_offset < tr->frame_data_size)
+    if(frame_offset < tr->frame_data.size())
     {
-        frame = tr->frame_data + frame_offset;
+        frame = tr->frame_data.data() + frame_offset;
         bone_frame->bb_min[0] = (short int)frame[0];                            // x_min
         bone_frame->bb_min[1] = (short int)frame[4];                            // y_min
         bone_frame->bb_min[2] = -(short int)frame[3];                            // z_min
