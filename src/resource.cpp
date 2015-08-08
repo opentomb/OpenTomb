@@ -2379,7 +2379,7 @@ void TR_GenCameras(World *world, class VT_Level *tr)
 {
     world->cameras_sinks.clear();
 
-    for(uint32_t i = 0; i < tr->cameras_count; i++)
+    for(uint32_t i = 0; i < tr->cameras.size(); i++)
     {
         world->cameras_sinks.emplace_back();
         world->cameras_sinks[i].x = tr->cameras[i].x;

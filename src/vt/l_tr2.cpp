@@ -312,9 +312,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     if (demo)
         read_tr_lightmap(src, this->lightmap);
 
-    this->cameras_count = read_bitu32(src);
-    this->cameras = (tr_camera_t*)malloc(this->cameras_count * sizeof(tr_camera_t));
-    for (i = 0; i < this->cameras_count; i++)
+    this->cameras.resize( read_bitu32(src) );
+    for (i = 0; i < this->cameras.size(); i++)
     {
         this->cameras[i].x = read_bit32(src);
         this->cameras[i].y = read_bit32(src);

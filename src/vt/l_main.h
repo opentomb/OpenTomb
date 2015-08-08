@@ -44,8 +44,7 @@ public:
         this->animated_textures.clear();
         this->sprite_textures.clear();
         this->sprite_sequences.clear();
-        this->cameras_count = 0;            // destroyed
-        this->cameras = nullptr;               // destroyed
+        this->cameras.clear();
         this->flyby_cameras_count = 0;      // destroyed
         this->flyby_cameras = nullptr;         // destroyed
         this->sound_sources_count = 0;      // destroyed
@@ -129,12 +128,7 @@ public:
 
         this->sprite_sequences.clear();
 
-        if(this->cameras_count)
-        {
-            this->cameras_count = 0;
-            free(this->cameras);
-            this->cameras = nullptr;
-        }
+        this->cameras.clear();
 
         if(this->flyby_cameras_count)
         {
@@ -386,8 +380,7 @@ public:
     uint32_t animated_textures_uv_count;
     std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
     std::vector<tr_sprite_sequence_t> sprite_sequences; ///< \brief sprite sequences for animation.
-    uint32_t cameras_count;
-    tr_camera_t *cameras = nullptr;                   ///< \brief cameras.
+    std::vector<tr_camera_t> cameras;                   ///< \brief cameras.
     uint32_t flyby_cameras_count;
     tr4_flyby_camera_t *flyby_cameras = nullptr;      ///< \brief flyby cameras.
     uint32_t sound_sources_count;
