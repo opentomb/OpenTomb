@@ -3238,10 +3238,7 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
 
 void TR_GenAnimCommands(World *world, class VT_Level *tr)
 {
-    world->anim_commands.assign(tr->anim_commands + 0, tr->anim_commands + tr->anim_commands_count);
-    free(tr->anim_commands);
-    tr->anim_commands = nullptr;
-    tr->anim_commands_count = 0;
+    world->anim_commands = std::move(tr->anim_commands);
 }
 
 void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, class VT_Level *tr)
