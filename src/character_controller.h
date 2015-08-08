@@ -151,6 +151,13 @@ enum class StepType
     UpImpossible //!< too big height, no one ways here, or phantom case
 };
 
+enum class LeanType
+{
+    None,
+    Left,
+    Right
+};
+
 inline constexpr bool isLittleStep(StepType type)
 {
     return type >= StepType::DownLittle && type <= StepType::UpLittle;
@@ -272,6 +279,7 @@ struct CharacterResponse
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
     SlideType   slide = SlideType::None;
+    LeanType    lean = LeanType::None;
 };
 
 struct CharacterParam
