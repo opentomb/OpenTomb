@@ -32,8 +32,7 @@ public:
         this->floor_data.clear();
         this->mesh_indices.clear();
 
-        this->animations_count = 0;         // destroyed
-        this->animations = nullptr;            // destroyed
+        this->animations.clear();            // destroyed
         this->state_changes_count = 0;      // destroyed
         this->state_changes = nullptr;         // destroyed
         this->anim_dispatches_count = 0;    // destroyed
@@ -117,12 +116,7 @@ public:
 
         this->mesh_indices.clear();
 
-        if(this->animations_count)
-        {
-            this->animations_count = 0;
-            free(this->animations);
-            this->animations = nullptr;
-        }
+        this->animations.clear();
 
         if(this->state_changes_count)
         {
@@ -423,8 +417,7 @@ public:
     std::vector<uint16_t> floor_data;                   ///< \brief the floor data.
     std::vector<tr4_mesh_t> meshes;                     ///< \brief all meshes (static and moveables).
     std::vector<uint32_t> mesh_indices;                 ///< \brief mesh index table.
-    uint32_t animations_count;
-    tr_animation_t *animations = nullptr;             ///< \brief animations for moveables.
+    std::vector<tr_animation_t> animations;             ///< \brief animations for moveables.
     uint32_t state_changes_count;
     tr_state_change_t *state_changes = nullptr;       ///< \brief state changes for moveables.
     uint32_t anim_dispatches_count;

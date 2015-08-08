@@ -630,9 +630,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
 
     read_mesh_data(src);
 
-    this->animations_count = read_bitu32(src);
-    this->animations = (tr_animation_t*)malloc(this->animations_count * sizeof(tr_animation_t));
-    for (i = 0; i < this->animations_count; i++)
+    this->animations.resize( read_bitu32(src) );
+    for (i = 0; i < this->animations.size(); i++)
         read_tr_animation(src, this->animations[i]);
 
     this->state_changes_count = read_bitu32(src);
@@ -658,7 +657,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     read_frame_moveable_data(src);
 
     // try to fix ugly stick
-    for (i = 0; i < this->animations_count; i++)
+    for (i = 0; i < this->animations.size(); i++)
     {
         uint32_t frame_offset = this->animations[i].frame_offset / 2;
         this->animations[i].frame_size = this->frame_data[frame_offset + 9] * 2 + 10;

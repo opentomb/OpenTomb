@@ -3189,13 +3189,13 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 {
     tr_animation_t *tr_animation;
 
-    if(anim >= tr->animations_count)
+    if(anim >= tr->animations.size())
     {
         return -1;
     }
 
     tr_animation = &tr->animations[anim];
-    if(anim + 1 == tr->animations_count)
+    if(anim + 1 == tr->animations.size())
     {
         if(offset < tr_animation->frame_offset)
         {
@@ -3298,7 +3298,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
      * =================    now, animation loading    ========================
      */
 
-    if(tr_moveable->animation_index >= tr->animations_count)
+    if(tr_moveable->animation_index >= tr->animations.size())
     {
         /*
          * model has no start offset and any animation
@@ -3632,7 +3632,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 
     if(moveable_ind == tr->moveables_count - 1)
     {
-        ret = static_cast<int32_t>(tr->animations_count) - static_cast<int32_t>(curr_moveable->animation_index);
+        ret = static_cast<int32_t>(tr->animations.size()) - static_cast<int32_t>(curr_moveable->animation_index);
         if(ret < 0)
         {
             return 1;
@@ -3656,7 +3656,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         }
     }
 
-    ret = (next_moveable->animation_index <= tr->animations_count) ? (next_moveable->animation_index) : (tr->animations_count);
+    ret = (next_moveable->animation_index <= tr->animations.size()) ? (next_moveable->animation_index) : (tr->animations.size());
     ret -= static_cast<int32_t>(curr_moveable->animation_index);
 
     return ret;
@@ -3676,14 +3676,14 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
         return 1;                                                               // impossible!
     }
 
-    if(animation_ind == tr->animations_count - 1)
+    if(animation_ind == tr->animations.size() - 1)
     {
         ret = 2 * tr->frame_data_size - curr_anim->frame_offset;
         ret /= curr_anim->frame_size * 2;                                       /// it is fully correct!
         return ret;
     }
 
-    next_anim = tr->animations + animation_ind + 1;
+    next_anim = tr->animations.data() + animation_ind + 1;
     ret = next_anim->frame_offset - curr_anim->frame_offset;
     ret /= curr_anim->frame_size * 2;
 

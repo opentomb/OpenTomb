@@ -588,9 +588,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
 
     read_mesh_data(src);
 
-    this->animations_count = read_bitu32(src);
-    this->animations = (tr_animation_t*)malloc(this->animations_count * sizeof(tr_animation_t));
-    for (i = 0; i < this->animations_count; i++)
+    this->animations.resize( read_bitu32(src) );
+    for (i = 0; i < this->animations.size(); i++)
     {
         read_tr4_animation(src, this->animations[i]);
     }
