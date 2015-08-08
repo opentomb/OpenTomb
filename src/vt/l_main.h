@@ -58,8 +58,7 @@ public:
         this->demo_data.clear();
         this->soundmap.clear();
         this->sound_details.clear();
-        this->sample_indices_count = 0;     // destroyed
-        this->sample_indices = nullptr;        // destroyed
+        this->sample_indices.clear();
         this->samples_count = 0;            // destroyed
         this->samples_data.clear();               // destroyed
 
@@ -148,12 +147,7 @@ public:
             this->samples_data.clear();
         }
 
-        if(this->sample_indices_count)
-        {
-            this->sample_indices_count = 0;
-            free(this->sample_indices);
-            this->sample_indices = nullptr;
-        }
+        this->sample_indices.clear();
 
         if(this->frame_data_size)
         {
@@ -333,8 +327,7 @@ public:
     std::vector<tr_sound_details_t> sound_details;      ///< \brief sound details.
     uint32_t samples_count;
     std::vector<uint8_t> samples_data;                  ///< \brief samples.
-    uint32_t sample_indices_count;
-    uint32_t *sample_indices = nullptr;               ///< \brief sample indices.
+    std::vector<uint32_t> sample_indices;               ///< \brief sample indices.
 
     uint32_t frame_data_size;               ///< \brief frame data array size
     uint16_t *frame_data = nullptr;                   ///< \brief frame data array

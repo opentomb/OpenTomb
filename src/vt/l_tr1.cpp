@@ -771,8 +771,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         }
     }
 
-    this->sample_indices_count = read_bitu32(src);
-    this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-    for(i=0; i < this->sample_indices_count; i++)
+    this->sample_indices.resize( read_bitu32(src) );
+    for(i=0; i < this->sample_indices.size(); i++)
         this->sample_indices[i] = read_bitu32(src);
 }

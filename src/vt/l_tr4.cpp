@@ -702,20 +702,9 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     }
 
     // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
-    i = read_bitu32(newsrc);
-    if(i)
-    {
-        this->sample_indices_count = i;
-
-        this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-        for(i=0; i < this->sample_indices_count; i++)
-            this->sample_indices[i] = read_bitu32(newsrc);
-    }
-    else
-    {
-        this->sample_indices_count = 0;
-        this->sample_indices = NULL;
-    }
+    this->sample_indices.resize( read_bitu32(newsrc) );
+    for(i=0; i < this->sample_indices.size(); i++)
+        this->sample_indices[i] = read_bitu32(newsrc);
 
     SDL_RWclose(newsrc);
     newsrc = NULL;

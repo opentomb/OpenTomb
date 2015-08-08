@@ -3938,7 +3938,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
             case TR_I_UB:
                 world->audio_map = tr->soundmap;
 
-                for(size_t i = 0; i < tr->sample_indices_count - 1; i++)
+                for(size_t i = 0; i < tr->sample_indices.size() - 1; i++)
                 {
                     pointer = tr->samples_data.data() + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i + 1)] - tr->sample_indices[i];

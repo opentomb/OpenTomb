@@ -760,9 +760,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sound_details[i].flags_2 = read_bitu8(src);
     }
 
-    this->sample_indices_count = read_bitu32(src);
-    this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-    for(i=0; i < this->sample_indices_count; i++)
+    this->sample_indices.resize( read_bitu32(src) );
+    for(i=0; i < this->sample_indices.size(); i++)
         this->sample_indices[i] = read_bitu32(src);
 
     SDL_RWseek(src, 6, SEEK_CUR);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
