@@ -17,60 +17,60 @@
 class TR_Level
 {
 public:
-    int32_t game_version = TR_UNKNOWN;                   ///< \brief game engine version.
+    int32_t m_gameVersion = TR_UNKNOWN;                   ///< \brief game engine version.
 
-    std::vector<tr_textile8_t> textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
-    std::vector<tr2_textile16_t> textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
-    std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
-    std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
-    std::vector<uint16_t> floor_data;                   ///< \brief the floor data.
-    std::vector<tr4_mesh_t> meshes;                     ///< \brief all meshes (static and moveables).
-    std::vector<uint32_t> mesh_indices;                 ///< \brief mesh index table.
-    std::vector<tr_animation_t> animations;             ///< \brief animations for moveables.
-    std::vector<tr_state_change_t> state_changes;       ///< \brief state changes for moveables.
-    std::vector<tr_anim_dispatch_t> anim_dispatches;    ///< \brief animation dispatches for moveables.
-    std::vector<int16_t> anim_commands;                 ///< \brief animation commands for moveables.
-    std::vector<tr_moveable_t> moveables;               ///< \brief data for the moveables.
-    std::vector<tr_staticmesh_t> static_meshes;         ///< \brief data for the static meshes.
-    std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
-    std::vector<uint16_t> animated_textures;            ///< \brief animated textures.
-    uint32_t animated_textures_uv_count = 0;
-    std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
-    std::vector<tr_sprite_sequence_t> sprite_sequences; ///< \brief sprite sequences for animation.
-    std::vector<tr_camera_t> cameras;                   ///< \brief cameras.
-    std::vector<tr4_flyby_camera_t> flyby_cameras;      ///< \brief flyby cameras.
-    std::vector<tr_sound_source_t> sound_sources;       ///< \brief sound sources.
-    std::vector<tr_box_t> boxes;                        ///< \brief boxes.
-    std::vector<uint16_t> overlaps;                     ///< \brief overlaps.
-    std::vector<int16_t> zones;                         ///< \brief zones.
-    std::vector<tr2_item_t> items;                      ///< \brief items.
-    tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
-    tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
-    tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).
-    std::vector<tr4_ai_object_t> ai_objects;            ///< \brief ai objects (TR4-5).
-    std::vector<tr_cinematic_frame_t> cinematic_frames; ///< \brief cinematic frames (TR1-3).
-    std::vector<uint8_t> demo_data;                     ///< \brief demo data.
-    std::vector<int16_t> soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
-    std::vector<tr_sound_details_t> sound_details;      ///< \brief sound details.
-    uint32_t samples_count = 0;
-    std::vector<uint8_t> samples_data;                  ///< \brief samples.
-    std::vector<uint32_t> sample_indices;               ///< \brief sample indices.
+    std::vector<tr_textile8_t> m_textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
+    std::vector<tr2_textile16_t> m_textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
+    std::vector<tr4_textile32_t> m_textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
+    std::vector<tr5_room_t> m_rooms;                      ///< \brief all rooms (normal and alternate).
+    std::vector<uint16_t> m_floorData;                   ///< \brief the floor data.
+    std::vector<tr4_mesh_t> m_meshes;                     ///< \brief all meshes (static and moveables).
+    std::vector<uint32_t> m_meshIndices;                 ///< \brief mesh index table.
+    std::vector<tr_animation_t> m_animations;             ///< \brief animations for moveables.
+    std::vector<tr_state_change_t> m_stateChanges;       ///< \brief state changes for moveables.
+    std::vector<tr_anim_dispatch_t> m_animDispatches;    ///< \brief animation dispatches for moveables.
+    std::vector<int16_t> m_animCommands;                 ///< \brief animation commands for moveables.
+    std::vector<tr_moveable_t> m_moveables;               ///< \brief data for the moveables.
+    std::vector<tr_staticmesh_t> m_staticMeshes;         ///< \brief data for the static meshes.
+    std::vector<tr4_object_texture_t> m_objectTextures;  ///< \brief object texture definitions.
+    std::vector<uint16_t> m_animatedTextures;            ///< \brief animated textures.
+    uint32_t m_animatedTexturesUvCount = 0;
+    std::vector<tr_sprite_texture_t> m_spriteTextures;   ///< \brief sprite texture definitions.
+    std::vector<tr_sprite_sequence_t> m_spriteSequences; ///< \brief sprite sequences for animation.
+    std::vector<tr_camera_t> m_cameras;                   ///< \brief cameras.
+    std::vector<tr4_flyby_camera_t> m_flybyCameras;      ///< \brief flyby cameras.
+    std::vector<tr_sound_source_t> m_soundSources;       ///< \brief sound sources.
+    std::vector<tr_box_t> m_boxes;                        ///< \brief boxes.
+    std::vector<uint16_t> m_overlaps;                     ///< \brief overlaps.
+    std::vector<int16_t> m_zones;                         ///< \brief zones.
+    std::vector<tr2_item_t> m_items;                      ///< \brief items.
+    tr_lightmap_t m_lightmap;                 ///< \brief ligthmap (TR1-3).
+    tr2_palette_t m_palette;                  ///< \brief colour palette (TR1-3).
+    tr2_palette_t m_palette16;                ///< \brief colour palette (TR2-3).
+    std::vector<tr4_ai_object_t> m_aiObjects;            ///< \brief ai objects (TR4-5).
+    std::vector<tr_cinematic_frame_t> m_cinematicFrames; ///< \brief cinematic frames (TR1-3).
+    std::vector<uint8_t> m_demoData;                     ///< \brief demo data.
+    std::vector<int16_t> m_soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
+    std::vector<tr_sound_details_t> m_soundDetails;      ///< \brief sound details.
+    uint32_t m_samplesCount = 0;
+    std::vector<uint8_t> m_samplesData;                  ///< \brief samples.
+    std::vector<uint32_t> m_sampleIndices;               ///< \brief sample indices.
 
-    std::vector<uint16_t> frame_data;                   ///< \brief frame data array
-    std::vector<uint32_t> mesh_tree_data;
+    std::vector<uint16_t> m_frameData;                   ///< \brief frame data array
+    std::vector<uint32_t> m_meshTreeData;
 
-    std::string sfx_path = "MAIN.SFX";
+    std::string m_sfxPath = "MAIN.SFX";
 
     void read_level(const std::string &filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
 
 protected:
-    uint32_t num_textiles;          ///< \brief number of 256x256 textiles.
-    uint32_t num_room_textiles;     ///< \brief number of 256x256 room textiles (TR4-5).
-    uint32_t num_obj_textiles;      ///< \brief number of 256x256 object textiles (TR4-5).
-    uint32_t num_bump_textiles;     ///< \brief number of 256x256 bump textiles (TR4-5).
-    uint32_t num_misc_textiles;     ///< \brief number of 256x256 misc textiles (TR4-5).
-    bool read_32bit_textiles;       ///< \brief are other 32bit textiles than misc ones read?
+    uint32_t m_numTextiles;          ///< \brief number of 256x256 textiles.
+    uint32_t m_numRoomTextiles;     ///< \brief number of 256x256 room textiles (TR4-5).
+    uint32_t m_numObjTextiles;      ///< \brief number of 256x256 object textiles (TR4-5).
+    uint32_t m_numBumpTextiles;     ///< \brief number of 256x256 bump textiles (TR4-5).
+    uint32_t m_numMiscTextiles;     ///< \brief number of 256x256 misc textiles (TR4-5).
+    bool m_read32BitTextiles;       ///< \brief are other 32bit textiles than misc ones read?
 
     int8_t read_bit8(SDL_RWops * const src);
     uint8_t read_bitu8(SDL_RWops * const src);

@@ -50,33 +50,33 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
     if ((newsrc = SDL_RWFromMem(buffer, size)) == NULL)
         Sys_extError("read_tr_mesh_data: SDL_RWFromMem");
 
-    this->mesh_indices.resize( read_bitu32(src) );
-    for (i = 0; i < this->mesh_indices.size(); i++)
-        this->mesh_indices[i] = read_bitu32(src);
+    this->m_meshIndices.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_meshIndices.size(); i++)
+        this->m_meshIndices[i] = read_bitu32(src);
 
-    this->meshes.resize( this->mesh_indices.size() );
+    this->m_meshes.resize( this->m_meshIndices.size() );
 
-    for (i = 0; i < this->mesh_indices.size(); i++)
+    for (i = 0; i < this->m_meshIndices.size(); i++)
     {
         uint32_t j;
 
-        for (j = 0; j < this->mesh_indices.size(); j++)
-            if (this->mesh_indices[j] == pos)
-                this->mesh_indices[j] = mesh;
+        for (j = 0; j < this->m_meshIndices.size(); j++)
+            if (this->m_meshIndices[j] == pos)
+                this->m_meshIndices[j] = mesh;
 
         SDL_RWseek(newsrc, pos, RW_SEEK_SET);
 
-        if (this->game_version >= TR_IV)
-            read_tr4_mesh(newsrc, this->meshes[mesh]);
+        if (this->m_gameVersion >= TR_IV)
+            read_tr4_mesh(newsrc, this->m_meshes[mesh]);
         else
-            read_tr_mesh(newsrc, this->meshes[mesh]);
+            read_tr_mesh(newsrc, this->m_meshes[mesh]);
 
         mesh++;
 
-        for (j = 0; j < this->mesh_indices.size(); j++)
-            if (this->mesh_indices[j] > pos)
+        for (j = 0; j < this->m_meshIndices.size(); j++)
+            if (this->m_meshIndices[j] > pos)
             {
-                pos = this->mesh_indices[j];
+                pos = this->m_meshIndices[j];
                 break;
             }
     }
@@ -97,33 +97,33 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
     //buffer = new bitu8[frame_data_size];
 
-    this->frame_data.resize( read_bitu32(src) );
+    this->m_frameData.resize( read_bitu32(src) );
 
-    if (SDL_RWread(src, this->frame_data.data(), sizeof(uint16_t), this->frame_data.size()) < frame_data.size())
+    if (SDL_RWread(src, this->m_frameData.data(), sizeof(uint16_t), this->m_frameData.size()) < m_frameData.size())
         Sys_extError("read_tr_level: frame_data: SDL_RWread(buffer)");
 
-    if ((newsrc = SDL_RWFromMem(this->frame_data.data(), this->frame_data.size())) == nullptr)
+    if ((newsrc = SDL_RWFromMem(this->m_frameData.data(), this->m_frameData.size())) == nullptr)
         Sys_extError("read_tr_level: frame_data: SDL_RWFromMem");
 
-    this->moveables.resize( read_bitu32(src) );
-    for (i = 0; i < this->moveables.size(); i++)
+    this->m_moveables.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_moveables.size(); i++)
     {
-        if (this->game_version < TR_V)
-            read_tr_moveable(src, this->moveables[i]);
+        if (this->m_gameVersion < TR_V)
+            read_tr_moveable(src, this->m_moveables[i]);
         else
-            read_tr5_moveable(src, this->moveables[i]);
+            read_tr5_moveable(src, this->m_moveables[i]);
     }
 
     //this->frames.reserve(this->moveables.size());
-    for (i = 0; i < this->moveables.size(); i++)
+    for (i = 0; i < this->m_moveables.size(); i++)
     {
         uint32_t j;
 
-        for (j = 0; j < this->moveables.size(); j++)
-            if (this->moveables[j].frame_offset == pos)
+        for (j = 0; j < this->m_moveables.size(); j++)
+            if (this->m_moveables[j].frame_offset == pos)
             {
-                this->moveables[j].frame_index = frame;
-                this->moveables[j].frame_offset = 0;
+                this->m_moveables[j].frame_index = frame;
+                this->m_moveables[j].frame_offset = 0;
             }
 
         SDL_RWseek(newsrc, pos, RW_SEEK_SET);
@@ -139,10 +139,10 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
         frame++;
 
         pos = 0;
-        for (j = 0; j < this->moveables.size(); j++)
-            if (this->moveables[j].frame_offset > pos)
+        for (j = 0; j < this->m_moveables.size(); j++)
+            if (this->m_moveables[j].frame_offset > pos)
             {
-                pos = this->moveables[j].frame_offset;
+                pos = this->m_moveables[j].frame_offset;
                 break;
             }
     }
@@ -166,7 +166,7 @@ void TR_Level::read_level(const std::string& filename, int32_t game_version)
 
     if(len2 > 0)
     {
-        this->sfx_path = filename.substr(0, len2 + 1) + "MAIN.SFX";
+        this->m_sfxPath = filename.substr(0, len2 + 1) + "MAIN.SFX";
     }
 
     this->read_level(SDL_RWFromFile(filename.c_str(), "rb"), game_version);
@@ -181,7 +181,7 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
     if (!src)
         Sys_extError("Invalid SDL_RWops");
 
-    this->game_version = game_version;
+    this->m_gameVersion = game_version;
 
     switch (game_version)
     {

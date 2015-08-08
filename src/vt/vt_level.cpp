@@ -11,23 +11,23 @@ void VT_Level::prepare_level()
 {
     uint32_t i;
 
-    if ((game_version >= TR_II) && (game_version <= TR_V))
+    if ((m_gameVersion >= TR_II) && (m_gameVersion <= TR_V))
     {
-        if (!read_32bit_textiles)
+        if (!m_read32BitTextiles)
         {
-            if (textile32.empty())
+            if (m_textile32.empty())
             {
-                this->textile32.resize( this->num_textiles );
+                this->m_textile32.resize( this->m_numTextiles );
             }
-            for (i = 0; i < (num_textiles - num_misc_textiles); i++)
-                convert_textile16_to_textile32(textile16[i], textile32[i]);
+            for (i = 0; i < (m_numTextiles - m_numMiscTextiles); i++)
+                convert_textile16_to_textile32(m_textile16[i], m_textile32[i]);
         }
     }
     else
     {
-        this->textile32.resize( this->num_textiles );
-        for (i = 0; i < num_textiles; i++)
-            convert_textile8_to_textile32(textile8[i], palette, textile32[i]);
+        this->m_textile32.resize( this->m_numTextiles );
+        for (i = 0; i < m_numTextiles; i++)
+            convert_textile8_to_textile32(m_textile8[i], m_palette, m_textile32[i]);
     }
 }
 
@@ -35,9 +35,9 @@ tr_staticmesh_t *VT_Level::find_staticmesh_id(uint32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < static_meshes.size(); i++)
-        if ((static_meshes[i].object_id == object_id) && (mesh_indices[static_meshes[i].mesh]))
-            return &static_meshes[i];
+    for (i = 0; i < m_staticMeshes.size(); i++)
+        if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
+            return &m_staticMeshes[i];
 
     return NULL;
 }
@@ -46,9 +46,9 @@ tr2_item_t *VT_Level::find_item_id(int32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < items.size(); i++)
-        if (items[i].object_id == object_id)
-            return &items[i];
+    for (i = 0; i < m_items.size(); i++)
+        if (m_items[i].object_id == object_id)
+            return &m_items[i];
 
     return NULL;
 }
@@ -57,9 +57,9 @@ tr_moveable_t *VT_Level::find_moveable_id(uint32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < moveables.size(); i++)
-        if (moveables[i].object_id == object_id)
-            return &moveables[i];
+    for (i = 0; i < m_moveables.size(); i++)
+        if (m_moveables[i].object_id == object_id)
+            return &m_moveables[i];
 
     return NULL;
 }
@@ -179,10 +179,10 @@ void VT_Level::dump_textures()
     uint32_t i;
     char buffer[1024];
 
-    for (i = 0; i < num_textiles; i++)
+    for (i = 0; i < m_numTextiles; i++)
     {
         snprintf(buffer, 1024, "dump/%03i_32.tga", i);
-        WriteTGAfile(buffer, (uint8_t *)&textile32[i].pixels, 256, 256, 0);
+        WriteTGAfile(buffer, (uint8_t *)&m_textile32[i].pixels, 256, 256, 0);
     }
 }
 

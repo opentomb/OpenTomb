@@ -228,163 +228,163 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     if (file_version != 0x0000002d)
         Sys_extError("Wrong level version");
 
-    read_tr_palette(src, this->palette);
-    read_tr2_palette16(src, this->palette16);
+    read_tr_palette(src, this->m_palette);
+    read_tr2_palette16(src, this->m_palette16);
 
-    this->num_textiles = 0;
-    this->num_room_textiles = 0;
-    this->num_obj_textiles = 0;
-    this->num_bump_textiles = 0;
-    this->num_misc_textiles = 0;
-    this->read_32bit_textiles = false;
+    this->m_numTextiles = 0;
+    this->m_numRoomTextiles = 0;
+    this->m_numObjTextiles = 0;
+    this->m_numBumpTextiles = 0;
+    this->m_numMiscTextiles = 0;
+    this->m_read32BitTextiles = false;
     
-    this->num_textiles = read_bitu32(src);
-    this->textile8.resize(this->num_textiles);
-    for (i = 0; i < this->textile8.size(); i++)
-        read_tr_textile8(src, this->textile8[i]);
-    this->textile16.resize(this->textile8.size());
-    for (i = 0; i < this->textile16.size(); i++)
-        read_tr2_textile16(src, this->textile16[i]);
+    this->m_numTextiles = read_bitu32(src);
+    this->m_textile8.resize(this->m_numTextiles);
+    for (i = 0; i < this->m_textile8.size(); i++)
+        read_tr_textile8(src, this->m_textile8[i]);
+    this->m_textile16.resize(this->m_textile8.size());
+    for (i = 0; i < this->m_textile16.size(); i++)
+        read_tr2_textile16(src, this->m_textile16[i]);
 
     // Unused
     if (read_bitu32(src) != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    this->rooms.resize( read_bitu16(src) );
-    for (i = 0; i < this->rooms.size(); i++)
-        read_tr2_room(src, this->rooms[i]);
+    this->m_rooms.resize( read_bitu16(src) );
+    for (i = 0; i < this->m_rooms.size(); i++)
+        read_tr2_room(src, this->m_rooms[i]);
 
-    this->floor_data.resize( read_bitu32(src) );
-    for(i = 0; i < this->floor_data.size(); i++)
-        this->floor_data[i] = read_bitu16(src);
+    this->m_floorData.resize( read_bitu32(src) );
+    for(i = 0; i < this->m_floorData.size(); i++)
+        this->m_floorData[i] = read_bitu16(src);
 
     read_mesh_data(src);
 
-    this->animations.resize( read_bitu32(src) );
-    for (i = 0; i < this->animations.size(); i++)
-        read_tr_animation(src, this->animations[i]);
+    this->m_animations.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_animations.size(); i++)
+        read_tr_animation(src, this->m_animations[i]);
 
-    this->state_changes.resize( read_bitu32(src) );
-    for (i = 0; i < this->state_changes.size(); i++)
-        read_tr_state_changes(src, this->state_changes[i]);
+    this->m_stateChanges.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_stateChanges.size(); i++)
+        read_tr_state_changes(src, this->m_stateChanges[i]);
 
-    this->anim_dispatches.resize( read_bitu32(src) );
-    for (i = 0; i < this->anim_dispatches.size(); i++)
-        read_tr_anim_dispatches(src, this->anim_dispatches[i]);
+    this->m_animDispatches.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_animDispatches.size(); i++)
+        read_tr_anim_dispatches(src, this->m_animDispatches[i]);
 
-    this->anim_commands.resize( read_bitu32(src) );
-    for (i = 0; i < this->anim_commands.size(); i++)
-        this->anim_commands[i] = read_bit16(src);
+    this->m_animCommands.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_animCommands.size(); i++)
+        this->m_animCommands[i] = read_bit16(src);
 
-    this->mesh_tree_data.resize( read_bitu32(src) );
-    for (i = 0; i < this->mesh_tree_data.size(); i++)
-        this->mesh_tree_data[i] = read_bitu32(src);                     // 4 bytes
+    this->m_meshTreeData.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_meshTreeData.size(); i++)
+        this->m_meshTreeData[i] = read_bitu32(src);                     // 4 bytes
 
     read_frame_moveable_data(src);
 
-    this->static_meshes.resize( read_bitu32(src) );
-    for (i = 0; i < this->static_meshes.size(); i++)
-        read_tr_staticmesh(src, this->static_meshes[i]);
+    this->m_staticMeshes.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_staticMeshes.size(); i++)
+        read_tr_staticmesh(src, this->m_staticMeshes[i]);
 
-    this->object_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->object_textures.size(); i++)
-        read_tr_object_texture(src, this->object_textures[i]);
+    this->m_objectTextures.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_objectTextures.size(); i++)
+        read_tr_object_texture(src, this->m_objectTextures[i]);
 
-    this->sprite_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->sprite_textures.size(); i++)
-        read_tr_sprite_texture(src, this->sprite_textures[i]);
+    this->m_spriteTextures.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_spriteTextures.size(); i++)
+        read_tr_sprite_texture(src, this->m_spriteTextures[i]);
 
-    this->sprite_sequences.resize( read_bitu32(src) );
-    for (i = 0; i < this->sprite_sequences.size(); i++)
-        read_tr_sprite_sequence(src, this->sprite_sequences[i]);
+    this->m_spriteSequences.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_spriteSequences.size(); i++)
+        read_tr_sprite_sequence(src, this->m_spriteSequences[i]);
 
     if (demo)
-        read_tr_lightmap(src, this->lightmap);
+        read_tr_lightmap(src, this->m_lightmap);
 
-    this->cameras.resize( read_bitu32(src) );
-    for (i = 0; i < this->cameras.size(); i++)
+    this->m_cameras.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_cameras.size(); i++)
     {
-        this->cameras[i].x = read_bit32(src);
-        this->cameras[i].y = read_bit32(src);
-        this->cameras[i].z = read_bit32(src);
+        this->m_cameras[i].x = read_bit32(src);
+        this->m_cameras[i].y = read_bit32(src);
+        this->m_cameras[i].z = read_bit32(src);
 
-        this->cameras[i].room = read_bit16(src);
-        this->cameras[i].unknown1 = read_bitu16(src);
+        this->m_cameras[i].room = read_bit16(src);
+        this->m_cameras[i].unknown1 = read_bitu16(src);
     }
 
-    this->sound_sources.resize( read_bitu32(src) );
-    for(i = 0; i < this->sound_sources.size(); i++)
+    this->m_soundSources.resize( read_bitu32(src) );
+    for(i = 0; i < this->m_soundSources.size(); i++)
     {
-        this->sound_sources[i].x = read_bit32(src);
-        this->sound_sources[i].y = read_bit32(src);
-        this->sound_sources[i].z = read_bit32(src);
+        this->m_soundSources[i].x = read_bit32(src);
+        this->m_soundSources[i].y = read_bit32(src);
+        this->m_soundSources[i].z = read_bit32(src);
 
-        this->sound_sources[i].sound_id = read_bitu16(src);
-        this->sound_sources[i].flags = read_bitu16(src);
+        this->m_soundSources[i].sound_id = read_bitu16(src);
+        this->m_soundSources[i].flags = read_bitu16(src);
     }
 
-    this->boxes.resize( read_bitu32(src) );
-    for (i = 0; i < this->boxes.size(); i++)
-        read_tr2_box(src, this->boxes[i]);
+    this->m_boxes.resize( read_bitu32(src) );
+    for (i = 0; i < this->m_boxes.size(); i++)
+        read_tr2_box(src, this->m_boxes[i]);
 
-    this->overlaps.resize(read_bitu32(src));
-    for (i = 0; i < this->overlaps.size(); i++)
-        this->overlaps[i] = read_bitu16(src);
+    this->m_overlaps.resize(read_bitu32(src));
+    for (i = 0; i < this->m_overlaps.size(); i++)
+        this->m_overlaps[i] = read_bitu16(src);
 
     // Zones
-    SDL_RWseek(src, this->boxes.size() * 20, RW_SEEK_CUR);
+    SDL_RWseek(src, this->m_boxes.size() * 20, RW_SEEK_CUR);
 
-    this->animated_textures.resize( read_bitu32(src) );
-    this->animated_textures_uv_count = 0; // No UVRotate in TR2
-    for (i = 0; i < this->animated_textures.size(); i++)
+    this->m_animatedTextures.resize( read_bitu32(src) );
+    this->m_animatedTexturesUvCount = 0; // No UVRotate in TR2
+    for (i = 0; i < this->m_animatedTextures.size(); i++)
     {
-        this->animated_textures[i] = read_bitu16(src);
+        this->m_animatedTextures[i] = read_bitu16(src);
     }
 
-    this->items.resize(read_bitu32(src));
-    for (i = 0; i < this->items.size(); i++)
-        read_tr2_item(src, this->items[i]);
+    this->m_items.resize(read_bitu32(src));
+    for (i = 0; i < this->m_items.size(); i++)
+        read_tr2_item(src, this->m_items[i]);
 
     if (!demo)
-        read_tr_lightmap(src, this->lightmap);
+        read_tr_lightmap(src, this->m_lightmap);
 
-    this->cinematic_frames.resize( read_bitu16(src) );
-    for (i = 0; i < this->cinematic_frames.size(); i++)
+    this->m_cinematicFrames.resize( read_bitu16(src) );
+    for (i = 0; i < this->m_cinematicFrames.size(); i++)
     {
-        read_tr_cinematic_frame(src, this->cinematic_frames[i]);
+        read_tr_cinematic_frame(src, this->m_cinematicFrames[i]);
     }
 
-    this->demo_data.resize( read_bitu16(src) );
-    for(i=0; i < this->demo_data.size(); i++)
-        this->demo_data[i] = read_bitu8(src);
+    this->m_demoData.resize( read_bitu16(src) );
+    for(i=0; i < this->m_demoData.size(); i++)
+        this->m_demoData[i] = read_bitu8(src);
 
     // Soundmap
-    this->soundmap.resize(TR_AUDIO_MAP_SIZE_TR2);
-    for(i=0; i < this->soundmap.size(); i++)
-        this->soundmap[i] = read_bit16(src);
+    this->m_soundmap.resize(TR_AUDIO_MAP_SIZE_TR2);
+    for(i=0; i < this->m_soundmap.size(); i++)
+        this->m_soundmap[i] = read_bit16(src);
 
-    this->sound_details.resize( read_bitu32(src) );
-    for(i = 0; i < this->sound_details.size(); i++)
+    this->m_soundDetails.resize( read_bitu32(src) );
+    for(i = 0; i < this->m_soundDetails.size(); i++)
     {
-        this->sound_details[i].sample = read_bitu16(src);
-        this->sound_details[i].volume = read_bitu16(src);
-        this->sound_details[i].chance = read_bitu16(src);
-        this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
-        this->sound_details[i].flags_2 = read_bitu8(src);
-        this->sound_details[i].sound_range = TR_AUDIO_DEFAULT_RANGE;
-        this->sound_details[i].pitch = (int16_t)TR_AUDIO_DEFAULT_PITCH;
+        this->m_soundDetails[i].sample = read_bitu16(src);
+        this->m_soundDetails[i].volume = read_bitu16(src);
+        this->m_soundDetails[i].chance = read_bitu16(src);
+        this->m_soundDetails[i].num_samples_and_flags_1 = read_bitu8(src);
+        this->m_soundDetails[i].flags_2 = read_bitu8(src);
+        this->m_soundDetails[i].sound_range = TR_AUDIO_DEFAULT_RANGE;
+        this->m_soundDetails[i].pitch = (int16_t)TR_AUDIO_DEFAULT_PITCH;
     }
 
-    this->sample_indices.resize( read_bitu32(src) );
-    for(i=0; i < this->sample_indices.size(); i++)
-        this->sample_indices[i] = read_bitu32(src);
+    this->m_sampleIndices.resize( read_bitu32(src) );
+    for(i=0; i < this->m_sampleIndices.size(); i++)
+        this->m_sampleIndices[i] = read_bitu32(src);
 
     // remap all sample indices here
-    for(i = 0; i < this->sound_details.size(); i++)
+    for(i = 0; i < this->m_soundDetails.size(); i++)
     {
-        if(this->sound_details[i].sample < this->sample_indices.size())
+        if(this->m_soundDetails[i].sample < this->m_sampleIndices.size())
         {
-            this->sound_details[i].sample = this->sample_indices[this->sound_details[i].sample];
+            this->m_soundDetails[i].sample = this->m_sampleIndices[this->m_soundDetails[i].sample];
         }
     }
 
@@ -393,21 +393,21 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     // In TR2, samples are stored in separate file called MAIN.SFX.
     // If there is no such files, no samples are loaded.
 
-    SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path.c_str(), "rb");
+    SDL_RWops *newsrc = SDL_RWFromFile(this->m_sfxPath.c_str(), "rb");
     if (newsrc == NULL)
     {
-        Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);
+        Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->m_sfxPath.c_str());
     }
     else
     {
-        this->samples_data.resize( SDL_RWsize(newsrc) );
-        this->samples_count = 0;
-        for(i = 0; i < this->samples_data.size(); i++)
+        this->m_samplesData.resize( SDL_RWsize(newsrc) );
+        this->m_samplesCount = 0;
+        for(i = 0; i < this->m_samplesData.size(); i++)
         {
-            this->samples_data[i] = read_bitu8(newsrc);
-            if((i >= 4) && (*((uint32_t*)(this->samples_data.data()+i-4)) == 0x46464952))   /// RIFF
+            this->m_samplesData[i] = read_bitu8(newsrc);
+            if((i >= 4) && (*((uint32_t*)(this->m_samplesData.data()+i-4)) == 0x46464952))   /// RIFF
             {
-                this->samples_count++;
+                this->m_samplesCount++;
             }
         }
 
