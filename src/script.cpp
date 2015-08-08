@@ -225,6 +225,19 @@ bool lua_SameRoom(int id1, int id2)
     return false;
 }
 
+bool lua_SameSector(int id1, int id2)
+{
+    std::shared_ptr<Entity> ent1 = engine_world.getEntityByID(id1);
+    std::shared_ptr<Entity> ent2 = engine_world.getEntityByID(id2);
+
+    if(ent1 && ent2 && ent1->m_currentSector && ent2->m_currentSector)
+    {
+        return ent1->m_currentSector->trig_index == ent2->m_currentSector->trig_index;
+    }
+
+    return false;
+}
+
 bool lua_NewSector(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
@@ -1949,6 +1962,7 @@ int lua_GetEntityResponse(int id, int response)
             case 1: return ent->m_response.vertical_collide;
             case 2: return ent->m_response.horizontal_collide;
             case 3: return static_cast<int>(ent->m_response.slide);
+            case 4: return static_cast<int>(ent->m_response.lean);
             default: return 0;
         }
     }
@@ -1978,6 +1992,9 @@ void lua_SetEntityResponse(int id, int response, int value)
                 break;
             case 3:
                 ent->m_response.slide = static_cast<SlideType>(value);
+                break;
+            case 4:
+                ent->m_response.lean = static_cast<LeanType>(value);
                 break;
             default:
                 break;
@@ -2794,6 +2811,8 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(ANIM_LOOP_LAST_FRAME);
     EXPOSE_C(ANIM_LOCK);
 
+    EXPOSE_CC(ACT_ACTION);
+
 #define EXPOSE_KEY(name) m_state.set("KEY_" #name, static_cast<int>(SDLK_##name))
 #define EXPOSE_KEY2(name,value) m_state.set("KEY_" #name, static_cast<int>(SDLK_##value))
 
@@ -3274,6 +3293,7 @@ void MainEngine::registerMainFunctions()
 
     registerC("isInRoom", lua_IsInRoom);
     registerC("sameRoom", lua_SameRoom);
+    registerC("sameSector", lua_SameSector);
     registerC("newSector", lua_NewSector);
     registerC("similarSector", lua_SimilarSector);
     registerC("getSectorHeight", lua_GetSectorHeight);

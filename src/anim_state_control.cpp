@@ -166,6 +166,26 @@ void ent_to_monkey_swing(Character* ent, SSAnimation* ss_anim, int state)
     }
 }
 
+void ent_to_tightrope(Character* ent, SSAnimation* ss_anim, int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        ent->m_moveType = MoveType::Climbing;
+        ent->ghostUpdate();
+        ss_anim->onFrame = nullptr;
+    }
+}
+
+void ent_from_tightrope(Character* ent, SSAnimation* ss_anim, int state)
+{
+    if(state == ENTITY_ANIM_NEWANIM)
+    {
+        ent->m_moveType = MoveType::OnFloor;
+        ent->ghostUpdate();
+        ss_anim->onFrame = nullptr;
+    }
+}
+
 void ent_crawl_to_climb(Character* ent, SSAnimation* ss_anim, int state)
 {
     if(state == ENTITY_ANIM_NEWANIM)
@@ -2986,6 +3006,117 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
+
+        case TR_STATE_LARA_TIGHTROPE_ENTER:
+            cmd->rot[0] = 0.0;
+            character->m_bt.no_fix_all = true;
+            character->m_dirFlag = ENT_MOVE_FORWARD;
+            ss_anim->onFrame = ent_to_tightrope;
+            ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_EXIT:
+            cmd->rot[0] = 0.0;
+            character->m_bt.no_fix_all = true;
+            character->m_dirFlag = ENT_MOVE_FORWARD;
+            ss_anim->onFrame = ent_from_tightrope;
+            ss_anim->next_state = TR_STATE_LARA_STOP;
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_IDLE:
+            cmd->rot[0] = 0.0;
+
+            if(ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_STAND)
+            {
+                if(character->m_response.lean == LeanType::Left)
+                {
+                    ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT;
+                    character->m_response.lean = LeanType::None;
+                    break;
+                }
+                else if(character->m_response.lean == LeanType::Right)
+                {
+                    ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT;
+                    character->m_response.lean = LeanType::None;
+                    break;
+                }
+                else if(last_frame)
+                {
+                    uint16_t chance_to_fall = rand() % 0x7FFF;
+
+                    if(chance_to_fall > 0x5FFF)
+                        ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT;
+                    else if(chance_to_fall < 0x2000)
+                        ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT;
+                }
+            }
+
+            if((cmd->roll) || (cmd->move[0] == -1))
+            {
+                character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_TURN, 0);
+                character->m_dirFlag = ENT_MOVE_FORWARD;
+            }
+            else if(cmd->move[0] == 1)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_FORWARD;
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_FORWARD:
+            cmd->rot[0] = 0.0;
+            character->m_dirFlag = ENT_MOVE_FORWARD;
+
+            if(cmd->move[0] != 1)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+            }
+            else
+            {
+                uint16_t chance_to_unbal = rand() % 0x7FFF;
+                if(chance_to_unbal < 0x00FF)
+                {
+                    ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+
+                    if(chance_to_unbal > 0x007F)
+                        character->m_response.lean = LeanType::Left;
+                    else
+                        character->m_response.lean = LeanType::Right;
+                }
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT:
+            cmd->rot[0] = 0.0;
+
+            if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_RIGHT) && (last_frame))
+            {
+                character->m_moveType = MoveType::FreeFalling;
+                character->m_transform.getOrigin() += character->m_transform.getBasis() * btVector3(256.0, 192.0, -640.0);
+                character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
+            }
+            else if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (ss_anim->current_frame >= 15) && (cmd->move[1] == -1))
+            {
+                // MAGIC: mirroring animation position.
+                character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, 30-ss_anim->current_frame);
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT:
+            cmd->rot[0] = 0.0;
+
+            if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_LEFT) && (last_frame))
+            {
+                character->m_moveType = MoveType::FreeFalling;
+                character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
+                character->m_transform.getOrigin() += character->m_transform.getBasis() * btVector3(-256.0, 192.0, -640.0);
+            }
+            else if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (ss_anim->current_frame >= 15) && (cmd->move[1] == 1))
+            {
+                // MAGIC: mirroring animation position.
+                character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, 30-ss_anim->current_frame);
+            }
+            break;
+
 
             /*
              * intermediate animations are processed automatically.
