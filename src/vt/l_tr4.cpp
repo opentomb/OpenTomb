@@ -595,9 +595,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     }
     //SDL_RWseek(newsrc, this->cameras.size() * 16, SEEK_CUR);
 
-    this->flyby_cameras_count = read_bitu32(newsrc);
-    this->flyby_cameras = (tr4_flyby_camera_t*)malloc(this->flyby_cameras_count * sizeof(tr4_flyby_camera_t));
-    for (i = 0; i < this->flyby_cameras_count; i++)
+    this->flyby_cameras.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->flyby_cameras.size(); i++)
     {
         this->flyby_cameras[i].cam_x = read_bit32(newsrc);
         this->flyby_cameras[i].cam_y = read_bit32(newsrc);
