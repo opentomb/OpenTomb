@@ -39,12 +39,11 @@ public:
 
         this->moveables.clear();
         this->static_meshes.clear();
-        this->object_textures.clear();       // destroyed
+        this->object_textures.clear();
         this->animated_textures_uv_count = 0; // destroyed
         this->animated_textures.clear();
-        this->sprite_textures.clear();       // destroyed
-        this->sprite_sequences_count = 0;   // destroyed
-        this->sprite_sequences = nullptr;      // destroyed
+        this->sprite_textures.clear();
+        this->sprite_sequences.clear();
         this->cameras_count = 0;            // destroyed
         this->cameras = nullptr;               // destroyed
         this->flyby_cameras_count = 0;      // destroyed
@@ -128,12 +127,7 @@ public:
 
         this->sprite_textures.clear();
 
-        if(this->sprite_sequences_count)
-        {
-            this->sprite_sequences_count = 0;
-            free(this->sprite_sequences);
-            this->sprite_sequences = nullptr;
-        }
+        this->sprite_sequences.clear();
 
         if(this->cameras_count)
         {
@@ -391,8 +385,7 @@ public:
     std::vector<uint16_t> animated_textures;            ///< \brief animated textures.
     uint32_t animated_textures_uv_count;
     std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
-    uint32_t sprite_sequences_count;
-    tr_sprite_sequence_t *sprite_sequences; ///< \brief sprite sequences for animation.
+    std::vector<tr_sprite_sequence_t> sprite_sequences; ///< \brief sprite sequences for animation.
     uint32_t cameras_count;
     tr_camera_t *cameras = nullptr;                   ///< \brief cameras.
     uint32_t flyby_cameras_count;

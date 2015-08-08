@@ -2416,7 +2416,7 @@ void TR_GenSprites(World *world, class VT_Level *tr)
         world->tex_atlas->getSpriteCoordinates(i, s->texture, s->tex_coord);
     }
 
-    for(uint32_t i = 0; i < tr->sprite_sequences_count; i++)
+    for(uint32_t i = 0; i < tr->sprite_sequences.size(); i++)
     {
         if((tr->sprite_sequences[i].offset >= 0) && (static_cast<uint32_t>(tr->sprite_sequences[i].offset) < world->sprites.size()))
         {

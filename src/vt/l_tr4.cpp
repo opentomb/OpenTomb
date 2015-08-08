@@ -579,9 +579,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for (i = 0; i < this->sprite_textures.size(); i++)
         read_tr4_sprite_texture(newsrc, this->sprite_textures[i]);
 
-    this->sprite_sequences_count = read_bitu32(newsrc);
-    this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
-    for (i = 0; i < this->sprite_sequences_count; i++)
+    this->sprite_sequences.resize( read_bitu32(newsrc) );
+    for (i = 0; i < this->sprite_sequences.size(); i++)
         read_tr_sprite_sequence(newsrc, this->sprite_sequences[i]);
 
     this->cameras_count = read_bitu32(newsrc);
