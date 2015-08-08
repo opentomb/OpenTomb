@@ -37,7 +37,7 @@ extern "C" {
 #include "character_controller.h"
 #include "engine.h"
 #include "engine_lua.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
 #include "bsp_tree.h"
@@ -50,7 +50,7 @@ lua_State *level_script = NULL;
 
 void Res_SetEntityModelProperties(struct entity_s *ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    if((objects_flags_conf != NULL) && (ent->bf->animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
@@ -58,19 +58,19 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->bf->animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
                 ent->self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
-                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
+                ent->bf->animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
                 ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
             }
         }
         lua_settop(objects_flags_conf, top);
     }
 
-    if((level_script != NULL) && (ent->bf.animations.model != NULL))
+    if((level_script != NULL) && (ent->bf->animations.model != NULL))
     {
         int top = lua_gettop(level_script);
         assert(top >= 0);
@@ -78,7 +78,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->bf->animations.model->id);        // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
@@ -91,7 +91,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
                 }
                 if(!lua_isnil(level_script, -2))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                    ent->bf->animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -1))
                 {
@@ -107,7 +107,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
 
 void Res_SetEntityFunction(struct entity_s *ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    if((objects_flags_conf != NULL) && (ent->bf->animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
@@ -115,7 +115,7 @@ void Res_SetEntityFunction(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->bf->animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 1, 0))
             {
                 if(!lua_isnil(objects_flags_conf, -1))
@@ -3953,7 +3953,7 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame)
+void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_frame_s *bone_frame)
 {
     unsigned short int *frame;
 
@@ -4051,11 +4051,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->inertia_angular[1] = 0.0;
         entity->move_type          = 0;
 
-        entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
+        entity->bf->animations.model = World_GetModelByID(world, tr_item->object_id);
 
         if(ent_ID_override != NULL)
         {
-            if(entity->bf.animations.model == NULL)
+            if(entity->bf->animations.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                              // save LUA stack
                 lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
@@ -4063,7 +4063,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
                 if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
-                    entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                    entity->bf->animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
                 }
                 lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
@@ -4080,15 +4080,15 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
                     animation_frame_p ta;
                     uint16_t tc;
-                    SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
-                    SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
+                    SWAPT(entity->bf->animations.model->animations, replace_anim_model->animations, ta);
+                    SWAPT(entity->bf->animations.model->animation_count, replace_anim_model->animation_count, tc);
                 }
             }
             lua_settop(ent_ID_override, top);                                      // restore LUA stack
 
         }
 
-        if(entity->bf.animations.model == NULL)
+        if(entity->bf->animations.model == NULL)
         {
             // SPRITE LOADING
             sprite_p sp = World_GetSpriteByID(tr_item->object_id, world);
@@ -4117,7 +4117,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;
         }
 
-        SSBoneFrame_CreateFromModel(&entity->bf, entity->bf.animations.model);
+        SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
@@ -4127,9 +4127,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             world->Character = entity;
             entity->self->collision_type = COLLISION_TYPE_ACTOR;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            entity->bf.animations.model->hide = 0;
+            entity->bf->animations.model->hide = 0;
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->bf.animations.model;
+            LM = (skeletal_model_p)entity->bf->animations.model;
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->id);
@@ -4181,11 +4181,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     break;
             };
 
-            for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
+            for(uint16_t j=0;j<entity->bf->bone_tag_count;j++)
             {
-                entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
-                entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
-                entity->bf.bone_tags[j].mesh_slot = NULL;
+                entity->bf->bone_tags[j].mesh_base = entity->bf->animations.model->mesh_tree[j].mesh_base;
+                entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
+                entity->bf->bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             BT_GenEntityRigidBody(entity);
@@ -4480,7 +4480,7 @@ void Res_EntityToItem(RedBlackNode_p n)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if(ent->bf.animations.model->id == item->world_model_id)
+                if(ent->bf->animations.model->id == item->world_model_id)
                 {
                     char buf[64] = {0};
                     snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);

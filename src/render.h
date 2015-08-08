@@ -108,6 +108,54 @@ typedef struct render_s
 
 extern render_t renderer;
 
+class CRenderDebugDrawer
+{
+    public:
+        // engine debug function
+        CRenderDebugDrawer();
+        virtual ~CRenderDebugDrawer();
+        bool IsEmpty()
+        {
+            return m_lines == 0;
+        }
+        void reset();
+        void render();
+        void setColor(GLfloat r, GLfloat g, GLfloat b)
+        {
+            m_color[0] = r;
+            m_color[1] = g;
+            m_color[2] = b;
+        }
+        void drawAxis(btScalar r, btScalar transform[16]);
+        void drawPortal(struct portal_s *p);
+        void drawFrustum(struct frustum_s *f);
+        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
+        void drawOBB(struct obb_s *obb);
+        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
+        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
+        void drawEntityDebugLines(struct entity_s *entity);
+        void drawSectorDebugLines(struct room_sector_s *rs);
+        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
+        
+        // physics debug interface
+        void   drawLine(const btScalar from[3], const btScalar to[3], const btScalar color[3]);
+        void   drawContactPoint(const btScalar pointOnB[3], const btScalar normalOnB[3], btScalar distance, int lifeTime, const btScalar color[3]);
+        void   setDebugMode(int debugMode) {m_debugMode = debugMode;};
+        int    getDebugMode() const {return m_debugMode;}
+        
+    private:
+        uint32_t m_debugMode;
+        uint32_t m_max_lines;
+        uint32_t m_lines;
+        bool     m_need_realloc;
+
+        GLuint  m_gl_vbo;
+        GLfloat m_color[3];
+        GLfloat *m_buffer;
+
+        struct obb_s *m_obb;
+};
+
 void Render_DoShaders();
 void Render_Empty(render_p render);
 void Render_ResetActiveTexture();

@@ -3,16 +3,6 @@
 #define CHARACTER_CONTROLLER_H
 
 #include <stdint.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCapsuleShape.h"
-#include "bullet/BulletCollision/CollisionShapes/btSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
-#include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "engine.h"
 
 
@@ -183,16 +173,14 @@ enum CharParameters
 
 struct engine_container_s;
 struct entity_s;
-class bt_engine_ClosestConvexResultCallback;
-class bt_engine_ClosestRayResultCallback;
-class btCollisionObject;
-class btConvexShape;
 
 typedef struct climb_info_s
 {
     int8_t                         height_info;
     int8_t                         can_hang;
-
+    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                         edge_hit;
+    
     btScalar                       point[3];
     btScalar                       n[3];
     btScalar                       t[3];
@@ -201,34 +189,30 @@ typedef struct climb_info_s
     btScalar                       ceiling_limit;
     btScalar                       next_z_space;
 
-    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit;
     btScalar                       edge_point[3];
     btScalar                       edge_normale[3];
     btScalar                       edge_tan_xy[2];
     btScalar                       edge_z_ang;
-    btCollisionObject             *edge_obj;
+    // bone number?
+    struct engine_container_s     *edge_obj;
 }climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
 {
-    bt_engine_ClosestRayResultCallback         *cb;
-    bt_engine_ClosestConvexResultCallback      *ccb;
-    btConvexShape                              *sp;
-
     int8_t                                      ceiling_climb;
     int8_t                                      walls_climb;
     int8_t                                      walls_climb_dir;
-
+    struct engine_container_s                  *self;
+    
     btScalar                                    floor_normale[3];
     btScalar                                    floor_point[3];
     int16_t                                     floor_hit;
-    btCollisionObject                          *floor_obj;
+    struct engine_container_s                  *floor_obj;
 
     btScalar                                    ceiling_normale[3];
     btScalar                                    ceiling_point[3];
     int16_t                                     ceiling_hit;
-    btCollisionObject                          *ceiling_obj;
+    struct engine_container_s                  *ceiling_obj;
 
     btScalar                                    transition_level;
     int16_t                                     water;
@@ -319,8 +303,8 @@ typedef struct character_s
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
     
-    btSphereShape               *sphere;                 // needs to height calculation
-    btSphereShape               *climb_sensor;
+    btScalar                     sphere;                 // needs to height calculation
+    btScalar                     climb_sensor;
 
     struct height_info_s         height_info;
     struct climb_info_s          climb;

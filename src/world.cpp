@@ -23,7 +23,7 @@
 #include "render.h"
 #include "engine.h"
 #include "engine_lua.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "script.h"
 #include "gui.h"
 #include "resource.h"
@@ -794,7 +794,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->inertia_angular[1] = 0.0;
             ent->move_type          = 0;
 
-            SSBoneFrame_CreateFromModel(&ent->bf, model);
+            SSBoneFrame_CreateFromModel(ent->bf, model);
             Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
             BT_GenEntityRigidBody(ent);
 

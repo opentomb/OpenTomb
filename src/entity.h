@@ -3,17 +3,6 @@
 #define ENTITY_H
 
 #include <stdint.h>
-#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "mesh.h"
-
-class btCollisionShape;
-class btRigidBody;
-class btPairCachingGhostObject;
-class bt_engine_ClosestRayResultCallback;
-class bt_engine_ClosestConvexResultCallback;
 
 struct room_s;
 struct room_sector_s;
@@ -21,6 +10,7 @@ struct obb_s;
 struct character_s;
 struct ss_animation_s;
 struct ss_bone_frame_s;
+struct physics_data_s;
 
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
@@ -67,82 +57,6 @@ struct ss_bone_frame_s;
 
 // Specific in-game entity structure.
 
-#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
-
-/*
- * typedef struct climb_info_s
-{
-    int8_t                         height_info;
-    int8_t                         can_hang;
-
-    btScalar                       point[3];
-    btScalar                       n[3];
-    btScalar                       t[3];
-    btScalar                       up[3];
-    btScalar                       floor_limit;
-    btScalar                       ceiling_limit;
-    btScalar                       next_z_space;
-
-    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit;
-    btVector3                      edge_point;
-    btVector3                      edge_normale;
-    btVector3                      edge_tan_xy;
-    btScalar                       edge_z_ang;
-    btCollisionObject             *edge_obj;
-}climb_info_t, *climb_info_p;
-
-typedef struct height_info_s
-{
-    bt_engine_ClosestRayResultCallback         *cb;
-    bt_engine_ClosestConvexResultCallback      *ccb;
-    btConvexShape                              *sp;
-
-    int8_t                                      ceiling_climb;
-    int8_t                                      walls_climb;
-    int8_t                                      walls_climb_dir;
-
-    btVector3                                   floor_normale;
-    btVector3                                   floor_point;
-    int16_t                                     floor_hit;
-    btCollisionObject                          *floor_obj;
-
-    btVector3                                   ceiling_normale;
-    btVector3                                   ceiling_point;
-    int16_t                                     ceiling_hit;
-    btCollisionObject                          *ceiling_obj;
-
-    btScalar                                    transition_level;
-    int16_t                                     water;
-    int16_t                                     quicksand;
-}height_info_t, *height_info_p;
- */
-
-typedef struct entity_collision_node_s
-{
-    uint16_t                    obj_count;
-    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
-}entity_collision_node_t, *entity_collision_node_p;
-
-typedef struct physics_data_s
-{
-    // kinematic
-    btCollisionShape                  **shapes;
-    btRigidBody                       **bt_body;
-    
-    // dynamic
-    bt_engine_ClosestRayResultCallback                  *ray_cb;
-    bt_engine_ClosestConvexResultCallback               *convex_cb;
-    uint32_t                            no_fix_skeletal_parts;
-    int8_t                              no_fix_all;
-    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
-    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
-    uint16_t                            bt_joint_count;         // Ragdoll joints
-    btTypedConstraint                 **bt_joints;              // Ragdoll joints
-    
-    struct entity_collision_node_s     *last_collisions;
-}physics_data_t, *physics_data_p;
-
 typedef struct entity_s
 {
     uint32_t                            id;                 // Unique entity ID
@@ -165,8 +79,8 @@ typedef struct entity_s
     btScalar                            inertia_linear;     // linear inertia
     btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
     
-    struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
-    struct physics_data_s               physics;
+    struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
+    struct physics_data_s              *physics;
     btScalar                            scaling[3];         // entity scaling
     btScalar                            angles[3];
     btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
@@ -185,7 +99,6 @@ typedef struct entity_s
 
 
 entity_p Entity_Create();
-void Entity_CreateGhosts(entity_p entity);
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);

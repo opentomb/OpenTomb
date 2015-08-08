@@ -13,7 +13,7 @@
 
 #include "anim_state_control.h"
 #include "engine.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "controls.h"
 #include "gui.h"
 #include "game.h"
@@ -681,60 +681,29 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    engine_container_t *c0;
-    btVector3 from, to, place;
+    btScalar from[3], to[3];
     engine_container_t cam_cont;
+    collision_result_t cb;
 
-    vec3_copy(from.m_floats, engine_camera.pos);
-    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
+    vec3_copy(from, engine_camera.pos);
+    vec3_add_mul(to, from, engine_camera.view_dir, 32768.0);
 
     cam_cont.next = NULL;
     cam_cont.object = NULL;
     cam_cont.object_type = 0;
     cam_cont.room = engine_camera.current_room;
 
-    bt_engine_ClosestRayResultCallback cbc(&cam_cont);
-    //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    bt_engine_dynamicsWorld->rayTest(from, to, cbc);
-    if(cbc.hasHit())
+    if(Physics_RayTest(&cb, from, to, &cam_cont))
     {
         extern GLfloat cast_ray[6];
+        vec3_copy(cast_ray, cb.point);
+        cast_ray[3] = cast_ray[0] + 100.0 * cb.normale[0];
+        cast_ray[4] = cast_ray[1] + 100.0 * cb.normale[1];
+        cast_ray[5] = cast_ray[2] + 100.0 * cb.normale[2];
 
-        place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        vec3_copy(cast_ray, place.m_floats);
-        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
-
-        if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
+        if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {
-            if(c0->object_type == OBJECT_BULLET_MISC)
-            {
-                btCollisionObject* obj = (btCollisionObject*)cbc.m_collisionObject;
-                btRigidBody* body = btRigidBody::upcast(obj);
-                if(body && body->getMotionState())
-                {
-                    delete body->getMotionState();
-                }
-                if(body && body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                }
-
-                if (body)
-                {
-                    body->setUserPointer(NULL);
-                }
-                c0->room = NULL;
-                free(c0);
-
-                bt_engine_dynamicsWorld->removeCollisionObject(obj);
-                delete obj;
-            }
-            else
-            {
-                last_cont = c0;
-            }
+            last_cont = cb.obj;
         }
     }
 }

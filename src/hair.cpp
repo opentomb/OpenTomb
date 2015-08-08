@@ -2,7 +2,7 @@
 #include <math.h>
 
 #include "engine.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "hair.h"
 
 bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
@@ -10,8 +10,8 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // No setup or parent to link to - bypass function.
 
     if( (!parent_entity) || (!setup)                           ||
-        (setup->link_body >= parent_entity->bf.bone_tag_count) ||
-        (!(parent_entity->physics.bt_body[setup->link_body]))           ) return false;
+        (setup->link_body >= parent_entity->bf->bone_tag_count) ||
+        (!(parent_entity->physics->bt_body[setup->link_body]))           ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
     btScalar owner_body_transform[16];
@@ -34,7 +34,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     // Setup initial position / angles.
 
-    Mat4_Mat4_mul(owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
+    Mat4_Mat4_mul(owner_body_transform, parent_entity->transform, parent_entity->bf->bone_tags[hair->owner_body].full_transform);
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -147,7 +147,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-            prev_body = parent_entity->physics.bt_body[hair->owner_body];   // Previous body is parent body.
+            prev_body = parent_entity->physics->bt_body[hair->owner_body];   // Previous body is parent body.
         }
         else
         {
@@ -272,7 +272,7 @@ void Hair_Update(entity_p entity)
 
         /*btScalar new_transform[16];
 
-        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
+        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf->bone_tags[hair->owner_body].full_transform);
 
         // Calculate mixed velocities.
         btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],

@@ -1,12 +1,12 @@
 
 #include <math.h>
-
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 
 #include "core/vmath.h"
+#include "mesh.h"
 #include "character_controller.h"
 #include "engine.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "ragdoll.h"
 
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
@@ -23,7 +23,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     // No entity, setup or body count overflow - bypass function.
 
     if( (!entity) || (!setup) ||
-        (setup->body_count > entity->bf.bone_tag_count) )
+        (setup->body_count > entity->bf->bone_tag_count) )
     {
         return false;
     }
@@ -32,25 +32,25 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
     // If ragdoll already exists, overwrite it with new one.
 
-    if(entity->physics.bt_joint_count > 0)
+    if(entity->physics->bt_joint_count > 0)
     {
         result = Ragdoll_Delete(entity);
     }
 
     // Setup bodies.
-    entity->physics.bt_joint_count = 0;
+    entity->physics->bt_joint_count = 0;
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    entity->physics.no_fix_all = 0x00;
-    entity->physics.no_fix_skeletal_parts = 0x00000000;
-    int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
-    entity->bf.animations.model->collision_map_size = entity->bf.animations.model->mesh_count;
+    Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+    entity->physics->no_fix_all = 0x00;
+    entity->physics->no_fix_skeletal_parts = 0x00000000;
+    int map_size = entity->bf->animations.model->collision_map_size;             // does not works, strange...
+    entity->bf->animations.model->collision_map_size = entity->bf->animations.model->mesh_count;
     Entity_FixPenetrations(entity, NULL);
-    entity->bf.animations.model->collision_map_size = map_size;
+    entity->bf->animations.model->collision_map_size = map_size;
 
     for(int i=0; i<setup->body_count; i++)
     {
-        if( (i >= entity->bf.bone_tag_count) || (entity->physics.bt_body[i] == NULL) )
+        if( (i >= entity->bf->bone_tag_count) || (entity->physics->bt_body[i] == NULL) )
         {
             result = false;
             continue;   // If body is absent, return false and bypass this body setup.
@@ -59,59 +59,59 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
 
-            bt_engine_dynamicsWorld->removeRigidBody(entity->physics.bt_body[i]);
+            bt_engine_dynamicsWorld->removeRigidBody(entity->physics->bt_body[i]);
 
-            entity->physics.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-            entity->physics.bt_body[i]->setMassProps(mass, inertia);
+            entity->physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+            entity->physics->bt_body[i]->setMassProps(mass, inertia);
 
-            entity->physics.bt_body[i]->updateInertiaTensor();
-            entity->physics.bt_body[i]->clearForces();
+            entity->physics->bt_body[i]->updateInertiaTensor();
+            entity->physics->bt_body[i]->clearForces();
 
-            entity->physics.bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-            entity->physics.bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+            entity->physics->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+            entity->physics->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
 
-            entity->physics.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
-            entity->physics.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
-            entity->physics.bt_body[i]->setFriction(setup->body_setup[i].friction);
-            entity->physics.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
+            entity->physics->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+            entity->physics->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+            entity->physics->bt_body[i]->setFriction(setup->body_setup[i].friction);
+            entity->physics->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
-            if(entity->bf.bone_tags[i].parent == NULL)
+            if(entity->bf->bone_tags[i].parent == NULL)
             {
-                entity->bf.bone_tags[i].mesh_base;
-                btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
-                entity->physics.bt_body[i]->setCcdMotionThreshold(0.8 * r);
-                entity->physics.bt_body[i]->setCcdSweptSphereRadius(r);
+                entity->bf->bone_tags[i].mesh_base;
+                btScalar r = getInnerBBRadius(entity->bf->bone_tags[i].mesh_base->bb_min, entity->bf->bone_tags[i].mesh_base->bb_max);
+                entity->physics->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+                entity->physics->bt_body[i]->setCcdSweptSphereRadius(r);
             }
     }
 
     Entity_UpdateRigidBody(entity, 1);
-    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+    for(uint16_t i=0;i<entity->bf->bone_tag_count;i++)
     {
-        bt_engine_dynamicsWorld->addRigidBody(entity->physics.bt_body[i]);
-        entity->physics.bt_body[i]->activate();
-        entity->physics.bt_body[i]->setLinearVelocity(btVector3(entity->speed[0], entity->speed[1], entity->speed[2]));
-        if(entity->physics.ghostObjects[i])
+        bt_engine_dynamicsWorld->addRigidBody(entity->physics->bt_body[i]);
+        entity->physics->bt_body[i]->activate();
+        entity->physics->bt_body[i]->setLinearVelocity(btVector3(entity->speed[0], entity->speed[1], entity->speed[2]));
+        if(entity->physics->ghostObjects[i])
         {
-            bt_engine_dynamicsWorld->removeCollisionObject(entity->physics.ghostObjects[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(entity->physics.ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
+            bt_engine_dynamicsWorld->removeCollisionObject(entity->physics->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(entity->physics->ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
         }
     }
 
     // Setup constraints.
-    entity->physics.bt_joint_count = setup->joint_count;
-    entity->physics.bt_joints = (btTypedConstraint**)calloc(entity->physics.bt_joint_count, sizeof(btTypedConstraint*));
+    entity->physics->bt_joint_count = setup->joint_count;
+    entity->physics->bt_joints = (btTypedConstraint**)calloc(entity->physics->bt_joint_count, sizeof(btTypedConstraint*));
 
-    for(int i=0; i<entity->physics.bt_joint_count; i++)
+    for(int i=0; i<entity->physics->bt_joint_count; i++)
     {
-        if( (setup->joint_setup[i].body_index >= entity->bf.bone_tag_count) ||
-            (entity->physics.bt_body[setup->joint_setup[i].body_index] == NULL) )
+        if( (setup->joint_setup[i].body_index >= entity->bf->bone_tag_count) ||
+            (entity->physics->bt_body[setup->joint_setup[i].body_index] == NULL) )
         {
             result = false;
             break;       // If body 1 or body 2 are absent, return false and bypass this joint.
         }
 
         btTransform localA, localB;
-        ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body_index;
+        ss_bone_tag_p btB = entity->bf->bone_tags + setup->joint_setup[i].body_index;
         ss_bone_tag_p btA = btB->parent;
         if(btA == NULL)
         {
@@ -135,33 +135,33 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         {
             case RD_CONSTRAINT_POINT:
                 {
-                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->physics.bt_body[btA->index], *entity->physics.bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
-                    entity->physics.bt_joints[i] = pointC;
+                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->physics->bt_body[btA->index], *entity->physics->bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
+                    entity->physics->bt_joints[i] = pointC;
                 }
                 break;
 
             case RD_CONSTRAINT_HINGE:
                 {
-                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->physics.bt_body[btA->index], *entity->physics.bt_body[btB->index], localA, localB);
+                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->physics->bt_body[btA->index], *entity->physics->bt_body[btB->index], localA, localB);
                     hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
-                    entity->physics.bt_joints[i] = hingeC;
+                    entity->physics->bt_joints[i] = hingeC;
                 }
                 break;
 
             case RD_CONSTRAINT_CONE:
                 {
-                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->physics.bt_body[btA->index], *entity->physics.bt_body[btB->index], localA, localB);
+                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->physics->bt_body[btA->index], *entity->physics->bt_body[btB->index], localA, localB);
                     coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
-                    entity->physics.bt_joints[i] = coneC;
+                    entity->physics->bt_joints[i] = coneC;
                 }
                 break;
         }
 
-        entity->physics.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
-        entity->physics.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
+        entity->physics->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        entity->physics->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
-        entity->physics.bt_joints[i]->setDbgDrawSize(64.0);
-        bt_engine_dynamicsWorld->addConstraint(entity->physics.bt_joints[i], true);
+        entity->physics->bt_joints[i]->setDbgDrawSize(64.0);
+        bt_engine_dynamicsWorld->addConstraint(entity->physics->bt_joints[i], true);
     }
 
     if(result == false)
@@ -178,33 +178,33 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
 bool Ragdoll_Delete(entity_p entity)
 {
-    if(entity->physics.bt_joint_count == 0) return false;
+    if(entity->physics->bt_joint_count == 0) return false;
 
-    for(int i=0; i<entity->physics.bt_joint_count; i++)
+    for(int i=0; i<entity->physics->bt_joint_count; i++)
     {
-        if(entity->physics.bt_joints[i] != NULL)
+        if(entity->physics->bt_joints[i] != NULL)
         {
-            bt_engine_dynamicsWorld->removeConstraint(entity->physics.bt_joints[i]);
-            delete entity->physics.bt_joints[i];
-            entity->physics.bt_joints[i] = NULL;
+            bt_engine_dynamicsWorld->removeConstraint(entity->physics->bt_joints[i]);
+            delete entity->physics->bt_joints[i];
+            entity->physics->bt_joints[i] = NULL;
         }
     }
 
-    for(int i=0;i<entity->bf.bone_tag_count;i++)
+    for(int i=0;i<entity->bf->bone_tag_count;i++)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(entity->physics.bt_body[i]);
-        entity->physics.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        bt_engine_dynamicsWorld->addRigidBody(entity->physics.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-        if(entity->physics.ghostObjects[i])
+        bt_engine_dynamicsWorld->removeRigidBody(entity->physics->bt_body[i]);
+        entity->physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        bt_engine_dynamicsWorld->addRigidBody(entity->physics->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        if(entity->physics->ghostObjects[i])
         {
-            bt_engine_dynamicsWorld->removeCollisionObject(entity->physics.ghostObjects[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(entity->physics.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_MASK_ALL);
+            bt_engine_dynamicsWorld->removeCollisionObject(entity->physics->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(entity->physics->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_MASK_ALL);
         }
     }
 
-    free(entity->physics.bt_joints);
-    entity->physics.bt_joints = NULL;
-    entity->physics.bt_joint_count = 0;
+    free(entity->physics->bt_joints);
+    entity->physics->bt_joints = NULL;
+    entity->physics->bt_joint_count = 0;
 
     entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 

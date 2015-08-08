@@ -22,6 +22,7 @@ extern "C" {
 #include "core/redblack.h"
 #include "core/vmath.h"
 #include "vt/vt_level.h"
+#include "mesh.h"
 #include "render.h"
 #include "gui.h"
 #include "gameflow.h"
@@ -29,7 +30,7 @@ extern "C" {
 #include "resource.h"
 #include "engine.h"
 #include "engine_lua.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 
 extern SDL_Window                      *sdl_window;
 extern SDL_GLContext                   sdl_gl_context;
@@ -77,7 +78,7 @@ void Engine_Init_Pre()
     Cam_Init(&engine_camera);
     renderer.cam = &engine_camera;
 
-    Engine_BTInit();
+    Physics_Init();
 }
 
 // Second stage of initialization.
@@ -99,7 +100,7 @@ void Engine_Destroy()
     Con_Destroy();
     Sys_Destroy();
 
-    Engine_BTDestroy();
+    Physics_Destroy();
 
     ///-----cleanup_end-----
     if(engine_lua)

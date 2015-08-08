@@ -9,6 +9,7 @@
 #include "core/vmath.h"
 
 #include "gui.h"
+#include "mesh.h"
 #include "character_controller.h"
 #include "engine.h"
 #include "render.h"
@@ -1142,7 +1143,7 @@ void Gui_FillBackgroundBuffer()
     vec4_copy(v, color);
     v += 4;
    *v++ = 0.0f; *v++ = 1.0f;
-   
+
     glBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
 }

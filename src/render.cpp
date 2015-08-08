@@ -19,7 +19,7 @@
 #include "hair.h"
 #include "entity.h"
 #include "engine.h"
-#include "engine_bullet.h"
+#include "engine_physics.h"
 #include "bsp_tree.h"
 #include "resource.h"
 #include "shader_description.h"
@@ -31,9 +31,10 @@ class dynamicBSP render_dBSP(512 * 1024);
 static uint16_t active_transparency = 0;
 static GLuint   active_texture = 0;
 
-/*GLhandleARB main_vsh, main_fsh, main_program;
-GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
-*/
+#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
+
+CRenderDebugDrawer      debugDrawer;
+
 /*bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
     engine_container_p cont = (engine_container_p)colObj->getUserPointer();
@@ -629,7 +630,7 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
 
 void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -637,11 +638,11 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
 
-    if(entity->bf.animations.model && entity->bf.animations.model->animations)
+    if(entity->bf->animations.model && entity->bf->animations.model->animations)
     {
         btScalar subModelView[16];
         btScalar subModelViewProjection[16];
-        if(entity->bf.bone_tag_count == 1)
+        if(entity->bf->bone_tag_count == 1)
         {
             btScalar scaledTransform[16];
             memcpy(scaledTransform, entity->transform, sizeof(btScalar) * 16);
@@ -654,7 +655,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+        Render_SkeletalModel(shader, entity->bf, subModelView, subModelViewProjection);
     }
 }
 
@@ -1062,15 +1063,15 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
-                    for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
+                    for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
                     {
-                        if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+                        if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
-                            Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
+                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                            render_dBSP.addNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
                         }
                     }
                 }
@@ -1078,16 +1079,16 @@ void Render_DrawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine_world.Character != NULL) && (engine_world.Character->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         btScalar tr[16];
         entity_p ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
+        for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
         {
-            if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+            if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
+                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                render_dBSP.addNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
             }
         }
     }
@@ -1151,10 +1152,10 @@ void Render_DrawList_DebugLines()
         debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
     }
 
-    if(renderer.style & R_DRAW_COLL)
+    /*if(renderer.style & R_DRAW_COLL)
     {
         bt_engine_dynamicsWorld->debugDrawWorld();
-    }
+    }*/
 
     if(!debugDrawer.IsEmpty())
     {
@@ -1348,5 +1349,568 @@ void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
             tint[2] = 1.0f;
             tint[3] = 1.0f;
         }
+    }
+}
+
+/*
+ * =============================================================================
+ */
+
+/**
+ * DEBUG PRIMITIVES RENDERING
+ */
+CRenderDebugDrawer::CRenderDebugDrawer()
+:m_debugMode(0)
+{
+    m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
+    m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
+
+    m_lines = 0;
+    m_gl_vbo = 0;
+    m_need_realloc = false;
+    vec3_set_zero(m_color);
+    m_obb = OBB_Create();
+}
+
+
+CRenderDebugDrawer::~CRenderDebugDrawer()
+{
+    free(m_buffer);
+    m_buffer = NULL;
+    if(m_gl_vbo != 0)
+    {
+        glDeleteBuffersARB(1, &m_gl_vbo);
+        m_gl_vbo = 0;
+    }
+    OBB_Clear(m_obb);
+    m_obb = NULL;
+}
+
+
+void CRenderDebugDrawer::reset()
+{
+    if(m_need_realloc)
+    {
+        uint32_t new_buffer_size = m_max_lines * 12 * 2;
+        GLfloat *new_buffer = (GLfloat*)malloc(new_buffer_size * sizeof(GLfloat));
+        if(new_buffer != NULL)
+        {
+            free(m_buffer);
+            m_buffer = new_buffer;
+            m_max_lines *= 2;
+        }
+        m_need_realloc = false;
+    }
+    if(m_gl_vbo == 0)
+    {
+        glGenBuffersARB(1, &m_gl_vbo);
+    }
+    m_lines = 0;
+}
+
+
+void CRenderDebugDrawer::render()
+{
+    if((m_lines > 0) && (m_gl_vbo != 0))
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_gl_vbo);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_lines * 12 * sizeof(GLfloat), m_buffer, GL_STREAM_DRAW);
+        glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), (void*)0);
+        glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat),  (void*)(3 * sizeof(GLfloat)));
+        glDrawArrays(GL_LINES, 0, 2 * m_lines);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    }
+
+    vec3_set_zero(m_color);
+    m_lines = 0;
+}
+
+
+void CRenderDebugDrawer::drawAxis(btScalar r, btScalar transform[16])
+{
+    GLfloat *v0, *v;
+
+    if(m_lines + 3 >= m_max_lines)
+    {
+        m_need_realloc = true;
+        return;
+    }
+
+    v0 = v = m_buffer + 3 * 4 * m_lines;
+    m_lines += 3;
+    vec3_copy(v0, transform + 12);
+
+    // OX
+    v += 3;
+    v[0] = 1.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 0, r);
+    v += 3;
+    v[0] = 1.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
+    v += 3;
+
+    // OY
+    vec3_copy(v, v0);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 1.0;
+    v[2] = 0.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 4, r);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 1.0;
+    v[2] = 0.0;
+    v += 3;
+
+    // OZ
+    vec3_copy(v, v0);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 1.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 8, r);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 1.0;
+}
+
+
+void CRenderDebugDrawer::drawFrustum(struct frustum_s *f)
+{
+    if(f != NULL)
+    {
+        GLfloat *v, *v0;
+        btScalar *fv = f->vertex;
+
+        if(m_lines + f->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
+
+        v = v0 = m_buffer + 3 * 4 * m_lines;
+        m_lines += f->vertex_count;
+
+        for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
+        {
+            vec3_copy(v, fv);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+
+            vec3_copy(v, fv + 3);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+
+        vec3_copy(v, fv);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+    }
+}
+
+
+void CRenderDebugDrawer::drawPortal(struct portal_s *p)
+{
+    if(p != NULL)
+    {
+        GLfloat *v, *v0;
+        btScalar *pv = p->vertex;
+
+        if(m_lines + p->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
+
+        v = v0 = m_buffer + 3 * 4 * m_lines;
+        m_lines += p->vertex_count;
+
+        for(uint16_t i=0;i<p->vertex_count-1;i++,pv += 3)
+        {
+            vec3_copy(v, pv);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+
+            vec3_copy(v, pv + 3);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+
+        vec3_copy(v, pv);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+    }
+}
+
+
+void CRenderDebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform)
+{
+    if(m_lines + 12 < m_max_lines)
+    {
+        OBB_Rebuild(m_obb, bb_min, bb_max);
+        m_obb->transform = transform;
+        OBB_Transform(m_obb);
+        drawOBB(m_obb);
+    }
+    else
+    {
+        m_need_realloc = true;
+    }
+}
+
+
+void CRenderDebugDrawer::drawOBB(struct obb_s *obb)
+{
+    GLfloat *v, *v0;
+    polygon_p p = obb->polygons;
+
+    if(m_lines + 12 >= m_max_lines)
+    {
+        m_need_realloc = true;
+        return;
+    }
+
+    v = v0 = m_buffer + 3 * 4 * m_lines;
+    m_lines += 12;
+
+    vec3_copy(v, p->vertices[0].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[0].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[1].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[3].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[2].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[2].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[3].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[1].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    for(uint16_t i=0; i<2; i++,p++)
+    {
+        vertex_p pv = p->vertices;
+        v0 = v;
+        for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
+        {
+            vec3_copy(v, pv->position);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+
+            vec3_copy(v, (pv+1)->position);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+
+        vec3_copy(v, pv->position);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+    }
+}
+
+
+void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
+{
+    if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
+    {
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
+        btScalar n[3];
+
+        if(m_lines + mesh->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
+
+        setColor(0.8, 0.0, 0.9);
+        m_lines += mesh->vertex_count;
+        if(overrideVertices)
+        {
+            btScalar *ov = (btScalar*)overrideVertices;
+            btScalar *on = (btScalar*)overrideNormals;
+            for(uint32_t i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
+            {
+                Mat4_vec3_mul_macro(v, transform, ov);
+                Mat4_vec3_rot_macro(n, transform, on);
+
+                v[6 + 0] = v[0] + n[0] * 128.0;
+                v[6 + 1] = v[1] + n[1] * 128.0;
+                v[6 + 2] = v[2] + n[2] * 128.0;
+                vec3_copy(v+3, m_color);
+                vec3_copy(v+9, m_color);
+            }
+        }
+        else
+        {
+            vertex_p mv = mesh->vertices;
+            for (uint32_t i = 0; i < mesh->vertex_count; i++,mv++,v+=12)
+            {
+                Mat4_vec3_mul_macro(v, transform, mv->position);
+                Mat4_vec3_rot_macro(n, transform, mv->normal);
+
+                v[6 + 0] = v[0] + n[0] * 128.0;
+                v[6 + 1] = v[1] + n[1] * 128.0;
+                v[6 + 2] = v[2] + n[2] * 128.0;
+                vec3_copy(v+3, m_color);
+                vec3_copy(v+9, m_color);
+            }
+        }
+    }
+}
+
+
+void CRenderDebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
+{
+    if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
+    {
+        btScalar tr[16];
+
+        ss_bone_tag_p btag = bframe->bone_tags;
+        for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+        {
+            Mat4_Mat4_mul(tr, transform, btag->full_transform);
+            drawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
+        }
+    }
+}
+
+
+void CRenderDebugDrawer::drawEntityDebugLines(struct entity_s *entity)
+{
+    if(m_need_realloc || entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    {
+        return;
+    }
+
+    if(renderer.style & R_DRAW_BOXES)
+    {
+        debugDrawer.setColor(0.0, 0.0, 1.0);
+        debugDrawer.drawOBB(entity->obb);
+    }
+
+    if(renderer.style & R_DRAW_AXIS)
+    {
+        // If this happens, the lines after this will get drawn with random colors. I don't care.
+        debugDrawer.drawAxis(1000.0, entity->transform);
+    }
+
+    if(entity->bf->animations.model && entity->bf->animations.model->animations)
+    {
+        debugDrawer.drawSkeletalModelDebugLines(entity->bf, entity->transform);
+    }
+
+    entity->was_rendered_lines = 1;
+}
+
+
+void CRenderDebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
+{
+    if(m_lines + 12 < m_max_lines)
+    {
+        btScalar bb_min[3] = {(btScalar)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->floor};
+        btScalar bb_max[3] = {(btScalar)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->ceiling};
+
+        drawBBox(bb_min, bb_max, NULL);
+    }
+    else
+    {
+        m_need_realloc = true;
+    }
+}
+
+
+void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
+{
+    uint32_t flag;
+    frustum_p frus;
+    engine_container_p cont;
+    entity_p ent;
+
+    if(m_need_realloc)
+    {
+        return;
+    }
+
+    flag = render->style & R_DRAW_ROOMBOXES;
+    if(flag)
+    {
+        debugDrawer.setColor(0.0, 0.1, 0.9);
+        debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
+        /*for(uint32_t s=0;s<room->sectors_count;s++)
+        {
+            drawSectorDebugLines(room->sectors + s);
+        }*/
+    }
+
+    flag = render->style & R_DRAW_PORTALS;
+    if(flag)
+    {
+        debugDrawer.setColor(0.0, 0.0, 0.0);
+        for(uint16_t i=0; i<room->portal_count; i++)
+        {
+            debugDrawer.drawPortal(room->portals+i);
+        }
+    }
+
+    flag = render->style & R_DRAW_FRUSTUMS;
+    if(flag)
+    {
+        debugDrawer.setColor(1.0, 0.0, 0.0);
+        for(frus=room->frustum; frus; frus=frus->next)
+        {
+            debugDrawer.drawFrustum(frus);
+        }
+    }
+
+    if(!(renderer.style & R_SKIP_ROOM) && (room->mesh != NULL))
+    {
+        debugDrawer.drawMeshDebugLines(room->mesh, room->transform, NULL, NULL);
+    }
+
+    flag = render->style & R_DRAW_BOXES;
+    for(uint32_t i=0; i<room->static_mesh_count; i++)
+    {
+        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
+          ((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
+        {
+            continue;
+        }
+
+        if(flag)
+        {
+            debugDrawer.setColor(0.0, 1.0, 0.1);
+            debugDrawer.drawOBB(room->static_mesh[i].obb);
+        }
+
+        if(render->style & R_DRAW_AXIS)
+        {
+            debugDrawer.drawAxis(1000.0, room->static_mesh[i].transform);
+        }
+
+        debugDrawer.drawMeshDebugLines(room->static_mesh[i].mesh, room->static_mesh[i].transform, NULL, NULL);
+
+        room->static_mesh[i].was_rendered_lines = 1;
+    }
+
+    for(cont=room->containers; cont; cont=cont->next)
+    {
+        switch(cont->object_type)
+        {
+        case OBJECT_ENTITY:
+            ent = (entity_p)cont->object;
+            if(ent->was_rendered_lines == 0)
+            {
+                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                {
+                    debugDrawer.drawEntityDebugLines(ent);
+                }
+                ent->was_rendered_lines = 1;
+            }
+            break;
+        };
+    }
+}
+
+
+void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], const btScalar color[3])
+{
+    GLfloat *v;
+
+    if(m_lines < m_max_lines - 1)
+    {
+        v = m_buffer + 3 * 4 * m_lines;
+        m_lines++;
+
+        vec3_copy(v, from);
+        v += 3;
+        vec3_copy(v, color);
+        v += 3;
+        vec3_copy(v, to);
+        v += 3;
+        vec3_copy(v, color);
+    }
+    else
+    {
+        m_need_realloc = true;
+    }
+}
+
+
+void CRenderDebugDrawer::drawContactPoint(const btScalar pointOnB[3], const btScalar normalOnB[3], btScalar distance, int lifeTime, const btScalar color[3])
+{
+    if(m_lines + 2 < m_max_lines)
+    {
+        btScalar to[3];
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
+
+        m_lines += 2;
+        vec3_add_mul(to, pointOnB, normalOnB, distance);
+
+        vec3_copy(v, pointOnB);
+        v += 3;
+        vec3_copy(v, color);
+        v += 3;
+
+        vec3_copy(v, to);
+        v += 3;
+        vec3_copy(v, color);
+
+        //glRasterPos3f(from.x(),  from.y(),  from.z());
+        //char buf[12];
+        //sprintf(buf," %d",lifeTime);
+        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
+    }
+    else
+    {
+        m_need_realloc = true;
     }
 }
