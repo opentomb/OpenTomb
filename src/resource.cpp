@@ -608,7 +608,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 
 int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 {
-    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size))
+    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data.size()))
     {
         return 0;
     }
@@ -619,8 +619,8 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
      * PARSE FUNCTIONS
      */
 
-    uint16_t *end_p = tr->floor_data + tr->floor_data_size - 1;
-    uint16_t *entry = tr->floor_data + sector->trig_index;
+    uint16_t *end_p = tr->floor_data.data() + tr->floor_data.size() - 1;
+    uint16_t *entry = tr->floor_data.data() + sector->trig_index;
 
     int ret = 0;
     uint16_t end_bit;

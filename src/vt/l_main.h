@@ -29,8 +29,7 @@ public:
         this->textile16 = nullptr;
         this->textile32.clear();
 
-        this->floor_data_size = 0;          // destroyed
-        this->floor_data = nullptr;            // destroyed
+        this->floor_data.clear();
         this->mesh_indices_count = 0;       // destroyed
         this->mesh_indices = nullptr;          // destroyed
 
@@ -116,12 +115,7 @@ public:
         this->textile32.clear();
 
         /**destroy other data**/
-        if(this->floor_data_size)
-        {
-            this->floor_data_size = 0;
-            free(this->floor_data);
-            this->floor_data = nullptr;
-        }
+        this->floor_data.clear();
 
         if(this->mesh_indices_count)
         {
@@ -435,8 +429,7 @@ public:
     tr2_textile16_t *textile16 = nullptr;             ///< \brief 16-bit 256x256 textiles(TR2-5).
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
-    uint32_t floor_data_size;               ///< \brief the floor data size
-    uint16_t *floor_data = nullptr;                   ///< \brief the floor data.
+    std::vector<uint16_t> floor_data;                   ///< \brief the floor data.
     uint32_t meshes_count;
     tr4_mesh_t *meshes = nullptr;                     ///< \brief all meshes (static and moveables).
     uint32_t mesh_indices_count;

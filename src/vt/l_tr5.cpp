@@ -582,9 +582,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     for (i = 0; i < this->rooms.size(); i++)
         read_tr5_room(src, this->rooms[i]);
 
-    this->floor_data_size = read_bitu32(src);
-    this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
-    for(i = 0; i < this->floor_data_size; i++)
+    this->floor_data.resize( read_bitu32(src) );
+    for(i = 0; i < this->floor_data.size(); i++)
         this->floor_data[i] = read_bitu16(src);
 
     read_mesh_data(src);
