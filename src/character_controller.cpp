@@ -2248,15 +2248,16 @@ void Character::frameImpl(btScalar time, int16_t frame, int state)
     if(m_bf.animations.current_frame != frame)
     {
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
-
         auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        if((af->accel_x == 0) || (frame < m_bf.animations.current_frame))
+        if(af->accel_x == 0)//If accel_x is 0 then speed must be set as fixed
         {
-            m_currentSpeed = af->speed_x;
+             m_currentSpeed = af->speed_x;
         }
         else
         {
-            m_currentSpeed += af->accel_x;
+             m_currentSpeed += (af->accel_x);
+            if((m_currentSpeed) > af->speed_x && af->accel_x > 0) m_currentSpeed = af->speed_x;///So accel doesn't go higher than speed
+            if((m_currentSpeed) < 0 && af->accel_x < 0) m_currentSpeed= 0;///So accel doesn't go lower than speed
         }
     }
 
