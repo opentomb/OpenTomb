@@ -166,9 +166,7 @@ void TR_Level::read_level(const std::string& filename, int32_t game_version)
 
     if(len2 > 0)
     {
-        memcpy(this->sfx_path, filename.c_str(), len2 + 1);
-        this->sfx_path[len2+1] = 0;
-        strcat(this->sfx_path, "MAIN.SFX");
+        this->sfx_path = filename.substr(0, len2 + 1) + "MAIN.SFX";
     }
 
     this->read_level(SDL_RWFromFile(filename.c_str(), "rb"), game_version);

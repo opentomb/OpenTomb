@@ -360,7 +360,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     // In TR3, samples are stored in separate file called MAIN.SFX.
     // If there is no such files, no samples are loaded.
 
-    SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path, "rb");
+    SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path.c_str(), "rb");
     if(newsrc == NULL)
     {
         Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);

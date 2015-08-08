@@ -18,57 +18,6 @@
 class TR_Level
 {
 public:
-    TR_Level()
-    {
-        this->game_version = TR_UNKNOWN;
-        strncpy(this->sfx_path, "MAIN.SFX", 256);
-
-        this->textile8_count = 0;
-        this->textile16_count = 0;
-        this->textile8 = nullptr;
-        this->textile16 = nullptr;
-        this->textile32.clear();
-
-        this->floor_data.clear();
-        this->mesh_indices.clear();
-
-        this->animations.clear();
-        this->state_changes.clear();
-        this->anim_dispatches.clear();
-        this->anim_commands.clear();
-
-        this->moveables.clear();
-        this->static_meshes.clear();
-        this->object_textures.clear();
-        this->animated_textures_uv_count = 0; // destroyed
-        this->animated_textures.clear();
-        this->sprite_textures.clear();
-        this->sprite_sequences.clear();
-        this->cameras.clear();
-        this->flyby_cameras.clear();
-        this->sound_sources.clear();
-
-        this->boxes.clear();
-        this->overlaps.clear();
-        this->zones.clear();
-        this->items.clear();
-        this->ai_objects.clear();
-        this->cinematic_frames.clear();
-
-        this->demo_data.clear();
-        this->soundmap.clear();
-        this->sound_details.clear();
-        this->sample_indices.clear();
-        this->samples_count = 0;            // destroyed
-        this->samples_data.clear();               // destroyed
-
-        this->frame_data.clear();
-        this->mesh_tree_data.clear();
-
-        this->meshes.clear();
-        this->rooms.clear();
-    }
-
     ~TR_Level()
     {
         uint32_t i;
@@ -88,195 +37,124 @@ public:
             this->textile16 = nullptr;
         }
 
-        this->textile32.clear();
-
-        /**destroy other data**/
-        this->floor_data.clear();
-
-        this->mesh_indices.clear();
-
-        this->animations.clear();
-
-        this->state_changes.clear();
-
-        this->anim_dispatches.clear();
-
-        this->anim_commands.clear();
-
-        this->moveables.clear();
-
-        this->static_meshes.clear();
-
-        this->object_textures.clear();
-
-        this->animated_textures.clear();
-
-        this->sprite_textures.clear();
-
-        this->sprite_sequences.clear();
-
-        this->cameras.clear();
-
-        this->flyby_cameras.clear();
-
-        this->sound_sources.clear();
-
-        this->boxes.clear();
-
-        this->overlaps.clear();
-
-        this->zones.clear();
-
-        this->items.clear();
-
-        this->ai_objects.clear();
-
-        this->cinematic_frames.clear();
-
-        this->demo_data.clear();
-
-        this->soundmap.clear();
-
-        this->sound_details.clear();
-
-        if(!this->samples_data.empty())
+        for(i = 0; i < this->meshes.size(); i++)
         {
-            this->samples_count = 0;
-            this->samples_data.clear();
+            if(this->meshes[i].lights)
+            {
+                free(this->meshes[i].lights);
+                this->meshes[i].lights = nullptr;
+            }
+
+            if(this->meshes[i].num_textured_triangles)
+            {
+                free(this->meshes[i].textured_triangles);
+                this->meshes[i].textured_triangles = nullptr;
+                this->meshes[i].num_textured_triangles = 0;
+            }
+
+            if(this->meshes[i].num_textured_rectangles)
+            {
+                free(this->meshes[i].textured_rectangles);
+                this->meshes[i].textured_rectangles = nullptr;
+                this->meshes[i].num_textured_rectangles = 0;
+            }
+
+            if(this->meshes[i].num_coloured_triangles)
+            {
+                free(this->meshes[i].coloured_triangles);
+                this->meshes[i].coloured_triangles = nullptr;
+                this->meshes[i].num_coloured_triangles = 0;
+            }
+
+            if(this->meshes[i].num_coloured_rectangles)
+            {
+                free(this->meshes[i].coloured_rectangles);
+                this->meshes[i].coloured_rectangles = nullptr;
+                this->meshes[i].num_coloured_rectangles = 0;
+            }
+
+            if(this->meshes[i].normals)
+            {
+                free(this->meshes[i].normals);
+                this->meshes[i].normals = nullptr;
+            }
+
+            if(this->meshes[i].vertices)
+            {
+                free(this->meshes[i].vertices);
+                this->meshes[i].vertices = nullptr;
+            }
         }
 
-        this->sample_indices.clear();
-
-        this->frame_data.clear();
-
-        this->mesh_tree_data.clear();
-
-        if(!this->meshes.empty())
+        for(i = 0; i < this->rooms.size(); i++)
         {
-            for(i = 0; i < this->meshes.size(); i++)
+            if(this->rooms[i].num_layers)
             {
-                if(this->meshes[i].lights)
-                {
-                    free(this->meshes[i].lights);
-                    this->meshes[i].lights = nullptr;
-                }
-
-                if(this->meshes[i].num_textured_triangles)
-                {
-                    free(this->meshes[i].textured_triangles);
-                    this->meshes[i].textured_triangles = nullptr;
-                    this->meshes[i].num_textured_triangles = 0;
-                }
-
-                if(this->meshes[i].num_textured_rectangles)
-                {
-                    free(this->meshes[i].textured_rectangles);
-                    this->meshes[i].textured_rectangles = nullptr;
-                    this->meshes[i].num_textured_rectangles = 0;
-                }
-
-                if(this->meshes[i].num_coloured_triangles)
-                {
-                    free(this->meshes[i].coloured_triangles);
-                    this->meshes[i].coloured_triangles = nullptr;
-                    this->meshes[i].num_coloured_triangles = 0;
-                }
-
-                if(this->meshes[i].num_coloured_rectangles)
-                {
-                    free(this->meshes[i].coloured_rectangles);
-                    this->meshes[i].coloured_rectangles = nullptr;
-                    this->meshes[i].num_coloured_rectangles = 0;
-                }
-
-                if(this->meshes[i].normals)
-                {
-                    free(this->meshes[i].normals);
-                    this->meshes[i].normals = nullptr;
-                }
-
-                if(this->meshes[i].vertices)
-                {
-                    free(this->meshes[i].vertices);
-                    this->meshes[i].vertices = nullptr;
-                }
+                this->rooms[i].num_layers = 0;
+                free(this->rooms[i].layers);
+                this->rooms[i].layers = nullptr;
             }
-            this->meshes.clear();
-        }
 
-        if(!this->rooms.empty())
-        {
-            for(i = 0; i < this->rooms.size(); i++)
+            if(this->rooms[i].num_lights)
             {
-                if(this->rooms[i].num_layers)
-                {
-                    this->rooms[i].num_layers = 0;
-                    free(this->rooms[i].layers);
-                    this->rooms[i].layers = nullptr;
-                }
-
-                if(this->rooms[i].num_lights)
-                {
-                    this->rooms[i].num_lights = 0;
-                    free(this->rooms[i].lights);
-                    this->rooms[i].lights = nullptr;
-                }
-
-                if(this->rooms[i].num_portals)
-                {
-                    this->rooms[i].num_portals = 0;
-                    free(this->rooms[i].portals);
-                    this->rooms[i].portals = nullptr;
-                }
-
-                if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
-                {
-                    this->rooms[i].num_xsectors = 0;
-                    this->rooms[i].num_zsectors = 0;
-                    free(this->rooms[i].sector_list);
-                    this->rooms[i].sector_list = nullptr;
-                }
-
-                if(this->rooms[i].num_sprites)
-                {
-                    this->rooms[i].num_sprites = 0;
-                    free(this->rooms[i].sprites);
-                    this->rooms[i].sprites = nullptr;
-                }
-
-                if(this->rooms[i].num_static_meshes)
-                {
-                    this->rooms[i].num_static_meshes = 0;
-                    free(this->rooms[i].static_meshes);
-                    this->rooms[i].static_meshes = nullptr;
-                }
-
-                if(this->rooms[i].num_triangles)
-                {
-                    this->rooms[i].num_triangles = 0;
-                    free(this->rooms[i].triangles);
-                    this->rooms[i].triangles = nullptr;
-                }
-
-                if(this->rooms[i].num_rectangles)
-                {
-                    this->rooms[i].num_rectangles = 0;
-                    free(this->rooms[i].rectangles);
-                    this->rooms[i].rectangles = nullptr;
-                }
-
-                if(this->rooms[i].num_vertices)
-                {
-                    this->rooms[i].num_vertices = 0;
-                    free(this->rooms[i].vertices);
-                    this->rooms[i].vertices = nullptr;
-                }
+                this->rooms[i].num_lights = 0;
+                free(this->rooms[i].lights);
+                this->rooms[i].lights = nullptr;
             }
-            this->rooms.clear();
+
+            if(this->rooms[i].num_portals)
+            {
+                this->rooms[i].num_portals = 0;
+                free(this->rooms[i].portals);
+                this->rooms[i].portals = nullptr;
+            }
+
+            if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
+            {
+                this->rooms[i].num_xsectors = 0;
+                this->rooms[i].num_zsectors = 0;
+                free(this->rooms[i].sector_list);
+                this->rooms[i].sector_list = nullptr;
+            }
+
+            if(this->rooms[i].num_sprites)
+            {
+                this->rooms[i].num_sprites = 0;
+                free(this->rooms[i].sprites);
+                this->rooms[i].sprites = nullptr;
+            }
+
+            if(this->rooms[i].num_static_meshes)
+            {
+                this->rooms[i].num_static_meshes = 0;
+                free(this->rooms[i].static_meshes);
+                this->rooms[i].static_meshes = nullptr;
+            }
+
+            if(this->rooms[i].num_triangles)
+            {
+                this->rooms[i].num_triangles = 0;
+                free(this->rooms[i].triangles);
+                this->rooms[i].triangles = nullptr;
+            }
+
+            if(this->rooms[i].num_rectangles)
+            {
+                this->rooms[i].num_rectangles = 0;
+                free(this->rooms[i].rectangles);
+                this->rooms[i].rectangles = nullptr;
+            }
+
+            if(this->rooms[i].num_vertices)
+            {
+                this->rooms[i].num_vertices = 0;
+                free(this->rooms[i].vertices);
+                this->rooms[i].vertices = nullptr;
+            }
         }
     }
 
-    int32_t game_version;                   ///< \brief game engine version.
+    int32_t game_version = TR_UNKNOWN;                   ///< \brief game engine version.
 
     uint32_t textile8_count;
     uint32_t textile16_count;
@@ -295,7 +173,7 @@ public:
     std::vector<tr_staticmesh_t> static_meshes;         ///< \brief data for the static meshes.
     std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
     std::vector<uint16_t> animated_textures;            ///< \brief animated textures.
-    uint32_t animated_textures_uv_count;
+    uint32_t animated_textures_uv_count = 0;
     std::vector<tr_sprite_texture_t> sprite_textures;   ///< \brief sprite texture definitions.
     std::vector<tr_sprite_sequence_t> sprite_sequences; ///< \brief sprite sequences for animation.
     std::vector<tr_camera_t> cameras;                   ///< \brief cameras.
@@ -313,14 +191,14 @@ public:
     std::vector<uint8_t> demo_data;                     ///< \brief demo data.
     std::vector<int16_t> soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
     std::vector<tr_sound_details_t> sound_details;      ///< \brief sound details.
-    uint32_t samples_count;
+    uint32_t samples_count = 0;
     std::vector<uint8_t> samples_data;                  ///< \brief samples.
     std::vector<uint32_t> sample_indices;               ///< \brief sample indices.
 
     std::vector<uint16_t> frame_data;                   ///< \brief frame data array
     std::vector<uint32_t> mesh_tree_data;
 
-    char     sfx_path[256];
+    std::string sfx_path = "MAIN.SFX";
 
     void read_level(const std::string &filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
