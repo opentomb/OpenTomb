@@ -310,9 +310,8 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     for(i = 0; i < this->object_textures.size(); i++)
         read_tr_object_texture(src, this->object_textures[i]);
 
-    this->items_count = read_bitu32(src);
-    this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
-    for(i = 0; i < this->items_count; i++)
+    this->items.resize(read_bitu32(src));
+    for(i = 0; i < this->items.size(); i++)
         read_tr3_item(src, this->items[i]);
 
     read_tr_lightmap(src, this->lightmap);

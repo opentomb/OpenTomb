@@ -661,9 +661,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for (i = 0; i < this->object_textures.size(); i++)
         read_tr4_object_texture(newsrc, this->object_textures[i]);
 
-    this->items_count = read_bitu32(newsrc);
-    this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
-    for (i = 0; i < this->items_count; i++)
+    this->items.resize(read_bitu32(newsrc));
+    for (i = 0; i < this->items.size(); i++)
         read_tr4_item(newsrc, this->items[i]);
 
     this->ai_objects_count = read_bitu32(newsrc);

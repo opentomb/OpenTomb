@@ -3741,7 +3741,7 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 
 void TR_GenEntities(World *world, class VT_Level *tr)
 {
-    for(uint32_t i = 0; i < tr->items_count; i++)
+    for(uint32_t i = 0; i < tr->items.size(); i++)
     {
         tr2_item_t *tr_item = &tr->items[i];
         std::shared_ptr<Entity> entity = (tr_item->object_id == 0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);

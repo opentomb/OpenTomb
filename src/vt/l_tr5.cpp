@@ -720,9 +720,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             Sys_extWarn("read_tr5_level: obj_tex trailing bitu16 != 0");
     }
 
-    this->items_count = read_bitu32(src);
-    this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
-    for (i = 0; i < this->items_count; i++)
+    this->items.resize(read_bitu32(src));
+    for (i = 0; i < this->items.size(); i++)
         read_tr4_item(src, this->items[i]);
 
     this->ai_objects_count = read_bitu32(src);

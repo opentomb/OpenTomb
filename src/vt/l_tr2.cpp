@@ -352,9 +352,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
         this->animated_textures[i] = read_bitu16(src);
     }
 
-    this->items_count = read_bitu32(src);
-    this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
-    for (i = 0; i < this->items_count; i++)
+    this->items.resize(read_bitu32(src));
+    for (i = 0; i < this->items.size(); i++)
         read_tr2_item(src, this->items[i]);
 
     if (!demo)

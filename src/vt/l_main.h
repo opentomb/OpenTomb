@@ -51,8 +51,7 @@ public:
         this->boxes.clear();
         this->overlaps.clear();
         this->zones.clear();
-        this->items_count = 0;              // destroyed
-        this->items = nullptr;                 // destroyed
+        this->items.clear();
         this->ai_objects_count = 0;         // destroyed
         this->ai_objects = nullptr;            // destroyed
         this->cinematic_frames_count = 0;   // destroyed
@@ -135,12 +134,7 @@ public:
 
         this->zones.clear();
 
-        if(this->items_count)
-        {
-            this->items_count = 0;
-            free(this->items);
-            this->items = nullptr;
-        }
+        this->items.clear();
 
         if(this->ai_objects_count)
         {
@@ -356,8 +350,7 @@ public:
     std::vector<tr_box_t> boxes;                        ///< \brief boxes.
     std::vector<uint16_t> overlaps;                     ///< \brief overlaps.
     std::vector<int16_t> zones;                         ///< \brief zones.
-    uint32_t items_count;
-    tr2_item_t *items = nullptr;                      ///< \brief items.
+    std::vector<tr2_item_t> items;                      ///< \brief items.
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
     tr2_palette_t palette;                  ///< \brief colour palette (TR1-3).
     tr2_palette_t palette16;                ///< \brief colour palette (TR2-3).

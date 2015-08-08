@@ -46,7 +46,7 @@ tr2_item_t *VT_Level::find_item_id(int32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < items_count; i++)
+    for (i = 0; i < items.size(); i++)
         if (items[i].object_id == object_id)
             return &items[i];
 
