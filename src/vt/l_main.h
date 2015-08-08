@@ -20,24 +20,7 @@ class TR_Level
 public:
     ~TR_Level()
     {
-        uint32_t i;
-
-        /**destroy all textiles**/
-        if(this->textile8_count)
-        {
-            this->textile8_count = 0;
-            free(this->textile8);
-            this->textile8 = nullptr;
-        }
-
-        if(this->textile16_count)
-        {
-            this->textile16_count = 0;
-            free(this->textile16);
-            this->textile16 = nullptr;
-        }
-
-        for(i = 0; i < this->meshes.size(); i++)
+        for(size_t i = 0; i < this->meshes.size(); i++)
         {
             if(this->meshes[i].lights)
             {
@@ -86,7 +69,7 @@ public:
             }
         }
 
-        for(i = 0; i < this->rooms.size(); i++)
+        for(size_t i = 0; i < this->rooms.size(); i++)
         {
             if(this->rooms[i].num_layers)
             {
@@ -156,10 +139,8 @@ public:
 
     int32_t game_version = TR_UNKNOWN;                   ///< \brief game engine version.
 
-    uint32_t textile8_count;
-    uint32_t textile16_count;
-    tr_textile8_t *textile8 = nullptr;                ///< \brief 8-bit 256x256 textiles(TR1-3).
-    tr2_textile16_t *textile16 = nullptr;             ///< \brief 16-bit 256x256 textiles(TR2-5).
+    std::vector<tr_textile8_t> textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
+    std::vector<tr2_textile16_t> textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
     std::vector<uint16_t> floor_data;                   ///< \brief the floor data.

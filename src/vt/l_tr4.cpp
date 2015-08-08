@@ -422,8 +422,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             {
                 uncomp_buffer = new uint8_t[uncomp_size];
 
-                this->textile16_count = this->num_textiles;
-                this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
+                this->textile16.resize( this->num_textiles );
                 comp_buffer = new uint8_t[comp_size];
 
                 if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)

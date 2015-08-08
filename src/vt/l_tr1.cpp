@@ -611,9 +611,9 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     this->num_misc_textiles = 0;
     this->read_32bit_textiles = false;
 
-    this->textile8_count = this->num_textiles = read_bitu32(src);
-    this->textile8 = (tr_textile8_t*)malloc(this->textile8_count * sizeof(tr_textile8_t));
-    for (i = 0; i < this->textile8_count; i++)
+    this->num_textiles = read_bitu32(src);
+    this->textile8.resize( this->num_textiles );
+    for (i = 0; i < this->textile8.size(); i++)
         read_tr_textile8(src, this->textile8[i]);
 
     // Unused
