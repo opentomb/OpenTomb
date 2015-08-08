@@ -365,9 +365,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
         read_tr_cinematic_frame(src, this->cinematic_frames[i]);
     }
 
-    this->demo_data_count = read_bitu16(src);
-    this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
-    for(i=0; i < this->demo_data_count; i++)
+    this->demo_data.resize( read_bitu16(src) );
+    for(i=0; i < this->demo_data.size(); i++)
         this->demo_data[i] = read_bitu8(src);
 
     // Soundmap
