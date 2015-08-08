@@ -88,8 +88,7 @@ public:
         this->mesh_tree_data_size = 0;      // destroyed
         this->mesh_tree_data = nullptr;        // destroyed
 
-        this->meshes_count = 0;             // destroyed
-        this->meshes = nullptr;                // destroyed
+        this->meshes.clear();
         this->rooms.clear();
     }
 
@@ -294,9 +293,9 @@ public:
             this->mesh_tree_data = nullptr;
         }
 
-        if(this->meshes_count)
+        if(!this->meshes.empty())
         {
-            for(i = 0; i < this->meshes_count; i++)
+            for(i = 0; i < this->meshes.size(); i++)
             {
                 if(this->meshes[i].lights)
                 {
@@ -344,9 +343,7 @@ public:
                     this->meshes[i].vertices = nullptr;
                 }
             }
-            this->meshes_count = 0;
-            free(this->meshes);
-            this->meshes = nullptr;
+            this->meshes.clear();
         }
 
         if(!this->rooms.empty())
@@ -430,8 +427,7 @@ public:
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
     std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
     std::vector<uint16_t> floor_data;                   ///< \brief the floor data.
-    uint32_t meshes_count;
-    tr4_mesh_t *meshes = nullptr;                     ///< \brief all meshes (static and moveables).
+    std::vector<tr4_mesh_t> meshes;                     ///< \brief all meshes (static and moveables).
     uint32_t mesh_indices_count;
     uint32_t *mesh_indices = nullptr;                 ///< \brief mesh index table.
     uint32_t animations_count;

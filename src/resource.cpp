@@ -2662,7 +2662,7 @@ bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *w
 
 void TR_GenMeshes(World *world, class VT_Level *tr)
 {
-    world->meshes.resize(tr->meshes_count);
+    world->meshes.resize(tr->meshes.size());
     size_t i = 0;
     for(std::shared_ptr<BaseMesh>& baseMesh : world->meshes)
     {

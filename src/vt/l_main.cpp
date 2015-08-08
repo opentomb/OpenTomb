@@ -55,8 +55,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
     for (i = 0; i < this->mesh_indices_count; i++)
         this->mesh_indices[i] = read_bitu32(src);
 
-    this->meshes_count = this->mesh_indices_count;
-    this->meshes = (tr4_mesh_t*)calloc(this->meshes_count, sizeof(tr4_mesh_t));
+    this->meshes.resize( this->mesh_indices_count );
 
     for (i = 0; i < this->mesh_indices_count; i++)
     {
@@ -83,7 +82,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
             }
     }
     SDL_RWclose(newsrc);
-    newsrc = NULL;
+    newsrc = nullptr;
     delete [] buffer;
 }
 
