@@ -17,7 +17,7 @@ void VT_Level::prepare_level()
         {
             if (m_textile32.empty())
             {
-                this->m_textile32.resize( this->m_numTextiles );
+                m_textile32.resize( m_numTextiles );
             }
             for (i = 0; i < (m_numTextiles - m_numMiscTextiles); i++)
                 convert_textile16_to_textile32(m_textile16[i], m_textile32[i]);
@@ -25,7 +25,7 @@ void VT_Level::prepare_level()
     }
     else
     {
-        this->m_textile32.resize( this->m_numTextiles );
+        m_textile32.resize( m_numTextiles );
         for (i = 0; i < m_numTextiles; i++)
             convert_textile8_to_textile32(m_textile8[i], m_palette, m_textile32[i]);
     }

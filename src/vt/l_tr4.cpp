@@ -338,23 +338,23 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (file_version != 0x00345254 /*&& file_version != 0x63345254*/)           // +TRLE
             Sys_extError("Wrong level version");
 
-    this->m_numTextiles = 0;
-    this->m_numRoomTextiles = 0;
-    this->m_numObjTextiles = 0;
-    this->m_numBumpTextiles = 0;
-    this->m_numMiscTextiles = 0;
-    this->m_read32BitTextiles = false;
+    m_numTextiles = 0;
+    m_numRoomTextiles = 0;
+    m_numObjTextiles = 0;
+    m_numBumpTextiles = 0;
+    m_numMiscTextiles = 0;
+    m_read32BitTextiles = false;
 
     {
         uint32_t uncomp_size;
         uint32_t comp_size;
         unsigned long size;
 
-        this->m_numRoomTextiles = read_bitu16(src);
-        this->m_numObjTextiles = read_bitu16(src);
-        this->m_numBumpTextiles = read_bitu16(src);
-        this->m_numMiscTextiles = 2;
-        this->m_numTextiles = this->m_numRoomTextiles + this->m_numObjTextiles + this->m_numBumpTextiles + this->m_numMiscTextiles;
+        m_numRoomTextiles = read_bitu16(src);
+        m_numObjTextiles = read_bitu16(src);
+        m_numBumpTextiles = read_bitu16(src);
+        m_numMiscTextiles = 2;
+        m_numTextiles = m_numRoomTextiles + m_numObjTextiles + m_numBumpTextiles + m_numMiscTextiles;
 
         uncomp_size = read_bitu32(src);
         if (uncomp_size == 0)
@@ -365,7 +365,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         {
             uncomp_buffer = new uint8_t[uncomp_size];
 
-            this->m_textile32.resize( this->m_numTextiles );
+            m_textile32.resize( m_numTextiles );
             comp_buffer = new uint8_t[comp_size];
 
             if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
@@ -383,14 +383,14 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
 
-            for (i = 0; i < (this->m_numTextiles - this->m_numMiscTextiles); i++)
-                read_tr4_textile32(newsrc, this->m_textile32[i]);
+            for (i = 0; i < (m_numTextiles - m_numMiscTextiles); i++)
+                read_tr4_textile32(newsrc, m_textile32[i]);
             SDL_RWclose(newsrc);
             newsrc = NULL;
             delete [] uncomp_buffer;
 
             uncomp_buffer = NULL;
-            this->m_read32BitTextiles = true;
+            m_read32BitTextiles = true;
         }
 
         uncomp_size = read_bitu32(src);
@@ -400,11 +400,11 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         comp_size = read_bitu32(src);
         if (comp_size > 0)
         {
-            if (this->m_textile32.empty())
+            if (m_textile32.empty())
             {
                 uncomp_buffer = new uint8_t[uncomp_size];
 
-                this->m_textile16.resize( this->m_numTextiles );
+                m_textile16.resize( m_numTextiles );
                 comp_buffer = new uint8_t[comp_size];
 
                 if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
@@ -422,8 +422,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                     Sys_extError("read_tr4_level: SDL_RWFromMem");
 
-                for (i = 0; i < (this->m_numTextiles - this->m_numMiscTextiles); i++)
-                    read_tr2_textile16(newsrc, this->m_textile16[i]);
+                for (i = 0; i < (m_numTextiles - m_numMiscTextiles); i++)
+                    read_tr2_textile16(newsrc, m_textile16[i]);
                 SDL_RWclose(newsrc);
                 newsrc = NULL;
                 delete [] uncomp_buffer;
@@ -448,9 +448,9 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             if ((uncomp_size / (256 * 256 * 4)) > 2)
                 Sys_extWarn("read_tr4_level: num_misc_textiles > 2");
 
-            if (this->m_textile32.empty())
+            if (m_textile32.empty())
             {
-                this->m_textile32.resize( this->m_numTextiles );
+                m_textile32.resize( m_numTextiles );
             }
             comp_buffer = new uint8_t[comp_size];
 
@@ -469,8 +469,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
 
-            for (i = (this->m_numTextiles - this->m_numMiscTextiles); i < this->m_numTextiles; i++)
-                read_tr4_textile32(newsrc, this->m_textile32[i]);
+            for (i = (m_numTextiles - m_numMiscTextiles); i < m_numTextiles; i++)
+                read_tr4_textile32(newsrc, m_textile32[i]);
             SDL_RWclose(newsrc);
             newsrc = NULL;
             delete [] uncomp_buffer;
@@ -510,41 +510,41 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bitu32(newsrc) != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    this->m_rooms.resize( read_bitu16(newsrc) );
-    for (i = 0; i < this->m_rooms.size(); i++)
-        read_tr4_room(newsrc, this->m_rooms[i]);
+    m_rooms.resize( read_bitu16(newsrc) );
+    for (i = 0; i < m_rooms.size(); i++)
+        read_tr4_room(newsrc, m_rooms[i]);
 
-    this->m_floorData.resize( read_bitu32(newsrc) );
-    for(i = 0; i < this->m_floorData.size(); i++)
-        this->m_floorData[i] = read_bitu16(newsrc);
+    m_floorData.resize( read_bitu32(newsrc) );
+    for(i = 0; i < m_floorData.size(); i++)
+        m_floorData[i] = read_bitu16(newsrc);
 
     read_mesh_data(newsrc);
 
-    this->m_animations.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_animations.size(); i++)
-        read_tr4_animation(newsrc, this->m_animations[i]);
+    m_animations.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_animations.size(); i++)
+        read_tr4_animation(newsrc, m_animations[i]);
 
-    this->m_stateChanges.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_stateChanges.size(); i++)
-        read_tr_state_changes(newsrc, this->m_stateChanges[i]);
+    m_stateChanges.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_stateChanges.size(); i++)
+        read_tr_state_changes(newsrc, m_stateChanges[i]);
 
-    this->m_animDispatches.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_animDispatches.size(); i++)
-        read_tr_anim_dispatches(newsrc, this->m_animDispatches[i]);
+    m_animDispatches.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_animDispatches.size(); i++)
+        read_tr_anim_dispatches(newsrc, m_animDispatches[i]);
 
-    this->m_animCommands.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_animCommands.size(); i++)
-        this->m_animCommands[i] = read_bit16(newsrc);
+    m_animCommands.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_animCommands.size(); i++)
+        m_animCommands[i] = read_bit16(newsrc);
 
-    this->m_meshTreeData.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_meshTreeData.size(); i++)
-        this->m_meshTreeData[i] = read_bitu32(newsrc);                     // 4 bytes
+    m_meshTreeData.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_meshTreeData.size(); i++)
+        m_meshTreeData[i] = read_bitu32(newsrc);                     // 4 bytes
 
     read_frame_moveable_data(newsrc);
 
-    this->m_staticMeshes.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_staticMeshes.size(); i++)
-        read_tr_staticmesh(newsrc, this->m_staticMeshes[i]);
+    m_staticMeshes.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_staticMeshes.size(); i++)
+        read_tr_staticmesh(newsrc, m_staticMeshes[i]);
 
     if (read_bit8(newsrc) != 'S')
         Sys_extError("read_tr4_level: 'SPR' not found");
@@ -555,78 +555,78 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bit8(newsrc) != 'R')
         Sys_extError("read_tr4_level: 'SPR' not found");
 
-    this->m_spriteTextures.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_spriteTextures.size(); i++)
-        read_tr4_sprite_texture(newsrc, this->m_spriteTextures[i]);
+    m_spriteTextures.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_spriteTextures.size(); i++)
+        read_tr4_sprite_texture(newsrc, m_spriteTextures[i]);
 
-    this->m_spriteSequences.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_spriteSequences.size(); i++)
-        read_tr_sprite_sequence(newsrc, this->m_spriteSequences[i]);
+    m_spriteSequences.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_spriteSequences.size(); i++)
+        read_tr_sprite_sequence(newsrc, m_spriteSequences[i]);
 
-    this->m_cameras.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_cameras.size(); i++)
+    m_cameras.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_cameras.size(); i++)
     {
-        this->m_cameras[i].x = read_bit32(newsrc);
-        this->m_cameras[i].y = read_bit32(newsrc);
-        this->m_cameras[i].z = read_bit32(newsrc);
+        m_cameras[i].x = read_bit32(newsrc);
+        m_cameras[i].y = read_bit32(newsrc);
+        m_cameras[i].z = read_bit32(newsrc);
 
-        this->m_cameras[i].room = read_bit16(newsrc);
-        this->m_cameras[i].unknown1 = read_bitu16(newsrc);
+        m_cameras[i].room = read_bit16(newsrc);
+        m_cameras[i].unknown1 = read_bitu16(newsrc);
     }
     //SDL_RWseek(newsrc, this->cameras.size() * 16, SEEK_CUR);
 
-    this->m_flybyCameras.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_flybyCameras.size(); i++)
+    m_flybyCameras.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_flybyCameras.size(); i++)
     {
-        this->m_flybyCameras[i].cam_x = read_bit32(newsrc);
-        this->m_flybyCameras[i].cam_y = read_bit32(newsrc);
-        this->m_flybyCameras[i].cam_z = read_bit32(newsrc);
-        this->m_flybyCameras[i].target_x = read_bit32(newsrc);
-        this->m_flybyCameras[i].target_y = read_bit32(newsrc);
-        this->m_flybyCameras[i].target_z = read_bit32(newsrc);
+        m_flybyCameras[i].cam_x = read_bit32(newsrc);
+        m_flybyCameras[i].cam_y = read_bit32(newsrc);
+        m_flybyCameras[i].cam_z = read_bit32(newsrc);
+        m_flybyCameras[i].target_x = read_bit32(newsrc);
+        m_flybyCameras[i].target_y = read_bit32(newsrc);
+        m_flybyCameras[i].target_z = read_bit32(newsrc);
 
-        this->m_flybyCameras[i].sequence = read_bit8(newsrc);
-        this->m_flybyCameras[i].index    = read_bit8(newsrc);
+        m_flybyCameras[i].sequence = read_bit8(newsrc);
+        m_flybyCameras[i].index    = read_bit8(newsrc);
 
-        this->m_flybyCameras[i].fov   = read_bitu16(newsrc);
-        this->m_flybyCameras[i].roll  = read_bitu16(newsrc);
-        this->m_flybyCameras[i].timer = read_bitu16(newsrc);
-        this->m_flybyCameras[i].speed = read_bitu16(newsrc);
-        this->m_flybyCameras[i].flags = read_bitu16(newsrc);
+        m_flybyCameras[i].fov   = read_bitu16(newsrc);
+        m_flybyCameras[i].roll  = read_bitu16(newsrc);
+        m_flybyCameras[i].timer = read_bitu16(newsrc);
+        m_flybyCameras[i].speed = read_bitu16(newsrc);
+        m_flybyCameras[i].flags = read_bitu16(newsrc);
 
-        this->m_flybyCameras[i].room_id = read_bitu32(newsrc);
+        m_flybyCameras[i].room_id = read_bitu32(newsrc);
     }
     //SDL_RWseek(newsrc, this->flyby_cameras.size() * 40, SEEK_CUR);
 
-    this->m_soundSources.resize( read_bitu32(newsrc) );
-    for(i = 0; i < this->m_soundSources.size(); i++)
+    m_soundSources.resize( read_bitu32(newsrc) );
+    for(i = 0; i < m_soundSources.size(); i++)
     {
-        this->m_soundSources[i].x = read_bit32(newsrc);
-        this->m_soundSources[i].y = read_bit32(newsrc);
-        this->m_soundSources[i].z = read_bit32(newsrc);
+        m_soundSources[i].x = read_bit32(newsrc);
+        m_soundSources[i].y = read_bit32(newsrc);
+        m_soundSources[i].z = read_bit32(newsrc);
 
-        this->m_soundSources[i].sound_id = read_bitu16(newsrc);
-        this->m_soundSources[i].flags = read_bitu16(newsrc);
+        m_soundSources[i].sound_id = read_bitu16(newsrc);
+        m_soundSources[i].flags = read_bitu16(newsrc);
     }
 
-    this->m_boxes.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_boxes.size(); i++)
-        read_tr2_box(newsrc, this->m_boxes[i]);
+    m_boxes.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_boxes.size(); i++)
+        read_tr2_box(newsrc, m_boxes[i]);
 
-    this->m_overlaps.resize(read_bitu32(newsrc));
-    for (i = 0; i < this->m_overlaps.size(); i++)
-        this->m_overlaps[i] = read_bitu16(newsrc);
+    m_overlaps.resize(read_bitu32(newsrc));
+    for (i = 0; i < m_overlaps.size(); i++)
+        m_overlaps[i] = read_bitu16(newsrc);
 
     // Zones
-    SDL_RWseek(newsrc, this->m_boxes.size() * 20, SEEK_CUR);
+    SDL_RWseek(newsrc, m_boxes.size() * 20, SEEK_CUR);
 
-    this->m_animatedTextures.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_animatedTextures.size(); i++)
+    m_animatedTextures.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_animatedTextures.size(); i++)
     {
-        this->m_animatedTextures[i] = read_bitu16(newsrc);
+        m_animatedTextures[i] = read_bitu16(newsrc);
     }
 
-    this->m_animatedTexturesUvCount = read_bitu8(newsrc);
+    m_animatedTexturesUvCount = read_bitu8(newsrc);
 
     if (read_bit8(newsrc) != 'T')
         Sys_extError("read_tr4_level: '\\0TEX' not found");
@@ -637,54 +637,54 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bit8(newsrc) != 'X')
         Sys_extError("read_tr4_level: '\\0TEX' not found");
 
-    this->m_objectTextures.resize( read_bitu32(newsrc) );
-    for (i = 0; i < this->m_objectTextures.size(); i++)
-        read_tr4_object_texture(newsrc, this->m_objectTextures[i]);
+    m_objectTextures.resize( read_bitu32(newsrc) );
+    for (i = 0; i < m_objectTextures.size(); i++)
+        read_tr4_object_texture(newsrc, m_objectTextures[i]);
 
-    this->m_items.resize(read_bitu32(newsrc));
-    for (i = 0; i < this->m_items.size(); i++)
-        read_tr4_item(newsrc, this->m_items[i]);
+    m_items.resize(read_bitu32(newsrc));
+    for (i = 0; i < m_items.size(); i++)
+        read_tr4_item(newsrc, m_items[i]);
 
-    this->m_aiObjects.resize(read_bitu32(newsrc));
-    for(i=0; i < this->m_aiObjects.size(); i++)
+    m_aiObjects.resize(read_bitu32(newsrc));
+    for(i=0; i < m_aiObjects.size(); i++)
     {
-        this->m_aiObjects[i].object_id = read_bitu16(newsrc);
-        this->m_aiObjects[i].room = read_bitu16(newsrc);                        // 4
+        m_aiObjects[i].object_id = read_bitu16(newsrc);
+        m_aiObjects[i].room = read_bitu16(newsrc);                        // 4
 
-        this->m_aiObjects[i].x = read_bit32(newsrc);
-        this->m_aiObjects[i].y = read_bit32(newsrc);
-        this->m_aiObjects[i].z = read_bit32(newsrc);                            // 16
+        m_aiObjects[i].x = read_bit32(newsrc);
+        m_aiObjects[i].y = read_bit32(newsrc);
+        m_aiObjects[i].z = read_bit32(newsrc);                            // 16
 
-        this->m_aiObjects[i].ocb = read_bitu16(newsrc);
-        this->m_aiObjects[i].flags = read_bitu16(newsrc);                       // 20
-        this->m_aiObjects[i].angle = read_bit32(newsrc);                        // 24
+        m_aiObjects[i].ocb = read_bitu16(newsrc);
+        m_aiObjects[i].flags = read_bitu16(newsrc);                       // 20
+        m_aiObjects[i].angle = read_bit32(newsrc);                        // 24
     }
 
-    this->m_demoData.resize( read_bitu16(newsrc) );
-    for(i=0; i < this->m_demoData.size(); i++)
-        this->m_demoData[i] = read_bitu8(newsrc);
+    m_demoData.resize( read_bitu16(newsrc) );
+    for(i=0; i < m_demoData.size(); i++)
+        m_demoData[i] = read_bitu8(newsrc);
 
     // Soundmap
-    this->m_soundmap.resize(TR_AUDIO_MAP_SIZE_TR4);
-    for(i=0; i < this->m_soundmap.size(); i++)
-        this->m_soundmap[i] = read_bit16(newsrc);
+    m_soundmap.resize(TR_AUDIO_MAP_SIZE_TR4);
+    for(i=0; i < m_soundmap.size(); i++)
+        m_soundmap[i] = read_bit16(newsrc);
 
-    this->m_soundDetails.resize(read_bitu32(newsrc));
-    for(i=0; i < this->m_soundDetails.size(); i++)
+    m_soundDetails.resize(read_bitu32(newsrc));
+    for(i=0; i < m_soundDetails.size(); i++)
     {
-        this->m_soundDetails[i].sample = read_bitu16(newsrc);
-        this->m_soundDetails[i].volume = (uint16_t)read_bitu8(newsrc);        // n x 2.6
-        this->m_soundDetails[i].sound_range = (uint16_t)read_bitu8(newsrc);   // n as is
-        this->m_soundDetails[i].chance = (uint16_t)read_bitu8(newsrc);        // If n = 99, n = 0 (max. chance)
-        this->m_soundDetails[i].pitch = (int16_t)read_bit8(newsrc);         // n as is
-        this->m_soundDetails[i].num_samples_and_flags_1 = read_bitu8(newsrc);
-        this->m_soundDetails[i].flags_2 = read_bitu8(newsrc);
+        m_soundDetails[i].sample = read_bitu16(newsrc);
+        m_soundDetails[i].volume = (uint16_t)read_bitu8(newsrc);        // n x 2.6
+        m_soundDetails[i].sound_range = (uint16_t)read_bitu8(newsrc);   // n as is
+        m_soundDetails[i].chance = (uint16_t)read_bitu8(newsrc);        // If n = 99, n = 0 (max. chance)
+        m_soundDetails[i].pitch = (int16_t)read_bit8(newsrc);         // n as is
+        m_soundDetails[i].num_samples_and_flags_1 = read_bitu8(newsrc);
+        m_soundDetails[i].flags_2 = read_bitu8(newsrc);
     }
 
     // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
-    this->m_sampleIndices.resize( read_bitu32(newsrc) );
-    for(i=0; i < this->m_sampleIndices.size(); i++)
-        this->m_sampleIndices[i] = read_bitu32(newsrc);
+    m_sampleIndices.resize( read_bitu32(newsrc) );
+    for(i=0; i < m_sampleIndices.size(); i++)
+        m_sampleIndices[i] = read_bitu32(newsrc);
 
     SDL_RWclose(newsrc);
     newsrc = NULL;
@@ -697,11 +697,11 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     i = read_bitu32(src);   // Read num samples
     if(i)
     {
-        this->m_samplesCount = i;
+        m_samplesCount = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        this->m_samplesData.resize( (SDL_RWsize(src) - SDL_RWtell(src)) );
-        for(i = 0; i < this->m_samplesData.size(); i++)
-            this->m_samplesData[i] = read_bitu8(src);
+        m_samplesData.resize( (SDL_RWsize(src) - SDL_RWtell(src)) );
+        for(i = 0; i < m_samplesData.size(); i++)
+            m_samplesData[i] = read_bitu8(src);
     }
 }
