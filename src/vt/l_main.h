@@ -50,8 +50,7 @@ public:
 
         this->boxes.clear();
         this->overlaps.clear();
-        this->zones_count = 0;              // destroyed
-        this->zones = nullptr;                 // destroyed
+        this->zones.clear();
         this->items_count = 0;              // destroyed
         this->items = nullptr;                 // destroyed
         this->ai_objects_count = 0;         // destroyed
@@ -134,12 +133,7 @@ public:
 
         this->overlaps.clear();
 
-        if(this->zones_count)
-        {
-            this->zones_count = 0;
-            free(this->zones);
-            this->zones = nullptr;
-        }
+        this->zones.clear();
 
         if(this->items_count)
         {
@@ -361,8 +355,7 @@ public:
     std::vector<tr_sound_source_t> sound_sources;       ///< \brief sound sources.
     std::vector<tr_box_t> boxes;                        ///< \brief boxes.
     std::vector<uint16_t> overlaps;                     ///< \brief overlaps.
-    uint32_t zones_count;
-    int16_t *zones = nullptr;                         ///< \brief zones.
+    std::vector<int16_t> zones;                         ///< \brief zones.
     uint32_t items_count;
     tr2_item_t *items = nullptr;                      ///< \brief items.
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
