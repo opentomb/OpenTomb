@@ -633,9 +633,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for (i = 0; i < this->boxes.size(); i++)
         read_tr2_box(newsrc, this->boxes[i]);
 
-    this->overlaps_count = read_bitu32(newsrc);
-    this->overlaps = (uint16_t*)malloc(this->overlaps_count * sizeof(uint16_t));
-    for (i = 0; i < this->overlaps_count; i++)
+    this->overlaps.resize(read_bitu32(newsrc));
+    for (i = 0; i < this->overlaps.size(); i++)
         this->overlaps[i] = read_bitu16(newsrc);
 
     // Zones
