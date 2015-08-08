@@ -3917,7 +3917,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
     world->audio_effects.resize(tr->sound_details_count);
 
     // Generate new audio emitters array.
-    world->audio_emitters.resize(tr->sound_sources_count);
+    world->audio_emitters.resize(tr->sound_sources.size());
 
     // Cycle through raw samples block and parse them to OpenAL buffers.
 

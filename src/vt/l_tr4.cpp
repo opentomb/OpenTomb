@@ -618,9 +618,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     }
     //SDL_RWseek(newsrc, this->flyby_cameras.size() * 40, SEEK_CUR);
 
-    this->sound_sources_count = read_bitu32(newsrc);
-    this->sound_sources = (tr_sound_source_t*)malloc(this->sound_sources_count * sizeof(tr_sound_source_t));
-    for(i = 0; i < this->sound_sources_count; i++)
+    this->sound_sources.resize( read_bitu32(newsrc) );
+    for(i = 0; i < this->sound_sources.size(); i++)
     {
         this->sound_sources[i].x = read_bit32(newsrc);
         this->sound_sources[i].y = read_bit32(newsrc);

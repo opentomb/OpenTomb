@@ -46,8 +46,7 @@ public:
         this->sprite_sequences.clear();
         this->cameras.clear();
         this->flyby_cameras.clear();
-        this->sound_sources_count = 0;      // destroyed
-        this->sound_sources = nullptr;         // destroyed
+        this->sound_sources.clear();
 
         this->boxes_count = 0;              // destroyed
         this->boxes = nullptr;                 // destroyed
@@ -131,12 +130,7 @@ public:
 
         this->flyby_cameras.clear();
 
-        if(this->sound_sources_count)
-        {
-            this->sound_sources_count = 0;
-            free(this->sound_sources);
-            this->sound_sources = nullptr;
-        }
+        this->sound_sources.clear();
 
         if(this->boxes_count)
         {
@@ -376,8 +370,7 @@ public:
     std::vector<tr_sprite_sequence_t> sprite_sequences; ///< \brief sprite sequences for animation.
     std::vector<tr_camera_t> cameras;                   ///< \brief cameras.
     std::vector<tr4_flyby_camera_t> flyby_cameras;      ///< \brief flyby cameras.
-    uint32_t sound_sources_count;
-    tr_sound_source_t *sound_sources = nullptr;       ///< \brief sound sources.
+    std::vector<tr_sound_source_t> sound_sources;       ///< \brief sound sources.
     uint32_t boxes_count;
     tr_box_t *boxes = nullptr;                        ///< \brief boxes.
     uint32_t overlaps_count;

@@ -670,9 +670,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->flyby_cameras[i].room_id = read_bitu32(src);
     }
 
-    this->sound_sources_count = read_bitu32(src);
-    this->sound_sources = (tr_sound_source_t*)malloc(this->sound_sources_count * sizeof(tr_sound_source_t));
-    for(i = 0; i < this->sound_sources_count; i++)
+    this->sound_sources.resize( read_bitu32(src) );
+    for(i = 0; i < this->sound_sources.size(); i++)
     {
         this->sound_sources[i].x = read_bit32(src);
         this->sound_sources[i].y = read_bit32(src);
