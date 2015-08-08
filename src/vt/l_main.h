@@ -56,7 +56,7 @@ public:
         this->cinematic_frames.clear();
 
         this->demo_data.clear();
-        this->soundmap = nullptr;              // destroyed
+        this->soundmap.clear();
         this->sound_details_count = 0;      // destroyed
         this->sound_details = nullptr;         // destroyed
         this->sample_indices_count = 0;     // destroyed
@@ -139,11 +139,7 @@ public:
 
         this->demo_data.clear();
 
-        if(this->soundmap)
-        {
-            free(this->soundmap);
-            this->soundmap = nullptr;
-        }
+        this->soundmap.clear();
 
         if(this->sound_details_count)
         {
@@ -339,7 +335,7 @@ public:
     std::vector<tr4_ai_object_t> ai_objects;            ///< \brief ai objects (TR4-5).
     std::vector<tr_cinematic_frame_t> cinematic_frames; ///< \brief cinematic frames (TR1-3).
     std::vector<uint8_t> demo_data;                     ///< \brief demo data.
-    int16_t *soundmap = nullptr;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
+    std::vector<int16_t> soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
     uint32_t sound_details_count;
     tr_sound_details_t *sound_details;      ///< \brief sound details.
     uint32_t samples_count;

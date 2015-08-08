@@ -685,8 +685,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         this->demo_data[i] = read_bitu8(newsrc);
 
     // Soundmap
-    this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR4 * sizeof(int16_t));
-    for(i=0; i < TR_AUDIO_MAP_SIZE_TR4; i++)
+    this->soundmap.resize(TR_AUDIO_MAP_SIZE_TR4);
+    for(i=0; i < this->soundmap.size(); i++)
         this->soundmap[i] = read_bit16(newsrc);
 
     this->sound_details_count = 0;
