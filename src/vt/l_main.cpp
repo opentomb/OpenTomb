@@ -106,9 +106,8 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     if ((newsrc = SDL_RWFromMem(this->frame_data, this->frame_data_size)) == NULL)
         Sys_extError("read_tr_level: frame_data: SDL_RWFromMem");
 
-    this->moveables_count = read_bitu32(src);
-    this->moveables = (tr_moveable_t*)calloc(this->moveables_count, sizeof(tr_moveable_t));
-    for (i = 0; i < this->moveables_count; i++)
+    this->moveables.resize( read_bitu32(src) );
+    for (i = 0; i < this->moveables.size(); i++)
     {
         if (this->game_version < TR_V)
             read_tr_moveable(src, this->moveables[i]);
@@ -117,11 +116,11 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     }
 
     //this->frames.reserve(this->moveables.size());
-    for (i = 0; i < this->moveables_count; i++)
+    for (i = 0; i < this->moveables.size(); i++)
     {
         uint32_t j;
 
-        for (j = 0; j < this->moveables_count; j++)
+        for (j = 0; j < this->moveables.size(); j++)
             if (this->moveables[j].frame_offset == pos)
             {
                 this->moveables[j].frame_index = frame;
@@ -141,7 +140,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
         frame++;
 
         pos = 0;
-        for (j = 0; j < this->moveables_count; j++)
+        for (j = 0; j < this->moveables.size(); j++)
             if (this->moveables[j].frame_offset > pos)
             {
                 pos = this->moveables[j].frame_offset;

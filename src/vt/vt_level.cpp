@@ -57,7 +57,7 @@ tr_moveable_t *VT_Level::find_moveable_id(uint32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < moveables_count; i++)
+    for (i = 0; i < moveables.size(); i++)
         if (moveables[i].object_id == object_id)
             return &moveables[i];
 

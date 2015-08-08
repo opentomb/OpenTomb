@@ -3627,7 +3627,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         return 0;
     }
 
-    if(moveable_ind == tr->moveables_count - 1)
+    if(moveable_ind == tr->moveables.size() - 1)
     {
         ret = static_cast<int32_t>(tr->animations.size()) - static_cast<int32_t>(curr_moveable->animation_index);
         if(ret < 0)
@@ -3643,7 +3643,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     next_moveable = &tr->moveables[moveable_ind + 1];
     if(next_moveable->animation_index == 0xFFFF)
     {
-        if(moveable_ind + 2 < tr->moveables_count)                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
+        if(moveable_ind + 2 < tr->moveables.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
         {
             next_moveable = &tr->moveables[moveable_ind + 2];
         }
@@ -3726,9 +3726,9 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
 
 void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 {
-    world->skeletal_models.resize(tr->moveables_count);
+    world->skeletal_models.resize(tr->moveables.size());
 
-    for(uint32_t i = 0; i < tr->moveables_count; i++)
+    for(uint32_t i = 0; i < tr->moveables.size(); i++)
     {
         auto tr_moveable = &tr->moveables[i];
         auto smodel = &world->skeletal_models[i];
