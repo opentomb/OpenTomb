@@ -1852,7 +1852,7 @@ void Res_GenRBTrees(World *world)
 
 void TR_GenRooms(World *world, class VT_Level *tr)
 {
-    world->rooms.resize(tr->rooms_count);
+    world->rooms.resize(tr->rooms.size());
     std::generate(std::begin(world->rooms), std::end(world->rooms), std::make_shared<Room>);
     for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
@@ -2277,7 +2277,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     room->alternate_room = nullptr;
     room->base_room = nullptr;
 
-    if((tr_room->alternate_room >= 0) && (static_cast<uint32_t>(tr_room->alternate_room) < tr->rooms_count))
+    if((tr_room->alternate_room >= 0) && (static_cast<uint32_t>(tr_room->alternate_room) < tr->rooms.size()))
     {
         room->alternate_room = world->rooms[tr_room->alternate_room];
     }

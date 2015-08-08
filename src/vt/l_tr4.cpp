@@ -529,9 +529,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bitu32(newsrc) != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    this->rooms_count = read_bitu16(newsrc);
-    this->rooms = (tr5_room_t*)calloc(this->rooms_count, sizeof(tr5_room_t));
-    for (i = 0; i < this->rooms_count; i++)
+    this->rooms.resize( read_bitu16(newsrc) );
+    for (i = 0; i < this->rooms.size(); i++)
         read_tr4_room(newsrc, this->rooms[i]);
 
     this->floor_data_size = read_bitu32(newsrc);

@@ -1,5 +1,4 @@
-#ifndef _L_MAIN_H_
-#define _L_MAIN_H_
+#pragma once
 
 #include <SDL2/SDL_rwops.h>
 #include <vector>
@@ -92,8 +91,7 @@ public:
 
         this->meshes_count = 0;             // destroyed
         this->meshes = nullptr;                // destroyed
-        this->rooms_count = 0;              // destroyed
-        this->rooms = nullptr;                 // destroyed
+        this->rooms.clear();
     }
 
     ~TR_Level()
@@ -357,9 +355,9 @@ public:
             this->meshes = nullptr;
         }
 
-        if(this->rooms_count)
+        if(!this->rooms.empty())
         {
-            for(i = 0; i < this->rooms_count; i++)
+            for(i = 0; i < this->rooms.size(); i++)
             {
                 if(this->rooms[i].num_layers)
                 {
@@ -425,9 +423,7 @@ public:
                     this->rooms[i].vertices = nullptr;
                 }
             }
-            this->rooms_count = 0;
-            free(this->rooms);
-            this->rooms = nullptr;
+            this->rooms.clear();
         }
     }
 
@@ -438,8 +434,7 @@ public:
     tr_textile8_t *textile8 = nullptr;                ///< \brief 8-bit 256x256 textiles(TR1-3).
     tr2_textile16_t *textile16 = nullptr;             ///< \brief 16-bit 256x256 textiles(TR2-5).
     std::vector<tr4_textile32_t> textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
-    uint32_t rooms_count;
-    tr5_room_t *rooms;                      ///< \brief all rooms (normal and alternate).
+    std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
     uint32_t floor_data_size;               ///< \brief the floor data size
     uint16_t *floor_data = nullptr;                   ///< \brief the floor data.
     uint32_t meshes_count;
@@ -597,5 +592,3 @@ protected:
     void read_tr5_moveable(SDL_RWops * const src, tr_moveable_t & moveable);
     void read_tr5_level(SDL_RWops * const src);
 };
-
-#endif // _L_MAIN_H_

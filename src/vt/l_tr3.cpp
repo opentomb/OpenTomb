@@ -56,9 +56,9 @@ void TR_Level::read_tr3_room_vertex(SDL_RWops *const src, tr5_room_vertex_t & ro
     room_vertex.normal.y = 0;
     room_vertex.normal.z = 0;
 
-    room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10  ) / 62.0f;
-    room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5   ) / 62.0f;
-    room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)        ) / 62.0f;
+    room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10) / 62.0f;
+    room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5) / 62.0f;
+    room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)) / 62.0f;
     room_vertex.colour.a = 1.0f;
 }
 
@@ -70,11 +70,11 @@ void TR_Level::read_tr3_room_staticmesh(SDL_RWops *const src, tr2_room_staticmes
     room_static_mesh.intensity2 = read_bit16(src);
     room_static_mesh.object_id = read_bitu16(src);
 
-    room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)        ) / 62.0f;
+    room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)) / 62.0f;
 
-    room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5   ) / 62.0f;
+    room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5) / 62.0f;
 
-    room_static_mesh.tint.b = ((room_static_mesh.intensity1 & 0x7C00) >> 10  ) / 62.0f;
+    room_static_mesh.tint.b = ((room_static_mesh.intensity1 & 0x7C00) >> 10) / 62.0f;
     room_static_mesh.tint.a = 1.0f;
 }
 
@@ -99,22 +99,22 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.num_vertices = read_bitu16(src);
     room.vertices = (tr5_room_vertex_t*)calloc(room.num_vertices, sizeof(tr5_room_vertex_t));
-    for (i = 0; i < room.num_vertices; i++)
+    for(i = 0; i < room.num_vertices; i++)
         read_tr3_room_vertex(src, room.vertices[i]);
 
     room.num_rectangles = read_bitu16(src);
     room.rectangles = (tr4_face4_t*)malloc(room.num_rectangles * sizeof(tr4_face4_t));
-    for (i = 0; i < room.num_rectangles; i++)
+    for(i = 0; i < room.num_rectangles; i++)
         read_tr_face4(src, room.rectangles[i]);
 
     room.num_triangles = read_bitu16(src);
     room.triangles = (tr4_face3_t*)malloc(room.num_triangles * sizeof(tr4_face3_t));
-    for (i = 0; i < room.num_triangles; i++)
+    for(i = 0; i < room.num_triangles; i++)
         read_tr_face3(src, room.triangles[i]);
 
     room.num_sprites = read_bitu16(src);
     room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
-    for (i = 0; i < room.num_sprites; i++)
+    for(i = 0; i < room.num_sprites; i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
     // set to the right position in case that there is some unused data
@@ -122,13 +122,13 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.num_portals = read_bitu16(src);
     room.portals = (tr_room_portal_t*)malloc(room.num_portals * sizeof(tr_room_portal_t));
-    for (i = 0; i < room.num_portals; i++)
+    for(i = 0; i < room.num_portals; i++)
         read_tr_room_portal(src, room.portals[i]);
 
     room.num_zsectors = read_bitu16(src);
     room.num_xsectors = read_bitu16(src);
     room.sector_list = (tr_room_sector_t*)malloc(room.num_zsectors * room.num_xsectors * sizeof(tr_room_sector_t));
-    for (i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
+    for(i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
         read_tr_room_sector(src, room.sector_list[i]);
 
     room.intensity1 = read_bit16(src);
@@ -139,15 +139,15 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.num_lights = read_bitu16(src);
     room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
-    for (i = 0; i < room.num_lights; i++)
+    for(i = 0; i < room.num_lights; i++)
         read_tr3_room_light(src, room.lights[i]);
 
     room.num_static_meshes = read_bitu16(src);
     room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
-    for (i = 0; i < room.num_static_meshes; i++)
+    for(i = 0; i < room.num_static_meshes; i++)
         read_tr3_room_staticmesh(src, room.static_meshes[i]);
 
-    room.alternate_room  = read_bit16(src);
+    room.alternate_room = read_bit16(src);
     room.alternate_group = 0;   // Doesn't exist in TR1-3
 
     room.flags = read_bitu16(src);
@@ -190,7 +190,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     // Version
     uint32_t file_version = read_bitu32(src);
 
-    if ((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034) )
+    if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
         Sys_extError("Wrong level version");
 
     read_tr_palette(src, this->palette);
@@ -205,11 +205,11 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
 
     this->textile8_count = this->num_textiles = read_bitu32(src);
     this->textile8 = (tr_textile8_t*)malloc(this->textile8_count * sizeof(tr_textile8_t));
-    for (i = 0; i < this->textile8_count; i++)
+    for(i = 0; i < this->textile8_count; i++)
         read_tr_textile8(src, this->textile8[i]);
     this->textile16_count = this->textile8_count;
-        this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
-    for (i = 0; i < this->textile16_count; i++)
+    this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
+    for(i = 0; i < this->textile16_count; i++)
         read_tr2_textile16(src, this->textile16[i]);
 
     if(file_version == 0xFF180034)                                          // VICT.TR2
@@ -218,71 +218,70 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     }
 
     // Unused
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    this->rooms_count = read_bitu16(src);
-    this->rooms = (tr5_room_t*)calloc(this->rooms_count, sizeof(tr5_room_t));
-    for (i = 0; i < this->rooms_count; i++)
+    this->rooms.resize(read_bitu16(src));
+    for(i = 0; i < this->rooms.size(); i++)
         read_tr3_room(src, this->rooms[i]);
 
     this->floor_data_size = read_bitu32(src);
     this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
     for(i = 0; i < this->floor_data_size; i++)
-            this->floor_data[i] = read_bitu16(src);
+        this->floor_data[i] = read_bitu16(src);
 
     read_mesh_data(src);
 
     this->animations_count = read_bitu32(src);
     this->animations = (tr_animation_t*)malloc(this->animations_count * sizeof(tr_animation_t));
-    for (i = 0; i < this->animations_count; i++)
+    for(i = 0; i < this->animations_count; i++)
         read_tr_animation(src, this->animations[i]);
 
     this->state_changes_count = read_bitu32(src);
     this->state_changes = (tr_state_change_t*)malloc(this->state_changes_count * sizeof(tr_state_change_t));
-    for (i = 0; i < this->state_changes_count; i++)
-            read_tr_state_changes(src, this->state_changes[i]);
+    for(i = 0; i < this->state_changes_count; i++)
+        read_tr_state_changes(src, this->state_changes[i]);
 
     this->anim_dispatches_count = read_bitu32(src);
     this->anim_dispatches = (tr_anim_dispatch_t*)malloc(this->anim_dispatches_count * sizeof(tr_anim_dispatch_t));
-    for (i = 0; i < this->anim_dispatches_count; i++)
+    for(i = 0; i < this->anim_dispatches_count; i++)
         read_tr_anim_dispatches(src, this->anim_dispatches[i]);
 
     this->anim_commands_count = read_bitu32(src);
     this->anim_commands = (int16_t*)malloc(this->anim_commands_count * sizeof(int16_t));
-    for (i = 0; i < this->anim_commands_count; i++)
+    for(i = 0; i < this->anim_commands_count; i++)
         this->anim_commands[i] = read_bit16(src);
 
     this->mesh_tree_data_size = read_bitu32(src);
     this->mesh_tree_data = (uint32_t*)malloc(this->mesh_tree_data_size * sizeof(uint32_t));
-    for (i = 0; i < this->mesh_tree_data_size; i++)
+    for(i = 0; i < this->mesh_tree_data_size; i++)
         this->mesh_tree_data[i] = read_bitu32(src);                     // 4 bytes
 
     read_frame_moveable_data(src);
 
     this->static_meshes_count = read_bitu32(src);
     this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
-    for (i = 0; i < this->static_meshes_count; i++)
+    for(i = 0; i < this->static_meshes_count; i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
-    this->sprite_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->sprite_textures.size(); i++)
+    this->sprite_textures.resize(read_bitu32(src));
+    for(i = 0; i < this->sprite_textures.size(); i++)
         read_tr_sprite_texture(src, this->sprite_textures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
-    for (i = 0; i < this->sprite_sequences_count; i++)
+    for(i = 0; i < this->sprite_sequences_count; i++)
         read_tr_sprite_sequence(src, this->sprite_sequences[i]);
 
     this->cameras_count = read_bitu32(src);
     this->cameras = (tr_camera_t*)malloc(this->cameras_count * sizeof(tr_camera_t));
-    for (i = 0; i < this->cameras_count; i++)
+    for(i = 0; i < this->cameras_count; i++)
     {
         this->cameras[i].x = read_bit32(src);
         this->cameras[i].y = read_bit32(src);
         this->cameras[i].z = read_bit32(src);
 
-        this->cameras[i].room     = read_bit16(src);
+        this->cameras[i].room = read_bit16(src);
         this->cameras[i].unknown1 = read_bitu16(src);
     }
 
@@ -300,12 +299,12 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
 
     this->boxes_count = read_bitu32(src);
     this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
-    for (i = 0; i < this->boxes_count; i++)
+    for(i = 0; i < this->boxes_count; i++)
         read_tr2_box(src, this->boxes[i]);
 
     this->overlaps_count = read_bitu32(src);
     this->overlaps = (uint16_t*)malloc(this->overlaps_count * sizeof(uint16_t));
-    for (i = 0; i < this->overlaps_count; i++)
+    for(i = 0; i < this->overlaps_count; i++)
         this->overlaps[i] = read_bitu16(src);
 
     // Zones
@@ -314,32 +313,32 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     this->animated_textures_count = read_bitu32(src);
     this->animated_textures_uv_count = 0; // No UVRotate in TR3
     this->animated_textures = (uint16_t*)malloc(this->animated_textures_count * sizeof(uint16_t));
-    for (i = 0; i < this->animated_textures_count; i++)
+    for(i = 0; i < this->animated_textures_count; i++)
     {
         this->animated_textures[i] = read_bitu16(src);
     }
 
-    this->object_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->object_textures.size(); i++)
+    this->object_textures.resize(read_bitu32(src));
+    for(i = 0; i < this->object_textures.size(); i++)
         read_tr_object_texture(src, this->object_textures[i]);
 
     this->items_count = read_bitu32(src);
     this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
-    for (i = 0; i < this->items_count; i++)
+    for(i = 0; i < this->items_count; i++)
         read_tr3_item(src, this->items[i]);
 
     read_tr_lightmap(src, this->lightmap);
 
     this->cinematic_frames_count = read_bitu16(src);
     this->cinematic_frames = (tr_cinematic_frame_t*)malloc(this->cinematic_frames_count * sizeof(tr_cinematic_frame_t));
-    for (i = 0; i < this->cinematic_frames_count; i++)
+    for(i = 0; i < this->cinematic_frames_count; i++)
     {
         read_tr_cinematic_frame(src, this->cinematic_frames[i]);
     }
 
     this->demo_data_count = read_bitu16(src);
     this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
-    for(i=0; i < this->demo_data_count; i++)
+    for(i = 0; i < this->demo_data_count; i++)
         this->demo_data[i] = read_bitu8(src);
 
     // Soundmap
@@ -351,18 +350,18 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
     for(i = 0; i < this->sound_details_count; i++)
     {
-        this->sound_details[i].sample      = read_bitu16(src);
-        this->sound_details[i].volume      = (uint16_t)read_bitu8(src);
+        this->sound_details[i].sample = read_bitu16(src);
+        this->sound_details[i].volume = (uint16_t)read_bitu8(src);
         this->sound_details[i].sound_range = (uint16_t)read_bitu8(src);
-        this->sound_details[i].chance      = (uint16_t)read_bit8(src);
-        this->sound_details[i].pitch       = (int16_t)read_bit8(src);
+        this->sound_details[i].chance = (uint16_t)read_bit8(src);
+        this->sound_details[i].pitch = (int16_t)read_bit8(src);
         this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
         this->sound_details[i].flags_2 = read_bitu8(src);
     }
 
     this->sample_indices_count = read_bitu32(src);
     this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-    for(i=0; i < this->sample_indices_count; i++)
+    for(i = 0; i < this->sample_indices_count; i++)
         this->sample_indices[i] = read_bitu32(src);
 
     // remap all sample indices here
@@ -380,7 +379,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     // If there is no such files, no samples are loaded.
 
     SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path, "rb");
-    if (newsrc == NULL)
+    if(newsrc == NULL)
     {
         Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);
     }
@@ -391,7 +390,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
         for(i = 0; i < this->samples_data.size(); i++)
         {
             this->samples_data[i] = read_bitu8(newsrc);
-            if((i >= 4) && (*((uint32_t*)(this->samples_data.data()+i-4)) == 0x46464952))   /// RIFF
+            if((i >= 4) && (*((uint32_t*)(this->samples_data.data() + i - 4)) == 0x46464952))   /// RIFF
             {
                 this->samples_count++;
             }
