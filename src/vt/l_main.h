@@ -38,8 +38,7 @@ public:
         this->anim_commands.clear();
 
         this->moveables.clear();
-        this->static_meshes_count = 0;      // destroyed
-        this->static_meshes = nullptr;         // destroyed
+        this->static_meshes.clear();
         this->object_textures.clear();       // destroyed
         this->animated_textures_count = 0;  // destroyed
         this->animated_textures_uv_count = 0; // destroyed
@@ -122,12 +121,7 @@ public:
 
         this->moveables.clear();
 
-        if(this->static_meshes_count)
-        {
-            this->static_meshes_count = 0;
-            free(this->static_meshes);
-            this->static_meshes = nullptr;
-        }
+        this->static_meshes.clear();
 
         this->object_textures.clear();
 
@@ -398,8 +392,7 @@ public:
     std::vector<tr_anim_dispatch_t> anim_dispatches;    ///< \brief animation dispatches for moveables.
     std::vector<int16_t> anim_commands;                 ///< \brief animation commands for moveables.
     std::vector<tr_moveable_t> moveables;               ///< \brief data for the moveables.
-    uint32_t static_meshes_count;
-    tr_staticmesh_t *static_meshes = nullptr;         ///< \brief data for the static meshes.
+    std::vector<tr_staticmesh_t> static_meshes;         ///< \brief data for the static meshes.
     std::vector<tr4_object_texture_t> object_textures;  ///< \brief object texture definitions.
     uint32_t animated_textures_count;
     uint16_t *animated_textures = nullptr;            ///< \brief animated textures.

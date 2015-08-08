@@ -660,9 +660,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         this->animations[i].frame_size = this->frame_data[frame_offset + 9] * 2 + 10;
     }
 
-    this->static_meshes_count = read_bitu32(src);
-    this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
-    for (i = 0; i < this->static_meshes_count; i++)
+    this->static_meshes.resize( read_bitu32(src) );
+    for (i = 0; i < this->static_meshes.size(); i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
     this->object_textures.resize( read_bitu32(src) );

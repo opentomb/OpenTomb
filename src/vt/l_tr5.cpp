@@ -613,9 +613,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
 
     read_frame_moveable_data(src);
 
-    this->static_meshes_count = read_bitu32(src);
-    this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
-    for (i = 0; i < this->static_meshes_count; i++)
+    this->static_meshes.resize( read_bitu32(src) );
+    for (i = 0; i < this->static_meshes.size(); i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
     if (read_bit8(src) != 'S')

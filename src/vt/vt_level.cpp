@@ -35,7 +35,7 @@ tr_staticmesh_t *VT_Level::find_staticmesh_id(uint32_t object_id)
 {
     uint32_t i;
 
-    for (i = 0; i < static_meshes_count; i++)
+    for (i = 0; i < static_meshes.size(); i++)
         if ((static_meshes[i].object_id == object_id) && (mesh_indices[static_meshes[i].mesh]))
             return &static_meshes[i];
 
