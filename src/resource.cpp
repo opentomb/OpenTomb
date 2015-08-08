@@ -2511,7 +2511,7 @@ void TR_GenAnimTextures(World *world, class VT_Level *tr)
     p0.vertices.resize(3);
     p.vertices.resize(3);
 
-    pointer = tr->animated_textures;
+    pointer = tr->animated_textures.data();
     num_uvrotates = tr->animated_textures_uv_count;
 
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
