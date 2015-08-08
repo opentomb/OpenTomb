@@ -3914,7 +3914,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
         world->stream_track_map.resize(TR_AUDIO_STREAM_MAP_SIZE, 0);
 
     // Generate new audio effects array.
-    world->audio_effects.resize(tr->sound_details_count);
+    world->audio_effects.resize(tr->sound_details.size());
 
     // Generate new audio emitters array.
     world->audio_emitters.resize(tr->sound_sources.size());

@@ -374,10 +374,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     for(i=0; i < this->soundmap.size(); i++)
         this->soundmap[i] = read_bit16(src);
 
-    this->sound_details_count = read_bitu32(src);
-    this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
-
-    for(i = 0; i < this->sound_details_count; i++)
+    this->sound_details.resize( read_bitu32(src) );
+    for(i = 0; i < this->sound_details.size(); i++)
     {
         this->sound_details[i].sample = read_bitu16(src);
         this->sound_details[i].volume = read_bitu16(src);
@@ -394,7 +392,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
         this->sample_indices[i] = read_bitu32(src);
 
     // remap all sample indices here
-    for(i = 0; i < this->sound_details_count; i++)
+    for(i = 0; i < this->sound_details.size(); i++)
     {
         if(this->sound_details[i].sample < this->sample_indices_count)
         {

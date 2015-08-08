@@ -689,23 +689,16 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for(i=0; i < this->soundmap.size(); i++)
         this->soundmap[i] = read_bit16(newsrc);
 
-    this->sound_details_count = 0;
-    i = read_bitu32(newsrc);
-    if(i)
+    this->sound_details.resize(read_bitu32(newsrc));
+    for(i=0; i < this->sound_details.size(); i++)
     {
-        this->sound_details_count = i;
-
-        this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
-        for(i=0; i < this->sound_details_count; i++)
-        {
-            this->sound_details[i].sample = read_bitu16(newsrc);
-            this->sound_details[i].volume = (uint16_t)read_bitu8(newsrc);        // n x 2.6
-            this->sound_details[i].sound_range = (uint16_t)read_bitu8(newsrc);   // n as is
-            this->sound_details[i].chance = (uint16_t)read_bitu8(newsrc);        // If n = 99, n = 0 (max. chance)
-            this->sound_details[i].pitch = (int16_t)read_bit8(newsrc);         // n as is
-            this->sound_details[i].num_samples_and_flags_1 = read_bitu8(newsrc);
-            this->sound_details[i].flags_2 = read_bitu8(newsrc);
-        }
+        this->sound_details[i].sample = read_bitu16(newsrc);
+        this->sound_details[i].volume = (uint16_t)read_bitu8(newsrc);        // n x 2.6
+        this->sound_details[i].sound_range = (uint16_t)read_bitu8(newsrc);   // n as is
+        this->sound_details[i].chance = (uint16_t)read_bitu8(newsrc);        // If n = 99, n = 0 (max. chance)
+        this->sound_details[i].pitch = (int16_t)read_bit8(newsrc);         // n as is
+        this->sound_details[i].num_samples_and_flags_1 = read_bitu8(newsrc);
+        this->sound_details[i].flags_2 = read_bitu8(newsrc);
     }
 
     // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
