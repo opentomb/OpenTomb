@@ -3268,7 +3268,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     model->mesh_tree.resize(model->mesh_count);
     tree_tag = model->mesh_tree.data();
 
-    uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
+    uint32_t *mesh_index = tr->mesh_indices.data() + tr_moveable->starting_mesh;
 
     for(uint16_t k = 0; k < model->mesh_count; k++, tree_tag++)
     {

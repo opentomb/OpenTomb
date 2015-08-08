@@ -50,18 +50,17 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
     if ((newsrc = SDL_RWFromMem(buffer, size)) == NULL)
         Sys_extError("read_tr_mesh_data: SDL_RWFromMem");
 
-    this->mesh_indices_count = read_bitu32(src);
-    this->mesh_indices = (uint32_t*)malloc(this->mesh_indices_count * sizeof(uint32_t));
-    for (i = 0; i < this->mesh_indices_count; i++)
+    this->mesh_indices.resize( read_bitu32(src) );
+    for (i = 0; i < this->mesh_indices.size(); i++)
         this->mesh_indices[i] = read_bitu32(src);
 
-    this->meshes.resize( this->mesh_indices_count );
+    this->meshes.resize( this->mesh_indices.size() );
 
-    for (i = 0; i < this->mesh_indices_count; i++)
+    for (i = 0; i < this->mesh_indices.size(); i++)
     {
         uint32_t j;
 
-        for (j = 0; j < this->mesh_indices_count; j++)
+        for (j = 0; j < this->mesh_indices.size(); j++)
             if (this->mesh_indices[j] == pos)
                 this->mesh_indices[j] = mesh;
 
@@ -74,7 +73,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
 
         mesh++;
 
-        for (j = 0; j < this->mesh_indices_count; j++)
+        for (j = 0; j < this->mesh_indices.size(); j++)
             if (this->mesh_indices[j] > pos)
             {
                 pos = this->mesh_indices[j];

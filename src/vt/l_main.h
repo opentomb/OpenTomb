@@ -30,8 +30,7 @@ public:
         this->textile32.clear();
 
         this->floor_data.clear();
-        this->mesh_indices_count = 0;       // destroyed
-        this->mesh_indices = nullptr;          // destroyed
+        this->mesh_indices.clear();
 
         this->animations_count = 0;         // destroyed
         this->animations = nullptr;            // destroyed
@@ -116,12 +115,7 @@ public:
         /**destroy other data**/
         this->floor_data.clear();
 
-        if(this->mesh_indices_count)
-        {
-            this->mesh_indices_count = 0;
-            free(this->mesh_indices);
-            this->mesh_indices = nullptr;
-        }
+        this->mesh_indices.clear();
 
         if(this->animations_count)
         {
@@ -428,8 +422,7 @@ public:
     std::vector<tr5_room_t> rooms;                      ///< \brief all rooms (normal and alternate).
     std::vector<uint16_t> floor_data;                   ///< \brief the floor data.
     std::vector<tr4_mesh_t> meshes;                     ///< \brief all meshes (static and moveables).
-    uint32_t mesh_indices_count;
-    uint32_t *mesh_indices = nullptr;                 ///< \brief mesh index table.
+    std::vector<uint32_t> mesh_indices;                 ///< \brief mesh index table.
     uint32_t animations_count;
     tr_animation_t *animations = nullptr;             ///< \brief animations for moveables.
     uint32_t state_changes_count;
