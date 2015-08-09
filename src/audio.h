@@ -91,13 +91,6 @@ enum TR_AUDIO_FX
 
 #define TR_AUDIO_SAMPLE_NUMBER_MASK 0x0F
 
-// Default range and pitch values are required for compatibility with
-// TR1 and TR2 levels, as there is no such parameters in SoundDetails
-// structures.
-
-#define TR_AUDIO_DEFAULT_RANGE 8
-#define TR_AUDIO_DEFAULT_PITCH 1.0       // 0.0 - only noise
-
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
 // or global events, we have defined these three types of emitters.

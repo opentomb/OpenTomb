@@ -33,9 +33,7 @@ void TR_Level::read_mesh_data(io::SDLReader& reader)
     const uint32_t size = num_mesh_data * 2;
     const auto basePos = reader.tell();
 
-    m_meshIndices.resize(num_mesh_data);
-    for (size_t i = 0; i < m_meshIndices.size(); i++)
-        m_meshIndices[i] = reader.readU32();
+    reader.readVector(m_meshIndices, num_mesh_data);
 
     m_meshes.resize( m_meshIndices.size() );
 
@@ -74,8 +72,7 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
 
     m_frameData.resize(reader.readU32());
     const auto basePos = reader.tell();
-    for(uint32_t i = 0; i < m_frameData.size(); ++i)
-        m_frameData[i] = reader.readU16();
+    reader.readVector(m_frameData, m_frameData.size());
 
     reader.seek(basePos);
 
@@ -195,5 +192,7 @@ std::unique_ptr<TR_Level> TR_Level::createLoader(SDL_RWops * const src, int32_t 
             break;
     }
 
+
+    result->m_sfxPath = sfxPath;
     return result;
 }

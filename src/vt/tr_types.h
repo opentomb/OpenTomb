@@ -2,7 +2,10 @@
 
 #include "glmath.h"
 
+#include <cstdint>
 #include <vector>
+#include <stdexcept>
+#include <functional>
 
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_endian.h>
@@ -52,6 +55,42 @@ namespace io
             {
                 throw std::runtime_error("EOF unexpectedly reached");
             }
+        }
+
+        template<typename T>
+        void readVector(std::vector<T>& elements, size_t count, T function(SDLReader&))
+        {
+            elements.clear();
+            elements.reserve(count);
+            for(size_t i=0; i<count; ++i)
+            {
+                elements.emplace_back(function(*this));
+            }
+        }
+
+        template<typename T>
+        void readVector(std::vector<T>& elements, size_t count)
+        {
+            elements.clear();
+            elements.reserve(count);
+            for(size_t i=0; i<count; ++i)
+            {
+                elements.emplace_back(read<T>());
+            }
+        }
+
+        void readVector(std::vector<uint8_t>& elements, size_t count)
+        {
+            elements.clear();
+            elements.reserve(count);
+            readBytes(elements.data(), count);
+        }
+
+        void readVector(std::vector<int8_t>& elements, size_t count)
+        {
+            elements.clear();
+            elements.reserve(count);
+            readBytes(elements.data(), count);
         }
 
         template<typename T>
@@ -320,6 +359,20 @@ struct tr4_face4_t
 struct tr_textile8_t
 {
     uint8_t pixels[256][256];
+
+    /// \brief reads a 8-bit 256x256 textile.
+    static tr_textile8_t read(io::SDLReader& reader)
+    {
+        tr_textile8_t textile;
+        for(int i = 0; i < 256; i++)
+        {
+            for(int j = 0; j < 256; j++)
+            {
+                textile.pixels[i][j] = reader.readU8();
+            }
+        }
+        return textile;
+    }
 };
 //typedef prtl::array < tr_textile8_t > tr_textile8_array_t;
 
@@ -598,6 +651,7 @@ struct tr5_room_light_t
         light.dir2 = tr5_vertex_t::read32(reader);
         light.light_type = reader.readU8();
         auto temp = reader.readU8();
+        (void)temp; // avoid "unused variable" warning
 #if 0
         if(temp != 0xCD)
             Sys_extWarn("read_tr5_room_light: seperator2 has wrong value");
@@ -2247,6 +2301,18 @@ struct tr_sound_source_t
     int32_t z;              // absolute Z position of sound source (world coordinates)
     uint16_t sound_id;      // internal sound index
     uint16_t flags;         // 0x40, 0x80, or 0xc0
+
+    static tr_sound_source_t read(io::SDLReader& reader)
+    {
+        tr_sound_source_t sound_source;
+        sound_source.x = reader.readI32();
+        sound_source.y = reader.readI32();
+        sound_source.z = reader.readI32();
+
+        sound_source.sound_id = reader.readU16();
+        sound_source.flags = reader.readU16();
+        return sound_source;
+    }
 };
 //typedef prtl::array < tr_sound_source_t > tr_sound_source_array_t;
 
@@ -2268,6 +2334,39 @@ struct tr_sound_details_t
     uint8_t num_samples_and_flags_1;     // Bits 0-1: Looped flag, bits 2-5: num samples, bits 6-7: UNUSED
     uint8_t flags_2;                     // Bit 4: UNKNOWN, bit 5: Randomize pitch, bit 6: randomize volume
                                          // All other bits in flags_2 are unused.
+
+    // Default range and pitch values are required for compatibility with
+    // TR1 and TR2 levels, as there is no such parameters in SoundDetails
+    // structures.
+
+    static constexpr const int DefaultRange = 8;
+    static constexpr const float DefaultPitch = 1.0f;       // 0.0 - only noise
+
+    static tr_sound_details_t readTr1(io::SDLReader& reader)
+    {
+        tr_sound_details_t sound_details;
+        sound_details.sample = reader.readU16();
+        sound_details.volume = reader.readU16();
+        sound_details.chance = reader.readU16();
+        sound_details.num_samples_and_flags_1 = reader.readU8();
+        sound_details.flags_2 = reader.readU8();
+        sound_details.sound_range = DefaultRange;
+        sound_details.pitch = static_cast<int16_t>(DefaultPitch);
+        return sound_details;
+    }
+
+    static tr_sound_details_t readTr3(io::SDLReader& reader)
+    {
+        tr_sound_details_t sound_details;
+        sound_details.sample = reader.readU16();
+        sound_details.volume = static_cast<uint16_t>(reader.readU8());
+        sound_details.sound_range = static_cast<uint16_t>(reader.readU8());
+        sound_details.chance = static_cast<uint16_t>(reader.readI8());
+        sound_details.pitch = static_cast<int16_t>(reader.readI8());
+        sound_details.num_samples_and_flags_1 = reader.readU8();
+        sound_details.flags_2 = reader.readU8();
+        return sound_details;
+    }
 };
 //typedef prtl::array < tr_sound_details_t > tr_sound_detail_array_t;
 
@@ -2388,6 +2487,18 @@ struct tr4_object_texture_t
         object_texture.y_size = reader.readU32();
         return object_texture;
     }
+
+    static tr4_object_texture_t readTr5(io::SDLReader& reader)
+    {
+        tr4_object_texture_t object_texture = readTr4(reader);
+        if(reader.readU16() != 0)
+        {
+#if 0
+            Sys_extWarn("read_tr5_level: obj_tex trailing bitu16 != 0");
+#endif
+        }
+        return object_texture;
+    }
 };
 //typedef prtl::array < tr4_object_texture_t > tr4_object_texture_array_t;
 
@@ -2409,6 +2520,18 @@ struct tr_camera_t
     int32_t z;
     int16_t room;
     uint16_t unknown1;    // correlates to Boxes[]? Zones[]?
+
+    static tr_camera_t read(io::SDLReader& reader)
+    {
+        tr_camera_t camera;
+        camera.x = reader.readI32();
+        camera.y = reader.readI32();
+        camera.z = reader.readI32();
+
+        camera.room = reader.readI16();
+        camera.unknown1 = reader.readU16();
+        return camera;
+    }
 };
 //typedef prtl::array < tr_camera_t > tr_camera_array_t;
 
@@ -2430,6 +2553,29 @@ struct tr4_flyby_camera_t
     uint16_t speed;
     uint16_t flags;
     uint32_t room_id;
+
+    static tr4_flyby_camera_t read(io::SDLReader& reader)
+    {
+        tr4_flyby_camera_t camera;
+        camera.cam_x = reader.readI32();
+        camera.cam_y = reader.readI32();
+        camera.cam_z = reader.readI32();
+        camera.target_x = reader.readI32();
+        camera.target_y = reader.readI32();
+        camera.target_z = reader.readI32();
+
+        camera.sequence = reader.readI8();
+        camera.index = reader.readI8();
+
+        camera.fov = reader.readU16();
+        camera.roll = reader.readU16();
+        camera.timer = reader.readU16();
+        camera.speed = reader.readU16();
+        camera.flags = reader.readU16();
+
+        camera.room_id = reader.readU32();
+        return camera;
+    }
 };
 //typedef prtl::array < tr4_flyby_camera_t > tr4_flyby_camera_array_t;
 
@@ -2445,6 +2591,22 @@ struct tr4_ai_object_t
     uint16_t ocb;
     uint16_t flags;        // The trigger flags (button 1-5, first button has value 2)
     int32_t angle;
+
+    static tr4_ai_object_t read(io::SDLReader& reader)
+    {
+        tr4_ai_object_t object;
+        object.object_id = reader.readU16();
+        object.room = reader.readU16();                        // 4
+
+        object.x = reader.readI32();
+        object.y = reader.readI32();
+        object.z = reader.readI32();                            // 16
+
+        object.ocb = reader.readU16();
+        object.flags = reader.readU16();                       // 20
+        object.angle = reader.readI32();                        // 24
+        return object;
+    }
 };
 //typedef prtl::array < tr4_ai_object_t > tr4_ai_object_array_t;
 

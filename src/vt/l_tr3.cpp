@@ -28,8 +28,6 @@
 
 void TR_TR3Level::load()
 {
-    uint32_t i;
-
     // Version
     uint32_t file_version = m_src.readU32();
 
@@ -47,12 +45,8 @@ void TR_TR3Level::load()
     m_read32BitTextiles = false;
 
     m_numTextiles = m_src.readU32();
-    m_textile8.resize(m_numTextiles);
-    for(i = 0; i < m_textile8.size(); i++)
-        read_tr_textile8(m_textile8[i]);
-    m_textile16.resize( m_textile8.size() );
-    for(i = 0; i < m_textile16.size(); i++)
-        m_textile16[i] = tr2_textile16_t::read(m_src);
+    m_src.readVector(m_textile8, m_numTextiles, &tr_textile8_t::read);
+    m_src.readVector(m_textile16, m_numTextiles, &tr2_textile16_t::read);
 
     if(file_version == 0xFF180034)                                          // VICT.TR2
     {
@@ -63,133 +57,63 @@ void TR_TR3Level::load()
     if(m_src.readU32() != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    m_rooms.resize(m_src.readU16());
-    for(i = 0; i < m_rooms.size(); i++)
-        m_rooms[i] = tr5_room_t::readTr3(m_src);
+    m_src.readVector(m_rooms, m_src.readU16(), &tr5_room_t::readTr3);
 
-    m_floorData.resize( m_src.readU32() );
-    for(i = 0; i < m_floorData.size(); i++)
-        m_floorData[i] = m_src.readU16();
+    m_src.readVector(m_floorData, m_src.readU32());
 
     read_mesh_data(m_src);
 
-    m_animations.resize( m_src.readU32() );
-    for(i = 0; i < m_animations.size(); i++)
-        m_animations[i] = tr_animation_t::readTr1(m_src);
+    m_src.readVector(m_animations, m_src.readU32(), &tr_animation_t::readTr1);
 
-    m_stateChanges.resize( m_src.readU32() );
-    for(i = 0; i < m_stateChanges.size(); i++)
-        m_stateChanges[i] = tr_state_change_t::read(m_src);
+    m_src.readVector(m_stateChanges, m_src.readU32(), &tr_state_change_t::read);
 
-    m_animDispatches.resize( m_src.readU32() );
-    for(i = 0; i < m_animDispatches.size(); i++)
-        m_animDispatches[i] = tr_anim_dispatch_t::read(m_src);
+    m_src.readVector(m_animDispatches, m_src.readU32(), &tr_anim_dispatch_t::read);
 
-    m_animCommands.resize( m_src.readU32() );
-    for(i = 0; i < m_animCommands.size(); i++)
-        m_animCommands[i] = m_src.readI16();
+    m_src.readVector(m_animCommands, m_src.readU32());
 
-    m_meshTreeData.resize( m_src.readU32() );
-    for(i = 0; i < m_meshTreeData.size(); i++)
-        m_meshTreeData[i] = m_src.readU32();                     // 4 bytes
+    m_src.readVector(m_meshTreeData, m_src.readU32());
 
     read_frame_moveable_data(m_src);
 
-    m_staticMeshes.resize( m_src.readU32() );
-    for(i = 0; i < m_staticMeshes.size(); i++)
-        m_staticMeshes[i] = tr_staticmesh_t::read(m_src);
+    m_src.readVector(m_staticMeshes, m_src.readU32(), &tr_staticmesh_t::read);
 
-    m_spriteTextures.resize(m_src.readU32());
-    for(i = 0; i < m_spriteTextures.size(); i++)
-        m_spriteTextures[i] = tr_sprite_texture_t::readTr1(m_src);
+    m_src.readVector(m_spriteTextures, m_src.readU32(), &tr_sprite_texture_t::readTr1);
 
-    m_spriteSequences.resize( m_src.readU32() );
-    for(i = 0; i < m_spriteSequences.size(); i++)
-        m_spriteSequences[i] = tr_sprite_sequence_t::read(m_src);
+    m_src.readVector(m_spriteSequences, m_src.readU32(), tr_sprite_sequence_t::read);
 
-    m_cameras.resize( m_src.readU32() );
-    for(i = 0; i < m_cameras.size(); i++)
-    {
-        m_cameras[i].x = m_src.readI32();
-        m_cameras[i].y = m_src.readI32();
-        m_cameras[i].z = m_src.readI32();
+    m_src.readVector(m_cameras, m_src.readU32(), &tr_camera_t::read);
 
-        m_cameras[i].room = m_src.readI16();
-        m_cameras[i].unknown1 = m_src.readU16();
-    }
+    m_src.readVector(m_soundSources, m_src.readU32(), &tr_sound_source_t::read);
 
-    m_soundSources.resize( m_src.readU32() );
-    for(i = 0; i < m_soundSources.size(); i++)
-    {
-        m_soundSources[i].x = m_src.readI32();
-        m_soundSources[i].y = m_src.readI32();
-        m_soundSources[i].z = m_src.readI32();
+    m_src.readVector(m_boxes, m_src.readU32(), &tr_box_t::readTr2);
 
-        m_soundSources[i].sound_id = m_src.readU16();
-        m_soundSources[i].flags = m_src.readU16();
-    }
-
-    m_boxes.resize( m_src.readU32() );
-    for(i = 0; i < m_boxes.size(); i++)
-        m_boxes[i] = tr_box_t::readTr2(m_src);
-
-    m_overlaps.resize(m_src.readU32());
-    for(i = 0; i < m_overlaps.size(); i++)
-        m_overlaps[i] = m_src.readU16();
+    m_src.readVector(m_overlaps, m_src.readU32());
 
     // Zones
     m_src.skip(m_boxes.size() * 20);
 
-    m_animatedTextures.resize( m_src.readU32() );
     m_animatedTexturesUvCount = 0; // No UVRotate in TR3
-    for(i = 0; i < m_animatedTextures.size(); i++)
-    {
-        m_animatedTextures[i] = m_src.readU16();
-    }
+    m_src.readVector(m_animatedTextures, m_src.readU32());
 
-    m_objectTextures.resize(m_src.readU32());
-    for(i = 0; i < m_objectTextures.size(); i++)
-        m_objectTextures[i] = tr4_object_texture_t::readTr1(m_src);
+    m_src.readVector(m_objectTextures, m_src.readU32(), &tr4_object_texture_t::readTr1);
 
-    m_items.resize(m_src.readU32());
-    for(i = 0; i < m_items.size(); i++)
-        m_items[i] = tr2_item_t::readTr3(m_src);
+    m_src.readVector(m_items, m_src.readU32(), &tr2_item_t::readTr3);
 
     m_lightmap = tr_lightmap_t::read(m_src);
 
-    m_cinematicFrames.resize( m_src.readU16() );
-    for(i = 0; i < m_cinematicFrames.size(); i++)
-    {
-        m_cinematicFrames[i] = tr_cinematic_frame_t::read(m_src);
-    }
+    m_src.readVector(m_cinematicFrames, m_src.readU16(), &tr_cinematic_frame_t::read);
 
-    m_demoData.resize( m_src.readU16() );
-    for(i = 0; i < m_demoData.size(); i++)
-        m_demoData[i] = m_src.readU8();
+    m_src.readVector(m_demoData, m_src.readU16());
 
     // Soundmap
-    m_soundmap.resize(TR_AUDIO_MAP_SIZE_TR3);
-    for(i = 0; i < m_soundmap.size(); i++)
-        m_soundmap[i] = m_src.readI16();
+    m_src.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR3);
 
-    m_soundDetails.resize( m_src.readU32() );
-    for(i = 0; i < m_soundDetails.size(); i++)
-    {
-        m_soundDetails[i].sample = m_src.readU16();
-        m_soundDetails[i].volume = static_cast<uint16_t>(m_src.readU8());
-        m_soundDetails[i].sound_range = static_cast<uint16_t>(m_src.readU8());
-        m_soundDetails[i].chance = static_cast<uint16_t>(m_src.readI8());
-        m_soundDetails[i].pitch = static_cast<int16_t>(m_src.readI8());
-        m_soundDetails[i].num_samples_and_flags_1 = m_src.readU8();
-        m_soundDetails[i].flags_2 = m_src.readU8();
-    }
+    m_src.readVector(m_soundDetails, m_src.readU32(), &tr_sound_details_t::readTr3);
 
-    m_sampleIndices.resize( m_src.readU32() );
-    for(i = 0; i < m_sampleIndices.size(); i++)
-        m_sampleIndices[i] = m_src.readU32();
+    m_src.readVector(m_sampleIndices, m_src.readU32());
 
     // remap all sample indices here
-    for(i = 0; i < m_soundDetails.size(); i++)
+    for(size_t i = 0; i < m_soundDetails.size(); i++)
     {
         if(m_soundDetails[i].sample < m_sampleIndices.size())
         {
@@ -212,7 +136,7 @@ void TR_TR3Level::load()
         io::SDLReader newsrc(newsrcSdl);
         m_samplesData.resize(newsrc.size());
         m_samplesCount = 0;
-        for(i = 0; i < m_samplesData.size(); i++)
+        for(size_t i = 0; i < m_samplesData.size(); i++)
         {
             m_samplesData[i] = newsrc.readU8();
             if((i >= 4) && (*reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952))   /// RIFF
