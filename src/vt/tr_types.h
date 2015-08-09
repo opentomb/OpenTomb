@@ -595,8 +595,7 @@ struct tr4_object_texture_t
 struct tr_animated_textures_t
 {
     //int16_t num_texture_ids;    // Actually, this is the number of texture ID's - 1.
-    int16_t  texture_ids_count;
-    int16_t *texture_ids;       //[NumTextureIDs + 1]; // offsets into ObjectTextures[], in animation order.
+    std::vector<int16_t> texture_ids;       //[NumTextureIDs + 1]; // offsets into ObjectTextures[], in animation order.
 };       //[NumAnimatedTextures];
 //typedef prtl::array < tr_animated_textures_t > tr_animated_texture_array_t;
 
