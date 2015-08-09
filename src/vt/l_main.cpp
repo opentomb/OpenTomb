@@ -21,6 +21,7 @@
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include <algorithm>
 
 #include "l_main.h"
 #include "../system.h"
@@ -30,53 +31,48 @@ using namespace loader;
 /// \brief reads the mesh data.
 void TR_Level::read_mesh_data(io::SDLReader& reader)
 {
-    uint32_t num_mesh_data = reader.readU32();
-
-    const uint32_t size = num_mesh_data * 2;
+    uint32_t meshDataWords = reader.readU32();
     const auto basePos = reader.tell();
 
-    reader.readVector(m_meshIndices, num_mesh_data);
+    const auto meshDataSize = meshDataWords * 2;
+    reader.skip(meshDataSize);
 
-    m_meshes.resize( m_meshIndices.size() );
+    reader.readVector(m_meshIndices, reader.readU32());
+    const auto endPos = reader.tell();
 
-    Sint64 pos = 0;
-    uint32_t mesh = 0;
-    for (size_t i = 0; i < m_meshIndices.size(); i++)
+    m_meshes.clear();
+
+    uint32_t meshDataPos = 0;
+    for (uint32_t i = 0; i < m_meshIndices.size(); i++)
     {
-        for (size_t j = 0; j < m_meshIndices.size(); j++)
-            if (m_meshIndices[j] == pos)
-                m_meshIndices[j] = mesh;
+        std::replace(m_meshIndices.begin(), m_meshIndices.end(), meshDataPos, i);
 
-        reader.seek(basePos + pos);
+        reader.seek(basePos + meshDataPos);
 
         if (m_gameVersion >= TR_IV)
-            m_meshes[mesh] = Mesh::readTr4(reader);
+            m_meshes.emplace_back( Mesh::readTr4(reader) );
         else
-            m_meshes[mesh] = Mesh::readTr1(reader);
+            m_meshes.emplace_back( Mesh::readTr1(reader) );
 
-        mesh++;
-
-        for (size_t j = 0; j < m_meshIndices.size(); j++)
-            if (m_meshIndices[j] > pos)
+        for(size_t j = 0; j < m_meshIndices.size(); j++)
+        {
+            if(m_meshIndices[j] > meshDataPos)
             {
-                pos = m_meshIndices[j];
+                meshDataPos = m_meshIndices[j];
                 break;
             }
+        }
     }
 
-    reader.seek(basePos + size);
+    reader.seek(endPos);
 }
 
 /// \brief reads frame and moveable data.
 void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
 {
-    uint32_t frame = 0;
-
     m_frameData.resize(reader.readU32());
-    const auto basePos = reader.tell();
+    const auto frameDataPos = reader.tell();
     reader.readVector(m_frameData, m_frameData.size());
-
-    reader.seek(basePos);
 
     m_moveables.resize(reader.readU32() );
     for (size_t i = 0; i < m_moveables.size(); i++)
@@ -96,24 +92,22 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
         }
     }
 
-    uint32_t pos = 0;
-    for (size_t i = 0; i < m_moveables.size(); i++)
-    {
-        uint32_t j;
+    const auto endPos = reader.tell();
 
-        for (j = 0; j < m_moveables.size(); j++)
+    uint32_t pos = 0;
+    for (size_t i = 0; i < m_frameData.size(); i++)
+    {
+        for (size_t j = 0; j < m_moveables.size(); j++)
             if (m_moveables[j].frame_offset == pos)
             {
-                m_moveables[j].frame_index = frame;
+                m_moveables[j].frame_index = i;
                 m_moveables[j].frame_offset = 0;
             }
 
-        reader.seek(basePos + pos);
-
-        frame++;
+        reader.seek(frameDataPos + pos);
 
         pos = 0;
-        for(j = 0; j < m_moveables.size(); j++)
+        for(size_t j = 0; j < m_moveables.size(); j++)
         {
             if(m_moveables[j].frame_offset > pos)
             {
@@ -122,7 +116,7 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
             }
         }
     }
-    reader.seek(basePos + m_frameData.size() * sizeof(uint16_t));
+    reader.seek(endPos);
 }
 
 std::unique_ptr<TR_Level> TR_Level::createLoader(const std::string& filename, int32_t game_version)

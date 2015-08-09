@@ -4016,8 +4016,6 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                 tr->m_samplesData.clear();
                 return;
         }
-
-        tr->m_samplesData.clear();
     }
 
     // Cycle through SoundDetails and parse them into native OpenTomb
@@ -4106,16 +4104,16 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
         case TR_I_DEMO:
         case TR_I_UB:
             // Fix for underwater looped sound.
-            if((world->audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
+            if(world->audio_map[TR_AUDIO_SOUND_UNDERWATER] >= 0)
             {
-                world->audio_effects[(world->audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+                world->audio_effects[world->audio_map[TR_AUDIO_SOUND_UNDERWATER]].loop = TR_AUDIO_LOOP_LOOPED;
             }
             break;
         case TR_II:
             // Fix for helicopter sound range.
-            if((world->audio_map[297]) >= 0)
+            if(world->audio_map[297] >= 0)
             {
-                world->audio_effects[(world->audio_map[297])].range *= 10.0;
+                world->audio_effects[world->audio_map[297]].range *= 10.0;
             }
             break;
     }

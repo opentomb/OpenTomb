@@ -1568,7 +1568,7 @@ void Audio_LoadOverridedSamples(struct World *world)
                 }
                 else
                 {
-                    buffer_counter += world->audio_effects[(world->audio_map[i])].sample_count;
+                    buffer_counter += world->audio_effects[world->audio_map[i]].sample_count;
                 }
             }
         }

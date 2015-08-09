@@ -119,7 +119,7 @@ void TR_Level::load()
     // In TR1, samples are embedded into level file as solid block, preceded by
     // block size in bytes. Sample block is followed by sample indices array.
 
-#if 0
+#if 1
     m_samplesCount = 0;
     m_samplesData.resize( m_src.readU32() );
     for(size_t i=0; i < m_samplesData.size(); i++)
