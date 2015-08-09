@@ -20,35 +20,42 @@ audio =
 
 render =
 {
-    use_gl3 = true;                             -- Disable if you have old videocard or driver.
-    mipmap_mode = 3;                            -- 0 = no filter, 1/2 = bilinear filter, 3 = trilinear filter.
-    mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
+    use_gl3 = true;                 -- Forces OpenGL 3.2 Core Profile. Needed for OpenGL debuggers.
+    mipmap_mode = 3;                -- 0 = no filter, 1/2 = bilinear filter, 3 = trilinear filter.
+    mipmaps = 3;                    -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
-    anisotropy = 4;                             -- Maximum depends and is limited by hardware capabilities.
+    anisotropy = 4;                 -- Maximum depends and is limited by hardware capabilities.
     antialias = true;
-    antialias_samples = 4;                      -- Maximum depends and is limited by hardware capabilities.
-    z_depth = 24;                               -- Maximum and recommended is 24.
-    texture_border = 16;                        -- Needed to prevent mipmap border bleeding.
-    save_texture_memory = false;                -- Alternative texture generation algorithm, slower but less memory used.
-    fog_color = {r = 255, g = 255, b = 255};
+    antialias_samples = 4;          -- Maximum depends and is limited by hardware capabilities.
+    z_depth = 24;                   -- Maximum and recommended is 24.
+    texture_border = 16;            -- Needed to prevent mipmap border bleeding.
+    save_texture_memory = false;    -- Alternative texture generation algorithm, slower but less memory used.
+    fog_color = {r = 255,
+                 g = 255,
+                 b = 255};
+}
+
+system =
+{
+    logging = false;
 }
 
 controls =
 {
     mouse_sensitivity = 25.0;
 
-    use_joy = false;                            -- Use joystick - yes (1) or no (0)
-    joy_number = 0;                             -- If you have one joystick in system, it will be 0.
-    joy_rumble = false;                         -- Force feedback
+    use_joy = true;                 -- Use joystick
+    joy_number = 0;                 -- If you have one joystick in system, it will be 0.
+    joy_rumble = true;              -- Force feedback
 
-    joy_move_axis_x = 0;                        -- Movement axes options.
+    joy_move_axis_x = 0;            -- Movement axes options.
     joy_move_axis_y = 1;
     joy_move_invert_x = false;
     joy_move_invert_y = false;
     joy_move_sensitivity = 1.5;
     joy_move_deadzone = 1500;
 
-    joy_look_axis_x = 2;                        -- Look axes options.
+    joy_look_axis_x = 2;            -- Look axes options.
     joy_look_axis_y = 3;
     joy_look_invert_x = false;
     joy_look_invert_y = true;
@@ -58,8 +65,10 @@ controls =
 
 console =
 {
-    background_color = {r = 0, g = 0, b = 0, a = 200};
-
+    background_color = {r = 0,
+                        g = 0,
+                        b = 0,
+                        a = 200};
     line_size = 72;
     log_size = 16;
     lines_count = 128;

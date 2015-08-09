@@ -359,7 +359,7 @@ void ConsoleInfo::addLine(const std::string &text, font_Style style)
 {
     if(inited && !text.empty())
     {
-        std::cout << "LOG: " << text << std::endl;
+        std::cout << "CON: " << text << std::endl;
         m_lines.emplace_front(text, style);
         m_historyPos = 0;
     }

@@ -1379,7 +1379,9 @@ void Engine_InitConfig(const char *filename)
         state.parseRender(&renderer.settings());
         state.parseAudio(&audio_settings);
         state.parseConsole(&ConsoleInfo::instance());
-        state.parseControls(&control_mapper);    }
+        state.parseControls(&control_mapper);
+        state.parseSystem(&system_settings);
+    }
     else
     {
         Sys_Warn("Could not find \"%s\"", filename);

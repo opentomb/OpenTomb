@@ -3734,3 +3734,8 @@ void script::ScriptEngine::parseConsole(ConsoleInfo *cn)
     tmpF = (*this)["console"]["show_cursor_period"];
     cn->setShowCursorPeriod(tmpF);
 }
+
+void script::ScriptEngine::parseSystem(struct SystemSettings *ss)
+{
+    ss->logging = (*this)["system"]["logging"];
+}

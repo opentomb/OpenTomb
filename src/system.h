@@ -9,6 +9,11 @@
 #define LUA_LOG_FILENAME "lua.log"
 #define GL_LOG_FILENAME  "gl.log"
 
+struct SystemSettings
+{
+    bool        logging = false;
+};
+
 struct ScreenInfo
 {
     int16_t     x;
@@ -24,6 +29,7 @@ struct ScreenInfo
 };
 
 extern ScreenInfo screen_info;
+extern SystemSettings system_settings;
 
 void Sys_Init();
 void Sys_InitGlobals();
