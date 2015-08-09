@@ -1046,7 +1046,7 @@ bool Engine_LoadPCLevel(const std::string& name)
     int trv = Engine_GetPCLevelVersion(name);
     if(trv == TR_UNKNOWN) return false;
 
-    std::unique_ptr<TR_Level> loader = TR_Level::createLoader(name, trv);
+    std::unique_ptr<loader::TR_Level> loader = loader::TR_Level::createLoader(name, trv);
     loader->load();
     loader->prepare_level();
     //tr_level->dump_textures();

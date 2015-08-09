@@ -25,6 +25,8 @@
 #include "../system.h"
 #include "../audio.h"
 
+using namespace loader;
+
 void TR_TR4Level::load()
 {
     // Version
@@ -72,7 +74,7 @@ void TR_TR4Level::load()
             if(newsrcSdl == nullptr)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
             io::SDLReader newsrc(newsrcSdl);
-            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &tr4_textile32_t::read);
+            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
 
             m_read32BitTextiles = true;
         }
@@ -104,7 +106,7 @@ void TR_TR4Level::load()
                 if(newsrcSDL == nullptr)
                     Sys_extError("read_tr4_level: SDL_RWFromMem");
                 io::SDLReader newsrc(newsrcSDL);
-                newsrc.readVector(m_textile16, m_numTextiles - m_numMiscTextiles, &tr2_textile16_t::read);
+                newsrc.readVector(m_textile16, m_numTextiles - m_numMiscTextiles, &WordTexture::read);
             }
             else
             {
@@ -144,7 +146,7 @@ void TR_TR4Level::load()
             if(newsrcSDL == nullptr)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
             io::SDLReader newsrc(newsrcSDL);
-            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &tr4_textile32_t::read);
+            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
         }
     }
 
@@ -180,17 +182,17 @@ void TR_TR4Level::load()
     if(newsrc.readU32() != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    newsrc.readVector(m_rooms, newsrc.readU16(), &tr5_room_t::readTr4);
+    newsrc.readVector(m_rooms, newsrc.readU16(), &Room::readTr4);
 
     newsrc.readVector(m_floorData, newsrc.readU32());
 
     read_mesh_data(newsrc);
 
-    newsrc.readVector(m_animations, newsrc.readU32(), &tr_animation_t::readTr4);
+    newsrc.readVector(m_animations, newsrc.readU32(), &Animation::readTr4);
 
-    newsrc.readVector(m_stateChanges, newsrc.readU32(), &tr_state_change_t::read);
+    newsrc.readVector(m_stateChanges, newsrc.readU32(), &StateChange::read);
 
-    newsrc.readVector(m_animDispatches, newsrc.readU32(), tr_anim_dispatch_t::read);
+    newsrc.readVector(m_animDispatches, newsrc.readU32(), AnimDispatch::read);
 
     newsrc.readVector(m_animCommands, newsrc.readU32());
 
@@ -198,7 +200,7 @@ void TR_TR4Level::load()
 
     read_frame_moveable_data(newsrc);
 
-    newsrc.readVector(m_staticMeshes, newsrc.readU32(), &tr_staticmesh_t::read);
+    newsrc.readVector(m_staticMeshes, newsrc.readU32(), &StaticMesh::read);
 
     if(newsrc.readI8() != 'S')
         Sys_extError("read_tr4_level: 'SPR' not found");
@@ -209,19 +211,19 @@ void TR_TR4Level::load()
     if(newsrc.readI8() != 'R')
         Sys_extError("read_tr4_level: 'SPR' not found");
 
-    newsrc.readVector(m_spriteTextures, newsrc.readU32(), &tr_sprite_texture_t::readTr4);
+    newsrc.readVector(m_spriteTextures, newsrc.readU32(), &SpriteTexture::readTr4);
 
-    newsrc.readVector(m_spriteSequences, newsrc.readU32(), &tr_sprite_sequence_t::read);
+    newsrc.readVector(m_spriteSequences, newsrc.readU32(), &SpriteSequence::read);
 
-    newsrc.readVector(m_cameras, newsrc.readU32(), &tr_camera_t::read);
+    newsrc.readVector(m_cameras, newsrc.readU32(), &Camera::read);
     //SDL_RWseek(newsrc, this->cameras.size() * 16, SEEK_CUR);
 
-    newsrc.readVector(m_flybyCameras, newsrc.readU32(), &tr4_flyby_camera_t::read);
+    newsrc.readVector(m_flybyCameras, newsrc.readU32(), &FlybyCamera::read);
     //SDL_RWseek(newsrc, this->flyby_cameras.size() * 40, SEEK_CUR);
 
-    newsrc.readVector(m_soundSources, newsrc.readU32(), &tr_sound_source_t::read);
+    newsrc.readVector(m_soundSources, newsrc.readU32(), &SoundSource::read);
 
-    newsrc.readVector(m_boxes, newsrc.readU32(), &tr_box_t::readTr2);
+    newsrc.readVector(m_boxes, newsrc.readU32(), &Box::readTr2);
 
     newsrc.readVector(m_overlaps, newsrc.readU32());
 
@@ -241,18 +243,18 @@ void TR_TR4Level::load()
     if(newsrc.readI8() != 'X')
         Sys_extError("read_tr4_level: '\\0TEX' not found");
 
-    newsrc.readVector(m_objectTextures, newsrc.readU32(), &tr4_object_texture_t::readTr4);
+    newsrc.readVector(m_objectTextures, newsrc.readU32(), &ObjectTexture::readTr4);
 
-    newsrc.readVector(m_items, newsrc.readU32(), &tr2_item_t::readTr4);
+    newsrc.readVector(m_items, newsrc.readU32(), &Item::readTr4);
 
-    newsrc.readVector(m_aiObjects, newsrc.readU32(), &tr4_ai_object_t::read);
+    newsrc.readVector(m_aiObjects, newsrc.readU32(), &AIObject::read);
 
     newsrc.readVector(m_demoData, newsrc.readU16());
 
     // Soundmap
     newsrc.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR4);
 
-    newsrc.readVector(m_soundDetails, newsrc.readU32(), &tr_sound_details_t::readTr3);
+    newsrc.readVector(m_soundDetails, newsrc.readU32(), &SoundDetails::readTr3);
 
     // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
     newsrc.readVector(m_sampleIndices, newsrc.readU32());

@@ -25,6 +25,8 @@
 #include "l_main.h"
 #include "../system.h"
 
+using namespace loader;
+
 /// \brief reads the mesh data.
 void TR_Level::read_mesh_data(io::SDLReader& reader)
 {
@@ -48,9 +50,9 @@ void TR_Level::read_mesh_data(io::SDLReader& reader)
         reader.seek(basePos + pos);
 
         if (m_gameVersion >= TR_IV)
-            m_meshes[mesh] = tr4_mesh_t::readTr4(reader);
+            m_meshes[mesh] = Mesh::readTr4(reader);
         else
-            m_meshes[mesh] = tr4_mesh_t::readTr1(reader);
+            m_meshes[mesh] = Mesh::readTr1(reader);
 
         mesh++;
 
@@ -81,7 +83,7 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
     {
         if(m_gameVersion < TR_V)
         {
-            m_moveables[i] = tr_moveable_t::readTr1(reader);
+            m_moveables[i] = Moveable::readTr1(reader);
             // Disable unused skybox polygons.
             if((m_gameVersion == TR_III) && (m_moveables[i].object_id == 355))
             {
@@ -90,7 +92,7 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
         }
         else
         {
-            m_moveables[i] = tr_moveable_t::readTr5(reader);
+            m_moveables[i] = Moveable::readTr5(reader);
         }
     }
 

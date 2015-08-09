@@ -25,6 +25,8 @@
 #include "../system.h"
 #include "../audio.h"
 
+using namespace loader;
+
 void TR_TR5Level::load()
 {
     // Version
@@ -73,7 +75,7 @@ void TR_TR5Level::load()
             Sys_extError("read_tr5_level: SDL_RWFromMem");
 
         io::SDLReader newsrc(newsrcSDL);
-        newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &tr4_textile32_t::read);
+        newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
         m_read32BitTextiles = true;
     }
 
@@ -105,7 +107,7 @@ void TR_TR5Level::load()
                 Sys_extError("read_tr5_level: SDL_RWFromMem");
 
             io::SDLReader newsrc(newsrcSDL);
-            newsrc.readVector(m_textile16, m_numTextiles - m_numMiscTextiles, &tr2_textile16_t::read);
+            newsrc.readVector(m_textile16, m_numTextiles - m_numMiscTextiles, &WordTexture::read);
         }
         else
         {
@@ -145,7 +147,7 @@ void TR_TR5Level::load()
             Sys_extError("read_tr5_level: SDL_RWFromMem");
 
         io::SDLReader newsrc(newsrcSDL);
-        newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &tr4_textile32_t::read);
+        newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
     }
 
     // flags?
@@ -197,17 +199,17 @@ void TR_TR5Level::load()
     if(m_src.readU32() != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    m_src.readVector(m_rooms, m_src.readU32(), &tr5_room_t::readTr5);
+    m_src.readVector(m_rooms, m_src.readU32(), &Room::readTr5);
 
     m_src.readVector(m_floorData, m_src.readU32());
 
     read_mesh_data(m_src);
 
-    m_src.readVector(m_animations, m_src.readU32(), &tr_animation_t::readTr4);
+    m_src.readVector(m_animations, m_src.readU32(), &Animation::readTr4);
 
-    m_src.readVector(m_stateChanges, m_src.readU32(), &tr_state_change_t::read);
+    m_src.readVector(m_stateChanges, m_src.readU32(), &StateChange::read);
 
-    m_src.readVector(m_animDispatches, m_src.readU32(), &tr_anim_dispatch_t::read);
+    m_src.readVector(m_animDispatches, m_src.readU32(), &AnimDispatch::read);
 
     m_src.readVector(m_animCommands, m_src.readU32());
 
@@ -215,7 +217,7 @@ void TR_TR5Level::load()
 
     read_frame_moveable_data(m_src);
 
-    m_src.readVector(m_staticMeshes, m_src.readU32(), &tr_staticmesh_t::read);
+    m_src.readVector(m_staticMeshes, m_src.readU32(), &StaticMesh::read);
 
     if(m_src.readI8() != 'S')
         Sys_extError("read_tr5_level: 'SPR' not found");
@@ -229,17 +231,17 @@ void TR_TR5Level::load()
     if(m_src.readI8() != 0)
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    m_src.readVector(m_spriteTextures, m_src.readU32(), &tr_sprite_texture_t::readTr4);
+    m_src.readVector(m_spriteTextures, m_src.readU32(), &SpriteTexture::readTr4);
 
-    m_src.readVector(m_spriteSequences, m_src.readU32(), &tr_sprite_sequence_t::read);
+    m_src.readVector(m_spriteSequences, m_src.readU32(), &SpriteSequence::read);
 
-    m_src.readVector(m_cameras, m_src.readU32(), &tr_camera_t::read);
+    m_src.readVector(m_cameras, m_src.readU32(), &Camera::read);
 
-    m_src.readVector(m_flybyCameras, m_src.readU32(), &tr4_flyby_camera_t::read);
+    m_src.readVector(m_flybyCameras, m_src.readU32(), &FlybyCamera::read);
 
-    m_src.readVector(m_soundSources, m_src.readU32(), &tr_sound_source_t::read);
+    m_src.readVector(m_soundSources, m_src.readU32(), &SoundSource::read);
 
-    m_src.readVector(m_boxes, m_src.readU32(), &tr_box_t::readTr2);
+    m_src.readVector(m_boxes, m_src.readU32(), &Box::readTr2);
 
     m_src.readVector(m_overlaps, m_src.readU32());
 
@@ -262,18 +264,18 @@ void TR_TR5Level::load()
     if(m_src.readI8() != 0)
         Sys_extError("read_tr5_level: '\\0TEX' not found");
 
-    m_src.readVector(m_objectTextures, m_src.readU32(), &tr4_object_texture_t::readTr5);
+    m_src.readVector(m_objectTextures, m_src.readU32(), &ObjectTexture::readTr5);
 
-    m_src.readVector(m_items, m_src.readU32(), &tr2_item_t::readTr4);
+    m_src.readVector(m_items, m_src.readU32(), &Item::readTr4);
 
-    m_src.readVector(m_aiObjects, m_src.readU32(), &tr4_ai_object_t::read);
+    m_src.readVector(m_aiObjects, m_src.readU32(), &AIObject::read);
 
     m_src.readVector(m_demoData, m_src.readU16());
 
     // Soundmap
     m_src.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR5);
 
-    m_src.readVector(m_soundDetails, m_src.readU32(), &tr_sound_details_t::readTr3);
+    m_src.readVector(m_soundDetails, m_src.readU32(), &SoundDetails::readTr3);
 
     m_src.readVector(m_sampleIndices, m_src.readU32());
 

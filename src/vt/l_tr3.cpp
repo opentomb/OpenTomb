@@ -24,7 +24,7 @@
 #include "../system.h"
 #include "../audio.h"
 
-#define RCSID "$Id: l_tr3.cpp,v 1.15 2002/09/20 15:59:02 crow Exp $"
+using namespace loader;
 
 void TR_TR3Level::load()
 {
@@ -34,8 +34,8 @@ void TR_TR3Level::load()
     if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
         Sys_extError("Wrong level version");
 
-    m_palette = tr2_palette_t::readTr1(m_src);
-    m_palette16 = tr2_palette_t::readTr2(m_src);
+    m_palette = Palette::readTr1(m_src);
+    m_palette16 = Palette::readTr2(m_src);
 
     m_numTextiles = 0;
     m_numRoomTextiles = 0;
@@ -45,8 +45,8 @@ void TR_TR3Level::load()
     m_read32BitTextiles = false;
 
     m_numTextiles = m_src.readU32();
-    m_src.readVector(m_textile8, m_numTextiles, &tr_textile8_t::read);
-    m_src.readVector(m_textile16, m_numTextiles, &tr2_textile16_t::read);
+    m_src.readVector(m_textile8, m_numTextiles, &ByteTexture::read);
+    m_src.readVector(m_textile16, m_numTextiles, &WordTexture::read);
 
     if(file_version == 0xFF180034)                                          // VICT.TR2
     {
@@ -57,17 +57,17 @@ void TR_TR3Level::load()
     if(m_src.readU32() != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    m_src.readVector(m_rooms, m_src.readU16(), &tr5_room_t::readTr3);
+    m_src.readVector(m_rooms, m_src.readU16(), &Room::readTr3);
 
     m_src.readVector(m_floorData, m_src.readU32());
 
     read_mesh_data(m_src);
 
-    m_src.readVector(m_animations, m_src.readU32(), &tr_animation_t::readTr1);
+    m_src.readVector(m_animations, m_src.readU32(), &Animation::readTr1);
 
-    m_src.readVector(m_stateChanges, m_src.readU32(), &tr_state_change_t::read);
+    m_src.readVector(m_stateChanges, m_src.readU32(), &StateChange::read);
 
-    m_src.readVector(m_animDispatches, m_src.readU32(), &tr_anim_dispatch_t::read);
+    m_src.readVector(m_animDispatches, m_src.readU32(), &AnimDispatch::read);
 
     m_src.readVector(m_animCommands, m_src.readU32());
 
@@ -75,17 +75,17 @@ void TR_TR3Level::load()
 
     read_frame_moveable_data(m_src);
 
-    m_src.readVector(m_staticMeshes, m_src.readU32(), &tr_staticmesh_t::read);
+    m_src.readVector(m_staticMeshes, m_src.readU32(), &StaticMesh::read);
 
-    m_src.readVector(m_spriteTextures, m_src.readU32(), &tr_sprite_texture_t::readTr1);
+    m_src.readVector(m_spriteTextures, m_src.readU32(), &SpriteTexture::readTr1);
 
-    m_src.readVector(m_spriteSequences, m_src.readU32(), tr_sprite_sequence_t::read);
+    m_src.readVector(m_spriteSequences, m_src.readU32(), SpriteSequence::read);
 
-    m_src.readVector(m_cameras, m_src.readU32(), &tr_camera_t::read);
+    m_src.readVector(m_cameras, m_src.readU32(), &Camera::read);
 
-    m_src.readVector(m_soundSources, m_src.readU32(), &tr_sound_source_t::read);
+    m_src.readVector(m_soundSources, m_src.readU32(), &SoundSource::read);
 
-    m_src.readVector(m_boxes, m_src.readU32(), &tr_box_t::readTr2);
+    m_src.readVector(m_boxes, m_src.readU32(), &Box::readTr2);
 
     m_src.readVector(m_overlaps, m_src.readU32());
 
@@ -95,20 +95,20 @@ void TR_TR3Level::load()
     m_animatedTexturesUvCount = 0; // No UVRotate in TR3
     m_src.readVector(m_animatedTextures, m_src.readU32());
 
-    m_src.readVector(m_objectTextures, m_src.readU32(), &tr4_object_texture_t::readTr1);
+    m_src.readVector(m_objectTextures, m_src.readU32(), &ObjectTexture::readTr1);
 
-    m_src.readVector(m_items, m_src.readU32(), &tr2_item_t::readTr3);
+    m_src.readVector(m_items, m_src.readU32(), &Item::readTr3);
 
-    m_lightmap = tr_lightmap_t::read(m_src);
+    m_lightmap = LightMap::read(m_src);
 
-    m_src.readVector(m_cinematicFrames, m_src.readU16(), &tr_cinematic_frame_t::read);
+    m_src.readVector(m_cinematicFrames, m_src.readU16(), &CinematicFrame::read);
 
     m_src.readVector(m_demoData, m_src.readU16());
 
     // Soundmap
     m_src.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR3);
 
-    m_src.readVector(m_soundDetails, m_src.readU32(), &tr_sound_details_t::readTr3);
+    m_src.readVector(m_soundDetails, m_src.readU32(), &SoundDetails::readTr3);
 
     m_src.readVector(m_sampleIndices, m_src.readU32());
 

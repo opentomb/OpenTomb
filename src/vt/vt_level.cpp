@@ -5,6 +5,8 @@
 
 #include "vt_level.h"
 
+using namespace loader;
+
 void TR_Level::prepare_level()
 {
     uint32_t i;
@@ -29,7 +31,7 @@ void TR_Level::prepare_level()
     }
 }
 
-tr_staticmesh_t *TR_Level::find_staticmesh_id(uint32_t object_id)
+StaticMesh *TR_Level::find_staticmesh_id(uint32_t object_id)
 {
     uint32_t i;
 
@@ -40,7 +42,7 @@ tr_staticmesh_t *TR_Level::find_staticmesh_id(uint32_t object_id)
     return NULL;
 }
 
-tr2_item_t *TR_Level::find_item_id(int32_t object_id)
+Item *TR_Level::find_item_id(int32_t object_id)
 {
     uint32_t i;
 
@@ -51,7 +53,7 @@ tr2_item_t *TR_Level::find_item_id(int32_t object_id)
     return NULL;
 }
 
-tr_moveable_t *TR_Level::find_moveable_id(uint32_t object_id)
+Moveable *TR_Level::find_moveable_id(uint32_t object_id)
 {
     uint32_t i;
 
@@ -62,7 +64,7 @@ tr_moveable_t *TR_Level::find_moveable_id(uint32_t object_id)
     return NULL;
 }
 
-void TR_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t & pal, tr4_textile32_t & dst)
+void TR_Level::convert_textile8_to_textile32(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
     int x, y;
 
@@ -80,7 +82,7 @@ void TR_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t 
     }
 }
 
-void TR_Level::convert_textile16_to_textile32(tr2_textile16_t & tex, tr4_textile32_t & dst)
+void TR_Level::convert_textile16_to_textile32(WordTexture & tex, DWordTexture & dst)
 {
     int x, y;
 
