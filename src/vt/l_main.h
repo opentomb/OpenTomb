@@ -17,20 +17,18 @@ namespace loader
   * All indexes are converted, so they can be used directly.
   * Endian conversion is done at the lowest possible layer, most of the time this is in the read_bitxxx functions.
   */
-class TR_Level
+class TR1Level
 {
 public:
-    TR_Level(int32_t gameVersion, SDL_RWops* rwOps)
+    TR1Level(Game gameVersion, SDL_RWops* rwOps)
         : m_gameVersion(gameVersion)
-        , m_src(rwOps)
+        , m_reader(rwOps)
     {
     }
 
-    virtual ~TR_Level()
-    {
-    }
+    virtual ~TR1Level() = default;
 
-    int32_t m_gameVersion = TR_UNKNOWN;                   ///< \brief game engine version.
+    const Game m_gameVersion;                   ///< \brief game engine version.
 
     std::vector<ByteTexture> m_textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
     std::vector<WordTexture> m_textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
@@ -74,75 +72,72 @@ public:
 
     std::string m_sfxPath = "MAIN.SFX";
 
-    static std::unique_ptr<TR_Level> createLoader(const std::string &filename, int32_t game_version);
-    static std::unique_ptr<TR_Level> createLoader(SDL_RWops * const src, int32_t game_version, const std::string& sfxPath);
+    static std::unique_ptr<TR1Level> createLoader(const std::string &filename, Game game_version);
+    static std::unique_ptr<TR1Level> createLoader(SDL_RWops * const src, Game game_version, const std::string& sfxPath);
     virtual void load();
 
-    void prepare_level();
-    void dump_textures();
-    StaticMesh *find_staticmesh_id(uint32_t object_id);
-    Item *find_item_id(int32_t object_id);
-    Moveable *find_moveable_id(uint32_t object_id);
+    virtual void prepareLevel();
+    void dumpTextures();
+    StaticMesh *findStaticMeshById(uint32_t object_id);
+    Item *fineItemById(int32_t object_id);
+    Moveable *findMoveableById(uint32_t object_id);
 
 protected:
-    uint32_t m_numTextiles;          ///< \brief number of 256x256 textiles.
-    uint32_t m_numRoomTextiles;     ///< \brief number of 256x256 room textiles (TR4-5).
-    uint32_t m_numObjTextiles;      ///< \brief number of 256x256 object textiles (TR4-5).
-    uint32_t m_numBumpTextiles;     ///< \brief number of 256x256 bump textiles (TR4-5).
-    uint32_t m_numMiscTextiles;     ///< \brief number of 256x256 misc textiles (TR4-5).
-    bool m_read32BitTextiles;       ///< \brief are other 32bit textiles than misc ones read?
-
-    io::SDLReader m_src;
+    io::SDLReader m_reader;
     bool m_demoOrUb = false;
 
-    void read_mesh_data(io::SDLReader& reader);
-    void read_frame_moveable_data(io::SDLReader& reader);
+    void readMeshData(io::SDLReader& reader);
+    void readFrameMoveableData(io::SDLReader& reader);
 
-    void convert_textile8_to_textile32(ByteTexture & tex, Palette & pal, DWordTexture & dst);
-    void convert_textile16_to_textile32(WordTexture & tex, DWordTexture & dst);
+    void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
+    void convertTexture(WordTexture & tex, DWordTexture & dst);
 };
 
-class TR_TR2Level : public TR_Level
+class TR2Level : public TR1Level
 {
 public:
-    TR_TR2Level(int32_t gameVersion, SDL_RWops* rwOps)
-        : TR_Level(gameVersion, rwOps)
+    TR2Level(Game gameVersion, SDL_RWops* rwOps)
+        : TR1Level(gameVersion, rwOps)
     {
     }
 
     void load() override;
+    virtual void prepareLevel() override;
 };
 
-class TR_TR3Level : public TR_Level
+class TR3Level : public TR1Level
 {
 public:
-    TR_TR3Level(int32_t gameVersion, SDL_RWops* rwOps)
-        : TR_Level(gameVersion, rwOps)
+    TR3Level(Game gameVersion, SDL_RWops* rwOps)
+        : TR1Level(gameVersion, rwOps)
     {
     }
 
     void load() override;
+    virtual void prepareLevel() override;
 };
 
-class TR_TR4Level : public TR_Level
+class TR4Level : public TR1Level
 {
 public:
-    TR_TR4Level(int32_t gameVersion, SDL_RWops* rwOps)
-        : TR_Level(gameVersion, rwOps)
+    TR4Level(Game gameVersion, SDL_RWops* rwOps)
+        : TR1Level(gameVersion, rwOps)
     {
     }
 
     void load() override;
+    virtual void prepareLevel() override;
 };
 
-class TR_TR5Level : public TR_Level
+class TR5Level : public TR1Level
 {
 public:
-    TR_TR5Level(int32_t gameVersion, SDL_RWops* rwOps)
-        : TR_Level(gameVersion, rwOps)
+    TR5Level(Game gameVersion, SDL_RWops* rwOps)
+        : TR1Level(gameVersion, rwOps)
     {
     }
 
     void load() override;
+    virtual void prepareLevel() override;
 };
 }

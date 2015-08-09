@@ -27,40 +27,33 @@
 
 using namespace loader;
 
-void TR_TR4Level::load()
+void TR4Level::load()
 {
     // Version
-    uint32_t file_version = m_src.readU32();
+    uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0x00345254 /*&& file_version != 0x63345254*/)           // +TRLE
         Sys_extError("Wrong level version");
 
-    m_numTextiles = 0;
-    m_numRoomTextiles = 0;
-    m_numObjTextiles = 0;
-    m_numBumpTextiles = 0;
-    m_numMiscTextiles = 0;
-    m_read32BitTextiles = false;
-
     {
-        m_numRoomTextiles = m_src.readU16();
-        m_numObjTextiles = m_src.readU16();
-        m_numBumpTextiles = m_src.readU16();
-        m_numMiscTextiles = 2;
-        m_numTextiles = m_numRoomTextiles + m_numObjTextiles + m_numBumpTextiles + m_numMiscTextiles;
+        auto numRoomTextiles = m_reader.readU16();
+        auto numObjTextiles = m_reader.readU16();
+        auto numBumpTextiles = m_reader.readU16();
+        auto numMiscTextiles = 2;
+        auto numTextiles = numRoomTextiles + numObjTextiles + numBumpTextiles + numMiscTextiles;
 
-        uint32_t uncomp_size = m_src.readU32();
+        uint32_t uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
             Sys_extError("read_tr4_level: textiles32 uncomp_size == 0");
 
-        uint32_t comp_size = m_src.readU32();
+        uint32_t comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
             std::vector<uint8_t> uncomp_buffer(uncomp_size);
 
-            m_textile32.resize(m_numTextiles);
+            m_textile32.resize(numTextiles);
             std::vector<uint8_t> comp_buffer(comp_size);
-            m_src.readBytes(comp_buffer.data(), comp_size);
+            m_reader.readBytes(comp_buffer.data(), comp_size);
 
             uLongf size = uncomp_size;
             if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
@@ -74,25 +67,23 @@ void TR_TR4Level::load()
             if(newsrcSdl == nullptr)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
             io::SDLReader newsrc(newsrcSdl);
-            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
-
-            m_read32BitTextiles = true;
+            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
 
-        uncomp_size = m_src.readU32();
+        uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
             Sys_extError("read_tr4_level: textiles16 uncomp_size == 0");
 
-        comp_size = m_src.readU32();
+        comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
             if(m_textile32.empty())
             {
                 std::vector<uint8_t> uncomp_buffer(uncomp_size);
 
-                m_textile16.resize(m_numTextiles);
+                m_textile16.resize(numTextiles);
                 std::vector<uint8_t> comp_buffer(comp_size);
-                m_src.readBytes(comp_buffer.data(), comp_size);
+                m_reader.readBytes(comp_buffer.data(), comp_size);
 
                 uLongf size = uncomp_size;
                 if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
@@ -106,19 +97,19 @@ void TR_TR4Level::load()
                 if(newsrcSDL == nullptr)
                     Sys_extError("read_tr4_level: SDL_RWFromMem");
                 io::SDLReader newsrc(newsrcSDL);
-                newsrc.readVector(m_textile16, m_numTextiles - m_numMiscTextiles, &WordTexture::read);
+                newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
             }
             else
             {
-                m_src.skip(comp_size);
+                m_reader.skip(comp_size);
             }
         }
 
-        uncomp_size = m_src.readU32();
+        uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
             Sys_extError("read_tr4_level: textiles32d uncomp_size == 0");
 
-        comp_size = m_src.readU32();
+        comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
             std::vector<uint8_t> uncomp_buffer(uncomp_size);
@@ -128,11 +119,11 @@ void TR_TR4Level::load()
 
             if(m_textile32.empty())
             {
-                m_textile32.resize(m_numTextiles);
+                m_textile32.resize(numTextiles);
             }
             std::vector<uint8_t> comp_buffer(comp_size);
 
-            m_src.readBytes(comp_buffer.data(), comp_size);
+            m_reader.readBytes(comp_buffer.data(), comp_size);
 
             uLongf size = uncomp_size;
             if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
@@ -146,22 +137,22 @@ void TR_TR4Level::load()
             if(newsrcSDL == nullptr)
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
             io::SDLReader newsrc(newsrcSDL);
-            newsrc.readVector(m_textile32, m_numTextiles - m_numMiscTextiles, &DWordTexture::read);
+            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
     }
 
-    auto uncomp_size = m_src.readU32();
+    auto uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
         Sys_extError("read_tr4_level: packed geometry uncomp_size == 0");
 
-    auto comp_size = m_src.readU32();
+    auto comp_size = m_reader.readU32();
 
     if(!comp_size)
         Sys_extError("read_tr4_level: packed geometry");
 
     std::vector<uint8_t> uncomp_buffer(uncomp_size);
     std::vector<uint8_t> comp_buffer(comp_size);
-    m_src.readBytes(comp_buffer.data(), comp_size);
+    m_reader.readBytes(comp_buffer.data(), comp_size);
 
     uLongf size = uncomp_size;
     if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
@@ -186,7 +177,7 @@ void TR_TR4Level::load()
 
     newsrc.readVector(m_floorData, newsrc.readU32());
 
-    read_mesh_data(newsrc);
+    readMeshData(newsrc);
 
     newsrc.readVector(m_animations, newsrc.readU32(), &Animation::readTr4);
 
@@ -198,7 +189,7 @@ void TR_TR4Level::load()
 
     newsrc.readVector(m_meshTreeData, newsrc.readU32());
 
-    read_frame_moveable_data(newsrc);
+    readFrameMoveableData(newsrc);
 
     newsrc.readVector(m_staticMeshes, newsrc.readU32(), &StaticMesh::read);
 
@@ -261,11 +252,21 @@ void TR_TR4Level::load()
 
     // LOAD SAMPLES
 
-    if(auto i = m_src.readU32())
+    if(auto i = m_reader.readU32())
     {
         m_samplesCount = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        m_src.readVector(m_samplesData, m_src.tell() - m_src.size());
+        m_reader.readVector(m_samplesData, m_reader.tell() - m_reader.size());
     }
+}
+
+void TR4Level::prepareLevel()
+{
+    if(!m_textile32.empty())
+        return;
+
+    m_textile32.resize(m_textile16.size());
+    for(size_t i = 0; i < m_textile16.size(); i++)
+        convertTexture(m_textile16[i], m_textile32[i]);
 }

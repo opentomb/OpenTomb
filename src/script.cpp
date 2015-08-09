@@ -566,7 +566,7 @@ bool lua_GetActionChange(int act)
 
 int lua_GetLevelVersion()
 {
-    return engine_world.version;
+    return static_cast<int>(engine_world.version);
 }
 
 void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
@@ -2576,7 +2576,7 @@ void lua_SetFlipState(uint32_t group, bool state)
     {
         std::vector< std::shared_ptr<Room> >::iterator current_room = engine_world.rooms.begin();
 
-        if(engine_world.version > TR_III)
+        if(engine_world.version > loader::Game::TR3)
         {
             for(; current_room != engine_world.rooms.end(); ++current_room)
             {
@@ -2741,16 +2741,16 @@ void ScriptEngine::exposeConstants()
     // exposes a casted constant
 #define EXPOSE_CC(name) m_state.set(#name, static_cast<int>(name))
 
-    EXPOSE_C(TR_I);
-    EXPOSE_C(TR_I_DEMO);
-    EXPOSE_C(TR_I_UB);
-    EXPOSE_C(TR_II);
-    EXPOSE_C(TR_II_DEMO);
-    EXPOSE_C(TR_III);
-    EXPOSE_C(TR_IV);
-    EXPOSE_C(TR_IV_DEMO);
-    EXPOSE_C(TR_V);
-    EXPOSE_C(TR_UNKNOWN);
+    m_state.set("TR_I", static_cast<int>(loader::Game::TR1));
+    m_state.set("TR_I_DEMO", static_cast<int>(loader::Game::TR1Demo));
+    m_state.set("TR_I_UB", static_cast<int>(loader::Game::TR1UnfinishedBusiness));
+    m_state.set("TR_II", static_cast<int>(loader::Game::TR2));
+    m_state.set("TR_II_DEMO", static_cast<int>(loader::Game::TR2Demo));
+    m_state.set("TR_III", static_cast<int>(loader::Game::TR3));
+    m_state.set("TR_IV", static_cast<int>(loader::Game::TR4));
+    m_state.set("TR_IV_DEMO", static_cast<int>(loader::Game::TR4Demo));
+    m_state.set("TR_V", static_cast<int>(loader::Game::TR5));
+    m_state.set("TR_UNKNOWN", static_cast<int>(loader::Game::Unknown));
 
 #if 0
     // Unused, but kept here for reference
@@ -3521,23 +3521,23 @@ int script::MainEngine::parseInt(char **ch)
 
 int script::MainEngine::getGlobalSound(int global_sound_id)
 {
-    return call("getGlobalSound", engine_world.version, global_sound_id);
+    return call("getGlobalSound", static_cast<int>(engine_world.version), global_sound_id);
 }
 
 int script::MainEngine::getSecretTrackNumber()
 {
-    return call("getSecretTrackNumber", engine_world.version);
+    return call("getSecretTrackNumber", static_cast<int>(engine_world.version));
 }
 
 int script::MainEngine::getNumTracks()
 {
-    return call("getNumTracks", engine_world.version);
+    return call("getNumTracks", static_cast<int>(engine_world.version));
 }
 
 bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, char *sample_name_mask)
 {
     const char* realPath;
-    lua::tie(realPath, *num_sounds, *num_samples) = call("getOverridedSamplesInfo", engine_world.version);
+    lua::tie(realPath, *num_sounds, *num_samples) = call("getOverridedSamplesInfo", static_cast<int>(engine_world.version));
 
     strcpy(sample_name_mask, realPath);
 
@@ -3546,7 +3546,7 @@ bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_soun
 
 bool script::MainEngine::getOverridedSample(int sound_id, int *first_sample_number, int *samples_count)
 {
-    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", engine_world.version, int(gameflow_manager.CurrentLevelID), sound_id);
+    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", static_cast<int>(engine_world.version), int(gameflow_manager.CurrentLevelID), sound_id);
     return *first_sample_number != -1 && *samples_count != -1;
 }
 
@@ -3555,7 +3555,7 @@ bool script::MainEngine::getSoundtrack(int track_index, char *file_path, int *lo
     const char* realPath;
     int _load_method, _stream_type;
 
-    lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", engine_world.version, track_index);
+    lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", static_cast<int>(engine_world.version), track_index);
     if(file_path) strcpy(file_path, realPath);
     if(load_method) *load_method = _load_method;
     if(stream_type) *stream_type = _stream_type;

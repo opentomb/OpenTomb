@@ -29,7 +29,7 @@
 using namespace loader;
 
 /// \brief reads the mesh data.
-void TR_Level::read_mesh_data(io::SDLReader& reader)
+void TR1Level::readMeshData(io::SDLReader& reader)
 {
     uint32_t meshDataWords = reader.readU32();
     const auto basePos = reader.tell();
@@ -49,7 +49,7 @@ void TR_Level::read_mesh_data(io::SDLReader& reader)
 
         reader.seek(basePos + meshDataPos);
 
-        if (m_gameVersion >= TR_IV)
+        if (m_gameVersion >= Game::TR4)
             m_meshes.emplace_back( Mesh::readTr4(reader) );
         else
             m_meshes.emplace_back( Mesh::readTr1(reader) );
@@ -68,7 +68,7 @@ void TR_Level::read_mesh_data(io::SDLReader& reader)
 }
 
 /// \brief reads frame and moveable data.
-void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
+void TR1Level::readFrameMoveableData(io::SDLReader& reader)
 {
     m_frameData.resize(reader.readU32());
     const auto frameDataPos = reader.tell();
@@ -77,11 +77,11 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
     m_moveables.resize(reader.readU32() );
     for (size_t i = 0; i < m_moveables.size(); i++)
     {
-        if(m_gameVersion < TR_V)
+        if(m_gameVersion < Game::TR5)
         {
             m_moveables[i] = Moveable::readTr1(reader);
             // Disable unused skybox polygons.
-            if((m_gameVersion == TR_III) && (m_moveables[i].object_id == 355))
+            if((m_gameVersion == Game::TR3) && (m_moveables[i].object_id == 355))
             {
                 m_meshes[m_meshIndices[m_moveables[i].starting_mesh]].coloured_triangles.resize(16);
             }
@@ -119,7 +119,7 @@ void TR_Level::read_frame_moveable_data(io::SDLReader& reader)
     reader.seek(endPos);
 }
 
-std::unique_ptr<TR_Level> TR_Level::createLoader(const std::string& filename, int32_t game_version)
+std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Game game_version)
 {
     int len2 = 0;
 
@@ -149,39 +149,39 @@ std::unique_ptr<TR_Level> TR_Level::createLoader(const std::string& filename, in
   *
   * Takes a SDL_RWop and the game_version of the file and reads the structures into the members of TR_Level.
   */
-std::unique_ptr<TR_Level> TR_Level::createLoader(SDL_RWops * const src, int32_t game_version, const std::string& sfxPath)
+std::unique_ptr<TR1Level> TR1Level::createLoader(SDL_RWops * const src, Game game_version, const std::string& sfxPath)
 {
     if (!src)
         Sys_extError("Invalid SDL_RWops");
 
-    std::unique_ptr<TR_Level> result;
+    std::unique_ptr<TR1Level> result;
 
     switch (game_version)
     {
-        case TR_I:
-            result.reset(new TR_Level(game_version, src));
+        case Game::TR1:
+            result.reset(new TR1Level(game_version, src));
             break;
-        case TR_I_DEMO:
-        case TR_I_UB:
-            result.reset(new TR_Level(game_version, src));
+        case Game::TR1Demo:
+        case Game::TR1UnfinishedBusiness:
+            result.reset(new TR1Level(game_version, src));
             result->m_demoOrUb = true;
             break;
-        case TR_II:
-            result.reset(new TR_TR2Level(game_version, src));
+        case Game::TR2:
+            result.reset(new TR2Level(game_version, src));
             break;
-        case TR_II_DEMO:
-            result.reset(new TR_TR2Level(game_version, src));
+        case Game::TR2Demo:
+            result.reset(new TR2Level(game_version, src));
             result->m_demoOrUb = true;
             break;
-        case TR_III:
-            result.reset(new TR_TR3Level(game_version, src));
+        case Game::TR3:
+            result.reset(new TR3Level(game_version, src));
             break;
-        case TR_IV:
-        case TR_IV_DEMO:
-            result.reset(new TR_TR4Level(game_version, src));
+        case Game::TR4:
+        case Game::TR4Demo:
+            result.reset(new TR4Level(game_version, src));
             break;
-        case TR_V:
-            result.reset(new TR_TR5Level(game_version, src));
+        case Game::TR5:
+            result.reset(new TR5Level(game_version, src));
             break;
         default:
             Sys_extError("Invalid game version");

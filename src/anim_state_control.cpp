@@ -1342,7 +1342,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(resp->slide == SlideType::None)
             {
-                if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
+                if((cmd->move[0] == 1) && (engine_world.version >= loader::Game::TR3))
                 {
                     ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
                 }
@@ -1451,7 +1451,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
 
-                if(engine_world.version > TR_III)
+                if(engine_world.version > loader::Game::TR3)
                 {
                     if(was_traversed)
                     {
@@ -1478,7 +1478,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.version > loader::Game::TR3)
                 {
                     Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -1538,7 +1538,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
 
-                if(engine_world.version > TR_III)
+                if(engine_world.version > loader::Game::TR3)
                 {
                     if(was_traversed)
                     {
@@ -1567,7 +1567,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.version > loader::Game::TR3)
                 {
                     Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -2258,7 +2258,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());       // Stop scream
 
                 // Splash sound is hardcoded, beginning with TR3.
-                if(engine_world.version > TR_II)
+                if(engine_world.version > loader::Game::TR2)
                 {
                     Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -2674,7 +2674,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.version > loader::Game::TR3)
                 {
                     if(cmd->move[1] == 1)
                     {

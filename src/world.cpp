@@ -1170,9 +1170,9 @@ void World::updateAnimTextures()                                                
 
 void World::calculateWaterTint(float* tint, bool fixed_colour)
 {
-    if(version < TR_IV)  // If water room and level is TR1-3
+    if(version < loader::Game::TR4)  // If water room and level is TR1-3
     {
-        if(version < TR_III)
+        if(version < loader::Game::TR3)
         {
             // Placeholder, color very similar to TR1 PSX ver.
             if(fixed_colour)

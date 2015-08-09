@@ -50,14 +50,14 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
     if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf.call("getEntityModelProperties", engine_world.version, ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
         ent->m_typeFlags |= flg;
     }
 
     if(ent->m_bf.animations.model != nullptr && level_script["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script.call("getEntityModelProperties", engine_world.version, ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
         ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
         ent->m_typeFlags |= flg;                 // get traverse information
     }
@@ -67,7 +67,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        const char* funcName = objects_flags_conf.call("getEntityFunction", engine_world.version, ent->m_bf.animations.model->id);
+        const char* funcName = objects_flags_conf.call("getEntityFunction", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
         if(funcName)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
@@ -606,7 +606,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     return false;
 }
 
-int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::TR_Level>& tr)
+int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::TR1Level>& tr)
 {
     if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->m_floorData.size()))
     {
@@ -886,7 +886,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                                         {
                                             // Switch action type case.
                                             snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                            if((engine_world.version >= TR_III) && (only_once))
+                                            if((engine_world.version >= loader::Game::TR3) && (only_once))
                                             {
                                                 // Just lock out activator, no anti-action needed.
                                                 snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -1009,7 +1009,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                         case TR_FD_TRIGFUNC_PLAYTRACK:
                             // Override for looped BGM tracks in TR1: if there are any sectors
                             // triggering looped tracks, ignore it, as BGM is always set in script.
-                            if(engine_world.version < TR_II)
+                            if(engine_world.version < loader::Game::TR2)
                             {
                                 int looped;
                                 engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
@@ -1129,7 +1129,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                         if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                         {
                             script += buf2;
-                            if((engine_world.version < TR_III) || (!only_once))
+                            if((engine_world.version < loader::Game::TR3) || (!only_once))
                             {
                                 script += single_events;
                                 script += anti_events;    // Single/continous events are engaged along with
@@ -1166,7 +1166,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
             case TR_FD_FUNC_MINECART_LEFT:
                 // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(tr->m_gameVersion < TR_IV)
+                if(tr->m_gameVersion < loader::Game::TR4)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_LEFT;
                 }
@@ -1179,7 +1179,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
             case TR_FD_FUNC_MINECART_RIGHT:
                 // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(tr->m_gameVersion < TR_IV)
+                if(tr->m_gameVersion < loader::Game::TR4)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_RIGHT;
                 }
@@ -1486,7 +1486,7 @@ bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p
     return false;
 }
 
-void TR_Sector_Calculate(World *world, const std::unique_ptr<loader::TR_Level>& tr, long int room_index)
+void TR_Sector_Calculate(World *world, const std::unique_ptr<loader::TR1Level>& tr, long int room_index)
 {
     std::shared_ptr<Room> room = world->rooms[room_index];
     loader::Room *tr_room = &tr->m_rooms[room_index];
@@ -1649,7 +1649,7 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
 
-void Res_ScriptsOpen(int engine_version)
+void Res_ScriptsOpen(loader::Game engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
 
@@ -1718,7 +1718,7 @@ void Res_ScriptsClose()
 {
 }
 
-void Res_AutoexecOpen(int engine_version)
+void Res_AutoexecOpen(loader::Game engine_version)
 {
     std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
 
@@ -1748,7 +1748,7 @@ void Res_AutoexecOpen(int engine_version)
     }
 }
 
-void TR_GenWorld(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenWorld(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->version = tr->m_gameVersion;
 
@@ -1850,7 +1850,7 @@ void Res_GenRBTrees(World *world)
     world->items_tree.clear();
 }
 
-void TR_GenRooms(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenRooms(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->rooms.resize(tr->m_rooms.size());
     std::generate(std::begin(world->rooms), std::end(world->rooms), std::make_shared<Room>);
@@ -1860,7 +1860,7 @@ void TR_GenRooms(World *world, const std::unique_ptr<loader::TR_Level>& tr)
     }
 }
 
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     loader::Room *tr_room = &tr->m_rooms[room_index];
     loader::StaticMesh *tr_static;
@@ -1902,7 +1902,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
 
     for(uint16_t i = 0; i < tr_room->static_meshes.size(); i++)
     {
-        tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
+        tr_static = tr->findStaticMeshById(tr_room->static_meshes[i].object_id);
         if(tr_static == nullptr)
         {
             continue;
@@ -2056,7 +2056,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
 
         sector->owner_room = room;
 
-        if(tr->m_gameVersion < TR_III)
+        if(tr->m_gameVersion < loader::Game::TR3)
         {
             sector->box_index = tr_room->sector_list[i].box_index;
             sector->material = SECTOR_MATERIAL_STONE;
@@ -2324,7 +2324,7 @@ void Res_GenRoomCollision(World *world)
     }
 }
 
-void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
@@ -2357,7 +2357,7 @@ void Res_GenRoomFlipMap(World *world)
     world->flip_data.resize(FLIPMAP_MAX_NUMBER);
 }
 
-void TR_GenBoxes(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenBoxes(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->room_boxes.clear();
 
@@ -2374,7 +2374,7 @@ void TR_GenBoxes(World *world, const std::unique_ptr<loader::TR_Level>& tr)
     }
 }
 
-void TR_GenCameras(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenCameras(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->cameras_sinks.clear();
 
@@ -2392,7 +2392,7 @@ void TR_GenCameras(World *world, const std::unique_ptr<loader::TR_Level>& tr)
 /**
  * sprites loading, works correct in TR1 - TR5
  */
-void TR_GenSprites(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenSprites(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     if(tr->m_spriteTextures.empty())
     {
@@ -2430,7 +2430,7 @@ void Res_GenSpritesBuffer(World *world)
         Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
-void TR_GenTextures(World* world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenTextures(World* world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     int border_size = Clamp(renderer.settings().texture_border, 0, 64);
 
@@ -2500,7 +2500,7 @@ void TR_GenTextures(World* world, const std::unique_ptr<loader::TR_Level>& tr)
   *   is then parsed on the fly. What we do is parse this stream to the
   *   proper structures to be used later within renderer.
   */
-void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
@@ -2659,7 +2659,7 @@ bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *w
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-void TR_GenMeshes(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenMeshes(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->meshes.resize(tr->m_meshes.size());
     size_t i = 0;
@@ -2694,7 +2694,7 @@ void tr_accumulateNormals(loader::Mesh *tr_mesh, BaseMesh* mesh, int numCorners,
     }
 }
 
-void tr_setupColoredFace(loader::Mesh *tr_mesh, const std::unique_ptr<loader::TR_Level>& tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
+void tr_setupColoredFace(loader::Mesh *tr_mesh, const std::unique_ptr<loader::TR1Level>& tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
     for(size_t i = 0; i < p->vertices.size(); i++)
     {
@@ -2735,9 +2735,9 @@ void tr_setupTexturedFace(loader::Mesh *tr_mesh, BaseMesh* mesh, const uint16_t 
     }
 }
 
-void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::TR1Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2911,7 +2911,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::TR_Level>& tr, loader::Room *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
+void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::TR1Level>& tr, loader::Room *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -2935,9 +2935,9 @@ void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::TR_Level>&
     world->tex_atlas->getCoordinates(masked_texture, 0, p);
 }
 
-void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::TR1Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     auto tr_room = &tr->m_rooms[room_index];
 
@@ -3184,7 +3184,7 @@ void Res_FixRooms(World *world)
     }
 }
 
-long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::TR_Level>& tr)
+long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::TR1Level>& tr)
 {
     loader::Animation *tr_animation;
 
@@ -3212,22 +3212,22 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
     return tr_animation->frame_offset;
 }
 
-SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
+SkeletalModel* Res_GetSkybox(World *world, loader::Game engine_version)
 {
     switch(engine_version)
     {
-        case TR_II:
-        case TR_II_DEMO:
+        case loader::Game::TR2:
+        case loader::Game::TR2Demo:
             return world->getModelByID(TR_ITEM_SKYBOX_TR2);
 
-        case TR_III:
+        case loader::Game::TR3:
             return world->getModelByID(TR_ITEM_SKYBOX_TR3);
 
-        case TR_IV:
-        case TR_IV_DEMO:
+        case loader::Game::TR4:
+        case loader::Game::TR4Demo:
             return world->getModelByID(TR_ITEM_SKYBOX_TR4);
 
-        case TR_V:
+        case loader::Game::TR5:
             return world->getModelByID(TR_ITEM_SKYBOX_TR5);
 
         default:
@@ -3235,12 +3235,12 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
     }
 }
 
-void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->anim_commands = std::move(tr->m_animCommands);
 }
 
-void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, const std::unique_ptr<loader::TR1Level>& tr)
 {
     loader::Moveable *tr_moveable;
     loader::Animation *tr_animation;
@@ -3351,7 +3351,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
         frame_offset = tr_animation->frame_offset / 2;
         uint16_t l_start = 0x09;
-        if(tr->m_gameVersion == TR_I || tr->m_gameVersion == TR_I_DEMO || tr->m_gameVersion == TR_I_UB)
+        if(tr->m_gameVersion == loader::Game::TR1 || tr->m_gameVersion == loader::Game::TR1Demo || tr->m_gameVersion == loader::Game::TR1UnfinishedBusiness)
         {
             l_start = 0x0A;
         }
@@ -3454,9 +3454,9 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
                     switch(tr->m_gameVersion)
                     {
-                        case TR_I:                                              /* TR_I */
-                        case TR_I_UB:
-                        case TR_I_DEMO:
+                        case loader::Game::TR1:                                              /* TR_I */
+                        case loader::Game::TR1UnfinishedBusiness:
+                        case loader::Game::TR1Demo:
                         {
                             temp2 = tr->m_frameData[frame_offset + l];
                             l++;
@@ -3474,7 +3474,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                         default:                                                /* TR_II + */
                             temp1 = tr->m_frameData[frame_offset + l];
                             l++;
-                            if(tr->m_gameVersion >= TR_IV)
+                            if(tr->m_gameVersion >= loader::Game::TR4)
                             {
                                 ang = static_cast<float>(temp1 & 0x0fff);
                                 ang *= 360.0 / 4096.0;
@@ -3614,7 +3614,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     GenerateAnimCommandsTransform(model);
 }
 
-int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::TR_Level>& tr, size_t moveable_ind)
+int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::TR1Level>& tr, size_t moveable_ind)
 {
     int ret;
     loader::Moveable *curr_moveable, *next_moveable;
@@ -3661,7 +3661,7 @@ int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::TR_Level>& tr, 
 /*
  * It returns real animation count
  */
-int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::TR_Level>& tr, size_t animation_ind)
+int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::TR1Level>& tr, size_t animation_ind)
 {
     loader::Animation *curr_anim, *next_anim;
     int ret;
@@ -3686,7 +3686,7 @@ int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::TR_Level>& tr, siz
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::TR_Level>& tr, size_t frame_offset, BoneFrame *bone_frame)
+void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::TR1Level>& tr, size_t frame_offset, BoneFrame *bone_frame)
 {
     unsigned short int *frame;
 
@@ -3723,7 +3723,7 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::TR_Level>& tr, size_t fram
     bone_frame->centre = (bone_frame->bb_min + bone_frame->bb_max) / 2.0f;
 }
 
-void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     world->skeletal_models.resize(tr->m_moveables.size());
 
@@ -3738,7 +3738,7 @@ void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::TR_Level>&
     }
 }
 
-void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenEntities(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     for(uint32_t i = 0; i < tr->m_items.size(); i++)
     {
@@ -3775,11 +3775,11 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
 
         if(entity->m_bf.animations.model == nullptr)
         {
-            int id = ent_ID_override.call("getOverridedID", tr->m_gameVersion, tr_item->object_id);
+            int id = ent_ID_override.call("getOverridedID", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
-        int replace_anim_id = ent_ID_override.call("getOverridedAnim", tr->m_gameVersion, tr_item->object_id);
+        int replace_anim_id = ent_ID_override.call("getOverridedAnim", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
         if(replace_anim_id > 0)
         {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
@@ -3802,7 +3802,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
-        if(tr->m_gameVersion < TR_II && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
+        if(tr->m_gameVersion < loader::Game::TR2 && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
             // skip PSX save model
             continue;
@@ -3827,7 +3827,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
 
             switch(tr->m_gameVersion)
             {
-                case TR_I:
+                case loader::Game::TR1:
                     if(gameflow_manager.CurrentLevelID == 0)
                     {
                         LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
@@ -3840,7 +3840,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                     }
                     break;
 
-                case TR_III:
+                case loader::Game::TR3:
                     LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
@@ -3853,9 +3853,9 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                     }
                     break;
 
-                case TR_IV:
-                case TR_IV_DEMO:
-                case TR_V:
+                case loader::Game::TR4:
+                case loader::Game::TR4Demo:
+                case loader::Game::TR5:
                     LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
@@ -3899,7 +3899,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::TR_Level>& tr)
     }
 }
 
-void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
+void TR_GenSamples(World *world, const std::unique_ptr<loader::TR1Level>& tr)
 {
     // Generate new buffer array.
     world->audio_buffers.resize(tr->m_samplesCount, 0);
@@ -3932,9 +3932,9 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
         auto pointer = tr->m_samplesData.data();
         switch(tr->m_gameVersion)
         {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:
+            case loader::Game::TR1:
+            case loader::Game::TR1Demo:
+            case loader::Game::TR1UnfinishedBusiness:
                 world->audio_map = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_sampleIndices.size() - 1; i++)
@@ -3945,9 +3945,9 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                 }
                 break;
 
-            case TR_II:
-            case TR_II_DEMO:
-            case TR_III:
+            case loader::Game::TR2:
+            case loader::Game::TR2Demo:
+            case loader::Game::TR3:
             {
                 world->audio_map = tr->m_soundmap;
                 size_t ind1 = 0;
@@ -3989,9 +3989,9 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                 break;
             }
 
-            case TR_IV:
-            case TR_IV_DEMO:
-            case TR_V:
+            case loader::Game::TR4:
+            case loader::Game::TR4Demo:
+            case loader::Game::TR5:
                 world->audio_map = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_samplesCount; i++)
@@ -4022,12 +4022,12 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
     // audio effects structure.
     for(size_t i = 0; i < world->audio_effects.size(); i++)
     {
-        if(tr->m_gameVersion < TR_III)
+        if(tr->m_gameVersion < loader::Game::TR3)
         {
             world->audio_effects[i].gain = static_cast<float>(tr->m_soundDetails[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
             world->audio_effects[i].chance = tr->m_soundDetails[i].chance;
         }
-        else if(tr->m_gameVersion > TR_III)
+        else if(tr->m_gameVersion > loader::Game::TR3)
         {
             world->audio_effects[i].gain = static_cast<float>(tr->m_soundDetails[i].volume) / 255.0; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->m_soundDetails[i].chance * 255;
@@ -4049,9 +4049,9 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
 
         switch(tr->m_gameVersion)
         {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:
+            case loader::Game::TR1:
+            case loader::Game::TR1Demo:
+            case loader::Game::TR1UnfinishedBusiness:
                 switch(tr->m_soundDetails[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:
@@ -4065,8 +4065,8 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
                 }
                 break;
 
-            case TR_II:
-            case TR_II_DEMO:
+            case loader::Game::TR2:
+            case loader::Game::TR2Demo:
                 switch(tr->m_soundDetails[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x01:
@@ -4100,16 +4100,16 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR_Level>& tr)
 
     switch(world->version)
     {
-        case TR_I:
-        case TR_I_DEMO:
-        case TR_I_UB:
+        case loader::Game::TR1:
+        case loader::Game::TR1Demo:
+        case loader::Game::TR1UnfinishedBusiness:
             // Fix for underwater looped sound.
             if(world->audio_map[TR_AUDIO_SOUND_UNDERWATER] >= 0)
             {
                 world->audio_effects[world->audio_map[TR_AUDIO_SOUND_UNDERWATER]].loop = TR_AUDIO_LOOP_LOOPED;
             }
             break;
-        case TR_II:
+        case loader::Game::TR2:
             // Fix for helicopter sound range.
             if(world->audio_map[297] >= 0)
             {

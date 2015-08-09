@@ -7,31 +7,7 @@
 
 using namespace loader;
 
-void TR_Level::prepare_level()
-{
-    uint32_t i;
-
-    if ((m_gameVersion >= TR_II) && (m_gameVersion <= TR_V))
-    {
-        if (!m_read32BitTextiles)
-        {
-            if (m_textile32.empty())
-            {
-                m_textile32.resize( m_numTextiles );
-            }
-            for (i = 0; i < (m_numTextiles - m_numMiscTextiles); i++)
-                convert_textile16_to_textile32(m_textile16[i], m_textile32[i]);
-        }
-    }
-    else
-    {
-        m_textile32.resize( m_numTextiles );
-        for (i = 0; i < m_numTextiles; i++)
-            convert_textile8_to_textile32(m_textile8[i], m_palette, m_textile32[i]);
-    }
-}
-
-StaticMesh *TR_Level::find_staticmesh_id(uint32_t object_id)
+StaticMesh *TR1Level::findStaticMeshById(uint32_t object_id)
 {
     uint32_t i;
 
@@ -39,10 +15,10 @@ StaticMesh *TR_Level::find_staticmesh_id(uint32_t object_id)
         if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
             return &m_staticMeshes[i];
 
-    return NULL;
+    return nullptr;
 }
 
-Item *TR_Level::find_item_id(int32_t object_id)
+Item *TR1Level::fineItemById(int32_t object_id)
 {
     uint32_t i;
 
@@ -50,10 +26,10 @@ Item *TR_Level::find_item_id(int32_t object_id)
         if (m_items[i].object_id == object_id)
             return &m_items[i];
 
-    return NULL;
+    return nullptr;
 }
 
-Moveable *TR_Level::find_moveable_id(uint32_t object_id)
+Moveable *TR1Level::findMoveableById(uint32_t object_id)
 {
     uint32_t i;
 
@@ -61,10 +37,10 @@ Moveable *TR_Level::find_moveable_id(uint32_t object_id)
         if (m_moveables[i].object_id == object_id)
             return &m_moveables[i];
 
-    return NULL;
+    return nullptr;
 }
 
-void TR_Level::convert_textile8_to_textile32(ByteTexture & tex, Palette & pal, DWordTexture & dst)
+void TR1Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
     int x, y;
 
@@ -75,14 +51,14 @@ void TR_Level::convert_textile8_to_textile32(ByteTexture & tex, Palette & pal, D
             int col = tex.pixels[y][x];
 
             if (col > 0)
-                dst.pixels[y][x] = ((int)pal.colour[col].r) | ((int)pal.colour[col].g << 8) | ((int)pal.colour[col].b << 16) | (0xff << 24);
+                dst.pixels[y][x] = static_cast<int>(pal.colour[col].r) | (static_cast<int>(pal.colour[col].g) << 8) | (static_cast<int>(pal.colour[col].b) << 16) | (0xff << 24);
             else
                 dst.pixels[y][x] = 0x00000000;
         }
     }
 }
 
-void TR_Level::convert_textile16_to_textile32(WordTexture & tex, DWordTexture & dst)
+void TR1Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 {
     int x, y;
 
@@ -108,7 +84,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
     FILE *st;
 
     st = fopen(filename, "wb");
-    if (st == NULL)
+    if (st == nullptr)
         return;
 
     // write the header
@@ -174,15 +150,15 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
     fclose(st);
 }
 
-void TR_Level::dump_textures()
+void TR1Level::dumpTextures()
 {
     uint32_t i;
     char buffer[1024];
 
-    for (i = 0; i < m_numTextiles; i++)
+    for (i = 0; i < m_textile32.size(); i++)
     {
         snprintf(buffer, 1024, "dump/%03i_32.tga", i);
-        WriteTGAfile(buffer, (uint8_t *)&m_textile32[i].pixels, 256, 256, 0);
+        WriteTGAfile(buffer, reinterpret_cast<uint8_t *>(&m_textile32[i].pixels), 256, 256, 0);
     }
 }
 

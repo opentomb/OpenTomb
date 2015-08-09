@@ -27,89 +27,82 @@
 
 using namespace loader;
 
-void TR_TR2Level::load()
+void TR2Level::load()
 {
     // Version
-    uint32_t file_version = m_src.readU32();
+    uint32_t file_version = m_reader.readU32();
 
     if (file_version != 0x0000002d)
         Sys_extError("Wrong level version");
 
-    m_palette = Palette::readTr1(m_src);
-    m_palette16 = Palette::readTr2(m_src);
+    m_palette = Palette::readTr1(m_reader);
+    m_palette16 = Palette::readTr2(m_reader);
 
-    m_numTextiles = 0;
-    m_numRoomTextiles = 0;
-    m_numObjTextiles = 0;
-    m_numBumpTextiles = 0;
-    m_numMiscTextiles = 0;
-    m_read32BitTextiles = false;
-    
-    m_numTextiles = m_src.readU32();
-    m_src.readVector(m_textile8, m_numTextiles, &ByteTexture::read);
-    m_src.readVector(m_textile16, m_numTextiles, &WordTexture::read);
+    auto numTextiles = m_reader.readU32();
+    m_reader.readVector(m_textile8, numTextiles, &ByteTexture::read);
+    m_reader.readVector(m_textile16, numTextiles, &WordTexture::read);
 
     // Unused
-    if (m_src.readU32() != 0)
+    if (m_reader.readU32() != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    m_src.readVector(m_rooms, m_src.readU16(), Room::readTr2);
-    m_src.readVector(m_floorData, m_src.readU32());
+    m_reader.readVector(m_rooms, m_reader.readU16(), Room::readTr2);
+    m_reader.readVector(m_floorData, m_reader.readU32());
 
-    read_mesh_data(m_src);
+    readMeshData(m_reader);
 
-    m_src.readVector(m_animations, m_src.readU32(), &Animation::readTr1);
+    m_reader.readVector(m_animations, m_reader.readU32(), &Animation::readTr1);
 
-    m_src.readVector(m_stateChanges, m_src.readU32(), &StateChange::read);
+    m_reader.readVector(m_stateChanges, m_reader.readU32(), &StateChange::read);
 
-    m_src.readVector(m_animDispatches, m_src.readU32(), &AnimDispatch::read);
+    m_reader.readVector(m_animDispatches, m_reader.readU32(), &AnimDispatch::read);
 
-    m_src.readVector(m_animCommands, m_src.readU32());
+    m_reader.readVector(m_animCommands, m_reader.readU32());
 
-    m_src.readVector(m_meshTreeData, m_src.readU32());
+    m_reader.readVector(m_meshTreeData, m_reader.readU32());
 
-    read_frame_moveable_data(m_src);
+    readFrameMoveableData(m_reader);
 
-    m_src.readVector(m_staticMeshes, m_src.readU32(), &StaticMesh::read);
+    m_reader.readVector(m_staticMeshes, m_reader.readU32(), &StaticMesh::read);
 
-    m_src.readVector(m_objectTextures, m_src.readU32(), &ObjectTexture::readTr1);
+    m_reader.readVector(m_objectTextures, m_reader.readU32(), &ObjectTexture::readTr1);
 
-    m_src.readVector(m_spriteTextures, m_src.readU32(), &SpriteTexture::readTr1);
+    m_reader.readVector(m_spriteTextures, m_reader.readU32(), &SpriteTexture::readTr1);
 
-    m_src.readVector(m_spriteSequences, m_src.readU32(), &SpriteSequence::read);
+    m_reader.readVector(m_spriteSequences, m_reader.readU32(), &SpriteSequence::read);
 
     if (m_demoOrUb)
-        m_lightmap = LightMap::read(m_src);
+        m_lightmap = LightMap::read(m_reader);
 
-    m_src.readVector(m_cameras, m_src.readU32(), &Camera::read);
+    m_reader.readVector(m_cameras, m_reader.readU32(), &Camera::read);
 
-    m_src.readVector(m_soundSources, m_src.readU32(), &SoundSource::read);
+    m_reader.readVector(m_soundSources, m_reader.readU32(), &SoundSource::read);
 
-    m_src.readVector(m_boxes, m_src.readU32(), &Box::readTr2);
+    m_reader.readVector(m_boxes, m_reader.readU32(), &Box::readTr2);
 
-    m_src.readVector(m_overlaps, m_src.readU32());
+    m_reader.readVector(m_overlaps, m_reader.readU32());
 
     // Zones
-    m_src.skip(m_boxes.size() * 20);
+    m_reader.skip(m_boxes.size() * 20);
 
     m_animatedTexturesUvCount = 0; // No UVRotate in TR2
-    m_src.readVector(m_animatedTextures, m_src.readU32());
+    m_reader.readVector(m_animatedTextures, m_reader.readU32());
 
-    m_src.readVector(m_items, m_src.readU32(), &Item::readTr2);
+    m_reader.readVector(m_items, m_reader.readU32(), &Item::readTr2);
 
     if (!m_demoOrUb)
-        m_lightmap = LightMap::read(m_src);
+        m_lightmap = LightMap::read(m_reader);
 
-    m_src.readVector(m_cinematicFrames, m_src.readU16(), &CinematicFrame::read);
+    m_reader.readVector(m_cinematicFrames, m_reader.readU16(), &CinematicFrame::read);
 
-    m_src.readVector(m_demoData, m_src.readU16());
+    m_reader.readVector(m_demoData, m_reader.readU16());
 
     // Soundmap
-    m_src.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR2);
+    m_reader.readVector(m_soundmap, TR_AUDIO_MAP_SIZE_TR2);
 
-    m_src.readVector(m_soundDetails, m_src.readU32(), &SoundDetails::readTr1);
+    m_reader.readVector(m_soundDetails, m_reader.readU32(), &SoundDetails::readTr1);
 
-    m_src.readVector(m_sampleIndices, m_src.readU32());
+    m_reader.readVector(m_sampleIndices, m_reader.readU32());
 
     // remap all sample indices here
     for(size_t i = 0; i < m_soundDetails.size(); i++)
@@ -144,4 +137,11 @@ void TR_TR2Level::load()
             }
         }
     }
+}
+
+void TR2Level::prepareLevel()
+{
+    m_textile32.resize(m_textile16.size());
+    for(size_t i = 0; i < m_textile16.size(); i++)
+        convertTexture(m_textile16[i], m_textile32[i]);
 }
