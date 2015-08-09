@@ -452,8 +452,8 @@ typedef struct
     uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
 
-    float   speed;
-    float   accel;
+    int32_t   speed;
+    int32_t   accel;
 
     float   speed_lateral;      // new in TR4 -->
     float   accel_lateral;      // lateral speed and acceleration.

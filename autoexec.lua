@@ -12,7 +12,7 @@ cvars.free_look_speed = 2500;
 -- AUTOEXEC LINES
 setLanguage("english");
 
-setGravity(0, 0, -5856.0);
+setGravity(0, 0, -6800.0);
 mlook(true);
 freelook(false);
 cam_distance(1024.0);

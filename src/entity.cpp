@@ -959,7 +959,6 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;
-    m_currentSpeed = anim->speed_x;
     m_bf.animations.current_animation = animation;
     m_bf.animations.current_frame = frame;
     m_bf.animations.next_animation = animation;

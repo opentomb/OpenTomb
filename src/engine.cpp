@@ -540,15 +540,18 @@ void Engine_ShowDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d",
+        auto af = &ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation];
+        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.last_animation,
                       ent->m_bf.animations.current_animation,
                       ent->m_bf.animations.next_animation,
                       ent->m_bf.animations.last_state,
-                      ent->m_bf.animations.next_state);
+                      ent->m_bf.animations.next_state,
+                      engine_world.character->m_currentSpeed,
+                      ent->m_bf.animations.current_frame
+                      );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
+        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
     }
 
     if(last_cont != nullptr)

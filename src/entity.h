@@ -134,7 +134,7 @@ public:
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
-    btScalar                            m_speedMult = TR_FRAME_RATE;
+    btScalar                            m_speedMult = 34.0;
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes

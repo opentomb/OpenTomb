@@ -2249,16 +2249,8 @@ void Character::frameImpl(btScalar time, int16_t frame, int state)
     {
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
         auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        if(af->accel_x == 0)//If accel_x is 0 then speed must be set as fixed
-        {
-             m_currentSpeed = af->speed_x;
-        }
-        else
-        {
-             m_currentSpeed += (af->accel_x);
-            if((m_currentSpeed) > af->speed_x && af->accel_x > 0) m_currentSpeed = af->speed_x;///So accel doesn't go higher than speed
-            if((m_currentSpeed) < 0 && af->accel_x < 0) m_currentSpeed= 0;///So accel doesn't go lower than speed
-        }
+        m_currentSpeed = ((int32_t)af->speed_x + (frame * (int32_t)af->accel_x) >> 16);///@INFO Decompiled from TOMB5.EXE by Gh0stBlade 100% working
+        ///@CHECK if(m_currentSpeed < 0) m_currentSpeed = -m_currentSpeed;
     }
 
     m_bf.animations.current_frame = frame;
