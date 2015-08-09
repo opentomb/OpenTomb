@@ -1043,24 +1043,21 @@ std::string Engine_GetLevelScriptName(int game_version, const std::string& postf
 
 bool Engine_LoadPCLevel(const std::string& name)
 {
-    VT_Level *tr_level = new VT_Level();
-
     int trv = Engine_GetPCLevelVersion(name);
     if(trv == TR_UNKNOWN) return false;
 
-    tr_level->read_level(name, trv);
-    tr_level->prepare_level();
+    std::unique_ptr<TR_Level> loader = TR_Level::createLoader(name, trv);
+    loader->load();
+    loader->prepare_level();
     //tr_level->dump_textures();
 
-    TR_GenWorld(&engine_world, tr_level);
+    TR_GenWorld(&engine_world, loader);
 
     std::string buf = Engine_GetLevelName(name);
 
     ConsoleInfo::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
     ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, trv, buf.c_str());
     ConsoleInfo::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
-
-    delete tr_level;
 
     return true;
 }

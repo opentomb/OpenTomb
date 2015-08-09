@@ -606,7 +606,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     return false;
 }
 
-int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
+int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<TR_Level>& tr)
 {
     if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->m_floorData.size()))
     {
@@ -1486,7 +1486,7 @@ bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p
     return false;
 }
 
-void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
+void TR_Sector_Calculate(World *world, const std::unique_ptr<TR_Level>& tr, long int room_index)
 {
     std::shared_ptr<Room> room = world->rooms[room_index];
     tr5_room_t *tr_room = &tr->m_rooms[room_index];
@@ -1748,7 +1748,7 @@ void Res_AutoexecOpen(int engine_version)
     }
 }
 
-void TR_GenWorld(World *world, class VT_Level *tr)
+void TR_GenWorld(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->version = tr->m_gameVersion;
 
@@ -1850,7 +1850,7 @@ void Res_GenRBTrees(World *world)
     world->items_tree.clear();
 }
 
-void TR_GenRooms(World *world, class VT_Level *tr)
+void TR_GenRooms(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->rooms.resize(tr->m_rooms.size());
     std::generate(std::begin(world->rooms), std::end(world->rooms), std::make_shared<Room>);
@@ -1860,7 +1860,7 @@ void TR_GenRooms(World *world, class VT_Level *tr)
     }
 }
 
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<TR_Level>& tr)
 {
     tr5_room_t *tr_room = &tr->m_rooms[room_index];
     tr_staticmesh_t *tr_static;
@@ -2325,7 +2325,7 @@ void Res_GenRoomCollision(World *world)
     }
 }
 
-void TR_GenRoomProperties(World *world, class VT_Level *tr)
+void TR_GenRoomProperties(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
@@ -2358,7 +2358,7 @@ void Res_GenRoomFlipMap(World *world)
     world->flip_data.resize(FLIPMAP_MAX_NUMBER);
 }
 
-void TR_GenBoxes(World *world, class VT_Level *tr)
+void TR_GenBoxes(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->room_boxes.clear();
 
@@ -2375,7 +2375,7 @@ void TR_GenBoxes(World *world, class VT_Level *tr)
     }
 }
 
-void TR_GenCameras(World *world, class VT_Level *tr)
+void TR_GenCameras(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->cameras_sinks.clear();
 
@@ -2393,7 +2393,7 @@ void TR_GenCameras(World *world, class VT_Level *tr)
 /**
  * sprites loading, works correct in TR1 - TR5
  */
-void TR_GenSprites(World *world, class VT_Level *tr)
+void TR_GenSprites(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     if(tr->m_spriteTextures.empty())
     {
@@ -2431,7 +2431,7 @@ void Res_GenSpritesBuffer(World *world)
         Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
-void TR_GenTextures(World* world, class VT_Level *tr)
+void TR_GenTextures(World* world, const std::unique_ptr<TR_Level>& tr)
 {
     int border_size = Clamp(renderer.settings().texture_border, 0, 64);
 
@@ -2501,7 +2501,7 @@ void TR_GenTextures(World* world, class VT_Level *tr)
   *   is then parsed on the fly. What we do is parse this stream to the
   *   proper structures to be used later within renderer.
   */
-void TR_GenAnimTextures(World *world, class VT_Level *tr)
+void TR_GenAnimTextures(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
@@ -2660,7 +2660,7 @@ bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct World *w
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-void TR_GenMeshes(World *world, class VT_Level *tr)
+void TR_GenMeshes(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->meshes.resize(tr->m_meshes.size());
     size_t i = 0;
@@ -2695,7 +2695,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, const std::unique_ptr<TR_Level>& tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, struct Polygon *p)
 {
     for(size_t i = 0; i < p->vertices.size(); i++)
     {
@@ -2736,7 +2736,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *v
     }
 }
 
-void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
+void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<TR_Level>& tr)
 {
     const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
@@ -2912,7 +2912,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
+void tr_setupRoomVertices(World *world, const std::unique_ptr<TR_Level>& tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p)
 {
     p->vertices.resize(numCorners);
 
@@ -2936,7 +2936,7 @@ void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const
     world->tex_atlas->getCoordinates(masked_texture, 0, p);
 }
 
-void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
+void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<TR_Level>& tr)
 {
     const uint32_t tex_mask = (world->version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
@@ -3185,7 +3185,7 @@ void Res_FixRooms(World *world)
     }
 }
 
-long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr)
+long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<TR_Level>& tr)
 {
     tr_animation_t *tr_animation;
 
@@ -3236,12 +3236,12 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
     }
 }
 
-void TR_GenAnimCommands(World *world, class VT_Level *tr)
+void TR_GenAnimCommands(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->anim_commands = std::move(tr->m_animCommands);
 }
 
-void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, class VT_Level *tr)
+void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, const std::unique_ptr<TR_Level>& tr)
 {
     tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
@@ -3615,7 +3615,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     GenerateAnimCommandsTransform(model);
 }
 
-int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
+int TR_GetNumAnimationsForMoveable(const std::unique_ptr<TR_Level>& tr, size_t moveable_ind)
 {
     int ret;
     tr_moveable_t *curr_moveable, *next_moveable;
@@ -3662,7 +3662,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 /*
  * It returns real animation count
  */
-int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
+int TR_GetNumFramesForAnimation(const std::unique_ptr<TR_Level>& tr, size_t animation_ind)
 {
     tr_animation_t *curr_anim, *next_anim;
     int ret;
@@ -3687,7 +3687,7 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone_frame)
+void TR_GetBFrameBB_Pos(const std::unique_ptr<TR_Level>& tr, size_t frame_offset, BoneFrame *bone_frame)
 {
     unsigned short int *frame;
 
@@ -3724,7 +3724,7 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
     bone_frame->centre = (bone_frame->bb_min + bone_frame->bb_max) / 2.0f;
 }
 
-void TR_GenSkeletalModels(World *world, class VT_Level *tr)
+void TR_GenSkeletalModels(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     world->skeletal_models.resize(tr->m_moveables.size());
 
@@ -3739,7 +3739,7 @@ void TR_GenSkeletalModels(World *world, class VT_Level *tr)
     }
 }
 
-void TR_GenEntities(World *world, class VT_Level *tr)
+void TR_GenEntities(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     for(uint32_t i = 0; i < tr->m_items.size(); i++)
     {
@@ -3900,7 +3900,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
     }
 }
 
-void TR_GenSamples(World *world, class VT_Level *tr)
+void TR_GenSamples(World *world, const std::unique_ptr<TR_Level>& tr)
 {
     // Generate new buffer array.
     world->audio_buffers.resize(tr->m_samplesCount, 0);

@@ -5,9 +5,7 @@
 
 #include "vt_level.h"
 
-#define RCSID "$Id: vt_level.cpp,v 1.1 2002/09/20 15:59:02 crow Exp $"
-
-void VT_Level::prepare_level()
+void TR_Level::prepare_level()
 {
     uint32_t i;
 
@@ -31,7 +29,7 @@ void VT_Level::prepare_level()
     }
 }
 
-tr_staticmesh_t *VT_Level::find_staticmesh_id(uint32_t object_id)
+tr_staticmesh_t *TR_Level::find_staticmesh_id(uint32_t object_id)
 {
     uint32_t i;
 
@@ -42,7 +40,7 @@ tr_staticmesh_t *VT_Level::find_staticmesh_id(uint32_t object_id)
     return NULL;
 }
 
-tr2_item_t *VT_Level::find_item_id(int32_t object_id)
+tr2_item_t *TR_Level::find_item_id(int32_t object_id)
 {
     uint32_t i;
 
@@ -53,7 +51,7 @@ tr2_item_t *VT_Level::find_item_id(int32_t object_id)
     return NULL;
 }
 
-tr_moveable_t *VT_Level::find_moveable_id(uint32_t object_id)
+tr_moveable_t *TR_Level::find_moveable_id(uint32_t object_id)
 {
     uint32_t i;
 
@@ -64,7 +62,7 @@ tr_moveable_t *VT_Level::find_moveable_id(uint32_t object_id)
     return NULL;
 }
 
-void VT_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t & pal, tr4_textile32_t & dst)
+void TR_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t & pal, tr4_textile32_t & dst)
 {
     int x, y;
 
@@ -82,7 +80,7 @@ void VT_Level::convert_textile8_to_textile32(tr_textile8_t & tex, tr2_palette_t 
     }
 }
 
-void VT_Level::convert_textile16_to_textile32(tr2_textile16_t & tex, tr4_textile32_t & dst)
+void TR_Level::convert_textile16_to_textile32(tr2_textile16_t & tex, tr4_textile32_t & dst)
 {
     int x, y;
 
@@ -174,7 +172,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
     fclose(st);
 }
 
-void VT_Level::dump_textures()
+void TR_Level::dump_textures()
 {
     uint32_t i;
     char buffer[1024];
