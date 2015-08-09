@@ -1,13 +1,48 @@
 
 #include <math.h>
+
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
+#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 
 #include "core/vmath.h"
 #include "mesh.h"
 #include "character_controller.h"
 #include "engine.h"
+#include "entity.h"
+#include "engine_lua.h"
 #include "engine_physics.h"
+#include "script.h"
 #include "ragdoll.h"
+
+typedef struct physics_data_s
+{
+    // kinematic
+    btCollisionShape                  **shapes;
+    btRigidBody                       **bt_body;
+
+    // dynamic
+    uint32_t                            no_fix_skeletal_parts;
+    int8_t                              no_fix_all;
+    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
+    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    uint16_t                            objects_count;          // Ragdoll joints
+    uint16_t                            bt_joint_count;         // Ragdoll joints
+    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+
+    struct collision_node_s           *collisions;
+}physics_data_t, *physics_data_p;
+
+extern btDiscreteDynamicsWorld     *bt_engine_dynamicsWorld;
 
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
@@ -18,7 +53,7 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
     return (t > r)?(r):(t);
 }
 
-bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
+bool Ragdoll_Create(struct entity_s *entity, rd_setup_p setup)
 {
     // No entity, setup or body count overflow - bypass function.
 
@@ -176,7 +211,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 }
 
 
-bool Ragdoll_Delete(entity_p entity)
+bool Ragdoll_Delete(struct entity_s *entity)
 {
     if(entity->physics->bt_joint_count == 0) return false;
 
@@ -222,7 +257,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
     bool result = true;
 
     int top = lua_gettop(engine_lua);
-    assert(top >= 0);
 
     lua_getglobal(engine_lua, "getRagdollSetup");
     if(lua_isfunction(engine_lua, -1))
@@ -302,9 +336,9 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                 lua_getfield(engine_lua, -1, "body1_offset");
                                 if(lua_istable(engine_lua, -1))
                                 {
-                                    setup->joint_setup[i].body1_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body1_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body1_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                    setup->joint_setup[i].body1_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    setup->joint_setup[i].body1_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    setup->joint_setup[i].body1_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -312,9 +346,9 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                 lua_getfield(engine_lua, -1, "body2_offset");
                                 if(lua_istable(engine_lua, -1))
                                 {
-                                    setup->joint_setup[i].body2_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body2_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body2_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                    setup->joint_setup[i].body2_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    setup->joint_setup[i].body2_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    setup->joint_setup[i].body2_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);

@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 
+#include <math.h>
+
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
@@ -25,7 +27,7 @@ extern "C" {
 #include "character_controller.h"
 #include "render.h"
 #include "engine_string.h"
-#include <math.h>
+#include "world.h"
 
 ALfloat                     listener_position[3];
 struct audio_fxmanager_s    fxManager;

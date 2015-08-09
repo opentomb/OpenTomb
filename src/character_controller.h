@@ -3,7 +3,6 @@
 #define CHARACTER_CONTROLLER_H
 
 #include <stdint.h>
-#include "engine.h"
 
 
 /*------ Lara's model-------
@@ -282,7 +281,7 @@ typedef struct character_s
     struct character_stats_s     statistics;
     
     int8_t                       hair_count;
-    struct hair_s               *hairs;
+    struct hair_s              **hairs;
     
     int                          current_weapon;
     int                          weapon_current_state;

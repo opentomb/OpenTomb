@@ -1,27 +1,10 @@
 #ifndef HAIR_H
 #define HAIR_H
 
-#include <assert.h>
+///@TODO: make IHair class and CHair class + fabric method;
+
 #include <stdint.h>
-
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
-
 #include "core/vmath.h"
-#include "character_controller.h"
-#include "engine.h"
-#include "entity.h"
-#include "game.h"
-#include "mesh.h"
-#include "script.h"
-#include "world.h"
 
 #define HAIR_TR1       0
 #define HAIR_TR2       1
@@ -46,77 +29,27 @@ extern "C" {
 #define HAIR_DISCARD_ROOT_FACE 0
 #define HAIR_DISCARD_TAIL_FACE 5
 
-typedef struct hair_element_s
-{
-    base_mesh_s        *mesh;           // Pointer to rendered mesh.
-    btCollisionShape   *shape;          // Pointer to collision shape.
-    btRigidBody        *body;           // Pointer to dynamic body.
-}hair_element_t, *hair_element_p;
-
-typedef struct hair_s
-{
-    engine_container_p        container;
-
-    entity_p                  owner_char;         // Entity who owns this hair.
-    uint32_t                  owner_body;         // Owner entity's body ID.
-
-    uint8_t                   root_index;         // Index of "root" element.
-    uint8_t                   tail_index;         // Index of "tail" element.
-
-    uint8_t                   element_count;      // Overall amount of elements.
-    hair_element_s           *elements;           // Array of elements.
-
-    uint8_t                   joint_count;        // Overall amount of joints.
-    btGeneric6DofConstraint **joints;             // Array of joints.
-
-    uint8_t                   vertex_map_count;
-    uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
-    uint32_t                 *head_vertex_map;    // Head vertex indices to link
-
-}hair_t, *hair_p;
-
-typedef struct hair_setup_s
-{
-    uint32_t     model;              // Hair model ID
-    uint32_t     link_body;          // Lara's head mesh index
-
-    btScalar     root_weight;        // Root and tail hair body weight. Intermediate body
-    btScalar     tail_weight;        // weights are calculated from these two parameters
-
-    btScalar     hair_damping[2];    // Damping affects hair "plasticity"
-    btScalar     hair_inertia;       // Inertia affects hair "responsiveness"
-    btScalar     hair_restitution;   // "Bounciness" of the hair
-    btScalar     hair_friction;      // How much other bodies will affect hair trajectory
-
-    btScalar     joint_overlap;      // How much two hair bodies overlap each other
-
-    btScalar     joint_cfm;          // Constraint force mixing (joint softness)
-    btScalar     joint_erp;          // Error reduction parameter (joint "inertia")
-
-    btVector3    head_offset;        // Linear offset to place hair to
-    btScalar     root_angle[3];      // First constraint set angle (to align hair angle)
-
-    uint32_t     vertex_map_count;   // Amount of REAL vertices to link head and hair
-    uint32_t     hair_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Hair vertex indices to link
-    uint32_t     head_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Head vertex indices to link
-
-}hair_setup_t, *hair_setup_p;
+struct hair_s;
+struct hair_setup_s;
+struct entity_s;
+struct base_mesh_s;
+struct lua_State;
 
 // Gets scripted hair set-up to specified hair set-up structure.
-
-bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup);
+struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index);
 
 // Creates hair into allocated hair structure, using previously defined setup and
 // entity index.
-
-bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity);
+struct hair_s *Hair_Create(struct hair_setup_s *setup, struct entity_s *parent_entity);
 
 // Removes specified hair from entity and clears it from memory.
-
-void Hair_Clear(hair_p hair);
+void Hair_Delete(struct hair_s *hair);
 
 // Constantly updates some specific parameters to keep hair aligned to entity.
+void Hair_Update(struct entity_s *entity);
 
-void Hair_Update(entity_p entity);
+int Hair_GetElementsCount(struct hair_s *hair);
+
+int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, btScalar tr[16]);
 
 #endif  // HAIR_H

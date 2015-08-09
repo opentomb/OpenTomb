@@ -7,12 +7,20 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
 
+#include "camera.h"
 #include "anim_state_control.h"
 #include "engine.h"
+#include "engine_lua.h"
 #include "engine_physics.h"
 #include "controls.h"
 #include "gui.h"
@@ -649,7 +657,7 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown()
 {
-    engine_container_p cont = Container_Create();
+    /*engine_container_p cont = Container_Create();
     btScalar dbgR = 128.0;
     btScalar *v = engine_camera.pos;
     btScalar *dir = engine_camera.view_dir;
@@ -675,7 +683,7 @@ void Controls_PrimaryMouseDown()
     cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
-    body->setCcdSweptSphereRadius(dbgR);
+    body->setCcdSweptSphereRadius(dbgR);*/
 }
 
 

@@ -102,11 +102,7 @@ entity_p Entity_Create();
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
-void Entity_EnableCollision(entity_p ent);
-void Entity_DisableCollision(entity_p ent);
-
 void Entity_UpdateRoomPos(entity_p ent);
-void Entity_UpdateRigidBody(entity_p ent, int force);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
@@ -123,12 +119,13 @@ void Entity_CheckActivators(struct entity_s *ent);
 int  Entity_GetSubstanceState(entity_p entity);
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
+void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
-void Entity_ProcessSector(struct entity_s *ent);
+void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
-void Entity_MoveForward(struct entity_s *ent, btScalar dist);
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
+void Entity_MoveForward(entity_p ent, btScalar dist);
+void Entity_MoveStrafe(entity_p ent, btScalar dist);
+void Entity_MoveVertical(entity_p ent, btScalar dist);
 
 // Helper functions
 

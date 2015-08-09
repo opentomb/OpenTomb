@@ -20,6 +20,7 @@ extern "C" {
 #include "controls.h"
 #include "world.h"
 #include "game.h"
+#include "audio.h"
 #include "mesh.h"
 #include "entity.h"
 #include "camera.h"
@@ -431,7 +432,7 @@ void Game_ApplyControls(struct entity_s *ent)
     }
     else if(control_states.noclip != 0)
     {
-        btVector3 pos;
+        btScalar pos[3];
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
@@ -440,10 +441,10 @@ void Game_ApplyControls(struct entity_s *ent)
         renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos.m_floats[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
-        pos.m_floats[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
-        pos.m_floats[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
-        vec3_copy(ent->transform+12, pos.m_floats);
+        pos[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
+        pos[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
+        pos[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
+        vec3_copy(ent->transform+12, pos);
         Entity_UpdateTransform(ent);
     }
     else
@@ -874,8 +875,8 @@ void Game_Frame(btScalar time)
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
 
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
+    Physics_StepSimulation(time / 2.0);
+    Physics_StepSimulation(time / 2.0);
 
     Controls_RefreshStates();
     Render_UpdateAnimTextures();

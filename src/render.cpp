@@ -5,10 +5,12 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "core/gl_util.h"
+#include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
 #include "core/obb.h"
+#include "vt/tr_versions.h"
 #include "render.h"
 #include "world.h"
 #include "portal.h"
@@ -18,6 +20,7 @@
 #include "mesh.h"
 #include "hair.h"
 #include "entity.h"
+#include "character_controller.h"
 #include "engine.h"
 #include "engine_physics.h"
 #include "bsp_tree.h"
@@ -25,8 +28,9 @@
 #include "shader_description.h"
 #include "shader_manager.h"
 
+
 render_t renderer;
-class dynamicBSP render_dBSP(512 * 1024);
+class CDynamicBSP render_dBSP(512 * 1024);
 
 static uint16_t active_transparency = 0;
 static GLuint   active_texture = 0;
@@ -662,28 +666,28 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
+    {
         return;
+    }
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
-
+    btScalar subModelView[16];
+    btScalar subModelViewProjection[16];
+    btScalar transform[16];
+    base_mesh_p mesh;
     for(int h=0; h<entity->character->hair_count; h++)
     {
-        for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
+        int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
+        for(uint16_t i=0; i<num_elements; i++)
         {
-            btScalar subModelView[16];
-            btScalar subModelViewProjection[16];
-
-            btScalar transform[16];
-            const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(transform);
-
+            Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
             Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
 
             glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
+            Render_Mesh(mesh, NULL, NULL);
         }
     }
 }

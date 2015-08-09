@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "bullet/LinearMath/btScalar.h"
+#include "core/vmath.h"
 
 struct polygon_s;
 struct frustum_s;
@@ -33,7 +33,7 @@ typedef struct bsp_node_s
 } bsp_node_t, *bsp_node_p;
 
 
-class dynamicBSP
+class CDynamicBSP
 {
     uint8_t             *m_tree_buffer;
     uint32_t             m_tree_buffer_size;
@@ -59,8 +59,8 @@ public:
     struct bsp_node_s   *m_root;
     GLuint m_vbo;
     
-    dynamicBSP(uint32_t size);
-   ~dynamicBSP();
+    CDynamicBSP(uint32_t size);
+   ~CDynamicBSP();
    
     void addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f);
     void reset(struct anim_seq_s *seq);

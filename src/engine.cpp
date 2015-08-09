@@ -22,6 +22,8 @@ extern "C" {
 #include "core/redblack.h"
 #include "core/vmath.h"
 #include "vt/vt_level.h"
+#include "audio.h"
+#include "camera.h"
 #include "mesh.h"
 #include "render.h"
 #include "gui.h"
@@ -31,9 +33,10 @@ extern "C" {
 #include "engine.h"
 #include "engine_lua.h"
 #include "engine_physics.h"
+#include "controls.h"
 
 extern SDL_Window                      *sdl_window;
-extern SDL_GLContext                   sdl_gl_context;
+extern SDL_GLContext                    sdl_gl_context;
 extern SDL_GameController              *sdl_controller;
 extern SDL_Joystick                    *sdl_joystick;
 extern SDL_Haptic                      *sdl_haptic;

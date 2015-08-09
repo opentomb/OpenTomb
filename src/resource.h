@@ -91,7 +91,7 @@ void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_t
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
-int      Res_Sector_IsWall(room_sector_p ws, room_sector_p ns);
+int      Res_Sector_IsWall(struct room_sector_s *ws, struct room_sector_s *ns);
 
 void     Res_Poly_SortInMesh(struct base_mesh_s *mesh);
 void     TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);
@@ -100,10 +100,6 @@ bool     Res_Poly_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, 
 void     Res_FixRooms(struct world_s *world);   // Fix start-up room states.
 
 struct   skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version);
-
-// Create entity function from script, if exists.
-
-bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
 
 // Assign pickup functions to previously created base items.
 
@@ -145,23 +141,5 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
 void TR_GenCameras(struct world_s *world, class VT_Level *tr);
 void TR_GenSamples(struct world_s *world, class VT_Level *tr);
-
-// Helper functions to convert legacy TR structs to native OpenTomb structs.
-
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
-
-// Functions for getting various parameters from legacy TR structs.
-
-void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_frame_s *bone_frame);
-int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
-int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
-long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
-
-// Main functions which are used to translate legacy TR floor data
-// to native OpenTomb structs.
-
-int      TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr);
-void     TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
 
 #endif

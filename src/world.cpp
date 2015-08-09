@@ -5,9 +5,6 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/vmath.h"
@@ -32,7 +29,6 @@
 void Room_Empty(room_p room)
 {
     portal_p p;
-    btRigidBody* body;
 
     if(room == NULL)
     {
@@ -68,25 +64,8 @@ void Room_Empty(room_p room)
     {
         for(uint32_t i=0;i<room->static_mesh_count;i++)
         {
-            body = room->static_mesh[i].bt_body;
-            if(body)
-            {
-                body->setUserPointer(NULL);
-                if(body->getMotionState())
-                {
-                    delete body->getMotionState();
-                    body->setMotionState(NULL);
-                }
-                if(body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                    body->setCollisionShape(NULL);
-                }
-
-                bt_engine_dynamicsWorld->removeRigidBody(body);
-                delete body;
-                room->static_mesh[i].bt_body = NULL;
-            }
+            Physics_DeleteObject(room->static_mesh[i].physics_body);
+            room->static_mesh[i].physics_body = NULL;
 
             OBB_Clear(room->static_mesh[i].obb);
             free(room->static_mesh[i].obb);
@@ -103,28 +82,8 @@ void Room_Empty(room_p room)
         room->static_mesh_count = 0;
     }
 
-    if(room->bt_body)
-    {
-        body = room->bt_body;
-        if(body)
-        {
-            body->setUserPointer(NULL);
-            if(body->getMotionState())
-            {
-                delete body->getMotionState();
-                body->setMotionState(NULL);
-            }
-            if(body->getCollisionShape())
-            {
-                delete body->getCollisionShape();
-                body->setCollisionShape(NULL);
-            }
-
-            bt_engine_dynamicsWorld->removeRigidBody(body);
-            delete body;
-            room->bt_body = NULL;
-        }
-    }
+    Physics_DeleteObject(room->physics_body);
+    room->physics_body = NULL;
 
     if(room->sectors_count)
     {
@@ -393,11 +352,16 @@ bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
         (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (!ignore_doors && (s1->sector_below || s2->sector_below))     )
+    {
           return false;
+    }
 
     for(int i = 0; i < 4; i++)
     {
-        if(s1->floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
+        if(s1->floor_corners[0][2] != s2->floor_corners[0][2])
+        {
+            return false;
+        }
     }
 
     return true;
@@ -412,45 +376,52 @@ bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_door
     if( (s1->ceiling != s2->ceiling) ||
         (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_above || s2->sector_above))       )
+        (!ignore_doors && (s1->sector_above || s2->sector_above)) )
+    {
           return false;
+    }
 
     for(int i = 0; i < 4; i++)
     {
-        if(s1->ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+        if(s1->ceiling_corners[0][2] != s2->ceiling_corners[0][2])
+        {
+            return false;
+        }
     }
 
     return true;
 }
 
 
-btVector3 Sector_HighestFloorCorner(room_sector_p rs)
+void Sector_HighestFloorCorner(room_sector_p rs, btScalar v[3])
 {
-    btVector3 r1 = (rs->floor_corners[0].m_floats[2] > rs->floor_corners[1].m_floats[2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    btVector3 r2 = (rs->floor_corners[2].m_floats[2] > rs->floor_corners[3].m_floats[2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+    btScalar *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
+    btScalar *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
 
-    return (r1.m_floats[2] > r2.m_floats[2])?(r1):(r2);
+    if(r1[2] > r2[2])
+    {
+        vec3_copy(v, r1);
+    }
+    else
+    {
+        vec3_copy(v, r2);
+    }
 }
 
 
-btVector3 Sector_LowestCeilingCorner(room_sector_p rs)
+void Sector_LowestCeilingCorner(room_sector_p rs, btScalar v[3])
 {
-    btVector3 r1 = (rs->ceiling_corners[0].m_floats[2] > rs->ceiling_corners[1].m_floats[2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
-    btVector3 r2 = (rs->ceiling_corners[2].m_floats[2] > rs->ceiling_corners[3].m_floats[2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
+    btScalar *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
+    btScalar *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
 
-    return (r1.m_floats[2] > r2.m_floats[2])?(r2):(r1);
-}
-
-
-btVector3 Sector_GetFloorPoint(room_sector_p rs)
-{
-    return Sector_HighestFloorCorner(Sector_GetLowest(rs));
-}
-
-
-btVector3 Sector_GetCeilingPoint(room_sector_p rs)
-{
-    return Sector_LowestCeilingCorner(Sector_GetHighest(rs));
+    if(r1[2] < r2[2])
+    {
+        vec3_copy(v, r1);
+    }
+    else
+    {
+        vec3_copy(v, r2);
+    }
 }
 
 
@@ -545,40 +516,8 @@ void World_Empty(world_p world)
     RB_Free(world->entity_tree);
     world->entity_tree = NULL;
 
-    /* Now we can delete bullet misc */
-    if(bt_engine_dynamicsWorld != NULL)
-    {
-        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
-        {
-            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-            btRigidBody* body = btRigidBody::upcast(obj);
-            if(body != NULL)
-            {
-                engine_container_p cont = (engine_container_p)body->getUserPointer();
-                body->setUserPointer(NULL);
-
-                if(cont && (cont->object_type == OBJECT_BULLET_MISC))
-                {
-                    if(body->getMotionState())
-                    {
-                        delete body->getMotionState();
-                        body->setMotionState(NULL);
-                    }
-
-                    if(body->getCollisionShape())
-                    {
-                        delete body->getCollisionShape();
-                        body->setCollisionShape(NULL);
-                    }
-
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
-                    cont->room = NULL;
-                    free(cont);
-                    delete body;
-                }
-            }
-        }
-    }
+    /* Now we can delete physics misc objects */
+    Physics_CleanUpObjects();
 
     for(uint32_t i=0;i<world->room_count;i++)
     {
@@ -796,7 +735,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
 
             SSBoneFrame_CreateFromModel(ent->bf, model);
             Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
-            BT_GenEntityRigidBody(ent);
+            Physics_GenEntityRigidBody(ent);
 
             Entity_RebuildBV(ent);
             if(ent->self->room != NULL)
@@ -1105,16 +1044,16 @@ void Room_Enable(room_p room)
         return;
     }
 
-    if(room->bt_body != NULL)
+    if(room->physics_body != NULL)
     {
-        bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
+        Physics_EnableObject(room->physics_body);
     }
 
     for(uint32_t i=0;i<room->static_mesh_count;i++)
     {
-        if(room->static_mesh[i].bt_body != NULL)
+        if(room->static_mesh[i].physics_body != NULL)
         {
-            bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
+            Physics_EnableObject(room->static_mesh[i].physics_body);
         }
     }
 
@@ -1139,16 +1078,16 @@ void Room_Disable(room_p room)
         return;
     }
 
-    if(room->bt_body != NULL)
+    if(room->physics_body != NULL)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(room->bt_body);
+        Physics_DisableObject(room->physics_body);
     }
 
     for(uint32_t i=0;i<room->static_mesh_count;i++)
     {
-        if(room->static_mesh[i].bt_body != NULL)
+        if(room->static_mesh[i].physics_body != NULL)
         {
-            bt_engine_dynamicsWorld->removeRigidBody(room->static_mesh[i].bt_body);
+            Physics_DisableObject(room->static_mesh[i].physics_body);
         }
     }
 

@@ -15,14 +15,13 @@
 #include <stdint.h>
 #include "core/vmath.h"
 
-class btRigidBody;
-
 struct polygon_s;
 struct room_s;
 struct engine_container_s;
 struct obb_s;
 struct vertex_s;
 struct entity_s;
+struct physics_object_s;
 
 /*
  * base mesh, uses everywhere
@@ -145,7 +144,7 @@ typedef struct static_mesh_s
     struct engine_container_s  *self;
 
     struct base_mesh_s         *mesh;                                           // base model
-    btRigidBody                *bt_body;
+    struct physics_object_s    *physics_body;
 }static_mesh_t, *static_mesh_p;
 
 /*

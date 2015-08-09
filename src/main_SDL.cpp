@@ -21,9 +21,6 @@ extern "C" {
 #include "al/AL/alext.h"
 }
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "vt/vt_level.h"
 
 #include "core/system.h"
 #include "core/console.h"
@@ -32,6 +29,7 @@ extern "C" {
 #include "core/polygon.h"
 #include "core/obb.h"
 
+#include "vt/vt_level.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "main_SDL.h"

@@ -5,9 +5,7 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
-#include "world.h"
-#include "script.h"
-#include "controls.h"
+#include "core/vmath.h"
 
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
@@ -115,12 +113,6 @@ typedef struct engine_control_state_s
 }engine_control_state_t, *engine_control_state_p;
 
 
-extern lua_State                               *engine_lua;
-extern struct engine_control_state_s            control_states;
-extern struct control_settings_s                control_mapper;
-
-extern struct audio_settings_s                  audio_settings;
-
 extern btScalar                                 engine_frame_time;
 extern struct camera_s                          engine_camera;
 extern struct world_s                           engine_world;
@@ -155,9 +147,6 @@ extern "C" int  Engine_ExecCmd(char *ch);
 
 void Engine_InitConfig(const char *filename);
 void Engine_SaveConfig();
-
-void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
 
 #endif

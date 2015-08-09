@@ -115,6 +115,9 @@ typedef struct control_settings_s
 }control_settings_t, *control_settings_p;
 
 
+extern struct engine_control_state_s            control_states;
+extern struct control_settings_s                control_mapper;
+
 void Controls_PollSDLInput();
 void Controls_DebugKeys(int button, int state);
 void Controls_PrimaryMouseDown();

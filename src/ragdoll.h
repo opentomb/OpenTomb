@@ -1,7 +1,6 @@
 #ifndef RAGDOLL_H
 #define RAGDOLL_H
 
-#include <assert.h>
 #include <stdint.h>
 
 extern "C" {
@@ -10,13 +9,9 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include "core/vmath.h"
 
-#include "engine.h"
-#include "entity.h"
-
+struct entity_s;
 
 #define RD_CONSTRAINT_POINT 0
 #define RD_CONSTRAINT_HINGE 1
@@ -32,8 +27,8 @@ typedef struct rd_joint_setup_s
     uint16_t        body_index;     // Primary body index
     uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
-    btVector3       body1_offset;   // Primary pivot point offset
-    btVector3       body2_offset;   // Secondary pivot point offset
+    btScalar        body1_offset[3];   // Primary pivot point offset
+    btScalar        body2_offset[3];   // Secondary pivot point offset
     
     btScalar        body1_angle[3]; // Primary pivot point angle
     btScalar        body2_angle[3]; // Secondary pivot point angle
@@ -74,8 +69,8 @@ typedef struct rd_setup_s
 }rd_setup_t, *rd_setup_p;
 
 
-bool Ragdoll_Create(entity_p entity, rd_setup_p setup);
-bool Ragdoll_Delete(entity_p entity);
+bool Ragdoll_Create(struct entity_s *entity, rd_setup_p setup);
+bool Ragdoll_Delete(struct entity_s *entity);
 
 bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup);
 void Ragdoll_ClearSetup(rd_setup_p setup);

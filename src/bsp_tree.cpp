@@ -1,4 +1,5 @@
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -13,7 +14,7 @@
 #define NEED_REALLOC_VERTEX_BUFF      (2)
 #define NEED_REALLOC_TEMP_BUFF        (3)
 
-struct bsp_node_s *dynamicBSP::createBSPNode()
+struct bsp_node_s *CDynamicBSP::createBSPNode()
 {
     bsp_node_p ret = (bsp_node_p)(m_tree_buffer + m_tree_allocated);
     m_tree_allocated += sizeof(bsp_node_t);
@@ -25,7 +26,7 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 }
 
 
-struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
+struct polygon_s *CDynamicBSP::createPolygon(uint16_t vertex_count)
 {
     polygon_p ret = (polygon_p)(m_temp_buffer + m_temp_allocated);
     m_temp_allocated += sizeof(polygon_t);
@@ -37,7 +38,7 @@ struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
 }
 
 
-void dynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
+void CDynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 {
     if(m_realloc_state || (m_vertex_allocated + p->vertex_count >= m_vertex_buffer_size))
     {
@@ -76,7 +77,7 @@ void dynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 }
 
 
-void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
+void CDynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 {
     if(m_realloc_state)
     {
@@ -169,7 +170,7 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 }
 
 
-dynamicBSP::dynamicBSP(uint32_t size)
+CDynamicBSP::CDynamicBSP(uint32_t size)
 {
     size = (size < 8192)?(8192):(size);
 
@@ -193,7 +194,7 @@ dynamicBSP::dynamicBSP(uint32_t size)
 }
 
 
-dynamicBSP::~dynamicBSP()
+CDynamicBSP::~CDynamicBSP()
 {
     if(m_vbo != 0)
     {
@@ -228,7 +229,7 @@ dynamicBSP::~dynamicBSP()
 }
 
 
-void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
+void CDynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
 {
     for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
     {
@@ -298,7 +299,7 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, str
 }
 
 
-void dynamicBSP::reset(struct anim_seq_s *seq)
+void CDynamicBSP::reset(struct anim_seq_s *seq)
 {
     if(m_vbo == 0)
     {

@@ -5,11 +5,15 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
-#include "audio.h"
-#include "camera.h"
-#include "bordered_texture_atlas.h"
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
+
+extern "C" {
+#include "al/AL/al.h"
+#include "al/AL/alc.h"
+#include "al/AL/alext.h"
+#include "al/AL/efx-presets.h"
+}
+
+#include "core/vmath.h"
 
 // Native TR floor data functions
 
@@ -163,9 +167,10 @@
 #define AMASK_OP_OR  0
 #define AMASK_OP_XOR 1
 
-class btCollisionShape;
-class btRigidBody;
-
+class  AudioSource;
+class  StreamTrack;
+class  bordered_texture_atlas;
+struct physics_object_s;
 struct room_s;
 struct polygon_s;
 struct camera_s;
@@ -219,11 +224,11 @@ typedef struct room_sector_s
     int16_t                     index_y;
     btScalar                    pos[3];
 
-    btVector3                   ceiling_corners[4];
+    btScalar                    ceiling_corners[4][3];
     uint8_t                     ceiling_diagonal_type;
     uint8_t                     ceiling_penetration_config;
 
-    btVector3                   floor_corners[4];
+    btScalar                    floor_corners[4][3];
     uint8_t                     floor_diagonal_type;
     uint8_t                     floor_penetration_config;
 
@@ -233,10 +238,10 @@ typedef struct room_sector_s
 
 typedef struct sector_tween_s
 {
-    btVector3                   floor_corners[4];
+    btScalar                    floor_corners[4][3];
     uint8_t                     floor_tween_type;
 
-    btVector3                   ceiling_corners[4];
+    btScalar                    ceiling_corners[4][3];
     uint8_t                     ceiling_tween_type;
 }sector_tween_t, *sector_tween_p;
 
@@ -262,7 +267,7 @@ typedef struct room_s
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct sprite_buffer_s *sprite_buffer;               // Render data for sprites
+    struct sprite_buffer_s     *sprite_buffer;                                  // Render data for sprites
 
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;
@@ -297,7 +302,7 @@ typedef struct room_s
     struct room_s              *near_room_list[32];
     uint16_t                    overlapped_room_list_size;
     struct room_s              *overlapped_room_list[32];
-    btRigidBody                *bt_body;
+    struct physics_object_s    *physics_body;
 
     struct engine_container_s  *self;
 }room_t, *room_p;
@@ -417,10 +422,8 @@ room_sector_p Sector_CheckPortalPointer(room_sector_p rs);
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors);
 bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors);
-btVector3 Sector_HighestFloorCorner(room_sector_p rs);
-btVector3 Sector_LowestCeilingCorner(room_sector_p rs);
-btVector3 Sector_GetFloorPoint(room_sector_p rs);
-btVector3 Sector_GetCeilingPoint(room_sector_p rs);
+void Sector_HighestFloorCorner(room_sector_p rs, btScalar v[3]);
+void Sector_LowestCeilingCorner(room_sector_p rs, btScalar v[3]);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);

@@ -26,6 +26,29 @@
 #include "world.h"
 
 
+struct physics_object_s
+{
+    btRigidBody    *bt_body;
+};
+
+typedef struct physics_data_s
+{
+    // kinematic
+    btCollisionShape                  **shapes;
+    btRigidBody                       **bt_body;
+
+    // dynamic
+    uint32_t                            no_fix_skeletal_parts;
+    int8_t                              no_fix_all;
+    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
+    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    uint16_t                            objects_count;          // Ragdoll joints
+    uint16_t                            bt_joint_count;         // Ragdoll joints
+    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+
+    struct collision_node_s           *collisions;
+}physics_data_t, *physics_data_p;
+
 /*
  * INTERNAL BHYSICS CLASSES
  */
@@ -126,22 +149,36 @@ private:
 };
 
 
-btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
-btCollisionDispatcher                   *bt_engine_dispatcher;
-btGhostPairCallback                     *bt_engine_ghostPairCallback;
-btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-btSequentialImpulseConstraintSolver     *bt_engine_solver;
-btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
+btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration = NULL;
+btCollisionDispatcher                   *bt_engine_dispatcher = NULL;
+btGhostPairCallback                     *bt_engine_ghostPairCallback = NULL;
+btBroadphaseInterface                   *bt_engine_overlappingPairCache = NULL;
+btSequentialImpulseConstraintSolver     *bt_engine_solver = NULL;
+btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld = NULL;
 
+uint32_t                                 collision_nodes_pool_size = 0;
+uint32_t                                 collision_nodes_pool_used = 0;
+struct collision_node_s                 *collision_nodes_pool = NULL;
+
+struct collision_node_s *Physics_GetCollisionNode();
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+
+/* bullet collision model calculation */
+btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 int  Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 
 // Bullet Physics initialization.
 void Physics_Init()
 {
+    collision_nodes_pool = (struct collision_node_s*)malloc(DEFAULT_COLLSION_NODE_POOL_SIZE * sizeof(struct collision_node_s));
+    collision_nodes_pool_size = DEFAULT_COLLSION_NODE_POOL_SIZE;
+    collision_nodes_pool_used = 0;
+
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
@@ -183,8 +220,69 @@ void Physics_Destroy()
     delete bt_engine_collisionConfiguration;
 
     delete bt_engine_ghostPairCallback;
+
+    free(collision_nodes_pool);
+    collision_nodes_pool = NULL;
+    collision_nodes_pool_size = 0;
+    collision_nodes_pool_used = 0;
 }
 
+
+void Physics_StepSimulation(btScalar time)
+{
+    bt_engine_dynamicsWorld->stepSimulation(time, 0);
+    collision_nodes_pool_used = 0;
+}
+
+
+struct collision_node_s *Physics_GetCollisionNode()
+{
+    struct collision_node_s *ret = NULL;
+    if(collision_nodes_pool_used < collision_nodes_pool_size)
+    {
+        ret = collision_nodes_pool + collision_nodes_pool_used;
+        collision_nodes_pool_used++;
+    }
+    return ret;
+}
+
+
+void Physics_CleanUpObjects()
+{
+    if(bt_engine_dynamicsWorld != NULL)
+    {
+        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+        {
+            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+            btRigidBody* body = btRigidBody::upcast(obj);
+            if(body != NULL)
+            {
+                engine_container_p cont = (engine_container_p)body->getUserPointer();
+                body->setUserPointer(NULL);
+
+                if(cont && (cont->object_type == OBJECT_BULLET_MISC))
+                {
+                    if(body->getMotionState())
+                    {
+                        delete body->getMotionState();
+                        body->setMotionState(NULL);
+                    }
+
+                    if(body->getCollisionShape())
+                    {
+                        delete body->getCollisionShape();
+                        body->setCollisionShape(NULL);
+                    }
+
+                    bt_engine_dynamicsWorld->removeRigidBody(body);
+                    cont->room = NULL;
+                    free(cont);
+                    delete body;
+                }
+            }
+        }
+    }
+}
 
 struct physics_data_s *Physics_CreatePhysicsData()
 {
@@ -199,7 +297,7 @@ struct physics_data_s *Physics_CreatePhysicsData()
     ret->manifoldArray = NULL;
     ret->shapes = NULL;
     ret->ghostObjects = NULL;
-    ret->last_collisions = NULL;
+    ret->collisions = NULL;
 
     return ret;
 }
@@ -209,12 +307,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 {
     if(physics)
     {
-        if(physics->last_collisions)
-        {
-            free(physics->last_collisions);
-            physics->last_collisions = NULL;
-        }
-
+        physics->collisions = NULL;
         if(physics->ghostObjects)
         {
             for(int i=0;i<physics->objects_count;i++)
@@ -514,18 +607,24 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[0],
+                    btScalar *v0 = heightmap[i].floor_corners[3];
+                    btScalar *v1 = heightmap[i].floor_corners[2];
+                    btScalar *v2 = heightmap[i].floor_corners[0];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
+                    btScalar *v0 = heightmap[i].floor_corners[2];
+                    btScalar *v1 = heightmap[i].floor_corners[1];
+                    btScalar *v2 = heightmap[i].floor_corners[0];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
@@ -534,18 +633,24 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
+                    btScalar *v0 = heightmap[i].floor_corners[3];
+                    btScalar *v1 = heightmap[i].floor_corners[2];
+                    btScalar *v2 = heightmap[i].floor_corners[1];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
+                    btScalar *v0 = heightmap[i].floor_corners[3];
+                    btScalar *v1 = heightmap[i].floor_corners[1];
+                    btScalar *v2 = heightmap[i].floor_corners[0];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
@@ -560,18 +665,24 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
+                    btScalar *v0 = heightmap[i].ceiling_corners[0];
+                    btScalar *v1 = heightmap[i].ceiling_corners[2];
+                    btScalar *v2 = heightmap[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
+                    btScalar *v0 = heightmap[i].ceiling_corners[0];
+                    btScalar *v1 = heightmap[i].ceiling_corners[1];
+                    btScalar *v2 = heightmap[i].ceiling_corners[2];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
@@ -580,18 +691,24 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[3],
+                    btScalar *v0 = heightmap[i].ceiling_corners[0];
+                    btScalar *v1 = heightmap[i].ceiling_corners[1];
+                    btScalar *v2 = heightmap[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
+                    btScalar *v0 = heightmap[i].ceiling_corners[1];
+                    btScalar *v1 = heightmap[i].ceiling_corners[2];
+                    btScalar *v2 = heightmap[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          true);
                     cnt++;
                 }
@@ -605,47 +722,70 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
                 {
-                    btScalar t = fabs((tweens[i].ceiling_corners[2].m_floats[2] - tweens[i].ceiling_corners[3].m_floats[2]) /
-                                      (tweens[i].ceiling_corners[0].m_floats[2] - tweens[i].ceiling_corners[1].m_floats[2]));
+                    btScalar t = fabs((tweens[i].ceiling_corners[2][2] - tweens[i].ceiling_corners[3][2]) /
+                                      (tweens[i].ceiling_corners[0][2] - tweens[i].ceiling_corners[1][2]));
                     t = 1.0 / (1.0 + t);
-                    btVector3 o;
-                    o.setInterpolate3(tweens[i].ceiling_corners[0], tweens[i].ceiling_corners[2], t);
-                    trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                         tweens[i].ceiling_corners[1],
-                                         o, true);
-                    trimesh->addTriangle(tweens[i].ceiling_corners[3],
-                                         tweens[i].ceiling_corners[2],
-                                         o, true);
+                    btScalar o[3], t1 = 1.0 - t;
+                    btScalar *v0 = tweens[i].ceiling_corners[0];
+                    btScalar *v1 = tweens[i].ceiling_corners[1];
+                    btScalar *v2 = tweens[i].ceiling_corners[2];
+                    btScalar *v3 = tweens[i].ceiling_corners[3];
+                    vec3_interpolate_macro(o, v0, v2, t, t1);
+
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(o[0], o[1], o[2]),
+                                         true);
+                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(o[0], o[1], o[2]),
+                                         true);
                     cnt += 2;
                 }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt++;
+                {
+                    btScalar *v0 = tweens[i].ceiling_corners[0];
+                    btScalar *v1 = tweens[i].ceiling_corners[1];
+                    btScalar *v2 = tweens[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         true);
+                    cnt++;
+                }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt++;
+                {
+                    btScalar *v0 = tweens[i].ceiling_corners[2];
+                    btScalar *v1 = tweens[i].ceiling_corners[1];
+                    btScalar *v2 = tweens[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         true);
+                    cnt++;
+                }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_QUAD:
-                trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt += 2;
+                {
+                    btScalar *v0 = tweens[i].ceiling_corners[0];
+                    btScalar *v1 = tweens[i].ceiling_corners[1];
+                    btScalar *v2 = tweens[i].ceiling_corners[2];
+                    btScalar *v3 = tweens[i].ceiling_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
+                                         true);
+                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
+                                         true);
+                    cnt += 2;
+                }
                 break;
         };
 
@@ -653,47 +793,70 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
                 {
-                    btScalar t = fabs((tweens[i].floor_corners[2].m_floats[2] - tweens[i].floor_corners[3].m_floats[2]) /
-                                      (tweens[i].floor_corners[0].m_floats[2] - tweens[i].floor_corners[1].m_floats[2]));
+                    btScalar t = fabs((tweens[i].floor_corners[2][2] - tweens[i].floor_corners[3][2]) /
+                                      (tweens[i].floor_corners[0][2] - tweens[i].floor_corners[1][2]));
                     t = 1.0 / (1.0 + t);
-                    btVector3 o;
-                    o.setInterpolate3(tweens[i].floor_corners[0], tweens[i].floor_corners[2], t);
-                    trimesh->addTriangle(tweens[i].floor_corners[0],
-                                         tweens[i].floor_corners[1],
-                                         o, true);
-                    trimesh->addTriangle(tweens[i].floor_corners[3],
-                                         tweens[i].floor_corners[2],
-                                         o, true);
+                    btScalar o[3], t1 = 1.0 - t;
+                    btScalar *v0 = tweens[i].floor_corners[0];
+                    btScalar *v1 = tweens[i].floor_corners[1];
+                    btScalar *v2 = tweens[i].floor_corners[2];
+                    btScalar *v3 = tweens[i].floor_corners[3];
+                    vec3_interpolate_macro(o, v0, v2, t, t1);
+
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(o[0], o[1], o[2]),
+                                         true);
+                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(o[0], o[1], o[2]),
+                                         true);
                     cnt += 2;
                 }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                trimesh->addTriangle(tweens[i].floor_corners[0],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt++;
+                {
+                    btScalar *v0 = tweens[i].floor_corners[0];
+                    btScalar *v1 = tweens[i].floor_corners[1];
+                    btScalar *v2 = tweens[i].floor_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         true);
+                    cnt++;
+                }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                trimesh->addTriangle(tweens[i].floor_corners[2],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt++;
+                {
+                    btScalar *v0 = tweens[i].floor_corners[2];
+                    btScalar *v1 = tweens[i].floor_corners[1];
+                    btScalar *v2 = tweens[i].floor_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
+                                         true);
+                    cnt++;
+                }
                 break;
 
             case TR_SECTOR_TWEEN_TYPE_QUAD:
-                trimesh->addTriangle(tweens[i].floor_corners[0],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                trimesh->addTriangle(tweens[i].floor_corners[2],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt += 2;
+                {
+                    btScalar *v0 = tweens[i].floor_corners[0];
+                    btScalar *v1 = tweens[i].floor_corners[1];
+                    btScalar *v2 = tweens[i].floor_corners[2];
+                    btScalar *v3 = tweens[i].floor_corners[3];
+                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
+                                         true);
+                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
+                                         true);
+                    cnt += 2;
+                }
                 break;
         };
     }
@@ -712,7 +875,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
  * =============================================================================
  */
 
-void BT_GenEntityRigidBody(struct entity_s *ent)
+void Physics_GenEntityRigidBody(struct entity_s *ent)
 {
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
@@ -769,6 +932,107 @@ void BT_GenEntityRigidBody(struct entity_s *ent)
 }
 
 
+void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
+{
+    btCollisionShape *cshape = NULL;
+
+    smesh->physics_body = NULL;
+    switch(smesh->self->collision_shape)
+    {
+        case COLLISION_SHAPE_BOX:
+            cshape = BT_CSfromBBox(smesh->cbb_min, smesh->cbb_max);
+            break;
+
+        case COLLISION_SHAPE_BOX_BASE:
+            cshape = BT_CSfromBBox(smesh->mesh->bb_min, smesh->mesh->bb_max);
+            break;
+
+        case COLLISION_SHAPE_TRIMESH:
+            cshape = BT_CSfromMesh(smesh->mesh, true, true, true);
+            break;
+
+        case COLLISION_SHAPE_TRIMESH_CONVEX:
+            cshape = BT_CSfromMesh(smesh->mesh, true, true, false);
+            break;
+
+        default:
+            cshape = NULL;
+            break;
+    };
+
+    if(cshape)
+    {
+        btVector3 localInertia(0, 0, 0);
+        btTransform startTransform;
+        startTransform.setFromOpenGLMatrix(smesh->transform);
+        smesh->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
+        btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+        smesh->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+        bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        smesh->physics_body->bt_body->setUserPointer(smesh->self);
+    }
+}
+
+
+void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
+{
+    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, tweens, num_tweens, true, true);
+    room->physics_body = NULL;
+
+    if(cshape)
+    {
+        btVector3 localInertia(0, 0, 0);
+        btTransform tr;
+        tr.setFromOpenGLMatrix(room->transform);
+        room->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
+        btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+        room->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+        bt_engine_dynamicsWorld->addRigidBody(room->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        room->physics_body->bt_body->setUserPointer(room->self);
+        room->physics_body->bt_body->setUserIndex(0);
+        room->physics_body->bt_body->setRestitution(1.0);
+        room->physics_body->bt_body->setFriction(1.0);
+        room->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
+        room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+    }
+}
+
+
+void Physics_DeleteObject(struct physics_object_s *obj)
+{
+    if(obj)
+    {
+        obj->bt_body->setUserPointer(NULL);
+        if(obj->bt_body->getMotionState())
+        {
+            delete obj->bt_body->getMotionState();
+            obj->bt_body->setMotionState(NULL);
+        }
+        if(obj->bt_body->getCollisionShape())
+        {
+            delete obj->bt_body->getCollisionShape();
+            obj->bt_body->setCollisionShape(NULL);
+        }
+
+        bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+        delete obj->bt_body;
+        free(obj);
+    }
+}
+
+
+void Physics_EnableObject(struct physics_object_s *obj)
+{
+    bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+}
+
+
+void Physics_DisableObject(struct physics_object_s *obj)
+{
+    bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+}
+
+
 void Entity_CreateGhosts(struct entity_s *ent)
 {
     if(ent->bf->animations.model->mesh_count > 0)
@@ -779,7 +1043,6 @@ void Entity_CreateGhosts(struct entity_s *ent)
         ent->physics->manifoldArray = new btManifoldArray();
         ent->physics->shapes = (btCollisionShape**)malloc(ent->bf->bone_tag_count * sizeof(btCollisionShape*));
         ent->physics->ghostObjects = (btPairCachingGhostObject**)malloc(ent->bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
-        ent->physics->last_collisions = (entity_collision_node_p)malloc(ent->bf->bone_tag_count * sizeof(entity_collision_node_t));
         for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
             btVector3 box;
@@ -802,7 +1065,7 @@ void Entity_CreateGhosts(struct entity_s *ent)
             ent->physics->ghostObjects[i]->setCollisionShape(ent->physics->shapes[i]);
             bt_engine_dynamicsWorld->addCollisionObject(ent->physics->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
-            ent->physics->last_collisions[i].obj_count = 0;
+            ent->physics->collisions = NULL;
         }
     }
 }
@@ -880,6 +1143,142 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 }
 
 
+/**
+ * This function enables collision for entity_p in all cases exept NULL models.
+ * If collision models does not exists, function will create them;
+ * @param ent - pointer to the entity.
+ */
+void Entity_EnableCollision(struct entity_s *ent)
+{
+    if(ent->physics->bt_body != NULL)
+    {
+        ent->self->collision_type |= 0x0001;
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            btRigidBody *b = ent->physics->bt_body[i];
+            if((b != NULL) && !b->isInWorld())
+            {
+                bt_engine_dynamicsWorld->addRigidBody(b);
+            }
+        }
+    }
+    else
+    {
+        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;                   ///@TODO: order collision shape and entity collision type flags! it is a different things!
+        Physics_GenEntityRigidBody(ent);
+    }
+}
+
+
+void Entity_DisableCollision(struct entity_s *ent)
+{
+    if(ent->physics->bt_body != NULL)
+    {
+        ent->self->collision_type &= ~0x0001;
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            btRigidBody *b = ent->physics->bt_body[i];
+            if((b != NULL) && b->isInWorld())
+            {
+                bt_engine_dynamicsWorld->removeRigidBody(b);
+            }
+        }
+    }
+}
+
+
+void Entity_SetCollisionScale(struct entity_s *ent)
+{
+    if(ent->physics && ent->physics->bt_body)
+    {
+        for(int i=0; i<ent->physics->objects_count; i++)
+        {
+            if(ent->physics->bt_body[i] != NULL)
+            {
+                bt_engine_dynamicsWorld->removeRigidBody(ent->physics->bt_body[i]);
+                    ent->physics->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
+                bt_engine_dynamicsWorld->addRigidBody(ent->physics->bt_body[i]);
+
+                ent->physics->bt_body[i]->activate();
+            }
+        }
+    }
+}
+
+
+void Entity_SetBodyMass(struct entity_s *ent, btScalar mass, uint16_t index)
+{
+    btVector3 inertia (0.0, 0.0, 0.0);
+    if(ent->physics->bt_body[index])
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(ent->physics->bt_body[index]);
+
+            ent->physics->bt_body[index]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+
+            ent->physics->bt_body[index]->setMassProps(mass, inertia);
+
+            ent->physics->bt_body[index]->updateInertiaTensor();
+            ent->physics->bt_body[index]->clearForces();
+
+            ent->physics->bt_body[index]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
+
+            btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
+            ent->physics->bt_body[index]->setLinearFactor (factor);
+            ent->physics->bt_body[index]->setAngularFactor(factor);
+
+            //ent->physics_body[index]->forceActivationState(DISABLE_DEACTIVATION);
+
+            //ent->physics_body[index]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+            //ent->physics_body[index]->setCcdSweptSphereRadius(32.0);
+
+        bt_engine_dynamicsWorld->addRigidBody(ent->physics->bt_body[index]);
+
+        ent->physics->bt_body[index]->activate();
+
+        //ent->physics_body[index]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
+        //ent->physics_body[index]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
+
+        //ent->self->object_type = OBJECT_ENTITY;
+        //ent->physics_body[index]->setUserPointer(ent->self);
+    }
+}
+
+
+void Entity_PushBody(struct entity_s *ent, btScalar speed[3], uint16_t index)
+{
+    if(ent->physics->bt_body[index])
+    {
+        ent->physics->bt_body[index]->setLinearVelocity(btVector3(speed[0], speed[1], speed[2]));
+    }
+}
+
+
+void Entity_SetLinearFactor(struct entity_s *ent, btScalar factor[3], uint16_t index)
+{
+    if(ent->physics->bt_body[index])
+    {
+        ent->physics->bt_body[index]->setLinearFactor(btVector3(factor[0], factor[1], factor[2]));
+    }
+}
+
+void Entity_SetNoFixBodyPartFlag(struct entity_s *ent, uint32_t flag)
+{
+    ent->physics->no_fix_skeletal_parts = flag;
+}
+
+
+void Entity_SetNoFixAllFlag(struct entity_s *ent, uint8_t flag)
+{
+    ent->physics->no_fix_all = flag;
+}
+
+
+uint8_t Entity_GetNoFixAllFlag(struct entity_s *ent)
+{
+    return ent->physics->no_fix_all;
+}
+
+
 void Entity_GhostUpdate(struct entity_s *ent)
 {
     if(ent->physics->ghostObjects != NULL)
@@ -921,12 +1320,11 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
         btTransform orig_tr;
         btVector3 pos;
 
+        ent->physics->collisions = NULL;
         for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
             btPairCachingGhostObject *ghost = ent->physics->ghostObjects[i];
-            entity_collision_node_p cn = ent->physics->last_collisions + i;
 
-            cn->obj_count = 0;
             Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
             v = ent->bf->animations.model->mesh_tree[i].mesh_base->centre;
             orig_tr = ghost->getWorldTransform();
@@ -959,22 +1357,29 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 
                 for(int k=0;k<ent->physics->manifoldArray->size();k++)
                 {
-                    if(cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1)
+                    btPersistentManifold* manifold = (*ent->physics->manifoldArray)[k];
+                    for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
                     {
-                        btPersistentManifold* manifold = (*ent->physics->manifoldArray)[k];
-                        for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
+                        //const btManifoldPoint &pt = manifold->getContactPoint(c);
+                        if(manifold->getContactPoint(c).getDistance() < 0.0)
                         {
-                            //const btManifoldPoint &pt = manifold->getContactPoint(c);
-                            if(manifold->getContactPoint(c).getDistance() < 0.0)
+                            collision_node_p cn = Physics_GetCollisionNode();
+                            if(cn == NULL)
                             {
-                                cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody0();
-                                if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
-                                {
-                                    cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody1();
-                                }
-                                cn->obj_count++;                                    // do it once in current cycle, so condition (cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1) located in correct place
                                 break;
                             }
+                            btCollisionObject *obj = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody0();
+                            cn->obj = (engine_container_p)obj->getUserPointer();
+                            if(ent->self == cn->obj)
+                            {
+                                obj = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody1();
+                                cn->obj = (engine_container_p)obj->getUserPointer();
+                            }
+                            cn->part_from = obj->getUserIndex();
+                            cn->part_self = i;
+                            cn->next = ent->physics->collisions;
+                            ent->physics->collisions = cn;
+                            break;
                         }
                     }
                 }
@@ -1180,49 +1585,130 @@ int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 }
 
 
-void Entity_CheckCollisionCallbacks(struct entity_s *ent)
+void Entity_UpdateRigidBody(struct entity_s *ent, int force)
 {
-    if(ent->physics->ghostObjects != NULL)
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
-        btCollisionObject *cobj;
-        uint32_t curr_flag;
-        Entity_UpdateCurrentCollisions(ent);
-        while((cobj = Entity_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
+        btScalar tr[16];
+        //btVector3 pos = ent->physics->bt_body[0]->getWorldTransform().getOrigin();
+        //vec3_copy(ent->transform+12, pos.m_floats);
+        ent->physics->bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
+        Entity_UpdateRoomPos(ent);
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
-            // do callbacks here:
-            int type = -1;
-            engine_container_p cont = (engine_container_p)cobj->getUserPointer();
-            if(cont != NULL)
+            ent->physics->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
+        }
+
+        // that cycle is necessary only for skinning models;
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            if(ent->bf->bone_tags[i].parent != NULL)
             {
-                type = cont->object_type;
+                Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].parent->full_transform, ent->bf->bone_tags[i].full_transform);
             }
-
-            if(type == OBJECT_ENTITY)
+            else
             {
-                entity_p activator = (entity_p)cont->object;
+                Mat4_Copy(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].full_transform);
+            }
+        }
 
-                if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+        if(ent->character && ent->physics->ghostObjects)
+        {
+            btScalar v[3];
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                ent->physics->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
+                vec3_copy(tr+12, v);
+                ent->physics->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+            }
+        }
+
+        if(ent->bf->bone_tag_count == 1)
+        {
+            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
+        }
+        else
+        {
+            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                btScalar *pos = ent->bf->bone_tags[i].full_transform + 12;
+                btScalar *bb_min = ent->bf->bone_tags[i].mesh_base->bb_min;
+                btScalar *bb_max = ent->bf->bone_tags[i].mesh_base->bb_max;
+                btScalar r = bb_max[0] - bb_min[0];
+                btScalar t = bb_max[1] - bb_min[1];
+                r = (t > r)?(t):(r);
+                t = bb_max[2] - bb_min[2];
+                r = (t > r)?(t):(r);
+                r *= 0.5;
+
+                if(ent->bf->bb_min[0] > pos[0] - r)
                 {
-                    // Activator and entity IDs are swapped in case of collision callback.
-                    lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
-                    Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+                    ent->bf->bb_min[0] = pos[0] - r;
+                }
+                if(ent->bf->bb_min[1] > pos[1] - r)
+                {
+                    ent->bf->bb_min[1] = pos[1] - r;
+                }
+                if(ent->bf->bb_min[2] > pos[2] - r)
+                {
+                    ent->bf->bb_min[2] = pos[2] - r;
+                }
+
+                if(ent->bf->bb_max[0] < pos[0] + r)
+                {
+                    ent->bf->bb_max[0] = pos[0] + r;
+                }
+                if(ent->bf->bb_max[1] < pos[1] + r)
+                {
+                    ent->bf->bb_max[1] = pos[1] + r;
+                }
+                if(ent->bf->bb_max[2] < pos[2] + r)
+                {
+                    ent->bf->bb_max[2] = pos[2] + r;
                 }
             }
         }
     }
+    else
+    {
+        if((ent->bf->animations.model == NULL) ||
+           (ent->physics->bt_body == NULL) ||
+           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->frames_count == 1)))
+        {
+            return;
+        }
+
+        Entity_UpdateRoomPos(ent);
+        if(ent->self->collision_type & 0x0001)
+        //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
+        {
+            btScalar tr[16];
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                if(ent->physics->bt_body[i])
+                {
+                    Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                    ent->physics->bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+                }
+            }
+        }
+    }
+    Entity_RebuildBV(ent);
 }
 
 
 bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
-    if(ent->physics->last_collisions != NULL)
+    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
     {
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
         {
-            if((ent->bf->bone_tags[i].body_part & parts_flags) && (ent->physics->last_collisions[i].obj_count > 0))
-            {
-                return true;
-            }
+            return true;
         }
     }
 
@@ -1232,48 +1718,39 @@ bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 
 void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
 {
-    if(ent->physics->last_collisions != NULL)
-    {
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            ent->physics->last_collisions[i].obj_count = 0;
-        }
-    }
+    ent->physics->collisions = NULL;
 }
 
 
 void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
-    if(ent->physics->last_collisions != NULL)
+    collision_node_p parent = NULL;
+    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
     {
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
         {
-            if(ent->bf->bone_tags[i].body_part & parts_flags)
-            {
-                ent->physics->last_collisions[i].obj_count = 0;
-            }
+            (parent)?(parent->next = cn->next):(ent->physics->collisions = cn->next);
+            cn->next = NULL;
         }
+        parent = cn;
     }
 }
 
 
-btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
+collision_node_p Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
 {
     *curr_flag = 0x00;
-    if(ent->physics->last_collisions != NULL)
+    collision_node_p parent = NULL;
+    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
     {
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
         {
-            if(ent->bf->bone_tags[i].body_part & parts_flags)
-            {
-                entity_collision_node_p cn = ent->physics->last_collisions + i;
-                if(cn->obj_count > 0)
-                {
-                    *curr_flag = ent->bf->bone_tags[i].body_part;
-                    return cn->obj[--cn->obj_count];
-                }
-            }
+            *curr_flag = ent->bf->bone_tags[cn->part_self].body_part;
+            (parent)?(parent->next = cn->next):(ent->physics->collisions = cn->next);
+            cn->next = NULL;
+            return cn;
         }
+        parent = cn;
     }
 
     return NULL;

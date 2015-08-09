@@ -14,9 +14,12 @@
 #include "engine.h"
 #include "render.h"
 #include "camera.h"
+#include "audio.h"
+#include "engine_lua.h"
 #include "engine_string.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "world.h"
 
 extern SDL_Window  *sdl_window;
 

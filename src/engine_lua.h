@@ -9,6 +9,8 @@
 #define	ENGINE_LUA_H
 
 struct lua_State;
+extern lua_State   *engine_lua;
+
 
 int lua_print(lua_State * lua);
 int lua_BindKey(lua_State *lua);

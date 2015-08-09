@@ -4,6 +4,7 @@
 #include "core/console.h"
 #include "core/vmath.h"
 #include "core/obb.h"
+#include "audio.h"
 #include "mesh.h"
 #include "entity.h"
 #include "render.h"
@@ -158,49 +159,6 @@ void Entity_Disable(entity_p ent)
     }
 }
 
-/**
- * This function enables collision for entity_p in all cases exept NULL models.
- * If collision models does not exists, function will create them;
- * @param ent - pointer to the entity.
- */
-void Entity_EnableCollision(entity_p ent)
-{
-    if(ent->physics->bt_body != NULL)
-    {
-        ent->self->collision_type |= 0x0001;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            btRigidBody *b = ent->physics->bt_body[i];
-            if((b != NULL) && !b->isInWorld())
-            {
-                bt_engine_dynamicsWorld->addRigidBody(b);
-            }
-        }
-    }
-    else
-    {
-        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;                   ///@TODO: order collision shape and entity collision type flags! it is a different things!
-        BT_GenEntityRigidBody(ent);
-    }
-}
-
-
-void Entity_DisableCollision(entity_p ent)
-{
-    if(ent->physics->bt_body != NULL)
-    {
-        ent->self->collision_type &= ~0x0001;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            btRigidBody *b = ent->physics->bt_body[i];
-            if((b != NULL) && b->isInWorld())
-            {
-                bt_engine_dynamicsWorld->removeRigidBody(b);
-            }
-        }
-    }
-}
-
 
 void Entity_UpdateRoomPos(entity_p ent)
 {
@@ -256,123 +214,6 @@ void Entity_UpdateRoomPos(entity_p ent)
             ent->current_sector = new_sector;
         }
     }
-}
-
-
-void Entity_UpdateRigidBody(entity_p ent, int force)
-{
-    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
-    {
-        btScalar tr[16];
-        //btVector3 pos = ent->physics->bt_body[0]->getWorldTransform().getOrigin();
-        //vec3_copy(ent->transform+12, pos.m_floats);
-        ent->physics->bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
-        Entity_UpdateRoomPos(ent);
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            ent->physics->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
-            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
-        }
-
-        // that cycle is necessary only for skinning models;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            if(ent->bf->bone_tags[i].parent != NULL)
-            {
-                Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].parent->full_transform, ent->bf->bone_tags[i].full_transform);
-            }
-            else
-            {
-                Mat4_Copy(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].full_transform);
-            }
-        }
-
-        if(ent->character && ent->physics->ghostObjects)
-        {
-            btScalar v[3];
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                ent->physics->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
-                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
-                vec3_copy(tr+12, v);
-                ent->physics->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
-            }
-        }
-
-        if(ent->bf->bone_tag_count == 1)
-        {
-            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
-            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
-        }
-        else
-        {
-            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
-            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                btScalar *pos = ent->bf->bone_tags[i].full_transform + 12;
-                btScalar *bb_min = ent->bf->bone_tags[i].mesh_base->bb_min;
-                btScalar *bb_max = ent->bf->bone_tags[i].mesh_base->bb_max;
-                btScalar r = bb_max[0] - bb_min[0];
-                btScalar t = bb_max[1] - bb_min[1];
-                r = (t > r)?(t):(r);
-                t = bb_max[2] - bb_min[2];
-                r = (t > r)?(t):(r);
-                r *= 0.5;
-
-                if(ent->bf->bb_min[0] > pos[0] - r)
-                {
-                    ent->bf->bb_min[0] = pos[0] - r;
-                }
-                if(ent->bf->bb_min[1] > pos[1] - r)
-                {
-                    ent->bf->bb_min[1] = pos[1] - r;
-                }
-                if(ent->bf->bb_min[2] > pos[2] - r)
-                {
-                    ent->bf->bb_min[2] = pos[2] - r;
-                }
-
-                if(ent->bf->bb_max[0] < pos[0] + r)
-                {
-                    ent->bf->bb_max[0] = pos[0] + r;
-                }
-                if(ent->bf->bb_max[1] < pos[1] + r)
-                {
-                    ent->bf->bb_max[1] = pos[1] + r;
-                }
-                if(ent->bf->bb_max[2] < pos[2] + r)
-                {
-                    ent->bf->bb_max[2] = pos[2] + r;
-                }
-            }
-        }
-    }
-    else
-    {
-        if((ent->bf->animations.model == NULL) ||
-           (ent->physics->bt_body == NULL) ||
-           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->frames_count == 1)))
-        {
-            return;
-        }
-
-        Entity_UpdateRoomPos(ent);
-        if(ent->self->collision_type & 0x0001)
-        //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
-        {
-            btScalar tr[16];
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                if(ent->physics->bt_body[i])
-                {
-                    Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
-                    ent->physics->bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
-                }
-            }
-        }
-    }
-    Entity_RebuildBV(ent);
 }
 
 
@@ -650,6 +491,30 @@ btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
     return vec3_dist(v1, v2);
 }
 
+
+void Entity_CheckCollisionCallbacks(entity_p ent)
+{
+    collision_node_p cn;
+    uint32_t curr_flag;
+    Entity_UpdateCurrentCollisions(ent);
+    while((cn = Entity_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
+    {
+        // do callbacks here:
+        if(cn->obj->object_type == OBJECT_ENTITY)
+        {
+            entity_p activator = (entity_p)cn->obj->object;
+
+            if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+            {
+                // Activator and entity IDs are swapped in case of collision callback.
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+                Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cn->part_self, cn->obj->object_type);
+            }
+        }
+    }
+}
+
+
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
 {
     if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
@@ -865,7 +730,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 }
 
 
-void Entity_ProcessSector(struct entity_s *ent)
+void Entity_ProcessSector(entity_p ent)
 {
     if(!ent->current_sector) return;
 
@@ -937,7 +802,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     }
 
     animation = (animation < 0)?(0):(animation);
-    entity->physics->no_fix_all = 0x00;
+    Entity_SetNoFixAllFlag(entity, 0x00);
 
     if(another_model >= 0)
     {
@@ -1139,7 +1004,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
     }
 }
 
-void Character_DoWeaponFrame(struct entity_s *entity, btScalar time);
+void Character_DoWeaponFrame(entity_p entity, btScalar time);
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
@@ -1295,7 +1160,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 }
 
 
-void Entity_MoveForward(struct entity_s *ent, btScalar dist)
+void Entity_MoveForward(entity_p ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[4] * dist;
     ent->transform[13] += ent->transform[5] * dist;
@@ -1303,7 +1168,7 @@ void Entity_MoveForward(struct entity_s *ent, btScalar dist)
 }
 
 
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
+void Entity_MoveStrafe(entity_p ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[0] * dist;
     ent->transform[13] += ent->transform[1] * dist;
@@ -1311,7 +1176,7 @@ void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
 }
 
 
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
+void Entity_MoveVertical(entity_p ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[8] * dist;
     ent->transform[13] += ent->transform[9] * dist;
@@ -1322,7 +1187,7 @@ void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
 /* There are stick code for multianimation (weapon mode) testing
  * Model replacing will be upgraded too, I have to add override
  * flags to model manually in the script*/
-void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
+void Character_DoWeaponFrame(entity_p entity, btScalar time)
 {
     if(entity->character != NULL)
     {

@@ -416,6 +416,9 @@ private:
     int             method;             // OGG (TR1-2), WAD (TR3) or WAV (TR4-5).
 };
 
+
+extern struct audio_settings_s                  audio_settings;
+
 // General audio routines.
 
 void Audio_InitGlobals();

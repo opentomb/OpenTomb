@@ -3,6 +3,8 @@
 #include "core/console.h"
 #include "core/polygon.h"
 #include "core/obb.h"
+
+#include "audio.h"
 #include "world.h"
 #include "character_controller.h"
 #include "anim_state_control.h"
@@ -115,7 +117,8 @@ void Character_Clean(struct entity_s *ent)
     {
         for(int i=0;i<actor->hair_count;i++)
         {
-            Hair_Clear(actor->hairs+i);
+            Hair_Delete(actor->hairs[i]);
+            actor->hairs[i] = NULL;
         }
         free(actor->hairs);
         actor->hairs = NULL;
@@ -1255,7 +1258,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point[2]) && (ent->physics->no_fix_all == 0x00))
+        if((pos[2] < ent->character->height_info.floor_point[2]) && (Entity_GetNoFixAllFlag(ent) == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point[2];
             Entity_FixPenetrations(ent, NULL);
@@ -1822,9 +1825,9 @@ int Character_FindTraverse(struct entity_s *ch)
  */
 int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont)
 {
-    btScalar f0 = rs->floor_corners[0].m_floats[2];
-    if((rs->floor_corners[0].m_floats[2] != f0) || (rs->floor_corners[1].m_floats[2] != f0) ||
-       (rs->floor_corners[2].m_floats[2] != f0) || (rs->floor_corners[3].m_floats[2] != f0))
+    btScalar f0 = rs->floor_corners[0][2];
+    if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
+       (rs->floor_corners[2][2] != f0) || (rs->floor_corners[3][2] != f0))
     {
         return 0x00;
     }

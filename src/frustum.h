@@ -3,7 +3,7 @@
 #define FRUSTUM_H
 
 #include <stdint.h>
-#include "bullet/LinearMath/btScalar.h"
+#include "core/vmath.h"
 
 struct room_s;
 struct portal_s;
@@ -25,11 +25,11 @@ typedef struct frustum_s
 }frustum_t, *frustum_p;
 
 
-class frustumManager
+class CFrustumManager
 {
 public:
-    frustumManager(uint32_t buffer_size);
-   ~frustumManager();
+    CFrustumManager(uint32_t buffer_size);
+   ~CFrustumManager();
     
     void reset();
     frustum_p createFrustum();
@@ -48,7 +48,7 @@ private:
 };
 
 
-extern frustumManager engine_frustumManager;
+extern CFrustumManager engine_frustumManager;
 
 
 /**

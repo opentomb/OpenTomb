@@ -15,9 +15,9 @@
 #include "world.h"
 
 
-frustumManager engine_frustumManager(32768);
+CFrustumManager engine_frustumManager(32768);
 
-frustumManager::frustumManager(uint32_t buffer_size)
+CFrustumManager::CFrustumManager(uint32_t buffer_size)
 {
     m_buffer_size = buffer_size;
     m_allocated = 0;
@@ -25,7 +25,7 @@ frustumManager::frustumManager(uint32_t buffer_size)
     m_need_realloc = false;
 }
 
-frustumManager::~frustumManager()
+CFrustumManager::~CFrustumManager()
 {
     if(m_buffer != NULL)
     {
@@ -34,7 +34,7 @@ frustumManager::~frustumManager()
     }
 }
 
-void frustumManager::reset()
+void CFrustumManager::reset()
 {
     m_allocated = 0;
     if(m_need_realloc)
@@ -51,7 +51,7 @@ void frustumManager::reset()
     }
 }
 
-frustum_p frustumManager::createFrustum()
+frustum_p CFrustumManager::createFrustum()
 {
     if((!m_need_realloc) && (m_allocated + sizeof(frustum_t) < m_buffer_size))
     {
@@ -72,7 +72,7 @@ frustum_p frustumManager::createFrustum()
     return NULL;
 }
 
-btScalar *frustumManager::alloc(uint32_t size)
+btScalar *CFrustumManager::alloc(uint32_t size)
 {
     size *= sizeof(btScalar);
     if((!m_need_realloc) && (m_allocated + size < m_buffer_size))
@@ -86,7 +86,7 @@ btScalar *frustumManager::alloc(uint32_t size)
     return NULL;
 }
 
-void frustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
+void CFrustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
 {
     frustum->vertex_count = p->vertex_count;
     frustum->vertex = this->alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
@@ -103,7 +103,7 @@ void frustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum
     frustum->parent = NULL;
 }
 
-int frustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
+int CFrustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
 {
     if(!m_need_realloc)
     {
@@ -192,7 +192,7 @@ int frustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
     return SPLIT_EMPTY;
 }
 
-void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
+void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
 {
     if(m_allocated + p->vertex_count * 4 * sizeof(btScalar) >= m_buffer_size)
     {
@@ -236,7 +236,7 @@ void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
  * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
  * возвращает указатель на свежесгенеренный фрустум
  */
-frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render)
+frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render)
 {
     if(!m_need_realloc)
     {

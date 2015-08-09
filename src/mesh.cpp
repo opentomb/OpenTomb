@@ -1,9 +1,6 @@
 
 #include <stdlib.h>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-
 #include "core/system.h"
 #include "core/gl_util.h"
 #include "core/vmath.h"
