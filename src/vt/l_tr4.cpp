@@ -19,13 +19,13 @@
  *
  */
 
-#include <SDL2/SDL_endian.h>
-#include <zlib.h>
 #include "l_main.h"
-#include "../system.h"
-#include "../audio.h"
+
+#include <iostream>
 
 using namespace loader;
+
+#define TR_AUDIO_MAP_SIZE_TR4  370
 
 void TR4Level::load()
 {
@@ -33,7 +33,7 @@ void TR4Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0x00345254 /*&& file_version != 0x63345254*/)           // +TRLE
-        Sys_extError("Wrong level version");
+        throw std::runtime_error("Wrong level version");
 
     {
         auto numRoomTextiles = m_reader.readU16();
@@ -44,7 +44,7 @@ void TR4Level::load()
 
         uint32_t uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            Sys_extError("read_tr4_level: textiles32 uncomp_size == 0");
+            throw std::runtime_error("read_tr4_level: textiles32 uncomp_size == 0");
 
         uint32_t comp_size = m_reader.readU32();
         if(comp_size > 0)
@@ -60,7 +60,7 @@ void TR4Level::load()
 
         uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            Sys_extError("read_tr4_level: textiles16 uncomp_size == 0");
+            throw std::runtime_error("read_tr4_level: textiles16 uncomp_size == 0");
 
         comp_size = m_reader.readU32();
         if(comp_size > 0)
@@ -83,13 +83,13 @@ void TR4Level::load()
 
         uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            Sys_extError("read_tr4_level: textiles32d uncomp_size == 0");
+            throw std::runtime_error("read_tr4_level: textiles32d uncomp_size == 0");
 
         comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
             if((uncomp_size / (256 * 256 * 4)) > 2)
-                Sys_extWarn("read_tr4_level: num_misc_textiles > 2");
+                std::cerr << "read_tr4_level: num_misc_textiles > 2\n";
 
             if(m_textile32.empty())
             {
@@ -106,23 +106,23 @@ void TR4Level::load()
 
     auto uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        Sys_extError("read_tr4_level: packed geometry uncomp_size == 0");
+        throw std::runtime_error("read_tr4_level: packed geometry uncomp_size == 0");
 
     auto comp_size = m_reader.readU32();
 
     if(!comp_size)
-        Sys_extError("read_tr4_level: packed geometry");
+        throw std::runtime_error("read_tr4_level: packed geometry");
 
     std::vector<uint8_t> comp_buffer(comp_size);
     m_reader.readBytes(comp_buffer.data(), comp_size);
 
     io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
     if(!newsrc.isOpen())
-        Sys_extError("read_tr4_level: SDL_RWFromMem");
+        throw std::runtime_error("read_tr4_level: SDL_RWFromMem");
 
     // Unused
     if(newsrc.readU32() != 0)
-        Sys_extWarn("Bad value for 'unused'");
+        std::cerr << "Bad value for 'unused'\n";
 
     newsrc.readVector(m_rooms, newsrc.readU16(), &Room::readTr4);
 
@@ -145,13 +145,13 @@ void TR4Level::load()
     newsrc.readVector(m_staticMeshes, newsrc.readU32(), &StaticMesh::read);
 
     if(newsrc.readI8() != 'S')
-        Sys_extError("read_tr4_level: 'SPR' not found");
+        throw std::runtime_error("read_tr4_level: 'SPR' not found");
 
     if(newsrc.readI8() != 'P')
-        Sys_extError("read_tr4_level: 'SPR' not found");
+        throw std::runtime_error("read_tr4_level: 'SPR' not found");
 
     if(newsrc.readI8() != 'R')
-        Sys_extError("read_tr4_level: 'SPR' not found");
+        throw std::runtime_error("read_tr4_level: 'SPR' not found");
 
     newsrc.readVector(m_spriteTextures, newsrc.readU32(), &SpriteTexture::readTr4);
 
@@ -177,13 +177,13 @@ void TR4Level::load()
     m_animatedTexturesUvCount = newsrc.readU8();
 
     if(newsrc.readI8() != 'T')
-        Sys_extError("read_tr4_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
 
     if(newsrc.readI8() != 'E')
-        Sys_extError("read_tr4_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
 
     if(newsrc.readI8() != 'X')
-        Sys_extError("read_tr4_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
 
     newsrc.readVector(m_objectTextures, newsrc.readU32(), &ObjectTexture::readTr4);
 
@@ -208,7 +208,7 @@ void TR4Level::load()
         m_samplesCount = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        m_reader.readVector(m_samplesData, m_reader.tell() - m_reader.size());
+        m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.tell() - m_reader.size()));
     }
 }
 

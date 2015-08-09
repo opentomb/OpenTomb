@@ -19,13 +19,13 @@
  *
  */
 
-#include <SDL2/SDL.h>
-#include <cassert>
 #include "l_main.h"
-#include "../system.h"
-#include "../audio.h"
+
+#include <iostream>
 
 using namespace loader;
+
+#define TR_AUDIO_MAP_SIZE_TR1  256
 
 void TR1Level::load()
 {
@@ -33,13 +33,13 @@ void TR1Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if (file_version != 0x00000020)
-        Sys_extError("Wrong level version");
+        throw std::runtime_error("Wrong level version");
 
     m_reader.readVector(m_textile8, m_reader.readU32(), &ByteTexture::read);
 
     // Unused
     if (m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for 'unused'");
+        std::cerr << "Bad value for 'unused'\n";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr1);
 

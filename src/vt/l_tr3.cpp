@@ -19,12 +19,13 @@
  *
  */
 
-#include <SDL2/SDL.h>
 #include "l_main.h"
-#include "../system.h"
-#include "../audio.h"
+
+#include <iostream>
 
 using namespace loader;
+
+#define TR_AUDIO_MAP_SIZE_TR3  370
 
 void TR3Level::load()
 {
@@ -32,7 +33,7 @@ void TR3Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
-        Sys_extError("Wrong level version");
+        throw std::runtime_error("Wrong level version");
 
     m_palette = Palette::readTr1(m_reader);
     m_palette16 = Palette::readTr2(m_reader);
@@ -48,7 +49,7 @@ void TR3Level::load()
 
     // Unused
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for 'unused'");
+        std::cerr << "Bad value for 'unused'\n";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr3);
 
@@ -122,11 +123,11 @@ void TR3Level::load()
     io::SDLReader newsrc(m_sfxPath);
     if(!newsrc.isOpen())
     {
-        Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", m_sfxPath.c_str());
+        std::cerr << "read_tr2_level: failed to open \"" << m_sfxPath << "\"! No samples loaded.\n";
     }
     else
     {
-        m_samplesData.resize(newsrc.size());
+        m_samplesData.resize( static_cast<size_t>(newsrc.size()) );
         m_samplesCount = 0;
         for(size_t i = 0; i < m_samplesData.size(); i++)
         {

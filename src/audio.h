@@ -58,13 +58,6 @@ enum TR_AUDIO_FX
 // Normally, audio map size is a constant for each TR game version and
 // won't change from level to level.
 
-#define TR_AUDIO_MAP_SIZE_NONE (-1)
-#define TR_AUDIO_MAP_SIZE_TR1  256
-#define TR_AUDIO_MAP_SIZE_TR2  370
-#define TR_AUDIO_MAP_SIZE_TR3  370
-#define TR_AUDIO_MAP_SIZE_TR4  370
-#define TR_AUDIO_MAP_SIZE_TR5  450
-
 // Sound flags are found at offset 7 of SoundDetail unit and specify
 // certain sound modifications.
 

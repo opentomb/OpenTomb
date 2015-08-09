@@ -10,7 +10,6 @@ project(OpenTomb)
 if(APPLE)
     file(GLOB PRJ_SRC
         src/*.c*
-        src/vt/*.cpp
         src/mac/*.m
         3rdparty/al/*.c
         3rdparty/al/*/*.c
@@ -18,7 +17,6 @@ if(APPLE)
     )
     file(GLOB PRJ_HDR
         src/*.h*
-        src/vt/*.h
         src/mac/*.h
         3rdparty/al/*.h
         3rdparty/al/*/*.h
@@ -26,12 +24,11 @@ if(APPLE)
     )
 else()
     file(GLOB PRJ_SRC
-        src/*.c*
-        src/vt/*.cpp
+        src/*.c
+        src/*.cpp
     )
     file(GLOB PRJ_HDR
-        src/*.h*
-        src/vt/*.h
+        src/*.h
     )
 endif()
 
@@ -197,10 +194,8 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS}
-                           ${SDL2_IMAGE_INCLUDE_DIRS})
+add_subdirectory(src/vt)
 
-                    
 target_link_libraries(
     ${PROJECT_NAME}
     OpenGL
@@ -216,6 +211,7 @@ target_link_libraries(
     ${VORBIS_LIBRARIES}
     ${VORBISFILE_LIBRARIES}
     ${SNDFILE_LIBRARIES}
+    vtloader
     # efence
 )
 

@@ -41,14 +41,14 @@ namespace io
             : m_rwOps(nullptr)
             , m_memory(data)
         {
-            m_rwOps = SDL_RWFromConstMem(m_memory.data(), m_memory.size());
+            m_rwOps = SDL_RWFromConstMem(m_memory.data(), static_cast<int>(m_memory.size()));
         }
 
         explicit SDLReader(std::vector<uint8_t>&& data)
             : m_rwOps(nullptr)
             , m_memory(std::move(data))
         {
-            m_rwOps = SDL_RWFromConstMem(m_memory.data(), m_memory.size());
+            m_rwOps = SDL_RWFromConstMem(m_memory.data(), static_cast<int>(m_memory.size()));
         }
 
         ~SDLReader()
@@ -61,8 +61,8 @@ namespace io
         {
             std::vector<uint8_t> uncomp_buffer(uncompressedSize);
 
-            uLongf size = uncompressedSize;
-            if(uncompress(uncomp_buffer.data(), &size, compressed.data(), compressed.size()) != Z_OK)
+            uLongf size = static_cast<uLongf>(uncompressedSize);
+            if(uncompress(uncomp_buffer.data(), &size, compressed.data(), static_cast<uLong>(compressed.size())) != Z_OK)
                 throw std::runtime_error("read_tr4_level: uncompress");
 
             if(size != uncompressedSize)

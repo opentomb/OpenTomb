@@ -4012,7 +4012,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::TR1Level>& tr)
                 break;
 
             default:
-                world->audio_map.resize(TR_AUDIO_MAP_SIZE_NONE);
+                world->audio_map.clear();
                 tr->m_samplesData.clear();
                 return;
         }

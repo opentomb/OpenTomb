@@ -19,13 +19,13 @@
  *
  */
 
-#include <SDL2/SDL.h>
-#include <zlib.h>
 #include "l_main.h"
-#include "../system.h"
-#include "../audio.h"
+
+#include <iostream>
 
 using namespace loader;
+
+#define TR_AUDIO_MAP_SIZE_TR5  450
 
 void TR5Level::load()
 {
@@ -33,7 +33,7 @@ void TR5Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0x00345254)
-        Sys_extError("Wrong level version");
+        throw std::runtime_error("Wrong level version");
 
     auto numRoomTextiles = m_reader.readU16();
     auto numObjTextiles = m_reader.readU16();
@@ -43,7 +43,7 @@ void TR5Level::load()
 
     auto uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        Sys_extError("read_tr5_level: textiles32 uncomp_size == 0");
+        throw std::runtime_error("read_tr5_level: textiles32 uncomp_size == 0");
 
     auto comp_size = m_reader.readU32();
     if(comp_size > 0)
@@ -57,15 +57,15 @@ void TR5Level::load()
 
         uLongf size = uncomp_size;
         if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-            Sys_extError("read_tr5_level: uncompress");
+            throw std::runtime_error("read_tr5_level: uncompress");
 
         if(size != uncomp_size)
-            Sys_extError("read_tr5_level: uncompress size mismatch");
+            throw std::runtime_error("read_tr5_level: uncompress size mismatch");
         comp_buffer.clear();
 
         SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
         if(newsrcSDL == nullptr)
-            Sys_extError("read_tr5_level: SDL_RWFromMem");
+            throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
 
         io::SDLReader newsrc(newsrcSDL);
         newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
@@ -73,7 +73,7 @@ void TR5Level::load()
 
     uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        Sys_extError("read_tr5_level: textiles16 uncomp_size == 0");
+        throw std::runtime_error("read_tr5_level: textiles16 uncomp_size == 0");
 
     comp_size = m_reader.readU32();
     if(comp_size > 0)
@@ -89,14 +89,14 @@ void TR5Level::load()
 
             uLongf size = uncomp_size;
             if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                Sys_extError("read_tr5_level: uncompress");
+                throw std::runtime_error("read_tr5_level: uncompress");
 
             if(size != uncomp_size)
-                Sys_extError("read_tr5_level: uncompress size mismatch");
+                throw std::runtime_error("read_tr5_level: uncompress size mismatch");
 
             SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
             if(newsrcSDL == nullptr)
-                Sys_extError("read_tr5_level: SDL_RWFromMem");
+                throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
 
             io::SDLReader newsrc(newsrcSDL);
             newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
@@ -109,7 +109,7 @@ void TR5Level::load()
 
     uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        Sys_extError("read_tr5_level: textiles32d uncomp_size == 0");
+        throw std::runtime_error("read_tr5_level: textiles32d uncomp_size == 0");
 
     comp_size = m_reader.readU32();
     if(comp_size > 0)
@@ -117,7 +117,7 @@ void TR5Level::load()
         std::vector<uint8_t> uncomp_buffer(uncomp_size);
 
         if((uncomp_size / (256 * 256 * 4)) > 3)
-            Sys_extWarn("read_tr5_level: num_misc_textiles > 3");
+            std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
 
         if(m_textile32.empty())
         {
@@ -129,14 +129,14 @@ void TR5Level::load()
 
         uLongf size = uncomp_size;
         if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-            Sys_extError("read_tr5_level: uncompress");
+            throw std::runtime_error("read_tr5_level: uncompress");
 
         if(size != uncomp_size)
-            Sys_extError("read_tr5_level: uncompress size mismatch");
+            throw std::runtime_error("read_tr5_level: uncompress size mismatch");
 
         SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
         if(newsrcSDL == nullptr)
-            Sys_extError("read_tr5_level: SDL_RWFromMem");
+            throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
 
         io::SDLReader newsrc(newsrcSDL);
         newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
@@ -162,25 +162,25 @@ void TR5Level::load()
     i = m_src.readU16();
 #endif
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[1]");
+        std::cerr << "Bad value for flags[1]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[2]");
+        std::cerr << "Bad value for flags[2]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[3]");
+        std::cerr << "Bad value for flags[3]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[4]");
+        std::cerr << "Bad value for flags[4]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[5]");
+        std::cerr << "Bad value for flags[5]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[6]");
+        std::cerr << "Bad value for flags[6]\n";
 
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for flags[7]");
+        std::cerr << "Bad value for flags[7]\n";
 
     // LevelDataSize1
     m_reader.readU32();
@@ -189,7 +189,7 @@ void TR5Level::load()
 
     // Unused
     if(m_reader.readU32() != 0)
-        Sys_extWarn("Bad value for 'unused'");
+        std::cerr << "Bad value for 'unused'\n";
 
     m_reader.readVector(m_rooms, m_reader.readU32(), &Room::readTr5);
 
@@ -212,16 +212,16 @@ void TR5Level::load()
     m_reader.readVector(m_staticMeshes, m_reader.readU32(), &StaticMesh::read);
 
     if(m_reader.readI8() != 'S')
-        Sys_extError("read_tr5_level: 'SPR' not found");
+        throw std::runtime_error("read_tr5_level: 'SPR' not found");
 
     if(m_reader.readI8() != 'P')
-        Sys_extError("read_tr5_level: 'SPR' not found");
+        throw std::runtime_error("read_tr5_level: 'SPR' not found");
 
     if(m_reader.readI8() != 'R')
-        Sys_extError("read_tr5_level: 'SPR' not found");
+        throw std::runtime_error("read_tr5_level: 'SPR' not found");
 
     if(m_reader.readI8() != 0)
-        Sys_extError("read_tr5_level: 'SPR' not found");
+        throw std::runtime_error("read_tr5_level: 'SPR' not found");
 
     m_reader.readVector(m_spriteTextures, m_reader.readU32(), &SpriteTexture::readTr4);
 
@@ -245,16 +245,16 @@ void TR5Level::load()
     m_animatedTexturesUvCount = m_reader.readU8();
 
     if(m_reader.readI8() != 'T')
-        Sys_extError("read_tr5_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr5_level: '\\0TEX' not found");
 
     if(m_reader.readI8() != 'E')
-        Sys_extError("read_tr5_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr5_level: '\\0TEX' not found");
 
     if(m_reader.readI8() != 'X')
-        Sys_extError("read_tr5_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr5_level: '\\0TEX' not found");
 
     if(m_reader.readI8() != 0)
-        Sys_extError("read_tr5_level: '\\0TEX' not found");
+        throw std::runtime_error("read_tr5_level: '\\0TEX' not found");
 
     m_reader.readVector(m_objectTextures, m_reader.readU32(), &ObjectTexture::readTr5);
 
@@ -279,7 +279,7 @@ void TR5Level::load()
         m_samplesCount = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        m_reader.readVector(m_samplesData, m_reader.size() - m_reader.tell());
+        m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.size() - m_reader.tell()));
     }
 }
 

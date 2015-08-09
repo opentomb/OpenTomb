@@ -24,7 +24,6 @@
 #include <algorithm>
 
 #include "l_main.h"
-#include "../system.h"
 
 using namespace loader;
 
@@ -152,7 +151,7 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Ga
 std::unique_ptr<TR1Level> TR1Level::createLoader(SDL_RWops * const src, Game game_version, const std::string& sfxPath)
 {
     if (!src)
-        Sys_extError("Invalid SDL_RWops");
+        throw std::runtime_error("Invalid SDL_RWops");
 
     std::unique_ptr<TR1Level> result;
 
@@ -184,7 +183,7 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(SDL_RWops * const src, Game gam
             result.reset(new TR5Level(game_version, src));
             break;
         default:
-            Sys_extError("Invalid game version");
+            throw std::runtime_error("Invalid game version");
             break;
     }
 
