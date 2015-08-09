@@ -63,7 +63,7 @@ public:
     std::vector<uint8_t> m_demoData;                     ///< \brief demo data.
     std::vector<int16_t> m_soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
     std::vector<SoundDetails> m_soundDetails;      ///< \brief sound details.
-    uint32_t m_samplesCount = 0;
+    size_t m_samplesCount = 0;
     std::vector<uint8_t> m_samplesData;                  ///< \brief samples.
     std::vector<uint32_t> m_sampleIndices;               ///< \brief sample indices.
 
@@ -89,8 +89,8 @@ protected:
     void readMeshData(io::SDLReader& reader);
     void readFrameMoveableData(io::SDLReader& reader);
 
-    void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
-    void convertTexture(WordTexture & tex, DWordTexture & dst);
+    static void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
+    static void convertTexture(WordTexture & tex, DWordTexture & dst);
 };
 
 class TR2Level : public TR1Level

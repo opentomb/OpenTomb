@@ -100,7 +100,7 @@ void TR1Level::readFrameMoveableData(io::SDLReader& reader)
         for (size_t j = 0; j < m_moveables.size(); j++)
             if (m_moveables[j].frame_offset == pos)
             {
-                m_moveables[j].frame_index = i;
+                m_moveables[j].frame_index = static_cast<uint32_t>(i);
                 m_moveables[j].frame_offset = 0;
             }
 
@@ -121,7 +121,7 @@ void TR1Level::readFrameMoveableData(io::SDLReader& reader)
 
 std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Game game_version)
 {
-    int len2 = 0;
+    size_t len2 = 0;
 
     for(size_t i = 0; i < filename.length(); i++)
     {

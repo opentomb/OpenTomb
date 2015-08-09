@@ -1,17 +1,17 @@
+#include "vt_level.h"
+
 #include <cstdio>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
 
-#include "vt_level.h"
+#include <fstream>
 
 using namespace loader;
 
 StaticMesh *TR1Level::findStaticMeshById(uint32_t object_id)
 {
-    uint32_t i;
-
-    for (i = 0; i < m_staticMeshes.size(); i++)
+    for (size_t i = 0; i < m_staticMeshes.size(); i++)
         if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
             return &m_staticMeshes[i];
 
@@ -20,9 +20,7 @@ StaticMesh *TR1Level::findStaticMeshById(uint32_t object_id)
 
 Item *TR1Level::fineItemById(int32_t object_id)
 {
-    uint32_t i;
-
-    for (i = 0; i < m_items.size(); i++)
+    for (size_t i = 0; i < m_items.size(); i++)
         if (m_items[i].object_id == object_id)
             return &m_items[i];
 
@@ -31,9 +29,7 @@ Item *TR1Level::fineItemById(int32_t object_id)
 
 Moveable *TR1Level::findMoveableById(uint32_t object_id)
 {
-    uint32_t i;
-
-    for (i = 0; i < m_moveables.size(); i++)
+    for (size_t i = 0; i < m_moveables.size(); i++)
         if (m_moveables[i].object_id == object_id)
             return &m_moveables[i];
 
@@ -42,11 +38,9 @@ Moveable *TR1Level::findMoveableById(uint32_t object_id)
 
 void TR1Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
-    int x, y;
-
-    for (y = 0; y < 256; y++)
+    for (int y = 0; y < 256; y++)
     {
-        for (x = 0; x < 256; x++)
+        for (int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
@@ -60,11 +54,9 @@ void TR1Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & d
 
 void TR1Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 {
-    int x, y;
-
-    for (y = 0; y < 256; y++)
+    for (int y = 0; y < 256; y++)
     {
-        for (x = 0; x < 256; x++)
+        for (int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
@@ -78,76 +70,70 @@ void TR1Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 
 void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
 {
-    unsigned char c;
-    unsigned short s;
-    int x, y;
-    FILE *st;
-
-    st = fopen(filename, "wb");
-    if (st == nullptr)
+    std::ofstream st(filename, std::ios::out|std::ios::binary);
+    if(!st.is_open())
         return;
 
     // write the header
     // id_length
-    c = 0;
-    fwrite(&c, sizeof(c), 1, st);
+    char c = 0;
+    st.write(&c, 1);
     // colormap_type
     c = 0;
-    fwrite(&c, sizeof(c), 1, st);
+    st.write(&c, 1);
     // image_type
     c = 2;
-    fwrite(&c, sizeof(c), 1, st);
+    st.write(&c, 1);
     // colormap_index
-    s = 0;
-    fwrite(&s, sizeof(s), 1, st);
+    uint16_t s = 0;
+    st.write(reinterpret_cast<char*>(&s), 2);
     // colormap_length
     s = 0;
-    fwrite(&s, sizeof(s), 1, st);
+    st.write(reinterpret_cast<char*>(&s), 2);
     // colormap_size
     c = 0;
-    fwrite(&c, sizeof(c), 1, st);
+    st.write(&c, 1);
     // x_origin
     s = 0;
-    fwrite(&s, sizeof(s), 1, st);
+    st.write(reinterpret_cast<char*>(&s), 2);
     // y_origin
     s = 0;
-    fwrite(&s, sizeof(s), 1, st);
+    st.write(reinterpret_cast<char*>(&s), 2);
     // width
     s = SDL_SwapLE16(width);
-    fwrite(&s, sizeof(s), 1, st);
+    st.write(reinterpret_cast<char*>(&s), 2);
     // height
     s = SDL_SwapLE16(height);
-    fwrite(&s, sizeof(s), 1, st);
+    st.write(reinterpret_cast<char*>(&s), 2);
     // bits_per_pixel
     c = 32;
-    fwrite(&c, sizeof(c), 1, st);
+    st.write(&c, 1);
     // attributes
     c = 0;
-    fwrite(&c, sizeof(c), 1, st);
+    st.write(&c, 1);
 
     if(invY)
     {
-        for (y = 0; y < height; y++)
-            for (x = 0; x < width; x++)
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
             {
-                fwrite(&data[(y * width + x) * 4 + 2], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 1], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 0], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 3], sizeof(uint8_t), 1, st);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 2]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 1]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 0]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 3]), 1);
             }
     }
     else
     {
-        for (y = height-1; y >= 0; y--)
-            for (x = 0; x < width; x++)
+        for (int y = height-1; y >= 0; y--)
+            for (int x = 0; x < width; x++)
             {
-                fwrite(&data[(y * width + x) * 4 + 2], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 1], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 0], sizeof(uint8_t), 1, st);
-                fwrite(&data[(y * width + x) * 4 + 3], sizeof(uint8_t), 1, st);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 2]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 1]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 0]), 1);
+                st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 3]), 1);
             }
     }
-    fclose(st);
 }
 
 void TR1Level::dumpTextures()

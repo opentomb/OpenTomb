@@ -552,8 +552,8 @@ struct Light
 
         light.fade2 = light.fade1;
 
-        light.r_outer = light.fade1;
-        light.r_inner = light.fade1 / 2;
+        light.r_outer = static_cast<float>(light.fade1);
+        light.r_inner = static_cast<float>(light.fade1 / 2);
 
         light.light_type = 0x01; // Point light
 
@@ -579,8 +579,8 @@ struct Light
         if(light.intensity > 1.0f)
             light.intensity = 1.0f;
 
-        light.r_outer = light.fade1;
-        light.r_inner = light.fade1 / 2;
+        light.r_outer = static_cast<float>(light.fade1);
+        light.r_inner = static_cast<float>(light.fade1 / 2);
 
         light.light_type = 0x01; // Point light
 
@@ -634,11 +634,10 @@ struct Light
         Light light;
         light.pos = Vertex::readF(reader);
         //read_tr_colour(src, light.color);
-        light.color.r = reader.readF() * 255.0;    // r
-        light.color.g = reader.readF() * 255.0;    // g
-        light.color.b = reader.readF() * 255.0;    // b
-        light.color.a = reader.readF() * 255.0;    // a
-        light.color.a = 1.0f;
+        light.color.r = static_cast<uint8_t>(reader.readF() * 255);    // r
+        light.color.g = static_cast<uint8_t>(reader.readF() * 255);    // g
+        light.color.b = static_cast<uint8_t>(reader.readF() * 255);    // b
+        light.color.a = static_cast<uint8_t>(reader.readF() * 255);    // a
         /*
         if ((temp != 0) && (temp != 0xCDCDCDCD))
         throw TR_ReadError("read_tr5_room_light: seperator1 has wrong value");
@@ -1381,7 +1380,7 @@ struct Room
                                                         // static_meshes_offset or room_layer_offset
                                                         // read and change coordinate system
         room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = reader.readU32();
+        room.offset.y = static_cast<float>(reader.readU32());
         room.offset.z = static_cast<float>(-reader.readI32());
         room.y_bottom = static_cast<float>(-reader.readI32());
         room.y_top = static_cast<float>(-reader.readI32());
@@ -1412,7 +1411,7 @@ struct Room
 
         room.reverb_info = reader.readU8();
         room.alternate_group = reader.readU8();
-        room.water_scheme = reader.readU16();
+        room.water_scheme = static_cast<uint8_t>(reader.readU16());
 
         if(reader.readU32() != 0x00007FFF)
         {
@@ -2040,8 +2039,8 @@ struct SpriteTexture
         float h = th / 256.0f;
         sprite_texture.x0 = tx;
         sprite_texture.y0 = ty;
-        sprite_texture.x1 = sprite_texture.x0 + w;
-        sprite_texture.y1 = sprite_texture.y0 + h;
+        sprite_texture.x1 = static_cast<int16_t>(sprite_texture.x0 + w);
+        sprite_texture.y1 = static_cast<int16_t>(sprite_texture.y0 + h);
 
         sprite_texture.left_side = tleft;
         sprite_texture.right_side = tright;
