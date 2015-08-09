@@ -149,12 +149,57 @@ private:
 };
 
 
+class CBulletDebugDrawer : public btIDebugDraw
+{
+public:
+    CBulletDebugDrawer(){}
+   ~CBulletDebugDrawer(){}
+
+    virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color)
+    {
+        renderer.debug_drawer->drawLine(from.m_floats, to.m_floats, color.m_floats, color.m_floats);
+    }
+
+    virtual void   drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor)
+    {
+        renderer.debug_drawer->drawLine(from.m_floats, to.m_floats, fromColor.m_floats, toColor.m_floats);
+    }
+
+    virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
+    {
+
+    }
+
+    virtual void   reportErrorWarning(const char* warningString)
+    {
+        Con_AddLine(warningString, FONTSTYLE_CONSOLE_WARNING);
+    }
+
+    virtual void   draw3dText(const btVector3& location, const char* textString)
+    {
+        //glRasterPos3f(location.x(),  location.y(),  location.z());
+        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
+    }
+
+    virtual void   setDebugMode(int debugMode)
+    {
+        renderer.debug_drawer->setDebugMode(debugMode);
+    }
+
+    virtual int    getDebugMode() const
+    {
+        return renderer.debug_drawer->getDebugMode();
+    }
+};
+
 btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration = NULL;
 btCollisionDispatcher                   *bt_engine_dispatcher = NULL;
 btGhostPairCallback                     *bt_engine_ghostPairCallback = NULL;
 btBroadphaseInterface                   *bt_engine_overlappingPairCache = NULL;
 btSequentialImpulseConstraintSolver     *bt_engine_solver = NULL;
 btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld = NULL;
+
+CBulletDebugDrawer                       bt_debug_drawer;
 
 uint32_t                                 collision_nodes_pool_size = 0;
 uint32_t                                 collision_nodes_pool_used = 0;
@@ -198,8 +243,8 @@ void Physics_Init()
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
-    //debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
-    //bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
+    bt_debug_drawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
+    bt_engine_dynamicsWorld->setDebugDrawer(&bt_debug_drawer);
 }
 
 
@@ -234,6 +279,10 @@ void Physics_StepSimulation(btScalar time)
     collision_nodes_pool_used = 0;
 }
 
+void Physics_DebugDrawWorld()
+{
+    bt_engine_dynamicsWorld->debugDrawWorld();
+}
 
 struct collision_node_s *Physics_GetCollisionNode()
 {
@@ -251,7 +300,8 @@ void Physics_CleanUpObjects()
 {
     if(bt_engine_dynamicsWorld != NULL)
     {
-        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+        int num_obj = bt_engine_dynamicsWorld->getNumCollisionObjects();
+        for(int i = 0; i < num_obj; i++)
         {
             btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
             btRigidBody* body = btRigidBody::upcast(obj);
@@ -1755,18 +1805,3 @@ collision_node_p Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32
 
     return NULL;
 }
-
-
-
-
-/*void CRenderDebugDrawer::draw3dText(const btVector3& location, const char* textString)
-{
-   //glRasterPos3f(location.x(),  location.y(),  location.z());
-   //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
-}
-
-
-void CRenderDebugDrawer::reportErrorWarning(const char* warningString)
-{
-   Con_AddLine(warningString, FONTSTYLE_CONSOLE_WARNING);
-}*/

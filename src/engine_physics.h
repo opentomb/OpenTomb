@@ -42,6 +42,7 @@ struct physics_object_s;
 void Physics_Init();
 void Physics_Destroy();
 void Physics_StepSimulation(btScalar time);
+void Physics_DebugDrawWorld();
 void Physics_CleanUpObjects();
 
 struct physics_data_s *Physics_CreatePhysicsData();

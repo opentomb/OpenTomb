@@ -43,6 +43,8 @@ struct base_mesh_s;
 struct obb_s;
 struct lit_shader_description;
 
+class CRenderDebugDrawer;
+
 // Native TR blending modes.
 
 enum BlendingMode
@@ -99,6 +101,7 @@ typedef struct render_s
     struct camera_s            *cam;
     struct render_settings_s    settings;
     class shader_manager       *shader_manager;
+    class CRenderDebugDrawer   *debug_drawer;
 
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
@@ -137,7 +140,7 @@ class CRenderDebugDrawer
         void drawRoomDebugLines(struct room_s *room, struct render_s *render);
         
         // physics debug interface
-        void   drawLine(const btScalar from[3], const btScalar to[3], const btScalar color[3]);
+        void   drawLine(const btScalar from[3], const btScalar to[3], const btScalar color_from[3], const btScalar color_to[3]);
         void   drawContactPoint(const btScalar pointOnB[3], const btScalar normalOnB[3], btScalar distance, int lifeTime, const btScalar color[3]);
         void   setDebugMode(int debugMode) {m_debugMode = debugMode;};
         int    getDebugMode() const {return m_debugMode;}

@@ -37,13 +37,7 @@ static GLuint   active_texture = 0;
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 
-CRenderDebugDrawer      debugDrawer;
-
-/*bool btCollisionObjectIsVisible(btCollisionObject *colObj)
-{
-    engine_container_p cont = (engine_container_p)colObj->getUserPointer();
-    return (cont == NULL) || (cont->room == NULL) || (cont->room->is_in_r_list && cont->room->active);
-}*/
+static CRenderDebugDrawer      debugDrawer;
 
 void Render_InitGlobals()
 {
@@ -80,6 +74,8 @@ void Render_Init()
 
     renderer.world = NULL;
     renderer.style = 0x00;
+
+    renderer.debug_drawer = &debugDrawer;
 }
 
 
@@ -87,7 +83,7 @@ void Render_Empty(render_p render)
 {
     render->world = NULL;
 
-    if(render->r_list)
+    if (render->r_list)
     {
         render->r_list_active_count = 0;
         render->r_list_size = 0;
@@ -1156,10 +1152,10 @@ void Render_DrawList_DebugLines()
         debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
     }
 
-    /*if(renderer.style & R_DRAW_COLL)
+    if(renderer.style & R_DRAW_COLL)
     {
-        bt_engine_dynamicsWorld->debugDrawWorld();
-    }*/
+        Physics_DebugDrawWorld();
+    }
 
     if(!debugDrawer.IsEmpty())
     {
@@ -1265,7 +1261,7 @@ void Render_GenWorldList()
 }
 
 /**
- * Состыковка рендерера и "мира"
+ * Attaching renderer and "world"
  */
 void Render_SetWorld(struct world_s *world)
 {
@@ -1865,7 +1861,7 @@ void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
 }
 
 
-void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], const btScalar color[3])
+void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], const btScalar color_from[3], const btScalar color_to[3])
 {
     GLfloat *v;
 
@@ -1876,11 +1872,11 @@ void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], 
 
         vec3_copy(v, from);
         v += 3;
-        vec3_copy(v, color);
+        vec3_copy(v, color_from);
         v += 3;
         vec3_copy(v, to);
         v += 3;
-        vec3_copy(v, color);
+        vec3_copy(v, color_to);
     }
     else
     {
