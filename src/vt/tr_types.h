@@ -82,14 +82,14 @@ namespace io
         void readVector(std::vector<uint8_t>& elements, size_t count)
         {
             elements.clear();
-            elements.reserve(count);
+            elements.resize(count);
             readBytes(elements.data(), count);
         }
 
         void readVector(std::vector<int8_t>& elements, size_t count)
         {
             elements.clear();
-            elements.reserve(count);
+            elements.resize(count);
             readBytes(elements.data(), count);
         }
 
