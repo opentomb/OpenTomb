@@ -5,10 +5,11 @@
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
-#include <functional>
 
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_endian.h>
+
+#include <zlib.h>
 
 namespace io
 {
@@ -19,12 +20,64 @@ namespace io
     public:
         explicit SDLReader(SDL_RWops* ops)
             : m_rwOps(ops)
+            , m_memory()
         {
+        }
+
+        SDLReader(SDLReader&& rhs)
+            : m_rwOps(rhs.m_rwOps)
+            , m_memory(std::move(rhs.m_memory))
+        {
+            rhs.m_rwOps = nullptr;
+        }
+
+        explicit SDLReader(const std::string& filename)
+            : m_rwOps(SDL_RWFromFile(filename.c_str(), "rb"))
+            , m_memory()
+        {
+        }
+
+        explicit SDLReader(const std::vector<uint8_t>& data)
+            : m_rwOps(nullptr)
+            , m_memory(data)
+        {
+            m_rwOps = SDL_RWFromConstMem(m_memory.data(), m_memory.size());
+        }
+
+        explicit SDLReader(std::vector<uint8_t>&& data)
+            : m_rwOps(nullptr)
+            , m_memory(std::move(data))
+        {
+            m_rwOps = SDL_RWFromConstMem(m_memory.data(), m_memory.size());
         }
 
         ~SDLReader()
         {
-            SDL_RWclose(m_rwOps);
+            if(m_rwOps)
+                SDL_RWclose(m_rwOps);
+        }
+
+        static SDLReader decompress(const std::vector<uint8_t>& compressed, size_t uncompressedSize)
+        {
+            std::vector<uint8_t> uncomp_buffer(uncompressedSize);
+
+            uLongf size = uncompressedSize;
+            if(uncompress(uncomp_buffer.data(), &size, compressed.data(), compressed.size()) != Z_OK)
+                throw std::runtime_error("read_tr4_level: uncompress");
+
+            if(size != uncompressedSize)
+                throw std::runtime_error("read_tr4_level: uncompress size mismatch");
+
+            io::SDLReader reader(std::move(uncomp_buffer));
+            if(!reader.isOpen())
+                throw std::runtime_error("read_tr4_level: SDL_RWFromMem");
+
+            return reader;
+        }
+
+        bool isOpen() const
+        {
+            return m_rwOps != nullptr;
         }
 
         Sint64 tell() const
@@ -142,6 +195,7 @@ namespace io
 
     private:
         SDL_RWops* m_rwOps;
+        std::vector<uint8_t> m_memory;
 
         template<typename T, int dataSize, bool isIntegral>
         struct SwapTraits { };
@@ -648,23 +702,20 @@ struct Light
         light.pos2 = Vertex::read32(reader);
         light.dir2 = Vertex::read32(reader);
         light.light_type = reader.readU8();
-        auto temp = reader.readU8();
-        (void)temp; // avoid "unused variable" warning
 #if 0
+        auto temp = reader.readU8();
         if(temp != 0xCD)
             Sys_extWarn("read_tr5_room_light: seperator2 has wrong value");
-#endif
 
         temp = reader.readU8();
-#if 0
         if(temp != 0xCD)
             Sys_extWarn("read_tr5_room_light: seperator3 has wrong value");
-#endif
 
         temp = reader.readU8();
-#if 0
         if(temp != 0xCD)
             Sys_extWarn("read_tr5_room_light: seperator4 has wrong value");
+#else
+        reader.skip(3);
 #endif
         return light;
     }

@@ -49,24 +49,12 @@ void TR4Level::load()
         uint32_t comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
-            std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
-            m_textile32.resize(numTextiles);
             std::vector<uint8_t> comp_buffer(comp_size);
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            uLongf size = uncomp_size;
-            if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                Sys_extError("read_tr4_level: uncompress");
+            m_textile32.resize(numTextiles);
 
-            if(size != uncomp_size)
-                Sys_extError("read_tr4_level: uncompress size mismatch");
-            comp_buffer.clear();
-
-            SDL_RWops* newsrcSdl = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-            if(newsrcSdl == nullptr)
-                Sys_extError("read_tr4_level: SDL_RWFromMem");
-            io::SDLReader newsrc(newsrcSdl);
+            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
             newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
 
@@ -79,24 +67,12 @@ void TR4Level::load()
         {
             if(m_textile32.empty())
             {
-                std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
                 m_textile16.resize(numTextiles);
+                
                 std::vector<uint8_t> comp_buffer(comp_size);
                 m_reader.readBytes(comp_buffer.data(), comp_size);
 
-                uLongf size = uncomp_size;
-                if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                    Sys_extError("read_tr4_level: uncompress");
-
-                if(size != uncomp_size)
-                    Sys_extError("read_tr4_level: uncompress size mismatch");
-                comp_buffer.clear();
-
-                SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-                if(newsrcSDL == nullptr)
-                    Sys_extError("read_tr4_level: SDL_RWFromMem");
-                io::SDLReader newsrc(newsrcSDL);
+                io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
                 newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
             }
             else
@@ -112,8 +88,6 @@ void TR4Level::load()
         comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
-            std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
             if((uncomp_size / (256 * 256 * 4)) > 2)
                 Sys_extWarn("read_tr4_level: num_misc_textiles > 2");
 
@@ -125,18 +99,7 @@ void TR4Level::load()
 
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            uLongf size = uncomp_size;
-            if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                Sys_extError("read_tr4_level: uncompress");
-
-            if(size != uncomp_size)
-                Sys_extError("read_tr4_level: uncompress size mismatch");
-            comp_buffer.clear();
-
-            SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-            if(newsrcSDL == nullptr)
-                Sys_extError("read_tr4_level: SDL_RWFromMem");
-            io::SDLReader newsrc(newsrcSDL);
+            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
             newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
     }
@@ -150,24 +113,12 @@ void TR4Level::load()
     if(!comp_size)
         Sys_extError("read_tr4_level: packed geometry");
 
-    std::vector<uint8_t> uncomp_buffer(uncomp_size);
     std::vector<uint8_t> comp_buffer(comp_size);
     m_reader.readBytes(comp_buffer.data(), comp_size);
 
-    uLongf size = uncomp_size;
-    if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-        Sys_extError("read_tr4_level: uncompress");
-
-    if(size != uncomp_size)
-        Sys_extError("read_tr4_level: uncompress size mismatch");
-    comp_buffer.clear();
-
-    SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-
-    if(newsrcSDL == nullptr)
+    io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
+    if(!newsrc.isOpen())
         Sys_extError("read_tr4_level: SDL_RWFromMem");
-
-    io::SDLReader newsrc(newsrcSDL);
 
     // Unused
     if(newsrc.readU32() != 0)
