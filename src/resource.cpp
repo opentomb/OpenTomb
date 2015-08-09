@@ -1901,7 +1901,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
      */
     room->static_mesh.clear();
 
-    for(uint16_t i = 0; i < tr_room->num_static_meshes; i++)
+    for(uint16_t i = 0; i < tr_room->static_meshes.size(); i++)
     {
         tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
         if(tr_static == nullptr)
@@ -2014,7 +2014,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      * sprites loading section
      */
-    for(uint32_t i = 0; i < tr_room->num_sprites; i++)
+    for(uint32_t i = 0; i < tr_room->sprites.size(); i++)
     {
         room->sprites.emplace_back();
         if((tr_room->sprites[i].texture >= 0) && (static_cast<uint32_t>(tr_room->sprites[i].texture) < world->sprites.size()))
@@ -2163,9 +2163,9 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      *  load lights
      */
-    room->lights.resize(tr_room->num_lights);
+    room->lights.resize(tr_room->lights.size());
 
-    for(uint16_t i = 0; i < tr_room->num_lights; i++)
+    for(uint16_t i = 0; i < tr_room->lights.size(); i++)
     {
         switch(tr_room->lights[i].light_type)
         {
@@ -2217,8 +2217,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, cl
     /*
      * portals loading / calculation!!!
      */
-    room->portals.resize(tr_room->num_portals);
-    tr_portal = tr_room->portals;
+    room->portals.resize(tr_room->portals.size());
+    tr_portal = tr_room->portals.data();
     for(size_t i = 0; i < room->portals.size(); i++, tr_portal++)
     {
         Portal* p = &room->portals[i];
@@ -2942,7 +2942,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
 
     auto tr_room = &tr->rooms[room_index];
 
-    if(tr_room->num_triangles + tr_room->num_rectangles == 0)
+    if(tr_room->triangles.empty() && tr_room->rectangles.empty())
     {
         room->mesh = nullptr;
         return;
@@ -2953,7 +2953,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
     room->mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
     room->mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    room->mesh->m_vertices.resize(tr_room->num_vertices);
+    room->mesh->m_vertices.resize(tr_room->vertices.size());
     auto vertex = room->mesh->m_vertices.data();
     for(size_t i = 0; i < room->mesh->m_vertices.size(); i++, vertex++)
     {
@@ -2963,13 +2963,13 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
 
     room->mesh->findBB();
 
-    room->mesh->m_polygons.resize(tr_room->num_triangles + tr_room->num_rectangles);
+    room->mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
     auto p = room->mesh->m_polygons.begin();
 
     /*
      * triangles
      */
-    for(uint32_t i = 0; i < tr_room->num_triangles; i++, ++p)
+    for(uint32_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->triangles[i].texture & 0x8000;
@@ -2978,7 +2978,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
     /*
      * rectangles
      */
-    for(uint32_t i = 0; i < tr_room->num_rectangles; i++, ++p)
+    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
@@ -2996,7 +2996,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
      * triangles
      */
     p = room->mesh->m_polygons.begin();
-    for(size_t i = 0; i < tr_room->num_triangles; i++, ++p)
+    for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, room->mesh, tr_room->triangles[i].vertices);
     }
@@ -3004,7 +3004,7 @@ void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room,
     /*
      * rectangles
      */
-    for(uint32_t i = 0; i < tr_room->num_rectangles; i++, ++p)
+    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, room->mesh, tr_room->rectangles[i].vertices);
     }

@@ -220,29 +220,21 @@ struct tr5_room_t
     tr5_vertex_t offset;            ///< \brief offset of room (world coordinates).
     float y_bottom;                 ///< \brief indicates lowest point in room.
     float y_top;                    ///< \brief indicates highest point in room.
-    uint32_t num_layers;            // number of layers (pieces) this room (4 bytes)
-    tr5_room_layer_t *layers;       // [NumStaticMeshes]list of static meshes
-    uint32_t num_vertices;          // number of vertices in the following list
-    tr5_room_vertex_t *vertices;    // [NumVertices] list of vertices (relative coordinates)
-    uint32_t num_rectangles;        // number of textured rectangles
-    tr4_face4_t *rectangles;        // [NumRectangles] list of textured rectangles
-    uint32_t num_triangles;         // number of textured triangles
-    tr4_face3_t *triangles;         // [NumTriangles] list of textured triangles
-    uint32_t num_sprites;           // number of sprites
-    tr_room_Sprite *sprites;      // [NumSprites] list of sprites
-    uint16_t num_portals;           // number of visibility portals to other rooms
-    tr_room_portal_t *portals;      // [NumPortals] list of visibility portals
+    std::vector<tr5_room_layer_t> layers;       // [NumStaticMeshes]list of static meshes
+    std::vector<tr5_room_vertex_t> vertices;    // [NumVertices] list of vertices (relative coordinates)
+    std::vector<tr4_face4_t> rectangles;        // [NumRectangles] list of textured rectangles
+    std::vector<tr4_face3_t> triangles;         // [NumTriangles] list of textured triangles
+    std::vector<tr_room_Sprite> sprites;      // [NumSprites] list of sprites
+    std::vector<tr_room_portal_t> portals;      // [NumPortals] list of visibility portals
     uint16_t num_zsectors;          // "width" of sector list
     uint16_t num_xsectors;          // "height" of sector list
-    tr_room_sector_t *sector_list;  // [NumXsectors * NumZsectors] list of sectors
+    std::vector<tr_room_sector_t> sector_list;  // [NumXsectors * NumZsectors] list of sectors
     // in this room
     int16_t intensity1;             // This and the next one only affect externally-lit objects
     int16_t intensity2;             // Almost always the same value as AmbientIntensity1 [absent from TR1 data files]
     int16_t light_mode;             // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-    uint16_t num_lights;            // number of point lights in this room
-    tr5_room_light_t *lights;       // [NumLights] list of point lights
-    uint16_t num_static_meshes;     // number of static meshes
-    tr2_room_staticmesh_t *static_meshes;    // [NumStaticMeshes]list of static meshes
+    std::vector<tr5_room_light_t> lights;       // [NumLights] list of point lights
+    std::vector<tr2_room_staticmesh_t> static_meshes;    // [NumStaticMeshes]list of static meshes
     int16_t alternate_room;         // number of the room that this room can alternate
     int8_t  alternate_group;        // number of group which is used to switch alternate rooms
     // with (e.g. empty/filled with water is implemented as an empty room that alternates with a full room)

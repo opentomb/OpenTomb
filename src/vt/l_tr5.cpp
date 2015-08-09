@@ -38,10 +38,10 @@ void TR_Level::read_tr5_room_light(SDL_RWops * const src, tr5_room_light_t & lig
     light.color.b = read_float(src) * 255.0;    // b
     light.color.a = read_float(src) * 255.0;    // a
     light.color.a = 1.0f;
-/*
-    if ((temp != 0) && (temp != 0xCDCDCDCD))
-        throw TR_ReadError("read_tr5_room_light: seperator1 has wrong value");
-*/
+    /*
+        if ((temp != 0) && (temp != 0xCDCDCDCD))
+            throw TR_ReadError("read_tr5_room_light: seperator1 has wrong value");
+    */
     light.r_inner = read_float(src);
     light.r_outer = read_float(src);
     read_float(src);    // rad_input
@@ -52,15 +52,15 @@ void TR_Level::read_tr5_room_light(SDL_RWops * const src, tr5_room_light_t & lig
     read_tr_vertex32(src, light.dir2);
     light.light_type = read_bitu8(src);
     temp = read_bitu8(src);
-    if (temp != 0xCD)
+    if(temp != 0xCD)
         Sys_extWarn("read_tr5_room_light: seperator2 has wrong value");
 
     temp = read_bitu8(src);
-    if (temp != 0xCD)
+    if(temp != 0xCD)
         Sys_extWarn("read_tr5_room_light: seperator3 has wrong value");
 
     temp = read_bitu8(src);
-    if (temp != 0xCD)
+    if(temp != 0xCD)
         Sys_extWarn("read_tr5_room_light: seperator4 has wrong value");
 }
 
@@ -73,7 +73,7 @@ void TR_Level::read_tr5_room_layer(SDL_RWops * const src, tr5_room_layer_t & lay
     layer.num_triangles = read_bitu16(src);
     layer.unknown_l3 = read_bitu16(src);
     layer.unknown_l4 = read_bitu16(src);
-    if (read_bitu16(src) != 0)
+    if(read_bitu16(src) != 0)
         Sys_extWarn("read_tr5_room_layer: filler2 has wrong value");
 
     layer.bounding_box_x1 = read_float(src);
@@ -82,7 +82,7 @@ void TR_Level::read_tr5_room_layer(SDL_RWops * const src, tr5_room_layer_t & lay
     layer.bounding_box_x2 = read_float(src);
     layer.bounding_box_y2 = -read_float(src);
     layer.bounding_box_z2 = -read_float(src);
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("read_tr5_room_layer: filler3 has wrong value");
 
     layer.unknown_l6a = read_bit16(src);
@@ -121,29 +121,29 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     uint32_t i;
     uint8_t *buffer;
 
-    if (read_bitu32(src) != 0x414C4558)
+    if(read_bitu32(src) != 0x414C4558)
         Sys_extError("read_tr5_room: 'XELA' not found");
 
     room_data_size = read_bitu32(src);
     buffer = new uint8_t[room_data_size];
 
-    if (SDL_RWread(src, buffer, 1, room_data_size) < room_data_size)
+    if(SDL_RWread(src, buffer, 1, room_data_size) < room_data_size)
         Sys_extError("read_tr5_room: room_data");
 
-    if ((newsrc = SDL_RWFromMem(buffer, room_data_size)) == NULL)
+    if((newsrc = SDL_RWFromMem(buffer, room_data_size)) == NULL)
         Sys_extError("read_tr5_room: SDL_RWFromMem");
 
     room.intensity1 = 32767;
     room.intensity2 = 32767;
     room.light_mode = 0;
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator1 has wrong value");
 
     /*portal_offset = */read_bit32(newsrc);             // StartPortalOffset?   // endSDOffset
     sector_data_offset = read_bitu32(newsrc);    // StartSDOffset
     temp = read_bitu32(newsrc);
-    if ((temp != 0) && (temp != 0xCDCDCDCD))
+    if((temp != 0) && (temp != 0xCDCDCDCD))
         Sys_extWarn("read_tr5_room: seperator2 has wrong value");
 
     static_meshes_offset = read_bitu32(newsrc);     // endPortalOffset
@@ -163,31 +163,31 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.light_colour.r = read_bitu8(newsrc) / 255.0f;
     room.light_colour.a = read_bitu8(newsrc) / 255.0f;
 
-    room.num_lights = read_bitu16(newsrc);
-    if (room.num_lights > 512)
+    room.lights.resize(read_bitu16(newsrc));
+    if(room.lights.size() > 512)
         Sys_extWarn("read_tr5_room: num_lights > 512");
 
-    room.num_static_meshes = read_bitu16(newsrc);
-    if (room.num_static_meshes > 512)
+    room.static_meshes.resize(read_bitu16(newsrc));
+    if(room.static_meshes.size() > 512)
         Sys_extWarn("read_tr5_room: num_static_meshes > 512");
 
     room.reverb_info = read_bitu8(newsrc);
     room.alternate_group = read_bitu8(newsrc);
     room.water_scheme = read_bitu16(newsrc);
 
-    if (read_bitu32(newsrc) != 0x00007FFF)
+    if(read_bitu32(newsrc) != 0x00007FFF)
         Sys_extWarn("read_tr5_room: filler1 has wrong value");
 
-    if (read_bitu32(newsrc) != 0x00007FFF)
+    if(read_bitu32(newsrc) != 0x00007FFF)
         Sys_extWarn("read_tr5_room: filler2 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator4 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator5 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xFFFFFFFF)
+    if(read_bitu32(newsrc) != 0xFFFFFFFF)
         Sys_extWarn("read_tr5_room: seperator6 has wrong value");
 
     room.alternate_room = read_bit16(newsrc);
@@ -199,7 +199,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.unknown_r3 = read_bitu32(newsrc);
 
     temp = read_bitu32(newsrc);
-    if ((temp != 0) && (temp != 0xCDCDCDCD))
+    if((temp != 0) && (temp != 0xCDCDCDCD))
         Sys_extWarn("read_tr5_room: seperator7 has wrong value");
 
     room.unknown_r4a = read_bitu16(newsrc);
@@ -209,49 +209,51 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.unknown_r5 = read_bitu32(newsrc);
     room.room_z = -read_float(newsrc);
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator8 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator9 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator10 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator11 has wrong value");
 
     temp = read_bitu32(newsrc);
-    if ((temp != 0) && (temp != 0xCDCDCDCD))
+    if((temp != 0) && (temp != 0xCDCDCDCD))
         Sys_extWarn("read_tr5_room: seperator12 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator13 has wrong value");
 
-    room.num_triangles = read_bitu32(newsrc);
-    if (room.num_triangles == 0xCDCDCDCD)
-            room.num_triangles = 0;
-    if (room.num_triangles > 512)
+    auto num_triangles = read_bitu32(newsrc);
+    if(num_triangles == 0xCDCDCDCD)
+        num_triangles = 0;
+    if(num_triangles > 512)
         Sys_extWarn("read_tr5_room: num_triangles > 512");
+    room.triangles.resize(num_triangles);
 
-    room.num_rectangles = read_bitu32(newsrc);
-    if (room.num_rectangles == 0xCDCDCDCD)
-            room.num_rectangles = 0;
-    if (room.num_rectangles > 1024)
+    auto num_rectangles = read_bitu32(newsrc);
+    if(num_rectangles == 0xCDCDCDCD)
+        num_rectangles = 0;
+    if(num_rectangles > 1024)
         Sys_extWarn("read_tr5_room: num_rectangles > 1024");
+    room.rectangles.resize(num_rectangles);
 
-    if (read_bitu32(newsrc) != 0)
+    if(read_bitu32(newsrc) != 0)
         Sys_extWarn("read_tr5_room: seperator14 has wrong value");
 
     /*light_size = */read_bitu32(newsrc);
-    if (read_bitu32(newsrc) != room.num_lights)
+    if(read_bitu32(newsrc) != room.lights.size())
         Sys_extError("read_tr5_room: room.num_lights2 != room.num_lights");
 
     room.unknown_r6 = read_bitu32(newsrc);
     room.room_y_top = -read_float(newsrc);
     room.room_y_bottom = -read_float(newsrc);
 
-    room.num_layers = read_bitu32(newsrc);
+    room.layers.resize( read_bitu32(newsrc) );
 
     /*
        if (room.num_layers != 0) {
@@ -270,33 +272,32 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     vertices_offset = read_bitu32(newsrc);
     poly_offset = read_bitu32(newsrc);
     poly_offset2 = read_bitu32(newsrc);
-    if (poly_offset != poly_offset2)
+    if(poly_offset != poly_offset2)
         Sys_extError("read_tr5_room: poly_offset != poly_offset2");
 
     vertices_size = read_bitu32(newsrc);
-    if ((vertices_size % 28) != 0)
+    if((vertices_size % 28) != 0)
         Sys_extError("read_tr5_room: vertices_size has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator15 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator16 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator17 has wrong value");
 
-    if (read_bitu32(newsrc) != 0xCDCDCDCD)
+    if(read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator18 has wrong value");
 
-    room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
-    for (i = 0; i < room.num_lights; i++)
+    for(i = 0; i < room.lights.size(); i++)
         read_tr5_room_light(newsrc, room.lights[i]);
 
     SDL_RWseek(newsrc, 208 + sector_data_offset, SEEK_SET);
 
-    room.sector_list = (tr_room_sector_t*)malloc(room.num_zsectors * room.num_xsectors * sizeof(tr_room_sector_t));
-    for (i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
+    room.sector_list.resize(room.num_zsectors * room.num_xsectors);
+    for(i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
         read_tr_room_sector(newsrc, room.sector_list[i]);
 
     /*
@@ -308,21 +309,18 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
        }
      */
 
-    room.num_portals = read_bit16(newsrc);
-    room.portals = (tr_room_portal_t*)malloc(room.num_portals * sizeof(tr_room_portal_t));
-    for (i = 0; i < room.num_portals; i++)
+    room.portals.resize( read_bit16(newsrc) );
+    for(i = 0; i < room.portals.size(); i++)
         read_tr_room_portal(newsrc, room.portals[i]);
 
     SDL_RWseek(newsrc, 208 + static_meshes_offset, SEEK_SET);
 
-    room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
-    for (i = 0; i < room.num_static_meshes; i++)
+    for(i = 0; i < room.static_meshes.size(); i++)
         read_tr4_room_staticmesh(newsrc, room.static_meshes[i]);
 
     SDL_RWseek(newsrc, 208 + layer_offset, SEEK_SET);
 
-    room.layers = (tr5_room_layer_t*)malloc(room.num_layers * sizeof(tr5_room_layer_t));
-    for (i = 0; i < room.num_layers; i++)
+    for(i = 0; i < room.layers.size(); i++)
         read_tr5_room_layer(newsrc, room.layers[i]);
 
     SDL_RWseek(newsrc, 208 + poly_offset, SEEK_SET);
@@ -332,12 +330,12 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         uint32_t rectangle_index = 0;
         uint32_t triangle_index = 0;
 
-        room.rectangles = (tr4_face4_t*)malloc(room.num_rectangles * sizeof(tr4_face4_t));
-        room.triangles = (tr4_face3_t*)malloc(room.num_triangles * sizeof(tr4_face3_t));
-        for (i = 0; i < room.num_layers; i++) {
+        for(i = 0; i < room.layers.size(); i++)
+        {
             uint32_t j;
 
-            for (j = 0; j < room.layers[i].num_rectangles; j++) {
+            for(j = 0; j < room.layers[i].num_rectangles; j++)
+            {
                 read_tr4_face4(newsrc, room.rectangles[rectangle_index]);
                 room.rectangles[rectangle_index].vertices[0] += vertex_index;
                 room.rectangles[rectangle_index].vertices[1] += vertex_index;
@@ -345,7 +343,8 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
                 room.rectangles[rectangle_index].vertices[3] += vertex_index;
                 rectangle_index++;
             }
-            for (j = 0; j < room.layers[i].num_triangles; j++) {
+            for(j = 0; j < room.layers[i].num_triangles; j++)
+            {
                 read_tr4_face3(newsrc, room.triangles[triangle_index]);
                 room.triangles[triangle_index].vertices[0] += vertex_index;
                 room.triangles[triangle_index].vertices[1] += vertex_index;
@@ -360,14 +359,14 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
     {
         uint32_t vertex_index = 0;
-        room.num_vertices = vertices_size / 28;
+        room.vertices.resize( vertices_size / 28 );
         //int temp1 = room_data_size - (208 + vertices_offset + vertices_size);
-        room.vertices = (tr5_room_vertex_t*)calloc(room.num_vertices, sizeof(tr5_room_vertex_t));
-        for (i = 0; i < room.num_layers; i++) {
+        for(i = 0; i < room.layers.size(); i++)
+        {
             uint32_t j;
 
-            for (j = 0; j < room.layers[i].num_vertices; j++)
-                    read_tr5_room_vertex(newsrc, room.vertices[vertex_index++]);
+            for(j = 0; j < room.layers[i].num_vertices; j++)
+                read_tr5_room_vertex(newsrc, room.vertices[vertex_index++]);
         }
     }
 
@@ -375,13 +374,13 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
     SDL_RWclose(newsrc);
     newsrc = NULL;
-    delete [] buffer;
+    delete[] buffer;
 }
 
 void TR_Level::read_tr5_moveable(SDL_RWops * const src, tr_moveable_t & moveable)
 {
     read_tr_moveable(src, moveable);
-    if (read_bitu16(src) != 0xFFEF)
+    if(read_bitu16(src) != 0xFFEF)
         Sys_extWarn("read_tr5_moveable: filler has wrong value");
 }
 
@@ -395,7 +394,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     // Version
     uint32_t file_version = read_bitu32(src);
 
-    if (file_version != 0x00345254)
+    if(file_version != 0x00345254)
         Sys_extError("Wrong level version");
 
     this->num_textiles = 0;
@@ -416,118 +415,124 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     this->num_textiles = this->num_room_textiles + this->num_obj_textiles + this->num_bump_textiles + this->num_misc_textiles;
 
     uncomp_size = read_bitu32(src);
-    if (uncomp_size == 0)
+    if(uncomp_size == 0)
         Sys_extError("read_tr5_level: textiles32 uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
+    if(comp_size > 0)
+    {
         uncomp_buffer = new uint8_t[uncomp_size];
 
-        this->textile32.resize( this->num_textiles );
+        this->textile32.resize(this->num_textiles);
         comp_buffer = new uint8_t[comp_size];
 
-        if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+        if(SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
             Sys_extError("read_tr5_level: textiles32");
 
         size = uncomp_size;
-        if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+        if(uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
             Sys_extError("read_tr5_level: uncompress");
 
-        if (size != uncomp_size)
+        if(size != uncomp_size)
             Sys_extError("read_tr5_level: uncompress size mismatch");
-        delete [] comp_buffer;
+        delete[] comp_buffer;
 
         comp_buffer = NULL;
-        if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+        if((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
             Sys_extError("read_tr5_level: SDL_RWFromMem");
 
-        for (i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
+        for(i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
             read_tr4_textile32(newsrc, this->textile32[i]);
         SDL_RWclose(newsrc);
         newsrc = NULL;
-        delete [] uncomp_buffer;
+        delete[] uncomp_buffer;
 
         uncomp_buffer = NULL;
         this->read_32bit_textiles = true;
     }
 
     uncomp_size = read_bitu32(src);
-    if (uncomp_size == 0)
+    if(uncomp_size == 0)
         Sys_extError("read_tr5_level: textiles16 uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
-        if (this->textile32.empty()) {
+    if(comp_size > 0)
+    {
+        if(this->textile32.empty())
+        {
             uncomp_buffer = new uint8_t[uncomp_size];
 
-            this->textile16.resize( this->num_textiles );
+            this->textile16.resize(this->num_textiles);
             comp_buffer = new uint8_t[comp_size];
 
-            if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+            if(SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
                 Sys_extError("read_tr5_level: textiles16");
 
             size = uncomp_size;
-            if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+            if(uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
                 Sys_extError("read_tr5_level: uncompress");
 
-            if (size != uncomp_size)
+            if(size != uncomp_size)
                 Sys_extError("read_tr5_level: uncompress size mismatch");
-            delete [] comp_buffer;
+            delete[] comp_buffer;
 
             comp_buffer = NULL;
-            if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+            if((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                 Sys_extError("read_tr5_level: SDL_RWFromMem");
 
-            for (i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
+            for(i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
                 read_tr2_textile16(newsrc, this->textile16[i]);
             SDL_RWclose(newsrc);
             newsrc = NULL;
-            delete [] uncomp_buffer;
+            delete[] uncomp_buffer;
 
             uncomp_buffer = NULL;
-        } else {
+        }
+        else
+        {
             SDL_RWseek(src, comp_size, SEEK_CUR);
         }
     }
 
     uncomp_size = read_bitu32(src);
-    if (uncomp_size == 0)
+    if(uncomp_size == 0)
         Sys_extError("read_tr5_level: textiles32d uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
+    if(comp_size > 0)
+    {
         uncomp_buffer = new uint8_t[uncomp_size];
 
-        if ((uncomp_size / (256 * 256 * 4)) > 3)
+        if((uncomp_size / (256 * 256 * 4)) > 3)
             Sys_extWarn("read_tr5_level: num_misc_textiles > 3");
 
-        if (this->textile32.empty())
+        if(this->textile32.empty())
         {
-            this->textile32.resize( this->num_misc_textiles );
+            this->textile32.resize(this->num_misc_textiles);
         }
 
         comp_buffer = new uint8_t[comp_size];
 
-        if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+        if(SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
             Sys_extError("read_tr5_level: misc_textiles");
 
         size = uncomp_size;
-        if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+        if(uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
             Sys_extError("read_tr5_level: uncompress");
 
-        if (size != uncomp_size)
+        if(size != uncomp_size)
             Sys_extError("read_tr5_level: uncompress size mismatch");
-        delete [] comp_buffer;
+        delete[] comp_buffer;
 
         comp_buffer = NULL;
-        if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+        if((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
             Sys_extError("read_tr5_level: SDL_RWFromMem");
 
-        for (i = (this->num_textiles - this->num_misc_textiles); i < this->num_textiles; i++)
+        for(i = (this->num_textiles - this->num_misc_textiles); i < this->num_textiles; i++)
             read_tr4_textile32(newsrc, this->textile32[i]);
         SDL_RWclose(newsrc);
         newsrc = NULL;
-        delete [] uncomp_buffer;
+        delete[] uncomp_buffer;
 
         uncomp_buffer = NULL;
     }
@@ -547,25 +552,25 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
      */
     i = read_bitu16(src);
     i = read_bitu16(src);
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[1]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[2]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[3]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[4]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[5]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[6]");
 
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for flags[7]");
 
     // LevelDataSize1
@@ -574,69 +579,69 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     read_bitu32(src);
 
     // Unused
-    if (read_bitu32(src) != 0)
+    if(read_bitu32(src) != 0)
         Sys_extWarn("Bad value for 'unused'");
 
-    this->rooms.resize( read_bitu32(src) );
-    for (i = 0; i < this->rooms.size(); i++)
+    this->rooms.resize(read_bitu32(src));
+    for(i = 0; i < this->rooms.size(); i++)
         read_tr5_room(src, this->rooms[i]);
 
-    this->floor_data.resize( read_bitu32(src) );
+    this->floor_data.resize(read_bitu32(src));
     for(i = 0; i < this->floor_data.size(); i++)
         this->floor_data[i] = read_bitu16(src);
 
     read_mesh_data(src);
 
-    this->animations.resize( read_bitu32(src) );
-    for (i = 0; i < this->animations.size(); i++)
+    this->animations.resize(read_bitu32(src));
+    for(i = 0; i < this->animations.size(); i++)
     {
         read_tr4_animation(src, this->animations[i]);
     }
 
-    this->state_changes.resize( read_bitu32(src) );
-    for (i = 0; i < this->state_changes.size(); i++)
+    this->state_changes.resize(read_bitu32(src));
+    for(i = 0; i < this->state_changes.size(); i++)
         read_tr_state_changes(src, this->state_changes[i]);
 
-    this->anim_dispatches.resize( read_bitu32(src) );
-    for (i = 0; i < this->anim_dispatches.size(); i++)
+    this->anim_dispatches.resize(read_bitu32(src));
+    for(i = 0; i < this->anim_dispatches.size(); i++)
         read_tr_anim_dispatches(src, this->anim_dispatches[i]);
 
-    this->anim_commands.resize( read_bitu32(src) );
-    for (i = 0; i < this->anim_commands.size(); i++)
+    this->anim_commands.resize(read_bitu32(src));
+    for(i = 0; i < this->anim_commands.size(); i++)
         this->anim_commands[i] = read_bit16(src);
 
-    this->mesh_tree_data.resize( read_bitu32(src) );
-    for (i = 0; i < this->mesh_tree_data.size(); i++)
+    this->mesh_tree_data.resize(read_bitu32(src));
+    for(i = 0; i < this->mesh_tree_data.size(); i++)
         this->mesh_tree_data[i] = read_bitu32(src);                     // 4 bytes
 
     read_frame_moveable_data(src);
 
-    this->static_meshes.resize( read_bitu32(src) );
-    for (i = 0; i < this->static_meshes.size(); i++)
+    this->static_meshes.resize(read_bitu32(src));
+    for(i = 0; i < this->static_meshes.size(); i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
-    if (read_bit8(src) != 'S')
+    if(read_bit8(src) != 'S')
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    if (read_bit8(src) != 'P')
+    if(read_bit8(src) != 'P')
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    if (read_bit8(src) != 'R')
+    if(read_bit8(src) != 'R')
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    if (read_bit8(src) != 0)
+    if(read_bit8(src) != 0)
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    this->sprite_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->sprite_textures.size(); i++)
+    this->sprite_textures.resize(read_bitu32(src));
+    for(i = 0; i < this->sprite_textures.size(); i++)
         read_tr4_sprite_texture(src, this->sprite_textures[i]);
 
-    this->sprite_sequences.resize( read_bitu32(src) );
-    for (i = 0; i < this->sprite_sequences.size(); i++)
+    this->sprite_sequences.resize(read_bitu32(src));
+    for(i = 0; i < this->sprite_sequences.size(); i++)
         read_tr_sprite_sequence(src, this->sprite_sequences[i]);
 
-    this->cameras.resize( read_bitu32(src) );
-    for (i = 0; i < this->cameras.size(); i++)
+    this->cameras.resize(read_bitu32(src));
+    for(i = 0; i < this->cameras.size(); i++)
     {
         this->cameras[i].x = read_bit32(src);
         this->cameras[i].y = read_bit32(src);
@@ -646,8 +651,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->cameras[i].unknown1 = read_bitu16(src);
     }
 
-    this->flyby_cameras.resize( read_bitu32(src) );
-    for (i = 0; i < this->flyby_cameras.size(); i++)
+    this->flyby_cameras.resize(read_bitu32(src));
+    for(i = 0; i < this->flyby_cameras.size(); i++)
     {
         this->flyby_cameras[i].cam_x = read_bit32(src);
         this->flyby_cameras[i].cam_y = read_bit32(src);
@@ -657,10 +662,10 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->flyby_cameras[i].target_z = read_bit32(src);
 
         this->flyby_cameras[i].sequence = read_bit8(src);
-        this->flyby_cameras[i].index    = read_bit8(src);
+        this->flyby_cameras[i].index = read_bit8(src);
 
-        this->flyby_cameras[i].fov   = read_bitu16(src);
-        this->flyby_cameras[i].roll  = read_bitu16(src);
+        this->flyby_cameras[i].fov = read_bitu16(src);
+        this->flyby_cameras[i].roll = read_bitu16(src);
         this->flyby_cameras[i].timer = read_bitu16(src);
         this->flyby_cameras[i].speed = read_bitu16(src);
         this->flyby_cameras[i].flags = read_bitu16(src);
@@ -668,7 +673,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->flyby_cameras[i].room_id = read_bitu32(src);
     }
 
-    this->sound_sources.resize( read_bitu32(src) );
+    this->sound_sources.resize(read_bitu32(src));
     for(i = 0; i < this->sound_sources.size(); i++)
     {
         this->sound_sources[i].x = read_bit32(src);
@@ -679,51 +684,51 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sound_sources[i].flags = read_bitu16(src);
     }
 
-    this->boxes.resize( read_bitu32(src) );
-    for (i = 0; i < this->boxes.size(); i++)
+    this->boxes.resize(read_bitu32(src));
+    for(i = 0; i < this->boxes.size(); i++)
         read_tr2_box(src, this->boxes[i]);
 
     this->overlaps.resize(read_bitu32(src));
-    for (i = 0; i < this->overlaps.size(); i++)
+    for(i = 0; i < this->overlaps.size(); i++)
         this->overlaps[i] = read_bitu16(src);
 
     // Zones
     SDL_RWseek(src, this->boxes.size() * 20, SEEK_CUR);
 
-    this->animated_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->animated_textures.size(); i++)
+    this->animated_textures.resize(read_bitu32(src));
+    for(i = 0; i < this->animated_textures.size(); i++)
     {
         this->animated_textures[i] = read_bitu16(src);
     }
 
     this->animated_textures_uv_count = read_bitu8(src);
 
-    if (read_bit8(src) != 'T')
+    if(read_bit8(src) != 'T')
         Sys_extError("read_tr5_level: '\\0TEX' not found");
 
-    if (read_bit8(src) != 'E')
+    if(read_bit8(src) != 'E')
         Sys_extError("read_tr5_level: '\\0TEX' not found");
 
-    if (read_bit8(src) != 'X')
+    if(read_bit8(src) != 'X')
         Sys_extError("read_tr5_level: '\\0TEX' not found");
 
-    if (read_bit8(src) != 0)
+    if(read_bit8(src) != 0)
         Sys_extError("read_tr5_level: '\\0TEX' not found");
 
-    this->object_textures.resize( read_bitu32(src) );
-    for (i = 0; i < this->object_textures.size(); i++)
+    this->object_textures.resize(read_bitu32(src));
+    for(i = 0; i < this->object_textures.size(); i++)
     {
         read_tr4_object_texture(src, this->object_textures[i]);
-        if (read_bitu16(src) != 0)
+        if(read_bitu16(src) != 0)
             Sys_extWarn("read_tr5_level: obj_tex trailing bitu16 != 0");
     }
 
     this->items.resize(read_bitu32(src));
-    for (i = 0; i < this->items.size(); i++)
+    for(i = 0; i < this->items.size(); i++)
         read_tr4_item(src, this->items[i]);
 
     this->ai_objects.resize(read_bitu32(src));
-    for(i=0; i < this->ai_objects.size(); i++)
+    for(i = 0; i < this->ai_objects.size(); i++)
     {
         this->ai_objects[i].object_id = read_bitu16(src);
         this->ai_objects[i].room = read_bitu16(src);
@@ -737,17 +742,17 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->ai_objects[i].angle = read_bit32(src);                        // 24
     }
 
-    this->demo_data.resize( read_bitu16(src) );
-    for(i=0; i < this->demo_data.size(); i++)
+    this->demo_data.resize(read_bitu16(src));
+    for(i = 0; i < this->demo_data.size(); i++)
         this->demo_data[i] = read_bitu8(src);
 
     // Soundmap
     this->soundmap.resize(TR_AUDIO_MAP_SIZE_TR5);
-    for(i=0; i < this->soundmap.size(); i++)
+    for(i = 0; i < this->soundmap.size(); i++)
         this->soundmap[i] = read_bit16(src);
 
     this->sound_details.resize(read_bitu32(src));
-    for(i=0; i < this->sound_details.size(); i++)
+    for(i = 0; i < this->sound_details.size(); i++)
     {
         this->sound_details[i].sample = read_bitu16(src);
         this->sound_details[i].volume = (uint16_t)read_bitu8(src);        // n x 2.6
@@ -758,8 +763,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sound_details[i].flags_2 = read_bitu8(src);
     }
 
-    this->sample_indices.resize( read_bitu32(src) );
-    for(i=0; i < this->sample_indices.size(); i++)
+    this->sample_indices.resize(read_bitu32(src));
+    for(i = 0; i < this->sample_indices.size(); i++)
         this->sample_indices[i] = read_bitu32(src);
 
     SDL_RWseek(src, 6, SEEK_CUR);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
@@ -771,7 +776,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->samples_count = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        this->samples_data.resize( SDL_RWsize(src) - SDL_RWtell(src) );
+        this->samples_data.resize(SDL_RWsize(src) - SDL_RWtell(src));
         for(i = 0; i < this->samples_data.size(); i++)
             this->samples_data[i] = read_bitu8(src);
     }

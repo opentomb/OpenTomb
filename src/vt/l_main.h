@@ -3,7 +3,6 @@
 #include <SDL2/SDL_rwops.h>
 #include <vector>
 #include <string>
-#include <cstring>
 
 #include "tr_types.h"
 #include "tr_versions.h"
@@ -18,76 +17,6 @@
 class TR_Level
 {
 public:
-    ~TR_Level()
-    {
-        for(size_t i = 0; i < this->rooms.size(); i++)
-        {
-            if(this->rooms[i].num_layers)
-            {
-                this->rooms[i].num_layers = 0;
-                free(this->rooms[i].layers);
-                this->rooms[i].layers = nullptr;
-            }
-
-            if(this->rooms[i].num_lights)
-            {
-                this->rooms[i].num_lights = 0;
-                free(this->rooms[i].lights);
-                this->rooms[i].lights = nullptr;
-            }
-
-            if(this->rooms[i].num_portals)
-            {
-                this->rooms[i].num_portals = 0;
-                free(this->rooms[i].portals);
-                this->rooms[i].portals = nullptr;
-            }
-
-            if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
-            {
-                this->rooms[i].num_xsectors = 0;
-                this->rooms[i].num_zsectors = 0;
-                free(this->rooms[i].sector_list);
-                this->rooms[i].sector_list = nullptr;
-            }
-
-            if(this->rooms[i].num_sprites)
-            {
-                this->rooms[i].num_sprites = 0;
-                free(this->rooms[i].sprites);
-                this->rooms[i].sprites = nullptr;
-            }
-
-            if(this->rooms[i].num_static_meshes)
-            {
-                this->rooms[i].num_static_meshes = 0;
-                free(this->rooms[i].static_meshes);
-                this->rooms[i].static_meshes = nullptr;
-            }
-
-            if(this->rooms[i].num_triangles)
-            {
-                this->rooms[i].num_triangles = 0;
-                free(this->rooms[i].triangles);
-                this->rooms[i].triangles = nullptr;
-            }
-
-            if(this->rooms[i].num_rectangles)
-            {
-                this->rooms[i].num_rectangles = 0;
-                free(this->rooms[i].rectangles);
-                this->rooms[i].rectangles = nullptr;
-            }
-
-            if(this->rooms[i].num_vertices)
-            {
-                this->rooms[i].num_vertices = 0;
-                free(this->rooms[i].vertices);
-                this->rooms[i].vertices = nullptr;
-            }
-        }
-    }
-
     int32_t game_version = TR_UNKNOWN;                   ///< \brief game engine version.
 
     std::vector<tr_textile8_t> textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).

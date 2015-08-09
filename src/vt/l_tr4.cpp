@@ -132,39 +132,32 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 
     pos = SDL_RWseek(src, 0, SEEK_CUR);
 
-    room.num_layers = 0;
-
-    room.num_vertices = read_bitu16(src);
-    room.vertices = (tr5_room_vertex_t*)calloc(room.num_vertices, sizeof(tr5_room_vertex_t));
-    for (i = 0; i < room.num_vertices; i++)
+    room.vertices.resize( read_bitu16(src) );
+    for (i = 0; i < room.vertices.size(); i++)
         read_tr4_room_vertex(src, room.vertices[i]);
 
-    room.num_rectangles = read_bitu16(src);
-    room.rectangles = (tr4_face4_t*)malloc(room.num_rectangles * sizeof(tr4_face4_t));
-    for (i = 0; i < room.num_rectangles; i++)
+    room.rectangles.resize( read_bitu16(src) );
+    for (i = 0; i < room.rectangles.size(); i++)
         read_tr_face4(src, room.rectangles[i]);
 
-    room.num_triangles = read_bitu16(src);
-    room.triangles = (tr4_face3_t*)malloc(room.num_triangles * sizeof(tr4_face3_t));
-    for (i = 0; i < room.num_triangles; i++)
+    room.triangles.resize( read_bitu16(src) );
+    for (i = 0; i < room.triangles.size(); i++)
         read_tr_face3(src, room.triangles[i]);
 
-    room.num_sprites = read_bitu16(src);
-    room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
-    for (i = 0; i < room.num_sprites; i++)
+    room.sprites.resize( read_bitu16(src) );
+    for (i = 0; i < room.sprites.size(); i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
     // set to the right position in case that there is some unused data
     SDL_RWseek(src, pos + (num_data_words * 2), SEEK_SET);
 
-    room.num_portals = read_bitu16(src);
-    room.portals = (tr_room_portal_t*)malloc(room.num_portals * sizeof(tr_room_portal_t));
-    for (i = 0; i < room.num_portals; i++)
+    room.portals.resize( read_bitu16(src) );
+    for (i = 0; i < room.portals.size(); i++)
         read_tr_room_portal(src, room.portals[i]);
 
     room.num_zsectors = read_bitu16(src);
     room.num_xsectors = read_bitu16(src);
-    room.sector_list = (tr_room_sector_t*)malloc(room.num_zsectors * room.num_xsectors * sizeof(tr_room_sector_t));
+    room.sector_list.resize(room.num_zsectors * room.num_xsectors);
     for (i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
         read_tr_room_sector(src, room.sector_list[i]);
 
@@ -174,14 +167,12 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
     // only in TR2
     room.light_mode = 0;
 
-    room.num_lights = read_bitu16(src);
-    room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
-    for (i = 0; i < room.num_lights; i++)
+    room.lights.resize( read_bitu16(src) );
+    for (i = 0; i < room.lights.size(); i++)
         read_tr4_room_light(src, room.lights[i]);
 
-    room.num_static_meshes = read_bitu16(src);
-    room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
-    for (i = 0; i < room.num_static_meshes; i++)
+    room.static_meshes.resize( read_bitu16(src) );
+    for (i = 0; i < room.static_meshes.size(); i++)
         read_tr4_room_staticmesh(src, room.static_meshes[i]);
 
     room.alternate_room = read_bit16(src);
