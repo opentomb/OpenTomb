@@ -3679,7 +3679,7 @@ int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::TR1Level>& tr, siz
         return ret;
     }
 
-    next_anim = tr->m_animations.data() + animation_ind + 1;
+    next_anim = &tr->m_animations[animation_ind + 1];
     ret = next_anim->frame_offset - curr_anim->frame_offset;
     ret /= curr_anim->frame_size * 2;
 

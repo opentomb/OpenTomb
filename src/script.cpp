@@ -2371,7 +2371,7 @@ void lua_CamShake(float power, float time, lua::Value id)
     {
         std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-        btVector3 cam_pos = renderer.camera()->m_pos;
+        btVector3 cam_pos = renderer.camera()->getPosition();
 
         btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
         dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : (1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));

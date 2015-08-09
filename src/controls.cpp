@@ -643,8 +643,8 @@ void Controls_PrimaryMouseDown()
 {
     EngineContainer* cont = new EngineContainer();
     btScalar dbgR = 128.0;
-    btVector3 v = engine_camera.m_pos;
-    btVector3 dir = engine_camera.m_viewDir;
+    btVector3 v = engine_camera.getPosition();
+    btVector3 dir = engine_camera.getViewDir();
     btVector3 localInertia(0, 0, 0);
 
     btCollisionShape* cshape = new btSphereShape(dbgR);
@@ -668,8 +668,8 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    btVector3 from = engine_camera.m_pos;
-    btVector3 to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
+    btVector3 from = engine_camera.getPosition();
+    btVector3 to = from + engine_camera.getViewDir() * 32768.0;
 
     std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainer>();
     cam_cont->room = engine_camera.m_currentRoom;

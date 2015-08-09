@@ -19,7 +19,7 @@ struct Frustum
 {
     std::vector<Plane> planes;                                              // clip planes
     std::vector<btVector3> vertices;                                            // frustum vertices
-    btVector3* cam_pos = nullptr;                                               ///@TODO: delete it!
+    const btVector3* cam_pos = nullptr;                                               ///@TODO: delete it!
     Plane norm;                                                  // main frustum clip plane (inv. plane of parent portal)
 
     uint16_t parents_count = 0;

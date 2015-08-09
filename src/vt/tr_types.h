@@ -135,12 +135,9 @@ namespace io
         {
             return read<float>();
         }
-        float readMF()
+        float readScaled()
         {
-            int16_t base_int = readI16();
-            uint16_t sign_int = readU16();
-
-            return static_cast<float>(base_int) + static_cast<float>(sign_int) / 65535.0f;
+            return readI32() / 65536.0f;
         }
 
     private:
@@ -2144,8 +2141,8 @@ struct Animation
         animation.frame_size = reader.readU8();
         animation.state_id = reader.readU16();
 
-        animation.speed = reader.readMF();
-        animation.accel = reader.readMF();
+        animation.speed = reader.readScaled();
+        animation.accel = reader.readScaled();
 
         animation.frame_start = reader.readU16();
         animation.frame_end = reader.readU16();
@@ -2167,10 +2164,10 @@ struct Animation
         animation.frame_size = reader.readU8();
         animation.state_id = reader.readU16();
 
-        animation.speed = reader.readMF();
-        animation.accel = reader.readMF();
-        animation.speed_lateral = reader.readMF();
-        animation.accel_lateral = reader.readMF();
+        animation.speed = reader.readScaled();
+        animation.accel = reader.readScaled();
+        animation.speed_lateral = reader.readScaled();
+        animation.accel_lateral = reader.readScaled();
 
         animation.frame_start = reader.readU16();
         animation.frame_end = reader.readU16();

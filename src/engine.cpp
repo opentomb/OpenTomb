@@ -526,7 +526,7 @@ void Engine_ShowDebugInfo()
 {
     GLfloat color_array[] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
-    light_position = engine_camera.m_pos;
+    light_position = engine_camera.getPosition();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -571,14 +571,14 @@ void Engine_ShowDebugInfo()
 
     if(engine_camera.m_currentRoom != nullptr)
     {
-        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.m_pos);
+        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
             Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
             Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.m_pos[0], engine_camera.m_pos[1], engine_camera.m_pos[2]);
+    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
 }
 
 /**
@@ -1148,9 +1148,10 @@ int Engine_ExecCmd(const char *ch)
         else if(!strcmp(token.data(), "goto"))
         {
             control_states.free_look = true;
-            renderer.camera()->m_pos[0] = script::MainEngine::parseFloat(&ch);
-            renderer.camera()->m_pos[1] = script::MainEngine::parseFloat(&ch);
-            renderer.camera()->m_pos[2] = script::MainEngine::parseFloat(&ch);
+            const auto x = script::MainEngine::parseFloat(&ch);
+            const auto y = script::MainEngine::parseFloat(&ch);
+            const auto z = script::MainEngine::parseFloat(&ch);
+            renderer.camera()->setPosition({ x, y, z });
             return 1;
         }
         else if(!strcmp(token.data(), "save"))
@@ -1279,7 +1280,7 @@ int Engine_ExecCmd(const char *ch)
         {
             if(Room* r = renderer.camera()->m_currentRoom)
             {
-                sect = r->getSectorXYZ(renderer.camera()->m_pos);
+                sect = r->getSectorXYZ(renderer.camera()->getPosition());
                 ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

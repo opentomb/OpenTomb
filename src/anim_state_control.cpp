@@ -1087,7 +1087,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
-                character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
+                character->m_currentSpeed = std::min(character->m_currentSpeed, MAX_SPEED_QUICKSAND);
             }
 
             if(cmd->move[0] == 1)
@@ -1163,7 +1163,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
-                character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
+                character->m_currentSpeed = std::min(character->m_currentSpeed, MAX_SPEED_QUICKSAND);
             }
 
             global_offset = character->m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
