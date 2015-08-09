@@ -3,10 +3,10 @@
 #include <SDL2/SDL_rwops.h>
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "tr_types.h"
 #include "tr_versions.h"
-#include <memory>
 
 /** \brief A complete TR level.
   *

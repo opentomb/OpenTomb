@@ -373,10 +373,10 @@ void TR_TR5Level::load()
     for(size_t i = 0; i < m_soundDetails.size(); i++)
     {
         m_soundDetails[i].sample = m_src.readU16();
-        m_soundDetails[i].volume = (uint16_t)m_src.readU8();        // n x 2.6
-        m_soundDetails[i].sound_range = (uint16_t)m_src.readU8();   // n as is
-        m_soundDetails[i].chance = (uint16_t)m_src.readU8();        // If n = 99, n = 0 (max. chance)
-        m_soundDetails[i].pitch = (int16_t)m_src.readI8();           // n as is
+        m_soundDetails[i].volume = static_cast<uint16_t>(m_src.readU8());        // n x 2.6
+        m_soundDetails[i].sound_range = static_cast<uint16_t>(m_src.readU8());   // n as is
+        m_soundDetails[i].chance = static_cast<uint16_t>(m_src.readU8());        // If n = 99, n = 0 (max. chance)
+        m_soundDetails[i].pitch = static_cast<int16_t>(m_src.readI8());           // n as is
         m_soundDetails[i].num_samples_and_flags_1 = m_src.readU8();
         m_soundDetails[i].flags_2 = m_src.readU8();
     }

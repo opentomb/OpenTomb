@@ -20,7 +20,6 @@
  */
 
 #include <SDL2/SDL.h>
-#include <string.h>
 #include <GL/glew.h>
 
 #include "l_main.h"
@@ -34,7 +33,7 @@ void TR_Level::read_mesh_data(io::SDLReader& reader)
     const uint32_t size = num_mesh_data * 2;
     const auto basePos = reader.tell();
 
-    m_meshIndices.resize( reader.readU32() );
+    m_meshIndices.resize(num_mesh_data);
     for (size_t i = 0; i < m_meshIndices.size(); i++)
         m_meshIndices[i] = reader.readU32();
 

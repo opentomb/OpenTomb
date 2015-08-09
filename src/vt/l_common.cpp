@@ -18,9 +18,3 @@
  * This file is part of vt.
  *
  */
-
-#include <assert.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_endian.h>
-#include "l_main.h"
-#include "../system.h"
