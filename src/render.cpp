@@ -1,26 +1,27 @@
-#include <cmath>
+#include "render.h"
+
 #include <algorithm>
+#include <cmath>
 
 #include <LinearMath/btScalar.h>
 
-#include "gl_util.h"
-#include "render.h"
-#include "console.h"
-#include "world.h"
-#include "portal.h"
-#include "frustum.h"
-#include "polygon.h"
-#include "camera.h"
-#include "vmath.h"
-#include "mesh.h"
-#include "hair.h"
-#include "entity.h"
-#include "engine.h"
-#include "obb.h"
 #include "bsp_tree.h"
+#include "camera.h"
+#include "console.h"
+#include "engine.h"
+#include "entity.h"
+#include "frustum.h"
+#include "gl_util.h"
+#include "hair.h"
+#include "mesh.h"
+#include "obb.h"
+#include "polygon.h"
+#include "portal.h"
 #include "resource.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "vmath.h"
+#include "world.h"
 
 Render renderer;
 DynamicBSP render_dBSP;

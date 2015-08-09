@@ -1,29 +1,32 @@
+#include "script.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+
 #include <GL/glew.h>
 
-#include "script.h"
-#include "system.h"
+#include "LuaState.h"
+
+#include "anim_state_control.h"
+#include "audio.h"
+#include "character_controller.h"
 #include "console.h"
-#include "entity.h"
-#include "world.h"
-#include "engine.h"
 #include "controls.h"
+#include "engine.h"
+#include "entity.h"
 #include "game.h"
 #include "gameflow.h"
-#include "character_controller.h"
-#include "vmath.h"
-#include "render.h"
-#include "audio.h"
-#include "strings.h"
 #include "hair.h"
-#include "ragdoll.h"
 #include "helpers.h"
-#include "anim_state_control.h"
+#include "ragdoll.h"
+#include "render.h"
+#include "strings.h"
+#include "system.h"
+#include "vmath.h"
+#include "world.h"
 
-#include "LuaState.h"
 
 /*
  * debug functions

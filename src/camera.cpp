@@ -3,8 +3,8 @@
 #include <cmath>
 #include <cassert>
 
-#include "vmath.h"
 #include "frustum.h"
+#include "vmath.h"
 
 void Camera::apply()
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+
 #include <LinearMath/btScalar.h>
 
 #include <lua.hpp>

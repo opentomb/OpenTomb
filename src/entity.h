@@ -10,8 +10,8 @@
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
 #include "game.h"
-#include "object.h"
 #include "mesh.h"
+#include "object.h"
 
 #define ENTITY_ANIM_NONE     0x00
 #define ENTITY_ANIM_NEWFRAME 0x01

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 #include <list>
+#include <vector>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>

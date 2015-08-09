@@ -1,5 +1,4 @@
-#ifndef ANIM_STATE_CONTROL_H
-#define ANIM_STATE_CONTROL_H
+#pragma once
 
 class VT_Level;
 struct Polygon;
@@ -769,5 +768,3 @@ namespace
 
 struct Character;
 int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
-
-#endif

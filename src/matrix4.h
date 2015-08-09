@@ -1,5 +1,4 @@
-#ifndef VEC4_H
-#define VEC4_H
+#pragma once
 
 /*
  *  matrix4.cpp
@@ -8,11 +7,11 @@
  *  Created by Torsten Kammer on 07.05.10.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <limits>
 #include <iosfwd>
-#include <algorithm>
+#include <limits>
 
 #ifdef _MSC_VER
 #undef __SSE__
@@ -310,10 +309,10 @@ union float4
         *this = *this - other;
 #endif
 	}
-	
+
 	float max() const { return std::max(std::max(x, y), std::max(z, w)); }
 	float min() const { return std::min(std::min(x, y), std::min(z, w)); }
-	
+
 	float4 min(const float4 &other) const
 	{
 #ifdef __SSE__
@@ -704,5 +703,3 @@ struct matrix4
 };
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec);
-
-#endif /* VEC4_H */

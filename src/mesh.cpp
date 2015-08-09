@@ -1,18 +1,19 @@
+#include "mesh.h"
+
 #include <cstdlib>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "mesh.h"
-#include "polygon.h"
-#include "world.h"
-#include "vmath.h"
 #include "engine.h"
 #include "gl_util.h"
 #include "obb.h"
-#include "resource.h"
+#include "polygon.h"
 #include "render.h"
+#include "resource.h"
 #include "shader_description.h"
+#include "vmath.h"
+#include "world.h"
 
 Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
 

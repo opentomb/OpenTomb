@@ -1,3 +1,5 @@
+#include "gui.h"
+
 #include <cstdint>
 
 #ifdef __APPLE_CC__
@@ -6,22 +8,20 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include "gl_util.h"
-#include "gl_font.h"
-
-#include "gui.h"
-#include "character_controller.h"
-#include "engine.h"
-#include "render.h"
-#include "system.h"
-#include "console.h"
-#include "vmath.h"
 #include "camera.h"
-#include "strings.h"
+#include "character_controller.h"
+#include "console.h"
+#include "engine.h"
+#include "gl_font.h"
+#include "gl_util.h"
+#include "render.h"
+#include "script.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "strings.h"
+#include "system.h"
 #include "vertex_array.h"
-#include "script.h"
+#include "vmath.h"
 
 extern SDL_Window  *sdl_window;
 

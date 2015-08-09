@@ -1,42 +1,43 @@
+#include "resource.h"
+
 #include <algorithm>
 #include <cassert>
-#include <cstdio>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <numeric>
-
-#include <SDL2/SDL.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "vt/vt_level.h"
-#include "gl_util.h"
-#include "audio.h"
-#include "world.h"
-#include "mesh.h"
-#include "entity.h"
-#include "gameflow.h"
-#include "resource.h"
-#include "vmath.h"
-#include "polygon.h"
-#include "portal.h"
-#include "console.h"
-#include "system.h"
-#include "game.h"
-#include "gui.h"
-#include "anim_state_control.h"
-#include "character_controller.h"
-#include "obb.h"
-#include "engine.h"
-#include "bordered_texture_atlas.h"
-#include "render.h"
-#include "shader_description.h"
-#include "helpers.h"
-#include "strings.h"
+#include <SDL2/SDL.h>
 
 #include "LuaState.h"
+#include "vt/vt_level.h"
+
+#include "anim_state_control.h"
+#include "audio.h"
+#include "bordered_texture_atlas.h"
+#include "character_controller.h"
+#include "console.h"
+#include "engine.h"
+#include "entity.h"
+#include "game.h"
+#include "gameflow.h"
+#include "gl_util.h"
+#include "gui.h"
+#include "helpers.h"
+#include "mesh.h"
+#include "obb.h"
+#include "polygon.h"
+#include "portal.h"
+#include "render.h"
 #include "script.h"
+#include "shader_description.h"
+#include "strings.h"
+#include "system.h"
+#include "vmath.h"
+#include "world.h"
 
 namespace
 {

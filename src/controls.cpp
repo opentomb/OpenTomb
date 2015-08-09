@@ -1,3 +1,5 @@
+#include "controls.h"
+
 #include <cstdlib>
 
 #include <SDL2/SDL.h>
@@ -5,10 +7,9 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
-#include "engine.h"
-#include "controls.h"
-#include "console.h"
 #include "common.h"
+#include "console.h"
+#include "engine.h"
 #include "game.h"
 #include "script.h"
 #include "system.h"

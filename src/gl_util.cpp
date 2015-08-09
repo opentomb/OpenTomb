@@ -1,8 +1,9 @@
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-
 #include "gl_util.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include "system.h"
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)

@@ -1,6 +1,6 @@
-#include <LinearMath/btScalar.h>
-
 #include "helpers.h"
+
+#include <LinearMath/btScalar.h>
 
 btScalar WrapAngle(const btScalar value)
 {

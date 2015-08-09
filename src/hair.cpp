@@ -1,13 +1,14 @@
+#include "hair.h"
+
 #include <algorithm>
 #include <cmath>
 
 #include <LinearMath/btScalar.h>
 
-#include "hair.h"
+#include "LuaState.h"
+
 #include "mesh.h"
 #include "render.h"
-
-#include "LuaState.h"
 #include "script.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
@@ -265,12 +266,12 @@ void Hair::createHairMesh(const SkeletalModel *model)
 
 			assert(originalElementsStart < original->m_elements.size());
 			assert(originalElementsStart+original->m_elementsPerTexture[page] <= original->m_elements.size());
-			
+
 			assert(elementsStartPerTexture[page] < m_mesh->m_elements.size());
 			assert(elementsStartPerTexture[page] + original->m_elementsPerTexture[page] <= m_mesh->m_elements.size());
-			
+
 			std::copy_n(&original->m_elements[originalElementsStart], original->m_elementsPerTexture[page], &m_mesh->m_elements[elementsStartPerTexture[page]]);
-            
+
 			for (size_t j = 0; j < original->m_elementsPerTexture[page]; j++) {
                 m_mesh->m_elements[elementsStartPerTexture[page]] = verticesStart + original->m_elements[originalElementsStart];
                 originalElementsStart += 1;

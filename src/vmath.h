@@ -1,12 +1,11 @@
-#ifndef VMATH_H
-#define VMATH_H
+#pragma once
+
+#include <cmath>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
-
-#include <cmath>
 
 #define PLANE_X        1
 #define PLANE_Y        2
@@ -93,5 +92,3 @@ void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
 btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const btScalar& t);
-
-#endif  // VMATH_H

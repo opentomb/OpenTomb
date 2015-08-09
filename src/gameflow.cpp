@@ -1,17 +1,18 @@
+#include "gameflow.h"
+
 #include <cstdio>
 #include <cstdlib>
 
 #include <AL/al.h>
 #include <AL/alc.h>
 
+#include "LuaState.h"
+
 #include "console.h"
 #include "engine.h"
-#include "gameflow.h"
 #include "gui.h"
-#include "world.h"
-
-#include "LuaState.h"
 #include "script.h"
+#include "world.h"
 
 gameflow_manager_s gameflow_manager;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <LinearMath/btScalar.h>
 #include <GL/glew.h>
 

@@ -1,5 +1,6 @@
 #include "audio.h"
 
+#include <chrono>
 #include <cstdio>
 
 #include <SDL2/SDL.h>
@@ -7,16 +8,15 @@
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
-#include "vmath.h"
 #include "entity.h"
-#include "system.h"
-#include "render.h"
-#include "strings.h"
 #include "helpers.h"
+#include "render.h"
+#include "script.h"
+#include "strings.h"
+#include "system.h"
+#include "vmath.h"
 
 #ifndef AL_ALEXT_PROTOTYPES
-#include "script.h"
-#include <chrono>
 
 extern "C"
 {

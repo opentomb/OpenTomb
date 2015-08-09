@@ -1,18 +1,19 @@
-#include <cstdlib>
+#include "anim_state_control.h"
+
 #include <cstdio>
+#include <cstdlib>
 
 #include "vt/tr_versions.h"
 
-#include "vmath.h"
-#include "polygon.h"
-#include "engine.h"
-#include "world.h"
-#include "mesh.h"
-#include "entity.h"
-#include "system.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
+#include "engine.h"
+#include "entity.h"
+#include "mesh.h"
+#include "polygon.h"
 #include "resource.h"
+#include "system.h"
+#include "vmath.h"
+#include "world.h"
 
 /*
  * WALL CLIMB:

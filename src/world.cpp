@@ -1,24 +1,25 @@
+#include "world.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <algorithm>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
 #include "audio.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "camera.h"
-#include "portal.h"
-#include "world.h"
-#include "mesh.h"
-#include "entity.h"
-#include "render.h"
-#include "engine.h"
-#include "script.h"
 #include "console.h"
-#include "resource.h"
+#include "engine.h"
+#include "entity.h"
+#include "mesh.h"
 #include "obb.h"
+#include "polygon.h"
+#include "portal.h"
+#include "render.h"
+#include "resource.h"
+#include "script.h"
+#include "vmath.h"
 
 void Room::empty()
 {

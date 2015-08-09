@@ -1,5 +1,4 @@
-#ifndef GAME_H
-#define GAME_H
+#pragma once
 
 #include <cstdint>
 #include <map>
@@ -57,5 +56,3 @@ void Game_UpdateCharacters();
 
 void Cam_FollowEntity(struct Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
-
-#endif

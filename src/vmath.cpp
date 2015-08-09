@@ -1,6 +1,6 @@
-#include <cmath>
-
 #include "vmath.h"
+
+#include <cmath>
 
 void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
 {

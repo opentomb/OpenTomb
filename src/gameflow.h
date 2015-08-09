@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #define TR_GAMEFLOW_MAX_ACTIONS 32
 #define TR_GAMEFLOW_MAX_SECRETS 256

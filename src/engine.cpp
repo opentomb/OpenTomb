@@ -1,7 +1,17 @@
+#include "engine.h"
+
+#include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cctype>
+
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
@@ -12,23 +22,15 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
-
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
 #if defined(__MACOSX__)
 #include "mac/FindConfigFile.h"
 #endif
 
+#include "LuaState.h"
 #include "vt/vt_level.h"
 
 #include "gl_util.h"
 #include "polygon.h"
-#include "engine.h"
 #include "vmath.h"
 #include "controls.h"
 #include "console.h"
@@ -48,7 +50,6 @@
 #include "gameflow.h"
 #include "strings.h"
 
-#include "LuaState.h"
 
 SDL_Window             *sdl_window = nullptr;
 SDL_Joystick           *sdl_joystick = nullptr;

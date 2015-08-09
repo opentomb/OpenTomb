@@ -1,9 +1,10 @@
+#include "system.h"
+
 #include <cstdio>
 #include <cstdlib>
 
 #include "console.h"
 #include "engine.h"
-#include "system.h"
 #include "gui.h"
 
 ScreenInfo screen_info;
