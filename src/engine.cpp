@@ -926,8 +926,6 @@ bool Engine_LoadPCLevel(const std::string& name)
         return false;
 
     loader->load();
-    loader->prepareLevel();
-    //tr_level->dump_textures();
 
     TR_GenWorld(&engine_world, loader);
 

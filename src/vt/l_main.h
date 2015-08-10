@@ -74,7 +74,6 @@ public:
 
     static std::unique_ptr<Level> createLoader(const std::string &filename, Game game_version);
     virtual void load() = 0;
-    virtual void prepareLevel() = 0;
 
     void dumpTextures();
     StaticMesh *findStaticMeshById(uint32_t object_id);
@@ -105,55 +104,50 @@ public:
     }
 
     void load() override;
-    virtual void prepareLevel() override;
 };
 
 
-class TR2Level : public TR1Level
+class TR2Level : public Level
 {
 public:
     TR2Level(Game gameVersion, io::SDLReader&& reader)
-        : TR1Level(gameVersion, std::move(reader))
+        : Level(gameVersion, std::move(reader))
     {
     }
 
     void load() override;
-    virtual void prepareLevel() override;
 };
 
-class TR3Level : public TR1Level
+class TR3Level : public Level
 {
 public:
     TR3Level(Game gameVersion, io::SDLReader&& reader)
-        : TR1Level(gameVersion, std::move(reader))
+        : Level(gameVersion, std::move(reader))
     {
     }
 
     void load() override;
-    virtual void prepareLevel() override;
 };
 
-class TR4Level : public TR1Level
+class TR4Level : public Level
 {
 public:
     TR4Level(Game gameVersion, io::SDLReader&& reader)
-        : TR1Level(gameVersion, std::move(reader))
+        : Level(gameVersion, std::move(reader))
     {
     }
 
     void load() override;
-    virtual void prepareLevel() override;
 };
 
-class TR5Level : public TR1Level
+class TR5Level : public Level
 {
 public:
     TR5Level(Game gameVersion, io::SDLReader&& reader)
-        : TR1Level(gameVersion, std::move(reader))
+        : Level(gameVersion, std::move(reader))
     {
     }
 
     void load() override;
-    virtual void prepareLevel() override;
 };
 }

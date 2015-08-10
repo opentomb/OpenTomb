@@ -226,59 +226,44 @@ namespace io
     };
 } // namespace io
 
-/// \brief RGBA colour using bitu8. For palette etc.
 struct ByteColor
 {
-    uint8_t r;        ///< \brief the red component.
-    uint8_t g;        ///< \brief the green component.
-    uint8_t b;        ///< \brief the blue component.
-    uint8_t a;        ///< \brief the alpha component.
+    uint8_t r, g, b, a;
 
-    /** \brief reads rgb colour.
-     *
-     * Reads three rgb colour components. The read 6-bit values get shifted, so they are 8-bit.
-     * The alpha value of tr2_colour_t gets set to 0.
-     */
     static ByteColor readTr1(io::SDLReader& reader)
     {
-        ByteColor colour;
-        // read 6 bit color and change to 8 bit
-        colour.r = reader.readU8() << 2;
-        colour.g = reader.readU8() << 2;
-        colour.b = reader.readU8() << 2;
-        colour.a = 0;
-        return colour;
+        return read(reader, false);
     }
 
     static ByteColor readTr2(io::SDLReader& reader)
     {
+        return read(reader, true);
+    }
+
+private:
+    static ByteColor read(io::SDLReader& reader, bool withAlpha)
+    {
         ByteColor colour;
-        // read 6 bit color and change to 8 bit
         colour.r = reader.readU8() << 2;
         colour.g = reader.readU8() << 2;
         colour.b = reader.readU8() << 2;
-        colour.a = reader.readU8() << 2;
+        if(withAlpha)
+            colour.a = reader.readU8() << 2;
+        else
+            colour.a = 0;
         return colour;
     }
 };
 
-/// \brief RGBA colour using float. For single colours.
 struct FloatColor
 {
-    float r;        ///< \brief the red component.
-    float g;        ///< \brief the green component.
-    float b;        ///< \brief the blue component.
-    float a;        ///< \brief the alpha component.
+    float r, g, b, a;
 };
 
-/// \brief A vertex with x, y and z coordinates.
 struct Vertex
 {
     float x, y, z;
-    /** \brief reads three 16-bit vertex components.
-    *
-    * The values get converted from bit16 to float. y and z are negated to fit OpenGLs coordinate system.
-    */
+
     static Vertex read16(io::SDLReader& reader)
     {
         Vertex vertex;
@@ -289,10 +274,6 @@ struct Vertex
         return vertex;
     }
 
-    /** \brief reads three 32-bit vertex components.
-    *
-    * The values get converted from bit32 to float. y and z are negated to fit OpenGLs coordinate system.
-    */
     static Vertex read32(io::SDLReader& reader)
     {
         Vertex vertex;
@@ -313,7 +294,6 @@ struct Vertex
     }
 };
 
-/// \brief Definition for a triangle.
 struct Triangle
 {
     uint16_t vertices[3];    ///< index into the appropriate list of vertices.
@@ -327,34 +307,32 @@ struct Triangle
                                * bit1-7 is the strength of the hilight.
                                */
 
-    /** \brief reads a triangle definition.
-     *
-     * The lighting value is set to 0, as it is only in TR4-5.
-     */
     static Triangle readTr1(io::SDLReader& reader)
     {
-        Triangle meshface;
-        meshface.vertices[0] = reader.readU16();
-        meshface.vertices[1] = reader.readU16();
-        meshface.vertices[2] = reader.readU16();
-        meshface.texture = reader.readU16();
-        // lighting only in TR4-5
-        meshface.lighting = 0;
-        return meshface;
+        return read(reader, false);
     }
+
     static Triangle readTr4(io::SDLReader& reader)
+    {
+        return read(reader, true);
+    }
+
+private:
+    static Triangle read(io::SDLReader& reader, bool withLighting)
     {
         Triangle meshface;
         meshface.vertices[0] = reader.readU16();
         meshface.vertices[1] = reader.readU16();
         meshface.vertices[2] = reader.readU16();
         meshface.texture = reader.readU16();
-        meshface.lighting = reader.readU16();
+        if(withLighting)
+            meshface.lighting = reader.readU16();
+        else
+            meshface.lighting = 0;
         return meshface;
     }
 };
 
-/// \brief Definition for a rectangle.
 struct QuadFace
 {
     uint16_t vertices[4];    ///< index into the appropriate list of vertices.
@@ -370,60 +348,44 @@ struct QuadFace
                                * - bit1-7 is the strength of the hilight.
                                */
 
-    /** \brief reads a triangle definition.
-      *
-      * The lighting value is set to 0, as it is only in TR4-5.
-      */
     static QuadFace readTr1(io::SDLReader& reader)
     {
-        QuadFace meshface;
-        meshface.vertices[0] = reader.readU16();
-        meshface.vertices[1] = reader.readU16();
-        meshface.vertices[2] = reader.readU16();
-        meshface.vertices[3] = reader.readU16();
-        meshface.texture = reader.readU16();
-        // only in TR4-TR5
-        meshface.lighting = 0;
-        return meshface;
+        return read(reader, false);
     }
 
     static QuadFace readTr4(io::SDLReader& reader)
     {
+        return read(reader, true);
+    }
+
+private:
+    static QuadFace read(io::SDLReader& reader, bool withLighting)
+    {
         QuadFace meshface;
         meshface.vertices[0] = reader.readU16();
         meshface.vertices[1] = reader.readU16();
         meshface.vertices[2] = reader.readU16();
         meshface.vertices[3] = reader.readU16();
         meshface.texture = reader.readU16();
-        // only in TR4-TR5
-        meshface.lighting = reader.readU16();
+        if(withLighting)
+            meshface.lighting = reader.readU16();
+        else
+            meshface.lighting = 0;
         return meshface;
     }
 };
 
-/** \brief 8-bit texture.
-  *
-  * Each pixel is an index into the colour palette.
-  */
 struct ByteTexture
 {
     uint8_t pixels[256][256];
 
-    /// \brief reads a 8-bit 256x256 textile.
     static ByteTexture read(io::SDLReader& reader)
     {
         ByteTexture textile;
-        for(int i = 0; i < 256; i++)
-        {
-            for(int j = 0; j < 256; j++)
-            {
-                textile.pixels[i][j] = reader.readU8();
-            }
-        }
+        reader.readBytes(reinterpret_cast<uint8_t*>(textile.pixels), 256*256);
         return textile;
     }
 };
-//typedef prtl::array < tr_textile8_t > tr_textile8_array_t;
 
 /** \brief 16-bit texture.
   *
@@ -450,12 +412,7 @@ struct WordTexture
         return textile;
     }
 };
-//typedef prtl::array < tr2_textile16_t > tr2_textile16_array_t;
 
-/** \brief 32-bit texture.
-  *
-  * Each pixel is an ABGR value.
-  */
 struct DWordTexture
 {
     uint32_t pixels[256][256];
@@ -480,10 +437,7 @@ struct DWordTexture
         return textile;
     }
 };
-//typedef prtl::array < tr4_textile32_t > tr4_textile32_array_t;
 
-/** \brief Room portal.
-  */
 struct Portal
 {
     uint16_t adjoining_room;     ///< \brief which room this portal leads to.
@@ -498,10 +452,6 @@ struct Portal
                                    * AdjoiningRoom.
                                    */
 
-    /** \brief reads a room portal definition.
-      *
-      * A check is preformed to see wether the normal lies on a coordinate axis, if not an exception gets thrown.
-      */
     static Portal read(io::SDLReader& reader)
     {
         Portal portal;
@@ -527,10 +477,7 @@ struct Portal
         return portal;
     }
 };
-//typedef prtl::array < tr_room_portal_t > tr_room_portal_array_t;
 
-/** \brief Room sector.
-  */
 struct Sector
 {
     uint16_t fd_index;     // Index into FloorData[]
@@ -540,7 +487,6 @@ struct Sector
     uint8_t room_above;    // The number of the room above this one (-1 or 255 if none)
     int8_t ceiling;        // Absolute height of ceiling (multiply by 256 for world coordinates)
 
-    /// \brief reads a room sector definition.
     static Sector read(io::SDLReader& reader)
     {
         Sector sector;
@@ -553,10 +499,7 @@ struct Sector
         return sector;
     }
 };
-//typedef prtl::array < tr_room_sector_t > tr_room_sector_array_t;
 
-/** \brief Room light.
-  */
 struct Light
 {
     Vertex pos;           // world coords
@@ -716,10 +659,7 @@ struct Light
         return light;
     }
 };
-//typedef prtl::array < tr5_room_light_t > tr5_room_light_array_t;
 
-/** \brief Room sprite.
-  */
 struct Sprite
 {
     int16_t vertex;                 // offset into vertex list
@@ -734,20 +674,19 @@ struct Sprite
         return room_sprite;
     }
 };
-//typedef prtl::array < tr_room_Sprite > tr_room_sprite_array_t;
 
 /** \brief Room layer (TR5).
   */
 struct Layer
 {
-    uint16_t num_vertices;          // number of vertices in this layer (4 bytes)
+    uint16_t num_vertices;
     uint16_t unknown_l1;
     uint16_t unknown_l2;
-    uint16_t num_rectangles;        // number of rectangles in this layer (2 bytes)
-    uint16_t num_triangles;         // number of triangles in this layer (2 bytes)
+    uint16_t num_rectangles;
+    uint16_t num_triangles;
     uint16_t unknown_l3;
     uint16_t unknown_l4;
-    //  The following 6 floats (4 bytes each) define the bounding box for the layer
+    //  The following 6 floats define the bounding box for the layer
     float bounding_box_x1;
     float bounding_box_y1;
     float bounding_box_z1;
@@ -800,10 +739,7 @@ struct Layer
         return layer;
     }
 };
-//typedef prtl::array < tr5_room_layer_t > tr5_room_layer_array_t;
 
-/** \brief Room vertex.
-  */
 struct RoomVertex
 {
     Vertex vertex;    // where this vertex lies (relative to tr2_room_info::x/z)
@@ -817,7 +753,7 @@ struct RoomVertex
     int16_t lighting2;      // Almost always equal to Lighting1 [absent from TR1 data files]
     // TR5 -->
     Vertex normal;
-    FloatColor colour;    // vertex color ARGB format (4 bytes)
+    FloatColor colour;
 
     /** \brief reads a room vertex definition.
       *
@@ -918,8 +854,6 @@ struct RoomVertex
     }
 };
 
-/** \brief Room staticmesh.
-  */
 struct RoomStaticMesh
 {
     Vertex pos;       // world coords
@@ -1009,7 +943,6 @@ struct RoomStaticMesh
         return room_static_mesh;
     }
 };
-//typedef prtl::array < tr2_room_staticmesh_t > tr2_room_staticmesh_array_t;
 
 /** \brief Room.
   */
@@ -1645,15 +1578,6 @@ struct Room
         for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
             room.sector_list[i] = Sector::read(reader);
 
-        /*
-        if (room.portal_offset != 0xFFFFFFFF) {
-        if (room.portal_offset != (room.sector_data_offset + (room.num_zsectors * room.num_xsectors * 8)))
-        throw TR_ReadError("read_tr5_room: portal_offset has wrong value");
-
-        SDL_RWseek(newsrc, 208 + room.portal_offset, SEEK_SET);
-        }
-        */
-
         room.portals.resize(reader.readI16());
         for(size_t i = 0; i < room.portals.size(); i++)
             room.portals[i] = Portal::read(reader);
@@ -1720,10 +1644,7 @@ struct Room
         return room;
     }
 };
-//typedef prtl::array < tr5_room_t > tr5_room_array_t;
 
-/** \brief Mesh.
-  */
 struct Mesh
 {
     Vertex centre;                // This is usually close to the mesh's centroid, and appears to be the center of a sphere used for collision testing.
@@ -1819,10 +1740,8 @@ struct Mesh
     }
 };
 
-/** \brief Staticmesh.
-  */
 struct StaticMesh
-{                    // 32 bytes
+{
     uint32_t object_id;             // Object Identifier (matched in Items[])
     uint16_t mesh;                  // mesh (offset into MeshPointers[])
     Vertex visibility_box[2];
@@ -1830,7 +1749,6 @@ struct StaticMesh
     uint16_t flags;                 // Meaning uncertain; it is usually 2, and is 3 for objects Lara can travel through,
     // like TR2's skeletons and underwater vegetation
 
-    /// \brief reads a static mesh definition.
     static StaticMesh read(io::SDLReader& reader)
     {
         StaticMesh mesh;
@@ -1855,7 +1773,6 @@ struct StaticMesh
         return mesh;
     }
 };
-//typedef prtl::array < tr_staticmesh_t > tr_staticmesh_array_t;
 
 /** \brief MeshTree.
   *
@@ -1868,11 +1785,10 @@ struct StaticMesh
   * The next three bit32s are X, Y, Z offsets of the mesh's origin from the parent mesh's origin.
   */
 struct MeshTree
-{        // 4 bytes
+{
     uint32_t flags;
     Vertex offset;
 };
-//typedef prtl::array < tr_meshtree_t > tr_meshtree_array_t;
 
 /** \brief Frame.
   *
@@ -1916,10 +1832,8 @@ struct MeshTree
   } tr_frame_t;
   typedef prtl::array < tr_frame_t > tr_frame_array_t;*/
 
-  /** \brief Moveable.
-    */
 struct Moveable
-{                // 18 bytes
+{
     uint32_t object_id;         // Item Identifier (matched in Items[])
     uint16_t num_meshes;        // number of meshes in this object
     uint16_t starting_mesh;     // stating mesh (offset into MeshPointers[])
@@ -1958,12 +1872,9 @@ struct Moveable
         return moveable;
     }
 };
-//typedef prtl::array < tr_moveable_t > tr_moveable_array_t;
 
-/** \brief Item.
-  */
 struct Item
-{           // 24 bytes [TR1: 22 bytes]
+{
     int16_t object_id;     // Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)
     int16_t room;          // which room contains this item
     Vertex pos;      // world coords
@@ -2039,12 +1950,9 @@ struct Item
     }
     
 };
-//typedef prtl::array < tr2_item_t > tr2_item_array_t;
 
-/** \brief Sprite texture.
-  */
 struct SpriteTexture
-{               // 16 bytes
+{
     uint16_t        tile;
     int16_t         x0;        // tex coords
     int16_t         y0;        //
@@ -2117,18 +2025,15 @@ struct SpriteTexture
         sprite_texture.y1 = ttop;
 
         sprite_texture.left_side = tx;
-        sprite_texture.right_side = tx + tw / (256);
+        sprite_texture.right_side = tx + tw / 256;
         sprite_texture.bottom_side = ty;
-        sprite_texture.top_side = ty + th / (256);
+        sprite_texture.top_side = ty + th / 256;
         return sprite_texture;
     }
 };
-//typedef prtl::array < tr_sprite_texture_t > tr_sprite_texture_array_t;
 
-/** \brief Sprite sequence.
-  */
 struct SpriteSequence
-{           // 8 bytes
+{
     int32_t object_id;     // Item identifier (matched in Items[])
     int16_t length;        // negative of "how many sprites are in this sequence"
     int16_t offset;        // where (in sprite texture list) this sequence starts
@@ -2146,7 +2051,6 @@ struct SpriteSequence
         return sprite_sequence;
     }
 };
-//typedef prtl::array < tr_sprite_sequence_t > tr_sprite_sequence_array_t;
 
 /** \brief Animation.
   *
@@ -2157,7 +2061,7 @@ struct SpriteSequence
   * and that may have a different FrameSize value.
   */
 struct Animation
-{                // 32 bytes TR1/2/3 40 bytes TR4
+{
     uint32_t frame_offset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint8_t frame_rate;         // Engine ticks per frame
     uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
@@ -2182,28 +2086,16 @@ struct Animation
     /// \brief reads an animation definition.
     static Animation readTr1(io::SDLReader& reader)
     {
-        Animation animation;
-        animation.frame_offset = reader.readU32();
-        animation.frame_rate = reader.readU8();
-        animation.frame_size = reader.readU8();
-        animation.state_id = reader.readU16();
-
-        animation.speed = reader.readI32();
-        animation.accel = reader.readI32();
-
-        animation.frame_start = reader.readU16();
-        animation.frame_end = reader.readU16();
-        animation.next_animation = reader.readU16();
-        animation.next_frame = reader.readU16();
-
-        animation.num_state_changes = reader.readU16();
-        animation.state_change_offset = reader.readU16();
-        animation.num_anim_commands = reader.readU16();
-        animation.anim_command = reader.readU16();
-        return animation;
+        return read(reader, false);
     }
 
     static Animation readTr4(io::SDLReader& reader)
+    {
+        return read(reader, true);
+    }
+
+private:
+    static Animation read(io::SDLReader& reader, bool withLateral)
     {
         Animation animation;
         animation.frame_offset = reader.readU32();
@@ -2213,8 +2105,16 @@ struct Animation
 
         animation.speed = reader.readI32();
         animation.accel = reader.readI32();
-        animation.speed_lateral = reader.readI32();
-        animation.accel_lateral = reader.readI32();
+        if(withLateral)
+        {
+            animation.speed_lateral = reader.readI32();
+            animation.accel_lateral = reader.readI32();
+        }
+        else
+        {
+            animation.speed_lateral = 0;
+            animation.accel_lateral = 0;
+        }
 
         animation.frame_start = reader.readU16();
         animation.frame_end = reader.readU16();
@@ -2228,7 +2128,6 @@ struct Animation
         return animation;
     }
 };
-//typedef prtl::array < tr_animation_t > tr_animation_array_t;
 
 /** \brief State Change.
   *
@@ -2237,7 +2136,7 @@ struct Animation
   * range of frames.
   */
 struct StateChange
-{                        // 6 bytes
+{
     uint16_t state_id;
     uint16_t num_anim_dispatches;       // number of ranges (seems to always be 1..5)
     uint16_t anim_dispatch;             // Offset into AnimDispatches[]
@@ -2252,7 +2151,6 @@ struct StateChange
         return state_change;
     }
 };
-//typedef prtl::array < tr_state_change_t > tr_state_change_array_t;
 
 /** \brief Animation Dispatch.
   *
@@ -2261,7 +2159,7 @@ struct StateChange
   * animation for left foot forward and another animation for right foot forward.
   */
 struct AnimDispatch
-{                // 8 bytes
+{
     int16_t low;                // Lowest frame that uses this range
     int16_t high;               // Highest frame (+1?) that uses this range
     int16_t next_animation;     // Animation to dispatch to
@@ -2278,26 +2176,9 @@ struct AnimDispatch
         return anim_dispatch;
     }
 };
-//typedef prtl::array < tr_anim_dispatch_t > tr_anim_dispatch_array_t;
 
-/** \brief Animation Command.
-  *
-  * These are various commands associated with each animation; they are
-  * called "Bone1" in some documentation. They are varying numbers of bit16's
-  * packed into an array; the first of each set is the opcode, which determines
-  * how operand bit16's follow it. Some of them refer to the whole animation
-  * (jump and grab points, etc.), while others of them are associated with
-  * specific frames (sound, bubbles, etc.).
-  */
-  //typedef struct {        // 2 bytes
-  //    int16_t value;
-  //} tr_anim_command_t;
-  //typedef prtl::array < tr_anim_command_t > tr_anim_command_array_t;
-
-  /** \brief Box.
-    */
 struct Box
-{            // 8 bytes [TR1: 20 bytes] In TR1, the first four are bit32's instead of bitu8's, and are not scaled.
+{
     uint32_t zmin;          // sectors (* 1024 units)
     uint32_t zmax;
     uint32_t xmin;
@@ -2330,7 +2211,6 @@ struct Box
         return box;
     }
 };
-//typedef prtl::array < tr_box_t > tr_box_array_t;
 
 /** \brief SoundSource.
   *
@@ -2359,7 +2239,6 @@ struct SoundSource
         return sound_source;
     }
 };
-//typedef prtl::array < tr_sound_source_t > tr_sound_source_array_t;
 
 /** \brief SoundDetails.
  *
@@ -2370,7 +2249,7 @@ struct SoundSource
  */
 
 struct SoundDetails
-{                         // 8 bytes
+{
     uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
     uint16_t volume;                     // Global sample value
     uint16_t sound_range;                // Sound range
@@ -2404,16 +2283,15 @@ struct SoundDetails
     {
         SoundDetails sound_details;
         sound_details.sample = reader.readU16();
-        sound_details.volume = static_cast<uint16_t>(reader.readU8());
-        sound_details.sound_range = static_cast<uint16_t>(reader.readU8());
+        sound_details.volume = reader.readU8();
+        sound_details.sound_range = reader.readU8();
         sound_details.chance = static_cast<uint16_t>(reader.readI8());
-        sound_details.pitch = static_cast<int16_t>(reader.readI8());
+        sound_details.pitch = reader.readI8();
         sound_details.num_samples_and_flags_1 = reader.readU8();
         sound_details.flags_2 = reader.readU8();
         return sound_details;
     }
 };
-//typedef prtl::array < tr_sound_details_t > tr_sound_detail_array_t;
 
 /** \brief Object Texture Vertex.
   *
@@ -2424,7 +2302,7 @@ struct SoundDetails
   * a triangle, then the fourth vertex's values will all be zero.
   */
 struct ObjectTextureVertex
-{            // 4 bytes
+{
     int8_t xcoordinate;     // 1 if Xpixel is the low value, -1 if Xpixel is the high value in the object texture
     uint8_t xpixel;
     int8_t ycoordinate;     // 1 if Ypixel is the low value, -1 if Ypixel is the high value in the object texture
@@ -2462,7 +2340,7 @@ struct ObjectTextureVertex
   * mapping for the world geometry and for mesh objects.
   */
 struct ObjectTexture
-{                    // 38 bytes TR4 - 20 in TR1/2/3
+{
     uint16_t transparency_flags;    // 0 means that a texture is all-opaque, and that transparency
     // information is ignored.
     // 1 means that transparency information is used. In 8-bit colour,
@@ -2545,19 +2423,12 @@ struct ObjectTexture
         return object_texture;
     }
 };
-//typedef prtl::array < tr4_object_texture_t > tr4_object_texture_array_t;
 
-/** \brief Animated Textures.
-  */
 struct AnimatedTexture
 {
-    //int16_t num_texture_ids;    // Actually, this is the number of texture ID's - 1.
-    std::vector<int16_t> texture_ids;       //[NumTextureIDs + 1]; // offsets into ObjectTextures[], in animation order.
+    std::vector<int16_t> texture_ids; // offsets into ObjectTextures[], in animation order.
 };       //[NumAnimatedTextures];
-//typedef prtl::array < tr_animated_textures_t > tr_animated_texture_array_t;
 
-/** \brief Camera.
-  */
 struct Camera
 {
     int32_t x;
@@ -2578,10 +2449,7 @@ struct Camera
         return camera;
     }
 };
-//typedef prtl::array < tr_camera_t > tr_camera_array_t;
 
-/** \brief Flyby Camera.
-  */
 struct FlybyCamera
 {
     int32_t  cam_x;
@@ -2622,10 +2490,7 @@ struct FlybyCamera
         return camera;
     }
 };
-//typedef prtl::array < tr4_flyby_camera_t > tr4_flyby_camera_array_t;
 
-/** \brief AI Object.
-  */
 struct AIObject
 {
     uint16_t object_id;    // the objectID from the AI object (AI_FOLLOW is 402)
@@ -2653,10 +2518,7 @@ struct AIObject
         return object;
     }
 };
-//typedef prtl::array < tr4_ai_object_t > tr4_ai_object_array_t;
 
-/** \brief Cinematic Frame.
-  */
 struct CinematicFrame
 {
     int16_t roty;        // rotation about Y axis, +/- 32767 == +/- 180 degrees
@@ -2688,8 +2550,6 @@ struct CinematicFrame
     }
 };
 
-/** \brief Lightmap.
-  */
 struct LightMap
 {
     uint8_t map[32 * 256];
@@ -2704,8 +2564,6 @@ struct LightMap
     }
 };
 
-/** \brief Palette.
-  */
 struct Palette
 {
     ByteColor colour[256];

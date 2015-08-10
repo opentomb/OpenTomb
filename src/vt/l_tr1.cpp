@@ -132,10 +132,7 @@ void TR1Level::load()
     m_reader.readVector(m_sampleIndices, m_reader.readU32());
     m_samplesCount = m_sampleIndices.size();
 #endif
-}
 
-void TR1Level::prepareLevel()
-{
     m_textile32.resize(m_textile8.size());
     for(size_t i = 0; i < m_textile8.size(); i++)
         convertTexture(m_textile8[i], m_palette, m_textile32[i]);

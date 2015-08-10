@@ -138,10 +138,7 @@ void TR3Level::load()
             }
         }
     }
-}
 
-void TR3Level::prepareLevel()
-{
     m_textile32.resize(m_textile16.size());
     for(size_t i = 0; i < m_textile16.size(); i++)
         convertTexture(m_textile16[i], m_textile32[i]);

@@ -210,10 +210,7 @@ void TR4Level::load()
         // block of file as single array.
         m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.tell() - m_reader.size()));
     }
-}
 
-void TR4Level::prepareLevel()
-{
     if(!m_textile32.empty())
         return;
 
