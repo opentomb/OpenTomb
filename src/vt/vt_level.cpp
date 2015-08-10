@@ -9,7 +9,7 @@
 
 using namespace loader;
 
-StaticMesh *TR1Level::findStaticMeshById(uint32_t object_id)
+StaticMesh *Level::findStaticMeshById(uint32_t object_id)
 {
     for (size_t i = 0; i < m_staticMeshes.size(); i++)
         if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
@@ -18,7 +18,7 @@ StaticMesh *TR1Level::findStaticMeshById(uint32_t object_id)
     return nullptr;
 }
 
-Item *TR1Level::fineItemById(int32_t object_id)
+Item *Level::fineItemById(int32_t object_id)
 {
     for (size_t i = 0; i < m_items.size(); i++)
         if (m_items[i].object_id == object_id)
@@ -27,7 +27,7 @@ Item *TR1Level::fineItemById(int32_t object_id)
     return nullptr;
 }
 
-Moveable *TR1Level::findMoveableById(uint32_t object_id)
+Moveable *Level::findMoveableById(uint32_t object_id)
 {
     for (size_t i = 0; i < m_moveables.size(); i++)
         if (m_moveables[i].object_id == object_id)
@@ -36,7 +36,7 @@ Moveable *TR1Level::findMoveableById(uint32_t object_id)
     return nullptr;
 }
 
-void TR1Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
+void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
     for (int y = 0; y < 256; y++)
     {
@@ -52,7 +52,7 @@ void TR1Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & d
     }
 }
 
-void TR1Level::convertTexture(WordTexture & tex, DWordTexture & dst)
+void Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 {
     for (int y = 0; y < 256; y++)
     {
@@ -136,7 +136,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
     }
 }
 
-void TR1Level::dumpTextures()
+void Level::dumpTextures()
 {
     uint32_t i;
     char buffer[1024];

@@ -28,7 +28,7 @@
 using namespace loader;
 
 /// \brief reads the mesh data.
-void TR1Level::readMeshData(io::SDLReader& reader)
+void Level::readMeshData(io::SDLReader& reader)
 {
     uint32_t meshDataWords = reader.readU32();
     const auto basePos = reader.tell();
@@ -67,7 +67,7 @@ void TR1Level::readMeshData(io::SDLReader& reader)
 }
 
 /// \brief reads frame and moveable data.
-void TR1Level::readFrameMoveableData(io::SDLReader& reader)
+void Level::readFrameMoveableData(io::SDLReader& reader)
 {
     m_frameData.resize(reader.readU32());
     const auto frameDataPos = reader.tell();
@@ -118,7 +118,7 @@ void TR1Level::readFrameMoveableData(io::SDLReader& reader)
     reader.seek(endPos);
 }
 
-std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Game game_version)
+std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game game_version)
 {
     size_t len2 = 0;
 
@@ -158,12 +158,12 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Ga
   *
   * Takes a SDL_RWop and the game_version of the file and reads the structures into the members of TR_Level.
   */
-std::unique_ptr<TR1Level> TR1Level::createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath)
+std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath)
 {
     if (!reader.isOpen())
         return nullptr;
 
-    std::unique_ptr<TR1Level> result;
+    std::unique_ptr<Level> result;
 
     switch (game_version)
     {
@@ -197,12 +197,11 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(io::SDLReader&& reader, Game ga
             break;
     }
 
-
     result->m_sfxPath = sfxPath;
     return result;
 }
 
-Game TR1Level::probeVersion(io::SDLReader& reader, const std::string& filename)
+Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 {
     if(!reader.isOpen() || filename.length()<5)
         return Game::Unknown;

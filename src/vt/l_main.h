@@ -17,16 +17,16 @@ namespace loader
   * All indexes are converted, so they can be used directly.
   * Endian conversion is done at the lowest possible layer, most of the time this is in the read_bitxxx functions.
   */
-class TR1Level
+class Level
 {
 public:
-    TR1Level(Game gameVersion, io::SDLReader&& reader)
+    Level(Game gameVersion, io::SDLReader&& reader)
         : m_gameVersion(gameVersion)
         , m_reader(std::move(reader))
     {
     }
 
-    virtual ~TR1Level() = default;
+    virtual ~Level() = default;
 
     const Game m_gameVersion;                   ///< \brief game engine version.
 
@@ -72,10 +72,10 @@ public:
 
     std::string m_sfxPath = "MAIN.SFX";
 
-    static std::unique_ptr<TR1Level> createLoader(const std::string &filename, Game game_version);
-    virtual void load();
+    static std::unique_ptr<Level> createLoader(const std::string &filename, Game game_version);
+    virtual void load() = 0;
+    virtual void prepareLevel() = 0;
 
-    virtual void prepareLevel();
     void dumpTextures();
     StaticMesh *findStaticMeshById(uint32_t object_id);
     Item *fineItemById(int32_t object_id);
@@ -93,8 +93,21 @@ protected:
 
 private:
     static Game probeVersion(io::SDLReader& reader, const std::string &filename);
-    static std::unique_ptr<TR1Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
+    static std::unique_ptr<Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
 };
+
+class TR1Level : public Level
+{
+public:
+    TR1Level(Game gameVersion, io::SDLReader&& reader)
+        : TR1Level(gameVersion, std::move(reader))
+    {
+    }
+
+    void load() override;
+    virtual void prepareLevel() override;
+};
+
 
 class TR2Level : public TR1Level
 {

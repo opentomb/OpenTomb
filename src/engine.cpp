@@ -921,7 +921,7 @@ std::string Engine_GetLevelScriptName(loader::Game game_version, const std::stri
 
 bool Engine_LoadPCLevel(const std::string& name)
 {
-    std::unique_ptr<loader::TR1Level> loader = loader::TR1Level::createLoader(name, loader::Game::Unknown);
+    std::unique_ptr<loader::Level> loader = loader::TR1Level::createLoader(name, loader::Game::Unknown);
     if(!loader)
         return false;
 

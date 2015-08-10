@@ -121,23 +121,23 @@ void Res_AutoexecOpen(int engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
-void TR_GenWorld(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenMeshes(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenEntities(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenSprites(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenTextures(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenRooms(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenBoxes(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenCameras(World *world, const std::unique_ptr<loader::TR1Level>& tr);
-void TR_GenSamples(World *world, const std::unique_ptr<loader::TR1Level>& tr);
+void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenMeshes(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr);
+void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSprites(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenTextures(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRooms(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenBoxes(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenCameras(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -148,14 +148,14 @@ void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
 
 struct BoneFrame;
 
-void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::TR1Level>& tr, size_t frame_offset, BoneFrame* bone_frame);
-int      TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::TR1Level>& tr, size_t moveable_ind);
-int      TR_GetNumFramesForAnimation(const std::unique_ptr<loader::TR1Level>& tr, size_t animation_ind);
-long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::TR1Level>& tr);
+void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, BoneFrame* bone_frame);
+int      TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
+int      TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
+long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::Level>& tr);
 
 // Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
 
-int      TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::TR1Level>& tr);
-void     TR_Sector_Calculate(World *world, const std::unique_ptr<loader::TR1Level>& tr, long int room_index);
+int      TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::Level>& tr);
+void     TR_Sector_Calculate(World *world, const std::unique_ptr<loader::Level>& tr, long int room_index);
 
