@@ -1,12 +1,18 @@
 #pragma once
 
 #include <cstdint>
+
 #include <LinearMath/btScalar.h>
 #include <GL/glew.h>
 
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"
 #define GL_LOG_FILENAME  "gl.log"
+
+struct SystemSettings
+{
+    bool        logging = false;
+};
 
 struct ScreenInfo
 {
@@ -23,6 +29,7 @@ struct ScreenInfo
 };
 
 extern ScreenInfo screen_info;
+extern SystemSettings system_settings;
 
 void Sys_Init();
 void Sys_InitGlobals();

@@ -1,7 +1,7 @@
+#include "shader_manager.h"
+
 #include <cassert>
 #include <sstream>
-
-#include "shader_manager.h"
 
 ShaderManager::ShaderManager()
 {

@@ -1,24 +1,25 @@
+#include "world.h"
+
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <algorithm>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
 #include "audio.h"
-#include "vmath.h"
-#include "polygon.h"
 #include "camera.h"
-#include "portal.h"
-#include "world.h"
-#include "mesh.h"
-#include "entity.h"
-#include "render.h"
-#include "engine.h"
-#include "script.h"
 #include "console.h"
-#include "resource.h"
+#include "engine.h"
+#include "entity.h"
+#include "mesh.h"
 #include "obb.h"
+#include "polygon.h"
+#include "portal.h"
+#include "render.h"
+#include "resource.h"
+#include "script.h"
+#include "vmath.h"
 
 void Room::empty()
 {
@@ -401,13 +402,13 @@ void World::empty()
 {
     last_cont = nullptr;
     engine_lua.clearTasks();
-    // De-initialize and destroy all audio objects.
-    Audio_DeInit();
+
+    Audio_DeInit(); // De-initialize and destroy all audio objects.
 
     if(main_inventory_manager != nullptr)
     {
         main_inventory_manager->setInventory(nullptr);
-        main_inventory_manager->setItemsType(1);                                // see base items
+        main_inventory_manager->setItemsType(1);  // see base items
     }
 
     if(character)
@@ -416,10 +417,11 @@ void World::empty()
         character->m_currentSector = nullptr;
     }
 
-    /* entity empty must be done before rooms destroy */
-    entity_tree.clear();
+    entity_tree.clear();  // Clearing up entities must happen before destroying rooms.
 
-    /* Now we can delete bullet misc */
+    // Destroy Bullet's MISC objects (debug spheres etc.)
+    ///@FIXME: Hide it somewhere, it is nasty being here.
+
     if(bt_engine_dynamicsWorld != nullptr)
     {
         for(int i = bt_engine_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
@@ -450,36 +452,22 @@ void World::empty()
     }
 
     for(auto room : rooms)
-    {
-        room->empty();
-    }
+    { room->empty(); }
     rooms.clear();
 
     flip_data.clear();
-
     room_boxes.clear();
-
     cameras_sinks.clear();
-
-    /*sprite empty*/
     sprites.clear();
-
-    /*items empty*/
     items_tree.clear();
-
     character.reset();
-
     skeletal_models.clear();
-
-    /*mesh empty*/
-
     meshes.clear();
 
     glDeleteTextures(textures.size(), textures.data());
     textures.clear();
 
     tex_atlas.reset();
-
     anim_sequences.clear();
 }
 
@@ -709,10 +697,10 @@ RoomSector* Room::getSectorRaw(const btVector3& pos)
     {
         return nullptr;
     }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
+
+    // Column index system
+    // X - column number, Y - string number
+
     return &sectors[x * sectors_y + y];
 }
 
@@ -751,10 +739,10 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
     {
         return nullptr;
     }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
+
+    // Column index system
+    // X - column number, Y - string number
+
     ret = &room->sectors[x * room->sectors_y + y];
     return ret;
 }
@@ -795,15 +783,14 @@ RoomSector* Room::getSectorXYZ(const btVector3& pos)
     {
         return nullptr;
     }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
+
+    // Column index system
+    // X - column number, Y - string number
+
     RoomSector* ret = &room->sectors[x * room->sectors_y + y];
 
-    /*
-     * resolve Z overlapped neighboard rooms. room below has more priority.
-     */
+    //resolve Z overlapped neighboard rooms. room below has more priority.
+
     if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
     {
         return ret->sector_below->checkFlip();
@@ -1032,10 +1019,9 @@ SkeletalModel* World::getModelByID(uint32_t id)
     return nullptr;
 }
 
-/*
- * find sprite by ID.
- * not a binary search - sprites may be not sorted by ID
- */
+// Find sprite by ID.
+// Not a binary search - sprites may be not sorted by ID.
+
 Sprite* World::getSpriteByID(unsigned int ID)
 {
     for(Sprite& sp : sprites)
@@ -1049,9 +1035,9 @@ Sprite* World::getSpriteByID(unsigned int ID)
     return nullptr;
 }
 
-/*
- * Check for join portals existing
- */
+
+// Check for join portals existing
+
 bool Room::isJoined(Room* r2)
 {
     for(const Portal& p : portals)

@@ -1,4 +1,8 @@
+#include "common.h"
+
 #include <cstdio>
+
+#include <GL/glew.h>
 #include <SDL2/SDL.h>
 
 #ifndef __APPLE_CC__
@@ -10,7 +14,6 @@
 #endif
 
 #include "vt/vt_level.h"
-#include <GL/glew.h>
 
 static int screenshot_cnt = 0;
 

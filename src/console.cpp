@@ -3,15 +3,15 @@
 #include <cstdio>
 #include <iostream>
 
-#include <SDL2/SDL_keycode.h>
 #include <GL/glew.h>
+#include <SDL2/SDL_keycode.h>
 
-#include "gl_font.h"
-#include "system.h"
 #include "engine.h"
+#include "gl_font.h"
+#include "gui.h"
 #include "script.h"
 #include "shader_manager.h"
-#include "gui.h"
+#include "system.h"
 
 ConsoleInfo::ConsoleInfo()
 {
@@ -359,7 +359,7 @@ void ConsoleInfo::addLine(const std::string &text, font_Style style)
 {
     if(inited && !text.empty())
     {
-        std::cout << "LOG: " << text << std::endl;
+        std::cout << "CON: " << text << std::endl;
         m_lines.emplace_front(text, style);
         m_historyPos = 0;
     }

@@ -1,12 +1,11 @@
-#ifndef POLYGON_H
-#define POLYGON_H
+#pragma once
 
+#include <array>
 #include <cstdint>
 #include <vector>
-#include <array>
 
-#include <GL/glew.h>
 #include <LinearMath/btScalar.h>
+#include <GL/glew.h>
 
 #include "vmath.h"
 
@@ -83,9 +82,3 @@ struct Polygon
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);
     bool isInsideBQuad(const btVector3 &bb_min, const btVector3 &bb_max);
 };
-
-/*
- * polygons functions
- */
-
-#endif

@@ -1,11 +1,12 @@
+#include "obb.h"
+
 #include <cmath>
 
 #include <LinearMath/btScalar.h>
 
-#include "vmath.h"
-#include "obb.h"
-#include "polygon.h"
 #include "entity.h"
+#include "polygon.h"
+#include "vmath.h"
 
 void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {

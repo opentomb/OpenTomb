@@ -1,12 +1,13 @@
-#include <cstdio>
-#include <cstdlib>
+#include "portal.h"
+
 #include <cassert>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <LinearMath/btScalar.h>
 
 #include "polygon.h"
-#include "portal.h"
 #include "vmath.h"
 
 /*

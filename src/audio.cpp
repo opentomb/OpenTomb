@@ -1,5 +1,6 @@
 #include "audio.h"
 
+#include <chrono>
 #include <cstdio>
 
 #include <SDL2/SDL.h>
@@ -7,16 +8,15 @@
 #include "console.h"
 #include "camera.h"
 #include "engine.h"
-#include "vmath.h"
 #include "entity.h"
-#include "system.h"
-#include "render.h"
-#include "strings.h"
 #include "helpers.h"
+#include "render.h"
+#include "script.h"
+#include "strings.h"
+#include "system.h"
+#include "vmath.h"
 
 #ifndef AL_ALEXT_PROTOTYPES
-#include "script.h"
-#include <chrono>
 
 extern "C"
 {
@@ -379,7 +379,7 @@ void AudioSource::SetBuffer(ALint buffer)
             alGetBufferi(buffer_index, AL_BITS,      &bits);
             alGetBufferi(buffer_index, AL_FREQUENCY, &freq);
 
-            Sys_DebugLog(LOG_FILENAME, "Erroneous buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
+            Sys_DebugLog(LOG_FILENAME, "Faulty buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
         }
         */
     }
@@ -1381,7 +1381,6 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     uint16_t        random_value;
     ALfloat         random_float;
     AudioEffect*    effect = nullptr;
-    AudioSource    *source = nullptr;
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
@@ -1470,7 +1469,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
             buffer_index = effect->sample_index;
         }
 
-        source = &engine_world.audio_sources[source_number];
+        AudioSource *source = &engine_world.audio_sources[source_number];
 
         source->SetBuffer(buffer_index);
 

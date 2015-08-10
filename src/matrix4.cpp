@@ -4,10 +4,10 @@
  *
  *  Created by Torsten Kammer on 07.05.10.
  */
+#include "matrix4.h"
 
 #include <iostream>
 
-#include "matrix4.h"
 #include "vmath.h"
 
 bool float4::isOnTriangle(const float4 *points) const

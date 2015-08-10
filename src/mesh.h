@@ -1,16 +1,17 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
-#include <array>
 
+#include <LinearMath/btTransform.h>
 #include <LinearMath/btScalar.h>
-
-#include "vertex_array.h"
-#include "object.h"
+#include <LinearMath/btVector3.h>
 
 #include "LuaState.h"
+
+#include "object.h"
+#include "vertex_array.h"
 
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
@@ -418,5 +419,3 @@ void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
-
-#endif

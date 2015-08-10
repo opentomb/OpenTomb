@@ -1,12 +1,16 @@
+#include "system.h"
+
 #include <cstdio>
 #include <cstdlib>
 
 #include "console.h"
 #include "engine.h"
-#include "system.h"
 #include "gui.h"
 
-ScreenInfo screen_info;
+ScreenInfo     screen_info;
+SystemSettings system_settings;
+
+
 gui_text_line_t system_fps;
 
 // =======================================================================
@@ -54,6 +58,8 @@ void Sys_InitGlobals()
     screen_info.FS_flag = 0;
     screen_info.show_debuginfo = 0;
     screen_info.fov = 75.0;
+
+    system_settings.logging = false;
 }
 
 void Sys_Destroy()
@@ -90,6 +96,8 @@ void Sys_Warn(const char *warning, ...)
 
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
+    if(!system_settings.logging) return;
+
     va_list argptr;
     static char data[4096];
     FILE *fp;

@@ -131,6 +131,11 @@ function genBaseItems()
         createBaseItem(ITEM_PUZZLE_2, 206, 206, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_PUZZLE_3, 207, 207, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_PUZZLE_4, 208, 208, ITEM_TYPE_QUEST, 1);
+        
+        createBaseItem(ITEM_PUZZLE_4, 240, 240, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_PUZZLE_4, 241, 241, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_PUZZLE_4, 242, 242, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_PUZZLE_4, 243, 243, ITEM_TYPE_QUEST, 1);
 
     elseif(ver < TR_V) then
         createBaseItem(ITEM_COMPASS, 375, 375, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_COMPASS);

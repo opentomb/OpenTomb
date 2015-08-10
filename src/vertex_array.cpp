@@ -1,6 +1,6 @@
-#include <cassert>
-
 #include "vertex_array.h"
+
+#include <cassert>
 
 VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexArrayAttribute *attributes)
 {

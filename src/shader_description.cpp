@@ -5,11 +5,11 @@
 //  Created by Torsten Kammer on 17.05.15.
 //  Copyright (c) 2015 Torsten Kammer. All rights reserved.
 //
-
-#include <cstdlib>
-#include <cassert>
-
 #include "shader_description.h"
+
+#include <cassert>
+#include <cstdlib>
+
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {

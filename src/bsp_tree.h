@@ -1,5 +1,4 @@
-#ifndef BSP_TREE_H
-#define BSP_TREE_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -56,5 +55,3 @@ public:
         m_root.reset(new BSPNode());
     }
 };
-
-#endif
