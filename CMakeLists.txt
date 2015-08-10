@@ -49,13 +49,13 @@ endif()
 # I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
 
 if(CMAKE_COMPILER_IS_GNUCC)
-    target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -Wextra -msse3")
 elseif(MSVC)
     add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )
-    target_compile_options(${PROJECT_NAME} PRIVATE -std=c++11 -Wall -Wextra -msse3)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -msse3")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
