@@ -326,10 +326,10 @@ void TR_Level::read_tr4_animation(SDL_RWops * const src, tr_animation_t & animat
     animation.frame_size = read_bitu8(src);
     animation.state_id = read_bitu16(src);
 
-    animation.speed = read_mixfloat(src);
-    animation.accel = read_mixfloat(src);
-    animation.speed_lateral = read_mixfloat(src);
-    animation.accel_lateral = read_mixfloat(src);
+    animation.speed = read_bit32(src);
+    animation.accel = read_bit32(src);
+    animation.speed_lateral = read_bit32(src);
+    animation.accel_lateral = read_bit32(src);
 
     animation.frame_start = read_bitu16(src);
     animation.frame_end = read_bitu16(src);

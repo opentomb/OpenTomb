@@ -1634,7 +1634,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                character->m_dirFlag = ENT_STAY;
+                character->m_dirFlag = ENT_MOVE_FORWARD;///Lara can move forward towards walls in this state
             }
 
             if(character->m_moveType == MoveType::Underwater)
