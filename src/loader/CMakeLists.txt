@@ -6,7 +6,7 @@ add_library(vtloader STATIC
     tr4level.cpp
     tr5level.cpp
 
-    sdlreader.h
+    io/sdlreader.h
     datatypes.h
     level.h
     tr1level.h

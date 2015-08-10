@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "vt/level.h"
+#include "loader/level.h"
 
 #include "bsp_tree_2d.h"
 #include "polygon.h"

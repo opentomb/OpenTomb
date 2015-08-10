@@ -13,7 +13,7 @@
 #include <SDL2/SDL.h>
 
 #include "LuaState.h"
-#include "vt/level.h"
+#include "loader/level.h"
 
 #include "anim_state_control.h"
 #include "audio.h"

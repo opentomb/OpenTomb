@@ -27,7 +27,7 @@
 #endif
 
 #include "LuaState.h"
-#include "vt/level.h"
+#include "loader/level.h"
 
 #include "gl_util.h"
 #include "polygon.h"

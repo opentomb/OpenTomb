@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "sdlreader.h"
+#include "io/sdlreader.h"
 
 namespace loader
 {

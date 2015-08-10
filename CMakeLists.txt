@@ -194,7 +194,7 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE -DGL_GLEXT_PROTOTYPES)
 endif()
 
-add_subdirectory(src/vt)
+add_subdirectory(src/loader)
 
 target_link_libraries(
     ${PROJECT_NAME}
