@@ -19,7 +19,7 @@
  *
  */
 
-#include "l_main.h"
+#include "tr3level.h"
 
 #include <iostream>
 

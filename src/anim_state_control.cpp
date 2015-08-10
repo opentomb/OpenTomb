@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "vt/tr_versions.h"
+#include "vt/game.h"
 
 #include "character_controller.h"
 #include "engine.h"

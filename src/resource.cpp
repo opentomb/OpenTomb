@@ -13,7 +13,7 @@
 #include <SDL2/SDL.h>
 
 #include "LuaState.h"
-#include "vt/vt_level.h"
+#include "vt/level.h"
 
 #include "anim_state_control.h"
 #include "audio.h"
@@ -2739,7 +2739,7 @@ void tr_setupTexturedFace(loader::Mesh *tr_mesh, BaseMesh* mesh, const uint16_t 
 
 void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2939,7 +2939,7 @@ void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::Level>& tr
 
 void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
     auto tr_room = &tr->m_rooms[room_index];
 

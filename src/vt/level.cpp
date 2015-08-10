@@ -23,7 +23,12 @@
 #include <GL/glew.h>
 #include <algorithm>
 
-#include "l_main.h"
+#include "level.h"
+#include "tr1level.h"
+#include "tr2level.h"
+#include "tr3level.h"
+#include "tr4level.h"
+#include "tr5level.h"
 
 using namespace loader;
 
@@ -290,4 +295,63 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
     }
 
     return ret;
+}
+
+StaticMesh *Level::findStaticMeshById(uint32_t object_id)
+{
+    for (size_t i = 0; i < m_staticMeshes.size(); i++)
+        if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
+            return &m_staticMeshes[i];
+
+    return nullptr;
+}
+
+Item *Level::fineItemById(int32_t object_id)
+{
+    for (size_t i = 0; i < m_items.size(); i++)
+        if (m_items[i].object_id == object_id)
+            return &m_items[i];
+
+    return nullptr;
+}
+
+Moveable *Level::findMoveableById(uint32_t object_id)
+{
+    for (size_t i = 0; i < m_moveables.size(); i++)
+        if (m_moveables[i].object_id == object_id)
+            return &m_moveables[i];
+
+    return nullptr;
+}
+
+void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
+{
+    for (int y = 0; y < 256; y++)
+    {
+        for (int x = 0; x < 256; x++)
+        {
+            int col = tex.pixels[y][x];
+
+            if (col > 0)
+                dst.pixels[y][x] = static_cast<int>(pal.colour[col].r) | (static_cast<int>(pal.colour[col].g) << 8) | (static_cast<int>(pal.colour[col].b) << 16) | (0xff << 24);
+            else
+                dst.pixels[y][x] = 0x00000000;
+        }
+    }
+}
+
+void Level::convertTexture(WordTexture & tex, DWordTexture & dst)
+{
+    for (int y = 0; y < 256; y++)
+    {
+        for (int x = 0; x < 256; x++)
+        {
+            int col = tex.pixels[y][x];
+
+            if (col & 0x8000)
+                dst.pixels[y][x] = ((col & 0x00007c00) >> 7) | (((col & 0x000003e0) >> 2) << 8) | (((col & 0x0000001f) << 3) << 16) | 0xff000000;
+            else
+                dst.pixels[y][x] = 0x00000000;
+        }
+    }
 }

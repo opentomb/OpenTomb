@@ -27,7 +27,7 @@
 #endif
 
 #include "LuaState.h"
-#include "vt/vt_level.h"
+#include "vt/level.h"
 
 #include "gl_util.h"
 #include "polygon.h"
@@ -921,7 +921,7 @@ std::string Engine_GetLevelScriptName(loader::Game game_version, const std::stri
 
 bool Engine_LoadPCLevel(const std::string& name)
 {
-    std::unique_ptr<loader::Level> loader = loader::TR1Level::createLoader(name, loader::Game::Unknown);
+    std::unique_ptr<loader::Level> loader = loader::Level::createLoader(name, loader::Game::Unknown);
     if(!loader)
         return false;
 

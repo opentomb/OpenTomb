@@ -5,8 +5,8 @@
 #include <string>
 #include <memory>
 
-#include "tr_types.h"
-#include "tr_versions.h"
+#include "datatypes.h"
+#include "game.h"
 
 namespace loader
 {
@@ -75,7 +75,6 @@ public:
     static std::unique_ptr<Level> createLoader(const std::string &filename, Game game_version);
     virtual void load() = 0;
 
-    void dumpTextures();
     StaticMesh *findStaticMeshById(uint32_t object_id);
     Item *fineItemById(int32_t object_id);
     Moveable *findMoveableById(uint32_t object_id);
@@ -95,59 +94,4 @@ private:
     static std::unique_ptr<Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
 };
 
-class TR1Level : public Level
-{
-public:
-    TR1Level(Game gameVersion, io::SDLReader&& reader)
-        : Level(gameVersion, std::move(reader))
-    {
-    }
-
-    void load() override;
-};
-
-
-class TR2Level : public Level
-{
-public:
-    TR2Level(Game gameVersion, io::SDLReader&& reader)
-        : Level(gameVersion, std::move(reader))
-    {
-    }
-
-    void load() override;
-};
-
-class TR3Level : public Level
-{
-public:
-    TR3Level(Game gameVersion, io::SDLReader&& reader)
-        : Level(gameVersion, std::move(reader))
-    {
-    }
-
-    void load() override;
-};
-
-class TR4Level : public Level
-{
-public:
-    TR4Level(Game gameVersion, io::SDLReader&& reader)
-        : Level(gameVersion, std::move(reader))
-    {
-    }
-
-    void load() override;
-};
-
-class TR5Level : public Level
-{
-public:
-    TR5Level(Game gameVersion, io::SDLReader&& reader)
-        : Level(gameVersion, std::move(reader))
-    {
-    }
-
-    void load() override;
-};
 }

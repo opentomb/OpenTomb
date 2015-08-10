@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "vt/vt_level.h"
+#include "vt/level.h"
 
 #include "bsp_tree_2d.h"
 #include "polygon.h"
@@ -223,7 +223,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4)
+        if(canonical_candidate->original_page == (texture.tile_and_flag & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == min[0]
            && canonical_candidate->original_y == min[1]
            && canonical_candidate->width == width
@@ -243,7 +243,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures.back();
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_page = texture.tile_and_flag & loader::TextureIndexMaskTr4;
         canonical.original_x = min[0];
         canonical.original_y = min[1];
     }
@@ -286,7 +286,7 @@ void BorderedTextureAtlas::addSpriteTexture(const loader::SpriteTexture &texture
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile & TR_TEXTURE_INDEX_MASK_TR4)
+        if(canonical_candidate->original_page == (texture.tile & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == x
            && canonical_candidate->original_y == y
            && canonical_candidate->width == width
@@ -306,7 +306,7 @@ void BorderedTextureAtlas::addSpriteTexture(const loader::SpriteTexture &texture
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_page = texture.tile & loader::TextureIndexMaskTr4;
         canonical.original_x = x;
         canonical.original_y = y;
     }

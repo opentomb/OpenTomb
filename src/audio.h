@@ -9,7 +9,7 @@
 
 #include <sndfile.h>
 
-#include "vt/vt_level.h"
+#include "vt/level.h"
 #include "game.h"
 
 // AL_UNITS constant is used to translate native TR coordinates into

@@ -27,7 +27,7 @@
 
 #include <cstdint>
 
-#include "vt/tr_types.h"
+#include "vt/datatypes.h"
 #include "polygon.h"
 
 class BorderedTextureAtlas
