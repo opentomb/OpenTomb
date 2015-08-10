@@ -2245,7 +2245,7 @@ void Character::frameImpl(btScalar time, int16_t frame, int state)
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    m_currentSpeed = af->speed_x + (frame * af->accel_x / (1<<16)); //Decompiled from TOMB5.EXE
+    m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 

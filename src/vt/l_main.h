@@ -99,7 +99,7 @@ class TR1Level : public Level
 {
 public:
     TR1Level(Game gameVersion, io::SDLReader&& reader)
-        : TR1Level(gameVersion, std::move(reader))
+        : Level(gameVersion, std::move(reader))
     {
     }
 
