@@ -27,10 +27,7 @@
 #include "vmath.h"
 #include "world.h"
 
-
-/*
- * debug functions
- */
+// Debug functions
 
 void script::ScriptEngine::checkStack()
 {
@@ -84,9 +81,7 @@ void lua_SetRoomEnabled(int id, bool value)
     }
 }
 
-/*
- * Base engine functions
- */
+// Base engine functions
 
 void lua_SetModelCollisionMapSize(int id, int size)
 {
@@ -874,9 +869,8 @@ bool lua_DeleteEntity(int id)
     }
 }
 
-/*
- * Moveables script control section
- */
+// Moveable script control section
+
 std::tuple<float, float, float> lua_GetEntityVector(int id1, int id2)
 {
     std::shared_ptr<Entity> e1 = engine_world.getEntityByID(id1);
@@ -2364,9 +2358,7 @@ void lua_SetCharacterCurrentWeapon(int id, int weapon)
     }
 }
 
-/*
- * Camera functions
- */
+// Camera functions
 
 void lua_CamShake(float power, float time, lua::Value id)
 {
@@ -2415,9 +2407,7 @@ bool lua_FadeCheck()
     return Gui_FadeCheck(FADER_BLACK);
 }
 
-/*
- * General gameplay functions
- */
+// General gameplay functions
 
 void lua_PlayStream(int id, lua::Value mask)
 {
@@ -2563,9 +2553,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
     }
 }
 
-/*
- * Flipped (alternate) room functions
- */
+// Flipped (alternate) room functions
 
 void lua_SetFlipState(uint32_t group, bool state)
 {
@@ -2672,19 +2660,21 @@ void lua_genUVRotateAnimation(int id)
     AnimSeq* seq = &engine_world.anim_sequences.back();
 
     // Fill up new sequence with frame list.
+
     seq->anim_type = TR_ANIMTEXTURE_FORWARD;
-    seq->frame_lock = false; // by default anim is playing
+    seq->frame_lock = false;              // by default anim is playing
     seq->uvrotate = true;
-    seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-    seq->frame_rate        = 0.025f;  // Should be passed as 1 / FPS.
-    seq->frame_time        = 0.0;   // Reset frame time to initial state.
-    seq->current_frame     = 0;     // Reset current frame to zero.
     seq->frames.resize(16);
     seq->frame_list.resize(16);
+    seq->reverse_direction = false;       // Needed for proper reverse-type start-up.
+    seq->frame_rate        = 0.025f;      // Should be passed as 1 / FPS.
+    seq->frame_time        = 0.0;         // Reset frame time to initial state.
+    seq->current_frame     = 0;           // Reset current frame to zero.
     seq->frame_list[0] = 0;
 
     btScalar v_min, v_max;
     v_min = v_max = firstPolygon.vertices[0].tex_coord[1];
+
     for(size_t j = 1; j<firstPolygon.vertices.size(); j++)
     {
         if(firstPolygon.vertices[j].tex_coord[1] > v_max)
@@ -2699,6 +2689,7 @@ void lua_genUVRotateAnimation(int id)
 
     seq->uvrotate_max = 0.5 * (v_max - v_min);
     seq->uvrotate_speed = seq->uvrotate_max / static_cast<btScalar>(seq->frames.size());
+
     for(uint16_t j = 0; j < seq->frames.size(); j++)
     {
         seq->frames[j].tex_ind = firstPolygon.tex_index;
@@ -3231,9 +3222,8 @@ int ScriptEngine::panic(lua_State *lua)
 
 void MainEngine::registerMainFunctions()
 {
-    /*
-     * register globals
-     */
+    // Register globals
+
     set(CVAR_LUA_TABLE_NAME, lua::Table());
 
     Game_RegisterLuaFunctions(*this);
@@ -3418,9 +3408,8 @@ void MainEngine::registerMainFunctions()
 }
 }   // end namespace script
 
-/*
- * MISC
- */
+
+// Parsing words
 
 const char *script::MainEngine::parse_token(const char *data, char *token)
 {
@@ -3518,9 +3507,7 @@ int script::MainEngine::parseInt(char **ch)
     return 0;
 }
 
-/*
- *   Specific functions to get specific parameters from script.
- */
+// Specific functions to get specific parameters from script.
 
 int script::MainEngine::getGlobalSound(int global_sound_id)
 {
@@ -3586,9 +3573,9 @@ bool script::MainEngine::getLoadingScreen(int level_index, char *pic_path)
     return true;
 }
 
-/*
- * System lua functions
- */
+
+// System lua functions
+
 
 void script::MainEngine::addKey(int keycode, bool state)
 {
@@ -3617,9 +3604,8 @@ void script::MainEngine::execEffect(int id, int caller, int operand)
     call("execFlipeffect", id, caller, operand);
 }
 
-/*
- * Game structures parse
- */
+
+// Parsing config file entries.
 
 void script::ScriptEngine::parseControls(struct ControlSettings *cs)
 {

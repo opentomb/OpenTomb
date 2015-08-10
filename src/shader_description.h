@@ -2,15 +2,14 @@
 
 #include "gl_util.h"
 
-/*!
- * A shader stage is a simple wrapper to load an OpenGL shader
- * object more easily.
- *
- * Note about ownership: The destructor calls glDeleteShader,
- * which marks the shader object for deletion. OpenGL only
- * deletes it when the last program (shader description) using
- * it is deleted.
- */
+// A shader stage is a simple wrapper to load an OpenGL shader
+// object more easily.
+
+// Note about ownership: The destructor calls glDeleteShader,
+// which marks the shader object for deletion. OpenGL only
+// deletes it when the last program (shader description) using
+// it is deleted.
+
 struct ShaderStage
 {
     GLuint shader;
@@ -19,13 +18,12 @@ struct ShaderStage
     ~ShaderStage();
 };
 
-/*!
- * A shader description consists of a program, code to load the
- * program, and the indices of the various uniform values. Each
- * shader or set of related shaders will have its own subclass
- * of shader_description. We assume (for now) that every shader
- * has a texture.
- */
+// A shader description consists of a program, code to load the
+// program, and the indices of the various uniform values. Each
+// shader or set of related shaders will have its own subclass
+// of shader_description. We assume (for now) that every shader
+// has a texture.
+
 struct ShaderDescription
 {
     GLuint program;
@@ -35,9 +33,8 @@ struct ShaderDescription
     ~ShaderDescription();
 };
 
-/*!
- * A shader description specifically for use in GUI situations.
- */
+// A shader description specifically for use in GUI situations.
+
 struct GuiShaderDescription : public ShaderDescription
 {
     GLint offset;
@@ -52,9 +49,8 @@ struct GuiShaderDescription : public ShaderDescription
     GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-/*!
- * A shader description specifically for use in GUI situations.
- */
+// A shader description specifically for use in GUI situations.
+
 struct SpriteShaderDescription : public ShaderDescription
 {
     GLint model_view;
@@ -70,9 +66,9 @@ struct SpriteShaderDescription : public ShaderDescription
     SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-/*!
- * A shader description for text
- */
+
+// A shader description for text
+
 struct TextShaderDescription : public ShaderDescription
 {
     GLint screenSize;
@@ -87,9 +83,9 @@ struct TextShaderDescription : public ShaderDescription
     TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-/*!
- * A shader description type that contains transform information. This comes in the form of a model view projection matrix.
- */
+// A shader description type that contains transform information.
+// This comes in the form of a model view projection matrix.
+
 struct UnlitShaderDescription : public ShaderDescription
 {
     GLint model_view_projection;
@@ -106,11 +102,10 @@ struct UnlitShaderDescription : public ShaderDescription
     UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-/*!
- * A shader description type that is suitable for lit objects. Also
- * contains a model view matrix and information about the current
- * light situation
- */
+// A shader description type that is suitable for lit objects. Also
+// contains a model view matrix and information about the current
+// light situation
+
 struct LitShaderDescription : public UnlitShaderDescription
 {
     GLint model_view;

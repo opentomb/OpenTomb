@@ -1377,12 +1377,13 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
     if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
-        size_t ext_len = 0;
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
         strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
         if(!Engine_FileFound(buf, false))
         {
+            size_t ext_len = 0;
+            
             for(; ext_len + 1 < pic_name.length(); ext_len++)
             {
                 if(buf[pic_name.length() - ext_len - 1] == '.')

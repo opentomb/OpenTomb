@@ -75,7 +75,6 @@ void printShaderInfoLog(GLuint object)
 
     GLint       logLength = 0;
     GLint       charsWritten = 0;
-    GLchar * infoLog;
 
     checkOpenGLError();                         // check for OpenGL errors
     if(isProgram)
@@ -85,7 +84,8 @@ void printShaderInfoLog(GLuint object)
 
     if(logLength > 0)
     {
-        infoLog = static_cast<GLchar*>(malloc(logLength));
+        GLchar* infoLog = static_cast<GLchar*>(malloc(logLength));
+        
         if(isProgram)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
         else

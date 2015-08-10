@@ -118,7 +118,6 @@ void Engine_InitGL()
 
 void Engine_InitSDLControls()
 {
-    int    NumJoysticks;
     Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
@@ -132,7 +131,8 @@ void Engine_InitSDLControls()
 
         SDL_Init(init_flags);
 
-        NumJoysticks = SDL_NumJoysticks();
+        int NumJoysticks = SDL_NumJoysticks();
+
         if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
         {
             Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
@@ -1134,13 +1134,13 @@ int Engine_LoadMap(const std::string& name)
 int Engine_ExecCmd(const char *ch)
 {
     std::vector<char> token(ConsoleInfo::instance().lineSize());
-    const char *pch;
     RoomSector* sect;
     FILE *f;
 
     while(ch != nullptr)
     {
-        pch = ch;
+        const char *pch = ch;
+
         ch = script::MainEngine::parse_token(ch, token.data());
         if(!strcmp(token.data(), "help"))
         {

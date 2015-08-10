@@ -83,7 +83,7 @@ void Res_CreateEntityFunc(script::ScriptEngine& state, const std::string& func_n
 
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    if(entities.size() == 0) return;
+    if(entities.empty()) return;
 
     for(const auto& pair : entities)
         Res_SetEntityFunction(pair.second);
@@ -1545,6 +1545,7 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
                 {
                     RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
                     RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
+
                     if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p.dest_room->id;
@@ -2711,8 +2712,8 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
         }
         p->vertices[i].color[3] = 1.0f;
 
-        p->vertices[i].tex_coord[0] = i & 2 ? 1.0f : 0.0f;
-        p->vertices[i].tex_coord[1] = i >= 2 ? 1.0f : 0.0f;
+        p->vertices[i].tex_coord[0] = (i & 2) ? 1.0f : 0.0f;
+        p->vertices[i].tex_coord[1] = i >= 2  ? 1.0f : 0.0f;
     }
     mesh->m_usesVertexColors = true;
 }
@@ -3247,19 +3248,15 @@ void TR_GenAnimCommands(World *world, class VT_Level *tr)
 
 void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, class VT_Level *tr)
 {
-    tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
-
-    uint32_t frame_offset, frame_step;
-    uint16_t temp1, temp2;
-    float ang;
 
     BoneTag* bone_tag;
     BoneFrame* bone_frame;
     MeshTreeTag* tree_tag;
     AnimationFrame* anim;
 
-    tr_moveable = &tr->moveables[model_num];                                    // original tr structure
+    tr_moveable_t *tr_moveable = &tr->moveables[model_num];  // original tr structure
+
     model->collision_map.resize(model->mesh_count);
     for(uint16_t i = 0; i < model->mesh_count; i++)
     {
@@ -3274,7 +3271,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     for(uint16_t k = 0; k < model->mesh_count; k++, tree_tag++)
     {
         tree_tag->mesh_base = world->meshes[mesh_index[k]];
-        tree_tag->mesh_skin = nullptr;                                             ///@PARANOID: I use calloc for tree_tag's
+        tree_tag->mesh_skin = nullptr;  ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
         tree_tag->body_part = 0x00;
@@ -3351,16 +3348,20 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
     anim = model->animations.data();
+
     for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
     {
         tr_animation = &tr->animations[tr_moveable->animation_index + i];
-        frame_offset = tr_animation->frame_offset / 2;
+
+        uint32_t frame_offset = tr_animation->frame_offset / 2;
         uint16_t l_start = 0x09;
+
         if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
         {
             l_start = 0x0A;
         }
-        frame_step = tr_animation->frame_size;
+
+        uint32_t frame_step = tr_animation->frame_size;
 
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
@@ -3450,6 +3451,9 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             else
             {
                 uint16_t l = l_start;
+                uint16_t temp1, temp2;
+                float ang;
+
                 for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
                 {
                     tree_tag = &model->mesh_tree[k];
@@ -3663,9 +3667,9 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     return ret;
 }
 
-/*
- * It returns real animation count
- */
+
+// Returns real animation frame count
+
 int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 {
     tr_animation_t *curr_anim, *next_anim;
@@ -3693,18 +3697,17 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 
 void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone_frame)
 {
-    unsigned short int *frame;
-
     if(frame_offset < tr->frame_data_size)
     {
-        frame = tr->frame_data + frame_offset;
-        bone_frame->bb_min[0] = (short int)frame[0];                            // x_min
-        bone_frame->bb_min[1] = (short int)frame[4];                            // y_min
-        bone_frame->bb_min[2] = -(short int)frame[3];                            // z_min
+        unsigned short int *frame = tr->frame_data + frame_offset;
 
-        bone_frame->bb_max[0] = (short int)frame[1];                            // x_max
-        bone_frame->bb_max[1] = (short int)frame[5];                            // y_max
-        bone_frame->bb_max[2] = -(short int)frame[2];                            // z_max
+        bone_frame->bb_min[0] = (short int)frame[0];   // x_min
+        bone_frame->bb_min[1] = (short int)frame[4];   // y_min
+        bone_frame->bb_min[2] = -(short int)frame[3];  // z_min
+
+        bone_frame->bb_max[0] = (short int)frame[1];   // x_max
+        bone_frame->bb_max[1] = (short int)frame[5];   // y_max
+        bone_frame->bb_max[2] = -(short int)frame[2];  // z_max
 
         bone_frame->pos[0] = (short int)frame[6];
         bone_frame->pos[1] = (short int)frame[8];
