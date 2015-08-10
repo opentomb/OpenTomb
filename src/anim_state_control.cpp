@@ -1558,9 +1558,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_ROLL_FORWARD:
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS;
             break;
 
         case TR_STATE_LARA_ROLL_BACKWARD:
+            character->m_bt.no_fix_body_parts = BODY_PART_HANDS;
             if(character->m_moveType == MoveType::FreeFalling)
             {
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
