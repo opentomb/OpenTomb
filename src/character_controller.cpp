@@ -2241,17 +2241,10 @@ void Character::updateHair()
 
 void Character::frameImpl(btScalar time, int16_t frame, int state)
 {
-    // Update acceleration.
-    // With variable framerate, we don't know when we'll reach final
-    // frame for sure, so we use native frame number check to increase acceleration.
+    // Update acceleration/speed, it is calculated per anim frame index
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    if(m_bf.animations.current_frame != frame)
-    {
-        // NB!!! For Lara, we update ONLY X-axis speed/accel.
-        auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        m_currentSpeed = ((int32_t)af->speed_x + (frame * (int32_t)af->accel_x) >> 16);///@INFO Decompiled from TOMB5.EXE by Gh0stBlade 100% working
-        ///@CHECK if(m_currentSpeed < 0) m_currentSpeed = -m_currentSpeed;
-    }
+    m_currentSpeed = (static_cast<int>(af->speed_x) + (frame * static_cast<int>(af->accel_x)) >> 16);//Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 
