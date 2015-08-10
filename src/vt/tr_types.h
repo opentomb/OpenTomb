@@ -1,7 +1,5 @@
 #pragma once
 
-#include "glmath.h"
-
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
@@ -10,6 +8,9 @@
 #include <SDL2/SDL_endian.h>
 
 #include <zlib.h>
+
+namespace loader
+{
 
 namespace io
 {
@@ -223,10 +224,8 @@ namespace io
             }
         };
     };
-}
+} // namespace io
 
-namespace loader
-{
 /// \brief RGBA colour using bitu8. For palette etc.
 struct ByteColor
 {
@@ -273,8 +272,9 @@ struct FloatColor
 };
 
 /// \brief A vertex with x, y and z coordinates.
-struct Vertex : public vec3_t
+struct Vertex
 {
+    float x, y, z;
     /** \brief reads three 16-bit vertex components.
     *
     * The values get converted from bit16 to float. y and z are negated to fit OpenGLs coordinate system.
@@ -2727,4 +2727,5 @@ struct Palette
         return palette;
     }
 };
-}
+
+} // namespace loader
