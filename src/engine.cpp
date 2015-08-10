@@ -541,7 +541,6 @@ void Engine_ShowDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        auto af = &ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation];
         Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.last_animation,
                       ent->m_bf.animations.current_animation,
@@ -863,131 +862,6 @@ int Engine_GetLevelFormat(const std::string& /*name*/)
     return LEVEL_FORMAT_PC;
 }
 
-loader::Game Engine_GetPCLevelVersion(const std::string& name)
-{
-    loader::Game ret = loader::Game::Unknown;
-    FILE *ff;
-
-    if(name.length() < 5)
-    {
-        return ret;                                                             // Wrong (too short) filename
-    }
-
-    ff = fopen(name.c_str(), "rb");
-    if(ff)
-    {
-        char ext[5];
-        uint8_t check[4];
-
-        ext[0] = name[name.length() - 4];                                                   // .
-        ext[1] = toupper(name[name.length() - 3]);                                          // P
-        ext[2] = toupper(name[name.length() - 2]);                                          // H
-        ext[3] = toupper(name[name.length() - 1]);                                          // D
-        ext[4] = 0;
-        fread(check, 4, 1, ff);
-
-        if(!strncmp(ext, ".PHD", 4))                                            //
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = loader::Game::TR1;                                                     // TR_I ? OR TR_I_DEMO
-            }
-            else
-            {
-                ret = loader::Game::Unknown;
-            }
-        }
-        else if(!strncmp(ext, ".TUB", 4))
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = loader::Game::TR1UnfinishedBusiness;                                                  // TR_I_UB
-            }
-            else
-            {
-                ret = loader::Game::Unknown;
-            }
-        }
-        else if(!strncmp(ext, ".TR2", 4))
-        {
-            if(check[0] == 0x2D &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = loader::Game::TR2;                                                    // TR_II
-            }
-            else if((check[0] == 0x38 || check[0] == 0x34) &&
-                    (check[1] == 0x00) &&
-                    (check[2] == 0x18 || check[2] == 0x08) &&
-                    (check[3] == 0xFF))
-            {
-                ret = loader::Game::TR3;                                                   // TR_III
-            }
-            else
-            {
-                ret = loader::Game::Unknown;
-            }
-        }
-        else if(!strncmp(ext, ".TR4", 4))
-        {
-            if(check[0] == 0x54 &&                                         // T
-               check[1] == 0x52 &&                                         // R
-               check[2] == 0x34 &&                                         // 4
-               check[3] == 0x00)
-            {
-                ret = loader::Game::TR4;                                                    // OR TR TR_IV_DEMO
-            }
-            else if(check[0] == 0x54 &&                                         // T
-                    check[1] == 0x52 &&                                         // R
-                    check[2] == 0x34 &&                                         // 4
-                    check[3] == 0x63)                                           //
-            {
-                ret = loader::Game::TR4;                                                    // TRLE
-            }
-            else if(check[0] == 0xF0 &&                                         // T
-                    check[1] == 0xFF &&                                         // R
-                    check[2] == 0xFF &&                                         // 4
-                    check[3] == 0xFF)
-            {
-                ret = loader::Game::TR4;                                                    // BOGUS (OpenRaider =))
-            }
-            else
-            {
-                ret = loader::Game::Unknown;
-            }
-        }
-        else if(!strncmp(ext, ".TRC", 4))
-        {
-            if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // C
-               check[3] == 0x00)
-            {
-                ret = loader::Game::TR5;                                                     // TR_V
-            }
-            else
-            {
-                ret = loader::Game::Unknown;
-            }
-        }
-        else                                                                    // unknown ext.
-        {
-            ret = loader::Game::Unknown;
-        }
-
-        fclose(ff);
-    }
-
-    return ret;
-}
-
 std::string Engine_GetLevelName(const std::string& path)
 {
     if(path.empty())
@@ -1047,10 +921,10 @@ std::string Engine_GetLevelScriptName(loader::Game game_version, const std::stri
 
 bool Engine_LoadPCLevel(const std::string& name)
 {
-    loader::Game trv = Engine_GetPCLevelVersion(name);
-    if(trv == loader::Game::Unknown) return false;
+    std::unique_ptr<loader::TR1Level> loader = loader::TR1Level::createLoader(name, loader::Game::Unknown);
+    if(!loader)
+        return false;
 
-    std::unique_ptr<loader::TR1Level> loader = loader::TR1Level::createLoader(name, trv);
     loader->load();
     loader->prepareLevel();
     //tr_level->dump_textures();
@@ -1060,7 +934,7 @@ bool Engine_LoadPCLevel(const std::string& name)
     std::string buf = Engine_GetLevelName(name);
 
     ConsoleInfo::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
-    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, trv, buf.c_str());
+    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
     ConsoleInfo::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
 
     return true;

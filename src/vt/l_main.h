@@ -20,9 +20,9 @@ namespace loader
 class TR1Level
 {
 public:
-    TR1Level(Game gameVersion, SDL_RWops* rwOps)
+    TR1Level(Game gameVersion, io::SDLReader&& reader)
         : m_gameVersion(gameVersion)
-        , m_reader(rwOps)
+        , m_reader(std::move(reader))
     {
     }
 
@@ -73,7 +73,6 @@ public:
     std::string m_sfxPath = "MAIN.SFX";
 
     static std::unique_ptr<TR1Level> createLoader(const std::string &filename, Game game_version);
-    static std::unique_ptr<TR1Level> createLoader(SDL_RWops * const src, Game game_version, const std::string& sfxPath);
     virtual void load();
 
     virtual void prepareLevel();
@@ -91,13 +90,17 @@ protected:
 
     static void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
     static void convertTexture(WordTexture & tex, DWordTexture & dst);
+
+private:
+    static Game probeVersion(io::SDLReader& reader, const std::string &filename);
+    static std::unique_ptr<TR1Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
 };
 
 class TR2Level : public TR1Level
 {
 public:
-    TR2Level(Game gameVersion, SDL_RWops* rwOps)
-        : TR1Level(gameVersion, rwOps)
+    TR2Level(Game gameVersion, io::SDLReader&& reader)
+        : TR1Level(gameVersion, std::move(reader))
     {
     }
 
@@ -108,8 +111,8 @@ public:
 class TR3Level : public TR1Level
 {
 public:
-    TR3Level(Game gameVersion, SDL_RWops* rwOps)
-        : TR1Level(gameVersion, rwOps)
+    TR3Level(Game gameVersion, io::SDLReader&& reader)
+        : TR1Level(gameVersion, std::move(reader))
     {
     }
 
@@ -120,8 +123,8 @@ public:
 class TR4Level : public TR1Level
 {
 public:
-    TR4Level(Game gameVersion, SDL_RWops* rwOps)
-        : TR1Level(gameVersion, rwOps)
+    TR4Level(Game gameVersion, io::SDLReader&& reader)
+        : TR1Level(gameVersion, std::move(reader))
     {
     }
 
@@ -132,8 +135,8 @@ public:
 class TR5Level : public TR1Level
 {
 public:
-    TR5Level(Game gameVersion, SDL_RWops* rwOps)
-        : TR1Level(gameVersion, rwOps)
+    TR5Level(Game gameVersion, io::SDLReader&& reader)
+        : TR1Level(gameVersion, std::move(reader))
     {
     }
 

@@ -279,7 +279,6 @@ void Engine_DumpRoom(Room* r);
 // PC-specific level loader routines.
 
 bool Engine_LoadPCLevel(const std::string &name);
-loader::Game Engine_GetPCLevelVersion(const std::string &name);
 
 // General level loading routines.
 

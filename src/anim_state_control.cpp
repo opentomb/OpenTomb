@@ -1172,8 +1172,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if(!character->m_bt.no_fix_all)
                 {
-                    size_t frames_count = ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size();
-                    size_t frames_count2 = (frames_count + 1) / 2;
+                    int frames_count = static_cast<int>(ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size());
+                    int frames_count2 = (frames_count + 1) / 2;
                     if((ss_anim->current_frame >= 0) && (ss_anim->current_frame <= frames_count2))
                     {
                         character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, ss_anim->current_frame);

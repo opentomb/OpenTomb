@@ -141,46 +141,56 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(const std::string& filename, Ga
         sfxPath = "MAIN.SFX";
     }
 
-    return createLoader(SDL_RWFromFile(filename.c_str(), "rb"), game_version, sfxPath);
+    io::SDLReader reader(filename);
+    if(!reader.isOpen())
+        return nullptr;
+
+    if(game_version == Game::Unknown)
+        game_version = probeVersion(reader, filename);
+    if(game_version == Game::Unknown)
+        return nullptr;
+
+    reader.seek(0);
+    return createLoader(std::move(reader), game_version, sfxPath);
 }
 
 /** \brief reads the level.
   *
   * Takes a SDL_RWop and the game_version of the file and reads the structures into the members of TR_Level.
   */
-std::unique_ptr<TR1Level> TR1Level::createLoader(SDL_RWops * const src, Game game_version, const std::string& sfxPath)
+std::unique_ptr<TR1Level> TR1Level::createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath)
 {
-    if (!src)
-        throw std::runtime_error("Invalid SDL_RWops");
+    if (!reader.isOpen())
+        return nullptr;
 
     std::unique_ptr<TR1Level> result;
 
     switch (game_version)
     {
         case Game::TR1:
-            result.reset(new TR1Level(game_version, src));
+            result.reset(new TR1Level(game_version, std::move(reader)));
             break;
         case Game::TR1Demo:
         case Game::TR1UnfinishedBusiness:
-            result.reset(new TR1Level(game_version, src));
+            result.reset(new TR1Level(game_version, std::move(reader)));
             result->m_demoOrUb = true;
             break;
         case Game::TR2:
-            result.reset(new TR2Level(game_version, src));
+            result.reset(new TR2Level(game_version, std::move(reader)));
             break;
         case Game::TR2Demo:
-            result.reset(new TR2Level(game_version, src));
+            result.reset(new TR2Level(game_version, std::move(reader)));
             result->m_demoOrUb = true;
             break;
         case Game::TR3:
-            result.reset(new TR3Level(game_version, src));
+            result.reset(new TR3Level(game_version, std::move(reader)));
             break;
         case Game::TR4:
         case Game::TR4Demo:
-            result.reset(new TR4Level(game_version, src));
+            result.reset(new TR4Level(game_version, std::move(reader)));
             break;
         case Game::TR5:
-            result.reset(new TR5Level(game_version, src));
+            result.reset(new TR5Level(game_version, std::move(reader)));
             break;
         default:
             throw std::runtime_error("Invalid game version");
@@ -190,4 +200,95 @@ std::unique_ptr<TR1Level> TR1Level::createLoader(SDL_RWops * const src, Game gam
 
     result->m_sfxPath = sfxPath;
     return result;
+}
+
+Game TR1Level::probeVersion(io::SDLReader& reader, const std::string& filename)
+{
+    if(!reader.isOpen() || filename.length()<5)
+        return Game::Unknown;
+
+    std::string ext;
+    ext += filename[filename.length()-4];
+    ext += std::toupper(filename[filename.length()-3]);
+    ext += std::toupper(filename[filename.length()-2]);
+    ext += std::toupper(filename[filename.length()-1]);
+
+    reader.seek(0);
+    uint8_t check[4];
+    reader.readBytes(check, 4);
+
+    Game ret = Game::Unknown;
+    if(ext == ".PHD")
+    {
+        if(check[0] == 0x20 &&
+           check[1] == 0x00 &&
+           check[2] == 0x00 &&
+           check[3] == 0x00)
+        {
+            ret = Game::TR1; // TR_I ? OR TR_I_DEMO
+        }
+    }
+    else if(ext == ".TUB")
+    {
+        if(check[0] == 0x20 &&
+           check[1] == 0x00 &&
+           check[2] == 0x00 &&
+           check[3] == 0x00)
+        {
+            ret = loader::Game::TR1UnfinishedBusiness;                                                  // TR_I_UB
+        }
+    }
+    else if(ext == ".TR2")
+    {
+        if(check[0] == 0x2D &&
+           check[1] == 0x00 &&
+           check[2] == 0x00 &&
+           check[3] == 0x00)
+        {
+            ret = loader::Game::TR2;                                                    // TR_II
+        }
+        else if((check[0] == 0x38 || check[0] == 0x34) &&
+                (check[1] == 0x00) &&
+                (check[2] == 0x18 || check[2] == 0x08) &&
+                (check[3] == 0xFF))
+        {
+            ret = loader::Game::TR3;                                                   // TR_III
+        }
+    }
+    else if(ext == ".TR4")
+    {
+        if(check[0] == 0x54 &&                                         // T
+           check[1] == 0x52 &&                                         // R
+           check[2] == 0x34 &&                                         // 4
+           check[3] == 0x00)
+        {
+            ret = loader::Game::TR4;                                                    // OR TR TR_IV_DEMO
+        }
+        else if(check[0] == 0x54 &&                                         // T
+                check[1] == 0x52 &&                                         // R
+                check[2] == 0x34 &&                                         // 4
+                check[3] == 0x63)                                           //
+        {
+            ret = loader::Game::TR4;                                                    // TRLE
+        }
+        else if(check[0] == 0xF0 &&                                         // T
+                check[1] == 0xFF &&                                         // R
+                check[2] == 0xFF &&                                         // 4
+                check[3] == 0xFF)
+        {
+            ret = loader::Game::TR4;                                                    // BOGUS (OpenRaider =))
+        }
+    }
+    else if(ext == ".TRC")
+    {
+        if(check[0] == 0x54 &&                                              // T
+           check[1] == 0x52 &&                                              // R
+           check[2] == 0x34 &&                                              // C
+           check[3] == 0x00)
+        {
+            ret = loader::Game::TR5;                                                     // TR_V
+        }
+    }
+
+    return ret;
 }
