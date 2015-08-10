@@ -546,6 +546,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
+
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0;
             character->lean(cmd, 0.0);
 
@@ -602,7 +604,10 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_BACK:
+
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0.0;
+
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
                 if(curr_fc->quicksand != QuicksandPosition::None)
@@ -632,7 +637,10 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_LEFT:
+
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0.0;
+
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
                 if(curr_fc->quicksand != QuicksandPosition::None)
@@ -658,7 +666,10 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_RIGHT:
+
+            character->m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0.0;
+
             if(resp->vertical_collide & 0x01 || character->m_moveType == MoveType::OnFloor)
             {
                 if(curr_fc->quicksand != QuicksandPosition::None)
@@ -2154,7 +2165,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
         case TR_STATE_LARA_JUMP_FORWARD:
         case TR_STATE_LARA_FALL_BACKWARD:
-            character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+            character->m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS | BODY_PART_HEAD;
             character->lean(cmd, 4.0);
 
             if((resp->vertical_collide & 0x01) || (character->m_moveType == MoveType::OnFloor))
