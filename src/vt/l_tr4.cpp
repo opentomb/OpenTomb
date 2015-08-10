@@ -88,19 +88,26 @@ void TR4Level::load()
         comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
-            if((uncomp_size / (256 * 256 * 4)) > 2)
-                std::cerr << "read_tr4_level: num_misc_textiles > 2\n";
-
-            if(m_textile32.empty())
+            if(!m_textile32.empty())
             {
-                m_textile32.resize(numTextiles);
+                m_reader.skip(comp_size);
             }
-            std::vector<uint8_t> comp_buffer(comp_size);
+            else
+            {
+                if((uncomp_size / (256 * 256 * 4)) > 2)
+                    std::cerr << "read_tr4_level: num_misc_textiles > 2\n";
 
-            m_reader.readBytes(comp_buffer.data(), comp_size);
+                if(m_textile32.empty())
+                {
+                    m_textile32.resize(numTextiles);
+                }
+                std::vector<uint8_t> comp_buffer(comp_size);
 
-            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+                m_reader.readBytes(comp_buffer.data(), comp_size);
+
+                io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
+                newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+            }
         }
     }
 
@@ -208,7 +215,7 @@ void TR4Level::load()
         m_samplesCount = i;
         // Since sample data is the last part, we simply load whole last
         // block of file as single array.
-        m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.tell() - m_reader.size()));
+        m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.size() - m_reader.tell()));
     }
 
     if(!m_textile32.empty())

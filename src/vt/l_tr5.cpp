@@ -114,32 +114,34 @@ void TR5Level::load()
     comp_size = m_reader.readU32();
     if(comp_size > 0)
     {
-        std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
-        if((uncomp_size / (256 * 256 * 4)) > 3)
-            std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
-
         if(m_textile32.empty())
         {
-            m_textile32.resize(numMiscTextiles);
+            std::vector<uint8_t> uncomp_buffer(uncomp_size);
+
+            if((uncomp_size / (256 * 256 * 4)) > 3)
+                std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
+
+            std::vector<uint8_t> comp_buffer(comp_size);
+            m_reader.readBytes(comp_buffer.data(), comp_size);
+
+            uLongf size = uncomp_size;
+            if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
+                throw std::runtime_error("read_tr5_level: uncompress");
+
+            if(size != uncomp_size)
+                throw std::runtime_error("read_tr5_level: uncompress size mismatch");
+
+            SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
+            if(newsrcSDL == nullptr)
+                throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
+
+            io::SDLReader newsrc(newsrcSDL);
+            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
-
-        std::vector<uint8_t> comp_buffer(comp_size);
-        m_reader.readBytes(comp_buffer.data(), comp_size);
-
-        uLongf size = uncomp_size;
-        if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-            throw std::runtime_error("read_tr5_level: uncompress");
-
-        if(size != uncomp_size)
-            throw std::runtime_error("read_tr5_level: uncompress size mismatch");
-
-        SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-        if(newsrcSDL == nullptr)
-            throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
-
-        io::SDLReader newsrc(newsrcSDL);
-        newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+        else
+        {
+            m_reader.skip(uncomp_size);
+        }
     }
 
     // flags?

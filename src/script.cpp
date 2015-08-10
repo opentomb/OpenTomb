@@ -2740,7 +2740,9 @@ void ScriptEngine::exposeConstants()
     m_state.set("TR_I_UB", static_cast<int>(loader::Game::TR1UnfinishedBusiness));
     m_state.set("TR_II", static_cast<int>(loader::Game::TR2));
     m_state.set("TR_II_DEMO", static_cast<int>(loader::Game::TR2Demo));
+    m_state.set("TR_II_GOLD", static_cast<int>(loader::Game::TR2Gold));
     m_state.set("TR_III", static_cast<int>(loader::Game::TR3));
+    m_state.set("TR_III_GOLD", static_cast<int>(loader::Game::TR3Gold));
     m_state.set("TR_IV", static_cast<int>(loader::Game::TR4));
     m_state.set("TR_IV_DEMO", static_cast<int>(loader::Game::TR4Demo));
     m_state.set("TR_V", static_cast<int>(loader::Game::TR5));
