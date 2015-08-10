@@ -8,8 +8,8 @@
 #include "gl_font_buffer.h"
 
 #include "render.h"
-#include "vertex_array.h"
 #include "shader_description.h"
+#include "vertex_array.h"
 
 namespace
 {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <LinearMath/btScalar.h>
+
 #include <SDL2/SDL.h>
 
 #define JOY_BUTTON_MASK  1000

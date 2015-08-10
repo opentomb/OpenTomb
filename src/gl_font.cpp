@@ -5,13 +5,14 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#include <cstdint>
+#include "gl_font.h"
+
 #include <cmath>
+#include <cstdint>
 
 #include <ft2build.h>
 #include <freetype.h>
 
-#include "gl_font.h"
 #include "gl_font_buffer.h"
 
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}

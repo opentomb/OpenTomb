@@ -7,10 +7,10 @@
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
-/*!
- * Class containing all shaders used by OpenTomb. The shader objects
- * are owned by this manager and must not be deleted by anyone.
- */
+
+// Class containing all shaders used by OpenTomb. The shader objects
+// are owned by this manager and must not be deleted by anyone.
+
 class ShaderManager
 {
 private:
@@ -28,12 +28,12 @@ public:
     ShaderManager();
     ShaderManager(const ShaderManager&) = delete;
     ShaderManager& operator=(const ShaderManager&) = delete;
-    /*!
-     * Deletes the manager. Note: This destructor does nothing and
-     * does not delete the shaders, as the manager will only get
-     * destroyed when the program exits anyway, in which case all the
-     * shaders get destroyed by OpenGL.
-     */
+
+    // Deletes the manager. Note: This destructor does nothing and
+    // does not delete the shaders, as the manager will only get
+    // destroyed when the program exits anyway, in which case all the
+    // shaders get destroyed by OpenGL.
+
     ~ShaderManager() = default;
 
     LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const

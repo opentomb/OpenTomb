@@ -1,3 +1,5 @@
+#include "gui.h"
+
 #include <cstdint>
 
 #ifdef __APPLE_CC__
@@ -6,22 +8,20 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include "gl_util.h"
-#include "gl_font.h"
-
-#include "gui.h"
-#include "character_controller.h"
-#include "engine.h"
-#include "render.h"
-#include "system.h"
-#include "console.h"
-#include "vmath.h"
 #include "camera.h"
-#include "strings.h"
+#include "character_controller.h"
+#include "console.h"
+#include "engine.h"
+#include "gl_font.h"
+#include "gl_util.h"
+#include "render.h"
+#include "script.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "strings.h"
+#include "system.h"
 #include "vertex_array.h"
-#include "script.h"
+#include "vmath.h"
 
 extern SDL_Window  *sdl_window;
 
@@ -1377,12 +1377,13 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
     if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
         char buf[MAX_ENGINE_PATH];
-        size_t ext_len = 0;
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
         strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
         if(!Engine_FileFound(buf, false))
         {
+            size_t ext_len = 0;
+            
             for(; ext_len + 1 < pic_name.length(); ext_len++)
             {
                 if(buf[pic_name.length() - ext_len - 1] == '.')

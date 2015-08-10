@@ -1,12 +1,11 @@
-#ifndef VMATH_H
-#define VMATH_H
+#pragma once
+
+#include <cmath>
 
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
-
-#include <cmath>
 
 #define PLANE_X        1
 #define PLANE_Y        2
@@ -21,21 +20,19 @@ namespace
     constexpr const float Rad360 = 2 * M_PI;
 }
 
-/**
- * A simple Hesse normal form plane
- */
+
+// A simple Hesse normal form plane
+
 struct Plane
 {
-    //! The plane's normal
-    btVector3 normal = { 0,0,0 };
-    //! The plane's distance to the origin
-    btScalar dot = 0;
 
-    /**
-     * Calculates the normalized distance of an arbitrary point in terms of the normal
-     * @param pos The point
-     * @return The distance in multiples of the normal (if >0, @a pos is in the direction of the normal)
-     */
+    btVector3 normal = { 0,0,0 };   // The plane's normal
+    btScalar dot = 0;   // The plane's distance to the origin
+
+    // Calculates the normalized distance of an arbitrary point in terms of the normal
+    // @param pos The point
+    // @return The distance in multiples of the normal (if >0, @a pos is in the direction of the normal)
+
     btScalar distance(const btVector3& pos) const
     {
         return normal.dot(pos) - dot;
@@ -76,15 +73,14 @@ struct Plane
 
     void moveTo(const btVector3& where)
     {
-        //! @todo Project the (where--0) onto the normal before calculating the dot
+        ///@TODO: Project the (where--0) onto the normal before calculating the dot
         dot = normal.dot(where);
     }
 };
 
 void vec4_SetTRRotations(btQuaternion &v, const btVector3 &rot);
-/*
- * Matrix transformation functions and macro
- */
+
+// Matrix transformation functions and macro
 
 void Mat4_Translate(btTransform &mat, const btVector3 &v);
 void Mat4_Translate(btTransform &mat, btScalar x, btScalar y, btScalar z);
@@ -93,5 +89,3 @@ void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
 btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const btScalar& t);
-
-#endif  // VMATH_H

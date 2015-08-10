@@ -1,5 +1,4 @@
-#ifndef ANIM_STATE_CONTROL_H
-#define ANIM_STATE_CONTROL_H
+#pragma once
 
 class VT_Level;
 struct Polygon;
@@ -31,16 +30,14 @@ namespace
 	constexpr float LARA_HANG_SENSOR_Z = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
 }
 
-/*
- * Animation control flags
- */
-#define ANIM_NORMAL_CONTROL             (0)
-#define ANIM_LOOP_LAST_FRAME            (1)
-#define ANIM_LOCK                       (2)
 
- /*
-  * SURFACE MOVEMENT DIRECTIONS
-  */
+// Animation control flags
+
+#define ANIM_NORMAL_CONTROL  (0)
+#define ANIM_LOOP_LAST_FRAME (1)
+#define ANIM_LOCK            (2) // Animation will be locked once and for all.
+
+// Surface movement directions
 
 #define ENT_STAY 0x00000000
 #define ENT_MOVE_FORWARD 0x00000001
@@ -50,14 +47,12 @@ namespace
 #define ENT_MOVE_JUMP 0x00000010
 #define ENT_MOVE_CROUCH 0x00000020
 
-  /*
-   *  ====== LARA'S ANIMATIONS ======
-   *
-   *  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
-   *
-   *
-   *  TR1 AND ABOVE (0-159)
-   */
+
+//  ====== LARA'S ANIMATIONS ======
+//  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
+
+//  TR1 AND ABOVE (0-159)
+
 #define TR_ANIMATION_LARA_RUN 0
 #define TR_ANIMATION_LARA_WALK_FORWARD 1
 #define TR_ANIMATION_LARA_END_WALK_RIGHT 2
@@ -223,9 +218,9 @@ namespace
 #define TR_ANIMATION_LARA_START_FLY_LIKE_FISH_RIGHT 157
 #define TR_ANIMATION_LARA_FREE_FALL_FISH_START 158
 #define TR_ANIMATION_LARA_CLIMB_ON2 159
-   /*
-    * TR2 AND ABOVE (160-216)
-    */
+
+// TR2 AND ABOVE (160-216)
+
 #define TR_ANIMATION_LARA_STAND_TO_LADDER 160
 #define TR_ANIMATION_LARA_LADDER_UP 161
 #define TR_ANIMATION_LARA_LADDER_UP_STOP_RIGHT 162
@@ -241,7 +236,7 @@ namespace
 #define TR_ANIMATION_LARA_LADDER_HANG 172
 #define TR_ANIMATION_LARA_LADDER_HANG_TO_IDLE 173
 #define TR_ANIMATION_LARA_LADDER_TO_STAND 174
-    // #define TR_ANIMATION_LARA_UNKNOWN5 175                   // Unknown use
+// #define TR_ANIMATION_LARA_UNKNOWN5 175                   // Unknown use
 #define TR_ANIMATION_LARA_ONWATER_TO_WADE_SHALLOW 176
 #define TR_ANIMATION_LARA_WADE 177
 #define TR_ANIMATION_LARA_RUN_TO_WADE_LEFT 178
@@ -287,9 +282,8 @@ namespace
 #define TR_ANIMATION_LARA_TR2_ZIPLINE_RIDE 216
 #define TR_ANIMATION_LARA_TR2_ZIPLINE_FALL 217
 
-/*
- * TR3 AND ABOVE (214-312)
- */
+// TR3 AND ABOVE (214-312)
+
 #define TR_ANIMATION_LARA_TR345_ZIPLINE_GRAB 214
 #define TR_ANIMATION_LARA_TR345_ZIPLINE_RIDE 215
 #define TR_ANIMATION_LARA_TR345_ZIPLINE_FALL 216
@@ -401,9 +395,9 @@ namespace
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_RIGHT_BEGIN 305
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_LEFT_END 306
 #define TR_ANIMATION_LARA_RUN_TO_CROUCH_RIGHT_END 307
- /*
-  * TR4 AND ABOVE (313-444)
-  */
+
+// TR4 AND ABOVE (313-444)
+
 #define TR_ANIMATION_LARA_DOOR_OPEN_FORWARD 313
 #define TR_ANIMATION_LARA_DOOR_OPEN_BACK 314
 #define TR_ANIMATION_LARA_DOOR_KICK 315
@@ -434,7 +428,7 @@ namespace
 #define TR_ANIMATION_LARA_PULLEY_PULL 340
 #define TR_ANIMATION_LARA_PULLEY_UNGRAB 341
 #define TR_ANIMATION_LARA_POLE_GRAB_TO_STAY 342
-  // #define TR_ANIMATION_LARA_UNKNOWN8 343
+// #define TR_ANIMATION_LARA_UNKNOWN8 343
 #define TR_ANIMATION_LARA_POLE_TURN_LEFT_END 344
 // #define TR_ANIMATION_LARA_UNKNOWN9 345
 #define TR_ANIMATION_LARA_POLE_TURN_RIGHT_END 346
@@ -532,9 +526,9 @@ namespace
 #define TR_ANIMATION_LARA_DEATH_BIG_SCORPION 442
 #define TR_ANIMATION_LARA_tr4_DEATH_SETH_tr5_ELEVATOR_SMASH 443
 #define TR_ANIMATION_LARA_BEETLE_PUT 444
-/*
- * TR5 AND ABOVE (445-473)
- */
+
+// TR5 AND ABOVE (445-473)
+
 #define TR_ANIMATION_LARA_ELEVATOR_RECOVER 443
 #define TR_ANIMATION_LARA_DOZY 445
 #define TR_ANIMATION_LARA_TIGHTROPE_WALK 446
@@ -566,7 +560,8 @@ namespace
 #define TR_ANIMATION_LARA_LOOT_CHEST 472
 #define TR_ANIMATION_LARA_LADDER_TO_CROUCH 473
 
- //   ====== LARA'S STATES ======
+
+// ====== LARA'S STATES ======
 
 #define TR_STATE_CURRENT (-1)
 #define TR_STATE_LARA_WALK_FORWARD 0
@@ -663,7 +658,7 @@ namespace
 #define TR_STATE_LARA_ROPE_TURN_RIGHT 91
 #define TR_STATE_LARA_GIANT_BUTTON_PUSH 92
 #define TR_STATE_LARA_TRAPDOOR_FLOOR_OPEN 93
-//#define TR_STATE_LARA_UNUSED11 94 - in anim 28 prevents to free -fall - like 1 frame stay IDLE reset
+//#define TR_STATE_LARA_UNUSED11 94
 #define TR_STATE_LARA_ROUND_HANDLE 95
 #define TR_STATE_LARA_COGWHEEL 96
 #define TR_STATE_LARA_LEVERSWITCH_PUSH 97
@@ -707,6 +702,7 @@ namespace
 //#define TR_STATE_LARA_UNUSED15 135
 //#define TR_STATE_LARA_UNUSED16 136
 #define TR_STATE_LARA_PICKUP_FROM_CHEST 137
+
 
 //   ====== ANIMATION COMMANDS ======
 
@@ -769,5 +765,3 @@ namespace
 
 struct Character;
 int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
-
-#endif

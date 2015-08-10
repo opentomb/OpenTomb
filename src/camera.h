@@ -4,8 +4,8 @@
 
 #include <GL/glew.h>
 
-#include "vmath.h"
 #include "matrix4.h"
+#include "vmath.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0f
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0f

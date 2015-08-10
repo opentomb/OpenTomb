@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <string>
 
-#include "gui.h"
 #include "gl_font.h"
+#include "gui.h"
 
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128

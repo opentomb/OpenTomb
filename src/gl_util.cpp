@@ -1,8 +1,9 @@
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
-
 #include "gl_util.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include "system.h"
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
@@ -74,7 +75,6 @@ void printShaderInfoLog(GLuint object)
 
     GLint       logLength = 0;
     GLint       charsWritten = 0;
-    GLchar * infoLog;
 
     checkOpenGLError();                         // check for OpenGL errors
     if(isProgram)
@@ -84,7 +84,8 @@ void printShaderInfoLog(GLuint object)
 
     if(logLength > 0)
     {
-        infoLog = static_cast<GLchar*>(malloc(logLength));
+        GLchar* infoLog = static_cast<GLchar*>(malloc(logLength));
+        
         if(isProgram)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
         else

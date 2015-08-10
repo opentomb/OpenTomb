@@ -1,6 +1,7 @@
 #include "ragdoll.h"
 
 #include "LuaState.h"
+
 #include "script.h"
 
 bool RDSetup::getSetup(int ragdoll_index)

@@ -1,26 +1,27 @@
-#include <cstdlib>
+#include "entity.h"
+
 #include <cmath>
+#include <cstdlib>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include "vmath.h"
-#include "mesh.h"
-#include "entity.h"
-#include "world.h"
-#include "engine.h"
-#include "console.h"
-#include "script.h"
+#include "LuaState.h"
+
 #include "anim_state_control.h"
 #include "character_controller.h"
+#include "console.h"
+#include "engine.h"
+#include "helpers.h"
+#include "mesh.h"
 #include "obb.h"
 #include "ragdoll.h"
-#include "helpers.h"
+#include "script.h"
 #include "system.h"
-
-#include "LuaState.h"
+#include "vmath.h"
+#include "world.h"
 
 void Entity::createGhosts()
 {
@@ -92,7 +93,9 @@ void Entity::enableCollision()
     }
     else
     {
-        m_self->collision_type = COLLISION_TYPE_KINEMATIC;                            ///@TODO: order collision shape and entity collision type flags! it is a different things!
+        ///@TODO: order collision shape and entity collision type flags! it is a different things!
+
+        m_self->collision_type = COLLISION_TYPE_KINEMATIC;
         genEntityRigidBody();
     }
 }
@@ -149,13 +152,12 @@ void Entity::genEntityRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            if(dynamic_cast<btBvhTriangleMeshShape*>(cshape) == nullptr)
-                cshape->calculateLocalInertia(0.0, localInertia);
+            cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             m_bt.bt_body.back().reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-            //bt.bt_body[i]->setCollisionFlags(bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+            m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
             bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             m_bt.bt_body.back()->setUserPointer(m_self.get());
         }

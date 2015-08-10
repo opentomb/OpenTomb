@@ -1,26 +1,27 @@
-#include <cmath>
+#include "render.h"
+
 #include <algorithm>
+#include <cmath>
 
 #include <LinearMath/btScalar.h>
 
-#include "gl_util.h"
-#include "render.h"
-#include "console.h"
-#include "world.h"
-#include "portal.h"
-#include "frustum.h"
-#include "polygon.h"
-#include "camera.h"
-#include "vmath.h"
-#include "mesh.h"
-#include "hair.h"
-#include "entity.h"
-#include "engine.h"
-#include "obb.h"
 #include "bsp_tree.h"
+#include "camera.h"
+#include "console.h"
+#include "engine.h"
+#include "entity.h"
+#include "frustum.h"
+#include "gl_util.h"
+#include "hair.h"
+#include "mesh.h"
+#include "obb.h"
+#include "polygon.h"
+#include "portal.h"
 #include "resource.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "vmath.h"
+#include "world.h"
 
 Render renderer;
 DynamicBSP render_dBSP;
@@ -999,11 +1000,12 @@ void Render::drawListDebugLines()
 }
 
 /**
- * The reccursion algorithm: go through the rooms with portal-frustum occlusion test
+ * The recursion algorithm: go through the rooms with portal-frustum occlusion test.
  * @param portal we entered to the room through that portal
- * @para frus frustum that intersects the portal
+ * @param frus frustum that intersects the portal
  * @return number of added rooms
  */
+
 int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
 {
     std::shared_ptr<Room> destination = portal->dest_room;
@@ -1019,7 +1021,8 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
     {
         if(p.dest_room && p.dest_room->active && p.dest_room != current)
         {
-            auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);             // Главная ф-я портального рендерера. Тут и проверка
+            // The main function of portal renderer. Here comes the check.
+            auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);
             if(gen_frus)
             {
                 ret++;
@@ -1031,9 +1034,8 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
     return ret;
 }
 
-/**
- * Renderer list generation by current world and camera
- */
+// Renderer list generation by current world and camera
+
 void Render::genWorldList()
 {
     if(m_world == nullptr)
@@ -1076,15 +1078,14 @@ void Render::genWorldList()
     }
 }
 
-/**
- * Состыковка рендерера и "мира"
- */
+// Coupling renderer and the world.
+
 void Render::setWorld(World *world)
 {
     resetWorld();
-    uint32_t list_size = world->rooms.size() + 128;                               // magick 128 was added for debug and testing
+    uint32_t list_size = world->rooms.size() + 128;  // magic 128 was added for debug and testing
 
-    if(m_renderList.size() < list_size)                                    // if old list less than new one requiring
+    if(m_renderList.size() < list_size)  // if old list is less than new one requiring
     {
         m_renderList.resize(list_size);
     }
@@ -1098,9 +1099,9 @@ void Render::setWorld(World *world)
     engine_camera.m_currentRoom = nullptr;
 }
 
-/**
- * DEBUG PRIMITIVES RENDERING
- */
+
+// Render debug primitives.
+
 RenderDebugDrawer::RenderDebugDrawer()
     : m_obb(new OBB())
 {

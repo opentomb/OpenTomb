@@ -1,5 +1,4 @@
-#ifndef RESOURCE_H
-#define RESOURCE_H
+#pragma once
 
 #include <map>
 #include <memory>
@@ -160,5 +159,3 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 
 int      TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr);
 void     TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index);
-
-#endif

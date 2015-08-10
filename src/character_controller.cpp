@@ -1,19 +1,20 @@
+#include "character_controller.h"
+
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "world.h"
-#include "character_controller.h"
-#include "obb.h"
 #include "anim_state_control.h"
 #include "engine.h"
 #include "entity.h"
 #include "gui.h"
-#include "mesh.h"
 #include "hair.h"
-#include "vmath.h"
+#include "mesh.h"
+#include "obb.h"
 #include "polygon.h"
 #include "resource.h"
 #include "script.h"
+#include "vmath.h"
+#include "world.h"
 
 Character::Character(uint32_t id)
     : Entity(id)
