@@ -1,16 +1,20 @@
-#include <cstdlib>
+#include "game.h"
+
 #include <cstdio>
+#include <cstdlib>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+
 #include <lua.hpp>
+
+#include "LuaState.h"
 
 #include "vmath.h"
 #include "polygon.h"
 #include "engine.h"
 #include "controls.h"
 #include "world.h"
-#include "game.h"
 #include "mesh.h"
 #include "entity.h"
 #include "camera.h"
@@ -23,8 +27,6 @@
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
-
-#include "LuaState.h"
 
 btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 

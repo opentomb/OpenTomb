@@ -1,10 +1,9 @@
-#ifndef ENGINE_GUI_H
-#define ENGINE_GUI_H
+#pragma once
 
-#include "gl_font.h"
-#include "entity.h"
-#include "render.h"
 #include "character_controller.h"
+#include "entity.h"
+#include "gl_font.h"
+#include "render.h"
 
 #define GUI_MAX_TEMP_LINES   (256)
 
@@ -782,5 +781,3 @@ void Gui_DrawNotifier();
  */
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
-
-#endif

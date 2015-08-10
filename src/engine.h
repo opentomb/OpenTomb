@@ -1,18 +1,17 @@
-#ifndef ENGINE_H
-#define ENGINE_H
+#pragma once
 
 #include <cstdio>
-
-#include <SDL2/SDL.h>
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
-#include "world.h"
-#include "controls.h"
-#include "object.h"
+#include <SDL2/SDL.h>
 
 #include "LuaState.h"
+
+#include "controls.h"
+#include "object.h"
+#include "world.h"
 
 #define MAX_ENGINE_PATH                         (1024)
 
@@ -301,5 +300,3 @@ int  Engine_ExecCmd(const char *ch);
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-
-#endif

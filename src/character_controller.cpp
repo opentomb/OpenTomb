@@ -1,19 +1,20 @@
+#include "character_controller.h"
+
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "world.h"
-#include "character_controller.h"
-#include "obb.h"
 #include "anim_state_control.h"
 #include "engine.h"
 #include "entity.h"
 #include "gui.h"
-#include "mesh.h"
 #include "hair.h"
-#include "vmath.h"
+#include "mesh.h"
+#include "obb.h"
 #include "polygon.h"
 #include "resource.h"
 #include "script.h"
+#include "vmath.h"
+#include "world.h"
 
 Character::Character(uint32_t id)
     : Entity(id)
@@ -2241,24 +2242,10 @@ void Character::updateHair()
 
 void Character::frameImpl(btScalar time, int16_t frame, int state)
 {
-    // Update acceleration.
-    // With variable framerate, we don't know when we'll reach final
-    // frame for sure, so we use native frame number check to increase acceleration.
+    // Update acceleration/speed, it is calculated per anim frame index
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    if(m_bf.animations.current_frame != frame)
-    {
-        // NB!!! For Lara, we update ONLY X-axis speed/accel.
-
-        auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        if((af->accel_x == 0) || (frame < m_bf.animations.current_frame))
-        {
-            m_currentSpeed = af->speed_x;
-        }
-        else
-        {
-            m_currentSpeed += af->accel_x;
-        }
-    }
+    m_currentSpeed = (static_cast<int>(af->speed_x) + (frame * static_cast<int>(af->accel_x)) >> 16);//Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 

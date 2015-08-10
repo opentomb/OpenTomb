@@ -1,5 +1,4 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
 
 #include <cstdio>
 
@@ -473,5 +472,3 @@ void Audio_LogSndfileError(int code);           // Sndfile-specific error handle
 float   Audio_GetByteDepth(SF_INFO sfInfo);
 void    Audio_LoadALExtFunctions(ALCdevice* device);
 bool    Audio_DeInitDelay();
-
-#endif // AUDIO_H

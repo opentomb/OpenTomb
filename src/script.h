@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+
 #include <LinearMath/btScalar.h>
 
 #include <lua.hpp>
@@ -12,9 +13,11 @@
 struct ScreenInfo;
 struct ConsoleInfo;
 struct Entity;
+
 struct AudioSettings;
 struct ControlSettings;
 struct RenderSettings;
+struct SystemSettings;
 
 namespace script
 {
@@ -106,6 +109,7 @@ namespace script
         void parseAudio(AudioSettings *as);
         void parseConsole(ConsoleInfo *cn);
         void parseControls(ControlSettings *cs);
+        void parseSystem(SystemSettings *ss);
 
     protected:
         void checkStack();

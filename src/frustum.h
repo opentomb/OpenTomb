@@ -1,6 +1,4 @@
-
-#ifndef FRUSTUM_H
-#define FRUSTUM_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -57,5 +55,3 @@ struct Frustum
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-
-#endif

@@ -6,16 +6,17 @@
 //  Copyright (c) 2013 Torsten Kammer. All rights reserved.
 //
 
+#include "bordered_texture_atlas.h"
+
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <algorithm>
 
 #include "vt/vt_level.h"
 
-#include "bordered_texture_atlas.h"
 #include "bsp_tree_2d.h"
 #include "polygon.h"
 

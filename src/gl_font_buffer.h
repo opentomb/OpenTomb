@@ -1,12 +1,12 @@
 #pragma once
-//
+
 //  font_buffer.h
 //  OpenTomb
 //
 //  Created by Torsten Kammer on 18.06.15.
 //  Contains code to manage VBO and VAO for the font renderer, presenting
 //  a standard C interface.
-//
+
 
 #include <GL/glew.h>
 

@@ -188,10 +188,6 @@ namespace io
         {
             return read<float>();
         }
-        float readScaled()
-        {
-            return readI32() / 65536.0f;
-        }
 
     private:
         SDL_RWops* m_rwOps;
@@ -2167,11 +2163,11 @@ struct Animation
     uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
 
-    float   speed;
-    float   accel;
+    int32_t   speed;
+    int32_t   accel;
 
-    float   speed_lateral;      // new in TR4 -->
-    float   accel_lateral;      // lateral speed and acceleration.
+    int32_t   speed_lateral;      // new in TR4 -->
+    int32_t   accel_lateral;      // lateral speed and acceleration.
 
     uint16_t frame_start;           // first frame in this animation
     uint16_t frame_end;             // last frame in this animation (numframes = (End - Start) + 1)
@@ -2192,8 +2188,8 @@ struct Animation
         animation.frame_size = reader.readU8();
         animation.state_id = reader.readU16();
 
-        animation.speed = reader.readScaled();
-        animation.accel = reader.readScaled();
+        animation.speed = reader.readI32();
+        animation.accel = reader.readI32();
 
         animation.frame_start = reader.readU16();
         animation.frame_end = reader.readU16();
@@ -2215,10 +2211,10 @@ struct Animation
         animation.frame_size = reader.readU8();
         animation.state_id = reader.readU16();
 
-        animation.speed = reader.readScaled();
-        animation.accel = reader.readScaled();
-        animation.speed_lateral = reader.readScaled();
-        animation.accel_lateral = reader.readScaled();
+        animation.speed = reader.readI32();
+        animation.accel = reader.readI32();
+        animation.speed_lateral = reader.readI32();
+        animation.accel_lateral = reader.readI32();
 
         animation.frame_start = reader.readU16();
         animation.frame_end = reader.readU16();

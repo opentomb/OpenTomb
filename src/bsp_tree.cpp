@@ -1,13 +1,14 @@
+#include "bsp_tree.h"
+
 #include <cassert>
 #include <cstdint>
 
 #include <LinearMath/btScalar.h>
 
-#include "polygon.h"
-#include "bsp_tree.h"
-#include "vmath.h"
-#include "mesh.h"
 #include "frustum.h"
+#include "mesh.h"
+#include "polygon.h"
+#include "vmath.h"
 
 void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
 {

@@ -1,4 +1,5 @@
 #pragma once
+
 /*
  * File:   gl_font.h
  * Author: TeslaRus
@@ -7,8 +8,10 @@
  */
 
 #include <cstdint>
+
 #include <ft2build.h>
-#include FT_FREETYPE_H
+#include <freetype.h>
+
 #include <GL/glew.h>
 
 typedef struct char_info_s

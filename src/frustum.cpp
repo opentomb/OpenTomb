@@ -1,17 +1,18 @@
+#include "frustum.h"
+
 #include <cstdio>
 #include <cstdlib>
 
 #include <LinearMath/btScalar.h>
 
-#include "frustum.h"
-#include "vmath.h"
 #include "camera.h"
+#include "engine.h"
+#include "obb.h"
 #include "polygon.h"
 #include "portal.h"
 #include "render.h"
+#include "vmath.h"
 #include "world.h"
-#include "engine.h"
-#include "obb.h"
 
 void Frustum::splitPrepare(struct Portal *p)
 {

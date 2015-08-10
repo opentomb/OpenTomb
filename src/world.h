@@ -1,5 +1,4 @@
-#ifndef WORLD_H
-#define WORLD_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -8,10 +7,10 @@
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
-#include "object.h"
 #include "audio.h"
-#include "camera.h"
 #include "bordered_texture_atlas.h"
+#include "camera.h"
+#include "object.h"
 
 // Native TR floor data functions
 
@@ -433,5 +432,3 @@ struct World
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
-
-#endif
