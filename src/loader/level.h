@@ -72,6 +72,21 @@ public:
 
     std::string m_sfxPath = "MAIN.SFX";
 
+    /*
+     * 0 Normal
+     * 3 Catsuit
+     * 4 Divesuit
+     * 6 Invisible
+     */
+    uint16_t m_laraType = 0;
+
+    /*
+     * 0 No weather
+     * 1 Rain
+     * 2 Snow (in title.trc these are red triangles falling from the sky).
+     */
+    uint16_t m_weatherType = 0;
+
     static std::unique_ptr<Level> createLoader(const std::string &filename, Game game_version);
     virtual void load() = 0;
 

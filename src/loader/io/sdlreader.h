@@ -115,7 +115,13 @@ namespace io
         void readVector(std::vector<T>& elements, size_t count, T function(SDLReader&))
         {
             elements.clear();
-            elements.reserve(count);
+            appendVector(elements, count, function);
+        }
+
+        template<typename T>
+        void appendVector(std::vector<T>& elements, size_t count, T function(SDLReader&))
+        {
+            elements.reserve(elements.size() + count);
             for(size_t i=0; i<count; ++i)
             {
                 elements.emplace_back(function(*this));

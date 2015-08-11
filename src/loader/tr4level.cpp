@@ -52,8 +52,6 @@ void TR4Level::load()
             std::vector<uint8_t> comp_buffer(comp_size);
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            m_textile32.resize(numTextiles);
-
             io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
             newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
@@ -106,7 +104,7 @@ void TR4Level::load()
                 m_reader.readBytes(comp_buffer.data(), comp_size);
 
                 io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-                newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+                newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
             }
         }
     }

@@ -48,26 +48,10 @@ void TR5Level::load()
     auto comp_size = m_reader.readU32();
     if(comp_size > 0)
     {
-        std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
-        m_textile32.resize(numTextiles);
         std::vector<uint8_t> comp_buffer(comp_size);
-
         m_reader.readBytes(comp_buffer.data(), comp_size);
 
-        uLongf size = uncomp_size;
-        if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-            throw std::runtime_error("read_tr5_level: uncompress");
-
-        if(size != uncomp_size)
-            throw std::runtime_error("read_tr5_level: uncompress size mismatch");
-        comp_buffer.clear();
-
-        SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-        if(newsrcSDL == nullptr)
-            throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
-
-        io::SDLReader newsrc(newsrcSDL);
+        io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
         newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
     }
 
@@ -80,25 +64,10 @@ void TR5Level::load()
     {
         if(m_textile32.empty())
         {
-            std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
-            m_textile16.resize(numTextiles);
             std::vector<uint8_t> comp_buffer(comp_size);
-
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            uLongf size = uncomp_size;
-            if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                throw std::runtime_error("read_tr5_level: uncompress");
-
-            if(size != uncomp_size)
-                throw std::runtime_error("read_tr5_level: uncompress size mismatch");
-
-            SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-            if(newsrcSDL == nullptr)
-                throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
-
-            io::SDLReader newsrc(newsrcSDL);
+            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
             newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
         }
         else
@@ -116,27 +85,14 @@ void TR5Level::load()
     {
         if(m_textile32.empty())
         {
-            std::vector<uint8_t> uncomp_buffer(uncomp_size);
-
             if((uncomp_size / (256 * 256 * 4)) > 3)
                 std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
 
             std::vector<uint8_t> comp_buffer(comp_size);
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            uLongf size = uncomp_size;
-            if(uncompress(uncomp_buffer.data(), &size, comp_buffer.data(), comp_size) != Z_OK)
-                throw std::runtime_error("read_tr5_level: uncompress");
-
-            if(size != uncomp_size)
-                throw std::runtime_error("read_tr5_level: uncompress size mismatch");
-
-            SDL_RWops* newsrcSDL = SDL_RWFromMem(uncomp_buffer.data(), uncomp_size);
-            if(newsrcSDL == nullptr)
-                throw std::runtime_error("read_tr5_level: SDL_RWFromMem");
-
-            io::SDLReader newsrc(newsrcSDL);
-            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
+            newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
         }
         else
         {
@@ -144,25 +100,9 @@ void TR5Level::load()
         }
     }
 
-    // flags?
-    /*
-       I found 2 flags in the TR5 file format. Directly after the sprite textures are 2 ints as a flag. The first one is the lara type:
-       0 Normal
-       3 Catsuit
-       4 Divesuit
-       6 Invisible
+    m_laraType = m_reader.readU16();
+    m_weatherType = m_reader.readU16();
 
-       The second one is the weather type (effects all outside rooms):
-       0 No weather
-       1 Rain
-       2 Snow (in title.trc these are red triangles falling from the sky).
-     */
-#if 1
-    m_reader.skip(2*sizeof(uint16_t));
-#else
-    i = m_src.readU16();
-    i = m_src.readU16();
-#endif
     if(m_reader.readU32() != 0)
         std::cerr << "Bad value for flags[1]\n";
 
