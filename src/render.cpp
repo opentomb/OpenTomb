@@ -56,7 +56,7 @@ void Render::init()
     m_skipRoom = false;
     m_skipStatic = false;
     m_skipEntities = false;
-    m_drawNullMeshes = false;
+    m_drawAllModels = false;
     m_drawDummyStatics = false;
     m_drawColl = false;
     m_drawSkybox = false;
@@ -498,10 +498,7 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
 
 void Render::renderEntity(Entity* entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection)
 {
-    if(entity->m_wasRendered || !entity->m_visible || (entity->m_bf.animations.model->hide && !m_drawNullMeshes))
-    {
-        return;
-    }
+    if(!m_drawAllModels && (entity->m_wasRendered || !entity->m_visible)) return;
 
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity, modelViewMatrix, false);
@@ -560,8 +557,7 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, Entity* ent
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render::renderHair(std::shared_ptr<Character> entity, const matrix4 &modelViewMatrix, const matrix4 &projection)
 {
-    if(!entity || entity->m_hairs.empty())
-        return;
+    if(!entity || entity->m_hairs.empty()) return;
 
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity.get(), modelViewMatrix, true);
@@ -1317,7 +1313,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const b
 void RenderDebugDrawer::drawEntityDebugLines(Entity* entity, Render* render)
 {
     if(entity->m_wasRenderedLines || !(render->m_drawAxis || render->m_drawNormals || render->m_drawBoxes) ||
-       !entity->m_visible || (entity->m_bf.animations.model->hide && !(render->m_drawNullMeshes)))
+       !entity->m_visible)
     {
         return;
     }

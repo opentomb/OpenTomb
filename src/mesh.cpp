@@ -643,6 +643,18 @@ void BaseMesh::genFaces()
     // Now same for animated triangles
 }
 
+btCollisionShape *BT_CSfromSphere(const btScalar& radius)
+{
+    if(radius == 0.0) return nullptr;
+
+    btCollisionShape* ret;
+
+    ret = new btSphereShape(radius);
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
+
+    return ret;
+}
+
 btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool /*useCompression*/, bool /*buildBvh*/)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;

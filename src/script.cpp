@@ -2271,8 +2271,6 @@ int lua_SetEntityBodyMass(lua_State *lua)
             }
         }
 
-        ent->updateRigidBody(true);
-
         if(dynamic)
         {
             ent->m_typeFlags |= ENTITY_TYPE_DYNAMIC;
@@ -2281,6 +2279,8 @@ int lua_SetEntityBodyMass(lua_State *lua)
         {
             ent->m_typeFlags &= ~ENTITY_TYPE_DYNAMIC;
         }
+
+        ent->updateRigidBody(true);
     }
     else
     {

@@ -41,26 +41,19 @@
 
 namespace
 {
-script::ScriptEngine objects_flags_conf;
 script::ScriptEngine ent_ID_override;
 script::ScriptEngine level_script;
 }
 
-void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
+void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_bf.animations.model != nullptr && objects_flags_conf["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = objects_flags_conf.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
-        ent->m_typeFlags |= flg;
-    }
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
 
-    if(ent->m_bf.animations.model != nullptr && level_script["getEntityModelProperties"].is<lua::Callable>())
-    {
-        uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_bf.animations.model->hide, flg) = level_script.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
-        ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-        ent->m_typeFlags |= flg;                 // get traverse information
+        ent->m_visible = !ent->m_visible;
+        ent->m_typeFlags |= flg;
     }
 }
 
@@ -68,7 +61,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        const char* funcName = objects_flags_conf.call("getEntityFunction", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
+        const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
         if(funcName)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
@@ -1687,19 +1680,6 @@ void Res_ScriptsOpen(loader::Game engine_version)
         {
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
-    }
-
-    try
-    {
-        objects_flags_conf.doFile("scripts/entity/entity_properties.lua");
-    }
-    catch(lua::RuntimeError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    catch(lua::LoadError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
     }
 
     try
@@ -3823,7 +3803,6 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
             world->character = lara;
             lara->m_self->collision_type = COLLISION_TYPE_ACTOR;
             lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            lara->m_bf.animations.model->hide = 0;
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM;
 
@@ -3883,8 +3862,9 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
                 lara->m_bf.bone_tags[j].mesh_skin = lara->m_bf.animations.model->mesh_tree[j].mesh_skin;
                 lara->m_bf.bone_tags[j].mesh_slot = nullptr;
             }
+
             world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
-            lara->genEntityRigidBody();
+            lara->genRigidBody();
             lara->createGhosts();
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
@@ -3894,15 +3874,12 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
 
-        Res_SetEntityModelProperties(entity);
+        Res_SetEntityProperties(entity);
         entity->rebuildBV();
-        entity->genEntityRigidBody();
+        entity->genRigidBody();
 
         entity->m_self->room->addEntity(entity.get());
         world->addEntity(entity);
-
-        if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
-            entity->disableCollision();
     }
 }
 
