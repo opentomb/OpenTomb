@@ -1267,9 +1267,9 @@ int Engine_ExecCmd(const char *ch)
             renderer.toggleDrawAxis();
             return 1;
         }
-        else if(!strcmp(token.data(), "r_nullmeshes"))
+        else if(!strcmp(token.data(), "r_allmodels"))
         {
-            renderer.toggleDrawNullMeshes();
+            renderer.toggleDrawAllModels();
             return 1;
         }
         else if(!strcmp(token.data(), "r_dummy_statics"))

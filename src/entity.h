@@ -163,7 +163,7 @@ public:
     void disable();
     void enableCollision();
     void disableCollision();
-    void genEntityRigidBody();
+    void genRigidBody();
 
     void ghostUpdate();
     void updateCurrentCollisions();

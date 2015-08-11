@@ -18,6 +18,7 @@ function loadscript_pre()
     dofile("scripts/gameflow/gameflow.lua");
     dofile("scripts/trigger/trigger_functions.lua");
     dofile("scripts/trigger/helper_functions.lua");
+    dofile("scripts/entity/entity_properties.lua");
     dofile("scripts/entity/entity_functions.lua");
     dofile("scripts/character/hair.lua");
     dofile("scripts/character/ragdoll.lua");

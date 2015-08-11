@@ -80,7 +80,7 @@ struct BaseMesh
     btVector3 m_center;                                            // geometry centre of mesh
     btVector3 m_bbMin;                                            // AABB bounding volume
     btVector3 m_bbMax;                                            // AABB bounding volume
-    btScalar m_radius;                                                    // radius of the bounding sphere
+    btScalar m_radius;                                            // radius of the bounding sphere
 #pragma pack(push,1)
     struct MatrixIndex
     {
@@ -388,7 +388,6 @@ struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    lua::Boolean                hide;                                           // do not render
 
     btVector3                   bbox_min;                                    // bbox info
     btVector3                   bbox_max;
@@ -416,6 +415,7 @@ void SkeletonCopyMeshes(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 
 /* bullet collision model calculation */
+btCollisionShape *BT_CSfromSphere(const btScalar& radius);
 btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);

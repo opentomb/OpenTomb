@@ -549,13 +549,11 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
 
         ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
-        ent->m_active = ent->m_enabled = ent->m_visible = true;
+        ent->m_active = ent->m_enabled = true;
         ent->m_triggerLayout = 0x00;
         ent->m_OCB = 0x00;
         ent->m_timer = 0.0;
 
-        ent->m_self->collision_type = COLLISION_NONE;
-        ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
         ent->m_moveType = MoveType::StaticPos;
         ent->m_inertiaLinear = 0.0;
         ent->m_inertiaAngular[0] = 0.0;
@@ -564,9 +562,11 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         ent->m_bf.fromModel(model);
 
         ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
-        ent->genEntityRigidBody();
 
+        Res_SetEntityProperties(ent);
         ent->rebuildBV();
+        ent->genRigidBody();
+
         if(ent->m_self->room != nullptr)
         {
             ent->m_self->room->addEntity(ent.get());

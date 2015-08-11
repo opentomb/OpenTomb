@@ -47,7 +47,7 @@ void Entity::createGhosts()
         gltr.setOrigin(gltr * m_bf.bone_tags[i].mesh_base->m_center);
 
         m_bt.ghostObjects.back()->setWorldTransform(gltr);
-        m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+        m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
         m_bt.ghostObjects.back()->setUserPointer(m_self.get());
         m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
         bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
@@ -91,13 +91,6 @@ void Entity::enableCollision()
             }
         }
     }
-    else
-    {
-        ///@TODO: order collision shape and entity collision type flags! it is a different things!
-
-        m_self->collision_type = COLLISION_TYPE_KINEMATIC;
-        genEntityRigidBody();
-    }
 }
 
 void Entity::disableCollision()
@@ -114,12 +107,10 @@ void Entity::disableCollision()
     }
 }
 
-void Entity::genEntityRigidBody()
+void Entity::genRigidBody()
 {
-    if(m_bf.animations.model == nullptr)
-    {
+    if((m_bf.animations.model == nullptr) || (m_self->collision_type == COLLISION_TYPE_NONE))
         return;
-    }
 
     m_bt.bt_body.clear();
 
@@ -129,19 +120,19 @@ void Entity::genEntityRigidBody()
         btCollisionShape *cshape;
         switch(m_self->collision_shape)
         {
+            case COLLISION_SHAPE_BOX:
+                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
+                break;
+
+            case COLLISION_SHAPE_SPHERE:
+                cshape = BT_CSfromSphere(mesh->m_radius);
+                break;
+
             case COLLISION_SHAPE_TRIMESH_CONVEX:
                 cshape = BT_CSfromMesh(mesh, true, true, false);
                 break;
 
             case COLLISION_SHAPE_TRIMESH:
-                cshape = BT_CSfromMesh(mesh, true, true, true);
-                break;
-
-            case COLLISION_SHAPE_BOX:
-                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
-                break;
-
-                ///@TODO: add other shapes implementation; may be change default;
             default:
                 cshape = BT_CSfromMesh(mesh, true, true, true);
                 break;
@@ -157,7 +148,29 @@ void Entity::genEntityRigidBody()
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             m_bt.bt_body.back().reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-            m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+
+            switch(m_self->collision_type)
+            {
+                case COLLISION_TYPE_KINEMATIC:
+                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+                    break;
+
+                case COLLISION_TYPE_ACTOR:
+                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
+                    break;
+
+                case COLLISION_TYPE_GHOST:
+                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+                    break;
+
+                case COLLISION_TYPE_STATIC:
+                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+                    break;
+
+                default:
+                    break;
+            }
+
             bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             m_bt.bt_body.back()->setUserPointer(m_self.get());
         }

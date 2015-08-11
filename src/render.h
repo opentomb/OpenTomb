@@ -161,7 +161,7 @@ private:
     bool m_skipRoom = false;
     bool m_skipStatic = false;
     bool m_skipEntities = false;
-    bool m_drawNullMeshes = false;
+    bool m_drawAllModels = false;
     bool m_drawDummyStatics = false;
     bool m_drawColl = false;
     bool m_drawSkybox = false;
@@ -249,9 +249,9 @@ public:
     {
         m_drawAxis = !m_drawAxis;
     }
-    void toggleDrawNullMeshes()
+    void toggleDrawAllModels()
     {
-        m_drawNullMeshes = !m_drawNullMeshes;
+        m_drawAllModels = !m_drawAllModels;
     }
     void toggleDrawDummyStatics()
     {

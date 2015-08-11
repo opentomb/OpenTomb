@@ -1208,7 +1208,6 @@ function oldspike_init(id)  -- Teeth spikes
             if(lz > (pz + 256.0)) then
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
-                    setEntityCollision(object_id, false);
                     setEntityAnim(activator_id, 149, 0);
                     setEntityPos(activator_id, lx, ly, pz);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
