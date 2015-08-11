@@ -47,7 +47,7 @@ void Entity::createGhosts()
         gltr.setOrigin(gltr * m_bf.bone_tags[i].mesh_base->m_center);
 
         m_bt.ghostObjects.back()->setWorldTransform(gltr);
-        m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+        m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
         m_bt.ghostObjects.back()->setUserPointer(m_self.get());
         m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
         bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
@@ -152,21 +152,21 @@ void Entity::genRigidBody()
             switch(m_self->collision_type)
             {
                 case COLLISION_TYPE_KINEMATIC:
-                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+                    break;
+
+                case COLLISION_TYPE_GHOST:
+                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
                     break;
 
                 case COLLISION_TYPE_ACTOR:
                 case COLLISION_TYPE_VEHICLE:
-                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
-                    break;
-
-                case COLLISION_TYPE_GHOST:
-                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     break;
 
                 case COLLISION_TYPE_STATIC:
                 default:
-                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
                     break;
             }
 
