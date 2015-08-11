@@ -671,13 +671,9 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
 
     setEntityTypeFlag(id, ENTITY_TYPE_COLLCHECK);
     setEntityAnimFlag(id, ANIM_LOCK);
-    setEntityBodyPartFlag(id, 0, 0x01);
-    setEntityCollisionFlags(id, COLLISION_TYPE_GHOST, COLLISION_SHAPE_BOX);
     
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_ROOMCOLLISION, true);
-    
-    createEntityGhosts(id);
     
     entity_funcs[id].speed       = 100.0;
     entity_funcs[id].damage      = 50.0;
