@@ -119,7 +119,7 @@ tr1_entity_tbl[76] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr1_entity_tbl[81] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                      -- Menu: Passport (closed)
 
 tr1_entity_tbl[82] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                      -- Natla Logo
-tr1_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Savegame crystal
+tr1_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_SPHERE};                      -- Savegame crystal
 
 tr1_entity_tbl[95] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                      -- Menu: Sunglasses
 tr1_entity_tbl[96] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                      -- Menu: Cassette player
@@ -561,7 +561,7 @@ tr3_entity_tbl[176] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr3_entity_tbl[177] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Large medipack (pick-up)
 tr3_entity_tbl[178] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Flares (pick-up)
 tr3_entity_tbl[179] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Flare (pick-up)
-tr3_entity_tbl[180] = {coll = COLLISION_TYPE_GHOST,      shape = COLLISION_SHAPE_BOX, func = "crystal_TR3"};           -- Savegame crystal (pick-up)
+tr3_entity_tbl[180] = {coll = COLLISION_TYPE_GHOST,      shape = COLLISION_SHAPE_SPHERE, func = "crystal_TR3"};           -- Savegame crystal (pick-up)
 
 -- MENU ITEMS --
 
