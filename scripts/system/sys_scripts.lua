@@ -36,6 +36,14 @@ function clearKeys()
 end
 
 
+-- Autoexec service functions
+
+function clearAutoexec()
+    autoexec_PostLoad = function() end;
+    autoexec_PreLoad = function() end;
+end;
+
+
 -- Task manager functions
 
 engine_tasks = {};  -- task struct: {functions array}

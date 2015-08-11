@@ -290,7 +290,7 @@ int  Engine_LoadMap(const std::string &name);
 // String getters.
 
 std::string Engine_GetLevelName(const std::string &path);
-std::string Engine_GetLevelScriptName(int game_version, const std::string &postfix = nullptr);
+std::string Engine_GetAutoexecName(int game_version, const std::string &postfix = nullptr);
 
 // Console command parser.
 

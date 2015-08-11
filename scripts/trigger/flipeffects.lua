@@ -116,23 +116,27 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
             local material = getEntitySectorMaterial(caller);
             local sound_id = -1;
             
-                if(material == SECTOR_MATERIAL_MUD     ) then sound_id = 288;
-            elseif(material == SECTOR_MATERIAL_SAND    ) then sound_id = 291;
-            elseif(material == SECTOR_MATERIAL_GRAVEL  ) then sound_id = 290;
-            elseif(material == SECTOR_MATERIAL_WOOD    ) then sound_id = 292;
-            elseif(material == SECTOR_MATERIAL_METAL   ) then sound_id = 294;
-            elseif(material == SECTOR_MATERIAL_GRASS   ) then sound_id = 291;
-            elseif(material == SECTOR_MATERIAL_OLDWOOD ) then sound_id = 292;
-            elseif(material == SECTOR_MATERIAL_OLDMETAL) then sound_id = 294;
+                if(material == SECTOR_MATERIAL_MUD       ) then sound_id = 288;
+            elseif(material == SECTOR_MATERIAL_SAND      ) then sound_id = 291;
+            elseif(material == SECTOR_MATERIAL_GRAVEL    ) then sound_id = 290;
+            elseif(material == SECTOR_MATERIAL_WOOD      ) then sound_id = 292;
+            elseif(material == SECTOR_MATERIAL_METAL     ) then sound_id = 294;
+            elseif(material == SECTOR_MATERIAL_GRASS     ) then sound_id = 291;
+            elseif(material == SECTOR_MATERIAL_OLDWOOD   ) then sound_id = 292;
+            elseif(material == SECTOR_MATERIAL_OLDMETAL  ) then sound_id = 294;
             
             elseif( (material == SECTOR_MATERIAL_WATER   ) or
                     (material == SECTOR_MATERIAL_STONE   ) or
-                    (material == SECTOR_MATERIAL_CONCRETE) )  then return;
+                    (material == SECTOR_MATERIAL_CONCRETE) ) then return;
 
             elseif(getLevelVersion() ~= TR_IV) then
             
-                    if(material == SECTOR_MATERIAL_MARBLE) then sound_id = 293;
-                elseif(material == SECTOR_MATERIAL_ICE   ) then sound_id = 289; end;
+                    if(material == SECTOR_MATERIAL_SNOW) then sound_id = 293;
+                elseif(material == SECTOR_MATERIAL_ICE ) then sound_id = 289; end;
+                
+            elseif(getLevelVersion() == TR_IV) then
+                    
+                    if(material == SECTOR_MATERIAL_MARBLE) then sound_id = 293; end;
                 
             end;
             

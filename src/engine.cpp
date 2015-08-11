@@ -1007,11 +1007,11 @@ std::string Engine_GetLevelName(const std::string& path)
     return path.substr(start, ext - start);
 }
 
-std::string Engine_GetLevelScriptName(int game_version, const std::string& postfix)
+std::string Engine_GetAutoexecName(int game_version, const std::string& postfix)
 {
     std::string level_name = Engine_GetLevelName(gameflow_manager.CurrentLevelPath);
 
-    std::string name = "scripts/level/";
+    std::string name = "scripts/autoexec/";
 
     if(game_version < TR_II)
     {
