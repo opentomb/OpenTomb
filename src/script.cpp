@@ -2090,7 +2090,7 @@ uint32_t lua_GetEntityMeshCount(int id)
 
 void lua_SetEntityMeshswap(int id_dest, int id_src)
 {
-    std::shared_ptr<Entity>         ent_dest;
+    std::shared_ptr<Entity> ent_dest;
     SkeletalModel* model_src;
 
     ent_dest = engine_world.getEntityByID(id_dest);
