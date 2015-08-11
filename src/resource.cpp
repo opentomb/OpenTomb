@@ -39,12 +39,6 @@
 #include "vmath.h"
 #include "world.h"
 
-namespace
-{
-script::ScriptEngine ent_ID_override;
-script::ScriptEngine level_script;
-}
-
 void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
@@ -85,7 +79,7 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
 void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     lua::Integer _collision_type, _collision_shape, _hide;
-    lua::tie(_collision_type, _collision_shape, _hide) = level_script.call("getStaticMeshProperties", r_static->object_id);
+    lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->object_id);
 
     if(_collision_type > 0)
     {
@@ -1644,33 +1638,15 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
 
-void Res_ScriptsOpen(loader::Game game_version)
+void Res_AutoexecOpen(loader::Game engine_version)
 {
-    std::string temp_script_name = Engine_GetLevelScriptName(game_version, std::string());
-
-    level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
-    level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-    level_script.set("setSectorPortal", lua_SetSectorPortal);
-    level_script.set("setSectorFlags", lua_SetSectorFlags);
-
-    try
-    {
-        level_script.doFile("scripts/staticmesh/staticmesh_script.lua");
-    }
-    catch(lua::RuntimeError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    catch(lua::LoadError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
+    std::string temp_script_name = Engine_GetAutoexecName(engine_version, std::string());
 
     if(Engine_FileFound(temp_script_name, false))
     {
         try
         {
-            level_script.doFile(temp_script_name);
+            engine_lua.doFile(temp_script_name);
         }
         catch(lua::RuntimeError& error)
         {
@@ -1681,106 +1657,56 @@ void Res_ScriptsOpen(loader::Game game_version)
             Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
-
-    try
-    {
-        ent_ID_override.doFile("scripts/entity/entity_model_ID_override.lua");
-    }
-    catch(lua::RuntimeError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    catch(lua::LoadError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-}
-
-void Res_ScriptsClose()
-{
-}
-
-void Res_AutoexecOpen(loader::Game engine_version)
-{
-    std::string temp_script_name = Engine_GetLevelScriptName(engine_version, "_autoexec");
-
-    try
-    {
-        engine_lua.doFile("scripts/autoexec.lua");    // do standart autoexec
-    }
-    catch(lua::RuntimeError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    catch(lua::LoadError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    try
-    {
-        engine_lua.doFile(temp_script_name);          // do level-specific autoexec
-    }
-    catch(lua::RuntimeError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
-    catch(lua::LoadError& error)
-    {
-        Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-    }
 }
 
 void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
 {
     world->engineVersion = loader::gameToEngine(tr->m_gameVersion);
 
-    Res_ScriptsOpen(tr->m_gameVersion);   // Open configuration scripts.
+    Res_AutoexecOpen(tr->m_gameVersion);    // Open and do preload autoexec.
+    engine_lua.call("autoexec_PreLoad");
     Gui_DrawLoadScreen(150);
 
-    Res_GenRBTrees(world);               // Generate red-black trees
+    Res_GenRBTrees(world);
     Gui_DrawLoadScreen(200);
 
-    TR_GenTextures(world, tr);          // Generate OGL textures
+    TR_GenTextures(world, tr);
     Gui_DrawLoadScreen(300);
 
-    TR_GenAnimCommands(world, tr);      // Copy anim commands
+    TR_GenAnimCommands(world, tr);
     Gui_DrawLoadScreen(310);
 
-    TR_GenAnimTextures(world, tr);      // Generate animated textures
+    TR_GenAnimTextures(world, tr);
     Gui_DrawLoadScreen(320);
 
-    TR_GenMeshes(world, tr);            // Generate all meshes
+    TR_GenMeshes(world, tr);
     Gui_DrawLoadScreen(400);
 
-    TR_GenSprites(world, tr);           // Generate all sprites
+    TR_GenSprites(world, tr);
     Gui_DrawLoadScreen(420);
 
-    TR_GenBoxes(world, tr);             // Generate boxes.
+    TR_GenBoxes(world, tr);
     Gui_DrawLoadScreen(440);
 
-    TR_GenCameras(world, tr);           // Generate cameras & sinks.
+    TR_GenCameras(world, tr);
     Gui_DrawLoadScreen(460);
 
-    TR_GenRooms(world, tr);             // Build all rooms
+    TR_GenRooms(world, tr);
     Gui_DrawLoadScreen(500);
 
-    Res_GenRoomFlipMap(world);           // Generate room flipmaps
+    Res_GenRoomFlipMap(world);
     Gui_DrawLoadScreen(520);
-
-    // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
 
     TR_GenSkeletalModels(world, tr);
     Gui_DrawLoadScreen(600);
 
-    TR_GenEntities(world, tr);          // Build all moveables (entities)
+    TR_GenEntities(world, tr);
     Gui_DrawLoadScreen(650);
 
-    Res_GenBaseItems(world);             // Generate inventory item entries.
+    Res_GenBaseItems(world);
     Gui_DrawLoadScreen(680);
 
-    // Generate sprite buffers. Only now because entity generation adds new sprites
-
-    Res_GenSpritesBuffer(world);
+    Res_GenSpritesBuffer(world);        // Should be done ONLY after TR_GenEntities.
     Gui_DrawLoadScreen(700);
 
     TR_GenRoomProperties(world, tr);
@@ -1789,39 +1715,23 @@ void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
     Res_GenRoomCollision(world);
     Gui_DrawLoadScreen(800);
 
-    // Initialize audio.
-
     TR_GenSamples(world, tr);
     Gui_DrawLoadScreen(850);
 
-    // Find and set skybox.
-
-    world->sky_box = Res_GetSkybox(world, engine_world.engineVersion);
+    world->sky_box = Res_GetSkybox(world, world->engineVersion);
     Gui_DrawLoadScreen(860);
-
-    // Generate entity functions.
 
     Res_GenEntityFunctions(world->entity_tree);
     Gui_DrawLoadScreen(910);
 
-    // Load entity collision flags and ID overrides from script.
-
-    Res_ScriptsClose();
-    Gui_DrawLoadScreen(940);
-
-    // Generate VBOs for meshes.
-
     Res_GenVBOs(world);
     Gui_DrawLoadScreen(950);
 
-    // Process level autoexec loading.
-
-    Res_AutoexecOpen(tr->m_gameVersion);
+    engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
+    engine_lua.call("autoexec_PostLoad");
     Gui_DrawLoadScreen(960);
 
-    // Fix initial room states
-
-    Res_FixRooms(world);
+    Res_FixRooms(world);                        // Fix initial room states
     Gui_DrawLoadScreen(970);
 }
 
@@ -2266,13 +2176,6 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
 
 void Res_GenRoomCollision(World *world)
 {
-    /*
-    if(level_script.state != nullptr)
-    {
-        lua_CallVoidFunc(level_script.state, "doTuneSector");
-    }
-    */
-
     for(std::shared_ptr<Room> room : world->rooms)
     {
         // Inbetween polygons array is later filled by loop which scans adjacent
@@ -2528,7 +2431,7 @@ void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr)
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
 
-        level_script["UVRotate"].get(uvrotate_script);
+        engine_lua["UVRotate"].get(uvrotate_script);
 
         if(i < num_uvrotates)
         {
@@ -3747,7 +3650,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
         entity->m_timer = 0.0;
 
         entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
-        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
         entity->m_moveType = MoveType::StaticPos;
         entity->m_inertiaLinear = 0.0;
         entity->m_inertiaAngular[0] = 0.0;
@@ -3757,11 +3660,11 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
         if(entity->m_bf.animations.model == nullptr)
         {
-            int id = ent_ID_override.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+            int id = engine_lua.call("getOverridedID", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
-        int replace_anim_id = ent_ID_override.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+        int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
         if(replace_anim_id > 0)
         {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);

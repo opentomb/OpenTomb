@@ -143,9 +143,12 @@ namespace script
 
         void clean()
         {
+            call("st_Clear");
             call("tlist_Clear");
             call("entfuncs_Clear");
             call("fe_Clear");
+
+            call("clearAutoexec");
         }
 
         void doTasks(btScalar time)

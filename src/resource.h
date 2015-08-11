@@ -113,10 +113,8 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static);
 
 bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 
-// Open/close scripts.
+// Open autoexec.
 
-void Res_ScriptsOpen(loader::Game game_version);
-void Res_ScriptsClose();
 void Res_AutoexecOpen(loader::Game engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
