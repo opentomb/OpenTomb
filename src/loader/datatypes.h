@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 #include "io/sdlreader.h"
 
@@ -264,7 +265,7 @@ struct Portal
             return portal;
         if((portal.normal.x == 0.0f) && (portal.normal.y == 0.0f) && (portal.normal.z == -1.0f))
             return portal;
-        // Sys_extWarn("read_tr_room_portal: normal not on world axis");
+        // std::cerr << "read_tr_room_portal: normal not on world axis");
         return portal;
     }
 };
@@ -432,21 +433,19 @@ struct Light
         light.pos2 = Vertex::read32(reader);
         light.dir2 = Vertex::read32(reader);
         light.light_type = reader.readU8();
-#if 0
+
         auto temp = reader.readU8();
         if(temp != 0xCD)
-            Sys_extWarn("read_tr5_room_light: seperator2 has wrong value");
+            std::cerr << "read_tr5_room_light: seperator2 has wrong value\n";
 
         temp = reader.readU8();
         if(temp != 0xCD)
-            Sys_extWarn("read_tr5_room_light: seperator3 has wrong value");
+            std::cerr << "read_tr5_room_light: seperator3 has wrong value\n";
 
         temp = reader.readU8();
         if(temp != 0xCD)
-            Sys_extWarn("read_tr5_room_light: seperator4 has wrong value");
-#else
-        reader.skip(3);
-#endif
+            std::cerr << "read_tr5_room_light: seperator4 has wrong value\n";
+
         return light;
     }
 };
@@ -502,11 +501,7 @@ struct Layer
         layer.unknown_l3 = reader.readU16();
         layer.unknown_l4 = reader.readU16();
         if(reader.readU16() != 0)
-        {
-#if 0
-            Sys_extWarn("read_tr5_room_layer: filler2 has wrong value");
-#endif
-        }
+            std::cerr << "read_tr5_room_layer: filler2 has wrong value\n";
 
         layer.bounding_box_x1 = reader.readF();
         layer.bounding_box_y1 = -reader.readF();
@@ -515,11 +510,7 @@ struct Layer
         layer.bounding_box_y2 = -reader.readF();
         layer.bounding_box_z2 = -reader.readF();
         if(reader.readU32() != 0)
-        {
-#if 0
-            Sys_extWarn("read_tr5_room_layer: filler3 has wrong value");
-#endif
-        }
+            std::cerr << "read_tr5_room_layer: filler3 has wrong value\n";
 
         layer.unknown_l6a = reader.readI16();
         layer.unknown_l6b = reader.readI16();
@@ -1113,14 +1104,11 @@ struct Room
     static Room readTr5(io::SDLReader& reader)
     {
         if(reader.readU32() != 0x414C4558)
-        {
-#if 0
-            Sys_extError("read_tr5_room: 'XELA' not found");
-#endif
-        }
+            std::cerr << "read_tr5_room: 'XELA' not found\n";
 
-        auto room_data_size = reader.readU32();
-        auto pos = reader.tell();
+        const auto room_data_size = reader.readU32();
+        const auto pos = reader.tell();
+        const auto endPos = pos + room_data_size;
 
         Room room;
         room.intensity1 = 32767;
@@ -1129,9 +1117,7 @@ struct Room
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator1 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator1 has wrong value\n";
         }
 
         /*portal_offset = */reader.readI32();             // StartPortalOffset?   // endSDOffset
@@ -1139,9 +1125,7 @@ struct Room
         auto temp = reader.readU32();
         if((temp != 0) && (temp != 0xCDCDCDCD))
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator2 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator2 has wrong value\n";
         }
 
         auto static_meshes_offset = reader.readU32();     // endPortalOffset
@@ -1164,17 +1148,13 @@ struct Room
         room.lights.resize(reader.readU16());
         if(room.lights.size() > 512)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: num_lights > 512");
-#endif
+            std::cerr << "read_tr5_room: num_lights > 512\n";
         }
 
         room.static_meshes.resize(reader.readU16());
         if(room.static_meshes.size() > 512)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: num_static_meshes > 512");
-#endif
+            std::cerr << "read_tr5_room: num_static_meshes > 512\n";
         }
 
         room.reverb_info = reader.readU8();
@@ -1183,37 +1163,27 @@ struct Room
 
         if(reader.readU32() != 0x00007FFF)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: filler1 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: filler1 has wrong value\n";
         }
 
         if(reader.readU32() != 0x00007FFF)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: filler2 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: filler2 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator4 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator4 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator5 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator5 has wrong value\n";
         }
 
         if(reader.readU32() != 0xFFFFFFFF)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator6 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator6 has wrong value\n";
         }
 
         room.alternate_room = reader.readI16();
@@ -1227,9 +1197,7 @@ struct Room
         temp = reader.readU32();
         if((temp != 0) && (temp != 0xCDCDCDCD))
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator7 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator7 has wrong value\n";
         }
 
         room.unknown_r4a = reader.readU16();
@@ -1241,45 +1209,33 @@ struct Room
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator8 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator8 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator9 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator9 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator10 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator10 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator11 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator11 has wrong value\n";
         }
 
         temp = reader.readU32();
         if((temp != 0) && (temp != 0xCDCDCDCD))
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator12 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator12 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator13 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator13 has wrong value\n";
         }
 
         auto num_triangles = reader.readU32();
@@ -1287,9 +1243,7 @@ struct Room
             num_triangles = 0;
         if(num_triangles > 512)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: num_triangles > 512");
-#endif
+            std::cerr << "read_tr5_room: num_triangles > 512\n";
         }
         room.triangles.resize(num_triangles);
 
@@ -1298,21 +1252,18 @@ struct Room
             num_rectangles = 0;
         if(num_rectangles > 1024)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: num_rectangles > 1024");
-#endif
+            std::cerr << "read_tr5_room: num_rectangles > 1024\n";
         }
         room.rectangles.resize(num_rectangles);
 
         if(reader.readU32() != 0)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator14 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator14 has wrong value\n";
         }
 
         /*light_size = */reader.readU32();
-        if(reader.readU32() != room.lights.size())
+        auto numL2 = reader.readU32();
+        if(numL2 != room.lights.size())
             throw std::runtime_error("read_tr5_room: room.num_lights2 != room.num_lights");
 
         room.unknown_r6 = reader.readU32();
@@ -1334,30 +1285,22 @@ struct Room
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator15 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator15 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator16 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator16 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator17 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator17 has wrong value\n";
         }
 
         if(reader.readU32() != 0xCDCDCDCD)
         {
-#if 0
-            Sys_extWarn("read_tr5_room: seperator18 has wrong value");
-#endif
+            std::cerr << "read_tr5_room: seperator18 has wrong value\n";
         }
 
         for(size_t i = 0; i < room.lights.size(); i++)
@@ -1430,7 +1373,7 @@ struct Room
             }
         }
 
-        reader.seek(pos + room_data_size);
+        reader.seek(endPos);
 
         return room;
     }
@@ -1656,9 +1599,7 @@ struct Moveable
         moveable = readTr1(reader);
         if(reader.readU16() != 0xFFEF)
         {
-#if 0
-            Sys_extWarn("read_tr5_moveable: filler has wrong value");
-#endif
+            std::cerr << "read_tr5_moveable: filler has wrong value\n";
         }
         return moveable;
     }
@@ -1764,10 +1705,8 @@ struct SpriteTexture
         SpriteTexture sprite_texture;
 
         sprite_texture.tile = reader.readU16();
-#if 0
         if(sprite_texture.tile > 64)
-            Sys_extWarn("sprite_texture.tile > 64");
-#endif
+            std::cerr << "sprite_texture.tile > 64\n";
 
         int tx = reader.readU8();
         int ty = reader.readU8();
@@ -1796,10 +1735,8 @@ struct SpriteTexture
     {
         SpriteTexture sprite_texture;
         sprite_texture.tile = reader.readU16();
-#if 0
         if(sprite_texture.tile > 128)
-            Sys_extWarn("sprite_texture.tile > 128");
-#endif
+            std::cerr << "sprite_texture.tile > 128\n";
 
         int tx = reader.readU8();
         int ty = reader.readU8();
@@ -2158,13 +2095,11 @@ struct ObjectTexture
         ObjectTexture object_texture;
         object_texture.transparency_flags = reader.readU16();
         object_texture.tile_and_flag = reader.readU16();
-#if 0
         if(object_texture.tile_and_flag > 64)
-            Sys_extWarn("object_texture.tile_and_flags > 64");
+            std::cerr << "object_texture.tile_and_flags > 64\n";
 
         if((object_texture.tile_and_flag & (1 << 15)) != 0)
-            Sys_extWarn("object_texture.tile_and_flags has top bit set!");
-#endif
+            std::cerr << "object_texture.tile_and_flags has top bit set!\n";
 
         // only in TR4
         object_texture.flags = 0;
@@ -2185,10 +2120,8 @@ struct ObjectTexture
         ObjectTexture object_texture;
         object_texture.transparency_flags = reader.readU16();
         object_texture.tile_and_flag = reader.readU16();
-#if 0
         if((object_texture.tile_and_flag & 0x7FFF) > 128)
-            Sys_extWarn("object_texture.tile > 128");
-#endif
+            std::cerr << "object_texture.tile > 128\n";
 
         object_texture.flags = reader.readU16();
         object_texture.vertices[0] = ObjectTextureVertex::readTr4(reader);
@@ -2207,9 +2140,7 @@ struct ObjectTexture
         ObjectTexture object_texture = readTr4(reader);
         if(reader.readU16() != 0)
         {
-#if 0
-            Sys_extWarn("read_tr5_level: obj_tex trailing bitu16 != 0");
-#endif
+            std::cerr << "read_tr5_level: obj_tex trailing bitu16 != 0\n";
         }
         return object_texture;
     }

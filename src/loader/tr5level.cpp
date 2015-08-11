@@ -83,21 +83,14 @@ void TR5Level::load()
     comp_size = m_reader.readU32();
     if(comp_size > 0)
     {
-        if(m_textile32.empty())
-        {
-            if((uncomp_size / (256 * 256 * 4)) > 3)
-                std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
+        if((uncomp_size / (256 * 256 * 4)) > 3)
+            std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
 
-            std::vector<uint8_t> comp_buffer(comp_size);
-            m_reader.readBytes(comp_buffer.data(), comp_size);
+        std::vector<uint8_t> comp_buffer(comp_size);
+        m_reader.readBytes(comp_buffer.data(), comp_size);
 
-            io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-            newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
-        }
-        else
-        {
-            m_reader.skip(uncomp_size);
-        }
+        io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
+        newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
     }
 
     m_laraType = m_reader.readU16();
