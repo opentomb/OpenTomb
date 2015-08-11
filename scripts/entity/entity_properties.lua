@@ -492,8 +492,8 @@ tr3_entity_tbl[86] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_T
 tr3_entity_tbl[87] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = COLLISION_TYPE_DYNAMIC, shape = COLLISION_SHAPE_SPHERE, func = "boulder"};                 -- Boulder / Barrel
 tr3_entity_tbl[89] = {coll = COLLISION_TYPE_DYNAMIC, shape = COLLISION_SHAPE_SPHERE, func = "boulder"};                 -- Giant boulder (Temple of Puna)
-tr3_entity_tbl[90] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, hide = true, func = "dart_tr3"};                 -- Disk (like dart)
-tr3_entity_tbl[91] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, hide = true, func = "dartgun_tr3"};                 -- Dart shooter
+tr3_entity_tbl[90] = {coll = COLLISION_TYPE_GHOST, shape = COLLISION_SHAPE_BOX, func = "dart_tr3"};                 -- Disk (like dart)
+tr3_entity_tbl[91] = {coll = COLLISION_TYPE_NONE, shape = COLLISION_SHAPE_BOX, hide = true, func = "dartgun_tr3"};                 -- Dart shooter
 tr3_entity_tbl[94] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                 -- Spiked impaled skeleton / Slamming door
 tr3_entity_tbl[97] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
 tr3_entity_tbl[98] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
