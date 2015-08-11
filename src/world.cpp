@@ -393,10 +393,10 @@ bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_door
 }
 
 
-void Sector_HighestFloorCorner(room_sector_p rs, btScalar v[3])
+void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
 {
-    btScalar *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    btScalar *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
+    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
 
     if(r1[2] > r2[2])
     {
@@ -409,10 +409,10 @@ void Sector_HighestFloorCorner(room_sector_p rs, btScalar v[3])
 }
 
 
-void Sector_LowestCeilingCorner(room_sector_p rs, btScalar v[3])
+void Sector_LowestCeilingCorner(room_sector_p rs, float v[3])
 {
-    btScalar *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
-    btScalar *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
+    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
+    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
 
     if(r1[2] < r2[2])
     {
@@ -650,7 +650,7 @@ void RBItemFree(void *x)
 }
 
 
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id)
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id)
 {
     if(engine_world.entity_tree != NULL)
     {
@@ -797,7 +797,7 @@ struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
 }
 
 
-inline int Room_IsPointIn(room_p room, btScalar dot[3])
+inline int Room_IsPointIn(room_p room, float dot[3])
 {
     return (dot[0] >= room->bb_min[0]) && (dot[0] < room->bb_max[0]) &&
            (dot[1] >= room->bb_min[1]) && (dot[1] < room->bb_max[1]) &&
@@ -805,7 +805,7 @@ inline int Room_IsPointIn(room_p room, btScalar dot[3])
 }
 
 
-room_p Room_FindPos(btScalar pos[3])
+room_p Room_FindPos(float pos[3])
 {
     room_p r = engine_world.rooms;
     for(uint32_t i=0;i<engine_world.room_count;i++,r++)
@@ -822,7 +822,7 @@ room_p Room_FindPos(btScalar pos[3])
 }
 
 
-room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
+room_p Room_FindPosCogerrence(float new_pos[3], room_p room)
 {
     if(room == NULL)
     {
@@ -891,7 +891,7 @@ room_p Room_GetByID(world_p w, unsigned int ID)
 }
 
 
-room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
+room_sector_p Room_GetSectorRaw(room_p room, float pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -916,7 +916,7 @@ room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
 }
 
 
-room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
+room_sector_p Room_GetSectorCheckFlip(room_p room, float pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -996,7 +996,7 @@ room_sector_p Sector_GetHighest(room_sector_p sector)
 }
 
 
-room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
+room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;

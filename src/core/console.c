@@ -5,13 +5,46 @@
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_keycode.h>
 
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+
 #include "gl_font.h"
 #include "gl_util.h"
 #include "console.h"
 #include "system.h"
 #include "vmath.h"
 
-static console_info_t           con_base;
+
+static struct
+{
+    GLfloat                     background_color[4];
+
+    uint16_t                    log_lines_count;            // Amount of log lines to use
+    uint16_t                    log_pos;                    // Current log position
+    char                      **log_lines;                  // Console lines
+
+    uint16_t                    line_count;                 // Amount of shown lines
+    uint16_t                   *line_style_id;
+    char                      **line_text;                  // Console text
+
+    uint16_t                    line_size;                  // Console line size
+    int16_t                     line_height;                // Height, including spacing
+
+    uint16_t                    showing_lines;              // Amount of visible lines
+    int16_t                     cursor_pos;                 // Current cursor position, in symbols
+    int16_t                     cursor_x;                   // Cursor position in pixels
+    int16_t                     cursor_y;
+    
+    float                       spacing;                    // Line spacing
+    float                       cursor_time;                // Current cursor draw time
+    float                       show_cursor_period;
+    
+    int8_t                      show_cursor;                // Cursor visibility flag
+    int8_t                      show_console;               // Visibility flag
+} con_base;
+
+
 static gl_font_manager_p        con_font_manager = NULL;
 static GLuint                   backgroundBuffer = 0;
 static GLuint                   cursorBuffer = 0;
@@ -167,9 +200,85 @@ void Con_Destroy()
 }
 
 
-console_info_p Con_GetConsole()
+void Con_ParseSettings(struct lua_State *lua)
 {
-    return &con_base;
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+        float t;
+        
+        lua_getglobal(lua, "console");
+        lua_getfield(lua, -1, "background_color");
+        if(lua_istable(lua, -1))
+        {
+            lua_getfield(lua, -1, "r");
+            con_base.background_color[0] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+            
+            lua_getfield(lua, -1, "g");
+            con_base.background_color[1] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+            
+            lua_getfield(lua, -1, "b");
+            con_base.background_color[2] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+            
+            lua_getfield(lua, -1, "a");
+            con_base.background_color[3] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+        }
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "spacing");
+        t = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        if(t >= CON_MIN_LINE_INTERVAL && t <= CON_MAX_LINE_INTERVAL)
+        {
+            con_base.spacing = t;
+        }
+        
+        lua_getfield(lua, -1, "line_size");
+        t = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
+        {
+            con_base.line_size = t;
+        }
+        
+        lua_getfield(lua, -1, "showing_lines");
+        t = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        if(t >= CON_MIN_LINES && t <= CON_MAX_LINES)
+        {
+            con_base.showing_lines = t;
+        }
+        
+        lua_getfield(lua, -1, "log_size");
+        t = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
+        {
+            con_base.log_lines_count = t;
+        }
+        
+        lua_getfield(lua, -1, "lines_count");
+        t = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
+        {
+            con_base.line_count = t;
+        }
+
+        lua_getfield(lua, -1, "show");
+        con_base.show_console = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+        
+        lua_getfield(lua, -1, "show_cursor_period");
+        con_base.show_cursor_period = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_settop(lua, top);
+    }
 }
 
 

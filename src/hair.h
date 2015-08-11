@@ -50,6 +50,6 @@ void Hair_Update(struct entity_s *entity);
 
 int Hair_GetElementsCount(struct hair_s *hair);
 
-int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, btScalar tr[16]);
+int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16]);
 
 #endif  // HAIR_H

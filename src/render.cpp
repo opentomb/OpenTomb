@@ -118,10 +118,10 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
     return ret;
 }
 
-void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
+void Render_SkyBox(const float modelViewProjectionMatrix[16])
 {
-    btScalar tr[16];
-    btScalar *p;
+    float tr[16];
+    float *p;
 
     if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
@@ -131,7 +131,7 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
         vec3_add(tr+12, renderer.cam->pos, p);
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
-        btScalar fullView[16];
+        float fullView[16];
         Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
 
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getStaticMeshShader();
@@ -149,7 +149,7 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
+void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
 {
     if(mesh->num_animated_elements > 0)
     {
@@ -207,7 +207,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     if (overrideVertices != NULL)
     {
         // Standard normals are always float. Overridden normals (from skinning)
-        // are btScalar.
+        // are float.
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
         glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
@@ -286,7 +286,7 @@ void Render_BSPPolygon(struct bsp_polygon_s *p)
 
 void Render_BSPFrontToBack(struct bsp_node_s *root)
 {
-    btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
+    float d = vec3_plane_dist(root->plane, engine_camera.pos);
 
     if(d >= 0)
     {
@@ -334,7 +334,7 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
 
 void Render_BSPBackToFront(struct bsp_node_s *root)
 {
-    btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
+    float d = vec3_plane_dist(root->plane, engine_camera.pos);
 
     if(d >= 0)
     {
@@ -394,13 +394,13 @@ void Render_UpdateAnimTextures()                                                
         if(seq->uvrotate)
         {
             int j = (seq->frame_time / seq->frame_rate);
-            seq->frame_time -= (btScalar)j * seq->frame_rate;
+            seq->frame_time -= (float)j * seq->frame_rate;
             seq->frames[seq->current_frame].current_uvrotate = seq->frame_time * seq->frames[seq->current_frame].uvrotate_max / seq->frame_rate;
         }
         else if(seq->frame_time >= seq->frame_rate)
         {
             int j = (seq->frame_time / seq->frame_rate);
-            seq->frame_time -= (btScalar)j * seq->frame_rate;
+            seq->frame_time -= (float)j * seq->frame_rate;
 
             switch(seq->anim_type)
             {
@@ -443,11 +443,11 @@ void Render_UpdateAnimTextures()                                                
 }
 
 
-void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
+void Render_SkinMesh(struct base_mesh_s *mesh, float transform[16])
 {
     uint32_t i;
     vertex_p v;
-    btScalar *p_vertex, *src_v, *dst_v, t;
+    float *p_vertex, *src_v, *dst_v, t;
     GLfloat *p_normale, *src_n, *dst_n;
     int8_t *ch = mesh->skin_map;
     size_t buf_size = mesh->vertex_count * 3 * sizeof(GLfloat);
@@ -508,7 +508,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -517,11 +517,11 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 
     for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
     {
-        btScalar mvTransform[16];
+        float mvTransform[16];
         Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
         glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
 
-        btScalar mvpTransform[16];
+        float mvpTransform[16];
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
@@ -541,7 +541,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16])
+const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const float modelViewMatrix[16])
 {
     // Calculate lighting
     const lit_shader_description *shader;
@@ -628,7 +628,7 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
     return shader;
 }
 
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Entity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -640,12 +640,12 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
 
     if(entity->bf->animations.model && entity->bf->animations.model->animations)
     {
-        btScalar subModelView[16];
-        btScalar subModelViewProjection[16];
+        float subModelView[16];
+        float subModelViewProjection[16];
         if(entity->bf->bone_tag_count == 1)
         {
-            btScalar scaledTransform[16];
-            memcpy(scaledTransform, entity->transform, sizeof(btScalar) * 16);
+            float scaledTransform[16];
+            memcpy(scaledTransform, entity->transform, sizeof(float) * 16);
             Mat4_Scale(scaledTransform, entity->scaling[0], entity->scaling[1], entity->scaling[2]);
             Mat4_Mat4_mul(subModelView, modelViewMatrix, scaledTransform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, scaledTransform);
@@ -659,7 +659,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     }
 }
 
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Hair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
     {
@@ -668,9 +668,9 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
-    btScalar subModelView[16];
-    btScalar subModelViewProjection[16];
-    btScalar transform[16];
+    float subModelView[16];
+    float subModelViewProjection[16];
+    float transform[16];
     base_mesh_p mesh;
     for(int h=0; h<entity->character->hair_count; h++)
     {
@@ -691,7 +691,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Room(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
     engine_container_p cont;
     entity_p ent;
@@ -756,7 +756,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
-        btScalar modelViewProjectionTransform[16];
+        float modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
 
         const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(room->light_mode == 1, room->flags & 1);
@@ -791,7 +791,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 continue;
             }
 
-            btScalar transform[16];
+            float transform[16];
             Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
             glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, transform);
             base_mesh_s *mesh = room->static_mesh[i].mesh;
@@ -839,7 +839,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 }
 
 
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16])
+void Render_Room_Sprites(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float projectionMatrix[16])
 {
     if (room->sprites_count > 0 && room->sprite_buffer)
     {
@@ -902,7 +902,7 @@ int Render_AddRoom(struct room_s *room)
 {
     int ret = 0;
     engine_container_p cont;
-    btScalar dist, centre[3];
+    float dist, centre[3];
 
     if(room->is_in_r_list || !room->active)
     {
@@ -1065,7 +1065,7 @@ void Render_DrawList()
                 entity_p ent = (entity_p)cont->object;
                 if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
-                    btScalar tr[16];
+                    float tr[16];
                     for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
                     {
                         if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
@@ -1081,7 +1081,7 @@ void Render_DrawList()
 
     if((engine_world.Character != NULL) && (engine_world.Character->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
-        btScalar tr[16];
+        float tr[16];
         entity_p ent = engine_world.Character;
         for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
         {
@@ -1138,7 +1138,7 @@ void Render_DrawList_DebugLines()
     if((renderer.style & R_DRAW_NORMALS) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
         GLfloat tr[16];
-        btScalar *p;
+        float *p;
         Mat4_E_macro(tr);
         p = renderer.world->sky_box->animations->frames->bone_tags->offset;
         vec3_add(tr+12, renderer.cam->pos, p);
@@ -1426,7 +1426,7 @@ void CRenderDebugDrawer::render()
 }
 
 
-void CRenderDebugDrawer::drawAxis(btScalar r, btScalar transform[16])
+void CRenderDebugDrawer::drawAxis(float r, float transform[16])
 {
     GLfloat *v0, *v;
 
@@ -1487,7 +1487,7 @@ void CRenderDebugDrawer::drawFrustum(struct frustum_s *f)
     if(f != NULL)
     {
         GLfloat *v, *v0;
-        btScalar *fv = f->vertex;
+        float *fv = f->vertex;
 
         if(m_lines + f->vertex_count >= m_max_lines)
         {
@@ -1527,7 +1527,7 @@ void CRenderDebugDrawer::drawPortal(struct portal_s *p)
     if(p != NULL)
     {
         GLfloat *v, *v0;
-        btScalar *pv = p->vertex;
+        float *pv = p->vertex;
 
         if(m_lines + p->vertex_count >= m_max_lines)
         {
@@ -1562,7 +1562,7 @@ void CRenderDebugDrawer::drawPortal(struct portal_s *p)
 }
 
 
-void CRenderDebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform)
+void CRenderDebugDrawer::drawBBox(float bb_min[3], float bb_max[3], float *transform)
 {
     if(m_lines + 12 < m_max_lines)
     {
@@ -1657,12 +1657,12 @@ void CRenderDebugDrawer::drawOBB(struct obb_s *obb)
 }
 
 
-void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
+void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals)
 {
     if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
-        btScalar n[3];
+        float n[3];
 
         if(m_lines + mesh->vertex_count >= m_max_lines)
         {
@@ -1674,8 +1674,8 @@ void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
         m_lines += mesh->vertex_count;
         if(overrideVertices)
         {
-            btScalar *ov = (btScalar*)overrideVertices;
-            btScalar *on = (btScalar*)overrideNormals;
+            float *ov = (float*)overrideVertices;
+            float *on = (float*)overrideNormals;
             for(uint32_t i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
             {
                 Mat4_vec3_mul_macro(v, transform, ov);
@@ -1707,11 +1707,11 @@ void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
 }
 
 
-void CRenderDebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
+void CRenderDebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16])
 {
     if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
     {
-        btScalar tr[16];
+        float tr[16];
 
         ss_bone_tag_p btag = bframe->bone_tags;
         for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
@@ -1756,8 +1756,8 @@ void CRenderDebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 {
     if(m_lines + 12 < m_max_lines)
     {
-        btScalar bb_min[3] = {(btScalar)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->floor};
-        btScalar bb_max[3] = {(btScalar)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->ceiling};
+        float bb_min[3] = {(float)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (float)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (float)rs->floor};
+        float bb_max[3] = {(float)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (float)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (float)rs->ceiling};
 
         drawBBox(bb_min, bb_max, NULL);
     }
@@ -1861,7 +1861,7 @@ void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
 }
 
 
-void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], const btScalar color_from[3], const btScalar color_to[3])
+void CRenderDebugDrawer::drawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3])
 {
     GLfloat *v;
 
@@ -1885,11 +1885,11 @@ void CRenderDebugDrawer::drawLine(const btScalar from[3], const btScalar to[3], 
 }
 
 
-void CRenderDebugDrawer::drawContactPoint(const btScalar pointOnB[3], const btScalar normalOnB[3], btScalar distance, int lifeTime, const btScalar color[3])
+void CRenderDebugDrawer::drawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3])
 {
     if(m_lines + 2 < m_max_lines)
     {
-        btScalar to[3];
+        float to[3];
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
 
         m_lines += 2;

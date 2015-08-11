@@ -59,63 +59,63 @@ typedef struct engine_container_s
 
 typedef struct engine_control_state_s
 {
-    btScalar free_look_speed;
-    btScalar cam_distance;
-    btScalar look_axis_x;                       // Unified look axis data.
-    btScalar look_axis_y;
+    float       free_look_speed;
+    float       cam_distance;
+    float       look_axis_x;                       // Unified look axis data.
+    float       look_axis_y;
     
-    int8_t   free_look;
-    int8_t   mouse_look;
-    int8_t   noclip;
-    int8_t   move_forward;                      // Directional movement keys.
-    int8_t   move_backward;
-    int8_t   move_left;
-    int8_t   move_right;
-    int8_t   move_up;                           // These are not typically used.
-    int8_t   move_down;
+    int8_t      free_look;
+    int8_t      mouse_look;
+    int8_t      noclip;
+    int8_t      move_forward;                      // Directional movement keys.
+    int8_t      move_backward;
+    int8_t      move_left;
+    int8_t      move_right;
+    int8_t      move_up;                           // These are not typically used.
+    int8_t      move_down;
 
-    int8_t   look_up;                           // Look (camera) keys.
-    int8_t   look_down;
-    int8_t   look_left;
-    int8_t   look_right;
-    int8_t   look_roll_left;
-    int8_t   look_roll_right;
+    int8_t      look_up;                           // Look (camera) keys.
+    int8_t      look_down;
+    int8_t      look_left;
+    int8_t      look_right;
+    int8_t      look_roll_left;
+    int8_t      look_roll_right;
 
-    int8_t   do_jump;                              // Eventual actions.
-    int8_t   do_draw_weapon;
-    int8_t   do_roll;
+    int8_t      do_jump;                              // Eventual actions.
+    int8_t      do_draw_weapon;
+    int8_t      do_roll;
 
-    int8_t   state_action;                         // Conditional actions.
-    int8_t   state_walk;
-    int8_t   state_sprint;
-    int8_t   state_crouch;
-    int8_t   state_look;
+    int8_t      state_action;                         // Conditional actions.
+    int8_t      state_walk;
+    int8_t      state_sprint;
+    int8_t      state_crouch;
+    int8_t      state_look;
 
-    int8_t   use_flare;                            // Use item hotkeys.
-    int8_t   use_big_medi;
-    int8_t   use_small_medi;
+    int8_t      use_flare;                            // Use item hotkeys.
+    int8_t      use_big_medi;
+    int8_t      use_small_medi;
 
-    int8_t   use_prev_weapon;                      // Weapon hotkeys.
-    int8_t   use_next_weapon;
-    int8_t   use_weapon1;
-    int8_t   use_weapon2;
-    int8_t   use_weapon3;
-    int8_t   use_weapon4;
-    int8_t   use_weapon5;
-    int8_t   use_weapon6;
-    int8_t   use_weapon7;
-    int8_t   use_weapon8;
+    int8_t      use_prev_weapon;                      // Weapon hotkeys.
+    int8_t      use_next_weapon;
+    int8_t      use_weapon1;
+    int8_t      use_weapon2;
+    int8_t      use_weapon3;
+    int8_t      use_weapon4;
+    int8_t      use_weapon5;
+    int8_t      use_weapon6;
+    int8_t      use_weapon7;
+    int8_t      use_weapon8;
 
 
-    int8_t   gui_pause;                         // GUI keys - not sure if it must be here.
-    int8_t   gui_inventory;
+    int8_t      gui_pause;                         // GUI keys - not sure if it must be here.
+    int8_t      gui_inventory;
 
 }engine_control_state_t, *engine_control_state_p;
 
 
-extern btScalar                                 engine_frame_time;
-extern struct camera_s                          engine_camera;
-extern struct world_s                           engine_world;
+extern float                                 engine_frame_time;
+extern struct camera_s                       engine_camera;
+extern struct world_s                        engine_world;
 
 
 engine_container_p Container_Create();
@@ -128,7 +128,7 @@ void Engine_InitDefaultGlobals();
 void Engine_Destroy();
 void Engine_Shutdown(int val) __attribute__((noreturn));
 
-void Engine_Frame(btScalar time);
+void Engine_Frame(float time);
 void Engine_Display();
 
 // PC-specific level loader routines.

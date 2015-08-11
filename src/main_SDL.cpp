@@ -61,7 +61,7 @@ ALCdevice              *al_device      = NULL;
 ALCcontext             *al_context     = NULL;
 
 int done = 0;
-btScalar time_scale = 1.0;
+float time_scale = 1.0;
 
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
@@ -336,8 +336,8 @@ void Engine_InitAL()
 
 int main(int argc, char **argv)
 {
-    btScalar time, newtime;
-    static btScalar oldtime = 0.0;
+    float time, newtime;
+    static float oldtime = 0.0;
 
     Engine_Start();
 
@@ -451,16 +451,16 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     Gui_Resize();
 
-    Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
+    Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
 
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
-void Engine_Frame(btScalar time)
+void Engine_Frame(float time)
 {
     static int cycles = 0;
-    static btScalar time_cycl = 0.0;
+    static float time_cycl = 0.0;
     static char fps_str[32] = "0.0";
 
     if(time > 0.1)

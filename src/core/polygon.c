@@ -46,7 +46,7 @@ void Polygon_Clear(polygon_p p)
 
 int Polygon_IsBroken(polygon_p p)
 {
-    btScalar dif[3];
+    float dif[3];
     vertex_p next_v, curr_v;
 
     if(p->vertex_count < 3)
@@ -105,7 +105,7 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
 
 void Polygon_FindNormale(polygon_p p)
 {
-    btScalar v1[3], v2[3];
+    float v1[3], v2[3];
 
     vec3_sub(v1, p->vertices[1].position, p->vertices[0].position);
     vec3_sub(v2, p->vertices[2].position, p->vertices[1].position);
@@ -115,7 +115,7 @@ void Polygon_FindNormale(polygon_p p)
 }
 
 
-void Polygon_MoveSelf(polygon_p p, btScalar move[3])
+void Polygon_MoveSelf(polygon_p p, float move[3])
 {
     vertex_p v;
 
@@ -129,7 +129,7 @@ void Polygon_MoveSelf(polygon_p p, btScalar move[3])
 }
 
 
-void Polygon_Move(polygon_p ret, polygon_p src, btScalar move[3])
+void Polygon_Move(polygon_p ret, polygon_p src, float move[3])
 {
     vertex_p ret_v, src_v;
 
@@ -145,9 +145,9 @@ void Polygon_Move(polygon_p ret, polygon_p src, btScalar move[3])
 }
 
 
-void Polygon_TransformSelf(polygon_p p, btScalar tr[16])
+void Polygon_TransformSelf(polygon_p p, float tr[16])
 {
-    btScalar v[3];
+    float v[3];
     vertex_p vp;
 
     Mat4_vec3_rot_macro(v, tr, p->plane);
@@ -165,7 +165,7 @@ void Polygon_TransformSelf(polygon_p p, btScalar tr[16])
 }
 
 
-void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16])
+void Polygon_Transform(polygon_p ret, polygon_p src, float tr[16])
 {
     vertex_p ret_v, src_v;
 
@@ -182,9 +182,9 @@ void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16])
 }
 
 
-int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t)
+int Polygon_RayIntersect(polygon_p p, float dir[3], float dot[3], float *t)
 {
-    btScalar tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];
+    float tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];
     vertex_p vp;
 
     u = vec3_dot(p->plane, dir);
@@ -224,7 +224,7 @@ int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar
 
 int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
 {
-    btScalar dist[3], dir[3], t, *result_buf, *result_v;
+    float dist[3], dir[3], t, *result_buf, *result_v;
     vertex_p prev_v, curr_v;
     size_t buf_size;
     char cnt = 0;
@@ -234,8 +234,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         return 0;                                                               // quick check
     }
 
-    buf_size = (p1->vertex_count + p2->vertex_count) * 3 * sizeof(btScalar);
-    result_buf = (btScalar*)Sys_GetTempMem(buf_size);
+    buf_size = (p1->vertex_count + p2->vertex_count) * 3 * sizeof(float);
+    result_buf = (float*)Sys_GetTempMem(buf_size);
     result_v = result_buf;
 
     /*
@@ -374,12 +374,12 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
 }
 
 
-int Polygon_SplitClassify(polygon_p p, btScalar n[4])
+int Polygon_SplitClassify(polygon_p p, float n[4])
 {
     int i;
     int positive = 0;
     int negative = 0;
-    btScalar dist;
+    float dist;
     vertex_p v;
 
     v = p->vertices;
@@ -415,11 +415,11 @@ int Polygon_SplitClassify(polygon_p p, btScalar n[4])
 /*
  * animated textures coordinates splits too!
  */
-void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back)
+void Polygon_Split(polygon_p src, float n[4], polygon_p front, polygon_p back)
 {
-    btScalar t, tmp, dir[3];
+    float t, tmp, dir[3];
     vertex_t *curr_v, *prev_v, tv;
-    btScalar dist[2];
+    float dist[2];
 
     vec4_copy(front->plane, src->plane);
     front->anim_id = src->anim_id;
@@ -506,7 +506,7 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
 }
 
 
-int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
+int Polygon_IsInsideBBox(polygon_p p, float bb_min[3], float bb_max[3])
 {
     vertex_p v = p->vertices;
 
@@ -524,7 +524,7 @@ int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
 }
 
 
-int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
+int Polygon_IsInsideBQuad(polygon_p p, float bb_min[3], float bb_max[3])
 {
     vertex_p v = p->vertices;
 

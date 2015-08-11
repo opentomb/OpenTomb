@@ -12,7 +12,7 @@
 #include "resource.h"
 
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3]);
+vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3]);
 
 void BaseMesh_Clear(base_mesh_p mesh)
 {
@@ -409,7 +409,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
     uint16_t new_frames_count;
     animation_frame_p anim = model->animations;
     bone_frame_p bf, new_bone_frames;
-    btScalar lerp, t;
+    float lerp, t;
 
     for(uint16_t i=0;i<model->animation_count;i++,anim++)
     {
@@ -444,7 +444,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                     vec3_set_zero(bf->pos);
                     vec3_set_zero(bf->move);
                     bf->command = 0x00;
-                    lerp = ((btScalar)l) / (btScalar)anim->original_frame_rate;
+                    lerp = ((float)l) / (float)anim->original_frame_rate;
                     t = 1.0 - lerp;
 
                     bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
@@ -545,7 +545,7 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
     }
 }
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
+vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3])
 {
     vertex_p mv = mesh->vertices;
     for(uint32_t i=0;i<mesh->vertex_count;i++,mv++)
@@ -562,7 +562,7 @@ vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
 void FillSkinnedMeshMap(skeletal_model_p model)
 {
     int8_t *ch;
-    btScalar tv[3];
+    float tv[3];
     vertex_p v, rv;
     base_mesh_p mesh_base, mesh_skin;
     mesh_tree_tag_p tree_tag, prev_tree_tag;

@@ -50,8 +50,8 @@ lua_State *level_script = NULL;
 bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
+void TR_vertex_to_arr(float v[3], tr5_vertex_t *tr_v);
+void TR_color_to_arr(float v[4], tr5_colour_t *tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
 
@@ -245,7 +245,7 @@ void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
     if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
     {
-        btScalar t;
+        float t;
         SWAPT(tween->floor_corners[0][2], tween->floor_corners[1][2], t);
         SWAPT(tween->floor_corners[2][2], tween->floor_corners[3][2], t);
     }
@@ -277,7 +277,7 @@ void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
     if(tween->ceiling_corners[0][2] > tween->ceiling_corners[1][2])
     {
-        btScalar t;
+        float t;
         SWAPT(tween->ceiling_corners[0][2], tween->ceiling_corners[1][2], t);
         SWAPT(tween->ceiling_corners[2][2], tween->ceiling_corners[3][2], t);
     }
@@ -790,24 +790,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->floor_corners[2][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= ((float)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((float)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->floor_corners[0][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= ((float)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((float)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -825,24 +825,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->ceiling_corners[3][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += ((float)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((float)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->ceiling_corners[1][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += ((float)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((float)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -1339,10 +1339,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((float)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((float)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((float)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((float)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1363,10 +1363,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((float)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((float)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((float)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((float)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1387,10 +1387,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1411,10 +1411,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1476,9 +1476,9 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
-                    af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
-                    af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
+                    af->frames[af->frames_count-1].move[0] = (float)(*++pointer);                          // x = x;
+                    af->frames[af->frames_count-1].move[2] =-(float)(*++pointer);                          // z =-y
+                    af->frames[af->frames_count-1].move[1] = (float)(*++pointer);                          // y = z
                     af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
                     break;
@@ -1523,7 +1523,7 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
 {
     if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p->norm[1]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, x;
+        float min_x, max_x, min_y, max_y, x;
         max_x = min_x = p->vertex[0];
         for(uint16_t i=1;i<p->vertex_count;i++)
         {
@@ -1555,7 +1555,7 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
     }
     else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p->norm[0]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, y;
+        float min_x, max_x, min_y, max_y, y;
         max_y = min_y = p->vertex[1];
         for(uint16_t i=1;i<p->vertex_count;i++)
         {
@@ -1660,14 +1660,14 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
     }
 }
 
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
+void TR_vertex_to_arr(float v[3], tr5_vertex_t *tr_v)
 {
     v[0] = tr_v->x;
     v[1] =-tr_v->z;
     v[2] = tr_v->y;
 }
 
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
+void TR_color_to_arr(float v[4], tr5_colour_t *tr_c)
 {
     v[0] = tr_c->r * 2;
     v[1] = tr_c->g * 2;
@@ -2273,21 +2273,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
 
-        room->sectors[i].ceiling_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0][2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1][2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2][2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3][2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][2] = (float)sector->ceiling;
 
         // BUILDING FLOOR HEIGHTMAP.
 
@@ -2306,21 +2306,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
 
-        room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0][2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1][2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2][2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3][2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][2] = (float)sector->floor;
     }
 
     /*
@@ -2393,7 +2393,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     {
         r_dest = world->rooms + tr_portal->adjoining_room;
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
-        p->vertex = (btScalar*)malloc(3*p->vertex_count*sizeof(btScalar));
+        p->vertex = (float*)malloc(3*p->vertex_count*sizeof(float));
         p->dest_room = r_dest;
         p->current_room = room;
         TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
@@ -2418,21 +2418,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // X_MIN
         if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
         {
-            btScalar pos[3] = {1.0, 0.0, 0.0};
+            float pos[3] = {1.0, 0.0, 0.0};
             Portal_Move(p, pos);
         }
 
         // Y_MIN
         if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
         {
-            btScalar pos[3] = {0.0, 1.0, 0.0};
+            float pos[3] = {0.0, 1.0, 0.0};
             Portal_Move(p, pos);
         }
 
         // Z_MAX
         if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
         {
-            btScalar pos[3] = {0.0, 0.0, -1.0};
+            float pos[3] = {0.0, 0.0, -1.0};
             Portal_Move(p, pos);
         }
     }
@@ -2944,7 +2944,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     tr4_face3_t *face3;
     tr4_object_texture_t *tex;
     polygon_p p;
-    btScalar n;
+    float n;
     vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -3147,7 +3147,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     tr5_room_t *tr_room;
     polygon_p p;
     base_mesh_p mesh;
-    btScalar n;
+    float n;
     vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -3454,7 +3454,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     uint32_t frame_offset, frame_step;
     uint16_t temp1, temp2;
     float ang;
-    btScalar rot[3];
+    float rot[3];
 
     bone_tag_p bone_tag;
     bone_frame_p bone_frame;

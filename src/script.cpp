@@ -131,9 +131,9 @@ int SC_ParseInt(char **ch)
  * get tbl[key]
  * @TODO: delete functions like lua_Get[Set]xxxField! Use only native LUA functions;
  */
-btScalar lua_GetScalarField(lua_State *lua, const char *key)
+float lua_GetScalarField(lua_State *lua, const char *key)
 {
-    btScalar ret = 0.0;
+    float ret = 0.0;
     int top = lua_gettop(lua);
 
     if (!lua_istable(lua, -1))
@@ -147,9 +147,9 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
     return ret;
 }
 
-btScalar lua_GetScalarField(lua_State *lua, int index)
+float lua_GetScalarField(lua_State *lua, int index)
 {
-    btScalar ret = 0.0;
+    float ret = 0.0;
     int top = lua_gettop(lua);
 
     if (!lua_istable(lua, -1))
@@ -443,7 +443,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 /**
  * set tbl[key]
  */
-int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
+int lua_SetScalarField(lua_State *lua, const char *key, float val)
 {
     int top = lua_gettop(lua);
 
@@ -462,7 +462,7 @@ int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
  * Gameplay functions
  */
 
-int lua_DoTasks(lua_State *lua, btScalar time)
+int lua_DoTasks(lua_State *lua, float time)
 {
     lua_pushnumber(lua, time);
     lua_setglobal(lua, "frame_time");
@@ -683,58 +683,6 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     return -1;
 }
 
-int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "console");
-        lua_getfield(lua, -1, "background_color");
-        if(lua_istable(lua, -1))
-        {
-            cn->background_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-            cn->background_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-            cn->background_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
-            cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
-        }
-        lua_pop(lua, 1);
-
-        float tf = lua_GetScalarField(lua, "spacing");
-        if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
-        {
-            cn->spacing = tf;
-        }
-        int t = lua_GetScalarField(lua, "line_size");
-        if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
-        {
-            cn->line_size = t;
-        }
-        t = lua_GetScalarField(lua, "showing_lines");
-        if(t >= CON_MIN_LINES && t <= CON_MAX_LINES)
-        {
-            cn->showing_lines = t;
-        }
-        t = lua_GetScalarField(lua, "log_size");
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            cn->log_lines_count = t;
-        }
-        t = lua_GetScalarField(lua, "lines_count");
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            cn->line_count = t;
-        }
-
-        cn->show_console = lua_GetScalarField(lua, "show");
-        cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
-}
 
 void lua_Clean(lua_State *lua)
 {

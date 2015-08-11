@@ -35,9 +35,9 @@ extern "C" {
 #include "hair.h"
 #include "ragdoll.h"
 
-btScalar cam_angles[3] = {0.0, 0.0, 0.0};
+float cam_angles[3] = {0.0, 0.0, 0.0};
 
-extern btScalar time_scale;
+extern float time_scale;
 extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
@@ -393,7 +393,7 @@ void Game_ApplyControls(struct entity_s *ent)
         }
 
         Cam_SetRotation(renderer.cam, cam_angles);
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
         Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
         Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
@@ -423,7 +423,7 @@ void Game_ApplyControls(struct entity_s *ent)
 
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
         Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
@@ -432,8 +432,8 @@ void Game_ApplyControls(struct entity_s *ent)
     }
     else if(control_states.noclip != 0)
     {
-        btScalar pos[3];
-        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        float pos[3];
+        float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
         Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
@@ -491,7 +491,7 @@ void Game_ApplyControls(struct entity_s *ent)
         }
         else
         {
-            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * (float)move_logic[1];
         }
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
@@ -500,7 +500,7 @@ void Game_ApplyControls(struct entity_s *ent)
         }
         else
         {
-            ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
+            ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (float)move_logic[0];
         }
 
         vec3_copy(ent->character->cmd.move, move_logic);
@@ -508,9 +508,9 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz)
+void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz)
 {
-    btScalar cam_pos[3], cameraFrom[3], cameraTo[3];
+    float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
 
     vec3_copy(cam_pos, cam->pos);
@@ -781,18 +781,18 @@ void Game_UpdateCharacters()
     }
 }
 
-__inline btScalar Game_Tick(btScalar *game_logic_time)
+__inline float Game_Tick(float *game_logic_time)
 {
     int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    float dt = (float)t * GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= dt;
     return dt;
 }
 
 
-void Game_Frame(btScalar time)
+void Game_Frame(float time)
 {
-    static btScalar game_logic_time  = 0.0;
+    static float game_logic_time  = 0.0;
                     game_logic_time += time;
 
     bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
@@ -836,7 +836,7 @@ void Game_Frame(btScalar time)
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
-        btScalar dt = Game_Tick(&game_logic_time);
+        float dt = Game_Tick(&game_logic_time);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
@@ -875,8 +875,7 @@ void Game_Frame(btScalar time)
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
 
-    Physics_StepSimulation(time / 2.0);
-    Physics_StepSimulation(time / 2.0);
+    Physics_StepSimulation(time);
 
     Controls_RefreshStates();
     Render_UpdateAnimTextures();

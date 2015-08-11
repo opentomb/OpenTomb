@@ -29,15 +29,15 @@ struct RedBlackNode_s;
 
 class bt_engine_ClosestConvexResultCallback;
 
-extern btScalar cam_angles[3];
+extern float cam_angles[3];
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 
-btScalar Game_Tick(btScalar *game_logic_time);
-void     Game_Frame(btScalar time);
+float Game_Tick(float *game_logic_time);
+void  Game_Frame(float time);
 
 void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);
@@ -49,7 +49,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz);
+void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
 
 #endif
 

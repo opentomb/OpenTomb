@@ -28,37 +28,37 @@ struct physics_object_s;
  */
 typedef struct base_mesh_s
 {
-    uint32_t              id;                                                   // mesh's ID
-    uint32_t              polygons_count;                                       // number of all mesh's polygons
-    struct polygon_s     *polygons;                                             // polygons data
+    uint32_t                id;                                                 // mesh's ID
+    uint32_t                polygons_count;                                     // number of all mesh's polygons
+    struct polygon_s       *polygons;                                           // polygons data
 
-    struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
-    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
+    struct polygon_s       *transparency_polygons;                              // transparency mesh's polygons list
+    struct polygon_s       *animated_polygons;                                  // opaque animated mesh's polygons list
 
-    uint32_t              num_texture_pages;                                    // face without structure wrapping
-    uint32_t             *element_count_per_texture;                            //
-    uint32_t             *elements;                                             //
+    uint32_t                num_texture_pages;                                  // face without structure wrapping
+    uint32_t               *element_count_per_texture;                          //
+    uint32_t               *elements;                                           //
 
-    uint32_t              vertex_count;                                         // number of mesh's vertices
-    struct vertex_s      *vertices;
+    uint32_t                vertex_count;                                       // number of mesh's vertices
+    struct vertex_s        *vertices;
 
-    btScalar              centre[3];                                            // geometry centre of mesh
-    btScalar              bb_min[3];                                            // AABB bounding volume
-    btScalar              bb_max[3];                                            // AABB bounding volume
-    btScalar              R;                                                    // radius of the bounding sphere
-    int8_t               *skin_map;                                             // vertices map for skin mesh
+    float                   centre[3];                                          // geometry centre of mesh
+    float                   bb_min[3];                                          // AABB bounding volume
+    float                   bb_max[3];                                          // AABB bounding volume
+    float                   R;                                                  // radius of the bounding sphere
+    int8_t                 *skin_map;                                           // vertices map for skin mesh
 
-    GLuint                vbo_vertex_array;
-    GLuint                vbo_index_array;
+    GLuint                  vbo_vertex_array;
+    GLuint                  vbo_index_array;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
-    size_t                num_animated_elements;
-    GLuint                animated_vertex_array;
-    GLuint                animated_texcoord_array;
-    GLuint                animated_index_array;
-    size_t                animated_index_array_length;
+    size_t                  num_animated_elements;
+    GLuint                  animated_vertex_array;
+    GLuint                  animated_texcoord_array;
+    GLuint                  animated_index_array;
+    size_t                  animated_index_array_length;
 }base_mesh_t, *base_mesh_p;
 
 
@@ -71,10 +71,10 @@ typedef struct sprite_s
     uint32_t            texture;                                                // texture number
     GLfloat             tex_coord[8];                                           // texture coordinates
     uint32_t            flag;
-    btScalar            left;                                                   // world sprite's gabarites
-    btScalar            right;
-    btScalar            top;
-    btScalar            bottom;
+    float               left;                                                   // world sprite's gabarites
+    float               right;
+    float               top;
+    float               bottom;
 }sprite_t, *sprite_p;
 
 /*
@@ -130,16 +130,16 @@ typedef struct static_mesh_s
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
     uint8_t                     hide;                                           // disable static mesh rendering
-    btScalar                    pos[3];                                         // model position
-    btScalar                    rot[3];                                         // model angles
+    float                       pos[3];                                         // model position
+    float                       rot[3];                                         // model angles
     GLfloat                     tint[4];                                        // model tint
 
-    btScalar                    vbb_min[3];                                     // visible bounding box
-    btScalar                    vbb_max[3];
-    btScalar                    cbb_min[3];                                     // collision bounding box
-    btScalar                    cbb_max[3];
+    float                       vbb_min[3];                                     // visible bounding box
+    float                       vbb_max[3];
+    float                       cbb_min[3];                                     // collision bounding box
+    float                       cbb_max[3];
 
-    btScalar                    transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
+    float                       transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
     struct obb_s               *obb;
     struct engine_container_s  *self;
 
@@ -164,11 +164,11 @@ typedef struct ss_bone_tag_s
     base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
     base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
     base_mesh_p             mesh_slot;
-    btScalar                offset[3];                                          // model position offset
+    float                   offset[3];                                          // model position offset
 
-    btScalar                qrotate[4];                                         // quaternion rotation
-    btScalar                transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
-    btScalar                full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+    float                   qrotate[4];                                         // quaternion rotation
+    float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
+    float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
@@ -186,9 +186,9 @@ typedef struct ss_animation_s
 
     uint16_t                    anim_flags;                                     // additional animation control param
 
-    btScalar                    period;                                         // one frame change period
-    btScalar                    frame_time;                                     // current time
-    btScalar                    lerp;
+    float                       period;                                         // one frame change period
+    float                       frame_time;                                     // current time
+    float                       lerp;
 
     void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
 
@@ -203,10 +203,10 @@ typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
-    btScalar                    pos[3];                                         // position (base offset)
-    btScalar                    bb_min[3];                                      // bounding box min coordinates
-    btScalar                    bb_max[3];                                      // bounding box max coordinates
-    btScalar                    centre[3];                                      // bounding box centre
+    float                       pos[3];                                         // position (base offset)
+    float                       bb_min[3];                                      // bounding box min coordinates
+    float                       bb_max[3];                                      // bounding box max coordinates
+    float                       centre[3];                                      // bounding box centre
 
     struct ss_animation_s       animations;                                     // animations list
 }ss_bone_frame_t, *ss_bone_frame_p;
@@ -216,8 +216,8 @@ typedef struct ss_bone_frame_s
  */
 typedef struct bone_tag_s
 {
-    btScalar              offset[3];                                            // bone vector
-    btScalar              qrotate[4];                                           // rotation quaternion
+    float               offset[3];                                              // bone vector
+    float               qrotate[4];                                             // rotation quaternion
 }bone_tag_t, *bone_tag_p;
 
 /*
@@ -228,13 +228,13 @@ typedef struct bone_frame_s
     uint16_t            bone_tag_count;                                         // number of bones
     uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
     struct bone_tag_s  *bone_tags;                                              // bones data
-    btScalar            pos[3];                                                 // position (base offset)
-    btScalar            bb_min[3];                                              // bounding box min coordinates
-    btScalar            bb_max[3];                                              // bounding box max coordinates
-    btScalar            centre[3];                                              // bounding box centre
-    btScalar            move[3];                                                // move command data
-    btScalar            v_Vertical;                                             // jump command data
-    btScalar            v_Horizontal;                                           // jump command data
+    float               pos[3];                                                 // position (base offset)
+    float               bb_min[3];                                              // bounding box min coordinates
+    float               bb_max[3];                                              // bounding box max coordinates
+    float               centre[3];                                              // bounding box centre
+    float               move[3];                                                // move command data
+    float               v_Vertical;                                             // jump command data
+    float               v_Horizontal;                                           // jump command data
 }bone_frame_t, *bone_frame_p ;
 
 /*
@@ -244,7 +244,7 @@ typedef struct mesh_tree_tag_s
 {
     base_mesh_p                 mesh_base;                                      // base mesh - pointer to the first mesh in array
     base_mesh_p                 mesh_skin;                                      // base skinned mesh for ТР4+
-    btScalar                    offset[3];                                      // model position offset
+    float                       offset[3];                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint32_t                    body_part;
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
@@ -276,10 +276,10 @@ typedef struct animation_frame_s
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
-    btScalar                    speed_x;                // Forward-backward speed
-    btScalar                    accel_x;                // Forward-backward accel
-    btScalar                    speed_y;                // Left-right speed
-    btScalar                    accel_y;                // Left-right accel
+    float                       speed_x;                // Forward-backward speed
+    float                       accel_x;                // Forward-backward accel
+    float                       speed_y;                // Left-right speed
+    float                       accel_y;                // Left-right accel
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
@@ -302,9 +302,9 @@ typedef struct skeletal_model_s
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
     uint8_t                     hide;                                           // do not render
-    btScalar                    bbox_min[3];                                    // bbox info
-    btScalar                    bbox_max[3];
-    btScalar                    centre[3];                                      // the centre of model
+    float                       bbox_min[3];                                    // bbox info
+    float                       bbox_max[3];
+    float                       centre[3];                                      // the centre of model
 
     uint16_t                    animation_count;                                // number of animations
     struct animation_frame_s   *animations;                                     // animations data

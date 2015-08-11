@@ -72,12 +72,12 @@ frustum_p CFrustumManager::createFrustum()
     return NULL;
 }
 
-btScalar *CFrustumManager::alloc(uint32_t size)
+float *CFrustumManager::alloc(uint32_t size)
 {
-    size *= sizeof(btScalar);
+    size *= sizeof(float);
     if((!m_need_realloc) && (m_allocated + size < m_buffer_size))
     {
-        btScalar *ret = (btScalar*)(m_buffer + m_allocated);
+        float *ret = (float*)(m_buffer + m_allocated);
         m_allocated += size;
         return ret;
     }
@@ -92,7 +92,7 @@ void CFrustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustu
     frustum->vertex = this->alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
     if(frustum->vertex != NULL)
     {
-        memcpy(frustum->vertex, p->vertex, 3 * p->vertex_count * sizeof(btScalar));
+        memcpy(frustum->vertex, p->vertex, 3 * p->vertex_count * sizeof(float));
         vec4_copy_inv(frustum->norm, p->norm);
     }
     else
@@ -103,12 +103,12 @@ void CFrustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustu
     frustum->parent = NULL;
 }
 
-int CFrustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
+int CFrustumManager::split_by_plane(frustum_p p, float n[4], float *buf)
 {
     if(!m_need_realloc)
     {
-        btScalar *curr_v, *prev_v, *v, t, dir[3];
-        btScalar dist[2];
+        float *curr_v, *prev_v, *v, t, dir[3];
+        float dist[2];
         uint16_t added = 0;
 
         curr_v = p->vertex;
@@ -162,7 +162,7 @@ int CFrustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
 
     #if 0
         p->vertex_count = added;
-        memcpy(p->vertex, buf, added*3*sizeof(btScalar));
+        memcpy(p->vertex, buf, added*3*sizeof(float));
     #else       // filter repeating (too closest) points
         curr_v = buf;
         prev_v = buf + 3 * (added - 1);
@@ -194,14 +194,14 @@ int CFrustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
 
 void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
 {
-    if(m_allocated + p->vertex_count * 4 * sizeof(btScalar) >= m_buffer_size)
+    if(m_allocated + p->vertex_count * 4 * sizeof(float) >= m_buffer_size)
     {
         m_need_realloc = true;
     }
 
     if((!m_need_realloc) && (p->vertex_count > 0))
     {
-        btScalar V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
+        float V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
         p->planes = this->alloc(4 * p->vertex_count);
 
         next_v = p->vertex;
@@ -213,7 +213,7 @@ void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
 
         for(uint16_t i=0;i<p->vertex_count;i++,r+=4)
         {
-            btScalar t;
+            float t;
             vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
             vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
             vec3_norm(V1, t);
@@ -251,8 +251,8 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
         }
 
         int in_dist = 0, in_face = 0;
-        btScalar *n = render->cam->frustum->norm;
-        btScalar *v = portal->vertex;
+        float *n = render->cam->frustum->norm;
+        float *v = portal->vertex;
         for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
         {
             if((in_dist == 0) && (vec3_plane_dist(n, v) < render->cam->dist_far))
@@ -308,8 +308,8 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
             return NULL;
         }
 
-        int buf_size = (current_gen->vertex_count + emitter->vertex_count + 4) * 3 * sizeof(btScalar);
-        btScalar *tmp = (btScalar*)Sys_GetTempMem(buf_size);
+        int buf_size = (current_gen->vertex_count + emitter->vertex_count + 4) * 3 * sizeof(float);
+        float *tmp = (float*)Sys_GetTempMem(buf_size);
         if(this->split_by_plane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
         {
             n = emitter->planes;
@@ -411,8 +411,8 @@ int Frustum_HaveParent(frustum_p parent, frustum_p frustum)
  */
 int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
 {
-    btScalar t, dir[3], T[3], dist[2];
-    btScalar *prev_n, *curr_n, *next_n;
+    float t, dir[3], T[3], dist[2];
+    float *prev_n, *curr_n, *next_n;
     vertex_p curr_v, prev_v;
     char ins, outs;
 
@@ -497,7 +497,7 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
  * @param frustum - test frustum
  * @return 1 if aabb is in frustum.
  */
-int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s *frustum)
+int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum)
 {
     char ins;
     polygon_t poly;
@@ -685,7 +685,7 @@ int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s
 int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 {
     int ins = 1;
-    btScalar t;
+    float t;
     polygon_p p;
 
     p = obb->polygons;
@@ -710,7 +710,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     int                         ins;
     polygon_p                   p;
     frustum_p                   frustum;
-    btScalar                    t;
+    float                    t;
     extern struct camera_s      engine_camera;
 
     frustum = room->frustum;

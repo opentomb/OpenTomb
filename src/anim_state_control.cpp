@@ -52,7 +52,7 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
 {
     if(state == 0x02)
     {
-        btScalar *v = ent->character->traversed_object->transform + 12;
+        float *v = ent->character->traversed_object->transform + 12;
         int i = v[0] / TR_METERING_SECTORSIZE;
         v[0] = i * TR_METERING_SECTORSIZE + 512.0;
         i = v[1] / TR_METERING_SECTORSIZE;
@@ -88,7 +88,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
     animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
     if(ss_anim->current_frame >= af->frames_count - 1)
     {
-        btScalar p[3], move[3];
+        float p[3], move[3];
 
         Mat4_vec3_mul(move, ent->transform, ent->bf->bone_tags[0].full_transform + 12);
         Entity_SetAnimation(ent, af->next_anim->id, af->next_frame);
@@ -156,7 +156,7 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
 {
     if(state == 0x02)
     {
-        btScalar *v = ent->character->climb.point;
+        float *v = ent->character->climb.point;
 
         vec3_add_mul(ent->transform+12, v, ent->transform+4, 48.0);             // temporary stick
         ent->transform[12 + 2] = v[2];
@@ -169,7 +169,7 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
 {
     if(state == 0x02)
     {
-        btScalar *v = ent->character->climb.point;
+        float *v = ent->character->climb.point;
 
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
         ent->transform[12 + 1] = v[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
@@ -219,8 +219,8 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
 int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     int i;
-    btScalar t, *pos = ent->transform + 12;
-    btScalar /*local_offset[3], */global_offset[3], move[3];
+    float t, *pos = ent->transform + 12;
+    float /*local_offset[3], */global_offset[3], move[3];
     height_info_t next_fc, *curr_fc;
     climb_info_t *climb = &ent->character->climb;
     character_command_p cmd = &ent->character->cmd;
@@ -356,7 +356,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     t = 512.0 + 72.0;                                           ///@PARANOID
                 }
-                btScalar *v = ent->character->traversed_object->transform + 12;
+                float *v = ent->character->traversed_object->transform + 12;
                 pos[0] = v[0] - ent->transform[4 + 0] * t;
                 pos[1] = v[1] - ent->transform[4 + 1] * t;
             }
@@ -1623,7 +1623,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                        (ent->speed[2] < 0.0)) // Only hang if speed is lower than zero.
                     {
                         // Fix the position to the TR metering step.
-                        ent->transform[12+2] = (btScalar)((int)((ent->transform[12+2]) / TR_METERING_STEP) * TR_METERING_STEP);
+                        ent->transform[12+2] = (float)((int)((ent->transform[12+2]) / TR_METERING_STEP) * TR_METERING_STEP);
                         ent->move_type = MOVE_WALLS_CLIMB;
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_HANG_IDLE, -1);
                         break;
@@ -2752,7 +2752,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     else if(cmd->action && (resp->horizontal_collide == 0) &&
                        (next_fc.floor_point[2] < pos[2] - ent->character->Height))
                     {
-                        btScalar temp[3];
+                        float temp[3];
                         vec3_copy(temp, pos);                                       // save entity position
                         pos[0] = next_fc.floor_point[0];
                         pos[1] = next_fc.floor_point[1];

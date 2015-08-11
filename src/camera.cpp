@@ -35,7 +35,7 @@ void Cam_Init(camera_p cam)
     cam->frustum->parents_count = 0;
     cam->frustum->vertex = NULL;
     cam->frustum->planes = cam->clip_planes;
-    cam->frustum->vertex = (btScalar*)malloc(3*4*sizeof(btScalar));
+    cam->frustum->vertex = (float*)malloc(3*4*sizeof(float));
 
     cam->pos[0] = 0.0;
     cam->pos[1] = 0.0;
@@ -203,7 +203,7 @@ void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         
     vec4_mul(cam->up_dir, temp, Rt)
 }
 
-void Cam_SetRotation(camera_p cam, btScalar angles[3])                          //angles = {OX, OY, OZ}
+void Cam_SetRotation(camera_p cam, float angles[3])                          //angles = {OX, OY, OZ}
 {
     GLfloat R[4], Rt[4], temp[4];
     GLfloat sin_t2, cos_t2, t;

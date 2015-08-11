@@ -450,7 +450,7 @@ int lua_NewSector(lua_State *lua)
 
 int lua_GetGravity(lua_State * lua)
 {
-    btScalar g[3];
+    float g[3];
     Physics_GetGravity(g);
     lua_pushnumber(lua, g[0]);
     lua_pushnumber(lua, g[1]);
@@ -462,7 +462,7 @@ int lua_GetGravity(lua_State * lua)
 
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
-    btScalar g[3];
+    float g[3];
 
     switch(lua_gettop(lua))
     {
@@ -514,8 +514,8 @@ int lua_DropEntity(lua_State * lua)
         return 0;
     }
 
-    btScalar move[3], g[3], t, time = lua_tonumber(lua, 2);
-    btScalar from[3], to[3];
+    float move[3], g[3], t, time = lua_tonumber(lua, 2);
+    float from[3], to[3];
     collision_result_t cb;
 
     Physics_GetGravity(g);
@@ -1362,7 +1362,7 @@ int lua_SpawnEntity(lua_State * lua)
         return 0;
     }
 
-    btScalar pos[3], ang[3];
+    float pos[3], ang[3];
     int model_id = lua_tointeger(lua, 1);
     int room_id = lua_tointeger(lua, 2);
     pos[0] = lua_tonumber(lua, 3);
@@ -1603,11 +1603,11 @@ int lua_SimilarSector(lua_State * lua)
         return 0;
     }
 
-    btScalar dx = lua_tonumber(lua, 2);
-    btScalar dy = lua_tonumber(lua, 3);
-    btScalar dz = lua_tonumber(lua, 4);
+    float dx = lua_tonumber(lua, 2);
+    float dy = lua_tonumber(lua, 3);
+    float dz = lua_tonumber(lua, 4);
 
-    btScalar next_pos[3];
+    float next_pos[3];
 
     next_pos[0] = ent->transform[12+0] + (dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0]);
     next_pos[1] = ent->transform[12+1] + (dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1]);
@@ -1655,14 +1655,14 @@ int lua_GetSectorHeight(lua_State * lua)
     bool ceiling = false;
     if(top > 1) ceiling = lua_toboolean(lua, 2);
 
-    btScalar pos[3];
+    float pos[3];
     vec3_copy(pos, ent->transform+12);
 
     if(top > 2)
     {
-        btScalar dx = lua_tonumber(lua, 2);
-        btScalar dy = lua_tonumber(lua, 3);
-        btScalar dz = lua_tonumber(lua, 4);
+        float dx = lua_tonumber(lua, 2);
+        float dy = lua_tonumber(lua, 3);
+        float dz = lua_tonumber(lua, 4);
 
         pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
         pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
@@ -1671,7 +1671,7 @@ int lua_GetSectorHeight(lua_State * lua)
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
     curr_sector = Sector_CheckPortalPointer(curr_sector);
-    btScalar point[3];
+    float point[3];
     (ceiling)?(Sector_LowestCeilingCorner(curr_sector, point)):(Sector_HighestFloorCorner(curr_sector, point));
 
     lua_pushnumber(lua, point[2]);
@@ -1811,9 +1811,9 @@ int lua_MoveEntityLocal(lua_State * lua)
         return 0;
     }
 
-    btScalar dx = lua_tonumber(lua, 2);
-    btScalar dy = lua_tonumber(lua, 3);
-    btScalar dz = lua_tonumber(lua, 4);
+    float dx = lua_tonumber(lua, 2);
+    float dy = lua_tonumber(lua, 3);
+    float dz = lua_tonumber(lua, 4);
 
     ent->transform[12+0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
     ent->transform[12+1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
@@ -1838,7 +1838,7 @@ int lua_MoveEntityToSink(lua_State * lua)
     if(sink_index > engine_world.cameras_sinks_count) return 0;
     stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
 
-    btScalar sink_pos[3], *ent_pos = ent->transform + 12;
+    float sink_pos[3], *ent_pos = ent->transform + 12;
     sink_pos[0] = sink->x;
     sink_pos[1] = sink->y;
     sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
@@ -1852,11 +1852,11 @@ int lua_MoveEntityToSink(lua_State * lua)
         sink_pos[2] = ent_pos[2];
     }
 
-    btScalar speed[3];
+    float speed[3];
     vec3_sub(speed, sink_pos, ent_pos);
-    btScalar t = vec3_abs(speed);
+    float t = vec3_abs(speed);
     if(t == 0.0) t = 1.0; // Prevents division by zero.
-    t = ((btScalar)(sink->room_or_strength) * 1.5) / t;
+    t = ((float)(sink->room_or_strength) * 1.5) / t;
 
     ent_pos[0] += speed[0] * t;
     ent_pos[1] += speed[1] * t;
@@ -1879,10 +1879,10 @@ int lua_MoveEntityToEntity(lua_State * lua)
 
     entity_p ent1 = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     entity_p ent2 = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
-    btScalar speed_mult = lua_tonumber(lua, 3);
-    btScalar *ent1_pos = ent1->transform + 12;
-    btScalar *ent2_pos = ent2->transform + 12;
-    btScalar t, speed[3];
+    float speed_mult = lua_tonumber(lua, 3);
+    float *ent1_pos = ent1->transform + 12;
+    float *ent2_pos = ent2->transform + 12;
+    float t, speed[3];
 
     vec3_sub(speed, ent2_pos, ent1_pos);
     t = vec3_abs(speed);
@@ -2167,7 +2167,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 {
     int id;
     int top = lua_gettop(lua);
-    btScalar pos[3], offset[3], r;
+    float pos[3], offset[3], r;
 
     if(top < 2)
     {
@@ -3227,9 +3227,9 @@ int lua_PushEntityBody(lua_State *lua)
 
     if(ent && (body_number < ent->bf->bone_tag_count) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar h_force = lua_tonumber(lua, 3);
-        btScalar t       = ent->angles[0] * M_PI / 180.0;
-        btScalar speed[3];
+        float h_force = lua_tonumber(lua, 3);
+        float t       = ent->angles[0] * M_PI / 180.0;
+        float speed[3];
 
         speed[0] = -sinf(t) * h_force;
         speed[1] =  cosf(t) * h_force;
@@ -3269,7 +3269,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     {
         uint16_t argn  = 3;
         bool dynamic = false;
-        btScalar mass = 0.0;
+        float mass = 0.0;
 
         for(int i=0; i < body_number; i++)
         {
@@ -3312,7 +3312,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
 
     if(ent && (body_number < ent->bf->bone_tag_count) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar factor[3], t    = ent->angles[0] * M_PI / 180.0;
+        float factor[3], t    = ent->angles[0] * M_PI / 180.0;
         factor[0] = fabs(sinf(t));
         factor[1] = fabs(cosf(t));
         factor[2] = 1.0;
@@ -3832,7 +3832,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
             seq->frame_list[0]     = 0;
             seq->frames            = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
 
-            btScalar v_min, v_max;
+            float v_min, v_max;
             v_min = v_max = p->vertices->tex_coord[1];
             for(uint16_t j=1;j<p->vertex_count;j++)
             {

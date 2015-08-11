@@ -495,11 +495,11 @@ void Gui_RenderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
+void Item_Frame(struct ss_bone_frame_s *bf, float time)
 {
     int16_t frame, anim;
     long int t;
-    btScalar dt;
+    float dt;
     state_change_p stc;
 
     bf->animations.lerp = 0.0;
@@ -531,8 +531,8 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     bf->animations.frame_time += time;
 
     t = (bf->animations.frame_time) / bf->animations.period;
-    dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
-    bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
+    dt = bf->animations.frame_time - (float)t * bf->animations.period;
+    bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     Entity_UpdateCurrentBoneFrame(bf, NULL);
@@ -546,7 +546,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatrix)
 {
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0);
     glUseProgramObjectARB(shader->program);
@@ -555,7 +555,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
 
     if(size != 0.0)
     {
-        btScalar bb[3];
+        float bb[3];
         vec3_sub(bb, bf->bb_max, bf->bb_min);
         if(bb[0] >= bb[1])
         {
@@ -567,15 +567,15 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         }
         size *= 0.8;
 
-        btScalar scaledMatrix[16];
+        float scaledMatrix[16];
         Mat4_E(scaledMatrix);
         if(size < 1.0)          // only reduce items size...
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btScalar scaledMvMatrix[16];
+        float scaledMvMatrix[16];
         Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
-        btScalar mvpMatrix[16];
+        float mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
 
         // Render with scaled model view projection matrix
@@ -584,7 +584,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
     }
     else
     {
-        btScalar mvpMatrix[16];
+        float mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
         Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
     }
@@ -1014,12 +1014,12 @@ void gui_InventoryManager::render()
                 continue;
             }
 
-            btScalar matrix[16], offset[3];
+            float matrix[16], offset[3];
             Mat4_E_macro(matrix);
             matrix[12 + 2] = - mBaseRingRadius * 2.0;
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
-            btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
+            float ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
             Mat4_RotateY(matrix, ang);
             offset[0] = 0.0;
             offset[1] = mVerticalOffset;
@@ -1080,7 +1080,7 @@ void Gui_SwitchGLMode(char is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(btScalar [16]));
+        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(float [16]));
     }
 }
 
@@ -1935,14 +1935,14 @@ void gui_ItemNotifier::Draw()
         {
             int anim = item->bf->animations.current_animation;
             int frame = item->bf->animations.current_frame;
-            btScalar time = item->bf->animations.frame_time;
+            float time = item->bf->animations.frame_time;
 
             item->bf->animations.current_animation = 0;
             item->bf->animations.current_frame = 0;
             item->bf->animations.frame_time = 0.0;
 
             Item_Frame(item->bf, 0.0);
-            btScalar matrix[16];
+            float matrix[16];
             Mat4_E_macro(matrix);
             matrix[12 + 0] = mCurrPosX;
             matrix[12 + 1] = mPosY;

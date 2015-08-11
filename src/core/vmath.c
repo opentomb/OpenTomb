@@ -3,9 +3,9 @@
 #include <string.h>
 #include "vmath.h"
 
-void vec4_rev(btScalar rev[4], btScalar src[4])
+void vec4_rev(float rev[4], float src[4])
 {
-    btScalar module;
+    float module;
     module = vec4_abs(src);
     rev[3] = src[3] / module;                                                   // w
     rev[0] = - src[0] / module;                                                 // x
@@ -13,10 +13,10 @@ void vec4_rev(btScalar rev[4], btScalar src[4])
     rev[2] = - src[2] / module;                                                 // z
 }
 
-void vec4_div(btScalar ret[4], btScalar a[4], btScalar b[4])
+void vec4_div(float ret[4], float a[4], float b[4])
 {
-    btScalar temp[4];
-    btScalar module;
+    float temp[4];
+    float module;
     module = vec4_abs(b);
     vec4_sop(b, b)
     vec4_mul(temp, a, b);
@@ -27,10 +27,10 @@ void vec4_div(btScalar ret[4], btScalar a[4], btScalar b[4])
     ret[3] = temp[3] / module;
 }
 
-void vec4_rotate(btScalar rot[4], btScalar vec[4], btScalar angle)
+void vec4_rotate(float rot[4], float vec[4], float angle)
 {
-    btScalar sin_t2, cos_t2, module;
-    btScalar t1[4], t2[4], t[4];
+    float sin_t2, cos_t2, module;
+    float t1[4], t2[4], t[4];
 
     angle /= 2.0;
     sin_t2 = sin(angle);
@@ -52,9 +52,9 @@ void vec4_rotate(btScalar rot[4], btScalar vec[4], btScalar angle)
     vec4_mul(rot, t, t2);
 }
 
-void vec4_GetEilerOrientationTransform(btScalar R[4], btScalar ang[3])
+void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
 {
-    btScalar t, Rt[4], T[4];
+    float t, Rt[4], T[4];
 
     t = ang[2] / 2.0;                                                           // ROLL
     R[0] = 0.0;                                                                 // -OZ
@@ -77,9 +77,9 @@ void vec4_GetEilerOrientationTransform(btScalar R[4], btScalar ang[3])
     vec4_mul(R, T, Rt)
 }
 
-void vec4_GetPlaneEquation(btScalar eq[4], btScalar poly[12])
+void vec4_GetPlaneEquation(float eq[4], float poly[12])
 {
-    btScalar v1[3], v2[3], t;
+    float v1[3], v2[3], t;
 
     v1[0] = poly[1*4+0] - poly[0*4+0];                                          // get the first vector inside the plane
     v1[1] = poly[1*4+1] - poly[0*4+1];
@@ -101,9 +101,9 @@ void vec4_GetPlaneEquation(btScalar eq[4], btScalar poly[12])
     eq[3] = -(poly[0]*eq[0] + poly[1]*eq[1] + poly[2]*eq[2]);                   // distance from the plane to (0, 0, 0)
 }
 
-void vec3_GetPlaneEquation(btScalar eq[4], btScalar v0[3], btScalar v1[3], btScalar v2[3])
+void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
 {
-    btScalar l1[3], l2[3], t;
+    float l1[3], l2[3], t;
 
     vec3_sub(l1, v1, v0);                                                       // get the first vector inside the plane
     vec3_sub(l2, v0, v2);                                                       // get the second vector inside the plane
@@ -117,9 +117,9 @@ void vec3_GetPlaneEquation(btScalar eq[4], btScalar v0[3], btScalar v1[3], btSca
     eq[3] = -(v0[0]*eq[0] + v0[1]*eq[1] + v0[2]*eq[2]);                         // distance from the plane to (0, 0, 0)
 }
 
-void vec3_RotateX(btScalar res[3], btScalar src[3], btScalar ang)
+void vec3_RotateX(float res[3], float src[3], float ang)
 {
-    btScalar t[2], sint, cost;
+    float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
     sint = sin(ang);
@@ -132,9 +132,9 @@ void vec3_RotateX(btScalar res[3], btScalar src[3], btScalar ang)
     res[2] = t[1];
 }
 
-void vec3_RotateY(btScalar res[3], btScalar src[3], btScalar ang)
+void vec3_RotateY(float res[3], float src[3], float ang)
 {
-    btScalar t[2], sint, cost;
+    float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
     sint = sin(ang);
@@ -147,9 +147,9 @@ void vec3_RotateY(btScalar res[3], btScalar src[3], btScalar ang)
     res[2] = t[1];
 }
 
-void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang)
+void vec3_RotateZ(float res[3], float src[3], float ang)
 {
-    btScalar t[2], sint, cost;
+    float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
     sint = sin(ang);
@@ -162,9 +162,9 @@ void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang)
     res[1] = t[1];
 }
 
-void vec4_slerp(btScalar ret[4], btScalar q1[4], btScalar q2[4], btScalar t)
+void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
 {
-    btScalar cos_fi, sin_fi, fi, k1, k2, sign;
+    float cos_fi, sin_fi, fi, k1, k2, sign;
     cos_fi = q1[3] * q2[3] + q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
     sign = (cos_fi < 0.0)?(-1.0):(1.0);
     fi = acos(sign * cos_fi);
@@ -193,9 +193,9 @@ void vec4_slerp(btScalar ret[4], btScalar q1[4], btScalar q2[4], btScalar t)
     ret[3] /= fi;
 }
 
-void vec4_SetTRRotations(btScalar v[4], btScalar rot[3])
+void vec4_SetTRRotations(float v[4], float rot[3])
 {
-    btScalar angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
+    float angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
 
     // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
     angle = M_PI * rot[2] / 360.0;
@@ -236,7 +236,7 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3])
  * Matrix operations:
  */
 
-void Mat4_E(btScalar mat[16])
+void Mat4_E(float mat[16])
 {
     mat[0]  = 1.0;
     mat[1]  = 0.0;
@@ -259,7 +259,7 @@ void Mat4_E(btScalar mat[16])
     mat[15] = 1.0;
 }
 
-void Mat4_Copy(btScalar dst[16], const btScalar src[16])
+void Mat4_Copy(float dst[16], const float src[16])
 {
     vec4_copy(dst,    src);
     vec4_copy(dst+4,  src+4);
@@ -267,14 +267,14 @@ void Mat4_Copy(btScalar dst[16], const btScalar src[16])
     vec4_copy(dst+12, src+12);
 }
 
-void Mat4_Translate(btScalar mat[16], const btScalar v[3])
+void Mat4_Translate(float mat[16], const float v[3])
 {
     mat[12] += mat[0] * v[0] + mat[4] * v[1] + mat[8]  * v[2];
     mat[13] += mat[1] * v[0] + mat[5] * v[1] + mat[9]  * v[2];
     mat[14] += mat[2] * v[0] + mat[6] * v[1] + mat[10] * v[2];
 }
 
-void Mat4_Scale(btScalar mat[16], btScalar x, btScalar y, btScalar z)
+void Mat4_Scale(float mat[16], float x, float y, float z)
 {
     mat[ 0] *= x;
     mat[ 1] *= x;
@@ -289,9 +289,9 @@ void Mat4_Scale(btScalar mat[16], btScalar x, btScalar y, btScalar z)
     mat[ 10] *= z;
 }
 
-void Mat4_RotateX(btScalar mat[16], btScalar ang)
+void Mat4_RotateX(float mat[16], float ang)
 {
-    btScalar sina, cosa, R[9];
+    float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
     sina = sin(R[0]);
@@ -314,9 +314,9 @@ void Mat4_RotateX(btScalar mat[16], btScalar ang)
     vec3_copy(mat+8, R+6);
 }
 
-void Mat4_RotateY(btScalar mat[16], btScalar ang)
+void Mat4_RotateY(float mat[16], float ang)
 {
-    btScalar sina, cosa, R[9];
+    float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
     sina = sin(R[0]);
@@ -339,9 +339,9 @@ void Mat4_RotateY(btScalar mat[16], btScalar ang)
     vec3_copy(mat+8, R+6);
 }
 
-void Mat4_RotateZ(btScalar mat[16], btScalar ang)
+void Mat4_RotateZ(float mat[16], float ang)
 {
-    btScalar sina, cosa, R[9];
+    float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
     sina = sin(R[0]);
@@ -364,9 +364,9 @@ void Mat4_RotateZ(btScalar mat[16], btScalar ang)
     vec3_copy(mat+8, R+6);
 }
 
-void Mat4_T(btScalar mat[16])
+void Mat4_T(float mat[16])
 {
-    btScalar t;
+    float t;
     SWAPT(mat[1], mat[4], t);
     SWAPT(mat[2], mat[8], t);
     SWAPT(mat[3], mat[12], t);
@@ -381,9 +381,9 @@ void Mat4_T(btScalar mat[16])
  * OpenGL matrix inversing. Not an usual matrix inversing.
  * Works only with OpenGL transformation matrices!
  */
-void Mat4_affine_inv(btScalar mat[16])
+void Mat4_affine_inv(float mat[16])
 {
-    btScalar v[3];
+    float v[3];
 
     SWAPT(mat[1], mat[4], v[0]);
     SWAPT(mat[2], mat[8], v[0]);
@@ -402,10 +402,10 @@ void Mat4_affine_inv(btScalar mat[16])
 /**
  * Matrix multiplication. serult = src1 x src2.
  */
-void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16])
+void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16])
 {
     // Store in temporary matrix so we don't overwrite anything if src1,2 alias result
-    btScalar t_res[16];
+    float t_res[16];
     int i, j, k;
     
     for (i = 0; i < 4; i++)
@@ -428,9 +428,9 @@ void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar 
  * OpenGL matrices multiplication. serult = (src1^-1) x src2.
  * Works only with affine transformation matrices!
  */
-void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar src2[16])
+void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16])
 {
-    btScalar t_res[16], v[3];
+    float t_res[16], v[3];
 
     v[0] = -(src1[0] * src1[12] + src1[1] * src1[13] + src1[2] * src1[14]);
     v[1] = -(src1[4] * src1[12] + src1[5] * src1[13] + src1[6] * src1[14]);
@@ -462,9 +462,9 @@ void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar s
     vec4_copy(result+12, t_res+12);
 }
 
-void Mat4_vec3_mul(btScalar v[3], const btScalar mat[16], const btScalar src[3])
+void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3])
 {
-    btScalar ret[3];
+    float ret[3];
 
     ret[0] = mat[0] * src[0] + mat[4] * src[1] + mat[8]  * src[2] + mat[12];
     ret[1] = mat[1] * src[0] + mat[5] * src[1] + mat[9]  * src[2] + mat[13];
@@ -472,9 +472,9 @@ void Mat4_vec3_mul(btScalar v[3], const btScalar mat[16], const btScalar src[3])
     vec3_copy(v, ret);
 }
 
-void Mat4_vec3_mul_inv(btScalar v[3], btScalar mat[16], btScalar src[3])
+void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3])
 {
-    btScalar ret[3];
+    float ret[3];
 
     ret[0]  = mat[0] * src[0] + mat[1] * src[1] + mat[2]  * src[2];             // (M^-1 * src).x
     ret[0] -= mat[0] * mat[12]+ mat[1] * mat[13]+ mat[2]  * mat[14];            // -= (M^-1 * mov).x
@@ -485,9 +485,9 @@ void Mat4_vec3_mul_inv(btScalar v[3], btScalar mat[16], btScalar src[3])
     vec3_copy(v, ret);
 }
 
-void Mat4_vec3_mul_T(btScalar v[3], btScalar mat[16], btScalar src[3])
+void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3])
 {
-    btScalar ret[3];
+    float ret[3];
 
     ret[0] = mat[0] * src[0] + mat[1] * src[1] + mat[2]  * src[2] + mat[3];
     ret[1] = mat[4] * src[0] + mat[5] * src[1] + mat[6]  * src[2] + mat[7];
@@ -496,10 +496,10 @@ void Mat4_vec3_mul_T(btScalar v[3], btScalar mat[16], btScalar src[3])
 }
 
 
-void Mat4_SetSelfOrientation(btScalar mat[16], btScalar ang[3])
+void Mat4_SetSelfOrientation(float mat[16], float ang[3])
 {
-    btScalar R[4], Rt[4], temp[4];
-    btScalar sin_t2, cos_t2, t;
+    float R[4], Rt[4], temp[4];
+    float sin_t2, cos_t2, t;
 
     sin_t2 = 0.0;
     cos_t2 = 1.0;
@@ -569,9 +569,9 @@ void Mat4_SetSelfOrientation(btScalar mat[16], btScalar ang[3])
     }
 }
 
-int ThreePlanesIntersection(btScalar v[3], btScalar n0[4], btScalar n1[4], btScalar n2[4])
+int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4])
 {
-    btScalar d;
+    float d;
     /*
      * Solve system of the linear equations by Kramer method!
      * I know - It may be slow, but it has a good precision!

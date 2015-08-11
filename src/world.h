@@ -222,13 +222,13 @@ typedef struct room_sector_s
 
     int16_t                     index_x;
     int16_t                     index_y;
-    btScalar                    pos[3];
+    float                       pos[3];
 
-    btScalar                    ceiling_corners[4][3];
+    float                       ceiling_corners[4][3];
     uint8_t                     ceiling_diagonal_type;
     uint8_t                     ceiling_penetration_config;
 
-    btScalar                    floor_corners[4][3];
+    float                       floor_corners[4][3];
     uint8_t                     floor_diagonal_type;
     uint8_t                     floor_penetration_config;
 
@@ -238,10 +238,10 @@ typedef struct room_sector_s
 
 typedef struct sector_tween_s
 {
-    btScalar                    floor_corners[4][3];
+    float                       floor_corners[4][3];
     uint8_t                     floor_tween_type;
 
-    btScalar                    ceiling_corners[4][3];
+    float                       ceiling_corners[4][3];
     uint8_t                     ceiling_tween_type;
 }sector_tween_t, *sector_tween_p;
 
@@ -249,7 +249,7 @@ typedef struct sector_tween_s
 typedef struct room_sprite_s
 {
     struct sprite_s            *sprite;
-    btScalar                    pos[3];
+    float                       pos[3];
     int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;
 
@@ -276,10 +276,10 @@ typedef struct room_s
 
     struct engine_container_s  *containers;                                     // engine containers with moveables objects
 
-    btScalar                    bb_min[3];                                      // room's bounding box
-    btScalar                    bb_max[3];                                      // room's bounding box
-    btScalar                    transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
-    btScalar                    ambient_lighting[3];
+    float                       bb_min[3];                                      // room's bounding box
+    float                       bb_max[3];                                      // room's bounding box
+    float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    float                       ambient_lighting[3];
 
     uint32_t                    light_count;
     struct light_s             *lights;
@@ -380,7 +380,7 @@ int compEntityEQ(void *x, void *y);
 int compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id);
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
 
@@ -389,17 +389,17 @@ void Room_AddEntity(room_p room, struct entity_s *entity);
 int Room_RemoveEntity(room_p room, struct entity_s *entity);
 
 void Room_AddToNearRoomsList(room_p room, room_p r);
-int Room_IsPointIn(room_p room, btScalar dot[3]);
+int Room_IsPointIn(room_p room, float dot[3]);
 
-room_p Room_FindPos(btScalar pos[3]);
-room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room);
+room_p Room_FindPos(float pos[3]);
+room_p Room_FindPosCogerrence(float new_pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
-room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3]);
-room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3]);
+room_sector_p Room_GetSectorRaw(room_p room, float pos[3]);
+room_sector_p Room_GetSectorCheckFlip(room_p room, float pos[3]);
 room_sector_p Sector_CheckFlip(room_sector_p rs);
 room_sector_p Sector_GetLowest(room_sector_p sector);
 room_sector_p Sector_GetHighest(room_sector_p sector);
-room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
+room_sector_p Room_GetSectorXYZ(room_p room, float pos[3]);
 
 void Room_Enable(room_p room);
 void Room_Disable(room_p room);
@@ -422,15 +422,15 @@ room_sector_p Sector_CheckPortalPointer(room_sector_p rs);
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors);
 bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors);
-void Sector_HighestFloorCorner(room_sector_p rs, btScalar v[3]);
-void Sector_LowestCeilingCorner(room_sector_p rs, btScalar v[3]);
+void Sector_HighestFloorCorner(room_sector_p rs, float v[3]);
+void Sector_LowestCeilingCorner(room_sector_p rs, float v[3]);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world);
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
+struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);            // binary search the model by ID
 
 
 #endif

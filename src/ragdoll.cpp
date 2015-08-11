@@ -27,7 +27,6 @@ extern "C" {
 typedef struct physics_data_s
 {
     // kinematic
-    btCollisionShape                  **shapes;
     btRigidBody                       **bt_body;
 
     // dynamic
@@ -39,7 +38,7 @@ typedef struct physics_data_s
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
 
-    struct collision_node_s           *collisions;
+    struct collision_node_s            *collisions;
 }physics_data_t, *physics_data_p;
 
 extern btDiscreteDynamicsWorld     *bt_engine_dynamicsWorld;

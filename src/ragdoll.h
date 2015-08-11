@@ -27,13 +27,13 @@ typedef struct rd_joint_setup_s
     uint16_t        body_index;     // Primary body index
     uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
-    btScalar        body1_offset[3];   // Primary pivot point offset
-    btScalar        body2_offset[3];   // Secondary pivot point offset
+    float           body1_offset[3];   // Primary pivot point offset
+    float           body2_offset[3];   // Secondary pivot point offset
     
-    btScalar        body1_angle[3]; // Primary pivot point angle
-    btScalar        body2_angle[3]; // Secondary pivot point angle
+    float           body1_angle[3]; // Primary pivot point angle
+    float           body2_angle[3]; // Secondary pivot point angle
     
-    btScalar        joint_limit[3]; // Only first two are used for hinge constraint.
+    float           joint_limit[3]; // Only first two are used for hinge constraint.
         
 }rd_joint_setup_t, *rd_joint_setup_p;
 
@@ -42,11 +42,11 @@ typedef struct rd_joint_setup_s
 
 typedef struct rd_body_setup_s
 {
-    btScalar        mass;
+    float        mass;
     
-    btScalar        damping[2];
-    btScalar        restitution;
-    btScalar        friction;
+    float        damping[2];
+    float        restitution;
+    float        friction;
     
 }rd_body_setup_t, *rd_body_setup_p;
 
@@ -59,8 +59,8 @@ typedef struct rd_setup_s
     uint32_t            joint_count;
     uint32_t            body_count;
     
-    btScalar            joint_cfm;      // Constraint force mixing (joint softness)
-    btScalar            joint_erp;      // Error reduction parameter (joint "inertia")
+    float               joint_cfm;      // Constraint force mixing (joint softness)
+    float               joint_erp;      // Error reduction parameter (joint "inertia")
     
     rd_joint_setup_s   *joint_setup;
     rd_body_setup_s    *body_setup;

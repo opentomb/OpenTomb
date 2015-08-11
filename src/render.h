@@ -74,7 +74,7 @@ typedef struct render_list_s
 {
     char               active;
     struct room_s     *room;
-    btScalar           dist;
+    float           dist;
 }render_list_t, *render_list_p;
 
 typedef struct render_settings_s
@@ -128,20 +128,20 @@ class CRenderDebugDrawer
             m_color[1] = g;
             m_color[2] = b;
         }
-        void drawAxis(btScalar r, btScalar transform[16]);
+        void drawAxis(float r, float transform[16]);
         void drawPortal(struct portal_s *p);
         void drawFrustum(struct frustum_s *f);
-        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
+        void drawBBox(float bb_min[3], float bb_max[3], float *transform);
         void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
+        void drawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals);
+        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16]);
         void drawEntityDebugLines(struct entity_s *entity);
         void drawSectorDebugLines(struct room_sector_s *rs);
         void drawRoomDebugLines(struct room_s *room, struct render_s *render);
         
         // physics debug interface
-        void   drawLine(const btScalar from[3], const btScalar to[3], const btScalar color_from[3], const btScalar color_to[3]);
-        void   drawContactPoint(const btScalar pointOnB[3], const btScalar normalOnB[3], btScalar distance, int lifeTime, const btScalar color[3]);
+        void   drawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);
+        void   drawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3]);
         void   setDebugMode(int debugMode) {m_debugMode = debugMode;};
         int    getDebugMode() const {return m_debugMode;}
         
@@ -165,21 +165,21 @@ void Render_InitGlobals();
 void Render_Init();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_SkyBox(const btScalar matrix[16]);
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
+void Render_Entity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации
+void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);
+void Render_Hair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
+void Render_SkyBox(const float matrix[16]);
+void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals);
 void Render_BSPPolygon(struct bsp_polygon_s *p);
 void Render_BSPFrontToBack(struct bsp_node_s *root);
 void Render_BSPBackToFront(struct bsp_node_s *root);
-void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);
+void Render_SkinMesh(struct base_mesh_s *mesh, float transform[16]);
 void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
+void Render_Room(struct room_s *room, struct render_s *render, const float matrix[16], const float modelViewProjectionMatrix[16]);
+void Render_Room_Sprites(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float projectionMatrix[16]);
 int Render_AddRoom(struct room_s *room);
 void Render_DrawList();
 void Render_DrawList_DebugLines();

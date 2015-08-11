@@ -42,7 +42,7 @@ void OBB_Clear(obb_p obb)
 }
 
 
-void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
+void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
 {
     polygon_p p, p_up, p_down;
     vertex_p v;
@@ -224,19 +224,19 @@ void OBB_Transform(obb_p obb)
 int OBB_OBB_Test(obb_p obb1, obb_p obb2)
 {
     //translation, in parent frame
-    btScalar v[3], T[3];
+    float v[3], T[3];
     vec3_sub(v, obb2->centre, obb1->centre);
     //translation, in A's frame
     T[0] = vec3_dot(v, obb1->transform + 0);
     T[1] = vec3_dot(v, obb1->transform + 4);
     T[2] = vec3_dot(v, obb1->transform + 8);
 
-    btScalar *a = obb1->extent;
-    btScalar *b = obb2->extent;
+    float *a = obb1->extent;
+    float *b = obb2->extent;
 
     //B's basis with respect to A's local frame
-    btScalar R[3][3];
-    btScalar ra, rb, t;
+    float R[3][3];
+    float ra, rb, t;
     int i, k;
 
     //calculate rotation matrix
@@ -244,8 +244,8 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            btScalar *e1b = obb1->transform + 4 * i;
-            btScalar *e2b = obb2->transform + 4 * k;
+            float *e1b = obb1->transform + 4 * i;
+            float *e2b = obb2->transform + 4 * k;
             R[i][k] = vec3_dot(e1b, e2b);
         }
     }

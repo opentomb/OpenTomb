@@ -162,7 +162,7 @@ void Entity_Disable(entity_p ent)
 
 void Entity_UpdateRoomPos(entity_p ent)
 {
-    btScalar pos[3];
+    float pos[3];
     room_p new_room;
     room_sector_p new_sector;
 
@@ -174,7 +174,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     }
     else
     {
-        btScalar v[3];
+        float v[3];
         vec3_add(v, ent->bf->bb_min, ent->bf->bb_max);
         v[0] /= 2.0;
         v[1] /= 2.0;
@@ -219,11 +219,11 @@ void Entity_UpdateRoomPos(entity_p ent)
 
 void Entity_UpdateTransform(entity_p entity)
 {
-    btScalar R[4], Rt[4], temp[4];
-    btScalar sin_t2, cos_t2, t;
-    btScalar *up_dir = entity->transform + 8;                                   // OZ
-    btScalar *view_dir = entity->transform + 4;                                 // OY
-    btScalar *right_dir = entity->transform + 0;                                // OX
+    float R[4], Rt[4], temp[4];
+    float sin_t2, cos_t2, t;
+    float *up_dir = entity->transform + 8;                                   // OZ
+    float *view_dir = entity->transform + 4;                                 // OY
+    float *right_dir = entity->transform + 0;                                // OX
     int i;
 
     if(entity->character != NULL)
@@ -312,8 +312,8 @@ void Entity_UpdateTransform(entity_p entity)
 
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
 {
-    btScalar t  = entity->current_speed * entity->speed_mult;
-    btScalar vz = (zeroVz)?(0.0):(entity->speed[2]);
+    float t  = entity->current_speed * entity->speed_mult;
+    float vz = (zeroVz)?(0.0):(entity->speed[2]);
 
     if(entity->dir_flag & ENT_MOVE_FORWARD)
     {
@@ -365,9 +365,9 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
 }
 
 
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
+void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
 {
-    btScalar cmd_tr[3], tr[3], t;
+    float cmd_tr[3], tr[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     skeletal_model_p model = bf->animations.model;
@@ -413,7 +413,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
         {
             bone_tag_p ov_src_btag = src_btag;
             bone_tag_p ov_next_btag = next_btag;
-            btScalar ov_lerp = bf->animations.lerp;
+            float ov_lerp = bf->animations.lerp;
             for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
             {
                 if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
@@ -440,6 +440,148 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
     for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
     {
         Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+    }
+}
+
+
+void Entity_UpdateRigidBody(struct entity_s *ent, int force)
+{
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+    {
+        float tr[16];
+        Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
+        Entity_UpdateRoomPos(ent);
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            Physics_GetBodyWorldTransform(ent->physics, tr, i);
+            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
+        }
+
+        // that cycle is necessary only for skinning models;
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            if(ent->bf->bone_tags[i].parent != NULL)
+            {
+                Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].parent->full_transform, ent->bf->bone_tags[i].full_transform);
+            }
+            else
+            {
+                Mat4_Copy(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].full_transform);
+            }
+        }
+
+        if(Physics_IsGhostsInited(ent->physics))
+        {
+            float v[3];
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                Physics_GetBodyWorldTransform(ent->physics, tr, i);
+                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
+                vec3_copy(tr+12, v);
+                Physics_SetGhostWorldTransform(ent->physics, tr, i);
+            }
+        }
+
+        if(ent->bf->bone_tag_count == 1)
+        {
+            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
+        }
+        else
+        {
+            vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                float *pos = ent->bf->bone_tags[i].full_transform + 12;
+                float *bb_min = ent->bf->bone_tags[i].mesh_base->bb_min;
+                float *bb_max = ent->bf->bone_tags[i].mesh_base->bb_max;
+                float r = bb_max[0] - bb_min[0];
+                float t = bb_max[1] - bb_min[1];
+                r = (t > r)?(t):(r);
+                t = bb_max[2] - bb_min[2];
+                r = (t > r)?(t):(r);
+                r *= 0.5;
+
+                if(ent->bf->bb_min[0] > pos[0] - r)
+                {
+                    ent->bf->bb_min[0] = pos[0] - r;
+                }
+                if(ent->bf->bb_min[1] > pos[1] - r)
+                {
+                    ent->bf->bb_min[1] = pos[1] - r;
+                }
+                if(ent->bf->bb_min[2] > pos[2] - r)
+                {
+                    ent->bf->bb_min[2] = pos[2] - r;
+                }
+
+                if(ent->bf->bb_max[0] < pos[0] + r)
+                {
+                    ent->bf->bb_max[0] = pos[0] + r;
+                }
+                if(ent->bf->bb_max[1] < pos[1] + r)
+                {
+                    ent->bf->bb_max[1] = pos[1] + r;
+                }
+                if(ent->bf->bb_max[2] < pos[2] + r)
+                {
+                    ent->bf->bb_max[2] = pos[2] + r;
+                }
+            }
+        }
+    }
+    else
+    {
+        if((ent->bf->animations.model == NULL) || !Physics_IsBodyesInited(ent->physics) ||
+           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->frames_count == 1)))
+        {
+            return;
+        }
+
+        Entity_UpdateRoomPos(ent);
+        if(ent->self->collision_type & 0x0001)
+        //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
+        {
+            float tr[16];
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                Physics_SetBodyWorldTransform(ent->physics, tr, i);
+            }
+        }
+    }
+    Entity_RebuildBV(ent);
+}
+
+
+void Entity_GhostUpdate(struct entity_s *ent)
+{
+    if(Physics_IsGhostsInited(ent->physics))
+    {
+        if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+        {
+            float tr[16], pos[3], *v;
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                v = ent->bf->animations.model->mesh_tree[i].mesh_base->centre;
+                Mat4_vec3_mul_macro(pos, tr, v);
+                vec3_copy(tr + 12, v);
+                Physics_SetGhostWorldTransform(ent->physics, tr, i);
+            }
+        }
+        else
+        {
+            float tr[16], v[3];
+            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            {
+                Physics_GetBodyWorldTransform(ent->physics, tr, i);
+                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
+                vec3_copy(tr + 12, v);
+                Physics_SetGhostWorldTransform(ent->physics, tr, i);
+            }
+        }
     }
 }
 
@@ -483,10 +625,10 @@ int  Entity_GetSubstanceState(entity_p entity)
     }
 }
 
-btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
+float Entity_FindDistance(entity_p entity_1, entity_p entity_2)
 {
-    btScalar *v1 = entity_1->transform + 12;
-    btScalar *v2 = entity_2->transform + 12;
+    float *v1 = entity_1->transform + 12;
+    float *v2 = entity_2->transform + 12;
 
     return vec3_dist(v1, v2);
 }
@@ -606,7 +748,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                             case TR_EFFECT_SHAKESCREEN:
                                 if(engine_world.Character)
                                 {
-                                    btScalar dist = Entity_FindDistance(engine_world.Character, entity);
+                                    float dist = Entity_FindDistance(engine_world.Character, entity);
                                     dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                                     if(dist > 0)
                                         Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
@@ -826,10 +968,10 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     entity->bf->animations.next_animation = animation;
     entity->bf->animations.next_frame = frame;
 
-    entity->bf->animations.frame_time = (btScalar)frame * entity->bf->animations.period;
+    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period;
     //long int t = (entity->bf->animations.frame_time) / entity->bf->animations.period;
-    //btScalar dt = entity->bf->animations.frame_time - (btScalar)t * entity->bf->animations.period;
-    entity->bf->animations.frame_time = (btScalar)frame * entity->bf->animations.period;// + dt;
+    //float dt = entity->bf->animations.frame_time - (float)t * entity->bf->animations.period;
+    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period;// + dt;
 
     Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
@@ -899,7 +1041,7 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
     animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
 
@@ -997,24 +1139,24 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
-            btScalar tr[3];
+            float tr[3];
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
             vec3_add(entity->transform+12, entity->transform+12, tr);
         }
     }
 }
 
-void Character_DoWeaponFrame(entity_p entity, btScalar time);
+void Character_DoWeaponFrame(entity_p entity, float time);
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
 ///@TODO: rewrite as a cycle through all bf.animations list
-int Entity_Frame(entity_p entity, btScalar time)
+int Entity_Frame(entity_p entity, float time)
 {
     int16_t frame, anim, ret = 0x00;
     long int t;
-    btScalar dt;
+    float dt;
     animation_frame_p af;
     state_change_p stc;
     ss_animation_p ss_anim;
@@ -1061,8 +1203,8 @@ int Entity_Frame(entity_p entity, btScalar time)
     entity->bf->animations.frame_time += time;
 
     t = (entity->bf->animations.frame_time) / entity->bf->animations.period;
-    dt = entity->bf->animations.frame_time - (btScalar)t * entity->bf->animations.period;
-    entity->bf->animations.frame_time = (btScalar)frame * entity->bf->animations.period + dt;
+    dt = entity->bf->animations.frame_time - (float)t * entity->bf->animations.period;
+    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period + dt;
     entity->bf->animations.lerp = dt / entity->bf->animations.period;
     Entity_GetNextFrame(entity->bf, entity->bf->animations.period, stc, &entity->bf->animations.next_frame, &entity->bf->animations.next_animation, ss_anim->anim_flags);
 
@@ -1124,7 +1266,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 {
     if((ent != NULL) && (ent->self->room != NULL))
     {
-        btScalar ppos[3];
+        float ppos[3];
 
         ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf->bb_max[1];
         ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf->bb_max[1];
@@ -1135,7 +1277,7 @@ void Entity_CheckActivators(struct entity_s *ent)
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
                 entity_p e = (entity_p)cont->object;
-                btScalar r = e->activation_offset[3];
+                float r = e->activation_offset[3];
                 r *= r;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
@@ -1147,7 +1289,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    btScalar *v = e->transform + 12;
+                    float *v = e->transform + 12;
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12+2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf->bb_max[2]))
                     {
@@ -1160,7 +1302,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 }
 
 
-void Entity_MoveForward(entity_p ent, btScalar dist)
+void Entity_MoveForward(entity_p ent, float dist)
 {
     ent->transform[12] += ent->transform[4] * dist;
     ent->transform[13] += ent->transform[5] * dist;
@@ -1168,7 +1310,7 @@ void Entity_MoveForward(entity_p ent, btScalar dist)
 }
 
 
-void Entity_MoveStrafe(entity_p ent, btScalar dist)
+void Entity_MoveStrafe(entity_p ent, float dist)
 {
     ent->transform[12] += ent->transform[0] * dist;
     ent->transform[13] += ent->transform[1] * dist;
@@ -1176,7 +1318,7 @@ void Entity_MoveStrafe(entity_p ent, btScalar dist)
 }
 
 
-void Entity_MoveVertical(entity_p ent, btScalar dist)
+void Entity_MoveVertical(entity_p ent, float dist)
 {
     ent->transform[12] += ent->transform[8] * dist;
     ent->transform[13] += ent->transform[9] * dist;
@@ -1187,7 +1329,7 @@ void Entity_MoveVertical(entity_p ent, btScalar dist)
 /* There are stick code for multianimation (weapon mode) testing
  * Model replacing will be upgraded too, I have to add override
  * flags to model manually in the script*/
-void Character_DoWeaponFrame(entity_p entity, btScalar time)
+void Character_DoWeaponFrame(entity_p entity, float time)
 {
     if(entity->character != NULL)
     {
@@ -1210,7 +1352,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
             Character_SetWeaponModel(entity, entity->character->current_weapon, 1);
         }
 
-        btScalar dt;
+        float dt;
         int t;
 
         for(ss_animation_p ss_anim=entity->bf->animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
@@ -1234,7 +1376,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                     case WEAPON_STATE_HIDE_TO_READY:
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1288,7 +1430,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)
@@ -1307,7 +1449,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                     case WEAPON_STATE_IDLE_TO_FIRE:
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1343,7 +1485,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                             // inc time, loop;
                             ss_anim->frame_time += time;
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                            dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                             ss_anim->lerp = dt / ss_anim->period;
                             t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1379,7 +1521,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         if(ss_anim->current_frame < t - 1)
                         {
@@ -1415,7 +1557,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                     case WEAPON_STATE_HIDE_TO_READY:
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1469,7 +1611,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)
@@ -1488,7 +1630,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                     case WEAPON_STATE_IDLE_TO_FIRE:
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1524,7 +1666,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                             // inc time, loop;
                             ss_anim->frame_time += time;
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                            dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                             ss_anim->lerp = dt / ss_anim->period;
                             t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
@@ -1561,7 +1703,7 @@ void Character_DoWeaponFrame(entity_p entity, btScalar time)
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)

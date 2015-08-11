@@ -23,7 +23,7 @@ typedef struct bsp_polygon_s
 
 typedef struct bsp_node_s
 {
-    btScalar                plane[4];
+    float                   plane[4];
     
     struct bsp_polygon_s   *polygons_front;
     struct bsp_polygon_s   *polygons_back;
@@ -62,7 +62,7 @@ public:
     CDynamicBSP(uint32_t size);
    ~CDynamicBSP();
    
-    void addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f);
+    void addNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f);
     void reset(struct anim_seq_s *seq);
     
     struct vertex_s *getVertexArray()

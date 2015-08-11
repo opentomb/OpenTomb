@@ -8,18 +8,6 @@ extern "C" {
 
 #include <math.h>
 
-#ifndef btScalar
-#if defined(BT_USE_DOUBLE_PRECISION)
-#define btScalar double
-//this number could be bigger in double precision
-#define BT_LARGE_FLOAT 1e30
-#else
-#define btScalar float
-//keep BT_LARGE_FLOAT*BT_LARGE_FLOAT < FLT_MAX
-#define BT_LARGE_FLOAT 1e18f
-#endif
-#endif  // #ifndef btScalar
-
 #ifndef M_PI
 #define M_PI        3.14159265358979323846
 #endif
@@ -88,12 +76,12 @@ extern "C" {
                    (dot)[1] = (p)[1] + (t) * (v)[1]; \
                    (dot)[2] = (p)[2] + (t) * (v)[2]; }
 
-void vec3_GetPlaneEquation(btScalar eq[4], btScalar v0[3], btScalar v1[3], btScalar v2[3]);
-void vec3_RotateX(btScalar res[3], btScalar src[3], btScalar ang);
-void vec3_RotateY(btScalar res[3], btScalar src[3], btScalar ang);
-void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang);
+void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3]);
+void vec3_RotateX(float res[3], float src[3], float ang);
+void vec3_RotateY(float res[3], float src[3], float ang);
+void vec3_RotateZ(float res[3], float src[3], float ang);
 
-//vec4 - btScalar[4] (x, y, z, w)
+//vec4 - float[4] (x, y, z, w)
 
 #define vec4_set_one(x) {(x)[0] = 1.0; (x)[1] = 1.0; (x)[2] = 1.0; (x)[3] = 1.0;}
 #define vec4_set_zero(x) {(x)[0] = 0.0; (x)[1] = 0.0; (x)[2] = 0.0; (x)[3] = 0.0;}
@@ -122,13 +110,13 @@ void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang);
 
 #define vec4_dot(x, y) ((x)[0]*(y)[0] + (x)[1]*(y)[1] + (x)[2]*(y)[2] + (x)[3]*(y)[3])
 
-void vec4_rev(btScalar rev[4], btScalar src[4]);
-void vec4_div(btScalar ret[4], btScalar a[4], btScalar b[4]);
-void vec4_rotate(btScalar rot[4], btScalar vec[4], btScalar angle);
-void vec4_GetEilerOrientationTransform(btScalar R[4], btScalar ang[3]);
-void vec4_GetPlaneEquation(btScalar eq[4], btScalar poly[12]);
-void vec4_slerp(btScalar ret[4], btScalar q1[4], btScalar q2[4], btScalar t);
-void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
+void vec4_rev(float rev[4], float src[4]);
+void vec4_div(float ret[4], float a[4], float b[4]);
+void vec4_rotate(float rot[4], float vec[4], float angle);
+void vec4_GetEilerOrientationTransform(float R[4], float ang[3]);
+void vec4_GetPlaneEquation(float eq[4], float poly[12]);
+void vec4_slerp(float ret[4], float q1[4], float q2[4], float t);
+void vec4_SetTRRotations(float v[4], float rot[3]);
 /*
  * Matrix transformation functions and macro
  */
@@ -210,23 +198,23 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
     (mat)[15] = 1.0;\
 }
 
-void Mat4_E(btScalar mat[16]);
-void Mat4_Copy(btScalar dst[16], const btScalar src[16]);
-void Mat4_Translate(btScalar mat[16], const btScalar v[3]);
-void Mat4_Scale(btScalar mat[16], btScalar x, btScalar y, btScalar z);
-void Mat4_RotateX(btScalar mat[16], btScalar ang);
-void Mat4_RotateY(btScalar mat[16], btScalar ang);
-void Mat4_RotateZ(btScalar mat[16], btScalar ang);
-void Mat4_T(btScalar mat[16]);
-void Mat4_affine_inv(btScalar mat[16]);
-void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16]);
-void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
-void Mat4_vec3_mul(btScalar v[3], const btScalar mat[16], const btScalar src[3]);
-void Mat4_vec3_mul_inv(btScalar v[3], btScalar mat[16], btScalar src[3]);
-void Mat4_vec3_mul_T(btScalar v[3], btScalar mat[16], btScalar src[3]);
-void Mat4_SetSelfOrientation(btScalar mat[16], btScalar ang[3]);
+void Mat4_E(float mat[16]);
+void Mat4_Copy(float dst[16], const float src[16]);
+void Mat4_Translate(float mat[16], const float v[3]);
+void Mat4_Scale(float mat[16], float x, float y, float z);
+void Mat4_RotateX(float mat[16], float ang);
+void Mat4_RotateY(float mat[16], float ang);
+void Mat4_RotateZ(float mat[16], float ang);
+void Mat4_T(float mat[16]);
+void Mat4_affine_inv(float mat[16]);
+void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16]);
+void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16]);
+void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3]);
+void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3]);
+void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3]);
+void Mat4_SetSelfOrientation(float mat[16], float ang[3]);
 
-int ThreePlanesIntersection(btScalar v[3], btScalar n0[4], btScalar n1[4], btScalar n2[4]);
+int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4]);
 #define ThreePlanesIntersection_macro(v, n0, n1, n2, d)\
 {\
     (d) =-(n0)[0] * ((n1)[1] * (n2)[2] - (n1)[2] * (n2)[1]) + \

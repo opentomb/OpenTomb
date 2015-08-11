@@ -32,7 +32,7 @@ portal_p Portal_Create(unsigned int vcount)
 {
     portal_p p = (portal_p)malloc(sizeof(portal_t));
     p->vertex_count = vcount;
-    p->vertex = (btScalar*)malloc(3*vcount*sizeof(btScalar));
+    p->vertex = (float*)malloc(3*vcount*sizeof(float));
     p->dest_room = NULL;
     return p;
 }
@@ -57,7 +57,7 @@ void Portal_Clear(portal_p p)
  */
 int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
 {
-    btScalar bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
+    float bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
 
     /*
      * Если портал вертикальный, то
@@ -114,7 +114,7 @@ int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
  */
 int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
 {
-    btScalar bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
+    float bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
     char in_x, in_y;
 
     bb_min[0] = bb_max[0] = sector->owner_room->transform[12] + 1024.0 * sector->index_x;
@@ -222,9 +222,9 @@ int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
 }
 
 
-void Portal_Move(portal_p p, btScalar mv[3])
+void Portal_Move(portal_p p, float mv[3])
 {
-    btScalar *v = p->vertex;
+    float *v = p->vertex;
 
     vec3_add(p->centre, p->centre, mv);
     for(uint16_t i=0;i<p->vertex_count;i++,v+=3)
@@ -242,9 +242,9 @@ void Portal_Move(portal_p p, btScalar mv[3])
  * dir - ray directionа
  * dot - point of ray - plane intersection
  */
-int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3])
+int Portal_RayIntersect(portal_p p, float dir[3], float dot[3])
 {
-    btScalar t, u, v, E1[3], E2[3], P[3], Q[3], T[3], *vd;
+    float t, u, v, E1[3], E2[3], P[3], Q[3], T[3], *vd;
 
     u = vec3_dot(p->norm, dir);
     if(ABS(u) < SPLIT_EPSILON)
@@ -290,7 +290,7 @@ int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3])
  */
 void Portal_GenNormale(portal_p p)
 {
-    btScalar v1[3], v2[3];
+    float v1[3], v2[3];
 
     vec3_sub(v1, p->vertex+3, p->vertex)
     vec3_sub(v2, p->vertex+6, p->vertex+3)

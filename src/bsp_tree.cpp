@@ -108,7 +108,7 @@ void CDynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
     uint16_t positive = 0;
     uint16_t negative = 0;
     uint16_t in_plane = 0;
-    btScalar dist;
+    float dist;
     vertex_p v = p->vertices;
     for(uint16_t i=0;i<p->vertex_count;i++,v++)
     {
@@ -229,7 +229,7 @@ CDynamicBSP::~CDynamicBSP()
 }
 
 
-void CDynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
+void CDynamicBSP::addNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f)
 {
     for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
     {

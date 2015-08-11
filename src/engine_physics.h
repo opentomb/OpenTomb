@@ -28,8 +28,8 @@ typedef struct collision_result_s
 {
     struct engine_container_s  *obj;
     uint16_t                    bone_num;
-    btScalar                    point[3];
-    btScalar                    normale[3];
+    float                       point[3];
+    float                       normale[3];
 }collision_result_t, *collision_result_p;
 
 
@@ -41,18 +41,25 @@ struct physics_object_s;
 /* Common physics functions */
 void Physics_Init();
 void Physics_Destroy();
-void Physics_StepSimulation(btScalar time);
+void Physics_StepSimulation(float time);
 void Physics_DebugDrawWorld();
 void Physics_CleanUpObjects();
 
 struct physics_data_s *Physics_CreatePhysicsData();
 void Physics_DeletePhysicsData(struct physics_data_s *physics);
 
-void Physics_GetGravity(btScalar g[3]);
-void Physics_SetGravity(btScalar g[3]);
+void Physics_GetGravity(float g[3]);
+void Physics_SetGravity(float g[3]);
 
-int  Physics_RayTest(struct collision_result_s *result, btScalar from[3], btScalar to[3], struct engine_container_s *cont);
-int  Physics_SphereTest(struct collision_result_s *result, btScalar from[3], btScalar to[3], btScalar R, struct engine_container_s *cont);
+int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
+int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont);
+
+int Physics_IsBodyesInited(struct physics_data_s *physics);
+int Physics_IsGhostsInited(struct physics_data_s *physics);
+void Physics_GetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
+void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
+void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
+void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 
 // Bullet entity rigid body generating.
 void Physics_GenEntityRigidBody(struct entity_s *ent);
@@ -65,19 +72,19 @@ void Physics_DisableObject(struct physics_object_s *obj);
 void Entity_EnableCollision(struct entity_s *ent);
 void Entity_DisableCollision(struct entity_s *ent);
 void Entity_SetCollisionScale(struct entity_s *ent);
-void Entity_SetBodyMass(struct entity_s *ent, btScalar mass, uint16_t index);
-void Entity_PushBody(struct entity_s *ent, btScalar speed[3], uint16_t index);
-void Entity_SetLinearFactor(struct entity_s *ent, btScalar factor[3], uint16_t index);
+void Entity_GetBodyWorldTransform(struct entity_s *ent, float tr[3], uint16_t index);
+void Entity_SetBodyWorldTransform(struct entity_s *ent, float tr[3], uint16_t index);
+void Entity_SetBodyMass(struct entity_s *ent, float mass, uint16_t index);
+void Entity_PushBody(struct entity_s *ent, float speed[3], uint16_t index);
+void Entity_SetLinearFactor(struct entity_s *ent, float factor[3], uint16_t index);
 void Entity_SetNoFixBodyPartFlag(struct entity_s *ent, uint32_t flag);
 void Entity_SetNoFixAllFlag(struct entity_s *ent, uint8_t flag);
 uint8_t Entity_GetNoFixAllFlag(struct entity_s *ent);
 void Entity_CreateGhosts(struct entity_s *ent);
-void Entity_GhostUpdate(struct entity_s *ent);
 void Entity_UpdateCurrentCollisions(struct entity_s *ent);
-int  Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
-void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
-int  Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-void Entity_UpdateRigidBody(struct entity_s *ent, int force);
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3]);
+void Entity_FixPenetrations(struct entity_s *ent, float move[3]);
+int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3]);
 bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
 void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);

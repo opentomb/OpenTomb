@@ -86,30 +86,30 @@ typedef struct control_action_s
 
 typedef struct control_settings_s
 {
-    float    mouse_sensitivity;
+    float       mouse_sensitivity;
 
     // Global joystick settings.
-    int8_t   use_joy;
-    int8_t   joy_number;
-    int8_t   joy_rumble;
+    int8_t      use_joy;
+    int8_t      joy_number;
+    int8_t      joy_rumble;
 
     // Look axis settings.
-    btScalar joy_look_x;                        // Raw look axis data!
-    btScalar joy_look_y;                        // Raw look axis data!
-    int8_t   joy_look_invert_x;
-    int8_t   joy_look_invert_y;
-    btScalar joy_look_sensitivity;
-    int16_t  joy_look_deadzone;
+    float       joy_look_x;                        // Raw look axis data!
+    float       joy_look_y;                        // Raw look axis data!
+    int8_t      joy_look_invert_x;
+    int8_t      joy_look_invert_y;
+    float       joy_look_sensitivity;
+    int16_t     joy_look_deadzone;
 
     // Move axis settings.
-    btScalar joy_move_x;                        // Raw move axis data!
-    btScalar joy_move_y;                        // Raw move axis data!
-    int8_t   joy_move_invert_x;
-    int8_t   joy_move_invert_y;
-    btScalar joy_move_sensitivity;
-    int16_t  joy_move_deadzone;
+    float       joy_move_x;                        // Raw move axis data!
+    float       joy_move_y;                        // Raw move axis data!
+    int8_t      joy_move_invert_x;
+    int8_t      joy_move_invert_y;
+    float       joy_move_sensitivity;
+    int16_t     joy_move_deadzone;
 
-    int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
+    int8_t      joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
 
     control_action_s  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
 }control_settings_t, *control_settings_p;

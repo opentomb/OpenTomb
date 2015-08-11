@@ -300,7 +300,7 @@ typedef struct audio_emitter_s
 {
     ALuint      emitter_index;  // Unique emitter index.
     ALuint      sound_index;    // Sound index.
-    btScalar    position[3];    // Vector coordinate.    
+    float       position[3];    // Vector coordinate.    
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
 }audio_emitter_t, *audio_emitter_p;
 

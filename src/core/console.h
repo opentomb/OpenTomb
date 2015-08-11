@@ -65,40 +65,13 @@ enum font_Type
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 #define GUI_MAX_FONTS      8    // 8 fonts is PLENTY.
 
-typedef struct console_info_s
-{
-    GLfloat                     background_color[4];
-
-    uint16_t                    log_lines_count;            // Amount of log lines to use
-    uint16_t                    log_pos;                    // Current log position
-    char                      **log_lines;                  // Console lines
-
-    uint16_t                    line_count;                 // Amount of shown lines
-    uint16_t                   *line_style_id;
-    char                      **line_text;                  // Console text
-
-    uint16_t                    line_size;                  // Console line size
-    int16_t                     line_height;                // Height, including spacing
-
-    uint16_t                    showing_lines;              // Amount of visible lines
-    int16_t                     cursor_pos;                 // Current cursor position, in symbols
-    int16_t                     cursor_x;                   // Cursor position in pixels
-    int16_t                     cursor_y;
-    
-    float                       spacing;                    // Line spacing
-    float                       cursor_time;                // Current cursor draw time
-    float                       show_cursor_period;
-    
-    int8_t                      show_cursor;                // Cursor visibility flag
-    int8_t                      show_console;               // Visibility flag
-}console_info_t, *console_info_p;
-
+struct lua_State;
 
 void Con_Init();
 void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();
-console_info_p Con_GetConsole();
+void Con_ParseSettings(struct lua_State *lua);
 
 float Con_GetLineInterval();
 void  Con_SetLineInterval(float interval);

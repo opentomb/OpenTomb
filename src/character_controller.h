@@ -175,52 +175,52 @@ struct entity_s;
 
 typedef struct climb_info_s
 {
-    int8_t                         height_info;
-    int8_t                         can_hang;
-    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit;
+    int8_t                      height_info;
+    int8_t                      can_hang;
+    int8_t                      wall_hit;                                       // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                      edge_hit;
     
-    btScalar                       point[3];
-    btScalar                       n[3];
-    btScalar                       t[3];
-    btScalar                       up[3];
-    btScalar                       floor_limit;
-    btScalar                       ceiling_limit;
-    btScalar                       next_z_space;
+    float                       point[3];
+    float                       n[3];
+    float                       t[3];
+    float                       up[3];
+    float                       floor_limit;
+    float                       ceiling_limit;
+    float                       next_z_space;
 
-    btScalar                       edge_point[3];
-    btScalar                       edge_normale[3];
-    btScalar                       edge_tan_xy[2];
-    btScalar                       edge_z_ang;
+    float                       edge_point[3];
+    float                       edge_normale[3];
+    float                       edge_tan_xy[2];
+    float                       edge_z_ang;
     // bone number?
-    struct engine_container_s     *edge_obj;
+    struct engine_container_s  *edge_obj;
 }climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
 {
-    int8_t                                      ceiling_climb;
-    int8_t                                      walls_climb;
-    int8_t                                      walls_climb_dir;
-    struct engine_container_s                  *self;
+    int8_t                                   ceiling_climb;
+    int8_t                                   walls_climb;
+    int8_t                                   walls_climb_dir;
+    struct engine_container_s               *self;
     
-    btScalar                                    floor_normale[3];
-    btScalar                                    floor_point[3];
-    int16_t                                     floor_hit;
-    struct engine_container_s                  *floor_obj;
+    float                                    floor_normale[3];
+    float                                    floor_point[3];
+    int16_t                                  floor_hit;
+    struct engine_container_s               *floor_obj;
 
-    btScalar                                    ceiling_normale[3];
-    btScalar                                    ceiling_point[3];
-    int16_t                                     ceiling_hit;
-    struct engine_container_s                  *ceiling_obj;
+    float                                    ceiling_normale[3];
+    float                                    ceiling_point[3];
+    int16_t                                  ceiling_hit;
+    struct engine_container_s               *ceiling_obj;
 
-    btScalar                                    transition_level;
-    int16_t                                     water;
-    int16_t                                     quicksand;
+    float                                    transition_level;
+    int16_t                                  water;
+    int16_t                                  quicksand;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
 {
-    btScalar    rot[3];
+    float       rot[3];
     int8_t      move[3];
 
     int8_t      roll;
@@ -272,43 +272,43 @@ typedef struct inventory_node_s
 
 typedef struct character_s
 {
-    struct entity_s             *ent;                    // actor entity
-    struct character_command_s   cmd;                    // character control commands
-    struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    struct entity_s            *ent;                    // actor entity
+    struct character_command_s  cmd;                    // character control commands
+    struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
     
-    struct inventory_node_s     *inventory;
-    struct character_param_s     parameters;
-    struct character_stats_s     statistics;
+    struct inventory_node_s    *inventory;
+    struct character_param_s    parameters;
+    struct character_stats_s    statistics;
     
-    int8_t                       hair_count;
-    struct hair_s              **hairs;
+    int8_t                      hair_count;
+    struct hair_s             **hairs;
     
-    int                          current_weapon;
-    int                          weapon_current_state;
+    int                         current_weapon;
+    int                         weapon_current_state;
     
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     
-    int8_t                       cam_follow_center;
-    btScalar                     min_step_up_height;
-    btScalar                     max_step_up_height;
-    btScalar                     max_climb_height;
-    btScalar                     fall_down_height;
-    btScalar                     critical_slant_z_component;
-    btScalar                     critical_wall_component;
+    int8_t                      cam_follow_center;
+    float                       min_step_up_height;
+    float                       max_step_up_height;
+    float                       max_climb_height;
+    float                       fall_down_height;
+    float                       critical_slant_z_component;
+    float                       critical_wall_component;
 
-    btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     forvard_size;           // offset for climbing calculation
-    btScalar                     Height;                 // base character height
-    btScalar                     wade_depth;             // water depth that enable wade walk
-    btScalar                     swim_depth;             // depth offset for starting to swim
+    float                       climb_r;                // climbing sensor radius
+    float                       forvard_size;           // offset for climbing calculation
+    float                       Height;                 // base character height
+    float                       wade_depth;             // water depth that enable wade walk
+    float                       swim_depth;             // depth offset for starting to swim
     
-    btScalar                     sphere;                 // needs to height calculation
-    btScalar                     climb_sensor;
+    float                       sphere;                 // needs to height calculation
+    float                       climb_sensor;
 
-    struct height_info_s         height_info;
-    struct climb_info_s          climb;
+    struct height_info_s        height_info;
+    struct climb_info_s         climb;
 
-    struct entity_s             *traversed_object;
+    struct entity_s            *traversed_object;
 }character_t, *character_p;
 
 void Character_Create(struct entity_s *ent);
@@ -319,20 +319,20 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
 int32_t Character_RemoveAllItems(struct entity_s *ent);
 int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
 
-void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
+void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
+int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
-climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
+climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], struct height_info_s *nfc, float test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
-void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
-btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command);
-btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis);
+void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
+void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
+float Character_InertiaLinear(struct entity_s *ent, float max_speed, float accel, int8_t command);
+float Character_InertiaAngular(struct entity_s *ent, float max_angle, float accel, uint8_t axis);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
@@ -343,7 +343,7 @@ int Character_MoveUnderWater(struct entity_s *ent);
 int Character_MoveOnWater(struct entity_s *ent);
 
 int Character_FindTraverse(struct entity_s *ch);
-int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont);
+int Sector_AllowTraverse(struct room_sector_s *rs, float floor, struct engine_container_s *cont);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
 void Character_ApplyCommands(struct entity_s *ent);

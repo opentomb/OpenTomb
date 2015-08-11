@@ -72,18 +72,18 @@ typedef struct entity_s
     uint16_t                            state_flags;
 
     uint16_t                            move_type;          // on floor / free fall / swim ....    
-    btScalar                            current_speed;      // current linear speed from animation info
-    btScalar                            speed_mult;
-    btScalar                            speed[3];           // speed of the entity XYZ
+    float                               current_speed;      // current linear speed from animation info
+    float                               speed_mult;
+    float                               speed[3];           // speed of the entity XYZ
     
-    btScalar                            inertia_linear;     // linear inertia
-    btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
+    float                               inertia_linear;     // linear inertia
+    float                               inertia_angular[2]; // angular inertia - X and Y axes
     
     struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
     struct physics_data_s              *physics;
-    btScalar                            scaling[3];         // entity scaling
-    btScalar                            angles[3];
-    btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    float                               scaling[3];         // entity scaling
+    float                               angles[3];
+    float                               transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 
     struct obb_s                       *obb;                // oriented bounding box
 
@@ -92,7 +92,7 @@ typedef struct entity_s
 
     struct engine_container_s          *self;
 
-    btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
+    float                               activation_offset[4];   // where we can activate object (dx, dy, dz, r)
     
     struct character_s                 *character;
 }entity_t, *entity_p;
@@ -107,8 +107,8 @@ void Entity_UpdateRoomPos(entity_p ent);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id);
-void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to change state
+void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+int  Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
@@ -118,17 +118,19 @@ void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetSubstanceState(entity_p entity);
 
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
+void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
+void Entity_UpdateRigidBody(struct entity_s *ent, int force);
+void Entity_GhostUpdate(struct entity_s *ent);
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
-void Entity_MoveForward(entity_p ent, btScalar dist);
-void Entity_MoveStrafe(entity_p ent, btScalar dist);
-void Entity_MoveVertical(entity_p ent, btScalar dist);
+void Entity_MoveForward(entity_p ent, float dist);
+void Entity_MoveStrafe(entity_p ent, float dist);
+void Entity_MoveVertical(entity_p ent, float dist);
 
 // Helper functions
 
-btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
+float Entity_FindDistance(entity_p entity_1, entity_p entity_2);
 
 #endif

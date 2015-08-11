@@ -25,7 +25,7 @@ extern "C" {
  */
 typedef struct vertex_s
 {
-    btScalar        position[4];
+    float        position[4];
     GLfloat         normal[4];
     GLfloat         color[4];
     GLfloat         tex_coord[2];
@@ -41,7 +41,7 @@ typedef struct polygon_s
     uint16_t            frame_offset;                                           // anim texture frame offset
     uint16_t            transparency;                                           // transparency information
     uint8_t             double_side;                                            // double side flag
-    btScalar            plane[4];                                               // polygon plane equation
+    float            plane[4];                                               // polygon plane equation
 
     struct polygon_s   *next;                                                   // polygon list (for BSP using)
 }polygon_t, *polygon_p;
@@ -87,20 +87,20 @@ void Polygon_Clear(polygon_p p);
 int  Polygon_IsBroken(polygon_p p);
 void Polygon_Copy(polygon_p dst, polygon_p src);
 
-void Polygon_MoveSelf(polygon_p p, btScalar move[3]);
-void Polygon_Move(polygon_p ret, polygon_p src, btScalar move[3]);
-void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16]);
-void Polygon_TransformSelf(polygon_p p, btScalar tr[16]);
+void Polygon_MoveSelf(polygon_p p, float move[3]);
+void Polygon_Move(polygon_p ret, polygon_p src, float move[3]);
+void Polygon_Transform(polygon_p ret, polygon_p src, float tr[16]);
+void Polygon_TransformSelf(polygon_p p, float tr[16]);
 
 void Polygon_FindNormale(polygon_p p);
-int  Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t);
+int  Polygon_RayIntersect(polygon_p p, float dir[3], float dot[3], float *t);
 int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
-int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);
-void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back);
+int  Polygon_SplitClassify(polygon_p p, float n[4]);
+void Polygon_Split(polygon_p src, float n[4], polygon_p front, polygon_p back);
 
-int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
-int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
+int Polygon_IsInsideBBox(polygon_p p, float bb_min[3], float bb_max[3]);
+int Polygon_IsInsideBQuad(polygon_p p, float bb_min[3], float bb_max[3]);
 
 #ifdef	__cplusplus
 }

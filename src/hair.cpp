@@ -28,7 +28,6 @@ extern "C" {
 typedef struct physics_data_s
 {
     // kinematic
-    btCollisionShape                  **shapes;
     btRigidBody                       **bt_body;
 
     // dynamic
@@ -40,7 +39,7 @@ typedef struct physics_data_s
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
 
-    struct collision_node_s           *collisions;
+    struct collision_node_s            *collisions;
 }physics_data_t, *physics_data_p;
 
 
@@ -511,8 +510,17 @@ int Hair_GetElementsCount(struct hair_s *hair)
     return (hair)?(hair->element_count):(0);
 }
 
-int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, btScalar tr[16])
+int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16])
 {
+#ifndef BT_USE_DOUBLE_PRECISION
     hair->elements[element].body->getWorldTransform().getOpenGLMatrix(tr);
+#else
+    btScalar btTr[16];
+    hair->elements[element].body->getWorldTransform().getOpenGLMatrix(btTr);
+    for(int i = 0; i < 16; i++)
+    {
+        tr[i] = btTr[i];
+    }
+#endif
     *mesh = hair->elements[element].mesh;
 }

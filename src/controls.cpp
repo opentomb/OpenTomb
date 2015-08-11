@@ -658,10 +658,10 @@ void Controls_DebugKeys(int button, int state)
 void Controls_PrimaryMouseDown()
 {
     /*engine_container_p cont = Container_Create();
-    btScalar dbgR = 128.0;
-    btScalar *v = engine_camera.pos;
-    btScalar *dir = engine_camera.view_dir;
-    btScalar new_pos[3];
+    float dbgR = 128.0;
+    float *v = engine_camera.pos;
+    float *dir = engine_camera.view_dir;
+    float new_pos[3];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
@@ -689,7 +689,7 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    btScalar from[3], to[3];
+    float from[3], to[3];
     engine_container_t cam_cont;
     collision_result_t cb;
 

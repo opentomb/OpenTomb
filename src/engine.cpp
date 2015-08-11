@@ -46,7 +46,7 @@ extern ALCcontext                      *al_context;
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
 struct audio_settings_s                 audio_settings = {0};
-btScalar                                engine_frame_time = 0.0;
+float                                   engine_frame_time = 0.0;
 
 lua_State                              *engine_lua = NULL;
 struct camera_s                         engine_camera;
@@ -722,7 +722,7 @@ void Engine_InitConfig(const char *filename)
             lua_ParseScreen(lua, &screen_info);
             lua_ParseRender(lua, &renderer.settings);
             lua_ParseAudio(lua, &audio_settings);
-            lua_ParseConsole(lua, Con_GetConsole());
+            Con_ParseSettings(lua);
             lua_ParseControls(lua, &control_mapper);
             lua_close(lua);
         }

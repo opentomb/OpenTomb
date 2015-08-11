@@ -280,8 +280,8 @@ void Gui_RenderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix);
+void Item_Frame(struct ss_bone_frame_s *bf, float time);
+void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatrix);
 /*
  * Inventory renderer class
  */

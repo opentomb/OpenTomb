@@ -12,7 +12,7 @@
 #include <string.h>
 
 void Engine_Display();
-void Engine_Frame(btScalar time);
+void Engine_Frame(float time);
 
 void Engine_Start();
 

@@ -24,9 +24,9 @@ struct frustum_s;
 typedef struct portal_s                                                         
 {
     uint16_t        vertex_count;     
-    btScalar       *vertex;                                                     // Оригинальные вершины портала
-    btScalar        norm[4];                                                    // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btScalar        centre[3];                                                  // центр портала
+    float          *vertex;                                                     // Оригинальные вершины портала
+    float           norm[4];                                                    // уравнение плоскости оригинальных вершин (оно же нормаль)
+    float           centre[3];                                                  // центр портала
     struct room_s  *dest_room;                                                  // куда ведет портал
     struct room_s  *current_room;                                               // комната, где нааходится портал
 }portal_t, *portal_p;
@@ -61,8 +61,8 @@ void Portal_Clear(portal_p p);
 // тут пошли реальные нешуточные функции
 int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);
 int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector);
-void Portal_Move(portal_p p, btScalar mv[3]);
-int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3]);              // проверка на пересечение луча и портала
+void Portal_Move(portal_p p, float mv[3]);
+int Portal_RayIntersect(portal_p p, float dir[3], float dot[3]);              // проверка на пересечение луча и портала
 
 void Portal_GenNormale(portal_p p);
 
