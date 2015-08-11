@@ -23,7 +23,7 @@
 print("Collide / visibility flags script loaded");
 
 --------------------------------------------------------------------------------
------------------------------ TR_I, TR_I_DEMO, TR_I_UB -------------------------
+----------------------------- TR 1 ---------------------------------------------
 --------------------------------------------------------------------------------
 
 tr1_entity_tbl = {};
@@ -201,7 +201,7 @@ tr1_entity_tbl[182] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr1_entity_tbl[183] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, hide = true};        -- [UNKNOWN YET]
 
 --------------------------------------------------------------------------------
---------------------------------- TR_II, TR_II_DEMO ----------------------------
+--------------------------------- TR 2 -----------------------------------------
 --------------------------------------------------------------------------------
 tr2_entity_tbl = {};
 
@@ -407,7 +407,7 @@ tr2_entity_tbl[264] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 
 
 --------------------------------------------------------------------------------
--------------------------------------- TR_III ----------------------------------
+-------------------------------------- TR 3 ------------------------------------
 --------------------------------------------------------------------------------
 tr3_entity_tbl = {};
 
@@ -715,7 +715,7 @@ tr3_entity_tbl[370] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 tr3_entity_tbl[373] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Electrical switch box
 
 --------------------------------------------------------------------------------
---------------------------------- TR_IV, TR_IV_DEMO ----------------------------
+--------------------------------- TR 4 -----------------------------------------
 --------------------------------------------------------------------------------
 tr4_entity_tbl = {};
 
@@ -1218,7 +1218,7 @@ tr4_entity_tbl[457] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr4_entity_tbl[458] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Animating 16 MIP
 
 --------------------------------------------------------------------------------
-------------------------------------- TR_V -------------------------------------
+------------------------------------- TR 5 -------------------------------------
 --------------------------------------------------------------------------------
 tr5_entity_tbl = {};
 
@@ -1729,15 +1729,15 @@ tr5_entity_tbl[453] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 
 function getEntityModelProperties(ver, id)
     tbl = {};
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+    if(ver == Engine.I) then
         tbl = tr1_entity_tbl;
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+    elseif(ver == Engine.II) then
         tbl = tr2_entity_tbl;
-    elseif(ver < 6) then                -- TR_III
+    elseif(ver == Engine.III) then
         tbl = tr3_entity_tbl;
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+    elseif(ver == Engine.IV) then
         tbl = tr4_entity_tbl;
-    elseif(ver < 9) then                -- TR_V
+    elseif(ver == Engine.V) then
         tbl = tr5_entity_tbl;
     else
         return nil, nil, nil, nil;
@@ -1752,15 +1752,15 @@ end;
 
 function getEntityFunction(ver, id)
     tbl = {};
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+    if(ver == Engine.I) then
         tbl = tr1_entity_tbl;
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+    elseif(ver == Engine.II) then
         tbl = tr2_entity_tbl;
-    elseif(ver < 6) then                -- TR_III
+    elseif(ver == Engine.III) then
         tbl = tr3_entity_tbl;
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+    elseif(ver == Engine.IV) then
         tbl = tr4_entity_tbl;
-    elseif(ver < 9) then                -- TR_V
+    elseif(ver == Engine.V) then
         tbl = tr5_entity_tbl;
     else
         return nil, nil, nil, nil;

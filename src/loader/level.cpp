@@ -229,7 +229,7 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
            check[2] == 0x00 &&
            check[3] == 0x00)
         {
-            ret = Game::TR1; // TR_I ? OR TR_I_DEMO
+            ret = Game::TR1;
         }
     }
     else if(ext == ".TUB")
@@ -239,7 +239,7 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
            check[2] == 0x00 &&
            check[3] == 0x00)
         {
-            ret = loader::Game::TR1UnfinishedBusiness;                                                  // TR_I_UB
+            ret = loader::Game::TR1UnfinishedBusiness;
         }
     }
     else if(ext == ".TR2")
@@ -249,14 +249,14 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
            check[2] == 0x00 &&
            check[3] == 0x00)
         {
-            ret = loader::Game::TR2;                                                    // TR_II
+            ret = loader::Game::TR2;
         }
         else if((check[0] == 0x38 || check[0] == 0x34) &&
                 (check[1] == 0x00) &&
                 (check[2] == 0x18 || check[2] == 0x08) &&
                 (check[3] == 0xFF))
         {
-            ret = loader::Game::TR3;                                                   // TR_III
+            ret = loader::Game::TR3;
         }
     }
     else if(ext == ".TR4")
@@ -266,21 +266,21 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
            check[2] == 0x34 &&                                         // 4
            check[3] == 0x00)
         {
-            ret = loader::Game::TR4;                                                    // OR TR TR_IV_DEMO
+            ret = loader::Game::TR4;
         }
         else if(check[0] == 0x54 &&                                         // T
                 check[1] == 0x52 &&                                         // R
                 check[2] == 0x34 &&                                         // 4
                 check[3] == 0x63)                                           //
         {
-            ret = loader::Game::TR4;                                                    // TRLE
+            ret = loader::Game::TR4;
         }
         else if(check[0] == 0xF0 &&                                         // T
                 check[1] == 0xFF &&                                         // R
                 check[2] == 0xFF &&                                         // 4
                 check[3] == 0xFF)
         {
-            ret = loader::Game::TR4;                                                    // BOGUS (OpenRaider =))
+            ret = loader::Game::TR4;
         }
     }
     else if(ext == ".TRC")
@@ -290,7 +290,7 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
            check[2] == 0x34 &&                                              // C
            check[3] == 0x00)
         {
-            ret = loader::Game::TR5;                                                     // TR_V
+            ret = loader::Game::TR5;
         }
     }
 

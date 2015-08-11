@@ -50,7 +50,7 @@ void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
     if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine_world.engineVersion), ent->m_bf.animations.model->id);
 
         ent->m_visible = !ent->m_visible;
         ent->m_typeFlags |= flg;
@@ -61,7 +61,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine_world.version), ent->m_bf.animations.model->id);
+        const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine_world.engineVersion), ent->m_bf.animations.model->id);
         if(funcName)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
@@ -621,13 +621,13 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
 
     do
     {
-        // TR_I - TR_II
+        // TR1 - TR2
         //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
-        //TR_III+, but works with TR_I - TR_II
+        //TR3+, but works with TR1 - TR2
         uint16_t function = ((*entry) & 0x001F);             // 0b00000000 00011111
-        // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
+        // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR3+
         uint16_t sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
@@ -880,7 +880,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                                         {
                                             // Switch action type case.
                                             snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                            if((engine_world.version >= loader::Game::TR3) && (only_once))
+                                            if(engine_world.engineVersion >= loader::Engine::TR3 && only_once)
                                             {
                                                 // Just lock out activator, no anti-action needed.
                                                 snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -1003,7 +1003,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                         case TR_FD_TRIGFUNC_PLAYTRACK:
                             // Override for looped BGM tracks in TR1: if there are any sectors
                             // triggering looped tracks, ignore it, as BGM is always set in script.
-                            if(engine_world.version < loader::Game::TR2)
+                            if(engine_world.engineVersion < loader::Engine::TR2)
                             {
                                 int looped;
                                 engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
@@ -1123,7 +1123,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                         if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                         {
                             script += buf2;
-                            if((engine_world.version < loader::Game::TR3) || (!only_once))
+                            if(engine_world.engineVersion < loader::Engine::TR3 || !only_once)
                             {
                                 script += single_events;
                                 script += anti_events;    // Single/continous events are engaged along with
@@ -1644,9 +1644,9 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
 }
 
-void Res_ScriptsOpen(loader::Game engine_version)
+void Res_ScriptsOpen(loader::Game game_version)
 {
-    std::string temp_script_name = Engine_GetLevelScriptName(engine_version, std::string());
+    std::string temp_script_name = Engine_GetLevelScriptName(game_version, std::string());
 
     level_script.set("setSectorFloorConfig", lua_SetSectorFloorConfig);
     level_script.set("setSectorCeilingConfig", lua_SetSectorCeilingConfig);
@@ -1732,9 +1732,9 @@ void Res_AutoexecOpen(loader::Game engine_version)
 
 void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
 {
-    world->version = tr->m_gameVersion;
+    world->engineVersion = loader::gameToEngine(tr->m_gameVersion);
 
-    Res_ScriptsOpen(world->version);   // Open configuration scripts.
+    Res_ScriptsOpen(tr->m_gameVersion);   // Open configuration scripts.
     Gui_DrawLoadScreen(150);
 
     Res_GenRBTrees(world);               // Generate red-black trees
@@ -1796,7 +1796,7 @@ void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
 
     // Find and set skybox.
 
-    world->sky_box = Res_GetSkybox(world, world->version);
+    world->sky_box = Res_GetSkybox(world, engine_world.engineVersion);
     Gui_DrawLoadScreen(860);
 
     // Generate entity functions.
@@ -1816,7 +1816,7 @@ void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
 
     // Process level autoexec loading.
 
-    Res_AutoexecOpen(world->version);
+    Res_AutoexecOpen(tr->m_gameVersion);
     Gui_DrawLoadScreen(960);
 
     // Fix initial room states
@@ -2719,7 +2719,7 @@ void tr_setupTexturedFace(loader::Mesh *tr_mesh, BaseMesh* mesh, const uint16_t 
 
 void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+    const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2919,7 +2919,7 @@ void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::Level>& tr
 
 void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world->version == loader::Game::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+    const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
     auto tr_room = &tr->m_rooms[room_index];
 
@@ -3194,22 +3194,20 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
     return tr_animation->frame_offset;
 }
 
-SkeletalModel* Res_GetSkybox(World *world, loader::Game engine_version)
+SkeletalModel* Res_GetSkybox(World *world, loader::Engine engine_version)
 {
     switch(engine_version)
     {
-        case loader::Game::TR2:
-        case loader::Game::TR2Demo:
+        case loader::Engine::TR2:
             return world->getModelByID(TR_ITEM_SKYBOX_TR2);
 
-        case loader::Game::TR3:
+        case loader::Engine::TR3:
             return world->getModelByID(TR_ITEM_SKYBOX_TR3);
 
-        case loader::Game::TR4:
-        case loader::Game::TR4Demo:
+        case loader::Engine::TR4:
             return world->getModelByID(TR_ITEM_SKYBOX_TR4);
 
-        case loader::Game::TR5:
+        case loader::Engine::TR5:
             return world->getModelByID(TR_ITEM_SKYBOX_TR5);
 
         default:
@@ -3439,7 +3437,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
                     switch(tr->m_gameVersion)
                     {
-                        case loader::Game::TR1:                                              /* TR_I */
+                        case loader::Game::TR1:                                              /* TR1 */
                         case loader::Game::TR1UnfinishedBusiness:
                         case loader::Game::TR1Demo:
                         {
@@ -3456,7 +3454,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                             break;
                         }
 
-                        default:                                                /* TR_II + */
+                        default:                                                /* TR2 + */
                             temp1 = tr->m_frameData[frame_offset + l];
                             l++;
                             if(tr->m_gameVersion >= loader::Game::TR4)
@@ -3759,11 +3757,11 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
         if(entity->m_bf.animations.model == nullptr)
         {
-            int id = ent_ID_override.call("getOverridedID", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
+            int id = ent_ID_override.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
-        int replace_anim_id = ent_ID_override.call("getOverridedAnim", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
+        int replace_anim_id = ent_ID_override.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(replace_anim_id > 0)
         {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
@@ -3808,9 +3806,9 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
             engine_lua.set("player", lara->id());
 
-            switch(tr->m_gameVersion)
+            switch(loader::gameToEngine(tr->m_gameVersion))
             {
-                case loader::Game::TR1:
+                case loader::Engine::TR1:
                     if(gameflow_manager.CurrentLevelID == 0)
                     {
                         LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
@@ -3823,7 +3821,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
                     }
                     break;
 
-                case loader::Game::TR3:
+                case loader::Engine::TR3:
                     LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
@@ -3836,9 +3834,8 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
                     }
                     break;
 
-                case loader::Game::TR4:
-                case loader::Game::TR4Demo:
-                case loader::Game::TR5:
+                case loader::Engine::TR4:
+                case loader::Engine::TR5:
                     LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
@@ -3852,7 +3849,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
                     world->skeletal_models[0].fillSkinnedMeshMap();
                     break;
 
-                case loader::Game::Unknown:
+                case loader::Engine::Unknown:
                     break;
             };
 
@@ -4082,25 +4079,23 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
 
     // Hardcoded version-specific fixes!
 
-    switch(world->version)
+    switch(world->engineVersion)
     {
-        case loader::Game::TR1:
-        case loader::Game::TR1Demo:
-        case loader::Game::TR1UnfinishedBusiness:
+        case loader::Engine::TR1:
             // Fix for underwater looped sound.
             if(world->audio_map[TR_AUDIO_SOUND_UNDERWATER] >= 0)
             {
                 world->audio_effects[world->audio_map[TR_AUDIO_SOUND_UNDERWATER]].loop = TR_AUDIO_LOOP_LOOPED;
             }
             break;
-        case loader::Game::TR2:
+        case loader::Engine::TR2:
             // Fix for helicopter sound range.
             if(world->audio_map[297] >= 0)
             {
                 world->audio_effects[world->audio_map[297]].range *= 10.0;
             }
             break;
-        case loader::Game::Unknown:
+        default:
             break;
     }
 

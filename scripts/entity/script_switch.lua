@@ -257,7 +257,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     local off = {};
     local key = nil;
 
-    if(getLevelVersion() < TR_II) then
+    if(getEngineVersion() == Engine.I) then
         if(tr1_switches[m_id] ~= nil) then
             on       = tr1_switches[m_id].on;
             off      = tr1_switches[m_id].off;
@@ -266,7 +266,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         else
             return false;
         end
-    elseif(getLevelVersion() < TR_III) then
+    elseif(getEngineVersion() == Engine.II) then
         if(tr2_switches[m_id] ~= nil) then
             on       = tr2_switches[m_id].on;
             off      = tr2_switches[m_id].off;
@@ -275,7 +275,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         else
             return false;
         end
-    elseif(getLevelVersion() < TR_IV) then
+    elseif(getEngineVersion() == Engine.III) then
         if(tr3_switches[m_id] ~= nil) then
             on       = tr3_switches[m_id].on;
             off      = tr3_switches[m_id].off;
@@ -284,7 +284,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         else
             return false;
         end
-    elseif(getLevelVersion() < TR_V) then
+    elseif(getEngineVersion() == Engine.IV) then
         if(tr4_switches[m_id] ~= nil) then
             on       = tr4_switches[m_id].on;
             off      = tr4_switches[m_id].off;
@@ -367,7 +367,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             return true;
         end);
     -- Off case: Locked switches doesn't flip back, but only in TR3+
-    elseif(off.ready_anim == t and ((getLevelVersion() < TR_III) or (not getEntityLock(object_id)))) then
+    elseif(off.ready_anim == t and ((getEngineVersion() < Engine.III) or (not getEntityLock(object_id)))) then
         setEntityAnim(object_id, off.trig_anim, 0);
         setEntityAnim(actor_id, off.actor_anim, 0);
         setEntityActivity(object_id, true);

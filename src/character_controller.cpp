@@ -1135,7 +1135,7 @@ int Character::freeFalling()
             m_speed[1] = 0.0;
         }
 
-        if((engine_world.version < loader::Game::TR2))//Lara cannot wade in < TRII so when floor < transition level she has to swim
+        if((engine_world.engineVersion < loader::Engine::TR2))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
             if(!m_heightInfo.water || (m_currentSector->floor <= m_heightInfo.transition_level))
             {
@@ -2412,7 +2412,7 @@ btVector3 Character::camPosForFollowing(btScalar dz)
  * flags to model manually in the script*/
 void Character::doWeaponFrame(btScalar time)
 {
-    /* anims (TR_I - TR_V):
+    /* anims (TR1 - TR5):
      * pistols:
      * 0: idle to fire;
      * 1: draw weapon (short?);

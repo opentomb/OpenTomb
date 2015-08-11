@@ -63,7 +63,7 @@ end;
 
 function checkPlayerRagdollConditions()
     local anim, frame, count = getEntityAnim(player);
-    local version = getLevelVersion();
+    local version = getEngineVersion();
     
     if(getEntityTypeFlag(player, ENTITY_TYPE_DYNAMIC) == 0) then
         if( ((anim ==  25) and (frame >= 6 )) or
@@ -72,7 +72,7 @@ function checkPlayerRagdollConditions()
             ((anim == 133) and (frame >= 18)) or
             ((anim == 145) and (frame >= 67)) or
             ((anim == 301) and (frame >= 57)) or
-            ((anim == 138) and (((frame >= 60) and (version >= TR_II)) or ((frame >= 8) and (version < TR_II)))) ) then
+            ((anim == 138) and (((frame >= 60) and (version >= Engine.II)) or ((frame >= 8) and (version < Engine.II)))) ) then
                 addEntityRagdoll(player, RD_TYPE_LARA);
         end;
     end;

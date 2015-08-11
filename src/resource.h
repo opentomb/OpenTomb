@@ -91,7 +91,7 @@ bool     Res_Poly_SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, Wo
 void     Res_FixRooms(World *world);   // Fix start-up room states.
 
 struct SkeletalModel;
-SkeletalModel* Res_GetSkybox(World *world, loader::Game engine_version);
+SkeletalModel* Res_GetSkybox(World *world, loader::Engine engine_version);
 
 // Create entity function from script, if exists.
 
@@ -115,9 +115,9 @@ bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 
 // Open/close scripts.
 
-void Res_ScriptsOpen(int engine_version);
+void Res_ScriptsOpen(loader::Game game_version);
 void Res_ScriptsClose();
-void Res_AutoexecOpen(int engine_version);
+void Res_AutoexecOpen(loader::Game engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 

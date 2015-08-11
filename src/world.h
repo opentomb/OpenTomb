@@ -361,7 +361,7 @@ struct World
 {
     char                       *name = nullptr;
     uint32_t                    id = 0;
-    loader::Game                version;
+    loader::Engine              engineVersion;
 
     std::vector< std::shared_ptr<Room> > rooms;
 
