@@ -3753,7 +3753,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->m_timer = 0.0;
 
         entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
-        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
         entity->m_moveType = MoveType::StaticPos;
         entity->m_inertiaLinear = 0.0;
         entity->m_inertiaAngular[0] = 0.0;

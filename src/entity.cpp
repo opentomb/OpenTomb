@@ -120,10 +120,6 @@ void Entity::genRigidBody()
         btCollisionShape *cshape;
         switch(m_self->collision_shape)
         {
-            case COLLISION_SHAPE_BOX:
-                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
-                break;
-
             case COLLISION_SHAPE_SPHERE:
                 cshape = BT_CSfromSphere(mesh->m_radius);
                 break;
@@ -133,8 +129,12 @@ void Entity::genRigidBody()
                 break;
 
             case COLLISION_SHAPE_TRIMESH:
-            default:
                 cshape = BT_CSfromMesh(mesh, true, true, true);
+                break;
+
+            case COLLISION_SHAPE_BOX:
+            default:
+                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
                 break;
         };
 
@@ -156,6 +156,7 @@ void Entity::genRigidBody()
                     break;
 
                 case COLLISION_TYPE_ACTOR:
+                case COLLISION_TYPE_VEHICLE:
                     m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
                     break;
 
@@ -164,10 +165,8 @@ void Entity::genRigidBody()
                     break;
 
                 case COLLISION_TYPE_STATIC:
-                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
-                    break;
-
                 default:
+                    m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
                     break;
             }
 
