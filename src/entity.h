@@ -182,6 +182,8 @@ public:
     static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
+    void lerpBones(btScalar lerp);
+
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
     void addOverrideAnim(int model_id);

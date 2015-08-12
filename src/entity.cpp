@@ -1052,8 +1052,8 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
 {
     AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
 
+
     *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
     *anim = bf->animations.current_animation;
 
     /*
@@ -1150,10 +1150,23 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
     }
 }
 
+// ----------------------------------------
+void Entity::lerpBones(btScalar lerp)
+{
+//    m_bf.animations.lerp += lerp;
+//    if(m_bf.animations.lerp > 1.0) {
+//        m_bf.animations.lerp = 1.0;
+//    }
+
+    m_bf.animations.lerp = lerp;
+    updateCurrentBoneFrame(&m_bf, &m_transform);
+    return;
+}
+
+
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
- ///@TODO: rewrite as a cycle through all bf.animations list
 int Entity::frame(btScalar time)
 {
     int16_t frame, anim, ret = ENTITY_ANIM_NONE;
@@ -1206,7 +1219,15 @@ int Entity::frame(btScalar time)
     t = (m_bf.animations.frame_time) / m_bf.animations.period;
     dt = m_bf.animations.frame_time - static_cast<btScalar>(t) * m_bf.animations.period;
     m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period + dt;
-    m_bf.animations.lerp = dt / m_bf.animations.period;
+
+//    m_bf.animations.lerp = dt / m_bf.animations.period;
+    m_bf.animations.lerp = (dt-time) / m_bf.animations.period;
+    if(m_bf.animations.lerp < 0.0) {
+        m_bf.animations.lerp = 0.0;
+    } else if(m_bf.animations.lerp > 1.0) {
+        m_bf.animations.lerp = 1.0;
+    }
+
     getNextFrame(&m_bf, m_bf.animations.period, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
 
     frameImpl(time, frame, ret);
@@ -1216,6 +1237,7 @@ int Entity::frame(btScalar time)
 
     return ret;
 }
+
 
 /**
  * The function rebuild / renew entity's BV

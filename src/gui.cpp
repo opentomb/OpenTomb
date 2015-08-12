@@ -333,12 +333,34 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
     return nullptr;
 }
 
-void Gui_Update()
+bool Gui_Update()
 {
     if(fontManager != nullptr)
     {
         fontManager->Update();
     }
+
+
+    if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
+    {
+        if(engine_world.character &&
+           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
+        {
+            main_inventory_manager->setInventory(&engine_world.character->m_inventory);
+            main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
+        }
+        if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+        {
+            main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
+        }
+    }
+
+    // If console or inventory is active, only thing to update is audio.
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    {
+        return true;
+    }
+    return false;
 }
 
 void Gui_Resize()

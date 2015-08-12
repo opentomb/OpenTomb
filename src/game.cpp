@@ -766,36 +766,50 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
     return dt;
 }
 
+
+/* FIXME: Framestep issues:
+ * - Low fps can cause entity.frame() to skip over animframes
+ *   where animcommands are ignored (try timescale(2) and keep jumping forward)
+ * - Animation transform updates and game logic effects should be separated,
+ *   to allow interpolation without unneeded logic and physics updates,
+ *   and better maintainability
+ * - reduce usage of global engine_frame_time in functions and methods
+ *   that must be called in multiple substeps (low fps issue)
+ * - move game logic actions to internaltick
+ *   or use updateAction from btActionInterface: This removes the need
+ *   for an extra catch-up loop for the gameticks on low fps because bullet
+ *   does this already in the substeps.
+ * - interp animations every frame, i.e. only update interpolated
+ *   bodies for the renderer, but don't do physics - this needs
+ *   some disentangling in the code...
+ */
+
+
+#define PHYSICS_RATE_FACTOR (2)
+#define PHYSICS_RATE (TR_FRAME_RATE * PHYSICS_RATE_FACTOR)
+#define MAX_SIM_SUBSTEPS (6)
+extern btScalar gLerp;
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
-    game_logic_time += time;
 
     const bool is_character = (engine_world.character != nullptr);
+
+    // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
+    if(time > GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS))
+    {
+        time = GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS);
+        engine_frame_time = time;   // FIXME
+    }
+    game_logic_time += time;
+
 
     // GUI and controls should be updated at all times!
 
     Controls_PollSDLInput();
-    Gui_Update();
 
-    ///@FIXME: I have no idea what's happening here! - Lwmte
-
-    if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
-    {
-        if((is_character) &&
-           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
-        {
-            main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            main_inventory_manager->send(InventoryManager::InventoryState::Open);
-        }
-        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
-        {
-            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
-        }
-    }
-
-    // If console or inventory is active, only thing to update is audio.
-    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    // FIXME: implement pause mechanism
+    if(Gui_Update())
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
@@ -805,55 +819,45 @@ void Game_Frame(btScalar time)
         return;
     }
 
+
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
-    if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
-    {
-        btScalar dt = Game_Tick(&game_logic_time);
-        engine_lua.doTasks(dt);
-        Game_UpdateAI();
-        Audio_Update();
-
-        if(is_character)
-        {
-            engine_world.character->processSector();
-            engine_world.character->updateParams();
-            engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
-        }
-
-        Game_LoopEntities(engine_world.entity_tree);
-    }
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-
     Game_ApplyControls(engine_world.character);
 
-    if(is_character)
-    {
-        if(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
-        {
-            engine_world.character->updateRigidBody(false);
-        }
-        if(!control_states.noclip && !control_states.free_look)
-        {
-            engine_world.character->frame(engine_frame_time);
-            engine_world.character->applyCommands();
-            engine_world.character->frame(0.0);
-            Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
-        }
+    gLerp += engine_frame_time / (1.0/30.0);
+    btScalar lerp = gLerp;
+    if( lerp > 1.0 ) {
+        lerp = 1.0;
     }
 
-    Game_UpdateCharacters();
+    if(engine_world.character) {
+        engine_world.character->lerpBones(lerp);
+        engine_world.character->updateRigidBody(false);
+    }
 
-    Game_UpdateAllEntities(engine_world.entity_tree);
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        std::shared_ptr<Entity> entity = entityPair.second;
+        entity->lerpBones(lerp);
+        entity->updateRigidBody(false);
+    }
 
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
+
+//    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
+    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1.0/30.0);
+
+
+    if(is_character) {
+        Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
+    }
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();
+
 }
 
 void Game_Prepare()

@@ -299,3 +299,4 @@ int  Engine_ExecCmd(const char *ch);
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+void Engine_InternalPreTickCallback(btDynamicsWorld *world, btScalar timeStep);

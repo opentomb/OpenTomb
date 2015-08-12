@@ -511,13 +511,10 @@ namespace
     }
 }
 
+
+
 void Engine_Frame(btScalar time)
 {
-    if(time > 0.1)
-    {
-        time = 0.1f;
-    }
-
     engine_frame_time = time;
     fpsCycle(time);
 
@@ -629,11 +626,76 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
     }
 }
 
+
+
+//void doEntityActions(btDynamicsWorld *world, btScalar timeStep)
+//{
+//
+//
+//    return;
+//}
+
+
+// -------------------------------
+
+void Engine_InternalPreTickCallback(btDynamicsWorld *world, btScalar timeStep)
+{
+    btScalar engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = timeStep;
+
+
+
+
+
+
+    engine_frame_time = engine_frame_time_backup;
+    return;
+}
+
+
+
 /**
  * update current room of bullet object
  */
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
+btScalar gLerp = 0.0f;
+void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
+    gLerp = 0.0f;
+
+    btScalar engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = timeStep;
+
+    engine_lua.doTasks(GAME_LOGIC_REFRESH_INTERVAL);
+    Game_UpdateAI();
+    Audio_Update();
+
+
+    if(engine_world.character)
+    {
+        engine_world.character->processSector();
+        engine_world.character->updateParams();
+        engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
+
+        // --- FIXME: Same as below:
+        if(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
+        {
+            engine_world.character->updateRigidBody(false);
+        }
+        if(!control_states.noclip && !control_states.free_look)
+        {
+            engine_world.character->frame(engine_frame_time);
+            engine_world.character->applyCommands();
+        }
+    }
+    Game_LoopEntities(engine_world.entity_tree);
+
+    Game_UpdateCharacters();
+
+    Game_UpdateAllEntities(engine_world.entity_tree);
+
+
+    // ----------------------------------------------------------
+
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
         assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
@@ -650,6 +712,9 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             }
         }
     }
+
+    engine_frame_time = engine_frame_time_backup;
+    return;
 }
 
 void Engine_InitDefaultGlobals()
@@ -720,6 +785,7 @@ void Engine_InitBullet()
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
+    bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalPreTickCallback, 0, true);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
