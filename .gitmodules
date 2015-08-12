@@ -1,6 +1,9 @@
 [submodule "3rdparty/LuaState"]
 	path = 3rdparty/LuaState
 	url = https://github.com/stohrendorf/LuaState.git
-[submodule "3rdparty/al"]
-	path = 3rdparty/al
+[submodule "3rdparty/bullet3"]
+	path = 3rdparty/bullet3
+	url = https://github.com/bulletphysics/bullet3.git
+[submodule "3rdparty/openal-soft"]
+	path = 3rdparty/openal-soft
 	url = git://repo.or.cz/openal-soft.git

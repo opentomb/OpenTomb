@@ -7,22 +7,28 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
+set(LOCAL_DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/install)
+
+if(NOT EXISTS ${LOCAL_DEPS_DIR}/success.txt)
+    message(STATUS "You haven't built the dependencies necessary to build OpenTomb itself yet.")
+    message(STATUS "To do so, go to ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty, and execute the following commands:")
+    message(STATUS "    cmake .")
+    message(FATAL_ERROR "Dependencies missing, aborting")
+endif()
+
+set(BULLET_ROOT ${LOCAL_DEPS_DIR})
+set(ENV{OPENALDIR} ${LOCAL_DEPS_DIR})
+
 if(APPLE)
     file(GLOB PRJ_SRC
         src/*.c*
         src/vt/*.cpp
         src/mac/*.m
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
     )
     file(GLOB PRJ_HDR
         src/*.h*
         src/vt/*.h
         src/mac/*.h
-        3rdparty/al/*.h
-        3rdparty/al/*/*.h
-        3rdparty/al/*/*/*.h
     )
 else()
     file(GLOB PRJ_SRC
@@ -64,26 +70,9 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 find_package(Bullet)
-if(BULLET_FOUND)
-    add_library(Bullet INTERFACE)
-    target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
-    target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
-else()
-    set(BULLET_DIR 3rdparty/bullet/src)
-
-    file(GLOB BULLET_FILES
-        ${BULLET_DIR}/*.h
-        ${BULLET_DIR}/*/*.h
-        ${BULLET_DIR}/*/*/*.h
-        ${BULLET_DIR}/*.cpp
-        ${BULLET_DIR}/*/*.cpp
-        ${BULLET_DIR}/*/*/*.cpp
-    )
-
-    add_library(Bullet ${BULLET_FILES})
-    target_compile_options(Bullet PRIVATE -O2)
-    target_include_directories(Bullet PUBLIC ${BULLET_DIR})
-endif()
+add_library(Bullet INTERFACE)
+target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
+target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
 find_package(Freetype REQUIRED)
 add_library(Freetype INTERFACE)
@@ -124,15 +113,10 @@ target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 
 target_include_directories(${PROJECT_NAME} PRIVATE 3rdparty/LuaState/include)
 
-if(APPLE)
-    # Don’t attempt to find AL anywhere, just use ours directly.
-    include_directories(3rdparty/al/)
-else()
-    find_package(OpenAL REQUIRED)
-    add_library(OpenAL INTERFACE)
-    target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
-    target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
-endif()
+find_package(OpenAL REQUIRED)
+add_library(OpenAL INTERFACE)
+target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
+target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 
