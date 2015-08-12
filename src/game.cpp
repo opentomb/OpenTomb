@@ -512,7 +512,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
-
+    
     vec3_copy(cam_pos, cam->pos);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
@@ -533,14 +533,14 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                 cameraTo[2] = cameraFrom[2];
 
                 //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
+                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
                 {
                     cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                     cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                     cameraTo[2] = cameraFrom[2];
 
                     //If collided we want to go to back else right
-                    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
+                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
                     {
                         cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK;
                     }

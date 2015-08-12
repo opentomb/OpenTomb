@@ -1577,7 +1577,7 @@ int lua_SetEntityScaling(lua_State * lua)
         ent->scaling[1] = lua_tonumber(lua, 3);
         ent->scaling[2] = lua_tonumber(lua, 4);
 
-        Entity_SetCollisionScale(ent);
+        Physics_SetCollisionScale(ent->physics, ent->scaling);
         Entity_UpdateRigidBody(ent, 1);
     }
 
@@ -3237,7 +3237,7 @@ int lua_PushEntityBody(lua_State *lua)
 
         /*if(lua_toboolean(lua, 5))
             ent->physics->bt_body[body_number]->clearForces();*/
-        Entity_PushBody(ent, speed, body_number);
+        Physics_PushBody(ent->physics, speed, body_number);
         //ent->physics->bt_body[body_number]->setLinearVelocity(angle);
         //ent->physics->bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
@@ -3275,7 +3275,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
         {
             if(top >= argn) mass = lua_tonumber(lua, argn++);
             if(mass > 0.0) dynamic = true;
-            Entity_SetBodyMass(ent, mass, i);
+            Physics_SetBodyMass(ent->physics, mass, i);
         }
         Entity_UpdateRigidBody(ent, 1);
 
@@ -3322,7 +3322,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
             factor[2] = fabs(lua_tonumber(lua, 3));
             factor[2] = (factor[2] > 1.0)?(1.0):(factor[2]);
         }
-        Entity_SetLinearFactor(ent, factor, body_number);
+        Physics_SetLinearFactor(ent->physics, factor, body_number);
     }
     else
     {

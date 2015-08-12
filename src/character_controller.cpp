@@ -482,7 +482,6 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
 {
     float pos[3], from[3], to[3], delta;
     height_info_p fc = &ent->character->height_info;
-    collision_result_t cb;
     int ret = CHARACTER_STEP_HORIZONTAL;
     ///penetration test?
 
@@ -566,7 +565,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     to[1] = pos[1];
     to[2] = from[2];
 
-    if(Physics_RayTest(&cb, from, to, fc->self))
+    if(Physics_RayTest(NULL, from, to, fc->self))
     {
         ret = CHARACTER_STEP_UP_IMPOSSIBLE;
     }
@@ -865,7 +864,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
         to[1] += ent->transform[4 + 1] * t;
         to[2] += ent->transform[4 + 2] * t;
 
-        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
+        if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self))
         {
             ret.wall_hit = 0x02;
         }
@@ -1258,7 +1257,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point[2]) && (Entity_GetNoFixAllFlag(ent) == 0x00))
+        if((pos[2] < ent->character->height_info.floor_point[2]) && (Physics_GetNoFixAllFlag(ent->physics) == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point[2];
             Entity_FixPenetrations(ent, NULL);
@@ -1961,7 +1960,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
         to[2] = from[2];
-        if(!Physics_SphereTest(&cb, from ,to, 0.48 * TR_METERING_SECTORSIZE, obj->self))
+        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, obj->self))
         {
             ret |= 0x01;                                                        // can traverse forvard
         }
@@ -2004,7 +2003,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
         to[2] = from[2];
-        if(!Physics_SphereTest(&cb, from ,to, 0.48 * TR_METERING_SECTORSIZE, ch->self))
+        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, ch->self))
         {
             ret |= 0x02;                                                        // can traverse backvard
         }

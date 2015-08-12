@@ -102,6 +102,8 @@ entity_p Entity_Create();
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
+void Entity_EnableCollision(entity_p ent);
+void Entity_DisableCollision(entity_p ent);
 void Entity_UpdateRoomPos(entity_p ent);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
@@ -121,6 +123,11 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
 void Entity_UpdateRigidBody(struct entity_s *ent, int force);
 void Entity_GhostUpdate(struct entity_s *ent);
+
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3]);
+int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3]);
+void Entity_FixPenetrations(struct entity_s *ent, float move[3]);
+
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(entity_p ent);

@@ -160,6 +160,30 @@ void Entity_Disable(entity_p ent)
 }
 
 
+void Entity_EnableCollision(entity_p ent)
+{
+    if(Physics_IsBodyesInited(ent->physics))
+    {
+        ent->self->collision_type |= 0x0001;
+        Physics_EnableCollision(ent->physics);
+    }
+    else
+    {
+        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;
+        Physics_GenEntityRigidBody(ent);
+    }
+}
+
+
+void Entity_DisableCollision(entity_p ent)
+{
+    if(Physics_IsBodyesInited(ent->physics))
+    {
+        ent->self->collision_type &= ~0x0001;
+        Physics_DisableCollision(ent->physics);
+    }
+}
+
 void Entity_UpdateRoomPos(entity_p ent)
 {
     float pos[3];
@@ -586,6 +610,192 @@ void Entity_GhostUpdate(struct entity_s *ent)
 }
 
 
+///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
+int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3])
+{
+    int ret = 0;
+
+    vec3_set_zero(reaction);
+    if(Physics_IsGhostsInited(ent->physics) && (Physics_GetNoFixAllFlag(ent->physics) == 0))
+    {
+        float tmp[3], orig_pos[3];
+        float tr[16];
+
+        vec3_copy(orig_pos, ent->transform + 12);
+        for(uint16_t i=0;i<ent->bf->animations.model->collision_map_size;i++)
+        {
+            //btTransform tr_current;
+            float from[3], to[3], curr[3], move[3], move_len;
+            uint16_t m = ent->bf->animations.model->collision_map[i];
+            ss_bone_tag_p btag = ent->bf->bone_tags + m;
+
+            if(btag->body_part & Physics_GetNoFixBodyPartFlag(ent->physics))
+            {
+                continue;
+            }
+
+            // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
+            if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+            {
+                Physics_GetGhostWorldTransform(ent->physics, tr, m);
+                from[0] = tr[12 + 0] + ent->transform[12+0] - orig_pos[0];
+                from[1] = tr[12 + 1] + ent->transform[12+1] - orig_pos[1];
+                from[2] = tr[12 + 2] + ent->transform[12+2] - orig_pos[2];
+            }
+            else
+            {
+                float parent_from[3];
+                Mat4_vec3_mul(parent_from, btag->parent->full_transform, btag->parent->mesh_base->centre);
+                Mat4_vec3_mul(from, ent->transform, parent_from);
+            }
+
+            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+            Mat4_vec3_mul(to, tr, btag->mesh_base->centre);
+            vec3_copy(curr, from);
+            vec3_sub(move, to, from);
+            move_len = vec3_abs(move);
+            if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
+            {
+                break;
+            }
+            int iter = (float)(2.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
+            move[0] /= (float)iter;
+            move[1] /= (float)iter;
+            move[2] /= (float)iter;
+
+            for(int j=0;j<=iter;j++)
+            {
+                vec3_copy(tr+12, curr);
+                Physics_SetGhostWorldTransform(ent->physics, tr, m);
+                if(Physics_GetGhostPenetrationFixVector(ent->physics, m, tmp))
+                {
+                    vec3_add_to(ent->transform + 12, tmp);
+                    vec3_add_to(curr, tmp);
+                    vec3_add_to(from, tmp);
+                    ret++;
+                }
+                vec3_add_to(curr, move);
+            }
+        }
+        vec3_sub(reaction, ent->transform+12, orig_pos);
+        vec3_copy(ent->transform + 12, orig_pos);
+    }
+
+    return ret;
+}
+
+
+/**
+ * we check walls and other collision objects reaction. if reaction more then critacal
+ * then cmd->horizontal_collide |= 0x01;
+ * @param ent - cheked entity
+ * @param cmd - here we fill cmd->horizontal_collide field
+ * @param move - absolute 3d move vector
+ */
+int Entity_CheckNextPenetration(struct entity_s *ent, float move[3])
+{
+    int ret = 0;
+    if(Physics_IsGhostsInited(ent->physics))
+    {
+        float t1, t2, reaction[3], *pos = ent->transform + 12;
+
+        Entity_GhostUpdate(ent);
+        vec3_add(pos, pos, move);
+        //resp->horizontal_collide = 0x00;
+        ret = Entity_GetPenetrationFixVector(ent, reaction, move);
+        if((ret > 0) && (ent->character != NULL))
+        {
+            t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
+            t2 = move[0] * move[0] + move[1] * move[1];
+            if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))
+            {
+                t2 *= t1;
+                t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
+                if(t1 < ent->character->critical_wall_component)
+                {
+                    ent->character->resp.horizontal_collide |= 0x01;
+                }
+            }
+        }
+        vec3_sub(pos, pos, move);
+        Entity_GhostUpdate(ent);
+    }
+
+    return ret;
+}
+
+
+void Entity_FixPenetrations(struct entity_s *ent, float move[3])
+{
+    if(Physics_IsGhostsInited(ent->physics))
+    {
+        float t1, t2, reaction[3];
+
+        if((move != NULL) && (ent->character != NULL))
+        {
+            ent->character->resp.horizontal_collide    = 0x00;
+            ent->character->resp.vertical_collide      = 0x00;
+        }
+
+        if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+        {
+            return;
+        }
+
+        if(Physics_GetNoFixAllFlag(ent->physics))
+        {
+            Entity_GhostUpdate(ent);
+            return;
+        }
+
+        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move);
+        vec3_add(ent->transform+12, ent->transform+12, reaction);
+
+        if(ent->character != NULL)
+        {
+            Character_UpdateCurrentHeight(ent);
+            if((move != NULL) && (numPenetrationLoops > 0))
+            {
+                t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
+                t2 = move[0] * move[0] + move[1] * move[1];
+                if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))    // we have horizontal move and horizontal correction
+                {
+                    t2 *= t1;
+                    t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
+                    if(t1 < ent->character->critical_wall_component)
+                    {
+                        ent->character->resp.horizontal_collide |= 0x01;
+                    }
+                }
+                else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
+                {
+                    if((reaction[2] > 0.0) && (move[2] < 0.0))
+                    {
+                        ent->character->resp.vertical_collide |= 0x01;
+                    }
+                    else if((reaction[2] < 0.0) && (move[2] > 0.0))
+                    {
+                        ent->character->resp.vertical_collide |= 0x02;
+                    }
+                }
+            }
+
+            if(ent->character->height_info.ceiling_hit && (reaction[2] < -0.1))
+            {
+                ent->character->resp.vertical_collide |= 0x02;
+            }
+
+            if(ent->character->height_info.floor_hit && (reaction[2] > 0.1))
+            {
+                ent->character->resp.vertical_collide |= 0x01;
+            }
+        }
+
+        Entity_GhostUpdate(ent);
+    }
+}
+
+
 int  Entity_GetSubstanceState(entity_p entity)
 {
     if((!entity) || (!entity->character))
@@ -636,10 +846,8 @@ float Entity_FindDistance(entity_p entity_1, entity_p entity_2)
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
-    collision_node_p cn;
-    uint32_t curr_flag;
-    Entity_UpdateCurrentCollisions(ent);
-    while((cn = Entity_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
+    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, ent->self);
+    for(;cn;cn=cn->next)
     {
         // do callbacks here:
         if(cn->obj->object_type == OBJECT_ENTITY)
@@ -650,7 +858,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
-                Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cn->part_self, cn->obj->object_type);
+                Con_Printf("collider_bone_index = %d, collider_type = %d", cn->part_self, cn->obj->object_type);
             }
         }
     }
@@ -944,7 +1152,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     }
 
     animation = (animation < 0)?(0):(animation);
-    Entity_SetNoFixAllFlag(entity, 0x00);
+    Physics_SetNoFixAllFlag(entity->physics, 0x00);
 
     if(another_model >= 0)
     {

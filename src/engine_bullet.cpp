@@ -23,6 +23,7 @@
 #include "resource.h"
 #include "world.h"
 
+//#error MOVE ALL ENTITYES FUNCTIONS TO entity.cpp / entity.h MODULE!!!!!!!!!!!!!!
 
 struct physics_object_s
 {
@@ -42,8 +43,6 @@ typedef struct physics_data_s
     uint16_t                            objects_count;          // Ragdoll joints
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
-
-    struct collision_node_s            *collisions;             // keep list of collision callbacks
 }physics_data_t, *physics_data_p;
 
 /*
@@ -204,15 +203,13 @@ struct collision_node_s                 *collision_nodes_pool = NULL;
 
 struct collision_node_s *Physics_GetCollisionNode();
 
-void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
-
-int  Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 
 // Bullet Physics initialization.
 void Physics_Init()
@@ -226,7 +223,7 @@ void Physics_Init()
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
-    bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
+    bt_engine_dispatcher->setNearCallback(Physics_RoomNearCallback);
 
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
@@ -237,7 +234,7 @@ void Physics_Init()
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
-    bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
+    bt_engine_dynamicsWorld->setInternalTickCallback(Physics_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     bt_debug_drawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
@@ -343,7 +340,6 @@ struct physics_data_s *Physics_CreatePhysicsData()
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->manifoldArray = NULL;
     ret->ghostObjects = NULL;
-    ret->collisions = NULL;
 
     return ret;
 }
@@ -353,7 +349,6 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 {
     if(physics)
     {
-        physics->collisions = NULL;
         if(physics->ghostObjects)
         {
             for(int i=0;i<physics->objects_count;i++)
@@ -416,7 +411,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 /**
  * overlapping room collision filter
  */
-void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     engine_container_p c0, c1;
     room_p r0 = NULL, r1 = NULL;
@@ -460,7 +455,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 /**
  * update current room of bullet object
  */
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
+void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
     {
@@ -594,6 +589,79 @@ void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
     physics->ghostObjects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+}
+
+
+/**
+ * It is from bullet_character_controller
+ */
+int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, float correction[3])
+{
+    // Here we must refresh the overlapping paircache as the penetrating movement itself or the
+    // previous recovery iteration might have used setWorldTransform and pushed us into an object
+    // that is not in the previous cache contents from the last timestep, as will happen if we
+    // are pushed into a new AABB overlap. Unhandled this means the next convex sweep gets stuck.
+    //
+    // Do this by calling the broadphase's setAabb with the moved AABB, this will update the broadphase
+    // paircache and the ghostobject's internal paircache at the same time.    /BW
+
+    int ret = 0;
+    int num_pairs, manifolds_size;
+    btPairCachingGhostObject *ghost = physics->ghostObjects[index];
+    btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
+    btVector3 aabb_min, aabb_max, t;
+
+    ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
+    bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
+    bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
+
+    vec3_set_zero(correction);
+    num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+    for(int i=0;i<num_pairs;i++)
+    {
+        physics->manifoldArray->clear();
+        // do not use commented code: it prevents to collision skips.
+        //btBroadphasePair &pair = pairArray[i];
+        //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+        btBroadphasePair *collisionPair = &pairArray[i];
+
+        if(!collisionPair)
+        {
+            continue;
+        }
+
+        if(collisionPair->m_algorithm)
+        {
+            collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
+        }
+
+        manifolds_size = physics->manifoldArray->size();
+        for(int j=0;j<manifolds_size;j++)
+        {
+            btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
+            btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+            engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
+            engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
+            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            {
+                continue;
+            }
+            for(int k=0;k<manifold->getNumContacts();k++)
+            {
+                const btManifoldPoint&pt = manifold->getContactPoint(k);
+                btScalar dist = pt.getDistance();
+
+                if(dist < 0.0)
+                {
+                    t = pt.m_normalWorldOnB * dist * directionSign;
+                    vec3_add(correction, correction, t.m_floats)
+                    ret++;
+                }
+            }
+        }
+    }
+
+    return ret;
 }
 
 
@@ -1156,82 +1224,8 @@ void Entity_CreateGhosts(struct entity_s *ent)
             ent->physics->ghostObjects[i]->setUserPointer(ent->self);
             ent->physics->ghostObjects[i]->setCollisionShape(new btBoxShape(box));
             bt_engine_dynamicsWorld->addCollisionObject(ent->physics->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
-
-            ent->physics->collisions = NULL;
         }
     }
-}
-
-
-/**
- * It is from bullet_character_controller
- */
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3])
-{
-    // Here we must refresh the overlapping paircache as the penetrating movement itself or the
-    // previous recovery iteration might have used setWorldTransform and pushed us into an object
-    // that is not in the previous cache contents from the last timestep, as will happen if we
-    // are pushed into a new AABB overlap. Unhandled this means the next convex sweep gets stuck.
-    //
-    // Do this by calling the broadphase's setAabb with the moved AABB, this will update the broadphase
-    // paircache and the ghostobject's internal paircache at the same time.    /BW
-
-    int ret = 0;
-    int num_pairs, manifolds_size;
-    btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-    btVector3 aabb_min, aabb_max, t;
-
-    ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-    bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
-    bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
-
-    vec3_set_zero(correction);
-    num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-    for(int i=0;i<num_pairs;i++)
-    {
-        manifoldArray->clear();
-        // do not use commented code: it prevents to collision skips.
-        //btBroadphasePair &pair = pairArray[i];
-        //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
-        btBroadphasePair *collisionPair = &pairArray[i];
-
-        if(!collisionPair)
-        {
-            continue;
-        }
-
-        if(collisionPair->m_algorithm)
-        {
-            collisionPair->m_algorithm->getAllContactManifolds(*manifoldArray);
-        }
-
-        manifolds_size = manifoldArray->size();
-        for(int j=0;j<manifolds_size;j++)
-        {
-            btPersistentManifold* manifold = (*manifoldArray)[j];
-            btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
-            engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
-            engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
-            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
-            {
-                continue;
-            }
-            for(int k=0;k<manifold->getNumContacts();k++)
-            {
-                const btManifoldPoint&pt = manifold->getContactPoint(k);
-                btScalar dist = pt.getDistance();
-
-                if(dist < 0.0)
-                {
-                    t = pt.m_normalWorldOnB * dist * directionSign;
-                    vec3_add(correction, correction, t.m_floats)
-                    ret++;
-                }
-            }
-        }
-    }
-
-    return ret;
 }
 
 
@@ -1240,36 +1234,29 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
  * If collision models does not exists, function will create them;
  * @param ent - pointer to the entity.
  */
-void Entity_EnableCollision(struct entity_s *ent)
+void Physics_EnableCollision(struct physics_data_s *physics)
 {
-    if(ent->physics->bt_body != NULL)
+    if(physics->bt_body != NULL)
     {
-        ent->self->collision_type |= 0x0001;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i=0;i<physics->objects_count;i++)
         {
-            btRigidBody *b = ent->physics->bt_body[i];
+            btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
             }
         }
     }
-    else
-    {
-        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;
-        Physics_GenEntityRigidBody(ent);
-    }
 }
 
 
-void Entity_DisableCollision(struct entity_s *ent)
+void Physics_DisableCollision(struct physics_data_s *physics)
 {
-    if(ent->physics->bt_body != NULL)
+    if(physics->bt_body != NULL)
     {
-        ent->self->collision_type &= ~0x0001;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i=0;i<physics->objects_count;i++)
         {
-            btRigidBody *b = ent->physics->bt_body[i];
+            btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && b->isInWorld())
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
@@ -1279,118 +1266,91 @@ void Entity_DisableCollision(struct entity_s *ent)
 }
 
 
-void Entity_SetCollisionScale(struct entity_s *ent)
+void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 {
-    if(ent->physics && ent->physics->bt_body)
+    for(int i=0; i<physics->objects_count; i++)
     {
-        for(int i=0; i<ent->physics->objects_count; i++)
-        {
-            if(ent->physics->bt_body[i] != NULL)
-            {
-                bt_engine_dynamicsWorld->removeRigidBody(ent->physics->bt_body[i]);
-                    ent->physics->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
-                bt_engine_dynamicsWorld->addRigidBody(ent->physics->bt_body[i]);
+        bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+            physics->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(scaling[0], scaling[1], scaling[2]));
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
 
-                ent->physics->bt_body[i]->activate();
-            }
-        }
+        physics->bt_body[i]->activate();
     }
 }
 
 
-void Entity_SetBodyMass(struct entity_s *ent, float mass, uint16_t index)
+void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t index)
 {
     btVector3 inertia (0.0, 0.0, 0.0);
-    if(ent->physics->bt_body[index])
+    bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[index]);
+
+        physics->bt_body[index]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+
+        physics->bt_body[index]->setMassProps(mass, inertia);
+
+        physics->bt_body[index]->updateInertiaTensor();
+        physics->bt_body[index]->clearForces();
+
+        btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
+        physics->bt_body[index]->setLinearFactor (factor);
+        physics->bt_body[index]->setAngularFactor(factor);
+
+        //physics_body[index]->forceActivationState(DISABLE_DEACTIVATION);
+
+        //physics_body[index]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+        //physics_body[index]->setCcdSweptSphereRadius(32.0);
+
+    bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[index]);
+
+    physics->bt_body[index]->activate();
+}
+
+
+void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t index)
+{
+    physics->bt_body[index]->setLinearVelocity(btVector3(speed[0], speed[1], speed[2]));
+}
+
+
+void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index)
+{
+    physics->bt_body[index]->setLinearFactor(btVector3(factor[0], factor[1], factor[2]));
+}
+
+void Physics_SetNoFixBodyPartFlag(struct physics_data_s *physics, uint32_t flag)
+{
+    physics->no_fix_skeletal_parts = flag;
+}
+
+
+void Physics_SetNoFixAllFlag(struct physics_data_s *physics, uint8_t flag)
+{
+    physics->no_fix_all = flag;
+}
+
+
+uint8_t Physics_GetNoFixAllFlag(struct physics_data_s *physics)
+{
+    return physics->no_fix_all;
+}
+
+
+uint32_t Physics_GetNoFixBodyPartFlag(struct physics_data_s *physics)
+{
+    return physics->no_fix_skeletal_parts;
+}
+
+
+struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, struct engine_container_s *cont)
+{
+    struct collision_node_s *ret = NULL;
+
+    if(physics->ghostObjects != NULL)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(ent->physics->bt_body[index]);
-
-            ent->physics->bt_body[index]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-
-            ent->physics->bt_body[index]->setMassProps(mass, inertia);
-
-            ent->physics->bt_body[index]->updateInertiaTensor();
-            ent->physics->bt_body[index]->clearForces();
-
-            ent->physics->bt_body[index]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
-
-            btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
-            ent->physics->bt_body[index]->setLinearFactor (factor);
-            ent->physics->bt_body[index]->setAngularFactor(factor);
-
-            //ent->physics_body[index]->forceActivationState(DISABLE_DEACTIVATION);
-
-            //ent->physics_body[index]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-            //ent->physics_body[index]->setCcdSweptSphereRadius(32.0);
-
-        bt_engine_dynamicsWorld->addRigidBody(ent->physics->bt_body[index]);
-
-        ent->physics->bt_body[index]->activate();
-
-        //ent->physics_body[index]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
-        //ent->physics_body[index]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
-
-        //ent->self->object_type = OBJECT_ENTITY;
-        //ent->physics_body[index]->setUserPointer(ent->self);
-    }
-}
-
-
-void Entity_PushBody(struct entity_s *ent, float speed[3], uint16_t index)
-{
-    if(ent->physics->bt_body[index])
-    {
-        ent->physics->bt_body[index]->setLinearVelocity(btVector3(speed[0], speed[1], speed[2]));
-    }
-}
-
-
-void Entity_SetLinearFactor(struct entity_s *ent, float factor[3], uint16_t index)
-{
-    if(ent->physics->bt_body[index])
-    {
-        ent->physics->bt_body[index]->setLinearFactor(btVector3(factor[0], factor[1], factor[2]));
-    }
-}
-
-void Entity_SetNoFixBodyPartFlag(struct entity_s *ent, uint32_t flag)
-{
-    ent->physics->no_fix_skeletal_parts = flag;
-}
-
-
-void Entity_SetNoFixAllFlag(struct entity_s *ent, uint8_t flag)
-{
-    ent->physics->no_fix_all = flag;
-}
-
-
-uint8_t Entity_GetNoFixAllFlag(struct entity_s *ent)
-{
-    return ent->physics->no_fix_all;
-}
-
-
-void Entity_UpdateCurrentCollisions(struct entity_s *ent)
-{
-    if(ent->physics->ghostObjects != NULL)
-    {
-        btScalar tr[16], *v;
         btTransform orig_tr;
-        btVector3 pos;
-
-        ent->physics->collisions = NULL;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i=0;i<physics->objects_count;i++)
         {
-            btPairCachingGhostObject *ghost = ent->physics->ghostObjects[i];
-
-            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
-            v = ent->bf->animations.model->mesh_tree[i].mesh_base->centre;
-            orig_tr = ghost->getWorldTransform();
-            ghost->getWorldTransform().setFromOpenGLMatrix(tr);
-            Mat4_vec3_mul_macro(pos.m_floats, tr, v);
-            ghost->getWorldTransform().setOrigin(pos);
-
+            btPairCachingGhostObject *ghost = physics->ghostObjects[i];
             btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
             btVector3 aabb_min, aabb_max;
 
@@ -1401,7 +1361,7 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
             int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
             for(int j=0;j<num_pairs;j++)
             {
-                ent->physics->manifoldArray->clear();
+                physics->manifoldArray->clear();
                 btBroadphasePair *collisionPair = &pairArray[j];
 
                 if(!collisionPair)
@@ -1411,12 +1371,12 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 
                 if(collisionPair->m_algorithm)
                 {
-                    collisionPair->m_algorithm->getAllContactManifolds(*ent->physics->manifoldArray);
+                    collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
                 }
 
-                for(int k=0;k<ent->physics->manifoldArray->size();k++)
+                for(int k=0;k<physics->manifoldArray->size();k++)
                 {
-                    btPersistentManifold* manifold = (*ent->physics->manifoldArray)[k];
+                    btPersistentManifold* manifold = (*physics->manifoldArray)[k];
                     for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
                     {
                         //const btManifoldPoint &pt = manifold->getContactPoint(c);
@@ -1427,17 +1387,17 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
                             {
                                 break;
                             }
-                            btCollisionObject *obj = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody0();
+                            btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
                             cn->obj = (engine_container_p)obj->getUserPointer();
-                            if(ent->self == cn->obj)
+                            if(cont == cn->obj)
                             {
-                                obj = (btCollisionObject*)(*ent->physics->manifoldArray)[k]->getBody1();
+                                obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
                                 cn->obj = (engine_container_p)obj->getUserPointer();
                             }
                             cn->part_from = obj->getUserIndex();
                             cn->part_self = i;
-                            cn->next = ent->physics->collisions;
-                            ent->physics->collisions = cn;
+                            cn->next = ret;
+                            ret = cn;
                             break;
                         }
                     }
@@ -1446,254 +1406,6 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
             ghost->setWorldTransform(orig_tr);
         }
     }
-}
-
-
-///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3])
-{
-    int ret = 0;
-
-    vec3_set_zero(reaction);
-    if((ent->physics->ghostObjects != NULL) && (ent->physics->no_fix_all == 0))
-    {
-        btScalar tmp[3], orig_pos[3];
-        btScalar tr[16];
-
-        vec3_copy(orig_pos, ent->transform + 12);
-        for(uint16_t i=0;i<ent->bf->animations.model->collision_map_size;i++)
-        {
-            btTransform tr_current;
-            btVector3 from, to, curr, move;
-            btScalar move_len;
-            uint16_t m = ent->bf->animations.model->collision_map[i];
-            ss_bone_tag_p btag = ent->bf->bone_tags + m;
-
-            if(btag->body_part & ent->physics->no_fix_skeletal_parts)
-            {
-                continue;
-            }
-
-            // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
-            if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
-            {
-                from = ent->physics->ghostObjects[m]->getWorldTransform().getOrigin();
-                from.m_floats[0] += ent->transform[12+0] - orig_pos[0];
-                from.m_floats[1] += ent->transform[12+1] - orig_pos[1];
-                from.m_floats[2] += ent->transform[12+2] - orig_pos[2];
-            }
-            else
-            {
-                btScalar parent_from[3];
-                Mat4_vec3_mul(parent_from, btag->parent->full_transform, btag->parent->mesh_base->centre);
-                Mat4_vec3_mul(from.m_floats, ent->transform, parent_from);
-            }
-
-            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
-            Mat4_vec3_mul(to.m_floats, tr, btag->mesh_base->centre);
-            curr = from;
-            move = to - from;
-            move_len = move.length();
-            if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
-            {
-                break;
-            }
-            int iter = (btScalar)(2.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
-            move.m_floats[0] /= (btScalar)iter;
-            move.m_floats[1] /= (btScalar)iter;
-            move.m_floats[2] /= (btScalar)iter;
-
-            for(int j=0;j<=iter;j++)
-            {
-                vec3_copy(tr+12, curr.m_floats);
-                tr_current.setFromOpenGLMatrix(tr);
-                ent->physics->ghostObjects[m]->setWorldTransform(tr_current);
-                if(Ghost_GetPenetrationFixVector(ent->physics->ghostObjects[m], ent->physics->manifoldArray, tmp))
-                {
-                    ent->transform[12+0] += tmp[0];
-                    ent->transform[12+1] += tmp[1];
-                    ent->transform[12+2] += tmp[2];
-                    curr.m_floats[0] += tmp[0];
-                    curr.m_floats[1] += tmp[1];
-                    curr.m_floats[2] += tmp[2];
-                    from.m_floats[0] += tmp[0];
-                    from.m_floats[1] += tmp[1];
-                    from.m_floats[2] += tmp[2];
-                    ret++;
-                }
-                curr += move;
-            }
-        }
-        vec3_sub(reaction, ent->transform+12, orig_pos);
-        vec3_copy(ent->transform + 12, orig_pos);
-    }
 
     return ret;
-}
-
-
-void Entity_FixPenetrations(struct entity_s *ent, float move[3])
-{
-    if(ent->physics->ghostObjects != NULL)
-    {
-        btScalar t1, t2, reaction[3];
-
-        if((move != NULL) && (ent->character != NULL))
-        {
-            ent->character->resp.horizontal_collide    = 0x00;
-            ent->character->resp.vertical_collide      = 0x00;
-        }
-
-        if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
-        {
-            return;
-        }
-
-        if(ent->physics->no_fix_all)
-        {
-            Entity_GhostUpdate(ent);
-            return;
-        }
-
-        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move);
-        vec3_add(ent->transform+12, ent->transform+12, reaction);
-
-        if(ent->character != NULL)
-        {
-            Character_UpdateCurrentHeight(ent);
-            if((move != NULL) && (numPenetrationLoops > 0))
-            {
-                t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-                t2 = move[0] * move[0] + move[1] * move[1];
-                if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))    // we have horizontal move and horizontal correction
-                {
-                    t2 *= t1;
-                    t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-                    if(t1 < ent->character->critical_wall_component)
-                    {
-                        ent->character->resp.horizontal_collide |= 0x01;
-                    }
-                }
-                else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
-                {
-                    if((reaction[2] > 0.0) && (move[2] < 0.0))
-                    {
-                        ent->character->resp.vertical_collide |= 0x01;
-                    }
-                    else if((reaction[2] < 0.0) && (move[2] > 0.0))
-                    {
-                        ent->character->resp.vertical_collide |= 0x02;
-                    }
-                }
-            }
-
-            if(ent->character->height_info.ceiling_hit && (reaction[2] < -0.1))
-            {
-                ent->character->resp.vertical_collide |= 0x02;
-            }
-
-            if(ent->character->height_info.floor_hit && (reaction[2] > 0.1))
-            {
-                ent->character->resp.vertical_collide |= 0x01;
-            }
-        }
-
-        Entity_GhostUpdate(ent);
-    }
-}
-
-/**
- * we check walls and other collision objects reaction. if reaction more then critacal
- * then cmd->horizontal_collide |= 0x01;
- * @param ent - cheked entity
- * @param cmd - here we fill cmd->horizontal_collide field
- * @param move - absolute 3d move vector
- */
-int Entity_CheckNextPenetration(struct entity_s *ent, float move[3])
-{
-    int ret = 0;
-    if(ent->physics->ghostObjects != NULL)
-    {
-        btScalar t1, t2, reaction[3], *pos = ent->transform + 12;
-        character_response_p resp = &ent->character->resp;
-
-        Entity_GhostUpdate(ent);
-        vec3_add(pos, pos, move);
-        //resp->horizontal_collide = 0x00;
-        ret = Entity_GetPenetrationFixVector(ent, reaction, move);
-        if((ret > 0) && (ent->character != NULL))
-        {
-            t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-            t2 = move[0] * move[0] + move[1] * move[1];
-            if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))
-            {
-                t2 *= t1;
-                t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-                if(t1 < ent->character->critical_wall_component)
-                {
-                    ent->character->resp.horizontal_collide |= 0x01;
-                }
-            }
-        }
-        vec3_sub(pos, pos, move);
-        Entity_GhostUpdate(ent);
-        Entity_CleanCollisionAllBodyParts(ent);
-    }
-
-    return ret;
-}
-
-
-bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
-{
-    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
-    {
-        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
-{
-    ent->physics->collisions = NULL;
-}
-
-
-void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
-{
-    collision_node_p parent = NULL;
-    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
-    {
-        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
-        {
-            (parent)?(parent->next = cn->next):(ent->physics->collisions = cn->next);
-            cn->next = NULL;
-        }
-        parent = cn;
-    }
-}
-
-
-collision_node_p Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
-{
-    *curr_flag = 0x00;
-    collision_node_p parent = NULL;
-    for(collision_node_p cn = ent->physics->collisions; cn; cn = cn->next)
-    {
-        if(ent->bf->bone_tags[cn->part_self].body_part & parts_flags)
-        {
-            *curr_flag = ent->bf->bone_tags[cn->part_self].body_part;
-            (parent)?(parent->next = cn->next):(ent->physics->collisions = cn->next);
-            cn->next = NULL;
-            return cn;
-        }
-        parent = cn;
-    }
-
-    return NULL;
 }
