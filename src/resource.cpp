@@ -3660,11 +3660,11 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
         if(entity->m_bf.animations.model == nullptr)
         {
-            int id = engine_lua.call("getOverridedID", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
+            int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
             entity->m_bf.animations.model = world->getModelByID(id);
         }
 
-        int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(tr->m_gameVersion), tr_item->object_id);
+        int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(replace_anim_id > 0)
         {
             SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
