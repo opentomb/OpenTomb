@@ -35,6 +35,7 @@ void TR4Level::load()
     if(file_version != 0x00345254 /*&& file_version != 0x63345254*/)           // +TRLE
         throw std::runtime_error("Wrong level version");
 
+    std::vector<WordTexture> texture16;
     {
         auto numRoomTextiles = m_reader.readU16();
         auto numObjTextiles = m_reader.readU16();
@@ -53,7 +54,7 @@ void TR4Level::load()
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
             io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-            newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+            newsrc.readVector(m_textures, numTextiles - numMiscTextiles, &DWordTexture::read);
         }
 
         uncomp_size = m_reader.readU32();
@@ -63,15 +64,13 @@ void TR4Level::load()
         comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
-            if(m_textile32.empty())
+            if(m_textures.empty())
             {
-                m_textile16.resize(numTextiles);
-                
                 std::vector<uint8_t> comp_buffer(comp_size);
                 m_reader.readBytes(comp_buffer.data(), comp_size);
 
                 io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-                newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
+                newsrc.readVector(texture16, numTextiles - numMiscTextiles, &WordTexture::read);
             }
             else
             {
@@ -86,7 +85,7 @@ void TR4Level::load()
         comp_size = m_reader.readU32();
         if(comp_size > 0)
         {
-            if(!m_textile32.empty())
+            if(!m_textures.empty())
             {
                 m_reader.skip(comp_size);
             }
@@ -95,16 +94,16 @@ void TR4Level::load()
                 if((uncomp_size / (256 * 256 * 4)) > 2)
                     std::cerr << "read_tr4_level: num_misc_textiles > 2\n";
 
-                if(m_textile32.empty())
+                if(m_textures.empty())
                 {
-                    m_textile32.resize(numTextiles);
+                    m_textures.resize(numTextiles);
                 }
                 std::vector<uint8_t> comp_buffer(comp_size);
 
                 m_reader.readBytes(comp_buffer.data(), comp_size);
 
                 io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-                newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
+                newsrc.appendVector(m_textures, numMiscTextiles, &DWordTexture::read);
             }
         }
     }
@@ -174,8 +173,7 @@ void TR4Level::load()
 
     newsrc.readVector(m_overlaps, newsrc.readU32());
 
-    // Zones
-    newsrc.skip(m_boxes.size() * 20);
+    m_reader.readVector(m_zones, m_boxes.size(), &Zone::readTr2);
 
     newsrc.readVector(m_animatedTextures, newsrc.readU32());
 
@@ -216,10 +214,10 @@ void TR4Level::load()
         m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.size() - m_reader.tell()));
     }
 
-    if(!m_textile32.empty())
+    if(!m_textures.empty())
         return;
 
-    m_textile32.resize(m_textile16.size());
-    for(size_t i = 0; i < m_textile16.size(); i++)
-        convertTexture(m_textile16[i], m_textile32[i]);
+    m_textures.resize(texture16.size());
+    for(size_t i = 0; i < texture16.size(); i++)
+        convertTexture(texture16[i], m_textures[i]);
 }

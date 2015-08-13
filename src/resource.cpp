@@ -2321,7 +2321,7 @@ void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
 
     world->tex_atlas.reset(new BorderedTextureAtlas(border_size,
                                                     renderer.settings().save_texture_memory,
-                                                    tr->m_textile32,
+                                                    tr->m_textures,
                                                     tr->m_objectTextures,
                                                     tr->m_spriteTextures));
 

@@ -35,7 +35,8 @@ void TR1Level::load()
     if (file_version != 0x00000020)
         throw std::runtime_error("Wrong level version");
 
-    m_reader.readVector(m_textile8, m_reader.readU32(), &ByteTexture::read);
+    std::vector<ByteTexture> texture8;
+    m_reader.readVector(texture8, m_reader.readU32(), &ByteTexture::read);
 
     // Unused
     if (m_reader.readU32() != 0)
@@ -85,8 +86,7 @@ void TR1Level::load()
 
     m_reader.readVector(m_overlaps, m_reader.readU32());
 
-    // Zones
-    m_reader.skip(m_boxes.size() * 12);
+    m_reader.readVector(m_zones, m_boxes.size(), &Zone::readTr1);
 
     m_animatedTexturesUvCount = 0; // No UVRotate in TR1
     m_reader.readVector(m_animatedTextures, m_reader.readU32());
@@ -133,7 +133,7 @@ void TR1Level::load()
     m_samplesCount = m_sampleIndices.size();
 #endif
 
-    m_textile32.resize(m_textile8.size());
-    for(size_t i = 0; i < m_textile8.size(); i++)
-        convertTexture(m_textile8[i], m_palette, m_textile32[i]);
+    m_textures.resize(texture8.size());
+    for(size_t i = 0; i < texture8.size(); i++)
+        convertTexture(texture8[i], m_palette, m_textures[i]);
 }

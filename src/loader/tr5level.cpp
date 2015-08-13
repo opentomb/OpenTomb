@@ -52,7 +52,7 @@ void TR5Level::load()
         m_reader.readBytes(comp_buffer.data(), comp_size);
 
         io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-        newsrc.readVector(m_textile32, numTextiles - numMiscTextiles, &DWordTexture::read);
+        newsrc.readVector(m_textures, numTextiles - numMiscTextiles, &DWordTexture::read);
     }
 
     uncomp_size = m_reader.readU32();
@@ -60,15 +60,16 @@ void TR5Level::load()
         throw std::runtime_error("read_tr5_level: textiles16 uncomp_size == 0");
 
     comp_size = m_reader.readU32();
+    std::vector<WordTexture> texture16;
     if(comp_size > 0)
     {
-        if(m_textile32.empty())
+        if(m_textures.empty())
         {
             std::vector<uint8_t> comp_buffer(comp_size);
             m_reader.readBytes(comp_buffer.data(), comp_size);
 
             io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-            newsrc.readVector(m_textile16, numTextiles - numMiscTextiles, &WordTexture::read);
+            newsrc.readVector(texture16, numTextiles - numMiscTextiles, &WordTexture::read);
         }
         else
         {
@@ -90,7 +91,7 @@ void TR5Level::load()
         m_reader.readBytes(comp_buffer.data(), comp_size);
 
         io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
-        newsrc.appendVector(m_textile32, numMiscTextiles, &DWordTexture::read);
+        newsrc.appendVector(m_textures, numMiscTextiles, &DWordTexture::read);
     }
 
     m_laraType = m_reader.readU16();
@@ -172,8 +173,7 @@ void TR5Level::load()
 
     m_reader.readVector(m_overlaps, m_reader.readU32());
 
-    // Zones
-    m_reader.skip(m_boxes.size() * 20);
+    m_reader.readVector(m_zones, m_boxes.size(), &Zone::readTr2);
 
     m_reader.readVector(m_animatedTextures, m_reader.readU32());
 
@@ -217,10 +217,10 @@ void TR5Level::load()
         m_reader.readVector(m_samplesData, static_cast<size_t>(m_reader.size() - m_reader.tell()));
     }
 
-    if(!m_textile32.empty())
+    if(!m_textures.empty())
         return;
 
-    m_textile32.resize(m_textile16.size());
-    for(size_t i = 0; i < m_textile16.size(); i++)
-        convertTexture(m_textile16[i], m_textile32[i]);
+    m_textures.resize(texture16.size());
+    for(size_t i = 0; i < texture16.size(); i++)
+        convertTexture(texture16[i], m_textures[i]);
 }

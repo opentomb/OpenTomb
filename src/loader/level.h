@@ -28,46 +28,43 @@ public:
 
     virtual ~Level() = default;
 
-    const Game m_gameVersion;                   ///< \brief game engine version.
+    const Game m_gameVersion;
 
-    std::vector<ByteTexture> m_textile8;                ///< \brief 8-bit 256x256 textiles(TR1-3).
-    std::vector<WordTexture> m_textile16;             ///< \brief 16-bit 256x256 textiles(TR2-5).
-    std::vector<DWordTexture> m_textile32;             ///< \brief 32-bit 256x256 textiles(TR4-5).
-    std::vector<Room> m_rooms;                      ///< \brief all rooms (normal and alternate).
-    std::vector<uint16_t> m_floorData;                   ///< \brief the floor data.
-    std::vector<Mesh> m_meshes;                     ///< \brief all meshes (static and moveables).
-    std::vector<uint32_t> m_meshIndices;                 ///< \brief mesh index table.
-    std::vector<Animation> m_animations;             ///< \brief animations for moveables.
-    std::vector<StateChange> m_stateChanges;       ///< \brief state changes for moveables.
-    std::vector<AnimDispatch> m_animDispatches;    ///< \brief animation dispatches for moveables.
-    std::vector<int16_t> m_animCommands;                 ///< \brief animation commands for moveables.
-    std::vector<Moveable> m_moveables;               ///< \brief data for the moveables.
-    std::vector<StaticMesh> m_staticMeshes;         ///< \brief data for the static meshes.
-    std::vector<ObjectTexture> m_objectTextures;  ///< \brief object texture definitions.
-    std::vector<uint16_t> m_animatedTextures;            ///< \brief animated textures.
+    std::vector<DWordTexture> m_textures;
+    Palette m_palette;
+    std::vector<Room> m_rooms;
+    std::vector<uint16_t> m_floorData;
+    std::vector<Mesh> m_meshes;
+    std::vector<uint32_t> m_meshIndices;
+    std::vector<Animation> m_animations;
+    std::vector<StateChange> m_stateChanges;
+    std::vector<AnimDispatch> m_animDispatches;
+    std::vector<int16_t> m_animCommands;
+    std::vector<Moveable> m_moveables;
+    std::vector<StaticMesh> m_staticMeshes;
+    std::vector<ObjectTexture> m_objectTextures;
+    std::vector<uint16_t> m_animatedTextures;
     uint32_t m_animatedTexturesUvCount = 0;
-    std::vector<SpriteTexture> m_spriteTextures;   ///< \brief sprite texture definitions.
-    std::vector<SpriteSequence> m_spriteSequences; ///< \brief sprite sequences for animation.
-    std::vector<Camera> m_cameras;                   ///< \brief cameras.
-    std::vector<FlybyCamera> m_flybyCameras;      ///< \brief flyby cameras.
-    std::vector<SoundSource> m_soundSources;       ///< \brief sound sources.
-    std::vector<Box> m_boxes;                        ///< \brief boxes.
-    std::vector<uint16_t> m_overlaps;                     ///< \brief overlaps.
-    std::vector<int16_t> m_zones;                         ///< \brief zones.
-    std::vector<Item> m_items;                      ///< \brief items.
-    LightMap m_lightmap;                 ///< \brief ligthmap (TR1-3).
-    Palette m_palette;                  ///< \brief colour palette (TR1-3).
-    Palette m_palette16;                ///< \brief colour palette (TR2-3).
-    std::vector<AIObject> m_aiObjects;            ///< \brief ai objects (TR4-5).
-    std::vector<CinematicFrame> m_cinematicFrames; ///< \brief cinematic frames (TR1-3).
-    std::vector<uint8_t> m_demoData;                     ///< \brief demo data.
-    std::vector<int16_t> m_soundmap;                      ///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
-    std::vector<SoundDetails> m_soundDetails;      ///< \brief sound details.
+    std::vector<SpriteTexture> m_spriteTextures;
+    std::vector<SpriteSequence> m_spriteSequences;
+    std::vector<Camera> m_cameras;
+    std::vector<FlybyCamera> m_flybyCameras;
+    std::vector<SoundSource> m_soundSources;
+    std::vector<Box> m_boxes;
+    std::vector<uint16_t> m_overlaps;
+    std::vector<Zone> m_zones;
+    std::vector<Item> m_items;
+    LightMap m_lightmap;
+    std::vector<AIObject> m_aiObjects;
+    std::vector<CinematicFrame> m_cinematicFrames;
+    std::vector<uint8_t> m_demoData;
+    std::vector<int16_t> m_soundmap;
+    std::vector<SoundDetails> m_soundDetails;
     size_t m_samplesCount = 0;
-    std::vector<uint8_t> m_samplesData;                  ///< \brief samples.
-    std::vector<uint32_t> m_sampleIndices;               ///< \brief sample indices.
+    std::vector<uint8_t> m_samplesData;
+    std::vector<uint32_t> m_sampleIndices;
 
-    std::vector<uint16_t> m_frameData;                   ///< \brief frame data array
+    std::vector<uint16_t> m_frameData;
     std::vector<uint32_t> m_meshTreeData;
 
     std::string m_sfxPath = "MAIN.SFX";

@@ -36,11 +36,13 @@ void TR3Level::load()
         throw std::runtime_error("Wrong level version");
 
     m_palette = Palette::readTr1(m_reader);
-    m_palette16 = Palette::readTr2(m_reader);
+    /*Palette palette16 =*/ Palette::readTr2(m_reader);
 
     auto numTextiles = m_reader.readU32();
-    m_reader.readVector(m_textile8, numTextiles, &ByteTexture::read);
-    m_reader.readVector(m_textile16, numTextiles, &WordTexture::read);
+    std::vector<ByteTexture> texture8;
+    m_reader.readVector(texture8, numTextiles, &ByteTexture::read);
+    std::vector<WordTexture> texture16;
+    m_reader.readVector(texture16, numTextiles, &WordTexture::read);
 
     if(file_version == 0xFF180034)                                          // VICT.TR2
     {
@@ -83,8 +85,7 @@ void TR3Level::load()
 
     m_reader.readVector(m_overlaps, m_reader.readU32());
 
-    // Zones
-    m_reader.skip(m_boxes.size() * 20);
+    m_reader.readVector(m_zones, m_boxes.size(), &Zone::readTr2);
 
     m_animatedTexturesUvCount = 0; // No UVRotate in TR3
     m_reader.readVector(m_animatedTextures, m_reader.readU32());
@@ -139,7 +140,7 @@ void TR3Level::load()
         }
     }
 
-    m_textile32.resize(m_textile16.size());
-    for(size_t i = 0; i < m_textile16.size(); i++)
-        convertTexture(m_textile16[i], m_textile32[i]);
+    m_textures.resize(texture16.size());
+    for(size_t i = 0; i < texture16.size(); i++)
+        convertTexture(texture16[i], m_textures[i]);
 }

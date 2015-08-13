@@ -1943,6 +1943,38 @@ struct Box
     }
 };
 
+struct Zone
+{
+    uint16_t flyZoneNormal;
+    std::vector<uint16_t> groundZonesNormal;
+    uint16_t flyZoneAlternate;
+    std::vector<uint16_t> groundZonesAlternate;
+
+    static Zone readTr1(io::SDLReader& reader)
+    {
+        Zone zone;
+        zone.flyZoneNormal = reader.readU16();
+        for(int i=0; i<2; ++i)
+            zone.groundZonesNormal.emplace_back( reader.readU16() );
+        zone.flyZoneAlternate = reader.readU16();
+        for(int i=0; i<2; ++i)
+            zone.groundZonesAlternate.emplace_back( reader.readU16() );
+        return zone;
+    }
+
+    static Zone readTr2(io::SDLReader& reader)
+    {
+        Zone zone;
+        zone.flyZoneNormal = reader.readU16();
+        for(int i=0; i<4; ++i)
+            zone.groundZonesNormal.emplace_back( reader.readU16() );
+        zone.flyZoneAlternate = reader.readU16();
+        for(int i=0; i<4; ++i)
+            zone.groundZonesAlternate.emplace_back( reader.readU16() );
+        return zone;
+    }
+};
+
 /** \brief SoundSource.
   *
   * This structure contains the details of continuous-sound sources. Although
