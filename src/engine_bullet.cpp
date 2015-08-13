@@ -36,8 +36,6 @@ typedef struct physics_data_s
     btRigidBody                       **bt_body;
 
     // dynamic
-    uint32_t                            no_fix_skeletal_parts;
-    int8_t                              no_fix_all;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
     uint16_t                            objects_count;          // Ragdoll joints
@@ -336,8 +334,6 @@ struct physics_data_s *Physics_CreatePhysicsData()
     ret->bt_joints = NULL;
     ret->objects_count = 0;
     ret->bt_joint_count = 0;
-    ret->no_fix_all = 0x00;
-    ret->no_fix_skeletal_parts = 0x00000000;
     ret->manifoldArray = NULL;
     ret->ghostObjects = NULL;
 
@@ -1202,7 +1198,6 @@ void Entity_CreateGhosts(struct entity_s *ent)
         btScalar gltr[16], v[3];
 
         ent->physics->manifoldArray = new btManifoldArray();
-        //ent->physics->shapes = (btCollisionShape**)malloc(ent->bf->bone_tag_count * sizeof(btCollisionShape*));
         ent->physics->ghostObjects = (btPairCachingGhostObject**)malloc(ent->bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
         for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
@@ -1315,29 +1310,6 @@ void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t i
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index)
 {
     physics->bt_body[index]->setLinearFactor(btVector3(factor[0], factor[1], factor[2]));
-}
-
-void Physics_SetNoFixBodyPartFlag(struct physics_data_s *physics, uint32_t flag)
-{
-    physics->no_fix_skeletal_parts = flag;
-}
-
-
-void Physics_SetNoFixAllFlag(struct physics_data_s *physics, uint8_t flag)
-{
-    physics->no_fix_all = flag;
-}
-
-
-uint8_t Physics_GetNoFixAllFlag(struct physics_data_s *physics)
-{
-    return physics->no_fix_all;
-}
-
-
-uint32_t Physics_GetNoFixBodyPartFlag(struct physics_data_s *physics)
-{
-    return physics->no_fix_skeletal_parts;
 }
 
 

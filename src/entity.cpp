@@ -45,6 +45,8 @@ entity_p Entity_Create()
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
 
+    ret->no_fix_all = 0x00;
+    ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData();
 
     ret->character = NULL;
@@ -616,7 +618,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     int ret = 0;
 
     vec3_set_zero(reaction);
-    if(Physics_IsGhostsInited(ent->physics) && (Physics_GetNoFixAllFlag(ent->physics) == 0))
+    if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00))
     {
         float tmp[3], orig_pos[3];
         float tr[16];
@@ -629,7 +631,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             uint16_t m = ent->bf->animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf->bone_tags + m;
 
-            if(btag->body_part & Physics_GetNoFixBodyPartFlag(ent->physics))
+            if(btag->body_part & ent->no_fix_skeletal_parts)
             {
                 continue;
             }
@@ -742,7 +744,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3])
             return;
         }
 
-        if(Physics_GetNoFixAllFlag(ent->physics))
+        if(ent->no_fix_all)
         {
             Entity_GhostUpdate(ent);
             return;
@@ -1152,7 +1154,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     }
 
     animation = (animation < 0)?(0):(animation);
-    Physics_SetNoFixAllFlag(entity->physics, 0x00);
+    entity->no_fix_all = 0x00;
 
     if(another_model >= 0)
     {

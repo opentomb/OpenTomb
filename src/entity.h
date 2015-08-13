@@ -65,6 +65,7 @@ typedef struct entity_s
     uint8_t                             dir_flag;           // (move direction)
     uint8_t                             was_rendered;       // render once per frame trigger
     uint8_t                             was_rendered_lines; // same for debug lines
+    int8_t                              no_fix_all;
     
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks
@@ -79,6 +80,7 @@ typedef struct entity_s
     float                               inertia_linear;     // linear inertia
     float                               inertia_angular[2]; // angular inertia - X and Y axes
     
+    uint32_t                            no_fix_skeletal_parts;
     struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
     struct physics_data_s              *physics;
     float                               scaling[3];         // entity scaling

@@ -77,10 +77,6 @@ void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t index);
 void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t index);
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index);
-void Physics_SetNoFixBodyPartFlag(struct physics_data_s *physics, uint32_t flag);
-void Physics_SetNoFixAllFlag(struct physics_data_s *physics, uint8_t flag);
-uint8_t Physics_GetNoFixAllFlag(struct physics_data_s *physics);
-uint32_t Physics_GetNoFixBodyPartFlag(struct physics_data_s *physics);
 struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, struct engine_container_s *cont);
 
 void Entity_CreateGhosts(struct entity_s *ent);

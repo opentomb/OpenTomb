@@ -30,8 +30,6 @@ typedef struct physics_data_s
     btRigidBody                       **bt_body;
 
     // dynamic
-    uint32_t                            no_fix_skeletal_parts;
-    int8_t                              no_fix_all;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
     uint16_t                            objects_count;          // Ragdoll joints
@@ -73,8 +71,8 @@ bool Ragdoll_Create(struct entity_s *entity, rd_setup_p setup)
     entity->physics->bt_joint_count = 0;
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
     Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
-    entity->physics->no_fix_all = 0x00;
-    entity->physics->no_fix_skeletal_parts = 0x00000000;
+    entity->no_fix_all = 0x00;
+    entity->no_fix_skeletal_parts = 0x00000000;
     int map_size = entity->bf->animations.model->collision_map_size;             // does not works, strange...
     entity->bf->animations.model->collision_map_size = entity->bf->animations.model->mesh_count;
     Entity_FixPenetrations(entity, NULL);

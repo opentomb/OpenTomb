@@ -31,8 +31,6 @@ typedef struct physics_data_s
     btRigidBody                       **bt_body;
 
     // dynamic
-    uint32_t                            no_fix_skeletal_parts;
-    int8_t                              no_fix_all;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
     uint16_t                            objects_count;          // Ragdoll joints

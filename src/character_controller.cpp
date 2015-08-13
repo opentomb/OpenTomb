@@ -1257,7 +1257,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point[2]) && (Physics_GetNoFixAllFlag(ent->physics) == 0x00))
+        if((pos[2] < ent->character->height_info.floor_point[2]) && (ent->no_fix_all == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point[2];
             Entity_FixPenetrations(ent, NULL);
