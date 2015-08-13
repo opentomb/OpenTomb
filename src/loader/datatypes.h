@@ -420,6 +420,8 @@ struct Light
         light.color.g = static_cast<uint8_t>(reader.readF() * 255);    // g
         light.color.b = static_cast<uint8_t>(reader.readF() * 255);    // b
         light.color.a = static_cast<uint8_t>(reader.readF() * 255);    // a
+        light.color.a = 1.0f;
+        light.intensity = 1.0f;
         /*
         if ((temp != 0) && (temp != 0xCDCDCDCD))
         throw TR_ReadError("read_tr5_room_light: seperator1 has wrong value");
@@ -1144,6 +1146,7 @@ struct Room
         room.light_colour.g = reader.readU8() / 255.0f;
         room.light_colour.r = reader.readU8() / 255.0f;
         room.light_colour.a = reader.readU8() / 255.0f;
+        room.light_colour.a = 1.0f;
 
         room.lights.resize(reader.readU16());
         if(room.lights.size() > 512)
