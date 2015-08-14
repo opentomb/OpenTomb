@@ -122,14 +122,12 @@ void Controls_Key(int32_t button, bool state)
                         if(ConsoleInfo::instance().isVisible())
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-                            SDL_ShowCursor(1);
                             SDL_SetRelativeMouseMode(SDL_FALSE);
                             SDL_StartTextInput();
                         }
                         else
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-                            SDL_ShowCursor(0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);
                             SDL_StopTextInput();
                         }
@@ -453,32 +451,17 @@ void Controls_InitGlobals()
 void Controls_PollSDLInput()
 {
     SDL_Event event;
-    static int mouse_setup = 0;
 
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look &&
-                   ((event.motion.x != (screen_info.w / 2)) ||
-                    (event.motion.y != (screen_info.h / 2))))
+                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look)
                 {
-                    if(mouse_setup)                                             // it is not perfect way, but cursor
-                    {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01f;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01f;
-                    }
-
-                    if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
-                       (event.motion.x >((screen_info.w / 2) + (screen_info.w / 4))) ||
-                       (event.motion.y < ((screen_info.h / 2) - (screen_info.h / 4))) ||
-                       (event.motion.y >((screen_info.h / 2) + (screen_info.h / 4))))
-                    {
-                        SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
-                    }
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_x;
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_y;
                 }
-                mouse_setup = 1;
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
