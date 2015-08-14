@@ -3610,6 +3610,8 @@ void script::MainEngine::execEffect(int id, int caller, int operand)
 void script::ScriptEngine::parseControls(struct ControlSettings *cs)
 {
     cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"];
+    cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"];
+    cs->mouse_scale_y = (*this)["controls"]["mouse_scale_y"];
     cs->use_joy = (*this)["controls"]["use_joy"];
     cs->joy_number = (*this)["controls"]["joy_number"];
     cs->joy_rumble = (*this)["controls"]["joy_rumble"];

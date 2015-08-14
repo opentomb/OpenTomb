@@ -44,6 +44,8 @@ system =
 controls =
 {
     mouse_sensitivity = 25.0;
+    mouse_scale_x = 0.01;
+    mouse_scale_y = 0.01;
 
     use_joy = true;                 -- Use joystick
     joy_number = 0;                 -- If you have one joystick in system, it will be 0.

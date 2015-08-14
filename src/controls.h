@@ -89,6 +89,8 @@ struct ControlAction
 struct ControlSettings
 {
     float    mouse_sensitivity = 0;
+    float    mouse_scale_x = 0.01f;
+    float    mouse_scale_y = 0.01f;
 
     // Global joystick settings.
     bool   use_joy = 0;
