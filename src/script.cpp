@@ -3640,6 +3640,7 @@ void script::ScriptEngine::parseScreen(struct ScreenInfo *sc)
     sc->FS_flag = (*this)["screen"]["fullscreen"];
     sc->show_debuginfo = (*this)["screen"]["debug_info"];
     sc->fov = (*this)["screen"]["fov"];
+    sc->vsync = (*this)["screen"]["vsync"];
 }
 
 void script::ScriptEngine::parseRender(struct RenderSettings *rs)

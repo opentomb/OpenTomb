@@ -26,6 +26,7 @@ struct ScreenInfo
     float       scale_factor;
     bool        FS_flag;
     bool        show_debuginfo;
+    bool        vsync;
 };
 
 extern ScreenInfo screen_info;
