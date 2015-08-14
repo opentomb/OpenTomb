@@ -7,6 +7,7 @@ screen =
     fullscreen = false;
     fov = 75.0;
     debug_info = false;
+    vsync = true;
 }
 
 audio =

@@ -229,7 +229,6 @@ void Engine_InitSDLVideo()
     if(!sdl_gl_context)
         Sys_Error("Can't create OpenGL context - shutting down. Try to disable use_gl3 option in config.");
 
-
     assert(sdl_gl_context);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
@@ -280,6 +279,9 @@ void Engine_InitSDLVideo()
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
+    if(SDL_GL_SetSwapInterval(screen_info.vsync))
+        Sys_DebugLog(LOG_FILENAME, "Cannot set VSYNC: %s\n", SDL_GetError());
 
     ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), FONTSTYLE_CONSOLE_INFO);
     ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), FONTSTYLE_CONSOLE_INFO);
