@@ -23,8 +23,6 @@
 #include "resource.h"
 #include "world.h"
 
-//#error MOVE ALL ENTITYES FUNCTIONS TO entity.cpp / entity.h MODULE!!!!!!!!!!!!!!
-
 struct physics_object_s
 {
     btRigidBody    *bt_body;
@@ -472,21 +470,21 @@ void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 
 
 /* Common physics functions */
-void Physics_GetGravity(btScalar g[3])
+void Physics_GetGravity(float g[3])
 {
     btVector3 bt_g = bt_engine_dynamicsWorld->getGravity();
     vec3_copy(g, bt_g.m_floats);
 }
 
 
-void Physics_SetGravity(btScalar g[3])
+void Physics_SetGravity(float g[3])
 {
     btVector3 bt_g(g[0], g[1], g[2]);
     bt_engine_dynamicsWorld->setGravity(bt_g);
 }
 
 
-int  Physics_RayTest(struct collision_result_s *result, btScalar from[3], btScalar to[3], struct engine_container_s *cont)
+int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont)
 {
     bt_engine_ClosestRayResultCallback cb(cont, true);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
@@ -516,7 +514,7 @@ int  Physics_RayTest(struct collision_result_s *result, btScalar from[3], btScal
 }
 
 
-int  Physics_SphereTest(struct collision_result_s *result, btScalar from[3], btScalar to[3], btScalar R, struct engine_container_s *cont)
+int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont)
 {
     bt_engine_ClosestConvexResultCallback cb(cont, true);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
@@ -687,14 +685,14 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
         cnt ++;
     }
 
+    OBB_Clear(obb);
+    free(obb);
+
     if(cnt == 0)                                                                // fixed: without that condition engine may easily crash
     {
         delete trimesh;
         return NULL;
     }
-
-    OBB_Clear(obb);
-    free(obb);
 
     ret = new btConvexTriangleMeshShape(trimesh, true);
 
@@ -707,7 +705,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     uint32_t cnt = 0;
     polygon_p p;
     btTriangleMesh *trimesh = new btTriangleMesh;
-    btCollisionShape* ret;
+    btCollisionShape* ret = NULL;
     btVector3 v0, v1, v2;
 
     p = mesh->polygons;
@@ -752,7 +750,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
     uint32_t cnt = 0;
     room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
-    btCollisionShape* ret;
+    btCollisionShape* ret = NULL;
 
     for(uint32_t i = 0; i < r->sectors_count; i++)
     {
@@ -1313,7 +1311,7 @@ void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], ui
 }
 
 
-struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, struct engine_container_s *cont)
+struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics)
 {
     struct collision_node_s *ret = NULL;
 
@@ -1324,6 +1322,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
         {
             btPairCachingGhostObject *ghost = physics->ghostObjects[i];
             btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
+            struct engine_container_s *cont = (struct engine_container_s*)ghost->getUserPointer();
             btVector3 aabb_min, aabb_max;
 
             ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);

@@ -848,7 +848,7 @@ float Entity_FindDistance(entity_p entity_1, entity_p entity_2)
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
-    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, ent->self);
+    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics);
     for(;cn;cn=cn->next)
     {
         // do callbacks here:
