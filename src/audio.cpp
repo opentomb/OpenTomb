@@ -934,21 +934,16 @@ bool StreamTrack::Stream(ALuint buffer)
     while(size < pcm.size() - sf_info.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
+        const size_t samplesToRead = ((audio_settings.stream_buffer_size - size) / sf_info.channels) * sf_info.channels;
 #ifdef AUDIO_OPENAL_FLOAT
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALfloat);
         const sf_count_t samplesRead = sf_read_float(snd_file, pcm.data() + size, samplesToRead);
 #else
-        const size_t samplesToRead = (audio_settings.stream_buffer_size - size) / sizeof(ALshort);
         const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead);
 #endif
 
         if(samplesRead > 0)
         {
-#ifdef AUDIO_OPENAL_FLOAT
-            size += samplesRead * sizeof(ALfloat);
-#else
-            size += samplesRead * sizeof(ALshort);
-#endif
+            size += samplesRead;
         }
         else
         {
@@ -956,6 +951,7 @@ bool StreamTrack::Stream(ALuint buffer)
             if(error != SF_ERR_NO_ERROR)
             {
                 Audio_LogSndfileError(error);
+                return false;
             }
             else
             {
@@ -974,7 +970,7 @@ bool StreamTrack::Stream(ALuint buffer)
     if(size == 0)
         return false;
 
-    alBufferData(buffer, format, pcm.data(), size, rate);
+    alBufferData(buffer, format, pcm.data(), size * sizeof(pcm[0]), rate);
     return true;
 }
 

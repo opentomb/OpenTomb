@@ -658,11 +658,11 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
 
                 GLfloat *v = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
 
-                for(size_t i = f->vertices.size() - 1; i >= 0; i--)
+                for(auto it = f->vertices.rbegin(); it != f->vertices.rend(); ++it)
                 {
-                    *v++ = f->vertices[i].x();
-                    *v++ = f->vertices[i].y();
-                    *v++ = f->vertices[i].z();
+                    *v++ = it->x();
+                    *v++ = it->y();
+                    *v++ = it->z();
                 }
 
                 glUnmapBuffer(GL_ARRAY_BUFFER);
