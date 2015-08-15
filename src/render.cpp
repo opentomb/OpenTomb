@@ -164,7 +164,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
 /**
  * draw transparency polygons
  */
-void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader)
+void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -172,28 +172,28 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     // them if you will force type via TRTextur utility.
     const TransparentPolygonReference* ref = bsp_ref.polygon;
     const struct Polygon *p = ref->polygon;
-    if(currentTransparency != p->transparency)
+    if(currentTransparency != p->blendMode)
     {
-        currentTransparency = p->transparency;
-        switch(p->transparency)
+        currentTransparency = p->blendMode;
+        switch(p->blendMode)
         {
-            case BM_MULTIPLY:                                    // Classic PC alpha
+            case loader::BlendingMode::Multiply:                                    // Classic PC alpha
                 glBlendFunc(GL_ONE, GL_ONE);
                 break;
 
-            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+            case loader::BlendingMode::InvertSrc:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
                 glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
-            case BM_INVERT_DEST:                                 // Inversion by dest
+            case loader::BlendingMode::InvertDst:                                 // Inversion by dest
                 glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
-            case BM_SCREEN:                                      // Screen (smoke, etc.)
+            case loader::BlendingMode::Screen:                                      // Screen (smoke, etc.)
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
-            case BM_ANIMATED_TEX:
+            case loader::BlendingMode::AnimatedTexture:
                 glBlendFunc(GL_ONE, GL_ZERO);
                 break;
 
@@ -212,7 +212,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const BSPF
     glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * ref->firstIndex));
 }
 
-void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
+void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
     btScalar d = root->plane.distance(engine_camera.getPosition());
 
@@ -260,7 +260,7 @@ void Render::renderBSPFrontToBack(uint16_t &currentTransparency, const std::uniq
     }
 }
 
-void Render::renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
+void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
     btScalar d = root->plane.distance(engine_camera.getPosition());
 
@@ -471,13 +471,13 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const matri
         positions[current_light_number * 3 + 2] = tmpPos[2];
 
         // Find fall-off
-        if(current_light->light_type == LT_SUN)
+        if(current_light->light_type == loader::LightType::Sun)
         {
             innerRadiuses[current_light_number] = 1e20f;
             outerRadiuses[current_light_number] = 1e21f;
             current_light_number++;
         }
-        else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
+        else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == loader::LightType::Point || current_light->light_type == loader::LightType::Shadow))
         {
             innerRadiuses[current_light_number] = std::abs(current_light->inner);
             outerRadiuses[current_light_number] = std::abs(current_light->outer);
@@ -940,7 +940,7 @@ void Render::drawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
-        uint16_t transparency = BM_OPAQUE;
+        loader::BlendingMode transparency = loader::BlendingMode::Opaque;
         renderBSPBackToFront(transparency, render_dBSP.root(), shader);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);

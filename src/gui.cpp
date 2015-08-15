@@ -203,7 +203,7 @@ void Gui_InitFaders()
             {
                 Fader[i].SetAlpha(255);
                 Fader[i].SetColor(0, 0, 0);
-                Fader[i].SetBlendingMode(BM_OPAQUE);
+                Fader[i].SetBlendingMode(loader::BlendingMode::Opaque);
                 Fader[i].SetSpeed(500);
                 Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
             }
@@ -213,7 +213,7 @@ void Gui_InitFaders()
             {
                 Fader[i].SetAlpha(255);
                 Fader[i].SetColor(255, 180, 0);
-                Fader[i].SetBlendingMode(BM_MULTIPLY);
+                Fader[i].SetBlendingMode(loader::BlendingMode::Multiply);
                 Fader[i].SetSpeed(10, 800);
             }
 
@@ -221,7 +221,7 @@ void Gui_InitFaders()
             {
                 Fader[i].SetAlpha(255);
                 Fader[i].SetColor(0, 0, 0);
-                Fader[i].SetBlendingMode(BM_OPAQUE);
+                Fader[i].SetBlendingMode(loader::BlendingMode::Opaque);
                 Fader[i].SetSpeed(500);
                 Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
             }
@@ -1100,8 +1100,8 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat near_dist = -1.0f;
 
         guiProjectionMatrix = matrix4{};                                        // identity matrix
-        guiProjectionMatrix[0][0] = 2.0f / ((GLfloat)screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0f / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(screen_info.h);
         guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
         guiProjectionMatrix[3][0] =-1.0f;
         guiProjectionMatrix[3][1] =-1.0f;
@@ -1208,7 +1208,7 @@ void Gui_DrawInventory()
 
     Gui_DrawRect(0.0, 0.0, static_cast<GLfloat>(screen_info.w), static_cast<GLfloat>(screen_info.h),
                  upper_color, upper_color, lower_color, lower_color,
-                 BM_OPAQUE);
+                 loader::BlendingMode::Opaque);
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
@@ -1275,24 +1275,24 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
                   const float colorUpperLeft[], const float colorUpperRight[],
                   const float colorLowerLeft[], const float colorLowerRight[],
-                  const int &blendMode,
+                  const loader::BlendingMode blendMode,
                   const GLuint texture)
 {
     switch(blendMode)
     {
-        case BM_HIDE:
+        case loader::BlendingMode::Hide:
             return;
-        case BM_MULTIPLY:
+        case loader::BlendingMode::Multiply:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             break;
-        case BM_SIMPLE_SHADE:
+        case loader::BlendingMode::SimpleShade:
             glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
             break;
-        case BM_SCREEN:
+        case loader::BlendingMode::Screen:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
-        case BM_OPAQUE:
+        case loader::BlendingMode::Opaque:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
     };
@@ -1432,7 +1432,7 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
 }
 
 void Gui_FadeSetup(int fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed)
 {
     if(fader >= FADER_LASTINDEX) return;
@@ -1462,7 +1462,7 @@ int Gui_FadeCheck(int fader)
 gui_Fader::gui_Fader()
 {
     SetColor(0, 0, 0);
-    SetBlendingMode(BM_OPAQUE);
+    SetBlendingMode(loader::BlendingMode::Opaque);
     SetAlpha(255);
     SetSpeed(500);
     SetDelay(0);
@@ -1531,7 +1531,7 @@ void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
     }
 }
 
-void gui_Fader::SetBlendingMode(uint32_t mode)
+void gui_Fader::SetBlendingMode(loader::BlendingMode mode)
 {
     mBlendingMode = mode;
 }
@@ -2292,7 +2292,7 @@ void gui_ProgressBar::Show(float value)
     Gui_DrawRect(mX, mY, mWidth + (mBorderWidth * 2), mHeight + (mBorderHeight * 2),
                  mBorderMainColor, mBorderMainColor,
                  mBorderFadeColor, mBorderFadeColor,
-                 BM_OPAQUE);
+                 loader::BlendingMode::Opaque);
 
     // SECTION FOR BASE BAR RECTANGLE.
 
@@ -2318,7 +2318,7 @@ void gui_ProgressBar::Show(float value)
         Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
                      mBackMainColor, (Vertical) ? (mBackFadeColor) : (mBackMainColor),
                      (Vertical) ? (mBackMainColor) : (mBackFadeColor), mBackFadeColor,
-                     BM_OPAQUE);
+                     loader::BlendingMode::Opaque);
         return;
     }
 
@@ -2369,7 +2369,7 @@ void gui_ProgressBar::Show(float value)
                      mWidth, mBaseSize,
                      RectFirstColor, RectFirstColor,
                      RectSecondColor, RectSecondColor,
-                     BM_OPAQUE);
+                     loader::BlendingMode::Opaque);
 
         // Draw background rect.
         Gui_DrawRect(mX + mBorderWidth,
@@ -2377,7 +2377,7 @@ void gui_ProgressBar::Show(float value)
                      mWidth, mHeight - mBaseSize,
                      mBackMainColor, mBackFadeColor,
                      mBackMainColor, mBackFadeColor,
-                     BM_OPAQUE);
+                     loader::BlendingMode::Opaque);
 
         if(mExtrude)    // Draw extrude overlay, if flag is set.
         {
@@ -2387,12 +2387,12 @@ void gui_ProgressBar::Show(float value)
                          mWidth / 2, mBaseSize,
                          mExtrudeDepth, transparentColor,
                          mExtrudeDepth, transparentColor,
-                         BM_OPAQUE);
+                         loader::BlendingMode::Opaque);
             Gui_DrawRect(mX + mBorderWidth + mWidth / 2, RectAnchor,
                          mWidth / 2, mBaseSize,
                          transparentColor, mExtrudeDepth,
                          transparentColor, mExtrudeDepth,
-                         BM_OPAQUE);
+                         loader::BlendingMode::Opaque);
         }
     }
     else
@@ -2404,7 +2404,7 @@ void gui_ProgressBar::Show(float value)
                      mBaseSize, mHeight,
                      RectSecondColor, RectFirstColor,
                      RectSecondColor, RectFirstColor,
-                     BM_OPAQUE);
+                     loader::BlendingMode::Opaque);
 
         // Draw background rect.
         Gui_DrawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
@@ -2412,7 +2412,7 @@ void gui_ProgressBar::Show(float value)
                      mWidth - mBaseSize, mHeight,
                      mBackMainColor, mBackMainColor,
                      mBackFadeColor, mBackFadeColor,
-                     BM_OPAQUE);
+                     loader::BlendingMode::Opaque);
 
         if(mExtrude)    // Draw extrude overlay, if flag is set.
         {
@@ -2422,12 +2422,12 @@ void gui_ProgressBar::Show(float value)
                          mBaseSize, mHeight / 2,
                          transparentColor, transparentColor,
                          mExtrudeDepth, mExtrudeDepth,
-                         BM_OPAQUE);
+                         loader::BlendingMode::Opaque);
             Gui_DrawRect(RectAnchor, mY + mBorderHeight + (mHeight / 2),
                          mBaseSize, mHeight / 2,
                          mExtrudeDepth, mExtrudeDepth,
                          transparentColor, transparentColor,
-                         BM_OPAQUE);
+                         loader::BlendingMode::Opaque);
         }
     } // end if(Vertical)
 }

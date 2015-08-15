@@ -2383,7 +2383,7 @@ void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16
     Gui_FadeSetup(FADER_EFFECT,
                   alpha,
                   R, G, B,
-                  BM_MULTIPLY,
+                  loader::BlendingMode::Multiply,
                   fadeinSpeed, fadeoutSpeed);
 }
 

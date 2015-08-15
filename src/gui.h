@@ -293,7 +293,7 @@ public:
 
     void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
-    void SetBlendingMode(uint32_t mode = BM_OPAQUE);
+    void SetBlendingMode(loader::BlendingMode mode = loader::BlendingMode::Opaque);
     void SetAlpha(uint8_t alpha = 255);
     void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
     void SetDelay(uint32_t delay_msec);
@@ -309,7 +309,7 @@ private:
     GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
     GLfloat         mBottomRightColor[4];
 
-    uint32_t        mBlendingMode;          // Fader's blending mode.
+    loader::BlendingMode mBlendingMode;     // Fader's blending mode.
 
     GLfloat         mCurrentAlpha;          // Current alpha value.
     GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
@@ -746,7 +746,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
                   const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
                   const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
-                  const int &blendMode,
+                  const loader::BlendingMode blendMode,
                   const GLuint texture = 0);
 
 /**
@@ -757,7 +757,7 @@ bool Gui_FadeStop(int fader);
 bool Gui_FadeAssignPic(int fader, const std::string &pic_name);
 int  Gui_FadeCheck(int fader);
 void Gui_FadeSetup(int fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed);
 
 /**

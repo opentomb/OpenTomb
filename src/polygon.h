@@ -15,6 +15,7 @@
 #define SPLIT_IN_BOTH  0x03
 
 #define SPLIT_EPSILON (0.02)
+#include "loader/datatypes.h"
 
 /*
  * The structure taken from Cochrane. Next I realise one in my style.
@@ -30,12 +31,12 @@ struct Vertex
 
 struct Polygon
 {
-    std::vector<Vertex> vertices{ 4 };                                               // vertices data
+    std::vector<Vertex> vertices{ 4 };                                              // vertices data
     uint16_t            tex_index = 0;                                              // texture index
     uint16_t            anim_id = 0;                                                // anim texture ID
     uint16_t            frame_offset = 0;                                           // anim texture frame offset
-    uint16_t            transparency = 0;                                           // transparency information
-    bool                double_side = false;                                            // double side flag
+    loader::BlendingMode blendMode = loader::BlendingMode::Opaque;                  // transparency information
+    bool                double_side = false;                                        // double side flag
     Plane plane;                                               // polygon plane equation
 
     Polygon() = default;
@@ -45,7 +46,7 @@ struct Polygon
         , tex_index(rhs.tex_index)
         , anim_id(rhs.anim_id)
         , frame_offset(rhs.frame_offset)
-        , transparency(rhs.transparency)
+        , blendMode(rhs.blendMode)
         , double_side(rhs.double_side)
         , plane(rhs.plane)
     {
@@ -57,7 +58,7 @@ struct Polygon
         tex_index = rhs.tex_index;
         anim_id = rhs.anim_id;
         frame_offset = rhs.frame_offset;
-        transparency = rhs.transparency;
+        blendMode = rhs.blendMode;
         double_side = rhs.double_side;
         plane = rhs.plane;
         // keep next

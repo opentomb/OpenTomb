@@ -2056,33 +2056,16 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
      */
     room->lights.resize(tr_room->lights.size());
 
-    for(uint16_t i = 0; i < tr_room->lights.size(); i++)
+    for(size_t i = 0; i < tr_room->lights.size(); i++)
     {
-        switch(tr_room->lights[i].light_type)
-        {
-            case 0:
-                room->lights[i].light_type = LT_SUN;
-                break;
-            case 1:
-                room->lights[i].light_type = LT_POINT;
-                break;
-            case 2:
-                room->lights[i].light_type = LT_SPOTLIGHT;
-                break;
-            case 3:
-                room->lights[i].light_type = LT_SHADOW;
-                break;
-            default:
-                room->lights[i].light_type = LT_NULL;
-                break;
-        }
+        room->lights[i].light_type = tr_room->lights[i].getLightType();
 
         room->lights[i].pos[0] = tr_room->lights[i].pos.x;
         room->lights[i].pos[1] = -tr_room->lights[i].pos.z;
         room->lights[i].pos[2] = tr_room->lights[i].pos.y;
         room->lights[i].pos[3] = 1.0f;
 
-        if(room->lights[i].light_type == LT_SHADOW)
+        if(room->lights[i].light_type == loader::LightType::Shadow)
         {
             room->lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
             room->lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
@@ -2676,11 +2659,11 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
 
         if(face3->lighting & 0x01)
         {
-            p.transparency = BM_MULTIPLY;
+            p.blendMode = loader::BlendingMode::Multiply;
         }
         else
         {
-            p.transparency = tex->transparency_flags;
+            p.blendMode = tex->transparency_flags;
         }
 
         tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
@@ -2700,7 +2683,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
         auto face3 = &tr_mesh->coloured_triangles[i];
         auto col = face3->texture & 0xff;
         p.tex_index = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages());
-        p.transparency = 0;
+        p.blendMode = loader::BlendingMode::Opaque;
         p.anim_id = 0;
 
         tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
@@ -2724,11 +2707,11 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
 
         if(face4->lighting & 0x01)
         {
-            p.transparency = BM_MULTIPLY;
+            p.blendMode = loader::BlendingMode::Multiply;
         }
         else
         {
-            p.transparency = tex->transparency_flags;
+            p.blendMode = tex->transparency_flags;
         }
 
         tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
@@ -2749,7 +2732,7 @@ void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh,
         auto col = face4->texture & 0xff;
         p.vertices.resize(4);
         p.tex_index = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages());
-        p.transparency = 0;
+        p.blendMode = loader::BlendingMode::Opaque;
         p.anim_id = 0;
 
         tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
@@ -2815,7 +2798,7 @@ void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::Level>& tr
 
     loader::ObjectTexture *tex = &tr->m_objectTextures[masked_texture];
     SetAnimTexture(p, masked_texture, world);
-    p->transparency = tex->transparency_flags;
+    p->blendMode = tex->transparency_flags;
 
     world->tex_atlas->getCoordinates(masked_texture, 0, p);
 }
@@ -3645,7 +3628,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
             entity->m_self->room = nullptr;
         }
 
-        entity->m_triggerLayout = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->m_triggerLayout = tr_item->getActivationMask();   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->m_OCB = tr_item->ocb;
         entity->m_timer = 0.0;
 
@@ -3928,35 +3911,22 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
         world->audio_effects[i].pitch = static_cast<float>(tr->m_soundDetails[i].pitch) / 127.0 + 1.0;
         world->audio_effects[i].range = static_cast<float>(tr->m_soundDetails[i].sound_range) * 1024.0;
 
-        world->audio_effects[i].rand_pitch = (tr->m_soundDetails[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
-        world->audio_effects[i].rand_gain = (tr->m_soundDetails[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
+        world->audio_effects[i].rand_pitch = tr->m_soundDetails[i].useRandomPitch();
+        world->audio_effects[i].rand_gain = tr->m_soundDetails[i].useRandomVolume();
 
         switch(tr->m_gameVersion)
         {
             case loader::Game::TR1:
             case loader::Game::TR1Demo:
             case loader::Game::TR1UnfinishedBusiness:
-                switch(tr->m_soundDetails[i].num_samples_and_flags_1 & 0x03)
-                {
-                    case 0x02:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    case 0x01:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    default:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-
             case loader::Game::TR2:
             case loader::Game::TR2Demo:
-                switch(tr->m_soundDetails[i].num_samples_and_flags_1 & 0x03)
+                switch(tr->m_soundDetails[i].getLoopType())
                 {
-                    case 0x01:
+                    case loader::SoundDetails::LoopType::PingPong:
                         world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
-                    case 0x03:
+                    case loader::SoundDetails::LoopType::Forward:
                         world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
                         break;
                     default:
@@ -3970,7 +3940,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
         }
 
         world->audio_effects[i].sample_index = tr->m_soundDetails[i].sample;
-        world->audio_effects[i].sample_count = (tr->m_soundDetails[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
+        world->audio_effects[i].sample_count = tr->m_soundDetails[i].getSampleCount();
     }
 
     // Try to override samples via script.

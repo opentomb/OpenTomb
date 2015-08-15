@@ -310,14 +310,14 @@ void Polygon::split(const Plane& n, Polygon* front, Polygon* back)
     front->frame_offset = frame_offset;
     front->double_side = double_side;
     front->tex_index = tex_index;
-    front->transparency = transparency;
+    front->blendMode = blendMode;
 
     back->plane = plane;
     back->anim_id = anim_id;
     back->frame_offset = frame_offset;
     back->double_side = double_side;
     back->tex_index = tex_index;
-    back->transparency = transparency;
+    back->blendMode = blendMode;
 
     auto curr_v = &vertices.front();
     auto prev_v = &vertices.back();

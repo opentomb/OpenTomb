@@ -119,13 +119,13 @@ void ConsoleInfo::drawBackground()
     /*
          * Draw console background to see the text
          */
-    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, BM_SCREEN);
+    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
-    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
+    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
 void ConsoleInfo::drawCursor()
@@ -150,7 +150,7 @@ void ConsoleInfo::drawCursor()
                      1,
                      m_lineHeight * 0.8f,
                      white, white, white, white,
-                     BM_SCREEN);
+                     loader::BlendingMode::Screen);
     }
 }
 

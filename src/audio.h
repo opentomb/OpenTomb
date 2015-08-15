@@ -60,8 +60,6 @@ enum TR_AUDIO_FX
 // Sound flags are found at offset 7 of SoundDetail unit and specify
 // certain sound modifications.
 
-#define TR_AUDIO_FLAG_RAND_PITCH  0x20 // P flag. Slight random pitch shift.
-#define TR_AUDIO_FLAG_RAND_VOLUME 0x40 // V flag. Slight random gain shift.
 #define TR_AUDIO_FLAG_UNKNOWN     0x10 // N flag. UNKNOWN MEANING!
 
 // Looped field is located at offset 6 of SoundDetail structure and

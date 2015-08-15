@@ -495,7 +495,7 @@ void BaseMesh::genFaces()
 
         if(p.anim_id == 0)
         {
-            if(p.transparency < 2)
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 m_elementsPerTexture[p.tex_index] += elementCount;
                 numNormalElements += elementCount;
@@ -508,7 +508,7 @@ void BaseMesh::genFaces()
         }
         else
         {
-            if(p.transparency < 2)
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
                 m_animatedElementCount += elementCount;
             else
             {
@@ -553,7 +553,7 @@ void BaseMesh::genFaces()
             uint32_t texture = p.tex_index;
 
             uint32_t oldStart;
-            if(p.transparency < 2)
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = startPerTexture[texture];
                 startPerTexture[texture] += elementCount;
@@ -597,7 +597,7 @@ void BaseMesh::genFaces()
         {
             // Animated
             uint32_t oldStart;
-            if(p.transparency < 2)
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = animatedStart;
                 animatedStart += elementCount;
@@ -958,7 +958,7 @@ void BaseMesh::polySortInMesh()
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
         }
 
-        if(p.transparency >= 2)
+        if(p.blendMode != loader::BlendingMode::Opaque && p.blendMode != loader::BlendingMode::Transparent)
         {
             m_transparencyPolygons.emplace_back(p);
         }

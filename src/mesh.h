@@ -19,6 +19,7 @@
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
+#include "loader/datatypes.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -145,18 +146,6 @@ struct SpriteBuffer
     uint32_t             *element_count_per_texture;
 };
 
-/*
- * lights
- */
-enum LightType
-{
-    LT_NULL,
-    LT_POINT,
-    LT_SPOTLIGHT,
-    LT_SUN,
-    LT_SHADOW
-};
-
 struct Light
 {
     btVector3 pos;                                         // world position
@@ -169,7 +158,7 @@ struct Light
 
     float                       falloff;
 
-    LightType                   light_type;
+    loader::LightType           light_type;
 };
 
 /*

@@ -292,6 +292,18 @@ struct Sector
     }
 };
 
+/*
+* lights
+*/
+enum class LightType : uint8_t
+{
+    Null,
+    Point,
+    Spotlight,
+    Sun,
+    Shadow
+};
+
 struct Light
 {
     Vertex pos;           // world coords
@@ -310,6 +322,23 @@ struct Light
     Vertex dir;           // direction
     Vertex pos2;          // world coords
     Vertex dir2;          // direction
+
+    LightType getLightType() const
+    {
+        switch(light_type)
+        {
+            case 0:
+                return LightType::Sun;
+            case 1:
+                return LightType::Point;
+            case 2:
+                return LightType::Spotlight;
+            case 3:
+                return LightType::Shadow;
+            default:
+                return LightType::Null;
+        }
+    }
 
     /** \brief reads a room light definition.
       *
@@ -337,7 +366,7 @@ struct Light
         light.r_outer = static_cast<float>(light.fade1);
         light.r_inner = static_cast<float>(light.fade1 / 2);
 
-        light.light_type = 0x01; // Point light
+        light.light_type = 1; // Point light
 
                                  // all white
         light.color.r = 0xff;
@@ -364,7 +393,7 @@ struct Light
         light.r_outer = static_cast<float>(light.fade1);
         light.r_inner = static_cast<float>(light.fade1 / 2);
 
-        light.light_type = 0x01; // Point light
+        light.light_type = 1; // Point light
 
                                  // all white
         light.color.r = 0xff;
@@ -389,7 +418,7 @@ struct Light
         light.r_outer = static_cast<float>(light.fade1);
         light.r_inner = static_cast<float>(light.fade1) / 2.0f;
 
-        light.light_type = 0x01; // Point light
+        light.light_type = 1; // Point light
         return light;
     }
 
@@ -1620,6 +1649,16 @@ struct Item
     // 0x3e00 indicates "open" or "activated";  these can be XORed with
     // related FloorData::FDlist fields (e.g. for switches)
 
+    uint16_t getActivationMask() const
+    {
+        return (flags & 0x3e00) >> 9;
+    }
+
+    bool isInitiallyInvisible() const
+    {
+        return (flags & 0x0100) != 0;
+    }
+
     /// \brief reads an item definition.
     static Item readTr1(io::SDLReader& reader)
     {
@@ -2021,6 +2060,42 @@ struct SoundDetails
     uint8_t flags_2;                     // Bit 4: UNKNOWN, bit 5: Randomize pitch, bit 6: randomize volume
                                          // All other bits in flags_2 are unused.
 
+    enum class LoopType
+    {
+        None,
+        Forward,
+        PingPong
+    };
+
+    LoopType getLoopType() const
+    {
+        switch(num_samples_and_flags_1 & 3)
+        {
+            case 1:
+                return LoopType::PingPong;
+            case 2:
+            case 3:
+                return LoopType::Forward;
+            default:
+                return LoopType::None;
+        }
+    }
+
+    uint8_t getSampleCount() const
+    {
+        return (num_samples_and_flags_1 >> 2) & 0x0f;
+    }
+
+    bool useRandomPitch() const
+    {
+        return flags_2 & 0x20;
+    }
+
+    bool useRandomVolume() const
+    {
+        return flags_2 & 0x40;
+    }
+
     // Default range and pitch values are required for compatibility with
     // TR1 and TR2 levels, as there is no such parameters in SoundDetails
     // structures.
@@ -2101,9 +2176,25 @@ struct ObjectTextureVertex
   * These, thee contents of ObjectTextures[], are used for specifying texture
   * mapping for the world geometry and for mesh objects.
   */
+enum class BlendingMode : uint16_t
+{
+    Opaque,
+    Transparent,
+    Multiply,
+    SimpleShade,
+    TransparentIgnoreZ,
+    InvertSrc,
+    Wireframe,
+    TransparentAlpha,
+    InvertDst,
+    Screen,
+    Hide,
+    AnimatedTexture
+};
+
 struct ObjectTexture
 {
-    uint16_t transparency_flags;    // 0 means that a texture is all-opaque, and that transparency
+    BlendingMode transparency_flags;    // 0 means that a texture is all-opaque, and that transparency
     // information is ignored.
     // 1 means that transparency information is used. In 8-bit colour,
     // index 0 is the transparent colour, while in 16-bit colour, the
@@ -2127,7 +2218,7 @@ struct ObjectTexture
     static ObjectTexture readTr1(io::SDLReader& reader)
     {
         ObjectTexture object_texture;
-        object_texture.transparency_flags = reader.readU16();
+        object_texture.transparency_flags = static_cast<BlendingMode>(reader.readU16());
         object_texture.tile_and_flag = reader.readU16();
         if(object_texture.tile_and_flag > 64)
             std::cerr << "object_texture.tile_and_flags > 64\n";
@@ -2152,7 +2243,7 @@ struct ObjectTexture
     static ObjectTexture readTr4(io::SDLReader& reader)
     {
         ObjectTexture object_texture;
-        object_texture.transparency_flags = reader.readU16();
+        object_texture.transparency_flags = static_cast<BlendingMode>( reader.readU16() );
         object_texture.tile_and_flag = reader.readU16();
         if((object_texture.tile_and_flag & 0x7FFF) > 128)
             std::cerr << "object_texture.tile > 128\n";
