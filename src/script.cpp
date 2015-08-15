@@ -3207,8 +3207,43 @@ int ScriptEngine::print(lua_State* state)
 
     for(int i = 1; i <= top; i++)
     {
-        const char* str = lua_tostring(state, i);
-        ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
+        const char* str;
+        switch(lua_type(state, i))
+        {
+            case LUA_TNONE:
+                str = "<none>";
+                break;
+            case LUA_TNIL:
+                str = "nil";
+                break;
+            case LUA_TBOOLEAN:
+                str = lua_toboolean(state, i) ? "true" : "false";
+                break;
+            case LUA_TLIGHTUSERDATA:
+                str = "<userdata>";
+                break;
+            case LUA_TNUMBER:
+            case LUA_TSTRING:
+                str = lua_tostring(state, i);
+                break;
+            case LUA_TTABLE:
+                str = "<table>";
+                break;
+            case LUA_TFUNCTION:
+                str = "<function>";
+                break;
+            case LUA_TUSERDATA:
+                str = "<userdata>";
+                break;
+            case LUA_TTHREAD:
+                str = "<thread>";
+                break;
+            default:
+                str = "<invalid>";
+                break;
+        }
+
+        ConsoleInfo::instance().addLine(str, FONTSTYLE_CONSOLE_EVENT);
     }
     return 0;
 }
