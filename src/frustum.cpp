@@ -113,7 +113,7 @@ void Frustum::genClipPlanes(Camera *cam)
 
     for(uint16_t i = 0; i < vertices.size(); i++)
     {
-        auto V1 = *prev_v - cam->m_pos;                    // POV-vertex vector
+        auto V1 = *prev_v - cam->getPosition();                    // POV-vertex vector
         auto V2 = *prev_v - *curr_v;                       // vector connecting neighbor vertices
         V1.normalize();
         V2.normalize();
@@ -124,7 +124,7 @@ void Frustum::genClipPlanes(Camera *cam)
         ++next_v;
     }
 
-    cam_pos = &(cam->m_pos);
+    cam_pos = &cam->getPosition();
 }
 
 /*
@@ -137,7 +137,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     if(!portal->dest_room)
         return nullptr;
 
-    if(portal->normal.distance(render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(portal->normal.distance(render->camera()->getPosition()) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;
     }
@@ -541,7 +541,7 @@ bool Frustum::isOBBVisibleInRoom(OBB *obb, const Room& room)
         auto p = obb->polygons;
         for(int i = 0; i < 6; i++, p++)
         {
-            auto t = p->plane.distance(engine_camera.m_pos);
+            auto t = p->plane.distance(engine_camera.getPosition());
             if((t > 0.0) && engine_camera.frustum->isPolyVisible(p))
             {
                 return true;

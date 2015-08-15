@@ -4,22 +4,8 @@
 -- By: Lwmte
 -- Rewritten by: TeslaRus
 
----------------------------------------------------------------------------------------------------------------------------------------
--- 1 - Define global constants
----------------------------------------------------------------------------------------------------------------------------------------
-GAME_1      = 0;
-GAME_1_1    = 1;
-GAME_1_5    = 2;
-GAME_2      = 3;
-GAME_2_1    = 4;
-GAME_2_5    = 5;
-GAME_3      = 6;
-GAME_3_5    = 7;
-GAME_4      = 8;
-GAME_4_1    = 9;
-GAME_5      = 10;
 -- other custom games constants
-GAME_MAX = GAME_5;  -- or last custom game id
+GAME_MAX = Game.V;  -- or last custom game id
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- 2 - Define script path information
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -27,29 +13,29 @@ gameflow_paths = {};
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- 3 - Assign script path information
 ---------------------------------------------------------------------------------------------------------------------------------------
-gameflow_paths[GAME_1]   = {script = "scripts/gameflow/TR1.lua",      title = "data/tr1/pix/AMERTIT.jpg" };
-gameflow_paths[GAME_1_1] = {script = "scripts/gameflow/TR1_demo.lua", title = "data/tr1/pix/AMERTIT.jpg" };
-gameflow_paths[GAME_1_5] = {script = "scripts/gameflow/TR1_gold.lua", title = "data/tr1_gold/pix/TITLE.jpg" };
-gameflow_paths[GAME_2]   = {script = "scripts/gameflow/TR2.lua",      title = "data/tr2/pix/TITLE.jpg" };
-gameflow_paths[GAME_2_1] = {script = "scripts/gameflow/TR2_demo.lua", title = "data/tr2/pix/TITLE.jpg" };
-gameflow_paths[GAME_2_5] = {script = "scripts/gameflow/TR2_gold.lua", title = "data/tr2_gold/pix/TITLE.jpg" };
-gameflow_paths[GAME_3]   = {script = "scripts/gameflow/TR3.lua",      title = "data/tr3/pix/TITLEUK.BMP" };
-gameflow_paths[GAME_3_5] = {script = "scripts/gameflow/TR3_gold.lua", title = "data/tr3_gold/pix/Titleuk.bmp" };
-gameflow_paths[GAME_4]   = {script = "scripts/gameflow/TR4.lua",      title = "graphics/tr4_title.png" };        -- No TR4 title screen!
-gameflow_paths[GAME_4_1] = {script = "scripts/gameflow/TR4_demo.lua", title = "graphics/tr4_title.png" };        -- No TR4 title screen!
-gameflow_paths[GAME_5]   = {script = "scripts/gameflow/TR5.lua",      title = "graphics/tr5_title.png" };        -- No TR5 title screen!
+gameflow_paths[Game.I]   = {script = "scripts/gameflow/TR1.lua",      title = "data/tr1/pix/AMERTIT.jpg" };
+gameflow_paths[Game.I_DEMO] = {script = "scripts/gameflow/TR1_demo.lua", title = "data/tr1/pix/AMERTIT.jpg" };
+gameflow_paths[Game.I_UB] = {script = "scripts/gameflow/TR1_gold.lua", title = "data/tr1_gold/pix/TITLE.jpg" };
+gameflow_paths[Game.II]   = {script = "scripts/gameflow/TR2.lua",      title = "data/tr2/pix/TITLE.jpg" };
+gameflow_paths[Game.II_DEMO] = {script = "scripts/gameflow/TR2_demo.lua", title = "data/tr2/pix/TITLE.jpg" };
+gameflow_paths[Game.II_GOLD] = {script = "scripts/gameflow/TR2_gold.lua", title = "data/tr2_gold/pix/TITLE.jpg" };
+gameflow_paths[Game.III]   = {script = "scripts/gameflow/TR3.lua",      title = "data/tr3/pix/TITLEUK.BMP" };
+gameflow_paths[Game.III_GOLD] = {script = "scripts/gameflow/TR3_gold.lua", title = "data/tr3_gold/pix/Titleuk.bmp" };
+gameflow_paths[Game.IV]   = {script = "scripts/gameflow/TR4.lua",      title = "graphics/tr4_title.png" };        -- No TR4 title screen!
+gameflow_paths[Game.IV_DEMO] = {script = "scripts/gameflow/TR4_demo.lua", title = "graphics/tr4_title.png" };        -- No TR4 title screen!
+gameflow_paths[Game.V]   = {script = "scripts/gameflow/TR5.lua",      title = "graphics/tr5_title.png" };        -- No TR5 title screen!
 
-dofile(gameflow_paths[GAME_1].script);
---dofile(gameflow_paths[GAME_1_1].script);
-dofile(gameflow_paths[GAME_1_5].script);
-dofile(gameflow_paths[GAME_2].script);
---dofile(gameflow_paths[GAME_2_1].script);
-dofile(gameflow_paths[GAME_2_5].script);
-dofile(gameflow_paths[GAME_3].script);
-dofile(gameflow_paths[GAME_3_5].script);
-dofile(gameflow_paths[GAME_4].script);
---dofile(gameflow_paths[GAME_4_1].script);
-dofile(gameflow_paths[GAME_5].script);
+dofile(gameflow_paths[Game.I].script);
+--dofile(gameflow_paths[Game.I_DEMO].script);
+dofile(gameflow_paths[Game.I_UB].script);
+dofile(gameflow_paths[Game.II].script);
+--dofile(gameflow_paths[Game.II_DEMO].script);
+dofile(gameflow_paths[Game.II_GOLD].script);
+dofile(gameflow_paths[Game.III].script);
+dofile(gameflow_paths[Game.III_GOLD].script);
+dofile(gameflow_paths[Game.IV].script);
+--dofile(gameflow_paths[Game.IV_DEMO].script);
+dofile(gameflow_paths[Game.V].script);
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -110,27 +96,27 @@ end;
 
 function setgamef(game_id, level_id)
     if(game_id == 1.0) then
-        setgame(GAME_1, level_id);
+        setgame(Game.I, level_id);
     elseif(game_id == 1.1) then
-        setgame(GAME_1_1, level_id);
+        setgame(Game.I_DEMO, level_id);
     elseif(game_id == 1.5) then
-        setgame(GAME_1_5, level_id);
+        setgame(Game.I_UB, level_id);
     elseif(game_id == 2.0) then
-        setgame(GAME_2, level_id);
+        setgame(Game.II, level_id);
     elseif(game_id == 2.1) then
-        setgame(GAME_2_1, level_id);
+        setgame(Game.II_DEMO, level_id);
     elseif(game_id == 2.5) then
-        setgame(GAME_2_5, level_id);
+        setgame(Game.II_GOLD, level_id);
     elseif(game_id == 3.0) then
-        setgame(GAME_3, level_id);
+        setgame(Game.III, level_id);
     elseif(game_id == 3.5) then
-        setgame(GAME_3_5, level_id);
+        setgame(Game.III_GOLD, level_id);
     elseif(game_id == 4.0) then
-        setgame(GAME_4, level_id);
+        setgame(Game.IV, level_id);
     elseif(game_id == 4.1) then
-        setgame(GAME_4_1, level_id);
+        setgame(Game.IV_DEMO, level_id);
     elseif(game_id == 5.0) then
-        setgame(GAME_5, level_id);
+        setgame(Game.V, level_id);
     end;
 end;
 

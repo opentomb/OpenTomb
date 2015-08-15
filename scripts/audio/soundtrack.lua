@@ -582,23 +582,23 @@ tr5_track_tbl[134] = {file = "xa17_Andy9", mode = ONCE};
 tr5_track_tbl[135] = {file = "xa17_Andy11", mode = ONCE};
 
 
-function getTrackInfo(ver, id)
+function getTrackInfo(engine, id)
     local tbl = {};
     local path, method, ext;
     
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+    if(engine == Engine.I) then
         tbl    = tr1_track_tbl;
         path   = "data/tr1/audio/";
         method = TRACK;
         ext    = ".ogg";
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+    elseif(engine == Engine.II) then
         tbl    = tr2_track_tbl;
         path   = "data/tr2/audio/";
         method = TRACK;
         ext    = ".ogg";
-    elseif(ver < 6) then
+    elseif(engine == Engine.III) then
         tbl    = tr3_track_tbl;
-        if(USE_TR3_REMASTER == 1) then  -- TR_III
+        if(USE_TR3_REMASTER == 1) then
             path   = "data/tr3/audio/";
             method = TRACK;
             ext    = ".ogg";
@@ -606,12 +606,12 @@ function getTrackInfo(ver, id)
             path   = "data/tr3/audio/cdaudio.wad";
             method = WAD;
         end
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+    elseif(engine == Engine.IV) then
         tbl    = tr4_track_tbl;
         path   = "data/tr4/audio/";
         method = TRACK;
         ext    = ".wav";
-    elseif(ver < 9) then                -- TR_V
+    elseif(engine == Engine.V) then
         tbl    = tr5_track_tbl;
         path   = "data/tr5/audio/";
         method = TRACK;
@@ -631,32 +631,32 @@ function getTrackInfo(ver, id)
     end;
 end;
 
-function getSecretTrackNumber(ver)
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+function getSecretTrackNumber(engine)
+    if(engine == Engine.I) then
         return SECRET_TR1;
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+    elseif(engine == Engine.II) then
         return SECRET_TR2;
-    elseif(ver < 6) then                
+    elseif(engine == Engine.III) then
         return SECRET_TR3;
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+    elseif(engine == Engine.IV) then
         return SECRET_TR4;
-    elseif(ver < 9) then                -- TR_V
+    elseif(engine == Engine.V) then
         return SECRET_TR5;
     else
         return 0;
     end;
 end;
 
-function getNumTracks(ver)
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+function getNumTracks(engine)
+    if(engine == Engine.I) then
         return tr1_num_soundtracks;
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+    elseif(engine == Engine.II) then
         return tr2_num_soundtracks;
-    elseif(ver < 6) then                
+    elseif(engine == Engine.III) then
         return tr3_num_soundtracks;
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+    elseif(engine == Engine.IV) then
         return tr4_num_soundtracks;
-    elseif(ver < 9) then                -- TR_V
+    elseif(engine == Engine.V) then
         return tr5_num_soundtracks;
     else
         return 0;

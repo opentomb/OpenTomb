@@ -13,7 +13,7 @@
 #include <CoreServices/CoreServices.h>
 #endif
 
-#include "vt/vt_level.h"
+#include "loader/level.h"
 
 static int screenshot_cnt = 0;
 

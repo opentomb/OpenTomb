@@ -423,7 +423,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
         renderer.camera()->moveVertical(dist * move_logic[2]);
-        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
+        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->getPosition(), renderer.camera()->m_currentRoom);
     }
     else if(control_states.noclip)
     {
@@ -433,10 +433,10 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.camera()->moveAlong(dist * move_logic[0]);
         renderer.camera()->moveStrafe(dist * move_logic[1]);
         renderer.camera()->moveVertical(dist * move_logic[2]);
-        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
+        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->getPosition(), renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = cam_angles[0] * DegPerRad;
-        pos = renderer.camera()->m_pos + renderer.camera()->m_viewDir * control_states.cam_distance;
+        pos = renderer.camera()->getPosition() + renderer.camera()->getViewDir() * control_states.cam_distance;
         pos[2] -= 512.0;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
@@ -523,7 +523,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
 
     std::shared_ptr<BtEngineClosestConvexResultCallback> cb = ent->callbackForCamera();
 
-    btVector3 cam_pos = cam->m_pos;
+    btVector3 cam_pos = cam->getPosition();
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(!control_states.mouse_look)//If mouse look is off
@@ -632,7 +632,7 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     if(dx != 0.0)
     {
         cameraFrom.setOrigin(cam_pos);
-        cam_pos += dx * cam->m_rightDir;
+        cam_pos += dx * cam->getRightDir();
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {
@@ -652,19 +652,19 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     }
 
     //Update cam pos
-    cam->m_pos = cam_pos;
+    cam->setPosition( cam_pos );
 
     //Modify cam pos for quicksand rooms
-    cam->m_pos[2] -= 128.0;
-    cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
-    cam->m_pos[2] += 128.0;
+    cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition() - btVector3(0, 0, 128), cam->m_currentRoom);
     if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0f * 64.0f;
+        btVector3 pos = cam->getPosition();
+        pos[2] = cam->m_currentRoom->bb_max[2] + 2.0f * 64.0f;
+        cam->setPosition(pos);
     }
 
     cam->setRotation(cam_angles);
-    cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
+    cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition(), cam->m_currentRoom);
 }
 
 void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
@@ -751,7 +751,7 @@ void Game_UpdateCharacters()
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
     int t = static_cast<int>(*game_logic_time / GAME_LOGIC_REFRESH_INTERVAL);
-    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    btScalar dt = static_cast<btScalar>(t) * GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= dt;
     return dt;
 }
@@ -879,9 +879,7 @@ void Game_Prepare()
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.m_pos[0] = engine_world.rooms[0]->bb_max[0];
-        engine_camera.m_pos[1] = engine_world.rooms[0]->bb_max[1];
-        engine_camera.m_pos[2] = engine_world.rooms[0]->bb_max[2];
+        engine_camera.setPosition(engine_world.rooms[0]->bb_max);
     }
 
     // Set gameflow parameters to default.

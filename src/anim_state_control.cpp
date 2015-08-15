@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "vt/tr_versions.h"
+#include "loader/game.h"
 
 #include "character_controller.h"
 #include "engine.h"
@@ -1082,7 +1082,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
-                character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
+                character->m_currentSpeed = std::min(character->m_currentSpeed, MAX_SPEED_QUICKSAND);
             }
 
             if(cmd->move[0] == 1)
@@ -1158,7 +1158,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_heightInfo.quicksand != QuicksandPosition::None)
             {
-                character->m_currentSpeed = (character->m_currentSpeed > MAX_SPEED_QUICKSAND) ? MAX_SPEED_QUICKSAND : character->m_currentSpeed;
+                character->m_currentSpeed = std::min(character->m_currentSpeed, MAX_SPEED_QUICKSAND);
             }
 
             global_offset = character->m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
@@ -1183,8 +1183,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if(!character->m_bt.no_fix_all)
                 {
-                    size_t frames_count = ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size();
-                    size_t frames_count2 = (frames_count + 1) / 2;
+                    int frames_count = static_cast<int>(ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size());
+                    int frames_count2 = (frames_count + 1) / 2;
                     if((ss_anim->current_frame >= 0) && (ss_anim->current_frame <= frames_count2))
                     {
                         character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, ss_anim->current_frame);
@@ -1337,7 +1337,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(resp->slide == SlideType::None)
             {
-                if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
+                if((cmd->move[0] == 1) && (engine_world.engineVersion >= loader::Engine::TR3))
                 {
                     ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
                 }
@@ -1445,7 +1445,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
 
-                if(engine_world.version > TR_III)
+                if(engine_world.engineVersion > loader::Engine::TR3)
                 {
                     if(was_traversed)
                     {
@@ -1472,7 +1472,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.engineVersion > loader::Engine::TR3)
                 {
                     Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -1532,7 +1532,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     }
                 }
 
-                if(engine_world.version > TR_III)
+                if(engine_world.engineVersion > loader::Engine::TR3)
                 {
                     if(was_traversed)
                     {
@@ -1561,7 +1561,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.engineVersion > loader::Engine::TR3)
                 {
                     Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -2254,7 +2254,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());       // Stop scream
 
                 // Splash sound is hardcoded, beginning with TR3.
-                if(engine_world.version > TR_II)
+                if(engine_world.engineVersion > loader::Engine::TR2)
                 {
                     Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, character->id());
                 }
@@ -2668,7 +2668,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else
             {
-                if(engine_world.version > TR_III)
+                if(engine_world.engineVersion > loader::Engine::TR3)
                 {
                     if(cmd->move[1] == 1)
                     {
@@ -2889,7 +2889,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
         case TR_STATE_LARA_MONKEYSWING_IDLE:
             cmd->rot[0] = 0.0;
             character->m_dirFlag = ENT_STAY;
-            ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150
+            ///@FIXME: stick for TR3+ monkey swing fix... something wrong with anim 150
             if(cmd->action && (character->m_moveType != MoveType::Monkeyswing) && curr_fc->ceiling_climb && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 96.0))
             {
                 character->m_moveType = MoveType::Monkeyswing;

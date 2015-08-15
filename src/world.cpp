@@ -257,7 +257,7 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
     RoomSector* s1p = s2->owner_room->getSectorRaw(pos);
     RoomSector* s2p = s1->owner_room->getSectorRaw(s2->pos);
 
-    // 2 next conditions are the stick for TR_V door-roll-wall
+    // 2 next conditions are the stick for TR5 door-roll-wall
     if(s1p->portal_to_room < 0)
     {
         s1p = s1p->checkAlternateRoom();
@@ -1156,9 +1156,9 @@ void World::updateAnimTextures()                                                
 
 void World::calculateWaterTint(float* tint, bool fixed_colour)
 {
-    if(version < TR_IV)  // If water room and level is TR1-3
+    if(engineVersion < loader::Engine::TR4)  // If water room and level is TR1-3
     {
-        if(version < TR_III)
+        if(engineVersion < loader::Engine::TR3)
         {
             // Placeholder, color very similar to TR1 PSX ver.
             if(fixed_colour)

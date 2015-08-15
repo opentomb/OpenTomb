@@ -15,7 +15,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "vt/vt_level.h"
+#include "loader/level.h"
 
 #include "bsp_tree_2d.h"
 #include "polygon.h"
@@ -157,9 +157,9 @@ void BorderedTextureAtlas::layOutTextures()
 
 BorderedTextureAtlas::BorderedTextureAtlas(int border,
                                            bool conserve_memory,
-                                           const std::vector<tr4_textile32_t>& pages,
-                                           const std::vector<tr4_object_texture_t>& object_textures,
-                                           const std::vector<tr_sprite_texture_t>& sprite_textures)
+                                           const std::vector<loader::DWordTexture>& pages,
+                                           const std::vector<loader::ObjectTexture>& object_textures,
+                                           const std::vector<loader::SpriteTexture>& sprite_textures)
     : m_borderWidth(border)
     , m_resultPageWidth(0)
     , m_resultPageHeights()
@@ -177,9 +177,9 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     {
         // Idea: sqrt(sum(areas)) * sqrt(2) >= needed area
         size_t areaSum = 0;
-        for(const tr4_object_texture_t& t : object_textures)
+        for(const loader::ObjectTexture& t : object_textures)
             areaSum += t.x_size * t.y_size;
-        for(const tr_sprite_texture_t& t : sprite_textures)
+        for(const loader::SpriteTexture& t : sprite_textures)
             areaSum += std::abs((t.x1 - t.x0) * (t.y1 - t.y0));
 
         m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
@@ -189,12 +189,12 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         m_resultPageWidth = NextPowerOf2(max_texture_edge_length);
     }
 
-    for(const tr4_object_texture_t& tex : object_textures)
+    for(const loader::ObjectTexture& tex : object_textures)
     {
         addObjectTexture(tex);
     }
 
-    for(const tr_sprite_texture_t& tex : sprite_textures)
+    for(const loader::SpriteTexture& tex : sprite_textures)
     {
         addSpriteTexture(tex);
     }
@@ -202,7 +202,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     layOutTextures();
 }
 
-void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
+void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture)
 {
     // Determine the canonical texture for this texture.
     // Use only first three vertices to find min, max, because for triangles the last will be 0,0 with no other marker that this is a triangle. As long as all textures are axis-aligned rectangles, this will always return the right result anyway.
@@ -223,7 +223,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4)
+        if(canonical_candidate->original_page == (texture.tile_and_flag & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == min[0]
            && canonical_candidate->original_y == min[1]
            && canonical_candidate->width == width
@@ -243,7 +243,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures.back();
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_page = texture.tile_and_flag & loader::TextureIndexMaskTr4;
         canonical.original_x = min[0];
         canonical.original_y = min[1];
     }
@@ -272,7 +272,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     }
 }
 
-void BorderedTextureAtlas::addSpriteTexture(const tr_sprite_texture_t &texture)
+void BorderedTextureAtlas::addSpriteTexture(const loader::SpriteTexture &texture)
 {
     // Determine the canonical texture for this texture.
     unsigned x = texture.x0;
@@ -286,7 +286,7 @@ void BorderedTextureAtlas::addSpriteTexture(const tr_sprite_texture_t &texture)
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile & TR_TEXTURE_INDEX_MASK_TR4)
+        if(canonical_candidate->original_page == (texture.tile & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == x
            && canonical_candidate->original_y == y
            && canonical_candidate->width == width
@@ -306,7 +306,7 @@ void BorderedTextureAtlas::addSpriteTexture(const tr_sprite_texture_t &texture)
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_page = texture.tile & loader::TextureIndexMaskTr4;
         canonical.original_x = x;
         canonical.original_y = y;
     }

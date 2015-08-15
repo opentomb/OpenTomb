@@ -200,20 +200,20 @@ tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIG
 function combineItems(a, b, oneway)
     
     oneway    = oneway or 0;    
-    local ver = getLevelVersion();
+    local ver = getEngineVersion();
     local map = {};
     local i   = 0;
     local j   = 0;
     
-    if(ver < TR_IV) then
-        print("Combine: wrong game version.");
+    if(ver < Engine.IV) then
+        print("Combine: wrong engine version.");
         return;
-    elseif(ver < TR_V) then
+    elseif(ver < Engine.V) then
         map = tr4_combine;
-    elseif(ver == TR_V) then
+    elseif(ver == Engine.V) then
         map = tr5_combine;
     else
-        print("Combine: unknown game version.");
+        print("Combine: unknown engine version.");
         return;
     end;
     
@@ -244,17 +244,17 @@ end
 
 function separateItems(a)
     
-    local ver = getLevelVersion();
+    local ver = getEngineVersion();
     local map = {};
     local i   = 0;
     local j   = 0;
     
-    if(ver < TR_IV) then
-        print("Wrong game version.");
+    if(ver < Engine.IV) then
+        print("Wrong engine version.");
         return;
-    elseif(ver < TR_V) then
+    elseif(ver < Engine.V) then
         map = tr4_combine;
-    elseif(ver == TR_V) then
+    elseif(ver == Engine.V) then
         map = tr5_combine;
     end;
     

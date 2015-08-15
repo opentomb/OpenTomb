@@ -38,7 +38,7 @@ function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 13, 0x01);
 end
 
-if (getLevelVersion() < TR_II) then
+if (getEngineVersion() == Engine.I) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -67,7 +67,7 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(4, 1, 0x03);
     setModelMeshReplaceFlag(4, 4, 0x03);
 
-elseif (getLevelVersion() < TR_III) then
+elseif (getEngineVersion() < Engine.II) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -116,7 +116,7 @@ elseif (getLevelVersion() < TR_III) then
     setModelAnimReplaceFlag(9, 12, 0x01);
     setModelAnimReplaceFlag(9, 13, 0x01);
     setModelMeshReplaceFlag(9, 13, 0x01);
-elseif (getLevelVersion() < TR_IV) then
+elseif (getEngineVersion() < Engine.III) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -168,7 +168,7 @@ elseif (getLevelVersion() < TR_IV) then
     setModelAnimReplaceFlag(10, 13, 0x01);
     setModelMeshReplaceFlag(10, 13, 0x01);
 
-elseif (getLevelVersion() <= TR_V) then
+elseif (getEngineVersion() == Engine.IV or getEngineVersion() == Engine.V) then
     -- pistols
     copyMeshFromModelToModel(1, 14, 1, 4);
     copyMeshFromModelToModel(1, 14, 4, 8);
@@ -238,7 +238,7 @@ setModelCollisionMap(0, 14, 13);
 setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
 setAnimCommandTransform(0, 146, -2, 0x03);
 
-if(getLevelVersion() >= TR_II) then
+if(getEngineVersion() >= Engine.II) then
     setAnimCommandTransform(0, 205,  1, 0x00);
     setAnimCommandTransform(0, 203, -2, 0x03);
 end
@@ -249,11 +249,11 @@ setAnimVerticalSpeed(0, 26, -1, -116);
 
 -- Generate UV rotation texture animations for waterfalls in TR4+ versions
 
-if (getLevelVersion() == TR_IV) then
+if (getEngineVersion() == Engine.IV) then
     for i=423, 426, 1 do
         genUVRotateAnimation(i);
     end;
-elseif (getLevelVersion() == TR_V) then
+elseif (getEngineVersion() == Engine.V) then
     for i=410, 415, 1 do
         genUVRotateAnimation(i);
     end;

@@ -1135,7 +1135,7 @@ int Character::freeFalling()
             m_speed[1] = 0.0;
         }
 
-        if((engine_world.version < TR_II))//Lara cannot wade in < TRII so when floor < transition level she has to swim
+        if((engine_world.engineVersion < loader::Engine::TR2))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
             if(!m_heightInfo.water || (m_currentSector->floor <= m_heightInfo.transition_level))
             {
@@ -2245,7 +2245,7 @@ void Character::frameImpl(btScalar time, int16_t frame, int state)
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    m_currentSpeed = (static_cast<int>(af->speed_x) + (frame * static_cast<int>(af->accel_x)) >> 16);//Decompiled from TOMB5.EXE
+    m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 
@@ -2412,7 +2412,7 @@ btVector3 Character::camPosForFollowing(btScalar dz)
  * flags to model manually in the script*/
 void Character::doWeaponFrame(btScalar time)
 {
-    /* anims (TR_I - TR_V):
+    /* anims (TR1 - TR5):
      * pistols:
      * 0: idle to fire;
      * 1: draw weapon (short?);

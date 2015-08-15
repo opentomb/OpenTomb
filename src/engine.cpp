@@ -27,7 +27,7 @@
 #endif
 
 #include "LuaState.h"
-#include "vt/vt_level.h"
+#include "loader/level.h"
 
 #include "gl_util.h"
 #include "polygon.h"
@@ -524,7 +524,7 @@ void Engine_ShowDebugInfo()
 {
     GLfloat color_array[] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
-    light_position = engine_camera.m_pos;
+    light_position = engine_camera.getPosition();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -538,7 +538,6 @@ void Engine_ShowDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        auto af = &ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation];
         Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.last_animation,
                       ent->m_bf.animations.current_animation,
@@ -572,14 +571,14 @@ void Engine_ShowDebugInfo()
 
     if(engine_camera.m_currentRoom != nullptr)
     {
-        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.m_pos);
+        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
             Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
             Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.m_pos[0], engine_camera.m_pos[1], engine_camera.m_pos[2]);
+    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
 }
 
 /**
@@ -860,131 +859,6 @@ int Engine_GetLevelFormat(const std::string& /*name*/)
     return LEVEL_FORMAT_PC;
 }
 
-int Engine_GetPCLevelVersion(const std::string& name)
-{
-    int ret = TR_UNKNOWN;
-    FILE *ff;
-
-    if(name.length() < 5)
-    {
-        return ret;                                                             // Wrong (too short) filename
-    }
-
-    ff = fopen(name.c_str(), "rb");
-    if(ff)
-    {
-        char ext[5];
-        uint8_t check[4];
-
-        ext[0] = name[name.length() - 4];                                                   // .
-        ext[1] = toupper(name[name.length() - 3]);                                          // P
-        ext[2] = toupper(name[name.length() - 2]);                                          // H
-        ext[3] = toupper(name[name.length() - 1]);                                          // D
-        ext[4] = 0;
-        fread(check, 4, 1, ff);
-
-        if(!strncmp(ext, ".PHD", 4))                                            //
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_I;                                                     // TR_I ? OR TR_I_DEMO
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TUB", 4))
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_I_UB;                                                  // TR_I_UB
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TR2", 4))
-        {
-            if(check[0] == 0x2D &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_II;                                                    // TR_II
-            }
-            else if((check[0] == 0x38 || check[0] == 0x34) &&
-                    (check[1] == 0x00) &&
-                    (check[2] == 0x18 || check[2] == 0x08) &&
-                    (check[3] == 0xFF))
-            {
-                ret = TR_III;                                                   // TR_III
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TR4", 4))
-        {
-            if(check[0] == 0x54 &&                                         // T
-               check[1] == 0x52 &&                                         // R
-               check[2] == 0x34 &&                                         // 4
-               check[3] == 0x00)
-            {
-                ret = TR_IV;                                                    // OR TR TR_IV_DEMO
-            }
-            else if(check[0] == 0x54 &&                                         // T
-                    check[1] == 0x52 &&                                         // R
-                    check[2] == 0x34 &&                                         // 4
-                    check[3] == 0x63)                                           //
-            {
-                ret = TR_IV;                                                    // TRLE
-            }
-            else if(check[0] == 0xF0 &&                                         // T
-                    check[1] == 0xFF &&                                         // R
-                    check[2] == 0xFF &&                                         // 4
-                    check[3] == 0xFF)
-            {
-                ret = TR_IV;                                                    // BOGUS (OpenRaider =))
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TRC", 4))
-        {
-            if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // C
-               check[3] == 0x00)
-            {
-                ret = TR_V;                                                     // TR_V
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else                                                                    // unknown ext.
-        {
-            ret = TR_UNKNOWN;
-        }
-
-        fclose(ff);
-    }
-
-    return ret;
-}
-
 std::string Engine_GetLevelName(const std::string& path)
 {
     if(path.empty())
@@ -1004,25 +878,25 @@ std::string Engine_GetLevelName(const std::string& path)
     return path.substr(start, ext - start);
 }
 
-std::string Engine_GetAutoexecName(int game_version, const std::string& postfix)
+std::string Engine_GetAutoexecName(loader::Game game_version, const std::string& postfix)
 {
     std::string level_name = Engine_GetLevelName(gameflow_manager.CurrentLevelPath);
 
     std::string name = "scripts/autoexec/";
 
-    if(game_version < TR_II)
+    if(game_version < loader::Game::TR2)
     {
         name += "tr1/";
     }
-    else if(game_version < TR_III)
+    else if(game_version < loader::Game::TR3)
     {
         name += "tr2/";
     }
-    else if(game_version < TR_IV)
+    else if(game_version < loader::Game::TR4)
     {
         name += "tr3/";
     }
-    else if(game_version < TR_V)
+    else if(game_version < loader::Game::TR5)
     {
         name += "tr4/";
     }
@@ -1044,24 +918,19 @@ std::string Engine_GetAutoexecName(int game_version, const std::string& postfix)
 
 bool Engine_LoadPCLevel(const std::string& name)
 {
-    VT_Level *tr_level = new VT_Level();
+    std::unique_ptr<loader::Level> loader = loader::Level::createLoader(name, loader::Game::Unknown);
+    if(!loader)
+        return false;
 
-    int trv = Engine_GetPCLevelVersion(name);
-    if(trv == TR_UNKNOWN) return false;
+    loader->load();
 
-    tr_level->read_level(name, trv);
-    tr_level->prepare_level();
-    //tr_level->dump_textures();
-
-    TR_GenWorld(&engine_world, tr_level);
+    TR_GenWorld(&engine_world, loader);
 
     std::string buf = Engine_GetLevelName(name);
 
     ConsoleInfo::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
-    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, trv, buf.c_str());
+    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
     ConsoleInfo::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
-
-    delete tr_level;
 
     return true;
 }
@@ -1152,9 +1021,10 @@ int Engine_ExecCmd(const char *ch)
         else if(!strcmp(token.data(), "goto"))
         {
             control_states.free_look = true;
-            renderer.camera()->m_pos[0] = script::MainEngine::parseFloat(&ch);
-            renderer.camera()->m_pos[1] = script::MainEngine::parseFloat(&ch);
-            renderer.camera()->m_pos[2] = script::MainEngine::parseFloat(&ch);
+            const auto x = script::MainEngine::parseFloat(&ch);
+            const auto y = script::MainEngine::parseFloat(&ch);
+            const auto z = script::MainEngine::parseFloat(&ch);
+            renderer.camera()->setPosition({ x, y, z });
             return 1;
         }
         else if(!strcmp(token.data(), "save"))
@@ -1283,7 +1153,7 @@ int Engine_ExecCmd(const char *ch)
         {
             if(Room* r = renderer.camera()->m_currentRoom)
             {
-                sect = r->getSectorXYZ(renderer.camera()->m_pos);
+                sect = r->getSectorXYZ(renderer.camera()->getPosition());
                 ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

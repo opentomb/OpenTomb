@@ -59,9 +59,9 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     -- TR3 ONLY: If lock flag is set, bypass activation.
     -- TR4-5 ONLY: If mask was already set and lock flag is set, bypass activation.
     
-    local game_ver = getLevelVersion();
+    local game_ver = getEngineVersion();
     
-    if(game_ver == TR_III) then
+    if(game_ver == Engine.III) then
         if(lock) then return end;
     else
         if((lock) and (mask == 0x1F)) then return end;
@@ -109,7 +109,7 @@ function deactivateEntity(object_id, activator_id, trigger_lock)
     -- its trigger lock flag to entity lock flag, so next activation event will be executed once.
     -- In TR1-2, antitriggers are ignored for locked entities.
     
-    if((getLevelVersion() < TR_III) and (lock)) then return end;
+    if((getEngineVersion() < Engine.III) and (lock)) then return end;
     
     lock = (lock or trigger_lock);
     
@@ -168,7 +168,7 @@ end
 function findSecret(secret_number)
     if(not getSecretStatus(secret_number)) then
         setSecretStatus(secret_number, true);  -- Set actual secret status
-        playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
+        playStream(getSecretTrackNumber(getEngineVersion()));   -- Play audiotrack
         --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
     end;
 end
@@ -184,7 +184,7 @@ end
 -- Plays specified flyby. Only valid in TR4-5.
 
 function playFlyby(flyby_index, once)
-    if(getLevelVersion() < TR_IV) then return 0 end;
+    if(getEngineVersion() < Engine.IV) then return 0 end;
     print("FLYBY: index = " .. flyby_index .. " once = " .. once);
 end
 
@@ -192,6 +192,6 @@ end
 -- Plays specified cutscene. Only valid in retail TR4-5.
 
 function playCutscene(cutscene_index)
-    if(getLevelVersion() < TR_IV) then return 0 end;
+    if(getEngineVersion() < Engine.IV) then return 0 end;
     print("CUTSCENE: index = " .. cutscene_index);
 end

@@ -27,7 +27,7 @@
 
 #include <cstdint>
 
-#include "vt/tr_types.h"
+#include "loader/datatypes.h"
 #include "polygon.h"
 
 class BorderedTextureAtlas
@@ -84,7 +84,7 @@ class BorderedTextureAtlas
     std::vector<uint32_t> m_resultPageHeights;
 
     // Original data
-    std::vector<tr4_textile32_t> m_originalPages;
+    std::vector<loader::DWordTexture> m_originalPages;
 
     // Object textures in the file.
     std::vector<FileObjectTexture> m_fileObjectTextures;
@@ -100,10 +100,10 @@ class BorderedTextureAtlas
     void layOutTextures();
 
     /*! Adds an object texture to the list. */
-    void addObjectTexture(const tr4_object_texture_t &texture);
+    void addObjectTexture(const loader::ObjectTexture &texture);
 
     /*! Adds a sprite texture to the list. */
-    void addSpriteTexture(const tr_sprite_texture_t &texture);
+    void addSpriteTexture(const loader::SpriteTexture &texture);
 
 public:
     /*!
@@ -112,9 +112,9 @@ public:
      */
     BorderedTextureAtlas(int border,
                          bool conserve_memory,
-                         const std::vector<tr4_textile32_t> &pages,
-                         const std::vector<tr4_object_texture_t> &object_textures,
-                         const std::vector<tr_sprite_texture_t> &sprite_textures);
+                         const std::vector<loader::DWordTexture> &pages,
+                         const std::vector<loader::ObjectTexture> &object_textures,
+                         const std::vector<loader::SpriteTexture> &sprite_textures);
 
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards

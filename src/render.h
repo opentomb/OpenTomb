@@ -5,6 +5,9 @@
 #include <memory>
 #include <vector>
 
+// glew must be included BEFORE btIDebugDraw.h
+#include <GL/glew.h>
+
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btIDebugDraw.h>
 
@@ -20,7 +23,7 @@ struct Portal;
 struct Frustum;
 struct World;
 struct Room;
-struct Camera;
+class Camera;
 struct Entity;
 struct Sprite;
 struct BaseMesh;

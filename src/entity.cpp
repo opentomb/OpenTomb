@@ -143,7 +143,8 @@ void Entity::genRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            cshape->calculateLocalInertia(0.0, localInertia);
+            if(m_self->collision_shape != COLLISION_SHAPE_TRIMESH)
+                cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);

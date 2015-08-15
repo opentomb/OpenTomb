@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstring>
 #include <iosfwd>
 #include <limits>
 
@@ -455,7 +454,7 @@ union float4
 
     uint4 is_finite() const
     {
-        return uint4(_finite(x), _finite(y), _finite(z), _finite(w));
+        return uint4(_finite(x)!=0, _finite(y)!=0, _finite(z)!=0, _finite(w)!=0);
     }
 
     bool isOnTriangle(const float4 *points) const;

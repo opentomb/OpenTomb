@@ -659,7 +659,7 @@ function boulder_init(id)
             setEntityBodyMass(object_id, getEntityMeshCount(object_id), 2000.0);
             setEntityActivity(object_id, true);
             
-            if(getLevelVersion() < TR_IV) then
+            if(getEngineVersion() < Engine.IV) then
                 pushEntityBody(object_id, 0, math.random(150) + 2500.0, 10.0, true);
                 lockEntityBodyLinearFactor(object_id, 0);
             end;
@@ -828,7 +828,7 @@ function pickup_init(id, item_id)    -- Pick-ups
             -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
             -- it was generalized with all rest animations by frame 16.
 
-            if((a == 135) and (getLevelVersion() < TR_IV)) then
+            if((a == 135) and (getEngineVersion() < Engine.IV)) then
                 if(f < 40) then
                     return true;
                 end;
@@ -900,8 +900,8 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     setEntitySpeed(id, 0.0, 0.0, 0.0);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     
-    local level_version = getLevelVersion();
-    if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, false) end;
+    local engine_version = getEngineVersion();
+    if((engine_version < Engine.II) or (engine_version >= Engine.III)) then setEntityVisibility(id, false) end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -1411,20 +1411,20 @@ function spikewall_init(id)      -- Spike wall
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        local ver = getLevelVersion();
+        local ver = getEngineVersion();
         local scan_distance = 32.0;
-        if(ver < TR_II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
+        if(ver < Engine.II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
         
         if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
             moveEntityLocal(object_id, 0.0, 8.0, 0.0);
-            playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            playSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
         else
             setEntityActivity(object_id, false);    -- Stop
-            stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
         end;
     end
     
@@ -1443,12 +1443,12 @@ function spikewall_init(id)      -- Spike wall
             
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
                 changeCharacterParam(activator_id, PARAM_HEALTH, -20);
-                playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
+                playSound(getGlobalSound(getEngineVersion(), GLOBALID_SPIKEHIT), activator_id);
                 if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
                     playSound(SOUND_GEN_DEATH, activator_id);
                     setEntityActivity(object_id, false);
-                    stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+                    stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
                 end;
             end;
         end;
@@ -1467,7 +1467,7 @@ function spikeceiling_init(id)
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
@@ -1475,10 +1475,10 @@ function spikeceiling_init(id)
 
         if(pz > (getSectorHeight(object_id) + 512.0)) then
             moveEntityLocal(object_id, 0.0, 0.0, -4.0);
-            playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            playSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
         else
             setEntityActivity(object_id, false);    -- Stop
-            stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
         end;
     end
     
@@ -1505,12 +1505,12 @@ function spikeceiling_init(id)
                     playSound(SOUND_IMPALE, activator_id);
                 else
                     changeCharacterParam(activator_id, PARAM_HEALTH, -20);
-                    playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
+                    playSound(getGlobalSound(getEngineVersion(), GLOBALID_SPIKEHIT), activator_id);
                     if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                         addEntityRagdoll(activator_id, RD_TYPE_LARA);
                         playSound(SOUND_GEN_DEATH, activator_id);
                         setEntityActivity(object_id, false);
-                        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+                        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
                     end;
                 end;
             end;

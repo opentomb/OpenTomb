@@ -365,10 +365,10 @@ struct AnimationFrame
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
-    btScalar                    speed_x;                // Forward-backward speed
-    btScalar                    accel_x;                // Forward-backward accel
-    btScalar                    speed_y;                // Left-right speed
-    btScalar                    accel_y;                // Left-right accel
+    int32_t                     speed_x;                // Forward-backward speed
+    int32_t                     accel_x;                // Forward-backward accel
+    int32_t                     speed_y;                // Left-right speed
+    int32_t                     accel_y;                // Left-right accel
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;

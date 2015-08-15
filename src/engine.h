@@ -62,7 +62,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
-struct Camera;
+class Camera;
 
 struct EngineContainer
 {
@@ -279,7 +279,6 @@ void Engine_DumpRoom(Room* r);
 // PC-specific level loader routines.
 
 bool Engine_LoadPCLevel(const std::string &name);
-int  Engine_GetPCLevelVersion(const std::string &name);
 
 // General level loading routines.
 
@@ -290,7 +289,7 @@ int  Engine_LoadMap(const std::string &name);
 // String getters.
 
 std::string Engine_GetLevelName(const std::string &path);
-std::string Engine_GetAutoexecName(int game_version, const std::string &postfix = nullptr);
+std::string Engine_GetAutoexecName(loader::Game game_version, const std::string &postfix = nullptr);
 
 // Console command parser.
 

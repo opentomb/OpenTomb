@@ -169,7 +169,7 @@ class btRigidBody;
 
 struct Room;
 struct Polygon;
-struct Camera;
+class Camera;
 struct Portal;
 class Render;
 struct Frustum;
@@ -361,7 +361,7 @@ struct World
 {
     char                       *name = nullptr;
     uint32_t                    id = 0;
-    uint32_t                    version;
+    loader::Engine              engineVersion;
 
     std::vector< std::shared_ptr<Room> > rooms;
 
