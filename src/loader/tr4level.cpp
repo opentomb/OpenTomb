@@ -173,7 +173,7 @@ void TR4Level::load()
 
     newsrc.readVector(m_overlaps, newsrc.readU32());
 
-    m_reader.readVector(m_zones, m_boxes.size(), &Zone::readTr2);
+    newsrc.readVector(m_zones, m_boxes.size(), &Zone::readTr2);
 
     newsrc.readVector(m_animatedTextures, newsrc.readU32());
 
