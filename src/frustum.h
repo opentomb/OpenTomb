@@ -11,7 +11,7 @@ struct Portal;
 class  Render;
 struct OBB;
 struct Polygon;
-struct Camera;
+class Camera;
 
 struct Frustum
 {

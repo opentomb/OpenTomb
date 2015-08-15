@@ -5,7 +5,7 @@ struct Polygon;
 struct BaseMesh;
 struct Room;
 struct World;
-struct Camera;
+class Camera;
 struct SSAnimation;
 struct Entity;
 struct RoomSector;

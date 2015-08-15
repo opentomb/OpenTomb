@@ -62,7 +62,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
-struct Camera;
+class Camera;
 
 struct EngineContainer
 {

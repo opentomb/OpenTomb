@@ -11,7 +11,6 @@
 #include "engine.h"
 #include "entity.h"
 #include "frustum.h"
-#include "gl_util.h"
 #include "hair.h"
 #include "mesh.h"
 #include "obb.h"
@@ -659,7 +658,7 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
 
                 GLfloat *v = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
 
-                for(int16_t i = f->vertices.size() - 1; i >= 0; i--)
+                for(size_t i = f->vertices.size() - 1; i >= 0; i--)
                 {
                     *v++ = f->vertices[i].x();
                     *v++ = f->vertices[i].y();
@@ -1350,7 +1349,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {
-        debugDrawer.setColor(0.0, 0.1, 0.9);
+        debugDrawer.setColor(0.0, 0.1f, 0.9f);
         debugDrawer.drawBBox(room->bb_min, room->bb_max, nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {

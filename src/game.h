@@ -28,7 +28,7 @@ struct Polygon;
 struct BaseMesh;
 struct Room;
 struct World;
-struct Camera;
+class Camera;
 struct Entity;
 struct RoomSector;
 
@@ -54,5 +54,5 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
-void Cam_FollowEntity(struct Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
+void Cam_FollowEntity(Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);

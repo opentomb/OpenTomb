@@ -1866,7 +1866,7 @@ bool Audio_FillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size,
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void Audio_UpdateListenerByCamera(struct Camera *cam)
+void Audio_UpdateListenerByCamera(Camera *cam)
 {
     ALfloat v[6] = {
         cam->getViewDir()[0], cam->getViewDir()[1], cam->getViewDir()[2],

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <GL/glew.h>
+
 // This class encapsulates a set of vertex state. Depending on whether the
 // current OpenGL context supports it or not (at creation time), this is
 // stored in a VAO, or not.
-
-#include "gl_util.h"
 
 // Description of a single vertex array attribute.
 

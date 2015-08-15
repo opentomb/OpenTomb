@@ -213,9 +213,9 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 
     std::string ext;
     ext += filename[filename.length()-4];
-    ext += std::toupper(filename[filename.length()-3]);
-    ext += std::toupper(filename[filename.length()-2]);
-    ext += std::toupper(filename[filename.length()-1]);
+    ext += toupper(filename[filename.length()-3]);
+    ext += toupper(filename[filename.length()-2]);
+    ext += toupper(filename[filename.length()-1]);
 
     reader.seek(0);
     uint8_t check[4];

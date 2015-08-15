@@ -169,7 +169,7 @@ class btRigidBody;
 
 struct Room;
 struct Polygon;
-struct Camera;
+class Camera;
 struct Portal;
 class Render;
 struct Frustum;

@@ -234,7 +234,7 @@ enum TR_AUDIO_STREAM_TYPE
 
 #define TR_AUDIO_DEINIT_DELAY 5.0
 
-struct Camera;
+class Camera;
 struct Entity;
 
 // Audio settings structure.
