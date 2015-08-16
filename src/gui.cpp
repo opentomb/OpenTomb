@@ -214,6 +214,7 @@ void Gui_InitFaders()
                 Fader[i].SetBlendingMode(loader::BlendingMode::Multiply);
                 Fader[i].SetSpeed(10, 800);
             }
+            break;
 
             case FADER_BLACK:
             {
