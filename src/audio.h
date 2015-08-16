@@ -62,19 +62,6 @@ enum TR_AUDIO_FX
 
 #define TR_AUDIO_FLAG_UNKNOWN     0x10 // N flag. UNKNOWN MEANING!
 
-// Looped field is located at offset 6 of SoundDetail structure and
-// combined with SampleIndexes value. This field is responsible for
-// looping behaviour of each sound.
-// L flag sets sound to continous looped state, while W flag waits
-// for any sound with similar ID to finish, and only then plays it
-// again. R flag rewinds sound, if sound with similar ID is being
-// sent to sources.
-
-#define TR_AUDIO_LOOP_LOOPED  0x03  // L flag. Normal looped.
-#define TR_AUDIO_LOOP_REWIND  0x02  // R flag. Rewind on re-send.
-#define TR_AUDIO_LOOP_WAIT    0x01  // W flag. Wait until play is over.
-#define TR_AUDIO_LOOP_NONE    0x00  // No looping.
-
 // Sample number mask is a mask value used in bitwise operation with
 // "num_samples_and_flags_1" field to extract amount of samples per
 // effect.
@@ -272,7 +259,7 @@ struct AudioEffect
     ALfloat     gain = 0;           // [VOL in TR] Global gain (volume).
     ALfloat     range = 0;          // [RAD in TR] Range (radius).
     ALuint      chance = 0;         // [CH  in TR] Chance to play.
-    ALuint      loop = 0;           // 0 = none, 1 = W, 2 = R, 3 = L.
+    loader::LoopType loop = loader::LoopType::None;
     ALboolean   rand_pitch = false;     // Similar to flag 0x200000 (P) in native TRs.
     ALboolean   rand_gain = false;      // Similar to flag 0x400000 (V) in native TRs.
 

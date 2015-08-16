@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "io/sdlreader.h"
+#include "game.h"
 
 namespace loader
 {
@@ -2041,6 +2042,21 @@ struct SoundSource
     }
 };
 
+// Looped field is located at offset 6 of SoundDetail structure and
+// combined with SampleIndexes value. This field is responsible for
+// looping behaviour of each sound.
+// L flag sets sound to continous looped state, while W flag waits
+// for any sound with similar ID to finish, and only then plays it
+// again. R flag rewinds sound, if sound with similar ID is being
+// sent to sources.
+enum class LoopType
+{
+    None,
+    Forward,
+    PingPong,
+    Wait
+};
+
 /** \brief SoundDetails.
  *
  * SoundDetails (also called SampleInfos in native TR sources) are properties
@@ -2048,7 +2064,6 @@ struct SoundSource
  * that is needed to play certain sample, except offset to raw wave buffer,
  * which is unnecessary, as it is managed internally by DirectSound.
  */
-
 struct SoundDetails
 {
     uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
@@ -2060,24 +2075,45 @@ struct SoundDetails
     uint8_t flags_2;                     // Bit 4: UNKNOWN, bit 5: Randomize pitch, bit 6: randomize volume
                                          // All other bits in flags_2 are unused.
 
-    enum class LoopType
+    LoopType getLoopType(Engine engine) const
     {
-        None,
-        Forward,
-        PingPong
-    };
-
-    LoopType getLoopType() const
-    {
-        switch(num_samples_and_flags_1 & 3)
+        if(engine == Engine::TR1)
         {
-            case 1:
-                return LoopType::PingPong;
-            case 2:
-            case 3:
-                return LoopType::Forward;
-            default:
-                return LoopType::None;
+            switch(num_samples_and_flags_1 & 3)
+            {
+                case 1:
+                    return LoopType::PingPong;
+                case 2:
+                    return LoopType::Forward;
+                default:
+                    return LoopType::None;
+            }
+        }
+        else if(engine == Engine::TR2)
+        {
+            switch(num_samples_and_flags_1 & 3)
+            {
+                case 1:
+                    return LoopType::PingPong;
+                case 3:
+                    return LoopType::Forward;
+                default:
+                    return LoopType::None;
+            }
+        }
+        else
+        {
+            switch(num_samples_and_flags_1 & 3)
+            {
+                case 1:
+                    return LoopType::Wait;
+                case 2:
+                    return LoopType::PingPong;
+                case 3:
+                    return LoopType::Forward;
+                default:
+                    return LoopType::None;
+            }
         }
     }
 

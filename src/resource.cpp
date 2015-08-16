@@ -3911,30 +3911,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
         world->audio_effects[i].rand_pitch = tr->m_soundDetails[i].useRandomPitch();
         world->audio_effects[i].rand_gain = tr->m_soundDetails[i].useRandomVolume();
 
-        switch(tr->m_gameVersion)
-        {
-            case loader::Game::TR1:
-            case loader::Game::TR1Demo:
-            case loader::Game::TR1UnfinishedBusiness:
-            case loader::Game::TR2:
-            case loader::Game::TR2Demo:
-                switch(tr->m_soundDetails[i].getLoopType())
-                {
-                    case loader::SoundDetails::LoopType::PingPong:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    case loader::SoundDetails::LoopType::Forward:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    default:
-                        world->audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-
-            default:
-                world->audio_effects[i].loop = (tr->m_soundDetails[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
-                break;
-        }
+        world->audio_effects[i].loop = tr->m_soundDetails[i].getLoopType(loader::gameToEngine(tr->m_gameVersion));
 
         world->audio_effects[i].sample_index = tr->m_soundDetails[i].sample;
         world->audio_effects[i].sample_count = tr->m_soundDetails[i].getSampleCount();
@@ -3955,7 +3932,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
             // Fix for underwater looped sound.
             if(world->audio_map[TR_AUDIO_SOUND_UNDERWATER] >= 0)
             {
-                world->audio_effects[world->audio_map[TR_AUDIO_SOUND_UNDERWATER]].loop = TR_AUDIO_LOOP_LOOPED;
+                world->audio_effects[world->audio_map[TR_AUDIO_SOUND_UNDERWATER]].loop = loader::LoopType::Forward;
             }
             break;
         case loader::Engine::TR2:

@@ -1405,7 +1405,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.
 
-    if((effect->loop != TR_AUDIO_LOOP_LOOPED) && (effect->chance > 0))
+    if((effect->loop != loader::LoopType::Forward) && (effect->chance > 0))
     {
         random_value = rand() % 0x7FFF;
         if(effect->chance < random_value)
@@ -1433,11 +1433,11 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     if(source_number != -1)
     {
-        if(effect->loop == TR_AUDIO_LOOP_REWIND)
+        if(effect->loop == loader::LoopType::PingPong)
         {
             engine_world.audio_sources[source_number].Stop();
         }
-        else if(effect->loop) // Any other looping case (Wait / Loop).
+        else if(effect->loop != loader::LoopType::None) // Any other looping case (Wait / Loop).
         {
             return TR_AUDIO_SEND_IGNORED;
         }
@@ -1471,7 +1471,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
         // Step 2. Check looped flag, and if so, set source type to looped.
 
-        if(effect->loop == TR_AUDIO_LOOP_LOOPED)
+        if(effect->loop == loader::LoopType::Forward)
         {
             source->SetLooping(AL_TRUE);
         }
