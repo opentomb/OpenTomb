@@ -83,7 +83,7 @@ void Camera::shake(GLfloat power, GLfloat time)
     m_shakeTime = time;
 }
 
-void Camera::deltaRotation(const btVector3& angles)                         //angles = {OX, OY, OZ}
+void Camera::deltaRotation(const btVector3& angles) //angles = {OX, OY, OZ}
 {
     m_ang += angles;
 
@@ -96,7 +96,7 @@ void Camera::deltaRotation(const btVector3& angles)                         //an
     m_upDir = m_viewDir.rotate(m_rightDir, angles.y());
 }
 
-void Camera::setRotation(const btVector3& angles)                          //angles = {OX, OY, OZ}
+void Camera::setRotation(const btVector3& angles) //angles = {OX, OY, OZ}
 {
     m_ang = angles;
 
@@ -118,30 +118,31 @@ void Camera::recalcClipPlanes()
 
     //==========================================================================
 
-    frustum.norm.assign(m_viewDir, m_pos);                               // Основная плоскость отсечения (что сзади - то не рисуем)
+    frustum.norm.assign(m_viewDir, m_pos); // Main clipping plane (we don't draw things beyond us).
 
     //==========================================================================
 
-    //   DOWN
+    //   Lower clipping plane vector
     btVector3 LU;
-    LU = nearViewPoint - m_height / 2.0f * m_upDir;                                       // вектор нижней плоскости отсечения
+    LU = nearViewPoint - m_height / 2.0f * m_upDir;
     m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
-    //   UP
-    LU = nearViewPoint + m_height / 2.0f * m_upDir;                                       // вектор верхней плоскости отсечения
+    //   Upper clipping plane vector
+    LU = nearViewPoint + m_height / 2.0f * m_upDir;
     m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
 
     //==========================================================================
 
-    //   LEFT
-    LU = nearViewPoint - m_width / 2.0f * m_rightDir;                                    // вектор левой плоскости отсечения
+    //   Left clipping plane vector
+    LU = nearViewPoint - m_width / 2.0f * m_rightDir;
     m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
-    //   RIGHT
-    LU = nearViewPoint + m_width / 2.0f * m_rightDir;                                    // вектор правой плоскости отсечения
+    //   Right clipping plane vector
+    LU = nearViewPoint + m_width / 2.0f * m_rightDir;
     m_clipPlanes[2].assign(m_upDir, LU, m_pos);
 
     auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
+
     // Ensure that normals point outside
     for(int i = 0; i < 4; ++i)
         if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)

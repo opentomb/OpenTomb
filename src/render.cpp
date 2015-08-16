@@ -1038,30 +1038,31 @@ void Render::genWorldList()
         return;
     }
 
-    cleanList();                                                         // clear old render list
+    cleanList();                              // clear old render list
     debugDrawer.reset();
     //cam->frustum->next = NULL;
 
-    Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->m_currentRoom);                // find room that contains camera
+    // find room that contains camera
+    Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->m_currentRoom);
 
-    m_cam->m_currentRoom = curr_room;                                     // set camera's cuttent room pointer
-    if(curr_room != nullptr)                                                       // camera located in some room
+    m_cam->m_currentRoom = curr_room;         // set camera's cuttent room pointer
+    if(curr_room != nullptr)                  // camera located in some room
     {
-        curr_room->frustum.clear();                                              // room with camera inside has no frustums!
+        curr_room->frustum.clear();           // room with camera inside has no frustums!
         curr_room->max_path = 0;
-        addRoom(curr_room);                                              // room with camera inside adds to the render list immediately
-        for(Portal& p : curr_room->portals)                   // go through all start room portals
+        addRoom(curr_room);                   // room with camera inside adds to the render list immediately
+        for(Portal& p : curr_room->portals)   // go through all start room portals
         {
             auto last_frus = Frustum::portalFrustumIntersect(&p, m_cam->frustum, this);
             if(last_frus)
             {
-                addRoom(p.dest_room.get());                                   // portal destination room
-                last_frus->parents_count = 1;                                   // created by camera
-                processRoom(&p, *last_frus);                               // next start reccursion algorithm
+                addRoom(p.dest_room.get());   // portal destination room
+                last_frus->parents_count = 1; // created by camera
+                processRoom(&p, *last_frus);  // next start reccursion algorithm
             }
         }
     }
-    else                                                                        // camera is out of all rooms
+    else if(control_states.noclip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
