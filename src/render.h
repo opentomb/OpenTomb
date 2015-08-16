@@ -43,8 +43,6 @@ struct base_mesh_s;
 struct obb_s;
 struct lit_shader_description;
 
-class CRenderDebugDrawer;
-
 // Native TR blending modes.
 
 enum BlendingMode
@@ -70,13 +68,6 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_REVERSE           2
 
 
-typedef struct render_list_s
-{
-    char               active;
-    struct room_s     *room;
-    float           dist;
-}render_list_t, *render_list_p;
-
 typedef struct render_settings_s
 {
     float     lod_bias;
@@ -93,22 +84,6 @@ typedef struct render_settings_s
     float     fog_end_depth;
 }render_settings_t, *render_settings_p;
 
-typedef struct render_s
-{
-    int8_t                      blocked;
-    uint32_t                    style;                                          //
-    struct world_s             *world;
-    struct camera_s            *cam;
-    struct render_settings_s    settings;
-    class shader_manager       *shader_manager;
-    class CRenderDebugDrawer   *debug_drawer;
-
-    uint32_t                    r_list_size;
-    uint32_t                    r_list_active_count;
-    struct render_list_s       *r_list;
-}render_t, *render_p;
-
-extern render_t renderer;
 
 class CRenderDebugDrawer
 {
@@ -120,33 +95,36 @@ class CRenderDebugDrawer
         {
             return m_lines == 0;
         }
-        void reset();
-        void render();
-        void setColor(GLfloat r, GLfloat g, GLfloat b)
+        void Reset();
+        void Render();
+        void SetColor(GLfloat r, GLfloat g, GLfloat b)
         {
             m_color[0] = r;
             m_color[1] = g;
             m_color[2] = b;
         }
-        void drawAxis(float r, float transform[16]);
-        void drawPortal(struct portal_s *p);
-        void drawFrustum(struct frustum_s *f);
-        void drawBBox(float bb_min[3], float bb_max[3], float *transform);
-        void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16]);
-        void drawEntityDebugLines(struct entity_s *entity);
-        void drawSectorDebugLines(struct room_sector_s *rs);
-        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
+        void DrawAxis(float r, float transform[16]);
+        void DrawPortal(struct portal_s *p);
+        void DrawFrustum(struct frustum_s *f);
+        void DrawBBox(float bb_min[3], float bb_max[3], float *transform);
+        void DrawOBB(struct obb_s *obb);
+        void DrawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals);
+        void DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16]);
+        void DrawEntityDebugLines(struct entity_s *entity);
+        void DrawSectorDebugLines(struct room_sector_s *rs);
+        void DrawRoomDebugLines(struct room_s *room);
         
         // physics debug interface
-        void   drawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);
-        void   drawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3]);
-        void   setDebugMode(int debugMode) {m_debugMode = debugMode;};
-        int    getDebugMode() const {return m_debugMode;}
+        void   DrawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);
+        void   DrawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3]);
+        void   SetDebugMode(int debugMode) {m_debugMode = debugMode;};
+        int    GetDebugMode() const {return m_debugMode;}
+        void     SetDrawFlags(uint32_t flags) {m_drawFlags = flags;};
+        uint32_t GetDrawFlags() const {return m_drawFlags;}
         
     private:
         uint32_t m_debugMode;
+        uint32_t m_drawFlags;
         uint32_t m_max_lines;
         uint32_t m_lines;
         bool     m_need_realloc;
@@ -158,44 +136,70 @@ class CRenderDebugDrawer
         struct obb_s *m_obb;
 };
 
-void Render_DoShaders();
-void Render_Empty(render_p render);
-void Render_ResetActiveTexture();
-void Render_InitGlobals();
-void Render_Init();
 
-render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);
-void Render_Hair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
-void Render_SkyBox(const float matrix[16]);
-void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals);
-void Render_BSPPolygon(struct bsp_polygon_s *p);
-void Render_BSPFrontToBack(struct bsp_node_s *root);
-void Render_BSPBackToFront(struct bsp_node_s *root);
-void Render_SkinMesh(struct base_mesh_s *mesh, float transform[16]);
-void Render_UpdateAnimTextures();
-void Render_CleanList();
+class CRender
+{
+    public:
+        CRender();
+       ~CRender();
+        void DoShaders();
+        void SetWorld(struct world_s *world);
+        void UpdateAnimTextures();
+
+        void GenWorldList(struct camera_s *cam);
+        void DrawList();
+        void DrawListDebugLines();
+        void CleanList();
+
+        void DrawBSPPolygon(struct bsp_polygon_s *p);
+        void DrawBSPFrontToBack(struct bsp_node_s *root);
+        void DrawBSPBackToFront(struct bsp_node_s *root);
+
+        void DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals);
+        void DrawSkinMesh(struct base_mesh_s *mesh, float transform[16]);
+        void DrawSkyBox(const float matrix[16]);
+
+        void DrawSkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);
+        void DrawHair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
+        void DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
+
+        void DrawRoom(struct room_s *room, const float matrix[16], const float modelViewProjectionMatrix[16]);
+        void DrawRoomSprites(struct room_s *room, const float modelViewMatrix[16], const float projectionMatrix[16]);
+
+    private:
+        struct render_list_s
+        {
+            char               active;
+            struct room_s     *room;
+            float              dist;
+        };
+
+        void InitSettings();
+        int  AddRoom(struct room_s *room);
+        int  ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
+        const lit_shader_description *SetupEntityLight(struct entity_s *entity, const float modelViewMatrix[16]);
+        
+        bool                        blocked;
+        struct world_s             *m_world;
+        struct camera_s            *m_camera;
+
+        uint16_t                    m_active_transparency;
+        GLuint                      m_active_texture;
+        
+        uint32_t                    r_list_size;
+        uint32_t                    r_list_active_count;
+        struct render_list_s       *r_list;
+        class CFrustumManager      *frustumManager;
+        
+    public:
+        uint32_t                    r_flags;
+        struct render_settings_s    settings;
+        class shader_manager       *shaderManager;
+        class CRenderDebugDrawer   *debugDrawer;
+        class CDynamicBSP          *dynamicBSP;
+};
 
 
-void Render_Room(struct room_s *room, struct render_s *render, const float matrix[16], const float modelViewProjectionMatrix[16]);
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float projectionMatrix[16]);
-int Render_AddRoom(struct room_s *room);
-void Render_DrawList();
-void Render_DrawList_DebugLines();
-
-int Render_HaveFrustumParent(struct room_s *room, struct frustum_s *frus);
-int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
-void Render_GenWorldList();
-
-void Render_SetWorld(struct world_s *world);
-
-void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
-
-/*
- * DEBUG PRIMITIVES RENDERING
- */
-void Render_SkyBox_DebugLines();
-
+extern CRender renderer;
 
 #endif

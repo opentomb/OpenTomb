@@ -59,7 +59,6 @@ void Engine_InitDefaultGlobals()
     Con_InitGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
-    Render_InitGlobals();
     Audio_InitGlobals();
 }
 
@@ -76,10 +75,7 @@ void Engine_Init_Pre()
     lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
     Gameflow_Init();
-
-    Render_Init();
     Cam_Init(&engine_camera);
-    renderer.cam = &engine_camera;
 
     Physics_Init();
 }
@@ -99,7 +95,7 @@ void Engine_Init_Post()
 
 void Engine_Destroy()
 {
-    Render_Empty(&renderer);
+    renderer.SetWorld(NULL);
     Con_Destroy();
     Sys_Destroy();
 
@@ -119,7 +115,7 @@ void Engine_Destroy()
 void Engine_Shutdown(int val)
 {
     Engine_LuaClearTasks();
-    Render_Empty(&renderer);
+    renderer.SetWorld(NULL);
     World_Empty(&engine_world);
     Engine_Destroy();
 
@@ -422,10 +418,6 @@ int Engine_LoadMap(const char *name)
 
     Gui_DrawLoadScreen(0);
 
-    renderer.style &= ~R_DRAW_SKYBOX;
-    renderer.r_list_active_count = 0;
-    renderer.world = NULL;
-
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
     Gui_DrawLoadScreen(50);
@@ -467,7 +459,7 @@ int Engine_LoadMap(const char *name)
 
     Game_Prepare();
 
-    Render_SetWorld(&engine_world);
+    renderer.SetWorld(&engine_world);
 
     Gui_DrawLoadScreen(1000);
     Gui_NotifierStop();
@@ -511,9 +503,9 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = 1;
-            renderer.cam->pos[0] = SC_ParseFloat(&ch);
-            renderer.cam->pos[1] = SC_ParseFloat(&ch);
-            renderer.cam->pos[2] = SC_ParseFloat(&ch);
+            engine_camera.pos[0] = SC_ParseFloat(&ch);
+            engine_camera.pos[1] = SC_ParseFloat(&ch);
+            engine_camera.pos[2] = SC_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
@@ -571,70 +563,70 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "r_wireframe"))
         {
-            renderer.style ^= R_DRAW_WIRE;
+            renderer.r_flags ^= R_DRAW_WIRE;
             return 1;
         }
         else if(!strcmp(token, "r_points"))
         {
-            renderer.style ^= R_DRAW_POINTS;
+            renderer.r_flags ^= R_DRAW_POINTS;
             return 1;
         }
         else if(!strcmp(token, "r_coll"))
         {
-            renderer.style ^= R_DRAW_COLL;
+            renderer.r_flags ^= R_DRAW_COLL;
             return 1;
         }
         else if(!strcmp(token, "r_normals"))
         {
-            renderer.style ^= R_DRAW_NORMALS;
+            renderer.r_flags ^= R_DRAW_NORMALS;
             return 1;
         }
         else if(!strcmp(token, "r_portals"))
         {
-            renderer.style ^= R_DRAW_PORTALS;
+            renderer.r_flags ^= R_DRAW_PORTALS;
             return 1;
         }
         else if(!strcmp(token, "r_frustums"))
         {
-            renderer.style ^= R_DRAW_FRUSTUMS;
+            renderer.r_flags ^= R_DRAW_FRUSTUMS;
             return 1;
         }
         else if(!strcmp(token, "r_room_boxes"))
         {
-            renderer.style ^= R_DRAW_ROOMBOXES;
+            renderer.r_flags ^= R_DRAW_ROOMBOXES;
             return 1;
         }
         else if(!strcmp(token, "r_boxes"))
         {
-            renderer.style ^= R_DRAW_BOXES;
+            renderer.r_flags ^= R_DRAW_BOXES;
             return 1;
         }
         else if(!strcmp(token, "r_axis"))
         {
-            renderer.style ^= R_DRAW_AXIS;
+            renderer.r_flags ^= R_DRAW_AXIS;
             return 1;
         }
         else if(!strcmp(token, "r_nullmeshes"))
         {
-            renderer.style ^= R_DRAW_NULLMESHES;
+            renderer.r_flags ^= R_DRAW_NULLMESHES;
             return 1;
         }
         else if(!strcmp(token, "r_dummy_statics"))
         {
-            renderer.style ^= R_DRAW_DUMMY_STATICS;
+            renderer.r_flags ^= R_DRAW_DUMMY_STATICS;
             return 1;
         }
         else if(!strcmp(token, "r_skip_room"))
         {
-            renderer.style ^= R_SKIP_ROOM;
+            renderer.r_flags ^= R_SKIP_ROOM;
             return 1;
         }
         else if(!strcmp(token, "room_info"))
         {
-            r = renderer.cam->current_room;
+            r = engine_camera.current_room;
             if(r)
             {
-                sect = Room_GetSectorXYZ(r, renderer.cam->pos);
+                sect = Room_GetSectorXYZ(r, engine_camera.pos);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

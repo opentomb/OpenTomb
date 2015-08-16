@@ -961,7 +961,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                     float dist = Entity_FindDistance(engine_world.Character, entity);
                                     dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                                     if(dist > 0)
-                                        Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
+                                        Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                                 }
                                 break;
 

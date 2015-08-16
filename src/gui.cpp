@@ -333,7 +333,7 @@ void Gui_Resize()
 
 void Gui_Render()
 {
-    const text_shader_description *shader = renderer.shader_manager->getTextShader();
+    const text_shader_description *shader = renderer.shaderManager->getTextShader();
     screenSize[0] = screen_info.w;
     screenSize[1] = screen_info.h;
     glUseProgramObjectARB(shader->program);
@@ -548,7 +548,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatrix)
 {
-    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0);
+    const lit_shader_description *shader = renderer.shaderManager->getEntityShader(0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -580,13 +580,13 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
+        renderer.DrawSkeletalModel(shader, bf, mvMatrix, mvpMatrix);
     }
     else
     {
         float mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
+        renderer.DrawSkeletalModel(shader, bf, mvMatrix, mvpMatrix);
     }
 }
 
@@ -1291,7 +1291,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(texture != 0);
+    const gui_shader_description *shader = renderer.shaderManager->getGuiShader(texture != 0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     if (texture)

@@ -15,8 +15,6 @@
 #include "world.h"
 
 
-CFrustumManager engine_frustumManager(32768);
-
 CFrustumManager::CFrustumManager(uint32_t buffer_size)
 {
     m_buffer_size = buffer_size;
@@ -34,7 +32,7 @@ CFrustumManager::~CFrustumManager()
     }
 }
 
-void CFrustumManager::reset()
+void CFrustumManager::Reset()
 {
     m_allocated = 0;
     if(m_need_realloc)
@@ -51,7 +49,7 @@ void CFrustumManager::reset()
     }
 }
 
-frustum_p CFrustumManager::createFrustum()
+frustum_p CFrustumManager::CreateFrustum()
 {
     if((!m_need_realloc) && (m_allocated + sizeof(frustum_t) < m_buffer_size))
     {
@@ -72,7 +70,7 @@ frustum_p CFrustumManager::createFrustum()
     return NULL;
 }
 
-float *CFrustumManager::alloc(uint32_t size)
+float *CFrustumManager::Alloc(uint32_t size)
 {
     size *= sizeof(float);
     if((!m_need_realloc) && (m_allocated + size < m_buffer_size))
@@ -86,10 +84,10 @@ float *CFrustumManager::alloc(uint32_t size)
     return NULL;
 }
 
-void CFrustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
+void CFrustumManager::SplitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
 {
     frustum->vertex_count = p->vertex_count;
-    frustum->vertex = this->alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
+    frustum->vertex = this->Alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
     if(frustum->vertex != NULL)
     {
         memcpy(frustum->vertex, p->vertex, 3 * p->vertex_count * sizeof(float));
@@ -103,7 +101,7 @@ void CFrustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustu
     frustum->parent = NULL;
 }
 
-int CFrustumManager::split_by_plane(frustum_p p, float n[4], float *buf)
+int CFrustumManager::SplitByPlane(frustum_p p, float n[4], float *buf)
 {
     if(!m_need_realloc)
     {
@@ -192,7 +190,7 @@ int CFrustumManager::split_by_plane(frustum_p p, float n[4], float *buf)
     return SPLIT_EMPTY;
 }
 
-void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
+void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
 {
     if(m_allocated + p->vertex_count * 4 * sizeof(float) >= m_buffer_size)
     {
@@ -202,7 +200,7 @@ void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
     if((!m_need_realloc) && (p->vertex_count > 0))
     {
         float V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
-        p->planes = this->alloc(4 * p->vertex_count);
+        p->planes = this->Alloc(4 * p->vertex_count);
 
         next_v = p->vertex;
         curr_v = p->vertex + 3 * (p->vertex_count - 1);
@@ -236,11 +234,11 @@ void CFrustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
  * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
  * возвращает указатель на свежесгенеренный фрустум
  */
-frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render)
+frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam)
 {
     if(!m_need_realloc)
     {
-        if(vec3_plane_dist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+        if(vec3_plane_dist(portal->norm, cam->pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
         {
             return NULL;
         }
@@ -251,11 +249,11 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
         }
 
         int in_dist = 0, in_face = 0;
-        float *n = render->cam->frustum->norm;
+        float *n = cam->frustum->norm;
         float *v = portal->vertex;
         for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
         {
-            if((in_dist == 0) && (vec3_plane_dist(n, v) < render->cam->dist_far))
+            if((in_dist == 0) && (vec3_plane_dist(n, v) < cam->dist_far))
             {
                 in_dist = 1;
             }
@@ -277,7 +275,7 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
         frustum_p prev = NULL, current_gen = NULL;
         if(portal->dest_room->frustum == NULL)
         {
-            current_gen = portal->dest_room->frustum = this->createFrustum();
+            current_gen = portal->dest_room->frustum = this->CreateFrustum();
         }
         else
         {
@@ -286,7 +284,7 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
             {
                 prev = prev->next;
             }
-            current_gen = prev->next = this->createFrustum();                   // generate new frustum.
+            current_gen = prev->next = this->CreateFrustum();                   // generate new frustum.
         }
 
         if(m_need_realloc)
@@ -294,7 +292,7 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
             return NULL;
         }
 
-        this->splitPrepare(current_gen, portal, emitter);                       // prepare to the clipping
+        this->SplitPrepare(current_gen, portal, emitter);                       // prepare to the clipping
         if(m_need_realloc)
         {
             if(prev)
@@ -310,12 +308,12 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
 
         int buf_size = (current_gen->vertex_count + emitter->vertex_count + 4) * 3 * sizeof(float);
         float *tmp = (float*)Sys_GetTempMem(buf_size);
-        if(this->split_by_plane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
+        if(this->SplitByPlane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
         {
             n = emitter->planes;
             for(uint16_t i=0;i<emitter->vertex_count;i++,n+=4)
             {
-                if(!this->split_by_plane(current_gen, n, tmp))
+                if(!this->SplitByPlane(current_gen, n, tmp))
                 {
                     if(prev)
                     {
@@ -331,7 +329,7 @@ frustum_p CFrustumManager::portalFrustumIntersect(struct portal_s *portal, frust
                 }
             }
 
-            this->genClipPlanes(current_gen, render->cam);                      // all is OK, let us generate clipplanes
+            this->GenClipPlanes(current_gen, cam);                              // all is OK, let us generate clipplanes
             if(m_need_realloc)
             {
                 if(prev)

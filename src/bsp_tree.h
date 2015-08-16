@@ -50,10 +50,10 @@ class CDynamicBSP
     uint32_t             m_realloc_state;
     struct anim_seq_s   *m_anim_seq;
     
-    struct bsp_node_s     *createBSPNode();
-    struct polygon_s      *createPolygon(uint16_t vertex_count);
-    void addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p);
-    void addPolygon(struct bsp_node_s *root, struct polygon_s *p);
+    struct bsp_node_s     *CreateBSPNode();
+    struct polygon_s      *CreatePolygon(uint16_t vertex_count);
+    void AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p);
+    void AddPolygon(struct bsp_node_s *root, struct polygon_s *p);
     
 public:
     struct bsp_node_s   *m_root;
@@ -62,15 +62,15 @@ public:
     CDynamicBSP(uint32_t size);
    ~CDynamicBSP();
    
-    void addNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f);
-    void reset(struct anim_seq_s *seq);
+    void AddNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f);
+    void Reset(struct anim_seq_s *seq);
     
-    struct vertex_s *getVertexArray()
+    struct vertex_s *GetVertexArray()
     {
         return m_vertex_buffer;
     }
     
-    uint32_t getActiveVertexCount()
+    uint32_t GetActiveVertexCount()
     {
         return m_vertex_allocated;
     }

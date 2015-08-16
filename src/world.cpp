@@ -1108,11 +1108,11 @@ void Room_SwapToBase(room_p room)
 {
     if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
     {
-        Render_CleanList();
+        renderer.CleanList();
         Room_Disable(room);                             //Disable current room
         Room_Disable(room->base_room);                  //Paranoid
         Room_SwapPortals(room, room->base_room);        //Update portals to match this room
-        Room_SwapItems(room, room->base_room);     //Update items to match this room
+        Room_SwapItems(room, room->base_room);          //Update items to match this room
         Room_Enable(room->base_room);                   //Enable original room
     }
 }
@@ -1121,12 +1121,12 @@ void Room_SwapToAlternate(room_p room)
 {
     if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
     {
-        Render_CleanList();
+        renderer.CleanList();
         Room_Disable(room);                             //Disable current room
         Room_Disable(room->alternate_room);             //Paranoid
         Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
-        Room_SwapItems(room, room->alternate_room);          //Update items to match this room
-        Room_Enable(room->alternate_room);                              //Enable base room
+        Room_SwapItems(room, room->alternate_room);     //Update items to match this room
+        Room_Enable(room->alternate_room);              //Enable base room
     }
 }
 

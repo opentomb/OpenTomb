@@ -7,7 +7,7 @@
 
 struct room_s;
 struct portal_s;
-struct render_s;
+struct camera_s;
 struct obb_s;
 
 typedef struct frustum_s
@@ -31,25 +31,21 @@ public:
     CFrustumManager(uint32_t buffer_size);
    ~CFrustumManager();
     
-    void reset();
-    frustum_p createFrustum();
-    frustum_p portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render);         // Основная функция для работы с порталами.
+    void Reset();
+    frustum_p CreateFrustum();
+    frustum_p PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam);         // Основная функция для работы с порталами.
 
 private:
-    float *alloc(uint32_t size);
-    void splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
-    void genClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
-    int split_by_plane(frustum_p p, float n[4], float *buf);                    // отсечение части портала плоскостью
+    float *Alloc(uint32_t size);
+    void SplitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
+    void GenClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
+    int SplitByPlane(frustum_p p, float n[4], float *buf);                      // отсечение части портала плоскостью
     
     bool m_need_realloc;
     uint32_t m_buffer_size;
     uint32_t m_allocated;
     uint8_t *m_buffer;
 };
-
-
-extern CFrustumManager engine_frustumManager;
-
 
 /**
  * Draws wireframe of this frustum.

@@ -369,7 +369,7 @@ void Game_ApplyControls(struct entity_s *ent)
     cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
     cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
 
-    if(!renderer.world)
+    if(engine_world.rooms == NULL)
     {
         if(control_mapper.use_joy)
         {
@@ -392,11 +392,11 @@ void Game_ApplyControls(struct entity_s *ent)
             control_states.look_axis_y = 0.0;
         }
 
-        Cam_SetRotation(renderer.cam, cam_angles);
+        Cam_SetRotation(&engine_camera, cam_angles);
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
+        Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
+        Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
+        Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
 
         return;
     }
@@ -424,26 +424,26 @@ void Game_ApplyControls(struct entity_s *ent)
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
+        Cam_SetRotation(&engine_camera, cam_angles);
+        Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
+        Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
+        Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
+        engine_camera.current_room = Room_FindPosCogerrence(engine_camera.pos, engine_camera.current_room);
     }
     else if(control_states.noclip != 0)
     {
         float pos[3];
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
+        Cam_SetRotation(&engine_camera, cam_angles);
+        Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
+        Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
+        Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
+        engine_camera.current_room = Room_FindPosCogerrence(engine_camera.pos, engine_camera.current_room);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
-        pos[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
-        pos[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
+        pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
+        pos[1] = engine_camera.pos[1] + engine_camera.view_dir[1] * control_states.cam_distance;
+        pos[2] = engine_camera.pos[2] + engine_camera.view_dir[2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform+12, pos);
         Entity_UpdateTransform(ent);
     }
@@ -512,7 +512,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
-    
+
     vec3_copy(cam_pos, cam->pos);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
@@ -611,12 +611,12 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     }
 
     //Code to manage screen shaking effects
-    if((renderer.cam->shake_time > 0.0) && (renderer.cam->shake_value > 0.0))
+    if((engine_camera.shake_time > 0.0) && (engine_camera.shake_value > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
+        cam_pos[0] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
+        cam_pos[1] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
+        cam_pos[2] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
+        engine_camera.shake_time  = (engine_camera.shake_time < 0.0)?(0.0):(engine_camera.shake_time)-engine_frame_time;
     }
 
     vec3_copy(cameraFrom, cam_pos);
@@ -867,7 +867,7 @@ void Game_Frame(float time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            Cam_FollowEntity(renderer.cam, engine_world.Character, 16.0, 128.0);
+            Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
         }
     }
 
@@ -878,7 +878,7 @@ void Game_Frame(float time)
     Physics_StepSimulation(time);
 
     Controls_RefreshStates();
-    Render_UpdateAnimTextures();
+    renderer.UpdateAnimTextures();
 }
 
 

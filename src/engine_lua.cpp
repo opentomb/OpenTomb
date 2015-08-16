@@ -3411,7 +3411,7 @@ int lua_CamShake(lua_State *lua)
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
-    Cam_Shake(renderer.cam, power, time);
+    Cam_Shake(&engine_camera, power, time);
 
     return 0;
 }

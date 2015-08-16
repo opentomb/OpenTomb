@@ -149,12 +149,12 @@ public:
 
     virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color)
     {
-        renderer.debug_drawer->drawLine(from.m_floats, to.m_floats, color.m_floats, color.m_floats);
+        renderer.debugDrawer->DrawLine(from.m_floats, to.m_floats, color.m_floats, color.m_floats);
     }
 
     virtual void   drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor)
     {
-        renderer.debug_drawer->drawLine(from.m_floats, to.m_floats, fromColor.m_floats, toColor.m_floats);
+        renderer.debugDrawer->DrawLine(from.m_floats, to.m_floats, fromColor.m_floats, toColor.m_floats);
     }
 
     virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
@@ -175,12 +175,12 @@ public:
 
     virtual void   setDebugMode(int debugMode)
     {
-        renderer.debug_drawer->setDebugMode(debugMode);
+        renderer.debugDrawer->SetDebugMode(debugMode);
     }
 
     virtual int    getDebugMode() const
     {
-        return renderer.debug_drawer->getDebugMode();
+        return renderer.debugDrawer->GetDebugMode();
     }
 };
 
@@ -564,25 +564,37 @@ int Physics_IsGhostsInited(struct physics_data_s *physics)
 
 void Physics_GetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    physics->bt_body[index]->getWorldTransform().getOpenGLMatrix(tr);
+    if(physics->bt_body[index])
+    {
+        physics->bt_body[index]->getWorldTransform().getOpenGLMatrix(tr);
+    }
 }
 
 
 void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    physics->bt_body[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+    if(physics->bt_body[index])
+    {
+        physics->bt_body[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+    }
 }
 
 
 void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    physics->ghostObjects[index]->getWorldTransform().getOpenGLMatrix(tr);
+    if(physics->ghostObjects[index])
+    {
+        physics->ghostObjects[index]->getWorldTransform().getOpenGLMatrix(tr);
+    }
 }
 
 
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    physics->ghostObjects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+    if(physics->ghostObjects[index])
+    {
+        physics->ghostObjects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+    }
 }
 
 
@@ -600,56 +612,59 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
     // paircache and the ghostobject's internal paircache at the same time.    /BW
 
     int ret = 0;
-    int num_pairs, manifolds_size;
     btPairCachingGhostObject *ghost = physics->ghostObjects[index];
-    btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-    btVector3 aabb_min, aabb_max, t;
-
-    ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-    bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
-    bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
-
-    vec3_set_zero(correction);
-    num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-    for(int i=0;i<num_pairs;i++)
+    if(ghost)
     {
-        physics->manifoldArray->clear();
-        // do not use commented code: it prevents to collision skips.
-        //btBroadphasePair &pair = pairArray[i];
-        //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
-        btBroadphasePair *collisionPair = &pairArray[i];
+        int num_pairs, manifolds_size;
+        btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
+        btVector3 aabb_min, aabb_max, t;
 
-        if(!collisionPair)
-        {
-            continue;
-        }
+        ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
+        bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
+        bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-        if(collisionPair->m_algorithm)
+        vec3_set_zero(correction);
+        num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+        for(int i=0;i<num_pairs;i++)
         {
-            collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
-        }
+            physics->manifoldArray->clear();
+            // do not use commented code: it prevents to collision skips.
+            //btBroadphasePair &pair = pairArray[i];
+            //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+            btBroadphasePair *collisionPair = &pairArray[i];
 
-        manifolds_size = physics->manifoldArray->size();
-        for(int j=0;j<manifolds_size;j++)
-        {
-            btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
-            btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
-            engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
-            engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
-            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            if(!collisionPair)
             {
                 continue;
             }
-            for(int k=0;k<manifold->getNumContacts();k++)
-            {
-                const btManifoldPoint&pt = manifold->getContactPoint(k);
-                btScalar dist = pt.getDistance();
 
-                if(dist < 0.0)
+            if(collisionPair->m_algorithm)
+            {
+                collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
+            }
+
+            manifolds_size = physics->manifoldArray->size();
+            for(int j=0;j<manifolds_size;j++)
+            {
+                btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
+                btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+                engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
+                engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
+                if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
                 {
-                    t = pt.m_normalWorldOnB * dist * directionSign;
-                    vec3_add(correction, correction, t.m_floats)
-                    ret++;
+                    continue;
+                }
+                for(int k=0;k<manifold->getNumContacts();k++)
+                {
+                    const btManifoldPoint&pt = manifold->getContactPoint(k);
+                    btScalar dist = pt.getDistance();
+
+                    if(dist < 0.0)
+                    {
+                        t = pt.m_normalWorldOnB * dist * directionSign;
+                        vec3_add(correction, correction, t.m_floats)
+                        ret++;
+                    }
                 }
             }
         }

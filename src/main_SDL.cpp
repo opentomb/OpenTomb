@@ -377,7 +377,7 @@ void Engine_Start()
 
     // Additional OpenGL initialization.
     Engine_InitGL();
-    Render_DoShaders();
+    renderer.DoShaders();
 
     // Secondary (deferred) initialization.
     Engine_Init_Post();
@@ -423,8 +423,8 @@ void Engine_Display()
 
         glFrontFace(GL_CW);
 
-        Render_GenWorldList();
-        Render_DrawList();
+        renderer.GenWorldList(&engine_camera);
+        renderer.DrawList();
 
         Gui_SwitchGLMode(1);
         glEnable(GL_ALPHA_TEST);
@@ -434,7 +434,7 @@ void Engine_Display()
         Gui_Render();
         Gui_SwitchGLMode(0);
 
-        Render_DrawList_DebugLines();
+        renderer.DrawListDebugLines();
 
         SDL_GL_SwapWindow(sdl_window);
     }

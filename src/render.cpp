@@ -29,127 +29,630 @@
 #include "shader_manager.h"
 
 
-render_t renderer;
-class CDynamicBSP render_dBSP(512 * 1024);
+CRender renderer;
 
-static uint16_t active_transparency = 0;
-static GLuint   active_texture = 0;
+void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 
-static CRenderDebugDrawer      debugDrawer;
+/*
+ * =============================================================================
+ */
 
-void Render_InitGlobals()
+CRender::CRender():
+blocked(true),
+r_flags(0x00),
+r_list(NULL),
+r_list_size(0),
+r_list_active_count(0),
+m_world(NULL),
+m_camera(NULL),
+m_active_transparency(0),
+m_active_texture(0),
+frustumManager(NULL),
+debugDrawer(NULL),
+dynamicBSP(NULL),
+shaderManager(NULL)
 {
-    renderer.settings.anisotropy = 0;
-    renderer.settings.lod_bias = 0;
-    renderer.settings.antialias = 0;
-    renderer.settings.antialias_samples = 0;
-    renderer.settings.mipmaps = 3;
-    renderer.settings.mipmap_mode = 3;
-    renderer.settings.texture_border = 8;
-    renderer.settings.z_depth = 16;
-    renderer.settings.fog_enabled = 1;
-    renderer.settings.fog_color[0] = 0.0f;
-    renderer.settings.fog_color[1] = 0.0f;
-    renderer.settings.fog_color[2] = 0.0f;
-    renderer.settings.fog_start_depth = 10000.0f;
-    renderer.settings.fog_end_depth = 16000.0f;
+    InitSettings();
+    frustumManager = new CFrustumManager(32768);
+    debugDrawer    = new CRenderDebugDrawer();
+    dynamicBSP     = new CDynamicBSP(512 * 1024);
 }
 
-void Render_DoShaders()
+CRender::~CRender()
 {
-    renderer.shader_manager = new shader_manager();
-}
+    m_world = NULL;
+    m_camera = NULL;
 
-
-void Render_Init()
-{
-    renderer.blocked = 1;
-    renderer.cam = NULL;
-
-    renderer.r_list = NULL;
-    renderer.r_list_size = 0;
-    renderer.r_list_active_count= 0;
-
-    renderer.world = NULL;
-    renderer.style = 0x00;
-
-    renderer.debug_drawer = &debugDrawer;
-}
-
-
-void Render_Empty(render_p render)
-{
-    render->world = NULL;
-
-    if (render->r_list)
+    if(r_list)
     {
-        render->r_list_active_count = 0;
-        render->r_list_size = 0;
-        free(render->r_list);
-        render->r_list = NULL;
+        r_list_active_count = 0;
+        r_list_size = 0;
+        free(r_list);
+        r_list = NULL;
     }
 
-    if (render->shader_manager)
+    if(frustumManager)
     {
-        delete render->shader_manager;
-        render->shader_manager = 0;
+        delete frustumManager;
+        frustumManager = NULL;
+    }
+
+    if(debugDrawer)
+    {
+        delete debugDrawer;
+        debugDrawer = NULL;
+    }
+
+    if(dynamicBSP)
+    {
+        delete dynamicBSP;
+        dynamicBSP = NULL;
+    }
+
+    if(shaderManager)
+    {
+        delete shaderManager;
+        shaderManager = NULL;
     }
 }
 
-
-void Render_ResetActiveTexture()
+void CRender::InitSettings()
 {
-    active_texture = 0;
+    settings.anisotropy = 0;
+    settings.lod_bias = 0;
+    settings.antialias = 0;
+    settings.antialias_samples = 0;
+    settings.mipmaps = 3;
+    settings.mipmap_mode = 3;
+    settings.texture_border = 8;
+    settings.z_depth = 16;
+    settings.fog_enabled = 1;
+    settings.fog_color[0] = 0.0f;
+    settings.fog_color[1] = 0.0f;
+    settings.fog_color[2] = 0.0f;
+    settings.fog_start_depth = 10000.0f;
+    settings.fog_end_depth = 16000.0f;
 }
 
-
-render_list_p Render_CreateRoomListArray(unsigned int count)
+void CRender::DoShaders()
 {
-    render_list_p ret = (render_list_p)malloc(count * sizeof(render_list_t));
-
-    for(unsigned int i=0; i<count; i++)
+    if(shaderManager == NULL)
     {
-        ret[i].active = 0;
-        ret[i].room = NULL;
-        ret[i].dist = 0.0;
+        shaderManager = new shader_manager();
     }
-    return ret;
 }
 
-void Render_SkyBox(const float modelViewProjectionMatrix[16])
+void CRender::SetWorld(struct world_s *world)
 {
-    float tr[16];
-    float *p;
-
-    if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
+    if(world)
     {
-        glDepthMask(GL_FALSE);
-        tr[15] = 1.0;
-        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, renderer.cam->pos, p);
-        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
-        Mat4_set_qrotation(tr, p);
-        float fullView[16];
-        Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
+        uint32_t list_size = world->room_count + 128;                               // magick 128 was added for debug and testing
+        if(m_world)
+        {
+            if(r_list_size < list_size)                                             // if old list less than new one requiring
+            {
+                r_list = (struct render_list_s*)realloc(r_list, list_size * sizeof(struct render_list_s));
+                for(uint32_t i=0; i<list_size; i++)
+                {
+                    r_list[i].active = 0;
+                    r_list[i].room = NULL;
+                    r_list[i].dist = 0.0;
+                }
+            }
+        }
+        else
+        {
+            r_list = (struct render_list_s*)malloc(list_size * sizeof(struct render_list_s));
+            for(unsigned int i=0; i<list_size; i++)
+            {
+                r_list[i].active = 0;
+                r_list[i].room = NULL;
+                r_list[i].dist = 0.0;
+            }
+        }
 
-        const unlit_tinted_shader_description *shader = renderer.shader_manager->getStaticMeshShader();
-        glUseProgramObjectARB(shader->program);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, fullView);
-        glUniform1iARB(shader->sampler, 0);
-        GLfloat tint[] = { 1, 1, 1, 1 };
-        glUniform4fvARB(shader->tint_mult, 1, tint);
+        m_world = world;
+        r_flags &= ~R_DRAW_SKYBOX;
+        r_list_size = list_size;
+        r_list_active_count = 0;
 
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
-        glDepthMask(GL_TRUE);
+        for(uint32_t i=0; i<m_world->room_count; i++)
+        {
+            m_world->rooms[i].is_in_r_list = 0;
+        }
+    }
+    else
+    {
+        this->CleanList();
+        m_world = NULL;
+        r_flags = 0x00;
+    }
+}
+
+// This function is used for updating global animated texture frame
+void CRender::UpdateAnimTextures()
+{
+    if(m_world)
+    {
+        anim_seq_p seq = m_world->anim_sequences;
+        for(uint16_t i=0;i<m_world->anim_sequences_count;i++,seq++)
+        {
+            if(seq->frame_lock)
+            {
+                continue;
+            }
+
+            seq->frame_time += engine_frame_time;
+            if(seq->uvrotate)
+            {
+                int j = (seq->frame_time / seq->frame_rate);
+                seq->frame_time -= (float)j * seq->frame_rate;
+                seq->frames[seq->current_frame].current_uvrotate = seq->frame_time * seq->frames[seq->current_frame].uvrotate_max / seq->frame_rate;
+            }
+            else if(seq->frame_time >= seq->frame_rate)
+            {
+                int j = (seq->frame_time / seq->frame_rate);
+                seq->frame_time -= (float)j * seq->frame_rate;
+
+                switch(seq->anim_type)
+                {
+                    case TR_ANIMTEXTURE_REVERSE:
+                        if(seq->reverse_direction)
+                        {
+                            if(seq->current_frame == 0)
+                            {
+                                seq->current_frame++;
+                                seq->reverse_direction = false;
+                            }
+                            else if(seq->current_frame > 0)
+                            {
+                                seq->current_frame--;
+                            }
+                        }
+                        else
+                        {
+                            if(seq->current_frame == seq->frames_count - 1)
+                            {
+                                seq->current_frame--;
+                                seq->reverse_direction = true;
+                            }
+                            else if(seq->current_frame < seq->frames_count - 1)
+                            {
+                                seq->current_frame++;
+                            }
+                            seq->current_frame %= seq->frames_count;                ///@PARANOID
+                        }
+                        break;
+
+                    case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                    case TR_ANIMTEXTURE_BACKWARD:
+                        seq->current_frame++;
+                        seq->current_frame %= seq->frames_count;
+                        break;
+                };
+            }
+        }
     }
 }
 
 /**
- * Opaque meshes drawing
+ * Renderer list generation by current world and camera
  */
-void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
+void CRender::GenWorldList(struct camera_s *cam)
+{
+    if(m_world == NULL)
+    {
+        return;
+    }
+
+    this->CleanList();                                                          // clear old render list
+    this->debugDrawer->Reset();
+    this->dynamicBSP->Reset(m_world->anim_sequences);
+    this->frustumManager->Reset();
+    cam->frustum->next = NULL;
+    m_camera = cam;
+
+    room_p curr_room = Room_FindPosCogerrence(cam->pos, cam->current_room);     // find room that contains camera
+
+    cam->current_room = curr_room;                                              // set camera's cuttent room pointer
+    if(curr_room != NULL)                                                       // camera located in some room
+    {
+        curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
+        curr_room->max_path = 0;
+        this->AddRoom(curr_room);                                               // room with camera inside adds to the render list immediately
+        portal_p p = curr_room->portals;                                        // pointer to the portals array
+        for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
+        {
+            frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
+            if(last_frus)
+            {
+                this->AddRoom(p->dest_room);                                    // portal destination room
+                last_frus->parents_count = 1;                                   // created by camera
+                this->ProcessRoom(p, last_frus);                                // next start reccursion algorithm
+            }
+        }
+    }
+    else                                                                        // camera is out of all rooms
+    {
+        curr_room = m_world->rooms;                                             // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
+        for(uint32_t i=0; i<m_world->room_count; i++,curr_room++)
+        {
+            if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, cam->frustum))
+            {
+                this->AddRoom(curr_room);
+            }
+        }
+    }
+}
+
+/**
+ * Render all visible rooms
+ */
+void CRender::DrawList()
+{
+    if(!m_world)
+    {
+        return;
+    }
+
+    if(r_flags & R_DRAW_WIRE)
+    {
+        glPolygonMode(GL_FRONT, GL_LINE);
+    }
+    else if(r_flags & R_DRAW_POINTS)
+    {
+        glEnable(GL_POINT_SMOOTH);
+        glPointSize(4);
+        glPolygonMode(GL_FRONT, GL_POINT);
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT, GL_FILL);
+    }
+
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    glEnable(GL_ALPHA_TEST);
+
+    m_active_texture = 0;
+    this->DrawSkyBox(m_camera->gl_view_proj_mat);
+
+    if(m_world->Character)
+    {
+        this->DrawEntity(m_world->Character, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+        this->DrawHair(m_world->Character, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+    }
+
+    /*
+     * room rendering
+     */
+    for(uint32_t i=0; i<r_list_active_count; i++)
+    {
+        this->DrawRoom(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+    }
+
+    glDisable(GL_CULL_FACE);
+    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
+    for(uint32_t i=0; i<r_list_active_count; i++)
+    {
+        this->DrawRoomSprites(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_proj_mat);
+    }
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+    /*
+     * NOW render transparency polygons
+     */
+    /*First generate BSP from base room mesh - it has good for start splitter polygons*/
+    for(uint32_t i=0;i<r_list_active_count;i++)
+    {
+        room_p r = r_list[i].room;
+        if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
+        {
+            dynamicBSP->AddNewPolygonList(r->mesh->transparency_polygons, r->transform, m_camera->frustum);
+        }
+    }
+
+    for(uint32_t i=0;i<r_list_active_count;i++)
+    {
+        room_p r = r_list[i].room;
+        // Add transparency polygons from static meshes (if they exists)
+        for(uint16_t j=0;j<r->static_mesh_count;j++)
+        {
+            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
+            {
+                dynamicBSP->AddNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, m_camera->frustum);
+            }
+        }
+
+        // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
+        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                {
+                    float tr[16];
+                    for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
+                    {
+                        if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+                        {
+                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                            dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if((engine_world.Character != NULL) && (engine_world.Character->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    {
+        float tr[16];
+        entity_p ent = engine_world.Character;
+        for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
+        {
+            if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+            {
+                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+            }
+        }
+    }
+
+    if((dynamicBSP->m_root->polygons_front != NULL) && (dynamicBSP->m_vbo != 0))
+    {
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        m_active_transparency = 0;
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->m_vbo);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->GetActiveVertexCount() * sizeof(vertex_t), dynamicBSP->GetVertexArray(), GL_DYNAMIC_DRAW);
+        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
+        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
+        this->DrawBSPBackToFront(dynamicBSP->m_root);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+    }
+    //Reset polygon draw mode
+    glPolygonMode(GL_FRONT, GL_FILL);
+    m_active_texture = 0;
+}
+
+void CRender::DrawListDebugLines()
+{
+    if (!m_world || !(r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
+    {
+        return;
+    }
+
+    debugDrawer->SetDrawFlags(r_flags);
+
+    if(m_world->Character)
+    {
+        debugDrawer->DrawEntityDebugLines(m_world->Character);
+    }
+
+    /*
+     * Render world debug information
+     */
+    if((r_flags & R_DRAW_NORMALS) && (m_world->sky_box != NULL))
+    {
+        GLfloat tr[16];
+        float *p;
+        Mat4_E_macro(tr);
+        p = m_world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, m_camera->pos, p);
+        p = m_world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
+        debugDrawer->DrawMeshDebugLines(m_world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
+    }
+
+    for(uint32_t i=0; i<r_list_active_count; i++)
+    {
+        debugDrawer->DrawRoomDebugLines(r_list[i].room);
+    }
+
+    if(r_flags & R_DRAW_COLL)
+    {
+        Physics_DebugDrawWorld();
+    }
+
+    if(!debugDrawer->IsEmpty())
+    {
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        m_active_texture = 0;
+        BindWhiteTexture();
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glPointSize( 6.0f );
+        glLineWidth( 3.0f );
+        debugDrawer->Render();
+    }
+}
+
+void CRender::CleanList()
+{
+    if(m_world && m_world->Character)
+    {
+        m_world->Character->was_rendered = 0;
+        m_world->Character->was_rendered_lines = 0;
+    }
+
+    for(uint32_t i=0; i<r_list_active_count; i++)
+    {
+        r_list[i].active = 0;
+        r_list[i].dist = 0.0;
+        room_p r = r_list[i].room;
+        r_list[i].room = NULL;
+
+        r->is_in_r_list = 0;
+        r->active_frustums = 0;
+        r->frustum = NULL;
+    }
+
+    r_flags &= ~R_DRAW_SKYBOX;
+    r_list_active_count = 0;
+}
+
+/*
+ * Draw objects functions
+ */
+void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
+{
+    // Blending mode switcher.
+    // Note that modes above 2 aren't explicitly used in TR textures, only for
+    // internal particle processing. Theoretically it's still possible to use
+    // them if you will force type via TRTextur utility.
+    if(m_active_transparency != p->transparency)
+    {
+        m_active_transparency = p->transparency;
+        switch(m_active_transparency)
+        {
+            case BM_MULTIPLY:                                    // Classic PC alpha
+                glBlendFunc(GL_ONE, GL_ONE);
+                break;
+
+            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_INVERT_DEST:                                 // Inversion by dest
+                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_SCREEN:                                      // Screen (smoke, etc.)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_ANIMATED_TEX:
+                glBlendFunc(GL_ONE, GL_ZERO);
+                break;
+
+            default:                                             // opaque animated textures case
+                break;
+        };
+    }
+
+    if(m_active_texture != m_world->textures[p->tex_index])
+    {
+        m_active_texture = m_world->textures[p->tex_index];
+        glBindTexture(GL_TEXTURE_2D, m_active_texture);
+    }
+    glDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
+}
+
+void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
+{
+    float d = vec3_plane_dist(root->plane, engine_camera.pos);
+
+    if(d >= 0)
+    {
+        if(root->front != NULL)
+        {
+            this->DrawBSPFrontToBack(root->front);
+        }
+
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+
+        if(root->back != NULL)
+        {
+            this->DrawBSPFrontToBack(root->back);
+        }
+    }
+    else
+    {
+        if(root->back != NULL)
+        {
+            this->DrawBSPFrontToBack(root->back);
+        }
+
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+
+        if(root->front != NULL)
+        {
+            this->DrawBSPFrontToBack(root->front);
+        }
+    }
+}
+
+void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
+{
+    float d = vec3_plane_dist(root->plane, engine_camera.pos);
+
+    if(d >= 0)
+    {
+        if(root->back != NULL)
+        {
+            this->DrawBSPBackToFront(root->back);
+        }
+
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+
+        if(root->front != NULL)
+        {
+            this->DrawBSPBackToFront(root->front);
+        }
+    }
+    else
+    {
+        if(root->front != NULL)
+        {
+            this->DrawBSPBackToFront(root->front);
+        }
+
+        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            this->DrawBSPPolygon(p);
+        }
+
+        if(root->back != NULL)
+        {
+            this->DrawBSPBackToFront(root->back);
+        }
+    }
+}
+
+void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
 {
     if(mesh->num_animated_elements > 0)
     {
@@ -181,10 +684,10 @@ void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const 
         glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
 
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        if(active_texture != renderer.world->textures[0])                       ///@FIXME: UGLY HACK!
+        if(m_active_texture != m_world->textures[0])                              ///@FIXME: UGLY HACK!
         {
-            active_texture = renderer.world->textures[0];
-            glBindTexture(GL_TEXTURE_2D, active_texture);
+            m_active_texture = m_world->textures[0];
+            glBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
         glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
     }
@@ -225,225 +728,17 @@ void Render_Mesh(struct base_mesh_s *mesh, const float *overrideVertices, const 
             continue;
         }
 
-        if(active_texture != renderer.world->textures[texture])
+        if(m_active_texture != m_world->textures[texture])
         {
-            active_texture = renderer.world->textures[texture];
-            glBindTexture(GL_TEXTURE_2D, active_texture);
+            m_active_texture = m_world->textures[texture];
+            glBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
     }
 }
 
-
-/**
- * draw transparency polygons
- */
-void Render_BSPPolygon(struct bsp_polygon_s *p)
-{
-    // Blending mode switcher.
-    // Note that modes above 2 aren't explicitly used in TR textures, only for
-    // internal particle processing. Theoretically it's still possible to use
-    // them if you will force type via TRTextur utility.
-    if(active_transparency != p->transparency)
-    {
-        active_transparency = p->transparency;
-        switch(active_transparency)
-        {
-            case BM_MULTIPLY:                                    // Classic PC alpha
-                glBlendFunc(GL_ONE, GL_ONE);
-                break;
-
-            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-                break;
-
-            case BM_INVERT_DEST:                                 // Inversion by dest
-                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-                break;
-
-            case BM_SCREEN:                                      // Screen (smoke, etc.)
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                break;
-
-            case BM_ANIMATED_TEX:
-                glBlendFunc(GL_ONE, GL_ZERO);
-                break;
-
-            default:                                             // opaque animated textures case
-                break;
-        };
-    }
-
-    if(active_texture != renderer.world->textures[p->tex_index])
-    {
-        active_texture = renderer.world->textures[p->tex_index];
-        glBindTexture(GL_TEXTURE_2D, active_texture);
-    }
-    glDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
-}
-
-
-void Render_BSPFrontToBack(struct bsp_node_s *root)
-{
-    float d = vec3_plane_dist(root->plane, engine_camera.pos);
-
-    if(d >= 0)
-    {
-        if(root->front != NULL)
-        {
-            Render_BSPFrontToBack(root->front);
-        }
-
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-
-        if(root->back != NULL)
-        {
-            Render_BSPFrontToBack(root->back);
-        }
-    }
-    else
-    {
-        if(root->back != NULL)
-        {
-            Render_BSPFrontToBack(root->back);
-        }
-
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-
-        if(root->front != NULL)
-        {
-            Render_BSPFrontToBack(root->front);
-        }
-    }
-}
-
-void Render_BSPBackToFront(struct bsp_node_s *root)
-{
-    float d = vec3_plane_dist(root->plane, engine_camera.pos);
-
-    if(d >= 0)
-    {
-        if(root->back != NULL)
-        {
-            Render_BSPBackToFront(root->back);
-        }
-
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-
-        if(root->front != NULL)
-        {
-            Render_BSPBackToFront(root->front);
-        }
-    }
-    else
-    {
-        if(root->front != NULL)
-        {
-            Render_BSPBackToFront(root->front);
-        }
-
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
-        {
-            Render_BSPPolygon(p);
-        }
-
-        if(root->back != NULL)
-        {
-            Render_BSPBackToFront(root->back);
-        }
-    }
-}
-
-void Render_UpdateAnimTextures()                                                // This function is used for updating global animated texture frame
-{
-    anim_seq_p seq = engine_world.anim_sequences;
-    for(uint16_t i=0;i<engine_world.anim_sequences_count;i++,seq++)
-    {
-        if(seq->frame_lock)
-        {
-            continue;
-        }
-
-        seq->frame_time += engine_frame_time;
-        if(seq->uvrotate)
-        {
-            int j = (seq->frame_time / seq->frame_rate);
-            seq->frame_time -= (float)j * seq->frame_rate;
-            seq->frames[seq->current_frame].current_uvrotate = seq->frame_time * seq->frames[seq->current_frame].uvrotate_max / seq->frame_rate;
-        }
-        else if(seq->frame_time >= seq->frame_rate)
-        {
-            int j = (seq->frame_time / seq->frame_rate);
-            seq->frame_time -= (float)j * seq->frame_rate;
-
-            switch(seq->anim_type)
-            {
-                case TR_ANIMTEXTURE_REVERSE:
-                    if(seq->reverse_direction)
-                    {
-                        if(seq->current_frame == 0)
-                        {
-                            seq->current_frame++;
-                            seq->reverse_direction = false;
-                        }
-                        else if(seq->current_frame > 0)
-                        {
-                            seq->current_frame--;
-                        }
-                    }
-                    else
-                    {
-                        if(seq->current_frame == seq->frames_count - 1)
-                        {
-                            seq->current_frame--;
-                            seq->reverse_direction = true;
-                        }
-                        else if(seq->current_frame < seq->frames_count - 1)
-                        {
-                            seq->current_frame++;
-                        }
-                        seq->current_frame %= seq->frames_count;                ///@PARANOID
-                    }
-                    break;
-
-                case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
-                case TR_ANIMTEXTURE_BACKWARD:
-                    seq->current_frame++;
-                    seq->current_frame %= seq->frames_count;
-                    break;
-            };
-        }
-    }
-}
-
-
-void Render_SkinMesh(struct base_mesh_s *mesh, float transform[16])
+void CRender::DrawSkinMesh(struct base_mesh_s *mesh, float transform[16])
 {
     uint32_t i;
     vertex_p v;
@@ -501,14 +796,42 @@ void Render_SkinMesh(struct base_mesh_s *mesh, float transform[16])
         dst_n += 3;
     }
 
-    Render_Mesh(mesh, p_vertex, p_normale);
-    Sys_ReturnTempMem(buf_size);
+    this->DrawMesh(mesh, p_vertex, p_normale);
+    Sys_ReturnTempMem(2 * buf_size);
+}
+
+void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
+{
+    float tr[16];
+    float *p;
+
+    if((r_flags & R_DRAW_SKYBOX) && (m_world != NULL) && (m_world->sky_box != NULL))
+    {
+        glDepthMask(GL_FALSE);
+        tr[15] = 1.0;
+        p = m_world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, m_camera->pos, p);
+        p = m_world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
+        float fullView[16];
+        Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
+
+        const unlit_tinted_shader_description *shader = shaderManager->getStaticMeshShader();
+        glUseProgramObjectARB(shader->program);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, fullView);
+        glUniform1iARB(shader->sampler, 0);
+        GLfloat tint[] = { 1, 1, 1, 1 };
+        glUniform4fvARB(shader->tint_mult, 1, tint);
+
+        this->DrawMesh(m_world->sky_box->mesh_tree->mesh_base, NULL, NULL);
+        glDepthMask(GL_TRUE);
+    }
 }
 
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16])
+void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -525,118 +848,56 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
-        Render_Mesh(btag->mesh_base, NULL, NULL);
+        this->DrawMesh(btag->mesh_base, NULL, NULL);
         if(btag->mesh_slot)
         {
-            Render_Mesh(btag->mesh_slot, NULL, NULL);
+            this->DrawMesh(btag->mesh_slot, NULL, NULL);
         }
         if(btag->mesh_skin)
         {
-            Render_SkinMesh(btag->mesh_skin, btag->transform);
+            this->DrawSkinMesh(btag->mesh_skin, btag->transform);
         }
     }
 }
 
-/**
- * Sets up the light calculations for the given entity based on its current
- * room. Returns the used shader, which will have been made current already.
- */
-const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const float modelViewMatrix[16])
+void CRender::DrawHair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
-    // Calculate lighting
-    const lit_shader_description *shader;
-
-    room_s *room = entity->self->room;
-    if(room != NULL)
-    {
-        GLfloat ambient_component[4];
-
-        ambient_component[0] = room->ambient_lighting[0];
-        ambient_component[1] = room->ambient_lighting[1];
-        ambient_component[2] = room->ambient_lighting[2];
-        ambient_component[3] = 1.0f;
-
-        if(room->flags & TR_ROOM_FLAG_WATER)
-        {
-            Render_CalculateWaterTint(ambient_component, 0);
-        }
-
-        GLenum current_light_number = 0;
-        light_s *current_light = NULL;
-
-        GLfloat positions[3*MAX_NUM_LIGHTS];
-        GLfloat colors[4*MAX_NUM_LIGHTS];
-        GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
-        GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
-        memset(positions, 0, sizeof(positions));
-        memset(colors, 0, sizeof(colors));
-        memset(innerRadiuses, 0, sizeof(innerRadiuses));
-        memset(outerRadiuses, 0, sizeof(outerRadiuses));
-
-        for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
-        {
-            current_light = &room->lights[i];
-
-            float x = entity->transform[12] - current_light->pos[0];
-            float y = entity->transform[13] - current_light->pos[1];
-            float z = entity->transform[14] - current_light->pos[2];
-
-            float distance = sqrt(x * x + y * y + z * z);
-
-            // Find color
-            colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
-            colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
-            colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
-            colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
-
-            if(room->flags & TR_ROOM_FLAG_WATER)
-            {
-                Render_CalculateWaterTint(colors + current_light_number * 4, 0);
-            }
-
-            // Find position
-            Mat4_vec3_mul(&positions[3*current_light_number], modelViewMatrix, current_light->pos);
-
-            // Find fall-off
-            if(current_light->light_type == LT_SUN)
-            {
-                innerRadiuses[current_light_number] = 1e20f;
-                outerRadiuses[current_light_number] = 1e21f;
-                current_light_number++;
-            }
-            else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
-            {
-                innerRadiuses[current_light_number] = std::fabs(current_light->inner);
-                outerRadiuses[current_light_number] = std::fabs(current_light->outer);
-                current_light_number++;
-            }
-        }
-
-        shader = renderer.shader_manager->getEntityShader(current_light_number);
-        glUseProgramObjectARB(shader->program);
-        glUniform4fvARB(shader->light_ambient, 1, ambient_component);
-        glUniform4fvARB(shader->light_color, current_light_number, colors);
-        glUniform3fvARB(shader->light_position, current_light_number, positions);
-        glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
-        glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
-    }
-    else
-    {
-        shader = renderer.shader_manager->getEntityShader(0);
-        glUseProgramObjectARB(shader->program);
-    }
-    return shader;
-}
-
-void Render_Entity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
-{
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
     {
         return;
     }
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+    const lit_shader_description *shader = this->SetupEntityLight(entity, modelViewMatrix);
+    float subModelView[16];
+    float subModelViewProjection[16];
+    float transform[16];
+    base_mesh_p mesh;
+    for(int h=0; h<entity->character->hair_count; h++)
+    {
+        int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
+        for(uint16_t i=0; i<num_elements; i++)
+        {
+            Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
+            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
+            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
+
+            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
+            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
+            this->DrawMesh(mesh, NULL, NULL);
+        }
+    }
+}
+
+void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
+{
+    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(r_flags & R_DRAW_NULLMESHES)))
+    {
+        return;
+    }
+
+    // Calculate lighting
+    const lit_shader_description *shader = this->SetupEntityLight(entity, modelViewMatrix);
 
     if(entity->bf->animations.model && entity->bf->animations.model->animations)
     {
@@ -655,43 +916,11 @@ void Render_Entity(struct entity_s *entity, const float modelViewMatrix[16], con
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
-        Render_SkeletalModel(shader, entity->bf, subModelView, subModelViewProjection);
+        this->DrawSkeletalModel(shader, entity->bf, subModelView, subModelViewProjection);
     }
 }
 
-void Render_Hair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
-{
-    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
-    {
-        return;
-    }
-
-    // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
-    float subModelView[16];
-    float subModelViewProjection[16];
-    float transform[16];
-    base_mesh_p mesh;
-    for(int h=0; h<entity->character->hair_count; h++)
-    {
-        int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
-        for(uint16_t i=0; i<num_elements; i++)
-        {
-            Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
-
-            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
-            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(mesh, NULL, NULL);
-        }
-    }
-}
-
-/**
- * drawing world models.
- */
-void Render_Room(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
+void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
     engine_container_p cont;
     entity_p ent;
@@ -715,7 +944,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
         if(need_stencil)
         {
             const int elem_size = (3 + 3 + 4 + 2) * sizeof(GLfloat);
-            const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(false, false);
+            const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
             size_t buf_size;
 
             glUseProgramObjectARB(shader->program);
@@ -738,7 +967,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
                     v[0] = v[1] = 0.0;                              v+=2;
                 }
 
-                active_texture = 0;
+                m_active_texture = 0;
                 BindWhiteTexture();
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
                 glVertexPointer(3, GL_FLOAT, elem_size, buf+0);
@@ -754,15 +983,15 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
     }
 #endif
 
-    if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
+    if(!(r_flags & R_SKIP_ROOM) && room->mesh)
     {
         float modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
 
-        const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(room->light_mode == 1, room->flags & 1);
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
         GLfloat tint[4];
-        Render_CalculateWaterTint(tint, 1);
+        CalculateWaterTint(tint, 1);
         if (shader != lastShader)
         {
             glUseProgramObjectARB(shader->program);
@@ -773,12 +1002,12 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
         glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
-        Render_Mesh(room->mesh, NULL, NULL);
+        this->DrawMesh(room->mesh, NULL, NULL);
     }
 
     if (room->static_mesh_count > 0)
     {
-        glUseProgramObjectARB(render->shader_manager->getStaticMeshShader()->program);
+        glUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
         for(uint32_t i=0; i<room->static_mesh_count; i++)
         {
             if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
@@ -786,14 +1015,14 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
                 continue;
             }
 
-            if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
+            if((room->static_mesh[i].hide == 1) && !(r_flags & R_DRAW_DUMMY_STATICS))
             {
                 continue;
             }
 
             float transform[16];
             Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
-            glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, transform);
+            glUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
             base_mesh_s *mesh = room->static_mesh[i].mesh;
             GLfloat tint[4];
 
@@ -802,10 +1031,10 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
             //If this static mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
-                Render_CalculateWaterTint(tint, 0);
+                CalculateWaterTint(tint, 0);
             }
-            glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint);
-            Render_Mesh(mesh, NULL, NULL);
+            glUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
+            this->DrawMesh(mesh, NULL, NULL);
             room->static_mesh[i].was_rendered = 1;
         }
     }
@@ -822,7 +1051,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                     {
-                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                        this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
                     }
                     ent->was_rendered = 1;
                 }
@@ -838,12 +1067,11 @@ void Render_Room(struct room_s *room, struct render_s *render, const float model
 #endif
 }
 
-
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const float modelViewMatrix[16], const float projectionMatrix[16])
+void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[16], const float projectionMatrix[16])
 {
     if (room->sprites_count > 0 && room->sprite_buffer)
     {
-        const sprite_shader_description *shader = render->shader_manager->getSpriteShader();
+        const sprite_shader_description *shader = shaderManager->getSpriteShader();
         glUseProgramObjectARB(shader->program);
         glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, modelViewMatrix);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
@@ -876,10 +1104,10 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const flo
                 continue;
             }
 
-            if(active_texture != renderer.world->textures[texture])
+            if(m_active_texture != m_world->textures[texture])
             {
-                active_texture = renderer.world->textures[texture];
-                glBindTexture(GL_TEXTURE_2D, active_texture);
+                m_active_texture = m_world->textures[texture];
+                glBindTexture(GL_TEXTURE_2D, m_active_texture);
             }
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
@@ -892,13 +1120,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const flo
     }
 }
 
-
-/**
- * Безопасное добавление комнаты в список рендерера.
- * Если комната уже есть в списке - возвращается ноль и комната повторно не добавляется.
- * Если список полон, то ничего не добавляется
- */
-int Render_AddRoom(struct room_s *room)
+int  CRender::AddRoom(struct room_s *room)
 {
     int ret = 0;
     engine_container_p cont;
@@ -912,18 +1134,20 @@ int Render_AddRoom(struct room_s *room)
     centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
     centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
     centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
-    dist = vec3_dist(renderer.cam->pos, centre);
+    dist = vec3_dist(m_camera->pos, centre);
 
-    if(renderer.r_list_active_count < renderer.r_list_size)
+    if(r_list_active_count < r_list_size)
     {
-        renderer.r_list[renderer.r_list_active_count].room = room;
-        renderer.r_list[renderer.r_list_active_count].active = 1;
-        renderer.r_list[renderer.r_list_active_count].dist = dist;
-        renderer.r_list_active_count++;
+        r_list[r_list_active_count].room = room;
+        r_list[r_list_active_count].active = 1;
+        r_list[r_list_active_count].dist = dist;
+        r_list_active_count++;
         ret++;
 
         if(room->flags & TR_ROOM_FLAG_SKYBOX)
-            renderer.style |= R_DRAW_SKYBOX;
+        {
+            r_flags |= R_DRAW_SKYBOX;
+        }
     }
 
     for(uint32_t i=0; i<room->static_mesh_count; i++)
@@ -936,10 +1160,10 @@ int Render_AddRoom(struct room_s *room)
     {
         switch(cont->object_type)
         {
-        case OBJECT_ENTITY:
-            ((entity_p)cont->object)->was_rendered = 0;
-            ((entity_p)cont->object)->was_rendered_lines = 0;
-            break;
+            case OBJECT_ENTITY:
+                ((entity_p)cont->object)->was_rendered = 0;
+                ((entity_p)cont->object)->was_rendered_lines = 0;
+                break;
         };
     }
 
@@ -953,258 +1177,34 @@ int Render_AddRoom(struct room_s *room)
     return ret;
 }
 
-
-void Render_CleanList()
-{
-    if(renderer.world->Character)
-    {
-        renderer.world->Character->was_rendered = 0;
-        renderer.world->Character->was_rendered_lines = 0;
-    }
-
-    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
-    {
-        renderer.r_list[i].active = 0;
-        renderer.r_list[i].dist = 0.0;
-        room_p r = renderer.r_list[i].room;
-        renderer.r_list[i].room = NULL;
-
-        r->is_in_r_list = 0;
-        r->active_frustums = 0;
-        r->frustum = NULL;
-    }
-
-    renderer.style &= ~R_DRAW_SKYBOX;
-    renderer.r_list_active_count = 0;
-}
-
-/**
- * Render all visible rooms
- */
-void Render_DrawList()
-{
-    if(!renderer.world)
-    {
-        return;
-    }
-
-    if(renderer.style & R_DRAW_WIRE)
-    {
-        glPolygonMode(GL_FRONT, GL_LINE);
-    }
-    else if(renderer.style & R_DRAW_POINTS)
-    {
-        glEnable(GL_POINT_SMOOTH);
-        glPointSize(4);
-        glPolygonMode(GL_FRONT, GL_POINT);
-    }
-    else
-    {
-        glPolygonMode(GL_FRONT, GL_FILL);
-    }
-
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
-    glEnable(GL_ALPHA_TEST);
-
-    active_texture = 0;
-    Render_SkyBox(renderer.cam->gl_view_proj_mat);
-
-    if(renderer.world->Character)
-    {
-        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
-        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
-    }
-
-    /*
-     * room rendering
-     */
-    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
-    {
-        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
-    }
-
-    glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
-    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
-    {
-        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
-    }
-    glEnableClientState(GL_NORMAL_ARRAY);
-
-    /*
-     * NOW render transparency polygons
-     */
-    /*First generate BSP from base room mesh - it has good for start splitter polygons*/
-    for(uint32_t i=0;i<renderer.r_list_active_count;i++)
-    {
-        room_p r = renderer.r_list[i].room;
-        if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
-        {
-            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform, renderer.cam->frustum);
-        }
-    }
-
-    for(uint32_t i=0;i<renderer.r_list_active_count;i++)
-    {
-        room_p r = renderer.r_list[i].room;
-        // Add transparency polygons from static meshes (if they exists)
-        for(uint16_t j=0;j<r->static_mesh_count;j++)
-        {
-            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
-            {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, renderer.cam->frustum);
-            }
-        }
-
-        // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
-        {
-            if(cont->object_type == OBJECT_ENTITY)
-            {
-                entity_p ent = (entity_p)cont->object;
-                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
-                {
-                    float tr[16];
-                    for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
-                    {
-                        if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
-                        {
-                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if((engine_world.Character != NULL) && (engine_world.Character->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
-    {
-        float tr[16];
-        entity_p ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
-        {
-            if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
-            {
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
-            }
-        }
-    }
-
-    if((render_dBSP.m_root->polygons_front != NULL) && (render_dBSP.m_vbo != 0))
-    {
-        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_ALPHA_TEST);
-        glEnable(GL_BLEND);
-        active_transparency = 0;
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, render_dBSP.m_vbo);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, render_dBSP.getActiveVertexCount() * sizeof(vertex_t), render_dBSP.getVertexArray(), GL_DYNAMIC_DRAW);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
-        Render_BSPBackToFront(render_dBSP.m_root);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
-    }
-    //Reset polygon draw mode
-    glPolygonMode(GL_FRONT, GL_FILL);
-    active_texture = 0;
-}
-
-void Render_DrawList_DebugLines()
-{
-    if (!renderer.world || !(renderer.style & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
-    {
-        return;
-    }
-
-    if(renderer.world->Character)
-    {
-        debugDrawer.drawEntityDebugLines(renderer.world->Character);
-    }
-
-    /*
-     * Render world debug information
-     */
-    if((renderer.style & R_DRAW_NORMALS) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
-    {
-        GLfloat tr[16];
-        float *p;
-        Mat4_E_macro(tr);
-        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, renderer.cam->pos, p);
-        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
-        Mat4_set_qrotation(tr, p);
-        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
-    }
-
-    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
-    {
-        debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
-    }
-
-    if(renderer.style & R_DRAW_COLL)
-    {
-        Physics_DebugDrawWorld();
-    }
-
-    if(!debugDrawer.IsEmpty())
-    {
-        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
-        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        active_texture = 0;
-        BindWhiteTexture();
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-        glPointSize( 6.0f );
-        glLineWidth( 3.0f );
-        debugDrawer.render();
-    }
-}
-
 /**
  * The reccursion algorithm: go through the rooms with portal - frustum occlusion test
  * @portal - we entered to the room through that portal
  * @frus - frustum that intersects the portal
  * @return number of added rooms
  */
-int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
+int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 {
     int ret = 0;
     room_p room = portal->dest_room;                                            // куда ведет портал
     room_p src_room = portal->current_room;                                     // откуда ведет портал
-    portal_p p;                                                                 // указатель на массив порталов входной ф-ии
-    frustum_p gen_frus;                                                         // новый генерируемый фрустум
 
     if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
     {
         return 0;
     }
 
-    p = room->portals;
-
-    for(uint16_t i=0; i<room->portal_count; i++,p++)                            // перебираем все порталы входной комнаты
+    for(uint16_t i=0; i<room->portal_count; i++)                                // перебираем все порталы входной комнаты
     {
+        portal_p p = room->portals + i;
         if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
-            gen_frus = engine_frustumManager.portalFrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
-            if(NULL != gen_frus)                                                // на пересечение и генерация фрустума по порталу
+            frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);// Главная ф-я портального рендерера. Тут и проверка
+            if(gen_frus)                                                        // на пересечение и генерация фрустума по порталу
             {
                 ret++;
-                Render_AddRoom(p->dest_room);
-                Render_ProcessRoom(p, gen_frus);
+                this->AddRoom(p->dest_room);
+                this->ProcessRoom(p, gen_frus);
             }
         }
     }
@@ -1212,166 +1212,112 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 }
 
 /**
- * Renderer list generation by current world and camera
+ * Sets up the light calculations for the given entity based on its current
+ * room. Returns the used shader, which will have been made current already.
  */
-void Render_GenWorldList()
+const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity, const float modelViewMatrix[16])
 {
-    if(renderer.world == NULL)
+    // Calculate lighting
+    const lit_shader_description *shader;
+
+    room_s *room = entity->self->room;
+    if(room != NULL)
     {
-        return;
-    }
+        GLfloat ambient_component[4];
 
-    Render_CleanList();                                                         // clear old render list
-    debugDrawer.reset();
-    render_dBSP.reset(engine_world.anim_sequences);
-    engine_frustumManager.reset();
-    renderer.cam->frustum->next = NULL;
+        ambient_component[0] = room->ambient_lighting[0];
+        ambient_component[1] = room->ambient_lighting[1];
+        ambient_component[2] = room->ambient_lighting[2];
+        ambient_component[3] = 1.0f;
 
-    room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
-
-    renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
-    if(curr_room != NULL)                                                       // camera located in some room
-    {
-        curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
-        curr_room->max_path = 0;
-        Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
-        portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
+        if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            frustum_p last_frus = engine_frustumManager.portalFrustumIntersect(p, renderer.cam->frustum, &renderer);
-            if(last_frus)
+            CalculateWaterTint(ambient_component, 0);
+        }
+
+        GLenum current_light_number = 0;
+        light_s *current_light = NULL;
+
+        GLfloat positions[3*MAX_NUM_LIGHTS];
+        GLfloat colors[4*MAX_NUM_LIGHTS];
+        GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
+        GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
+        memset(positions, 0, sizeof(positions));
+        memset(colors, 0, sizeof(colors));
+        memset(innerRadiuses, 0, sizeof(innerRadiuses));
+        memset(outerRadiuses, 0, sizeof(outerRadiuses));
+
+        for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
+        {
+            current_light = &room->lights[i];
+
+            float x = entity->transform[12] - current_light->pos[0];
+            float y = entity->transform[13] - current_light->pos[1];
+            float z = entity->transform[14] - current_light->pos[2];
+
+            float distance = sqrt(x * x + y * y + z * z);
+
+            // Find color
+            colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
+            colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
+            colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
+            colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
+
+            if(room->flags & TR_ROOM_FLAG_WATER)
             {
-                Render_AddRoom(p->dest_room);                                   // portal destination room
-                last_frus->parents_count = 1;                                   // created by camera
-                Render_ProcessRoom(p, last_frus);                               // next start reccursion algorithm
+                CalculateWaterTint(colors + current_light_number * 4, 0);
+            }
+
+            // Find position
+            Mat4_vec3_mul(&positions[3*current_light_number], modelViewMatrix, current_light->pos);
+
+            // Find fall-off
+            if(current_light->light_type == LT_SUN)
+            {
+                innerRadiuses[current_light_number] = 1e20f;
+                outerRadiuses[current_light_number] = 1e21f;
+                current_light_number++;
+            }
+            else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
+            {
+                innerRadiuses[current_light_number] = std::fabs(current_light->inner);
+                outerRadiuses[current_light_number] = std::fabs(current_light->outer);
+                current_light_number++;
             }
         }
-    }
-    else                                                                        // camera is out of all rooms
-    {
-        curr_room = renderer.world->rooms;                                      // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(uint32_t i=0; i<renderer.world->room_count; i++,curr_room++)
-        {
-            if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, renderer.cam->frustum))
-            {
-                Render_AddRoom(curr_room);
-            }
-        }
-    }
-}
 
-/**
- * Attaching renderer and "world"
- */
-void Render_SetWorld(struct world_s *world)
-{
-    uint32_t list_size = world->room_count + 128;                               // magick 128 was added for debug and testing
-
-    if(renderer.world)
-    {
-        if(renderer.r_list_size < list_size)                                    // if old list less than new one requiring
-        {
-            renderer.r_list = (render_list_p)realloc(renderer.r_list, list_size * sizeof(render_list_t));
-            for(uint32_t i=0; i<list_size; i++)
-            {
-                renderer.r_list[i].active = 0;
-                renderer.r_list[i].room = NULL;
-                renderer.r_list[i].dist = 0.0;
-            }
-        }
+        shader = shaderManager->getEntityShader(current_light_number);
+        glUseProgramObjectARB(shader->program);
+        glUniform4fvARB(shader->light_ambient, 1, ambient_component);
+        glUniform4fvARB(shader->light_color, current_light_number, colors);
+        glUniform3fvARB(shader->light_position, current_light_number, positions);
+        glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
+        glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
     }
     else
     {
-        renderer.r_list = Render_CreateRoomListArray(list_size);
+        shader = shaderManager->getEntityShader(0);
+        glUseProgramObjectARB(shader->program);
     }
-
-    renderer.world = world;
-    renderer.style &= ~R_DRAW_SKYBOX;
-    renderer.r_list_size = list_size;
-    renderer.r_list_active_count = 0;
-
-    renderer.cam = &engine_camera;
-    engine_camera.frustum->next = NULL;
-    engine_camera.current_room = NULL;
-
-    for(uint32_t i=0; i<world->room_count; i++)
-    {
-        world->rooms[i].is_in_r_list = 0;
-    }
+    return shader;
 }
-
-
-void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
-{
-    if(engine_world.version < TR_IV)  // If water room and level is TR1-3
-    {
-        if(engine_world.version < TR_III)
-        {
-             // Placeholder, color very similar to TR1 PSX ver.
-            if(fixed_colour > 0)
-            {
-                tint[0] = 0.585f;
-                tint[1] = 0.9f;
-                tint[2] = 0.9f;
-                tint[3] = 1.0f;
-            }
-            else
-            {
-                tint[0] *= 0.585f;
-                tint[1] *= 0.9f;
-                tint[2] *= 0.9f;
-            }
-        }
-        else
-        {
-            // TOMB3 - closely matches TOMB3
-            if(fixed_colour > 0)
-            {
-                tint[0] = 0.275f;
-                tint[1] = 0.45f;
-                tint[2] = 0.5f;
-                tint[3] = 1.0f;
-            }
-            else
-            {
-                tint[0] *= 0.275f;
-                tint[1] *= 0.45f;
-                tint[2] *= 0.5f;
-            }
-        }
-    }
-    else
-    {
-        if(fixed_colour > 0)
-        {
-            tint[0] = 1.0f;
-            tint[1] = 1.0f;
-            tint[2] = 1.0f;
-            tint[3] = 1.0f;
-        }
-    }
-}
-
-/*
- * =============================================================================
- */
 
 /**
  * DEBUG PRIMITIVES RENDERING
  */
-CRenderDebugDrawer::CRenderDebugDrawer()
-:m_debugMode(0)
+CRenderDebugDrawer::CRenderDebugDrawer():
+m_debugMode(0),
+m_lines(0),
+m_max_lines(DEBUG_DRAWER_DEFAULT_BUFFER_SIZE),
+m_gl_vbo(0),
+m_need_realloc(false),
+m_obb(NULL),
+m_buffer(NULL)
 {
-    m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
     m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
-
-    m_lines = 0;
-    m_gl_vbo = 0;
-    m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
 }
-
 
 CRenderDebugDrawer::~CRenderDebugDrawer()
 {
@@ -1386,8 +1332,7 @@ CRenderDebugDrawer::~CRenderDebugDrawer()
     m_obb = NULL;
 }
 
-
-void CRenderDebugDrawer::reset()
+void CRenderDebugDrawer::Reset()
 {
     if(m_need_realloc)
     {
@@ -1408,8 +1353,7 @@ void CRenderDebugDrawer::reset()
     m_lines = 0;
 }
 
-
-void CRenderDebugDrawer::render()
+void CRenderDebugDrawer::Render()
 {
     if((m_lines > 0) && (m_gl_vbo != 0))
     {
@@ -1425,8 +1369,7 @@ void CRenderDebugDrawer::render()
     m_lines = 0;
 }
 
-
-void CRenderDebugDrawer::drawAxis(float r, float transform[16])
+void CRenderDebugDrawer::DrawAxis(float r, float transform[16])
 {
     GLfloat *v0, *v;
 
@@ -1481,8 +1424,7 @@ void CRenderDebugDrawer::drawAxis(float r, float transform[16])
     v[2] = 1.0;
 }
 
-
-void CRenderDebugDrawer::drawFrustum(struct frustum_s *f)
+void CRenderDebugDrawer::DrawFrustum(struct frustum_s *f)
 {
     if(f != NULL)
     {
@@ -1521,8 +1463,7 @@ void CRenderDebugDrawer::drawFrustum(struct frustum_s *f)
     }
 }
 
-
-void CRenderDebugDrawer::drawPortal(struct portal_s *p)
+void CRenderDebugDrawer::DrawPortal(struct portal_s *p)
 {
     if(p != NULL)
     {
@@ -1561,15 +1502,14 @@ void CRenderDebugDrawer::drawPortal(struct portal_s *p)
     }
 }
 
-
-void CRenderDebugDrawer::drawBBox(float bb_min[3], float bb_max[3], float *transform)
+void CRenderDebugDrawer::DrawBBox(float bb_min[3], float bb_max[3], float *transform)
 {
     if(m_lines + 12 < m_max_lines)
     {
         OBB_Rebuild(m_obb, bb_min, bb_max);
         m_obb->transform = transform;
         OBB_Transform(m_obb);
-        drawOBB(m_obb);
+        this->DrawOBB(m_obb);
     }
     else
     {
@@ -1577,8 +1517,7 @@ void CRenderDebugDrawer::drawBBox(float bb_min[3], float bb_max[3], float *trans
     }
 }
 
-
-void CRenderDebugDrawer::drawOBB(struct obb_s *obb)
+void CRenderDebugDrawer::DrawOBB(struct obb_s *obb)
 {
     GLfloat *v, *v0;
     polygon_p p = obb->polygons;
@@ -1656,10 +1595,9 @@ void CRenderDebugDrawer::drawOBB(struct obb_s *obb)
     }
 }
 
-
-void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals)
+void CRenderDebugDrawer::DrawMeshDebugLines(struct base_mesh_s *mesh, float transform[16], const float *overrideVertices, const float *overrideNormals)
 {
-    if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
+    if((!m_need_realloc) && (m_drawFlags & R_DRAW_NORMALS))
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
         float n[3];
@@ -1670,7 +1608,7 @@ void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, float tran
             return;
         }
 
-        setColor(0.8, 0.0, 0.9);
+        this->SetColor(0.8, 0.0, 0.9);
         m_lines += mesh->vertex_count;
         if(overrideVertices)
         {
@@ -1706,10 +1644,9 @@ void CRenderDebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, float tran
     }
 }
 
-
-void CRenderDebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16])
+void CRenderDebugDrawer::DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16])
 {
-    if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
+    if((!m_need_realloc) && m_drawFlags & R_DRAW_NORMALS)
     {
         float tr[16];
 
@@ -1717,49 +1654,47 @@ void CRenderDebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
         {
             Mat4_Mat4_mul(tr, transform, btag->full_transform);
-            drawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
+            this->DrawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
         }
     }
 }
 
-
-void CRenderDebugDrawer::drawEntityDebugLines(struct entity_s *entity)
+void CRenderDebugDrawer::DrawEntityDebugLines(struct entity_s *entity)
 {
-    if(m_need_realloc || entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
-       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(m_need_realloc || entity->was_rendered_lines || !(m_drawFlags & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(m_drawFlags & R_DRAW_NULLMESHES)))
     {
         return;
     }
 
-    if(renderer.style & R_DRAW_BOXES)
+    if(m_drawFlags & R_DRAW_BOXES)
     {
-        debugDrawer.setColor(0.0, 0.0, 1.0);
-        debugDrawer.drawOBB(entity->obb);
+        this->SetColor(0.0, 0.0, 1.0);
+        this->DrawOBB(entity->obb);
     }
 
-    if(renderer.style & R_DRAW_AXIS)
+    if(m_drawFlags & R_DRAW_AXIS)
     {
         // If this happens, the lines after this will get drawn with random colors. I don't care.
-        debugDrawer.drawAxis(1000.0, entity->transform);
+        this->DrawAxis(1000.0, entity->transform);
     }
 
     if(entity->bf->animations.model && entity->bf->animations.model->animations)
     {
-        debugDrawer.drawSkeletalModelDebugLines(entity->bf, entity->transform);
+        this->DrawSkeletalModelDebugLines(entity->bf, entity->transform);
     }
 
     entity->was_rendered_lines = 1;
 }
 
-
-void CRenderDebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
+void CRenderDebugDrawer::DrawSectorDebugLines(struct room_sector_s *rs)
 {
     if(m_lines + 12 < m_max_lines)
     {
         float bb_min[3] = {(float)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (float)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (float)rs->floor};
         float bb_max[3] = {(float)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (float)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (float)rs->ceiling};
 
-        drawBBox(bb_min, bb_max, NULL);
+        this->DrawBBox(bb_min, bb_max, NULL);
     }
     else
     {
@@ -1767,10 +1702,8 @@ void CRenderDebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
     }
 }
 
-
-void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
+void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room)
 {
-    uint32_t flag;
     frustum_p frus;
     engine_container_p cont;
     entity_p ent;
@@ -1780,63 +1713,60 @@ void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
         return;
     }
 
-    flag = render->style & R_DRAW_ROOMBOXES;
-    if(flag)
+    if(m_drawFlags & R_DRAW_ROOMBOXES)
     {
-        debugDrawer.setColor(0.0, 0.1, 0.9);
-        debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
+        this->SetColor(0.0, 0.1, 0.9);
+        this->DrawBBox(room->bb_min, room->bb_max, NULL);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
         }*/
     }
 
-    flag = render->style & R_DRAW_PORTALS;
-    if(flag)
+    if(m_drawFlags & R_DRAW_PORTALS)
     {
-        debugDrawer.setColor(0.0, 0.0, 0.0);
+        this->SetColor(0.0, 0.0, 0.0);
         for(uint16_t i=0; i<room->portal_count; i++)
         {
-            debugDrawer.drawPortal(room->portals+i);
+            this->DrawPortal(room->portals+i);
         }
     }
 
-    flag = render->style & R_DRAW_FRUSTUMS;
-    if(flag)
+    if(m_drawFlags & R_DRAW_FRUSTUMS)
     {
-        debugDrawer.setColor(1.0, 0.0, 0.0);
+        this->SetColor(1.0, 0.0, 0.0);
         for(frus=room->frustum; frus; frus=frus->next)
         {
-            debugDrawer.drawFrustum(frus);
+            this->DrawFrustum(frus);
         }
     }
 
-    if(!(renderer.style & R_SKIP_ROOM) && (room->mesh != NULL))
+    if(!(m_drawFlags & R_SKIP_ROOM) && (room->mesh != NULL))
     {
-        debugDrawer.drawMeshDebugLines(room->mesh, room->transform, NULL, NULL);
+        this->DrawMeshDebugLines(room->mesh, room->transform, NULL, NULL);
     }
 
-    flag = render->style & R_DRAW_BOXES;
+    bool draw_boxes = m_drawFlags & R_DRAW_BOXES;
     for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
         if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
-          ((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
+          ((room->static_mesh[i].hide == 1) && !(m_drawFlags & R_DRAW_DUMMY_STATICS)))
         {
             continue;
         }
 
-        if(flag)
+        if(draw_boxes)
         {
-            debugDrawer.setColor(0.0, 1.0, 0.1);
-            debugDrawer.drawOBB(room->static_mesh[i].obb);
+            this->SetColor(0.0, 1.0, 0.1);
+            this->DrawOBB(room->static_mesh[i].obb);
         }
 
-        if(render->style & R_DRAW_AXIS)
+        if(m_drawFlags & R_DRAW_AXIS)
         {
-            debugDrawer.drawAxis(1000.0, room->static_mesh[i].transform);
+            this->DrawAxis(1000.0, room->static_mesh[i].transform);
         }
 
-        debugDrawer.drawMeshDebugLines(room->static_mesh[i].mesh, room->static_mesh[i].transform, NULL, NULL);
+        this->DrawMeshDebugLines(room->static_mesh[i].mesh, room->static_mesh[i].transform, NULL, NULL);
 
         room->static_mesh[i].was_rendered_lines = 1;
     }
@@ -1851,7 +1781,7 @@ void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
             {
                 if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                 {
-                    debugDrawer.drawEntityDebugLines(ent);
+                    this->DrawEntityDebugLines(ent);
                 }
                 ent->was_rendered_lines = 1;
             }
@@ -1860,8 +1790,7 @@ void CRenderDebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     }
 }
 
-
-void CRenderDebugDrawer::drawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3])
+void CRenderDebugDrawer::DrawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3])
 {
     GLfloat *v;
 
@@ -1884,8 +1813,7 @@ void CRenderDebugDrawer::drawLine(const float from[3], const float to[3], const 
     }
 }
 
-
-void CRenderDebugDrawer::drawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3])
+void CRenderDebugDrawer::DrawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3])
 {
     if(m_lines + 2 < m_max_lines)
     {
@@ -1912,5 +1840,59 @@ void CRenderDebugDrawer::drawContactPoint(const float pointOnB[3], const float n
     else
     {
         m_need_realloc = true;
+    }
+}
+
+/*
+ * Other functions
+ */
+void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
+{
+    if(engine_world.version < TR_IV)  // If water room and level is TR1-3
+    {
+        if(engine_world.version < TR_III)
+        {
+             // Placeholder, color very similar to TR1 PSX ver.
+            if(fixed_colour > 0)
+            {
+                tint[0] = 0.585f;
+                tint[1] = 0.9f;
+                tint[2] = 0.9f;
+                tint[3] = 1.0f;
+            }
+            else
+            {
+                tint[0] *= 0.585f;
+                tint[1] *= 0.9f;
+                tint[2] *= 0.9f;
+            }
+        }
+        else
+        {
+            // TOMB3 - closely matches TOMB3
+            if(fixed_colour > 0)
+            {
+                tint[0] = 0.275f;
+                tint[1] = 0.45f;
+                tint[2] = 0.5f;
+                tint[3] = 1.0f;
+            }
+            else
+            {
+                tint[0] *= 0.275f;
+                tint[1] *= 0.45f;
+                tint[2] *= 0.5f;
+            }
+        }
+    }
+    else
+    {
+        if(fixed_colour > 0)
+        {
+            tint[0] = 1.0f;
+            tint[1] = 1.0f;
+            tint[2] = 1.0f;
+            tint[3] = 1.0f;
+        }
     }
 }

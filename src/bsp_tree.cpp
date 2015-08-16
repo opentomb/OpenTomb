@@ -14,7 +14,7 @@
 #define NEED_REALLOC_VERTEX_BUFF      (2)
 #define NEED_REALLOC_TEMP_BUFF        (3)
 
-struct bsp_node_s *CDynamicBSP::createBSPNode()
+struct bsp_node_s *CDynamicBSP::CreateBSPNode()
 {
     bsp_node_p ret = (bsp_node_p)(m_tree_buffer + m_tree_allocated);
     m_tree_allocated += sizeof(bsp_node_t);
@@ -26,7 +26,7 @@ struct bsp_node_s *CDynamicBSP::createBSPNode()
 }
 
 
-struct polygon_s *CDynamicBSP::createPolygon(uint16_t vertex_count)
+struct polygon_s *CDynamicBSP::CreatePolygon(uint16_t vertex_count)
 {
     polygon_p ret = (polygon_p)(m_temp_buffer + m_temp_allocated);
     m_temp_allocated += sizeof(polygon_t);
@@ -38,7 +38,7 @@ struct polygon_s *CDynamicBSP::createPolygon(uint16_t vertex_count)
 }
 
 
-void CDynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
+void CDynamicBSP::AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 {
     if(m_realloc_state || (m_vertex_allocated + p->vertex_count >= m_vertex_buffer_size))
     {
@@ -77,7 +77,7 @@ void CDynamicBSP::addBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 }
 
 
-void CDynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
+void CDynamicBSP::AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
 {
     if(m_realloc_state)
     {
@@ -101,7 +101,7 @@ void CDynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
         // we though root->front == NULL and root->back == NULL
         vec4_copy(root->plane, p->plane);
         p->next = NULL;
-        this->addBSPPolygon(root, p);
+        this->AddBSPPolygon(root, p);
         return;
     }
 
@@ -131,41 +131,41 @@ void CDynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
     {
         if (root->front == NULL)
         {
-            root->front = this->createBSPNode();
+            root->front = this->CreateBSPNode();
         }
-        this->addPolygon(root->front, p);
+        this->AddPolygon(root->front, p);
     }
     else if ((positive == 0) && (negative > 0))             // SPLIT_BACK
     {
         if (root->back == NULL)
         {
-            root->back = this->createBSPNode();
+            root->back = this->CreateBSPNode();
         }
-        this->addPolygon(root->back, p);
+        this->AddPolygon(root->back, p);
     }
     else if ((positive == 0) && (negative == 0))            // SPLIT_IN_PLANE
     {
-        this->addBSPPolygon(root, p);
+        this->AddBSPPolygon(root, p);
     }
     else                                                    // SPLIT_IN_BOTH
     {
         polygon_p front, back;
-        front = this->createPolygon(p->vertex_count + 2);
+        front = this->CreatePolygon(p->vertex_count + 2);
         front->vertex_count = 0;
-        back = this->createPolygon(p->vertex_count + 2);
+        back = this->CreatePolygon(p->vertex_count + 2);
         back->vertex_count = 0;
         Polygon_Split(p, root->plane, front, back);
 
         if(root->front == NULL)
         {
-            root->front = this->createBSPNode();
+            root->front = this->CreateBSPNode();
         }
-        this->addPolygon(root->front, front);
+        this->AddPolygon(root->front, front);
         if(root->back == NULL)
         {
-            root->back = this->createBSPNode();
+            root->back = this->CreateBSPNode();
         }
-        this->addPolygon(root->back, back);
+        this->AddPolygon(root->back, back);
     }
 }
 
@@ -190,7 +190,7 @@ CDynamicBSP::CDynamicBSP(uint32_t size)
     m_vbo = 0;
     m_anim_seq = NULL;
     m_realloc_state = 0;
-    m_root = this->createBSPNode();
+    m_root = this->CreateBSPNode();
 }
 
 
@@ -229,12 +229,12 @@ CDynamicBSP::~CDynamicBSP()
 }
 
 
-void CDynamicBSP::addNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f)
+void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f)
 {
     for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
     {
         m_temp_allocated = 0;
-        polygon_p np = this->createPolygon(p->vertex_count);
+        polygon_p np = this->CreatePolygon(p->vertex_count);
         bool visible = (f == NULL);
         vertex_p src_v, dst_v;
 
@@ -293,13 +293,13 @@ void CDynamicBSP::addNewPolygonList(struct polygon_s *p, float *transform, struc
                     dst_v->tex_coord[1] = src_v->tex_coord[1];
                 }
             }
-            this->addPolygon(m_root, np);
+            this->AddPolygon(m_root, np);
         }
     }
 }
 
 
-void CDynamicBSP::reset(struct anim_seq_s *seq)
+void CDynamicBSP::Reset(struct anim_seq_s *seq)
 {
     if(m_vbo == 0)
     {
@@ -353,5 +353,5 @@ void CDynamicBSP::reset(struct anim_seq_s *seq)
     m_tree_allocated = 0;
     m_vertex_allocated = 0;
     m_realloc_state = 0;
-    m_root = this->createBSPNode();
+    m_root = this->CreateBSPNode();
 }
