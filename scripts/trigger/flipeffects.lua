@@ -134,7 +134,7 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
                     if(material == SECTOR_MATERIAL_SNOW) then sound_id = 293;
                 elseif(material == SECTOR_MATERIAL_ICE ) then sound_id = 289; end;
                 
-            elseif(getLevelVersion() == TR_IV) then
+            elseif(getEngineVersion() == Engine.IV) then
                     
                     if(material == SECTOR_MATERIAL_MARBLE) then sound_id = 293; end;
                 
