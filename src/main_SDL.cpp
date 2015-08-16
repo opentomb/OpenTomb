@@ -380,6 +380,8 @@ void Engine_Start()
     // Secondary (deferred) initialization.
     Engine_Init_Post();
 
+    Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+
     // Initial window resize.
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 

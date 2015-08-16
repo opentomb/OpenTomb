@@ -416,6 +416,8 @@ int Engine_LoadMap(const char *name)
         return 0;
     }
 
+    engine_camera.current_room = NULL;
+    renderer.SetWorld(NULL);
     Gui_DrawLoadScreen(0);
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.

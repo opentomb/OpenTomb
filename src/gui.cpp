@@ -34,7 +34,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 
 static GLuint crosshairBuffer = 0;
 static GLuint backgroundBuffer = 0;
-
+static GLuint load_screen_tex = 0;
 static GLfloat guiProjectionMatrix[16];
 
 static GLfloat screenSize[2];
@@ -50,6 +50,7 @@ void Gui_Init()
 
     glGenBuffersARB(1, &crosshairBuffer);
     glGenBuffersARB(1, &backgroundBuffer);
+    glGenTextures(1, &load_screen_tex);
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
 
@@ -215,6 +216,7 @@ void Gui_Destroy()
         main_inventory_manager = NULL;
     }
 
+    glDeleteTextures(1, &load_screen_tex);
     glDeleteBuffersARB(1, &crosshairBuffer);
     glDeleteBuffersARB(1, &backgroundBuffer);
 }
@@ -1241,7 +1243,9 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    GLfloat color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color, color, color, color, BM_SCREEN, load_screen_tex);
 
     //Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
@@ -1253,6 +1257,105 @@ void Gui_DrawLoadScreen(int value)
     Gui_SwitchGLMode(0);
 
     SDL_GL_SwapWindow(sdl_window);
+}
+
+bool Gui_LoadScreenAssignPic(const char* pic_name)
+{
+    char buf[MAX_ENGINE_PATH];
+    size_t len = strlen(pic_name);
+    size_t ext_len = 0;
+
+    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
+    strncpy(buf, pic_name, MAX_ENGINE_PATH);
+    if(!Sys_FileFound(buf, 0))
+    {
+        for(;ext_len+1<len;ext_len++)
+        {
+            if(buf[len-ext_len-1] == '.')
+            {
+                break;
+            }
+        }
+
+        if(ext_len + 1 == len)
+        {
+            return false;
+        }
+
+        buf[len - ext_len + 0] = 'b';
+        buf[len - ext_len + 1] = 'm';
+        buf[len - ext_len + 2] = 'p';
+        buf[len - ext_len + 3] = 0;
+        if(!Sys_FileFound(buf, 0))
+        {
+            buf[len - ext_len + 0] = 'j';
+            buf[len - ext_len + 1] = 'p';
+            buf[len - ext_len + 2] = 'g';
+            if(!Sys_FileFound(buf, 0))
+            {
+                buf[len - ext_len + 0] = 'p';
+                buf[len - ext_len + 1] = 'n';
+                buf[len - ext_len + 2] = 'g';
+                if(!Sys_FileFound(buf, 0))
+                {
+                    buf[len - ext_len + 0] = 't';
+                    buf[len - ext_len + 1] = 'g';
+                    buf[len - ext_len + 2] = 'a';
+                    if(!Sys_FileFound(buf, 0))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    SDL_Surface *surface = IMG_Load(buf);
+    if(surface != NULL)
+    {
+        GLenum       texture_format;
+        GLint        color_depth;
+
+        // Get the color depth of the SDL surface
+        color_depth = surface->format->BytesPerPixel;
+        if(color_depth == 4)        // Contains an alpha channel
+        {
+            if(surface->format->Rmask == 0x000000ff)
+                texture_format = GL_RGBA;
+            else
+                texture_format = GL_BGRA;
+
+            color_depth = GL_RGBA;
+        }
+        else if(color_depth == 3)   // No alpha channel
+        {
+            if(surface->format->Rmask == 0x000000ff)
+                texture_format = GL_RGB;
+            else
+                texture_format = GL_BGR;
+
+            color_depth = GL_RGB;
+        }
+        else
+        {
+            SDL_FreeSurface(surface);
+            return false;
+        }
+
+        // Bind the texture object
+        glBindTexture(GL_TEXTURE_2D, load_screen_tex);
+
+        // Set the texture's stretching properties
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        // Edit the texture object's image data using the information SDL_Surface gives us
+        glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
+                     texture_format, GL_UNSIGNED_BYTE, surface->pixels);
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -1318,64 +1421,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-/*bool Gui_FadeAssignPic(int fader, const char* pic_name)
-{
-    if((fader >= 0) && (fader < FADER_LASTINDEX))
-    {
-        char buf[MAX_ENGINE_PATH];
-        size_t len = strlen(pic_name);
-        size_t ext_len = 0;
-
-        ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-        strncpy(buf, pic_name, MAX_ENGINE_PATH);
-        if(!Sys_FileFound(buf, 0))
-        {
-            for(;ext_len+1<len;ext_len++)
-            {
-                if(buf[len-ext_len-1] == '.')
-                {
-                    break;
-                }
-            }
-
-            if(ext_len + 1 == len)
-            {
-                return false;
-            }
-
-            buf[len - ext_len + 0] = 'b';
-            buf[len - ext_len + 1] = 'm';
-            buf[len - ext_len + 2] = 'p';
-            buf[len - ext_len + 3] = 0;
-            if(!Sys_FileFound(buf, 0))
-            {
-                buf[len - ext_len + 0] = 'j';
-                buf[len - ext_len + 1] = 'p';
-                buf[len - ext_len + 2] = 'g';
-                if(!Sys_FileFound(buf, 0))
-                {
-                    buf[len - ext_len + 0] = 'p';
-                    buf[len - ext_len + 1] = 'n';
-                    buf[len - ext_len + 2] = 'g';
-                    if(!Sys_FileFound(buf, 0))
-                    {
-                        buf[len - ext_len + 0] = 't';
-                        buf[len - ext_len + 1] = 'g';
-                        buf[len - ext_len + 2] = 'a';
-                        if(!Sys_FileFound(buf, 0))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        //return Fader[fader].SetTexture(buf);
-    }
-
-    return false;
-}*/
 // ===================================================================================
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================
 // ===================================================================================
