@@ -365,6 +365,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     cam_angles[1] += 2.2f * engine_frame_time * look_logic[1];
     cam_angles[2] += 2.2f * engine_frame_time * look_logic[2];
 
+    // FIXME: Duplicate code - do we need cam control with no world??
     if(!renderer.world())
     {
         if(control_mapper.use_joy)
@@ -641,8 +642,17 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
         }
 
         cameraFrom.setOrigin(cam_pos);
-        cam_pos[0] += std::sin(cam_angles[0]) * control_states.cam_distance;
-        cam_pos[1] -= std::cos(cam_angles[0]) * control_states.cam_distance;
+
+        {
+            float cos_ay =  cos(cam_angles[1]);
+            float cam_dx =  sin(cam_angles[0]) * cos_ay;
+            float cam_dy = -cos(cam_angles[0]) * cos_ay;
+            float cam_dz = -sin(cam_angles[1]);
+            cam_pos.m_floats[0] += cam_dx * control_states.cam_distance;
+            cam_pos.m_floats[1] += cam_dy * control_states.cam_distance;
+            cam_pos.m_floats[2] += cam_dz * control_states.cam_distance;
+        }
+
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {
