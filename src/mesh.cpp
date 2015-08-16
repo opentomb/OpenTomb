@@ -315,7 +315,7 @@ void SkeletalModel::fillTransparency()
 
 MeshTreeTag *SkeletonClone(MeshTreeTag *src, int tags_count)
 {
-    MeshTreeTag* ret = static_cast<MeshTreeTag*>(malloc(tags_count * sizeof(MeshTreeTag)));
+    MeshTreeTag* ret = new MeshTreeTag[tags_count];
 
     for(int i = 0; i < tags_count; i++)
     {
@@ -520,7 +520,7 @@ void BaseMesh::genFaces()
 
     m_elements.resize(numNormalElements + m_alphaElements);
     uint32_t elementOffset = 0;
-    uint32_t *startPerTexture = static_cast<uint32_t *>(calloc(sizeof(uint32_t), m_texturePageCount));
+    std::vector<uint32_t> startPerTexture(m_texturePageCount, 0);
     for(uint32_t i = 0; i < m_texturePageCount; i++)
     {
         startPerTexture[i] = elementOffset;
@@ -638,7 +638,6 @@ void BaseMesh::genFaces()
             }
         }
     }
-    free(startPerTexture);
 
     // Now same for animated triangles
 }

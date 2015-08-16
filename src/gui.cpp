@@ -64,9 +64,7 @@ void Gui_InitTempLines()
 {
     for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
     {
-        gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
-        gui_temp_lines[i].text = static_cast<char*>(malloc(GUI_LINE_DEFAULTSIZE * sizeof(char)));
-        gui_temp_lines[i].text[0] = 0;
+        gui_temp_lines[i].text.clear();
         gui_temp_lines[i].show = false;
 
         gui_temp_lines[i].next = nullptr;
@@ -243,9 +241,7 @@ void Gui_Destroy()
     for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
     {
         gui_temp_lines[i].show = false;
-        gui_temp_lines[i].text_size = 0;
-        free(gui_temp_lines[i].text);
-        gui_temp_lines[i].text = nullptr;
+        gui_temp_lines[i].text.clear();
     }
 
     for(int i = 0; i < FADER_LASTINDEX; i++)
@@ -331,7 +327,9 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->style_id = FONTSTYLE_GENERIC;
 
         va_start(argptr, fmt);
-        vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
+        char tmpStr[GUI_LINE_DEFAULTSIZE];
+        vsnprintf(tmpStr, GUI_LINE_DEFAULTSIZE, fmt, argptr);
+        l->text = tmpStr;
         va_end(argptr);
 
         l->next = nullptr;
@@ -431,7 +429,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
         return;
     }
 
-    glf_get_string_bb(gl_font, l->text, -1, l->rect + 0, l->rect + 1, l->rect + 2, l->rect + 3);
+    glf_get_string_bb(gl_font, l->text.c_str(), -1, l->rect + 0, l->rect + 1, l->rect + 2, l->rect + 3);
 
     switch(l->Xanchor)
     {
@@ -487,11 +485,11 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glf_render_str(gl_font,
                        (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
                        (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT),
-                       l->text);
+                       l->text.c_str());
     }
 
     std::copy(style->real_color + 0, style->real_color + 4, gl_font->gl_font_color);
-    glf_render_str(gl_font, real_x, real_y, l->text);
+    glf_render_str(gl_font, real_x, real_y, l->text.c_str());
 }
 
 void Gui_RenderStrings()
@@ -2576,49 +2574,26 @@ gui_FontManager::gui_FontManager()
     this->font_library = nullptr;
     FT_Init_FreeType(&this->font_library);
 
-    this->style_count = 0;
-    this->styles = nullptr;
-    this->font_count = 0;
-    this->fonts = nullptr;
-
     this->mFadeValue = 0.0;
     this->mFadeDirection = true;
 }
 
 gui_FontManager::~gui_FontManager()
 {
-    this->font_count = 0;
-    this->style_count = 0;
-
-    for(gui_font_p next_font; this->fonts != nullptr;)
-    {
-        next_font = this->fonts->next;
-        glf_free_font(this->fonts->gl_font);
-        this->fonts->gl_font = nullptr;
-        free(this->fonts);
-        this->fonts = next_font;
-    }
-    this->fonts = nullptr;
-
-    for(gui_fontstyle_p next_style; this->styles != nullptr;)
-    {
-        next_style = this->styles->next;
-        free(this->styles);
-        this->styles = next_style;
-    }
-    this->styles = nullptr;
-
+    // must be freed before releasing the library
+    styles.clear();
+    fonts.clear();
     FT_Done_FreeType(this->font_library);
     this->font_library = nullptr;
 }
 
 gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
 {
-    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
+    for(const gui_font_s& current_font : this->fonts)
     {
-        if(current_font->index == index)
+        if(current_font.index == index)
         {
-            return current_font->gl_font;
+            return current_font.gl_font.get();
         }
     }
 
@@ -2627,11 +2602,11 @@ gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
 
 gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
 {
-    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
+    for(gui_font_t& current_font : this->fonts)
     {
-        if(current_font->index == index)
+        if(current_font.index == index)
         {
-            return current_font;
+            return &current_font;
         }
     }
 
@@ -2640,11 +2615,11 @@ gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
 
 gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
 {
-    for(gui_fontstyle_p current_style = this->styles; current_style != nullptr; current_style = current_style->next)
+    for(gui_fontstyle_t& current_style : this->styles)
     {
-        if(current_style->index == index)
+        if(current_style.index == index)
         {
-            return current_style;
+            return &current_style;
         }
     }
 
@@ -2662,21 +2637,15 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
 
     if(desired_font == nullptr)
     {
-        if(this->font_count >= GUI_MAX_FONTS)
+        if(this->fonts.size() >= GUI_MAX_FONTS)
         {
             return false;
         }
 
-        this->font_count++;
-        desired_font = static_cast<gui_font_p>(malloc(sizeof(gui_font_t)));
+        this->fonts.emplace_front();
+        desired_font = &this->fonts.front();
         desired_font->size = static_cast<uint16_t>(size);
         desired_font->index = index;
-        desired_font->next = this->fonts;
-        this->fonts = desired_font;
-    }
-    else
-    {
-        glf_free_font(desired_font->gl_font);
     }
 
     desired_font->gl_font = glf_create_font(this->font_library, path, size);
@@ -2695,16 +2664,14 @@ bool gui_FontManager::AddFontStyle(const font_Style index,
 
     if(desired_style == nullptr)
     {
-        if(this->style_count >= GUI_MAX_FONTSTYLES)
+        if(this->styles.size() >= GUI_MAX_FONTSTYLES)
         {
             return false;
         }
 
-        this->style_count++;
-        desired_style = static_cast<gui_fontstyle_p>(malloc(sizeof(gui_fontstyle_t)));
+        this->styles.emplace_front();
+        desired_style = &this->styles.front();
         desired_style->index = index;
-        desired_style->next = this->styles;
-        this->styles = desired_style;
     }
 
     desired_style->rect_border = rect_border;
@@ -2730,40 +2697,18 @@ bool gui_FontManager::AddFontStyle(const font_Style index,
 
 bool gui_FontManager::RemoveFont(const font_Type index)
 {
-    gui_font_p previous_font, current_font;
-
-    if(this->fonts == nullptr)
+    if(this->fonts.empty())
     {
         return false;
     }
 
-    if(this->fonts->index == index)
+    for(auto it = this->fonts.begin(); it != this->fonts.end(); ++it)
     {
-        previous_font = this->fonts;
-        this->fonts = this->fonts->next;
-        glf_free_font(previous_font->gl_font);
-        previous_font->gl_font = nullptr;                                          ///@PARANOID
-        free(previous_font);
-        this->font_count--;
-        return true;
-    }
-
-    previous_font = this->fonts;
-    current_font = this->fonts->next;
-    for(; current_font != nullptr;)
-    {
-        if(current_font->index == index)
+        if(it->index == index)
         {
-            previous_font->next = current_font->next;
-            glf_free_font(current_font->gl_font);
-            current_font->gl_font = nullptr;                                       ///@PARANOID
-            free(current_font);
-            this->font_count--;
+            this->fonts.erase(it);
             return true;
         }
-
-        previous_font = current_font;
-        current_font = current_font->next;
     }
 
     return false;
@@ -2771,36 +2716,18 @@ bool gui_FontManager::RemoveFont(const font_Type index)
 
 bool gui_FontManager::RemoveFontStyle(const font_Style index)
 {
-    gui_fontstyle_p previous_style, current_style;
-
-    if(this->styles == nullptr)
+    if(this->styles.empty())
     {
         return false;
     }
 
-    if(this->styles->index == index)
+    for(auto it = this->styles.begin(); it != this->styles.end(); ++it)
     {
-        previous_style = this->styles;
-        this->styles = this->styles->next;
-        free(previous_style);
-        this->style_count--;
-        return true;
-    }
-
-    previous_style = styles;
-    current_style = styles->next;
-    for(; current_style != nullptr;)
-    {
-        if(current_style->index == index)
+        if(it->index == index)
         {
-            previous_style->next = current_style->next;
-            free(current_style);
-            this->style_count--;
+            this->styles.erase(it);
             return true;
         }
-
-        previous_style = current_style;
-        current_style = current_style->next;
     }
 
     return false;
@@ -2829,25 +2756,25 @@ void gui_FontManager::Update()
         }
     }
 
-    for(gui_fontstyle_p current_style = this->styles; current_style != nullptr; current_style = current_style->next)
+    for(gui_fontstyle_s& current_style : this->styles)
     {
-        if(current_style->fading)
+        if(current_style.fading)
         {
-            current_style->real_color[0] = current_style->color[0] * this->mFadeValue;
-            current_style->real_color[1] = current_style->color[1] * this->mFadeValue;
-            current_style->real_color[2] = current_style->color[2] * this->mFadeValue;
+            current_style.real_color[0] = current_style.color[0] * this->mFadeValue;
+            current_style.real_color[1] = current_style.color[1] * this->mFadeValue;
+            current_style.real_color[2] = current_style.color[2] * this->mFadeValue;
         }
         else
         {
-            memcpy(current_style->real_color, current_style->color, sizeof(GLfloat) * 3);
+            std::copy_n( current_style.color, 3, current_style.real_color );
         }
     }
 }
 
 void gui_FontManager::Resize()
 {
-    for(gui_font_p current_font = this->fonts; current_font != nullptr; current_font = current_font->next)
+    for(gui_font_s& current_font : this->fonts)
     {
-        glf_resize(current_font->gl_font, static_cast<uint16_t>(static_cast<float>(current_font->size) * screen_info.scale_factor));
+        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * screen_info.scale_factor));
     }
 }

@@ -138,12 +138,12 @@ struct Sprite
 struct SpriteBuffer
 {
     // Vertex data for the sprites
-    std::unique_ptr<VertexArray> data;
+    std::unique_ptr<VertexArray> data{};
 
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
-    uint32_t              num_texture_pages;
+    uint32_t              num_texture_pages = 0;
     // The element count for each sub-range.
-    uint32_t             *element_count_per_texture;
+    std::vector<uint32_t> element_count_per_texture{};
 };
 
 struct Light

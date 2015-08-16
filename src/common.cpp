@@ -29,28 +29,24 @@ void Com_Destroy()
 static void ReleaseScreenshotData(void *info, const void *data,
                                   size_t size)
 {
-    free(info);
 }
 #endif
 
 void Com_TakeScreenShot()
 {
     GLint ViewPort[4];
-    char fname[128];
-    GLubyte *pixels;
-#ifndef __APPLE_CC__
-    SDL_Surface *surface;
-#endif
-    uint32_t str_size;
-
     glGetIntegerv(GL_VIEWPORT, ViewPort);
+
+    char fname[128];
     snprintf(fname, 128, "screen_%05d.png", screenshot_cnt);
-    str_size = ViewPort[2] * 4;
-    pixels = static_cast<GLubyte*>(malloc(str_size * ViewPort[3]));
-    glReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    const auto str_size = ViewPort[2] * 4;
+
+    std::vector<GLubyte> pixels(str_size * ViewPort[3]);
+    glReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 #ifdef __APPLE_CC__
     CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
-    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(pixels, pixels, str_size * ViewPort[3], ReleaseScreenshotData);
+    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(pixels.data(), pixels.data(), str_size * ViewPort[3], ReleaseScreenshotData);
     CGImageRef image = CGImageCreate(ViewPort[2], ViewPort[3], 32, 8, str_size * ViewPort[3], deviceRgb, kCGImageAlphaLast, dataProvider, nullptr, false, kCGRenderingIntentDefault);
     CGDataProviderRelease(dataProvider);
     CGColorSpaceRelease(deviceRgb);
@@ -71,18 +67,17 @@ void Com_TakeScreenShot()
     std::vector<GLubyte> buf(str_size);
     for(int h = 0; h < ViewPort[3] / 2; h++)
     {
-        memcpy(buf.data(), pixels + h * str_size, str_size);
-        memcpy(pixels + h * str_size, pixels + (ViewPort[3] - h - 1) * str_size, str_size);
-        memcpy(pixels + (ViewPort[3] - h - 1) * str_size, buf.data(), str_size);
+        memcpy(buf.data(), &pixels[h * str_size], str_size);
+        memcpy(&pixels[h * str_size], &pixels[(ViewPort[3] - h - 1) * str_size], str_size);
+        memcpy(&pixels[(ViewPort[3] - h - 1) * str_size], buf.data(), str_size);
     }
-    surface = SDL_CreateRGBSurfaceFrom(nullptr, ViewPort[2], ViewPort[3], 32, str_size, 0x000000FF, 0x00000FF00, 0x00FF0000, 0xFF000000);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(nullptr, ViewPort[2], ViewPort[3], 32, str_size, 0x000000FF, 0x00000FF00, 0x00FF0000, 0xFF000000);
     surface->format->format = SDL_PIXELFORMAT_RGBA8888;
-    surface->pixels = pixels;
+    surface->pixels = pixels.data();
     IMG_SavePNG(surface, fname);
 
     surface->pixels = nullptr;
     SDL_FreeSurface(surface);
-    free(pixels);
 #endif
     screenshot_cnt++;
 }

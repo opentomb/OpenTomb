@@ -32,9 +32,7 @@ void Sys_Printf(char *fmt, ...)
 
 void Sys_Init()
 {
-    system_fps.text_size = 16;
-    system_fps.text = (char*)malloc(system_fps.text_size * sizeof(char));
-    system_fps.text[0] = 0;
+    system_fps.text.clear();
 
     system_fps.X = (10.0);
     system_fps.Y = (10.0);
@@ -65,9 +63,7 @@ void Sys_InitGlobals()
 void Sys_Destroy()
 {
     system_fps.show = false;
-    system_fps.text_size = 0;
-    free(system_fps.text);
-    system_fps.text = nullptr;
+    system_fps.text.clear();
 }
 
 void Sys_Error(const char *error, ...)

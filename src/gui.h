@@ -5,6 +5,8 @@
 #include "gl_font.h"
 #include "render.h"
 
+#include <list>
+
 #define GUI_MAX_TEMP_LINES   (256)
 
 // Screen metering resolution specifies user-friendly relative dimensions of screen,
@@ -76,8 +78,7 @@ typedef struct gui_font_s
 {
     font_Type                   index;
     uint16_t                    size;
-    struct gl_tex_font_s       *gl_font;
-    struct gui_font_s          *next;
+    std::shared_ptr<gl_tex_font_s> gl_font;
 }gui_font_t, *gui_font_p;
 
 // Font style is different to font itself - whereas engine can have
@@ -97,8 +98,6 @@ typedef struct gui_fontstyle_s
     bool                        rect;
     bool                        fading;         // TR4-like looped fading font effect.
     bool                        hidden;         // Used to bypass certain GUI lines easily.
-
-    struct gui_fontstyle_s     *next;
 } gui_fontstyle_t, *gui_fontstyle_p;
 
 #define GUI_FONT_FADE_SPEED 1.0f                 // Global fading style speed.
@@ -135,11 +134,11 @@ public:
 
     uint32_t         GetFontCount()
     {
-        return font_count;
+        return fonts.size();
     }
     uint32_t         GetFontStyleCount()
     {
-        return style_count;
+        return styles.size();
     }
 
     void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
@@ -151,11 +150,9 @@ private:
     GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
     bool             mFadeDirection;
 
-    uint32_t         style_count;
-    gui_fontstyle_p  styles;
+    std::list<gui_fontstyle_s> styles;
 
-    uint32_t         font_count;
-    gui_font_p       fonts;
+    std::list<gui_font_s> fonts;
 
     FT_Library       font_library;  // GLF font library unit.
 };
@@ -175,8 +172,7 @@ private:
 
 typedef struct gui_text_line_s
 {
-    char                       *text;
-    uint16_t                    text_size;
+    std::string                 text;
 
     uint16_t                    font_id;
     uint16_t                    style_id;

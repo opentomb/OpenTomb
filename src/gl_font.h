@@ -8,6 +8,8 @@
  */
 
 #include <cstdint>
+#include <vector>
+#include <memory>
 
 #include <ft2build.h>
 #include <freetype.h>
@@ -34,23 +36,28 @@ typedef struct char_info_s
 typedef struct gl_tex_font_s
 {
     FT_Library               ft_library;
-    FT_Face                  ft_face;
+    std::shared_ptr<std::remove_pointer<FT_Face>::type> ft_face{nullptr, &FT_Done_Face};
     uint16_t                 font_size;
 
-    struct char_info_s      *glyphs;
-    uint16_t                 glyphs_count;
+    std::vector<char_info_s> glyphs;
 
-    uint16_t                 gl_tex_indexes_count;
     uint16_t                 gl_real_tex_indexes_count;
-    GLuint                  *gl_tex_indexes;
+    std::vector<GLuint>      gl_tex_indexes;
     GLint                    gl_max_tex_width;
     GLint                    gl_tex_width;
     GLfloat                  gl_font_color[4];
+
+    ~gl_tex_font_s()
+    {
+        if(!gl_tex_indexes.empty())
+        {
+            glDeleteTextures(gl_tex_indexes.size(), gl_tex_indexes.data());
+        }
+    }
 }gl_tex_font_t, *gl_tex_font_p;
 
-gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
+std::shared_ptr<gl_tex_font_s> glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);
-void glf_free_font(gl_tex_font_p glf);
 void glf_resize(gl_tex_font_p glf, uint16_t font_size);
 void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size);
 
@@ -62,4 +69,4 @@ void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *
 void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
 
 uint32_t utf8_strlen(const char *str);
-uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
+const uint8_t* utf8_to_utf32(const uint8_t *utf8, uint32_t *utf32);

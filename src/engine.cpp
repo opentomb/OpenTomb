@@ -68,9 +68,11 @@ btScalar           engine_frame_time = 0.0;
 Camera             engine_camera;
 World              engine_world;
 
-static btScalar   *frame_vertex_buffer = nullptr;
-static size_t      frame_vertex_buffer_size = 0;
-static size_t      frame_vertex_buffer_size_left = 0;
+namespace
+{
+std::vector<btScalar> frame_vertex_buffer;
+size_t                frame_vertex_buffer_size_left = 0;
+}
 
 script::MainEngine engine_lua;
 
@@ -499,7 +501,9 @@ namespace
         else
         {
             screen_info.fps = (20.0f / fpsTime);
-            snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
+            char tmp[16];
+            snprintf(tmp, 16, "%.1f", screen_info.fps);
+            system_fps.text = tmp;
             fpsCycles = 0;
             fpsTime = 0.0;
         }
@@ -670,9 +674,8 @@ void Engine_Init_Pre()
 
     Gameflow_Init();
 
-    frame_vertex_buffer = static_cast<btScalar*>(malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE));
-    frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
-    frame_vertex_buffer_size_left = frame_vertex_buffer_size;
+    frame_vertex_buffer.resize(INIT_FRAME_VERTEX_BUFFER_SIZE);
+    frame_vertex_buffer_size_left = frame_vertex_buffer.size();
 
     ConsoleInfo::instance().setCompletionItems(engine_lua.getGlobals());
 
@@ -812,12 +815,7 @@ void Engine_Shutdown(int val)
     }
 
     /* free temporary memory */
-    if(frame_vertex_buffer)
-    {
-        free(frame_vertex_buffer);
-    }
-    frame_vertex_buffer = nullptr;
-    frame_vertex_buffer_size = 0;
+    frame_vertex_buffer.clear();
     frame_vertex_buffer_size_left = 0;
 
 #if !defined(__MACOSX__)
@@ -1180,19 +1178,16 @@ int Engine_ExecCmd(const char *ch)
             f = fopen("ascII.txt", "r");
             if(f)
             {
-                long int size;
-                char *buf;
                 fseek(f, 0, SEEK_END);
-                size = ftell(f);
-                buf = static_cast<char*>(malloc((size + 1)*sizeof(char)));
+                auto size = ftell(f);
+                std::vector<char> buf(size + 1);
 
                 fseek(f, 0, SEEK_SET);
-                fread(buf, size, sizeof(char), f);
+                fread(buf.data(), size, sizeof(char), f);
                 buf[size] = 0;
                 fclose(f);
                 ConsoleInfo::instance().clean();
-                ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_INFO);
-                free(buf);
+                ConsoleInfo::instance().addText(buf.data(), FONTSTYLE_CONSOLE_INFO);
             }
             else
             {

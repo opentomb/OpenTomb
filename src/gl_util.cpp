@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #include "system.h"
 
@@ -84,15 +85,14 @@ void printShaderInfoLog(GLuint object)
 
     if(logLength > 0)
     {
-        GLchar* infoLog = static_cast<GLchar*>(malloc(logLength));
+        std::vector<GLchar> infoLog(logLength);
         
         if(isProgram)
-            glGetProgramInfoLog(object, logLength, &charsWritten, infoLog);
+            glGetProgramInfoLog(object, logLength, &charsWritten, infoLog.data());
         else
-            glGetShaderInfoLog(object, logLength, &charsWritten, infoLog);
+            glGetShaderInfoLog(object, logLength, &charsWritten, infoLog.data());
         Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
-        Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog));
-        free(infoLog);
+        Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog.data()));
     }
 }
 
@@ -142,9 +142,9 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
         return 0;
     }
 
-    char *buf = static_cast<char*>(malloc(size));
+    std::vector<char> buf(size);
     fseek(file, 0, SEEK_SET);
-    fread(buf, 1, size, file);
+    fread(buf.data(), 1, size, file);
     fclose(file);
 
     //printf ( "source = %s\n", buf );
@@ -152,18 +152,18 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     static const GLint versionLen = strlen(version);
     if(additionalDefines)
     {
-        const char *bufs[3] = { version, additionalDefines, buf };
+        const char *bufs[3] = { version, additionalDefines, buf.data() };
         const GLint lengths[3] = { versionLen, static_cast<GLint>(strlen(additionalDefines)), size };
         glShaderSource(ShaderObj, 3, bufs, lengths);
     }
     else
     {
-        const char *bufs[2] = { version, buf };
+        const char *bufs[2] = { version, buf.data() };
         const GLint lengths[2] = { versionLen, size };
         glShaderSource(ShaderObj, 2, bufs, lengths);
     }
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
-    free(buf);                                   // compile the particle vertex shader, and print out
+    buf.clear();                                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);

@@ -2900,14 +2900,14 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
         return;
     }
 
-    room->sprite_buffer = static_cast<SpriteBuffer *>(calloc(sizeof(SpriteBuffer), 1));
+    room->sprite_buffer = new SpriteBuffer();
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
-    room->sprite_buffer->element_count_per_texture = static_cast<uint32_t *>(calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages));
+    room->sprite_buffer->element_count_per_texture.resize(room->sprite_buffer->num_texture_pages, 0);
 
     // First collect indices on a per-texture basis
-    uint16_t **elements_for_texture = static_cast<uint16_t **>(calloc(sizeof(uint16_t*), highestTexturePageFound + 1));
+    std::vector<std::vector<uint16_t>> elements_for_texture(highestTexturePageFound + 1);
 
-    GLfloat *spriteData = static_cast<GLfloat *>(calloc(sizeof(GLfloat[7]), actualSpritesFound * 4));
+    std::vector<GLfloat> spriteData(actualSpritesFound * 4 * 7, 0);
 
     int writeIndex = 0;
     for(const RoomSprite& room_sprite : room->sprites)
@@ -2952,7 +2952,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
             uint32_t start = room->sprite_buffer->element_count_per_texture[texture];
             uint32_t newElementCount = start + 6;
             room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
-            elements_for_texture[texture] = static_cast<uint16_t *>(realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t)));
+            elements_for_texture[texture].resize(newElementCount);
 
             elements_for_texture[texture][start + 0] = vertexStart + 0;
             elements_for_texture[texture][start + 1] = vertexStart + 1;
@@ -2964,33 +2964,30 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     }
 
     // Now flatten all these indices to a single array
-    uint16_t *elements = nullptr;
-    uint32_t elementsSoFar = 0;
+    std::vector<uint16_t> elements;
     for(uint32_t i = 0; i <= highestTexturePageFound; i++)
     {
-        if(elements_for_texture[i] == nullptr)
+        if(elements_for_texture[i].empty())
         {
             continue;
         }
-        elements = static_cast<uint16_t*>(realloc(elements, (elementsSoFar + room->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0])));
-        memcpy(elements + elementsSoFar, elements_for_texture[i], room->sprite_buffer->element_count_per_texture[i] * sizeof(elements_for_texture[0][0]));
-
-        elementsSoFar += room->sprite_buffer->element_count_per_texture[i];
-        free(elements_for_texture[i]);
+        assert( elements_for_texture[i].size() >= room->sprite_buffer->element_count_per_texture[i] );
+        std::copy_n(elements_for_texture[i].begin(), room->sprite_buffer->element_count_per_texture[i], std::back_inserter(elements));
+        elements_for_texture[i].clear();
     }
-    free(elements_for_texture);
+    elements_for_texture.clear();
 
     // Now load into OpenGL
     GLuint arrayBuffer, elementBuffer;
     glGenBuffers(1, &arrayBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
-    free(spriteData);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[7]) * 4 * actualSpritesFound, spriteData.data(), GL_STATIC_DRAW);
+    spriteData.clear();
 
     glGenBuffers(1, &elementBuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
-    free(elements);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements[0]) * elements.size(), elements.data(), GL_STATIC_DRAW);
+    elements.clear();
 
     VertexArrayAttribute attribs[3] = {
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position,      3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), 0),
