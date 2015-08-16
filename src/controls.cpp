@@ -703,11 +703,11 @@ void Controls_SecondaryMouseDown()
 
     if(Physics_RayTest(&cb, from, to, &cam_cont))
     {
-        extern GLfloat cast_ray[6];
+        /*extern GLfloat cast_ray[6];
         vec3_copy(cast_ray, cb.point);
         cast_ray[3] = cast_ray[0] + 100.0 * cb.normale[0];
         cast_ray[4] = cast_ray[1] + 100.0 * cb.normale[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cb.normale[2];
+        cast_ray[5] = cast_ray[2] + 100.0 * cb.normale[2];*/
 
         if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {

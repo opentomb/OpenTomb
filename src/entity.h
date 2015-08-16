@@ -65,7 +65,7 @@ typedef struct entity_s
     uint8_t                             dir_flag;           // (move direction)
     uint8_t                             was_rendered;       // render once per frame trigger
     uint8_t                             was_rendered_lines; // same for debug lines
-    int8_t                              no_fix_all;
+    uint8_t                             no_fix_all;
     
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks

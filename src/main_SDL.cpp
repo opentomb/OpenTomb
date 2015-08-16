@@ -63,8 +63,6 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 float time_scale = 1.0;
 
-GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
 engine_container_p      last_cont = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
@@ -500,15 +498,6 @@ void Engine_Frame(float time)
 void ShowDebugInfo()
 {
     entity_p ent;
-    /*GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
-
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glLineWidth(2.0);
-    glVertexPointer(3, GL_FLOAT, 0, cast_ray);
-    glColorPointer(3, GL_FLOAT, 0, color_array);
-    glDrawArrays(GL_LINES, 0, 2);*/
-
     ent = engine_world.Character;
     if(ent && ent->character)
     {

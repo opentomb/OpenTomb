@@ -3033,6 +3033,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
     };
 
+    if(ent->move_type == MOVE_CLIMBING)
+    {
+        ent->no_fix_all = 0x01;
+    }
+
     return 0;
 }
 

@@ -32,41 +32,20 @@ public:
    ~CFrustumManager();
     
     void Reset();
-    frustum_p CreateFrustum();
     frustum_p PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam);         // Основная функция для работы с порталами.
 
 private:
     float *Alloc(uint32_t size);
+    frustum_p CreateFrustum();
     void SplitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
     void GenClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
-    int SplitByPlane(frustum_p p, float n[4], float *buf);                      // отсечение части портала плоскостью
+    int  SplitByPlane(frustum_p p, float n[4], float *buf);                     // отсечение части портала плоскостью
     
     bool m_need_realloc;
     uint32_t m_buffer_size;
     uint32_t m_allocated;
     uint8_t *m_buffer;
 };
-
-/**
- * Draws wireframe of this frustum.
- *
- * Expected state:
- *  - Vertex array is enabled, color, tex coord, normal disabled
- *  - No vertex buffer object is bound
- *  - Texturing is disabled
- *  - Alpha test is disabled
- *  - Blending is enabled
- *  - Lighting is disabled
- *  - Line width is set to desired width (typically 3.0)
- *  - Current color set to desired color (typically red)
- * Ignored state:
- *  - Currently bound texture.
- *  - Currently bound element buffer.
- *  - Vertex pointer (changes it)
- * Changed state:
- *  - Current position will be arbitrary.
- *  - Vertex pointer will be arbitray.
- */
 
 int Frustum_GetFrustumsCount(struct frustum_s *f);
 int Frustum_HaveParent(frustum_p parent, frustum_p frustum);

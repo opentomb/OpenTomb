@@ -160,7 +160,6 @@ class CRender
         void DrawSkyBox(const float matrix[16]);
 
         void DrawSkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);
-        void DrawHair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
         void DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
 
         void DrawRoom(struct room_s *room, const float matrix[16], const float modelViewProjectionMatrix[16]);

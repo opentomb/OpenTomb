@@ -598,10 +598,10 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     climb_info_t ret;
     float from[3], to[3], tmp[3];
     float d, *pos = ent->transform + 12;
-    float n0[4], n1[4], n2[4];                                               // planes equations
+    float n0[4], n1[4], n2[4];                                                  // planes equations
     char up_founded;
     collision_result_t cb;
-    extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
+    // GLfloat cast_ray[6];
 
     /*
      * init callbacks functions
@@ -642,12 +642,12 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     up_founded = 0;
     test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
     d = pos[2] + ent->bf->bb_max[2] - test_height;
-    vec3_copy(cast_ray, to);
-    vec3_copy(cast_ray+3, cast_ray);
-    cast_ray[5] -= d;
+    //vec3_copy(cast_ray, to);
+    //vec3_copy(cast_ray+3, cast_ray);
+    //cast_ray[5] -= d;
     do
     {
-        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, nfc->self))
+        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
         {
             if(cb.normale[2] >= 0.1)
             {
@@ -671,7 +671,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
             tmp[2] = d;
             //vec3_copy(cast_ray, to.m_floats);
             //vec3_copy(cast_ray+3, tmp.m_floats);
-            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, nfc->self))
+            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
             {
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);
@@ -730,7 +730,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                         n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
     ret.edge_point[2] /= d;
     vec3_copy(ret.point, ret.edge_point);
-    vec3_copy(cast_ray+3, ret.point);
+    //vec3_copy(cast_ray+3, ret.point);
     /*
      * unclimbable edge slant %)
      */

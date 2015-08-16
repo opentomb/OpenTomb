@@ -477,13 +477,14 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         float tr[16];
         Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
         Entity_UpdateRoomPos(ent);
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        Mat4_E(ent->bf->bone_tags[0].full_transform);
+        for(uint16_t i=1;i<ent->bf->bone_tag_count;i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
         }
 
-        // that cycle is necessary only for skinning models;
+        // fill bone frame transformation matrices;
         for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
             if(ent->bf->bone_tags[i].parent != NULL)
@@ -496,18 +497,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
             }
         }
 
-        if(Physics_IsGhostsInited(ent->physics))
-        {
-            float v[3];
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                Physics_GetBodyWorldTransform(ent->physics, tr, i);
-                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
-                vec3_copy(tr+12, v);
-                Physics_SetGhostWorldTransform(ent->physics, tr, i);
-            }
-        }
-
+        // recalculate visibility box
         if(ent->bf->bone_tag_count == 1)
         {
             vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
@@ -577,6 +567,19 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
             }
         }
     }
+
+    /*if(Physics_IsGhostsInited(ent->physics))
+    {
+        float v[3], tr[16];
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        {
+            Physics_GetBodyWorldTransform(ent->physics, tr, i);
+            Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
+            vec3_copy(tr+12, v);
+            Physics_SetGhostWorldTransform(ent->physics, tr, i);
+        }
+    }*/
+
     Entity_RebuildBV(ent);
 }
 
@@ -585,7 +588,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
-        if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+        /*if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             float tr[16], pos[3], *v;
             for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
@@ -597,7 +600,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
                 Physics_SetGhostWorldTransform(ent->physics, tr, i);
             }
         }
-        else
+        else*/
         {
             float tr[16], v[3];
             for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)

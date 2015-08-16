@@ -322,7 +322,6 @@ void CRender::DrawList()
     if(m_world->Character)
     {
         this->DrawEntity(m_world->Character, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
-        this->DrawHair(m_world->Character, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
     }
 
     /*
@@ -860,35 +859,6 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
     }
 }
 
-void CRender::DrawHair(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
-{
-    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
-    {
-        return;
-    }
-
-    // Calculate lighting
-    const lit_shader_description *shader = this->SetupEntityLight(entity, modelViewMatrix);
-    float subModelView[16];
-    float subModelViewProjection[16];
-    float transform[16];
-    base_mesh_p mesh;
-    for(int h=0; h<entity->character->hair_count; h++)
-    {
-        int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
-        for(uint16_t i=0; i<num_elements; i++)
-        {
-            Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
-
-            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
-            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            this->DrawMesh(mesh, NULL, NULL);
-        }
-    }
-}
-
 void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(r_flags & R_DRAW_NULLMESHES)))
@@ -916,7 +886,28 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
+
         this->DrawSkeletalModel(shader, entity->bf, subModelView, subModelViewProjection);
+
+        if(entity->character && entity->character->hair_count)
+        {
+            base_mesh_p mesh;
+            float transform[16];
+            for(int h=0; h<entity->character->hair_count; h++)
+            {
+                int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
+                for(uint16_t i=0; i<num_elements; i++)
+                {
+                    Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
+                    Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
+                    Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
+
+                    glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
+                    glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
+                    this->DrawMesh(mesh, NULL, NULL);
+                }
+            }
+        }
     }
 }
 
