@@ -17,7 +17,9 @@
   * In base_edges we safe the initial shape polygons
   */
 
+class Camera;
 struct Entity;
+struct Room;
 
 struct OBB
 {
@@ -32,6 +34,7 @@ struct OBB
 
     void doTransform();
     void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
+    bool isVisibleInRoom(const Room& room, const Camera& cam);
 };
 
 int OBB_OBB_Test(const Entity &e1, const Entity &e2, btScalar overlap = DEFAULT_OBB_TEST_OVERLAP);
