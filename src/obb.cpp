@@ -313,7 +313,7 @@ bool OBB::isVisibleInRoom(const Room& room, const Camera& cam)
         for(int i = 0; i < 6; i++)
         {
             auto t = polygons[i].plane.distance(engine_camera.getPosition());
-            if((t > 0.0) && engine_camera.frustum->isPolyVisible(&polygons[i], cam))
+            if((t > 0.0) && engine_camera.frustum.isPolyVisible(&polygons[i], cam))
             {
                 return true;
             }

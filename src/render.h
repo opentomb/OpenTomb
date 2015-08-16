@@ -263,7 +263,7 @@ public:
     void renderRoom(const Room *room, const matrix4 &matrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
     void renderRoomSprites(const Room *room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix);
 
-    int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
+    int processRoom(Portal* portal, const Frustum& frus);
 
 private:
     const LitShaderDescription *setupEntityLight(Entity *entity, const matrix4 &modelViewMatrix, bool skin);

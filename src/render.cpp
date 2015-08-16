@@ -1001,7 +1001,7 @@ void Render::drawListDebugLines()
  * @return number of added rooms
  */
 
-int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
+int Render::processRoom(Portal* portal, const Frustum& frus)
 {
     std::shared_ptr<Room> destination = portal->dest_room;
     std::shared_ptr<Room> current = portal->current_room;
@@ -1022,7 +1022,7 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus)
             {
                 ret++;
                 addRoom(p.dest_room.get());
-                processRoom(&p, gen_frus);
+                processRoom(&p, *gen_frus);
             }
         }
     }
@@ -1057,7 +1057,7 @@ void Render::genWorldList()
             {
                 addRoom(p.dest_room.get());                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
-                processRoom(&p, last_frus);                               // next start reccursion algorithm
+                processRoom(&p, *last_frus);                               // next start reccursion algorithm
             }
         }
     }
@@ -1065,7 +1065,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum->isAABBVisible(r->bb_min, r->bb_max, *m_cam))
+            if(m_cam->frustum.isAABBVisible(r->bb_min, r->bb_max, *m_cam))
             {
                 addRoom(r.get());
             }

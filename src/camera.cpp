@@ -118,7 +118,7 @@ void Camera::recalcClipPlanes()
 
     //==========================================================================
 
-    frustum->norm.assign(m_viewDir, m_pos);                               // Основная плоскость отсечения (что сзади - то не рисуем)
+    frustum.norm.assign(m_viewDir, m_pos);                               // Основная плоскость отсечения (что сзади - то не рисуем)
 
     //==========================================================================
 
@@ -147,8 +147,8 @@ void Camera::recalcClipPlanes()
         if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
             m_clipPlanes[i].mirrorNormal();
 
-    assert(!frustum->vertices.empty());
-    frustum->vertices[0] = m_pos + m_viewDir;
+    assert(!frustum.vertices.empty());
+    frustum.vertices[0] = m_pos + m_viewDir;
 }
 
 Camera::Camera()
@@ -157,7 +157,6 @@ Camera::Camera()
     m_height = 2.0f * m_distNear / m_f;
     m_width = m_height * m_aspect;
 
-    frustum = std::make_shared<Frustum>();
-    frustum->vertices.resize(3, { 0,0,0 });
-    frustum->planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
+    frustum.vertices.resize(3, { 0,0,0 });
+    frustum.planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
 }

@@ -318,7 +318,7 @@ struct Room : public Object
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
 
-    std::vector<std::shared_ptr<Frustum>> frustum;
+    std::vector<std::unique_ptr<Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     std::vector<std::shared_ptr<Room>> near_room_list;

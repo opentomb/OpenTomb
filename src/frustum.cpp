@@ -19,7 +19,7 @@ void Frustum::splitPrepare(struct Portal *p)
     vertices = p->vertices;
     norm = p->normal;
     norm.mirrorNormal();
-    parent.reset();
+    parent = nullptr;
 }
 
 int Frustum::split_by_plane(const Plane& splitPlane)
@@ -129,9 +129,8 @@ void Frustum::genClipPlanes(Camera *cam)
  * receiver - points to the base room frustum, which portal leads to - it's taken from the portal!
  * returns a pointer to newly generated frustum.
  */
-std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::shared_ptr<Frustum> emitter, Render *render)
+Frustum* Frustum::portalFrustumIntersect(Portal *portal, const Frustum& emitter, Render *render)
 {
-    assert(emitter);
     if(!portal->dest_room)
         return nullptr;
 
@@ -140,7 +139,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
         return nullptr;
     }
 
-    if(!portal->dest_room->frustum.empty() && emitter->hasParent(portal->dest_room->frustum.front()))
+    if(!portal->dest_room->frustum.empty() && emitter.hasParent(*portal->dest_room->frustum.front()))
     {
         return nullptr;                                                        // Abort infinite loop!
     }
@@ -148,9 +147,9 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     bool in_dist = false, in_face = false;
     for(const btVector3& v : portal->vertices)
     {
-        if(!in_dist && render->camera()->frustum->norm.distance(v) < render->camera()->m_distFar)
+        if(!in_dist && render->camera()->frustum.norm.distance(v) < render->camera()->m_distFar)
             in_dist = true;
-        if(!in_face && emitter->norm.distance(v) > 0.0)
+        if(!in_face && emitter.norm.distance(v) > 0.0)
             in_face = true;
         if(in_dist && in_face)
             break;
@@ -162,16 +161,16 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
     /*
      * Search for the first free room's frustum
      */
-    portal->dest_room->frustum.emplace_back(std::make_shared<Frustum>());
-    auto current_gen = portal->dest_room->frustum.back();
+    portal->dest_room->frustum.emplace_back(new Frustum());
+    Frustum* current_gen = portal->dest_room->frustum.back().get();
 
     current_gen->splitPrepare(portal);                       // prepare for clipping
 
-    if(current_gen->split_by_plane(emitter->norm))               // splitting by main frustum clip plane
+    if(current_gen->split_by_plane(emitter.norm))               // splitting by main frustum clip plane
     {
-        for(size_t i = 0; i < emitter->vertices.size(); i++)
+        for(size_t i = 0; i < emitter.vertices.size(); i++)
         {
-            const auto& n = emitter->planes[i];
+            const auto& n = emitter.planes[i];
             if(!current_gen->split_by_plane(n))
             {
                 portal->dest_room->frustum.pop_back();
@@ -181,8 +180,8 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
 
         current_gen->genClipPlanes(render->camera());                      // all is OK, let's generate clip planes
 
-        current_gen->parent = emitter;                                      // add parent pointer
-        current_gen->parents_count = emitter->parents_count + 1;
+        current_gen->parent = &emitter;                                      // add parent pointer
+        current_gen->parents_count = emitter.parents_count + 1;
         if(portal->dest_room->max_path < current_gen->parents_count)
         {
             portal->dest_room->max_path = current_gen->parents_count;       // maximum path to the room
@@ -205,14 +204,14 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, std::sh
   * true, and we break the loop.
   */
 
-bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
+bool Frustum::hasParent(const Frustum& parent) const
 {
-    auto frustum = this;
+    const Frustum* frustum = this;
     while(frustum)
     {
-        if(parent.get() == frustum)
+        if(&parent == frustum)
             return true;
-        frustum = frustum->parent.lock().get();
+        frustum = frustum->parent;
     }
     return false;
 }
@@ -221,7 +220,7 @@ bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
  * Check polygon visibility through the portal.
  * This method is not for realtime since check is generally more expensive than rendering ...
  */
-bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam)
+bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam) const
 {
     if((!p->double_side) && (p->plane.distance(cam.getPosition()) < 0.0))
     {

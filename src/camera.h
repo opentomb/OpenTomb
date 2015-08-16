@@ -6,6 +6,7 @@
 
 #include "matrix4.h"
 #include "vmath.h"
+#include "frustum.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0f
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0f
@@ -75,7 +76,7 @@ public:
     matrix4 m_glViewProjMat = matrix4();
 
     Plane m_clipPlanes[4];        // frustum side clip planes
-    std::shared_ptr<Frustum> frustum;               // camera frustum structure
+    Frustum frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;
     GLfloat m_distFar = 65536;
