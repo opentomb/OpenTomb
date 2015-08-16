@@ -1232,3 +1232,81 @@ RoomSector* RoomSector::getHighestSector()
 
     return highest_sector;
 }
+
+void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader::Level>& tr)
+{
+    const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+
+    auto tr_room = &tr->m_rooms[room_index];
+
+    if(tr_room->triangles.empty() && tr_room->rectangles.empty())
+    {
+        mesh = nullptr;
+        return;
+    }
+
+    mesh = std::make_shared<BaseMesh>();
+    mesh->m_id = room_index;
+    mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
+    mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
+
+    mesh->m_vertices.resize(tr_room->vertices.size());
+    auto vertex = mesh->m_vertices.data();
+    for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
+    {
+        TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
+        vertex->normal.setZero();                                          // paranoid
+    }
+
+    mesh->findBB();
+
+    mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
+    auto p = mesh->m_polygons.begin();
+
+    /*
+    * triangles
+    */
+    for(uint32_t i = 0; i < tr_room->triangles.size(); i++, ++p)
+    {
+        tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
+        p->double_side = tr_room->triangles[i].texture & 0x8000;
+    }
+
+    /*
+    * rectangles
+    */
+    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    {
+        tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
+        p->double_side = tr_room->rectangles[i].texture & 0x8000;
+    }
+
+    /*
+    * let us normalise normales %)
+    */
+    for(Vertex& v : mesh->m_vertices)
+    {
+        v.normal.safeNormalize();
+    }
+
+    /*
+    * triangles
+    */
+    p = mesh->m_polygons.begin();
+    for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
+    {
+        tr_copyNormals(&*p, mesh, tr_room->triangles[i].vertices);
+    }
+
+    /*
+    * rectangles
+    */
+    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    {
+        tr_copyNormals(&*p, mesh, tr_room->rectangles[i].vertices);
+    }
+
+    mesh->m_vertices.clear();
+    mesh->genFaces();
+    mesh->polySortInMesh();
+}

@@ -122,7 +122,6 @@ void Res_AutoexecOpen(loader::Game engine_version);
 void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenMeshes(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr);
 void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr);
@@ -139,7 +138,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
-void TR_vertex_to_arr(btVector3 &v, const Vertex &tr_v);
+void TR_vertex_to_arr(btVector3 &v, const loader::Vertex &tr_v);
 void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
@@ -156,4 +155,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
 
 int      TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::Level>& tr);
 void     TR_Sector_Calculate(World *world, const std::unique_ptr<loader::Level>& tr, long int room_index);
+
+void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::Level>& tr, loader::Room *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, struct Polygon *p);
+void tr_copyNormals(struct Polygon *polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices);
 
