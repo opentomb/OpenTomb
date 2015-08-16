@@ -1817,7 +1817,6 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->obb = new OBB();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
         r_static->cbb_min[1] = -tr_static->collision_box[0].z;
@@ -1834,14 +1833,14 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
         r_static->vbb_max[1] = -tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->obb->transform = &room->static_mesh[i]->transform;
-        r_static->obb->r = room->static_mesh[i]->mesh->m_radius;
+        r_static->obb.transform = &room->static_mesh[i]->transform;
+        r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
         r_static->transform.setIdentity();
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        r_static->obb->rebuild(r_static->vbb_min, r_static->vbb_max);
-        r_static->obb->doTransform();
+        r_static->obb.rebuild(r_static->vbb_min, r_static->vbb_max);
+        r_static->obb.doTransform();
 
         r_static->bt_body = nullptr;
         r_static->hide = false;

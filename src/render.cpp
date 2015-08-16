@@ -697,7 +697,7 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
-            if(sm->was_rendered || (sm->obb && !sm->obb->isVisibleInRoom(*room, *m_cam)))
+            if(sm->was_rendered || !sm->obb.isVisibleInRoom(*room, *m_cam))
             {
                 continue;
             }
@@ -733,7 +733,7 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
                     Entity* ent = static_cast<Entity*>(cont->object);
                     if(!ent->m_wasRendered)
                     {
-                        if(!ent->m_obb || ent->m_obb->isVisibleInRoom(*room, *m_cam))
+                        if(ent->m_obb.isVisibleInRoom(*room, *m_cam))
                         {
                             renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                         }
@@ -891,7 +891,7 @@ void Render::drawList()
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : room->static_mesh)
         {
-            if(!sm->mesh->m_transparentPolygons.empty() && (!sm->obb || sm->obb->isVisibleInRoom(*room, *m_cam)))
+            if(!sm->mesh->m_transparentPolygons.empty() && sm->obb.isVisibleInRoom(*room, *m_cam))
             {
                 render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum }, *m_cam);
             }
@@ -903,7 +903,7 @@ void Render::drawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* ent = static_cast<Entity*>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (!ent->m_obb || ent->m_obb->isVisibleInRoom(*room, *m_cam)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
                 {
                     for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
                     {
@@ -1098,7 +1098,6 @@ void Render::setWorld(World *world)
 // Render debug primitives.
 
 RenderDebugDrawer::RenderDebugDrawer()
-    : m_obb(new OBB())
 {
 }
 
@@ -1237,15 +1236,15 @@ void RenderDebugDrawer::drawPortal(const Portal& p)
 
 void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_max, const btTransform *transform)
 {
-    m_obb->rebuild(bb_min, bb_max);
-    m_obb->transform = transform;
-    m_obb->doTransform();
-    drawOBB(m_obb.get());
+    m_obb.rebuild(bb_min, bb_max);
+    m_obb.transform = transform;
+    m_obb.doTransform();
+    drawOBB(m_obb);
 }
 
-void RenderDebugDrawer::drawOBB(OBB *obb)
+void RenderDebugDrawer::drawOBB(const OBB& obb)
 {
-    struct Polygon *p = obb->polygons;
+    const Polygon *p = obb.polygons;
     addLine(p->vertices[0].position, (p + 1)->vertices[0].position);
     addLine(p->vertices[1].position, (p + 1)->vertices[3].position);
     addLine(p->vertices[2].position, (p + 1)->vertices[2].position);
@@ -1320,7 +1319,7 @@ void RenderDebugDrawer::drawEntityDebugLines(Entity* entity, Render* render)
     if(render->m_drawBoxes)
     {
         debugDrawer.setColor(0.0, 0.0, 1.0);
-        debugDrawer.drawOBB(entity->m_obb.get());
+        debugDrawer.drawOBB(entity->m_obb);
     }
 
     if(render->m_drawAxis)
@@ -1382,7 +1381,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render, con
 
     for(auto sm : room->static_mesh)
     {
-        if(sm->was_rendered_lines || (sm->obb && sm->obb->isVisibleInRoom(*room, cam)) ||
+        if(sm->was_rendered_lines || sm->obb.isVisibleInRoom(*room, cam) ||
            (sm->hide && !render->m_drawDummyStatics))
         {
             continue;
@@ -1413,7 +1412,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render, con
                 Entity* ent = static_cast<Entity*>(cont->object);
                 if(!ent->m_wasRenderedLines)
                 {
-                    if(!ent->m_obb || ent->m_obb->isVisibleInRoom(*room, cam))
+                    if(ent->m_obb.isVisibleInRoom(*room, cam))
                     {
                         debugDrawer.drawEntityDebugLines(ent, render);
                     }

@@ -1227,8 +1227,8 @@ void Entity::rebuildBV()
         /*
          * get current BB from animation
          */
-        m_obb->rebuild(m_bf.bb_min, m_bf.bb_max);
-        m_obb->doTransform();
+        m_obb.rebuild(m_bf.bb_min, m_bf.bb_max);
+        m_obb.doTransform();
     }
 }
 
@@ -1291,15 +1291,14 @@ Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
     , m_moveType(MoveType::OnFloor)
-    , m_obb(new OBB())
-    , m_self(new EngineContainer())
+    , m_self(std::make_shared<EngineContainer>())
 {
     m_transform.setIdentity();
     m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;
     m_self->room = nullptr;
     m_self->collision_type = 0;
-    m_obb->transform = &m_transform;
+    m_obb.transform = &m_transform;
     m_bt.bt_body.clear();
     m_bt.bt_joints.clear();
     m_bt.no_fix_all = false;

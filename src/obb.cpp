@@ -14,7 +14,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
     extent = (bb_max - bb_min) / 2;
     base_centre = (bb_min + bb_max) / 2;
-    r = extent.length();
+    radius = extent.length();
 
     struct Polygon *p = base_polygons;
     // UP
@@ -157,12 +157,12 @@ void OBB::doTransform()
 int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 {
     //translation, in parent frame
-    auto v = e2.m_obb->centre - e1.m_obb->centre;
+    auto v = e2.m_obb.centre - e1.m_obb.centre;
     //translation, in A's frame
     btVector3 T = e1.m_transform.getBasis() * v;
 
-    btVector3 a = e1.m_obb->extent * overlap;
-    btVector3 b = e2.m_obb->extent * overlap;
+    btVector3 a = e1.m_obb.extent * overlap;
+    btVector3 b = e2.m_obb.extent * overlap;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];

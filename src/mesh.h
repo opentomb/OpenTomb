@@ -20,6 +20,7 @@
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 #include "loader/datatypes.h"
+#include "obb.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -214,7 +215,7 @@ struct StaticMesh : public Object
     btVector3 cbb_max;
 
     btTransform transform;                                  // gl transformation matrix
-    OBB               *obb;
+    OBB obb;
     std::shared_ptr<EngineContainer> self;
 
     std::shared_ptr<BaseMesh> mesh;                                           // base model

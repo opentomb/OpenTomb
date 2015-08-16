@@ -2402,7 +2402,7 @@ btVector3 Character::camPosForFollowing(btScalar dz)
     if(m_camFollowCenter > 0)
     {
         m_camFollowCenter--;
-        return m_obb->centre;
+        return m_obb.centre;
     }
     return Entity::camPosForFollowing(dz);
 }

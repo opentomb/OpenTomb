@@ -19,6 +19,7 @@
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #define STENCIL_FRUSTUM 1
+#include "obb.h"
 
 struct Portal;
 struct Frustum;
@@ -41,7 +42,7 @@ class RenderDebugDrawer : public btIDebugDraw
     std::array<GLfloat, 3> m_color{ {0,0,0} };
     std::vector<std::array<GLfloat, 3>> m_buffer;
 
-    std::unique_ptr<OBB> m_obb;
+    OBB m_obb;
 
     void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &end);
     void addLine(const btVector3& start, const btVector3& end);
@@ -70,7 +71,7 @@ public:
     void drawPortal(const Portal &p);
     void drawFrustum(const Frustum &f);
     void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
-    void drawOBB(OBB *obb);
+    void drawOBB(const OBB& obb);
     void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
     void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(Entity *entity, Render *render);

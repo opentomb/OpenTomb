@@ -16,6 +16,7 @@
 #define ENTITY_ANIM_NONE     0x00
 #define ENTITY_ANIM_NEWFRAME 0x01
 #define ENTITY_ANIM_NEWANIM  0x02
+#include "obb.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -145,7 +146,7 @@ public:
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
-    std::unique_ptr<OBB> m_obb;                // oriented bounding box
+    OBB m_obb;                // oriented bounding box
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;

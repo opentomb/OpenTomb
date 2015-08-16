@@ -52,8 +52,6 @@ void Room::empty()
                 static_mesh[i]->bt_body = nullptr;
             }
 
-            delete static_mesh[i]->obb;
-            static_mesh[i]->obb = nullptr;
             if(static_mesh[i]->self)
             {
                 static_mesh[i]->self->room = nullptr;

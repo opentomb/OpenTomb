@@ -26,7 +26,7 @@ struct OBB
     struct Polygon base_polygons[6];               // bv base surface
     struct Polygon polygons[6];                    // bv world coordinate surface
     const btTransform* transform = nullptr;        // Object transform matrix
-    btScalar r;
+    btScalar radius;
 
     btVector3 base_centre;
     btVector3 centre;
