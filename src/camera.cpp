@@ -158,7 +158,6 @@ Camera::Camera()
     m_width = m_height * m_aspect;
 
     frustum = std::make_shared<Frustum>();
-    frustum->cam_pos = &m_pos;
     frustum->vertices.resize(3, { 0,0,0 });
     frustum->planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
 }

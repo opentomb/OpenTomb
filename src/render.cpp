@@ -697,7 +697,7 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
-            if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, *room))
+            if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, *room, *m_cam))
             {
                 continue;
             }
@@ -733,7 +733,7 @@ void Render::renderRoom(const Room* room, const matrix4 &modelViewMatrix, const 
                     Entity* ent = static_cast<Entity*>(cont->object);
                     if(!ent->m_wasRendered)
                     {
-                        if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
+                        if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room, *m_cam))
                         {
                             renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                         }
@@ -882,7 +882,7 @@ void Render::drawList()
     {
         if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, { m_cam->frustum });
+            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, { m_cam->frustum }, *m_cam);
         }
     }
 
@@ -891,9 +891,9 @@ void Render::drawList()
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : room->static_mesh)
         {
-            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *room))
+            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *room, *m_cam))
             {
-                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum });
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum }, *m_cam);
             }
         }
 
@@ -903,14 +903,14 @@ void Render::drawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* ent = static_cast<Entity*>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room, *m_cam)))
                 {
                     for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
                     {
                         if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                         {
                             auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum });
+                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
                         }
                     }
                 }
@@ -926,7 +926,7 @@ void Render::drawList()
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
             {
                 auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum });
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
             }
         }
     }
@@ -973,7 +973,7 @@ void Render::drawListDebugLines()
 
     for(const Room* room : m_renderList)
     {
-        debugDrawer.drawRoomDebugLines(room, this);
+        debugDrawer.drawRoomDebugLines(room, this, *m_cam);
     }
 
     if(m_drawColl)
@@ -1065,7 +1065,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum->isAABBVisible(r->bb_min, r->bb_max))
+            if(m_cam->frustum->isAABBVisible(r->bb_min, r->bb_max, *m_cam))
             {
                 addRoom(r.get());
             }
@@ -1345,7 +1345,7 @@ void RenderDebugDrawer::drawSectorDebugLines(RoomSector *rs)
     drawBBox(bb_min, bb_max, nullptr);
 }
 
-void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
+void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render, const Camera& cam)
 {
     if(render->m_drawRoomBoxes)
     {
@@ -1382,7 +1382,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
 
     for(auto sm : room->static_mesh)
     {
-        if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, *room) ||
+        if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, *room, cam) ||
            (sm->hide && !render->m_drawDummyStatics))
         {
             continue;
@@ -1413,7 +1413,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render)
                 Entity* ent = static_cast<Entity*>(cont->object);
                 if(!ent->m_wasRenderedLines)
                 {
-                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
+                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room, cam))
                     {
                         debugDrawer.drawEntityDebugLines(ent, render);
                     }

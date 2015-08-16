@@ -5,6 +5,7 @@
 
 #include "vmath.h"
 
+class Camera;
 struct Polygon;
 struct Frustum;
 struct TransparentPolygonReference;
@@ -43,7 +44,7 @@ private:
     void addPolygon(std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct Polygon &transformed);
 
 public:
-    void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);
+    void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f, const Camera& cam);
 
     const std::unique_ptr<BSPNode>& root() const
     {

@@ -58,7 +58,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
 }
 
-void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const std::vector<std::shared_ptr<Frustum>>& f)
+void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const std::vector<std::shared_ptr<Frustum>>& f, const Camera& cam)
 {
     for(const TransparentPolygonReference& pp : p)
     {
@@ -71,7 +71,7 @@ void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference
 
         for(const auto& ff : f)
         {
-            if(ff->isPolyVisible(&transformed))
+            if(ff->isPolyVisible(&transformed, cam))
             {
                 visible = true;
                 break;

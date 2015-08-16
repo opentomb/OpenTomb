@@ -75,7 +75,7 @@ public:
     void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(Entity *entity, Render *render);
     void drawSectorDebugLines(RoomSector *rs);
-    void drawRoomDebugLines(const Room *room, Render *render);
+    void drawRoomDebugLines(const Room *room, Render *render, const Camera& cam);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;
