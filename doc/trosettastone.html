@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="generator" content="AsciiDoc 8.6.8">
+<meta name="generator" content="AsciiDoc 8.6.9">
 <title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -93,7 +93,9 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-
+pre {
+  white-space: pre-wrap;
+}
 
 #author {
   color: #527bbd;
@@ -222,7 +224,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; }
+span.image img { border-style: none; vertical-align: text-bottom; }
 a.image:visited { color: white; }
 
 dl {
@@ -508,6 +510,9 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
+th.tableblock.grid-none, td.tableblock.grid-none {
+  border-style: hidden;
+}
 
 /*
  * manpage specific
@@ -530,19 +535,16 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
-/*
-  pygmentize filter
-*/
 .highlight .hll { background-color: #ffffcc }
-.highlight  { background: #f4f4f4; }
-.highlight .c { color: #008800; font-style: italic } /* Comment */
+.highlight  { background: #f8f8f8; }
+.highlight .c { color: #408080; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
-.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
+.highlight .k { color: #008000; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #008800 } /* Comment.Preproc */
-.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
+.highlight .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #BC7A00 } /* Comment.Preproc */
+.highlight .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #408080; font-style: italic } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
@@ -553,49 +555,48 @@ body.manpage div.sectionbody {
 .highlight .gs { font-weight: bold } /* Generic.Strong */
 .highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
 .highlight .gt { color: #0040D0 } /* Generic.Traceback */
-.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
-.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
-.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
-.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
-.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
-.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
+.highlight .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #008000 } /* Keyword.Pseudo */
+.highlight .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #B00040 } /* Keyword.Type */
 .highlight .m { color: #666666 } /* Literal.Number */
-.highlight .s { color: #BB4444 } /* Literal.String */
-.highlight .na { color: #BB4444 } /* Name.Attribute */
-.highlight .nb { color: #AA22FF } /* Name.Builtin */
-.highlight .nc { color: #0000FF } /* Name.Class */
+.highlight .s { color: #BA2121 } /* Literal.String */
+.highlight .na { color: #7D9029 } /* Name.Attribute */
+.highlight .nb { color: #008000 } /* Name.Builtin */
+.highlight .nc { color: #0000FF; font-weight: bold } /* Name.Class */
 .highlight .no { color: #880000 } /* Name.Constant */
 .highlight .nd { color: #AA22FF } /* Name.Decorator */
 .highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
 .highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.highlight .nf { color: #00A000 } /* Name.Function */
+.highlight .nf { color: #0000FF } /* Name.Function */
 .highlight .nl { color: #A0A000 } /* Name.Label */
 .highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
 .highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.highlight .nv { color: #B8860B } /* Name.Variable */
+.highlight .nv { color: #19177C } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
-.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
-.highlight .sc { color: #BB4444 } /* Literal.String.Char */
-.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
-.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
+.highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
+.highlight .sc { color: #BA2121 } /* Literal.String.Char */
+.highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BA2121 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
+.highlight .sh { color: #BA2121 } /* Literal.String.Heredoc */
 .highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
 .highlight .sx { color: #008000 } /* Literal.String.Other */
 .highlight .sr { color: #BB6688 } /* Literal.String.Regex */
-.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
-.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
-.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
-.highlight .vc { color: #B8860B } /* Name.Variable.Class */
-.highlight .vg { color: #B8860B } /* Name.Variable.Global */
-.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
+.highlight .s1 { color: #BA2121 } /* Literal.String.Single */
+.highlight .ss { color: #19177C } /* Literal.String.Symbol */
+.highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #19177C } /* Name.Variable.Class */
+.highlight .vg { color: #19177C } /* Name.Variable.Global */
+.highlight .vi { color: #19177C } /* Name.Variable.Instance */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
-
 
 
 @media screen {
@@ -2074,7 +2075,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-08-07)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-08-17)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -4841,10 +4842,10 @@ Hence, it is ignored here, as by the time engine reaches <span class="monospaced
 <table class="tableblock frame-all grid-all"
 style="
 margin-left:auto; margin-right:auto;
-width:30%;
+width:60%;
 ">
-<col style="width:33%;">
-<col style="width:66%;">
+<col style="width:25%;">
+<col style="width:75%;">
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">Timer</span></p></td>
@@ -4855,8 +4856,8 @@ width:30%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">bit 8 (<span class="monospaced">0x0100</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">Zoom</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">bit 12 (<span class="monospaced">0x1000</span>) <em>-- only in TR1-2</em></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">Move</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">bit 12 (<span class="monospaced">0x1000</span>) <em>in TR1</em>, bit 10 (<span class="monospaced">0x0400</span>) <em>in TR2</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">ContBit</span></p></td>
@@ -4867,7 +4868,7 @@ width:30%;
 <div class="paragraph"><p><span class="monospaced">Timer</span> is a number of seconds to wait before automatically switching back to the normal camera. If 0, it never switches back to normal camera, as long as
 trigger is active.</p></div>
 <div class="paragraph"><p><span class="monospaced">Once</span>: If set, only switch to camera once; otherwise, switch to camera every time trigger is active.</p></div>
-<div class="paragraph"><p><span class="monospaced">Zoom</span>: Camera smoothly zooms in when activated. Zoom amount is hardcoded.</p></div>
+<div class="paragraph"><p><span class="monospaced">Move</span>: Camera smoothly moves from current point to camera point when activated. Move speed is hardcoded.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -8527,7 +8528,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-02 16:31:53 CEST
+Last updated 2015-07-31 13:08:00 MSK
 </div>
 </div>
 </body>
