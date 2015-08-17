@@ -4154,7 +4154,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
-            Physics_GenEntityRigidBody(entity);
+            Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
             Character_Create(entity);
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
@@ -4167,7 +4167,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
         Res_SetEntityModelProperties(entity);
-        Physics_GenEntityRigidBody(entity);
+        Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->self->collision_type & 0x0001))
         {

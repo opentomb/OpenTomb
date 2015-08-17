@@ -45,7 +45,7 @@ void Physics_StepSimulation(float time);
 void Physics_DebugDrawWorld();
 void Physics_CleanUpObjects();
 
-struct physics_data_s *Physics_CreatePhysicsData();
+struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont);
 void Physics_DeletePhysicsData(struct physics_data_s *physics);
 
 void Physics_GetGravity(float g[3]);
@@ -64,7 +64,8 @@ void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, float correction[3]);
 
 // Bullet entity rigid body generating.
-void Physics_GenEntityRigidBody(struct entity_s *ent);
+void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16]);
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16]);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens);
 void Physics_DeleteObject(struct physics_object_s *obj);
@@ -78,8 +79,6 @@ void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t in
 void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t index);
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index);
 struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics);
-
-void Entity_CreateGhosts(struct entity_s *ent);
 
 
 #endif	/* ENGINE_PHYSICS_H */

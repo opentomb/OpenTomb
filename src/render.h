@@ -129,8 +129,8 @@ class CRenderDebugDrawer
         uint32_t m_lines;
         bool     m_need_realloc;
 
-        GLuint  m_gl_vbo;
-        GLfloat m_color[3];
+        GLuint   m_gl_vbo;
+        GLfloat  m_color[3];
         GLfloat *m_buffer;
 
         struct obb_s *m_obb;
@@ -178,7 +178,6 @@ class CRender
         int  ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
         const lit_shader_description *SetupEntityLight(struct entity_s *entity, const float modelViewMatrix[16]);
         
-        bool                        blocked;
         struct world_s             *m_world;
         struct camera_s            *m_camera;
 

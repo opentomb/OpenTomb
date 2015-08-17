@@ -929,6 +929,9 @@ void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];
     lua_GetLoadingScreen(engine_lua, level_index, file_path);
-    Gui_LoadScreenAssignPic(file_path);
+    if(!Gui_LoadScreenAssignPic(file_path))
+    {
+        Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+    }
     Audio_EndStreams();
 }

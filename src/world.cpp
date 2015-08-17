@@ -735,7 +735,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
             SSBoneFrame_CreateFromModel(ent->bf, model);
             Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
-            Physics_GenEntityRigidBody(ent);
+            Physics_GenRigidBody(ent->physics, ent->bf, ent->transform);
 
             Entity_RebuildBV(ent);
             if(ent->self->room != NULL)

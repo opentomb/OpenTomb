@@ -40,7 +40,6 @@ void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
  */
 
 CRender::CRender():
-blocked(true),
 r_flags(0x00),
 r_list(NULL),
 r_list_size(0),
@@ -126,48 +125,33 @@ void CRender::DoShaders()
 
 void CRender::SetWorld(struct world_s *world)
 {
+    this->CleanList();
+    m_world = NULL;
+    r_flags = 0x00;
+
     if(world)
     {
-        uint32_t list_size = world->room_count + 128;                               // magick 128 was added for debug and testing
-        if(m_world)
+        uint32_t list_size = world->room_count + 128;                           // magick 128 was added for debug and testing
+        if(r_list)
         {
-            if(r_list_size < list_size)                                             // if old list less than new one requiring
-            {
-                r_list = (struct render_list_s*)realloc(r_list, list_size * sizeof(struct render_list_s));
-                for(uint32_t i=0; i<list_size; i++)
-                {
-                    r_list[i].active = 0;
-                    r_list[i].room = NULL;
-                    r_list[i].dist = 0.0;
-                }
-            }
+            free(r_list);
         }
-        else
+        r_list = (struct render_list_s*)malloc(list_size * sizeof(struct render_list_s));
+        for(uint32_t i=0; i < list_size; i++)
         {
-            r_list = (struct render_list_s*)malloc(list_size * sizeof(struct render_list_s));
-            for(unsigned int i=0; i<list_size; i++)
-            {
-                r_list[i].active = 0;
-                r_list[i].room = NULL;
-                r_list[i].dist = 0.0;
-            }
+            r_list[i].active = 0;
+            r_list[i].room = NULL;
+            r_list[i].dist = 0.0;
         }
 
         m_world = world;
-        r_flags &= ~R_DRAW_SKYBOX;
         r_list_size = list_size;
         r_list_active_count = 0;
 
-        for(uint32_t i=0; i<m_world->room_count; i++)
+        for(uint32_t i=0; i < m_world->room_count; i++)
         {
             m_world->rooms[i].is_in_r_list = 0;
         }
-    }
-    else
-    {
-        this->CleanList();
-        m_world = NULL;
-        r_flags = 0x00;
     }
 }
 

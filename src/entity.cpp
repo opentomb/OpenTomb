@@ -47,7 +47,7 @@ entity_p Entity_Create()
 
     ret->no_fix_all = 0x00;
     ret->no_fix_skeletal_parts = 0x00000000;
-    ret->physics = Physics_CreatePhysicsData();
+    ret->physics = Physics_CreatePhysicsData(ret->self);
 
     ret->character = NULL;
     ret->current_sector = NULL;
@@ -172,7 +172,7 @@ void Entity_EnableCollision(entity_p ent)
     else
     {
         ent->self->collision_type = COLLISION_TYPE_KINEMATIC;
-        Physics_GenEntityRigidBody(ent);
+        Physics_GenRigidBody(ent->physics, ent->bf, ent->transform);
     }
 }
 

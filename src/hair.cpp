@@ -36,6 +36,8 @@ typedef struct physics_data_s
     uint16_t                            objects_count;          // Ragdoll joints
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
+
+    struct engine_container_s          *cont;
 }physics_data_t, *physics_data_p;
 
 

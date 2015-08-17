@@ -1314,11 +1314,9 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     if(surface != NULL)
     {
         GLenum       texture_format;
-        GLint        color_depth;
+        GLuint       color_depth;
 
-        // Get the color depth of the SDL surface
-        color_depth = surface->format->BytesPerPixel;
-        if(color_depth == 4)        // Contains an alpha channel
+        if(surface->format->BytesPerPixel == 4)        // Contains an alpha channel
         {
             if(surface->format->Rmask == 0x000000ff)
                 texture_format = GL_RGBA;
@@ -1327,7 +1325,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
 
             color_depth = GL_RGBA;
         }
-        else if(color_depth == 3)   // No alpha channel
+        else if(surface->format->BytesPerPixel == 3)   // No alpha channel
         {
             if(surface->format->Rmask == 0x000000ff)
                 texture_format = GL_RGB;
@@ -1352,6 +1350,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         // Edit the texture object's image data using the information SDL_Surface gives us
         glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
                      texture_format, GL_UNSIGNED_BYTE, surface->pixels);
+        glBindTexture(GL_TEXTURE_2D, 0);
         return true;
     }
 

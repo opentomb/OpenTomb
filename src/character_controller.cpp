@@ -90,7 +90,7 @@ void Character_Create(struct entity_s *ent)
 
     ret->traversed_object = NULL;
 
-    Entity_CreateGhosts(ent);
+    Physics_CreateGhosts(ent->physics, ent->bf, ent->transform);
 }
 
 void Character_Clean(struct entity_s *ent)
