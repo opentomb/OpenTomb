@@ -942,7 +942,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                             entry++;
                             uint8_t cam_timer = ((*entry) & 0x00FF);
                             uint8_t cam_once = ((*entry) & 0x0100) >> 8;
-                            uint8_t cam_zoom = ((*entry) & 0x1000) >> 12;
+                            uint8_t cam_zoom = (engine_world.engineVersion < loader::Engine::TR2)?(((*entry) & 0x0400) >> 10):(((*entry) & 0x1000) >> 12);
                             cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
 
                             snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
