@@ -658,9 +658,7 @@ public:
     };
 
     gui_text_line_s             mLabel_Title;
-    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
     gui_text_line_s             mLabel_ItemName;
-    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
     gui_InventoryManager();
     ~gui_InventoryManager();

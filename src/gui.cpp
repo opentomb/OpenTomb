@@ -658,8 +658,6 @@ gui_InventoryManager::gui_InventoryManager()
 
     mLabel_Title.font_id = FONT_PRIMARY;
     mLabel_Title.style_id = FONTSTYLE_MENU_TITLE;
-    mLabel_Title.text = mLabel_Title_text;
-    mLabel_Title_text[0] = 0;
     mLabel_Title.show = false;
 
     mLabel_ItemName.X = 0.0;
@@ -669,8 +667,6 @@ gui_InventoryManager::gui_InventoryManager()
 
     mLabel_ItemName.font_id = FONT_PRIMARY;
     mLabel_ItemName.style_id = FONTSTYLE_MENU_CONTENT;
-    mLabel_ItemName.text = mLabel_ItemName_text;
-    mLabel_ItemName_text[0] = 0;
     mLabel_ItemName.show = false;
 
     Gui_AddLine(&mLabel_ItemName);
@@ -754,7 +750,9 @@ void gui_InventoryManager::setTitle(int items_type)
             break;
     }
 
-    engine_lua.getString(string_index, GUI_LINE_DEFAULTSIZE, mLabel_Title_text);
+    char buffer[GUI_LINE_DEFAULTSIZE];
+    engine_lua.getString(string_index, GUI_LINE_DEFAULTSIZE, buffer);
+    mLabel_Title.text = buffer;
 }
 
 int gui_InventoryManager::setItemsType(int type)
@@ -1062,13 +1060,15 @@ void gui_InventoryManager::render()
             {
                 if(bi->name[0])
                 {
-                    strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                    mLabel_ItemName.text = bi->name;
 
                     if(i.count > 1)
                     {
                         char counter[32];
                         engine_lua.getString(STR_GEN_MASK_INVHEADER, 32, counter);
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, static_cast<const char*>(counter), bi->name, i.count);
+                        char tmp[GUI_LINE_DEFAULTSIZE];
+                        snprintf(tmp, GUI_LINE_DEFAULTSIZE, static_cast<const char*>(counter), bi->name, i.count);
+                        mLabel_ItemName.text = tmp;
                     }
                 }
                 Mat4_RotateZ(matrix, 90.0f + mItemAngle - ang);
