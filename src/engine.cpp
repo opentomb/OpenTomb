@@ -943,6 +943,8 @@ int Engine_LoadMap(const std::string& name)
 
     Gui_DrawLoadScreen(0);
 
+    engine_camera.m_currentRoom = nullptr;
+
     renderer.hideSkyBox();
     renderer.resetWorld();
 

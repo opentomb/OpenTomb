@@ -136,13 +136,13 @@
 // Sector material specifies audio response from character footsteps, as well as
 // footstep texture option, plus possible vehicle physics difference in the future.
 
-#define SECTOR_MATERIAL_MUD         0   // Classic one, TR1-2.
+#define SECTOR_MATERIAL_MUD         0
 #define SECTOR_MATERIAL_SNOW        1
 #define SECTOR_MATERIAL_SAND        2
 #define SECTOR_MATERIAL_GRAVEL      3
 #define SECTOR_MATERIAL_ICE         4
 #define SECTOR_MATERIAL_WATER       5
-#define SECTOR_MATERIAL_STONE       6
+#define SECTOR_MATERIAL_STONE       6   // Classic one, TR1-2.
 #define SECTOR_MATERIAL_WOOD        7
 #define SECTOR_MATERIAL_METAL       8
 #define SECTOR_MATERIAL_MARBLE      9

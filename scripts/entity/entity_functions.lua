@@ -675,7 +675,7 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_ROOMCOLLISION, true);
     
-    entity_funcs[id].speed       = 100.0;
+    entity_funcs[id].speed       = 5120.0;
     entity_funcs[id].damage      = 50.0;
     entity_funcs[id].poison      = 0.0;   -- Poison appeared only in TR3.
     entity_funcs[id].coll_sound  = -1;
@@ -694,7 +694,7 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed * FRAME_TIME, 0.0);
         if(not isInRoom(object_id)) then entity_funcs[object_id].onRoomCollide(object_id) end;   -- Penetration fix
     end
     
@@ -1829,7 +1829,7 @@ function snake_init(id)
             if(dist_to_Lara < entity_funcs[object_id].suspend_dist) then
                 entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].disturb_timeout;
             else
-                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - frame_time;
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - FRAME_TIME;
                 
                 if((entity_funcs[object_id].time_since_disturb <= 0.0) or (dist_to_Lara > entity_funcs[object_id].suspend_dist * 2) ) then
                     entity_funcs[object_id].time_since_disturb = 0.0;
@@ -1838,7 +1838,7 @@ function snake_init(id)
             end;
         else
             if(entity_funcs[object_id].mood > entity_funcs[object_id].min_mood) then
-                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - frame_time;
+                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - FRAME_TIME;
                 if(entity_funcs[object_id].current_mood_interval <= 0) then
                     entity_funcs[object_id].mood = entity_funcs[object_id].mood - 1;
                     entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].mood_release_interval;

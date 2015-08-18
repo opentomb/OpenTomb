@@ -119,7 +119,7 @@ struct RenderSettings
     bool      use_gl3 = false;
 };
 
-class ShaderManager;
+class  ShaderManager;
 struct BSPNode;
 struct UnlitTintedShaderDescription;
 struct SSBoneFrame;

@@ -153,7 +153,8 @@ namespace script
 
         void doTasks(btScalar time)
         {
-            set("frame_time", time);
+            set("FRAME_TIME", time);
+
             call("doTasks");
             call("clearKeys");
         }

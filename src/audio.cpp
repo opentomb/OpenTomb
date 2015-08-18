@@ -1395,7 +1395,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     if(real_ID == -1)
     {
-        return TR_AUDIO_SEND_NOSAMPLE;
+        return TR_AUDIO_SEND_IGNORED;
     }
     else
     {
