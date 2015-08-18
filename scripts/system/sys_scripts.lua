@@ -123,7 +123,7 @@ end
 function tickEntity(object_id)
     local timer = getEntityTimer(object_id);
     if(timer > 0.0) then
-        timer = timer - frame_time;
+        timer = timer - FRAME_TIME;
         if(timer < 0.0) then timer = 0.0 end;
         setEntityTimer(object_id, timer);
         if(timer == 0.0) then
