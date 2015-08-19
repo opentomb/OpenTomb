@@ -904,7 +904,7 @@ void Game_LevelTransition(uint16_t level_index)
 
     engine_lua.getLoadingScreen(level_index, file_path);
     Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
-    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
+    Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
 
     Audio_EndStreams();
 }

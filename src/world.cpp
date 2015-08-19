@@ -406,7 +406,7 @@ void World::empty()
     if(main_inventory_manager != nullptr)
     {
         main_inventory_manager->setInventory(nullptr);
-        main_inventory_manager->setItemsType(1);  // see base items
+        main_inventory_manager->setItemsType(MenuItemType::Supply);  // see base items
     }
 
     if(character)
@@ -956,7 +956,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         next_entity_id = entity->id() + 1;
 }
 
-bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string& name)
+bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if(!model)

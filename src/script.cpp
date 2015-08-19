@@ -582,7 +582,7 @@ void lua_AddFont(int index, const char* path, uint32_t size)
 {
     if(!fontManager->AddFont(static_cast<FontType>(index), size, path))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, fontManager->GetFontCount(), GUI_MAX_FONTS);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, fontManager->GetFontCount(), MaxFonts);
     }
 }
 
@@ -598,7 +598,7 @@ void lua_AddFontStyle(int style_index,
                                   rect, rect_border, rect_R, rect_G, rect_B, rect_A,
                                   hide))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, fontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, fontManager->GetFontStyleCount(), FontStyle::Sentinel);
     }
 }
 
@@ -679,7 +679,7 @@ int lua_GetItemsCount(int entity_id, int item_id)
 
 void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
-    engine_world.createItem(item_id, model_id, world_model_id, type, count, name ? name : std::string());
+    engine_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
 }
 
 void lua_DeleteBaseItem(int id)
@@ -2389,22 +2389,22 @@ void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16
 
 void lua_FlashStart()
 {
-    Gui_FadeStart(FaderType::Effect, GUI_FADER_DIR_TIMED);
+    Gui_FadeStart(FaderType::Effect, FaderDir::Timed);
 }
 
 void lua_FadeOut()
 {
-    Gui_FadeStart(FaderType::Black, GUI_FADER_DIR_OUT);
+    Gui_FadeStart(FaderType::Black, FaderDir::Out);
 }
 
 void lua_FadeIn()
 {
-    Gui_FadeStart(FaderType::Black, GUI_FADER_DIR_IN);
+    Gui_FadeStart(FaderType::Black, FaderDir::In);
 }
 
 bool lua_FadeCheck()
 {
-    return Gui_FadeCheck(FaderType::Black);
+    return Gui_FadeCheck(FaderType::Black) != FaderStatus::Idle;
 }
 
 // General gameplay functions
@@ -2524,7 +2524,7 @@ void lua_SetGame(int gameId, lua::Value levelId)
 
     const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
     Gui_FadeAssignPic(FaderType::LoadScreen, str);
-    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
+    Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
 
     ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
@@ -2548,7 +2548,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(gameflow_manager.CurrentLevelID, file_path);
         Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
-        Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_IN);
+        Gui_FadeStart(FaderType::LoadScreen, FaderDir::In);
         Engine_LoadMap(mapName);
     }
 }
@@ -3682,9 +3682,9 @@ void script::ScriptEngine::parseScreen(struct ScreenInfo *sc)
     sc->w = (*this)["screen"]["width"];
     sc->h = (*this)["screen"]["height"];
     sc->w = (*this)["screen"]["width"];
-    sc->w_unit = sc->w / GUI_SCREEN_METERING_RESOLUTION;
+    sc->w_unit = sc->w / ScreenMeteringResolution;
     sc->h = (*this)["screen"]["height"];
-    sc->h_unit = sc->h / GUI_SCREEN_METERING_RESOLUTION;
+    sc->h_unit = sc->h / ScreenMeteringResolution;
     sc->FS_flag = (*this)["screen"]["fullscreen"];
     sc->show_debuginfo = (*this)["screen"]["debug_info"];
     sc->fov = (*this)["screen"]["fov"];

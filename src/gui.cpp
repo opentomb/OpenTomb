@@ -27,7 +27,7 @@
 extern SDL_Window  *sdl_window;
 
 TextLine*     gui_base_lines = nullptr;
-TextLine      gui_temp_lines[GUI_MAX_TEMP_LINES];
+TextLine      gui_temp_lines[MaxTempLines];
 uint16_t      temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
@@ -63,7 +63,7 @@ void Gui_InitFontManager()
 
 void Gui_InitTempLines()
 {
-    for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
+    for(int i = 0; i < MaxTempLines; i++)
     {
         gui_temp_lines[i].text.clear();
         gui_temp_lines[i].show = false;
@@ -86,7 +86,7 @@ void Gui_InitBars()
         Bar[i].Vertical = false;
 
         Bar[i].SetSize(250, 15, 3);
-        Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
+        Bar[i].SetPosition(HorizontalAnchor::Left, 30, VerticalAnchor::Top, 30);
         Bar[i].SetColor(BarColorType::BaseMain, 255, 50, 50, 200);
         Bar[i].SetColor(BarColorType::BaseFade, 100, 255, 50, 200);
         Bar[i].SetColor(BarColorType::AltMain, 255, 180, 0, 255);
@@ -108,7 +108,7 @@ void Gui_InitBars()
         Bar[i].Vertical = false;
 
         Bar[i].SetSize(250, 15, 3);
-        Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
+        Bar[i].SetPosition(HorizontalAnchor::Right, 30, VerticalAnchor::Top, 30);
         Bar[i].SetColor(BarColorType::BaseMain, 0, 50, 255, 200);
         Bar[i].SetColor(BarColorType::BaseFade, 190, 190, 255, 200);
         Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
@@ -128,7 +128,7 @@ void Gui_InitBars()
         Bar[i].Vertical = false;
 
         Bar[i].SetSize(250, 15, 3);
-        Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
+        Bar[i].SetPosition(HorizontalAnchor::Left, 30, VerticalAnchor::Top, 55);
         Bar[i].SetColor(BarColorType::BaseMain, 255, 100, 50, 200);
         Bar[i].SetColor(BarColorType::BaseFade, 255, 200, 0, 200);
         Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
@@ -147,7 +147,7 @@ void Gui_InitBars()
         Bar[i].Vertical = false;
 
         Bar[i].SetSize(250, 15, 3);
-        Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
+        Bar[i].SetPosition(HorizontalAnchor::Right, 30, VerticalAnchor::Top, 55);
         Bar[i].SetColor(BarColorType::BaseMain, 255, 0, 255, 255);
         Bar[i].SetColor(BarColorType::BaseFade, 190, 120, 255, 255);
         Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
@@ -167,7 +167,7 @@ void Gui_InitBars()
         Bar[i].Vertical = false;
 
         Bar[i].SetSize(800, 25, 3);
-        Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
+        Bar[i].SetPosition(HorizontalAnchor::Center, 0, VerticalAnchor::Bottom, 40);
         Bar[i].SetColor(BarColorType::BaseMain, 255, 225, 127, 230);
         Bar[i].SetColor(BarColorType::BaseFade, 255, 187, 136, 230);
         Bar[i].SetColor(BarColorType::BackMain, 30, 30, 30, 100);
@@ -188,7 +188,7 @@ void Gui_InitFaders()
         faderType[i].SetColor(0, 0, 0);
         faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
         faderType[i].SetSpeed(500);
-        faderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+        faderType[i].SetScaleMode(FaderScale::Zoom);
     }
 
     {
@@ -205,7 +205,7 @@ void Gui_InitFaders()
         faderType[i].SetColor(0, 0, 0);
         faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
         faderType[i].SetSpeed(500);
-        faderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+        faderType[i].SetScaleMode(FaderScale::Zoom);
     }
 }
 
@@ -219,7 +219,7 @@ void Gui_InitNotifier()
 
 void Gui_Destroy()
 {
-    for(int i = 0; i < GUI_MAX_TEMP_LINES; i++)
+    for(int i = 0; i < MaxTempLines; i++)
     {
         gui_temp_lines[i].show = false;
         gui_temp_lines[i].text.clear();
@@ -230,7 +230,7 @@ void Gui_Destroy()
         fader.second.Cut();
     }
 
-    temp_lines_used = GUI_MAX_TEMP_LINES;
+    temp_lines_used = MaxTempLines;
 
     /*if(main_inventory_menu)
     {
@@ -299,7 +299,7 @@ void Gui_MoveLine(TextLine *line)
  */
 TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(fontManager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
+    if(fontManager && (temp_lines_used < MaxTempLines - 1))
     {
         va_list argptr;
         TextLine* l = gui_temp_lines + temp_lines_used;
@@ -308,8 +308,8 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->style_id = FontStyle::Generic;
 
         va_start(argptr, fmt);
-        char tmpStr[GUI_LINE_DEFAULTSIZE];
-        vsnprintf(tmpStr, GUI_LINE_DEFAULTSIZE, fmt, argptr);
+        char tmpStr[LineDefaultSize];
+        vsnprintf(tmpStr, LineDefaultSize, fmt, argptr);
         l->text = tmpStr;
         va_end(argptr);
 
@@ -320,8 +320,8 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
         l->X = x;
         l->Y = y;
-        l->Xanchor = GUI_ANCHOR_HOR_LEFT;
-        l->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+        l->Xanchor = HorizontalAnchor::Left;
+        l->Yanchor = VerticalAnchor::Bottom;
 
         l->absXoffset = l->X * screen_info.scale_factor;
         l->absYoffset = l->Y * screen_info.scale_factor;
@@ -414,26 +414,26 @@ void Gui_RenderStringLine(TextLine *l)
 
     switch(l->Xanchor)
     {
-        case GUI_ANCHOR_HOR_LEFT:
+        case HorizontalAnchor::Left:
             real_x = l->absXoffset;   // Used with center and right alignments.
             break;
-        case GUI_ANCHOR_HOR_RIGHT:
+        case HorizontalAnchor::Right:
             real_x = static_cast<float>(screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
-        case GUI_ANCHOR_HOR_CENTER:
+        case HorizontalAnchor::Center:
             real_x = (static_cast<float>(screen_info.w) / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
             break;
     }
 
     switch(l->Yanchor)
     {
-        case GUI_ANCHOR_VERT_BOTTOM:
+        case VerticalAnchor::Bottom:
             real_y += l->absYoffset;
             break;
-        case GUI_ANCHOR_VERT_TOP:
+        case VerticalAnchor::Top:
             real_y = static_cast<float>(screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
-        case GUI_ANCHOR_VERT_CENTER:
+        case VerticalAnchor::Center:
             real_y = (static_cast<float>(screen_info.h) / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
@@ -462,10 +462,10 @@ void Gui_RenderStringLine(TextLine *l)
         gl_font->gl_font_color[0] = 0.0f;
         gl_font->gl_font_color[1] = 0.0f;
         gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = static_cast<float>(style->color[3]) * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
+        gl_font->gl_font_color[3] = static_cast<float>(style->color[3]) * FontShadowTransparency;// Derive alpha from base color.
         glf_render_str(gl_font,
-                       (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
-                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT),
+                       (real_x + FontShadowHorizontalShift),
+                       (real_y + FontShadowVerticalShift),
                        l->text.c_str());
     }
 
@@ -611,7 +611,7 @@ InventoryManager::InventoryManager()
 {
     mCurrentState = InventoryState::Disabled;
     mNextState = InventoryState::Disabled;
-    mCurrentItemsType = GUI_MENU_ITEMTYPE_SYSTEM;
+    mCurrentItemsType = MenuItemType::System;
     mCurrentItemsCount = 0;
     mItemsOffset = 0;
     mNextItemsCount = 0;
@@ -633,8 +633,8 @@ InventoryManager::InventoryManager()
 
     mLabel_Title.X = 0.0;
     mLabel_Title.Y = 30.0;
-    mLabel_Title.Xanchor = GUI_ANCHOR_HOR_CENTER;
-    mLabel_Title.Yanchor = GUI_ANCHOR_VERT_TOP;
+    mLabel_Title.Xanchor = HorizontalAnchor::Center;
+    mLabel_Title.Yanchor = VerticalAnchor::Top;
 
     mLabel_Title.font_id = FontType::Primary;
     mLabel_Title.style_id = FontStyle::MenuTitle;
@@ -642,8 +642,8 @@ InventoryManager::InventoryManager()
 
     mLabel_ItemName.X = 0.0;
     mLabel_ItemName.Y = 50.0;
-    mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
-    mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+    mLabel_ItemName.Xanchor = HorizontalAnchor::Center;
+    mLabel_ItemName.Yanchor = VerticalAnchor::Bottom;
 
     mLabel_ItemName.font_id = FontType::Primary;
     mLabel_ItemName.style_id = FontStyle::MenuContent;
@@ -666,7 +666,7 @@ InventoryManager::~InventoryManager()
     Gui_DeleteLine(&mLabel_Title);
 }
 
-int InventoryManager::getItemsTypeCount(int type)
+int InventoryManager::getItemsTypeCount(MenuItemType type)
 {
     int ret = 0;
     for(const InventoryNode& i : *mInventory)
@@ -710,32 +710,32 @@ void InventoryManager::setInventory(std::list<InventoryNode> *i)
     mNextState = InventoryState::Disabled;
 }
 
-void InventoryManager::setTitle(int items_type)
+void InventoryManager::setTitle(MenuItemType items_type)
 {
     int string_index;
 
     switch(items_type)
     {
-        case GUI_MENU_ITEMTYPE_SYSTEM:
+        case MenuItemType::System:
             string_index = STR_GEN_OPTIONS_TITLE;
             break;
 
-        case GUI_MENU_ITEMTYPE_QUEST:
+        case MenuItemType::Quest:
             string_index = STR_GEN_ITEMS;
             break;
 
-        case GUI_MENU_ITEMTYPE_SUPPLY:
+        case MenuItemType::Supply:
         default:
             string_index = STR_GEN_INVENTORY;
             break;
     }
 
-    char buffer[GUI_LINE_DEFAULTSIZE];
-    engine_lua.getString(string_index, GUI_LINE_DEFAULTSIZE, buffer);
+    char buffer[LineDefaultSize];
+    engine_lua.getString(string_index, LineDefaultSize, buffer);
     mLabel_Title.text = buffer;
 }
 
-int InventoryManager::setItemsType(int type)
+MenuItemType InventoryManager::setItemsType(MenuItemType type)
 {
     if(!mInventory || mInventory->empty())
     {
@@ -768,7 +768,7 @@ int InventoryManager::setItemsType(int type)
         return type;
     }
 
-    return -1;
+    return MenuItemType::Invalid;
 }
 
 void InventoryManager::frame(float time)
@@ -853,7 +853,7 @@ void InventoryManager::frame(float time)
                     break;
 
                 case InventoryState::Up:
-                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType + 1);
+                    mNextItemsCount = this->getItemsTypeCount(nextItemType(mCurrentItemsType));
                     if(mNextItemsCount > 0)
                     {
                         //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
@@ -869,7 +869,7 @@ void InventoryManager::frame(float time)
                     break;
 
                 case InventoryState::Down:
-                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType - 1);
+                    mNextItemsCount = this->getItemsTypeCount(previousItemType(mCurrentItemsType));
                     if(mNextItemsCount > 0)
                     {
                         //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
@@ -889,7 +889,7 @@ void InventoryManager::frame(float time)
         case InventoryState::Disabled:
             if(mNextState == InventoryState::Open)
             {
-                if(setItemsType(mCurrentItemsType) >= 0)
+                if(setItemsType(mCurrentItemsType) != MenuItemType::Invalid)
                 {
                     Audio_Send(engine_lua.getGlobalSound(TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mCurrentState = InventoryState::Open;
@@ -919,7 +919,7 @@ void InventoryManager::frame(float time)
                     mVerticalOffset = mBaseRingRadius;
                     mRingAngleStep = 360.0f / mNextItemsCount;
                     mRingAngle = 180.0;
-                    mCurrentItemsType++;
+                    mCurrentItemsType = nextItemType(mCurrentItemsType);
                     mCurrentItemsCount = mNextItemsCount;
                     mItemsOffset = 0;
                     setTitle(mCurrentItemsType);
@@ -957,7 +957,7 @@ void InventoryManager::frame(float time)
                     mVerticalOffset = -mBaseRingRadius;
                     mRingAngleStep = 360.0f / mNextItemsCount;
                     mRingAngle = 180.0;
-                    mCurrentItemsType--;
+                    mCurrentItemsType = previousItemType(mCurrentItemsType);
                     mCurrentItemsCount = mNextItemsCount;
                     mItemsOffset = 0;
                     setTitle(mCurrentItemsType);
@@ -990,7 +990,7 @@ void InventoryManager::frame(float time)
                 mRingTime = 0.0;
                 mRingAngle = 0.0;
                 mVerticalOffset = 0.0;
-                setTitle(GUI_MENU_ITEMTYPE_SUPPLY);
+                setTitle(MenuItemType::Supply);
             }
             break;
 
@@ -1007,7 +1007,7 @@ void InventoryManager::frame(float time)
                 mRingTime = 0.0;
                 mLabel_Title.show = false;
                 mRingRadius = mBaseRingRadius;
-                mCurrentItemsType = 1;
+                mCurrentItemsType = MenuItemType::Supply;
             }
             break;
     }
@@ -1046,8 +1046,8 @@ void InventoryManager::render()
                     {
                         char counter[32];
                         engine_lua.getString(STR_GEN_MASK_INVHEADER, 32, counter);
-                        char tmp[GUI_LINE_DEFAULTSIZE];
-                        snprintf(tmp, GUI_LINE_DEFAULTSIZE, static_cast<const char*>(counter), bi->name, i.count);
+                        char tmp[LineDefaultSize];
+                        snprintf(tmp, LineDefaultSize, static_cast<const char*>(counter), bi->name, i.count);
                         mLabel_ItemName.text = tmp;
                     }
                 }
@@ -1323,11 +1323,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-bool Gui_FadeStart(FaderType fader, int fade_direction)
+bool Gui_FadeStart(FaderType fader, FaderDir fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != GUI_FADER_STATUS_FADING))
+    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != FaderStatus::Fading))
     {
         faderType[fader].Engage(fade_direction);
         return true;
@@ -1340,7 +1340,7 @@ bool Gui_FadeStart(FaderType fader, int fade_direction)
 
 bool Gui_FadeStop(FaderType fader)
 {
-    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != GUI_FADER_STATUS_IDLE))
+    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != FaderStatus::Idle))
     {
         faderType[fader].Cut();
         return true;
@@ -1422,7 +1422,7 @@ void Gui_FadeSetup(FaderType fader,
     faderType[fader].SetSpeed(fadein_speed, fadeout_speed);
 }
 
-int Gui_FadeCheck(FaderType fader)
+FaderStatus Gui_FadeCheck(FaderType fader)
 {
     if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
     {
@@ -1430,7 +1430,7 @@ int Gui_FadeCheck(FaderType fader)
     }
     else
     {
-        return false;
+        return FaderStatus::Invalid;
     }
 }
 
@@ -1448,7 +1448,7 @@ Fader::Fader()
 
     mActive = false;
     mComplete = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
-    mDirection = GUI_FADER_DIR_IN;
+    mDirection = FaderDir::In;
 
     mTexture = 0;
 }
@@ -1458,12 +1458,12 @@ void Fader::SetAlpha(uint8_t alpha)
     mMaxAlpha = static_cast<float>(alpha) / 255;
 }
 
-void Fader::SetScaleMode(uint8_t mode)
+void Fader::SetScaleMode(FaderScale mode)
 {
     mTextureScaleMode = mode;
 }
 
-void Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
+void Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner)
 {
     // Each corner of the fader could be colored independently, thus allowing
     // to create gradient faders. It is nifty yet not so useful feature, so
@@ -1472,25 +1472,25 @@ void Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
 
     switch(corner)
     {
-        case GUI_FADER_CORNER_TOPLEFT:
+        case FaderCorner::TopLeft:
             mTopLeftColor[0] = static_cast<GLfloat>(R) / 255;
             mTopLeftColor[1] = static_cast<GLfloat>(G) / 255;
             mTopLeftColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
-        case GUI_FADER_CORNER_TOPRIGHT:
+        case FaderCorner::TopRight:
             mTopRightColor[0] = static_cast<GLfloat>(R) / 255;
             mTopRightColor[1] = static_cast<GLfloat>(G) / 255;
             mTopRightColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
-        case GUI_FADER_CORNER_BOTTOMLEFT:
+        case FaderCorner::BottomLeft:
             mBottomLeftColor[0] = static_cast<GLfloat>(R) / 255;
             mBottomLeftColor[1] = static_cast<GLfloat>(G) / 255;
             mBottomLeftColor[2] = static_cast<GLfloat>(B) / 255;
             break;
 
-        case GUI_FADER_CORNER_BOTTOMRIGHT:
+        case FaderCorner::BottomRight:
             mBottomRightColor[0] = static_cast<GLfloat>(R) / 255;
             mBottomRightColor[1] = static_cast<GLfloat>(G) / 255;
             mBottomRightColor[2] = static_cast<GLfloat>(B) / 255;
@@ -1717,14 +1717,14 @@ bool Fader::DropTexture()
     }
 }
 
-void Fader::Engage(int fade_dir)
+void Fader::Engage(FaderDir fade_dir)
 {
     mDirection = fade_dir;
     mActive = true;
     mComplete = false;
     mCurrentTime = 0.0;
 
-    if(mDirection == GUI_FADER_DIR_IN)
+    if(mDirection == FaderDir::In)
     {
         mCurrentAlpha = mMaxAlpha;      // Fade in: set alpha to maximum.
     }
@@ -1752,7 +1752,7 @@ void Fader::Show()
         return;                                 // If fader is not active, don't render it.
     }
 
-    if(mDirection == GUI_FADER_DIR_IN)          // Fade in case
+    if(mDirection == FaderDir::In)          // Fade in case
     {
         if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
         {
@@ -1766,7 +1766,7 @@ void Fader::Show()
             DropTexture();
         }
     }
-    else if(mDirection == GUI_FADER_DIR_OUT)  // Fade out case
+    else if(mDirection == FaderDir::Out)  // Fade out case
     {
         if(mCurrentAlpha < mMaxAlpha)   // If alpha is less than maximum, continue to fade.
         {
@@ -1831,7 +1831,7 @@ void Fader::Show()
         // Texture is always modulated with alpha!
         GLfloat tex_color[4] = { mCurrentAlpha, mCurrentAlpha, mCurrentAlpha, mCurrentAlpha };
 
-        if(mTextureScaleMode == GUI_FADER_SCALE_LETTERBOX)
+        if(mTextureScaleMode == FaderScale::LetterBox)
         {
             if(mTextureWide)        // Texture is wider than the screen... Do letterbox.
             {
@@ -1888,7 +1888,7 @@ void Fader::Show()
                              mBlendingMode);
             }
         }
-        else if(mTextureScaleMode == GUI_FADER_SCALE_ZOOM)
+        else if(mTextureScaleMode == FaderScale::Zoom)
         {
             if(mTextureWide)    // Texture is wider than the screen - scale vertical.
             {
@@ -1930,19 +1930,19 @@ void Fader::Show()
     }   // end if(mTexture)
 }
 
-int Fader::IsFading()
+FaderStatus Fader::IsFading()
 {
     if(mComplete)
     {
-        return GUI_FADER_STATUS_COMPLETE;
+        return FaderStatus::Complete;
     }
     else if(mActive)
     {
-        return GUI_FADER_STATUS_FADING;
+        return FaderStatus::Fading;
     }
     else
     {
-        return GUI_FADER_STATUS_IDLE;
+        return FaderStatus::Idle;
     }
 }
 
@@ -1961,7 +1961,7 @@ ProgressBar::ProgressBar()
 
     // Initialize parameters.
     // By default, bar is initialized with TR5-like health bar properties.
-    SetPosition(GUI_ANCHOR_HOR_LEFT, 20, GUI_ANCHOR_VERT_TOP, 20);
+    SetPosition(HorizontalAnchor::Left, 20, VerticalAnchor::Top, 20);
     SetSize(250, 25, 3);
     SetColor(BarColorType::BaseMain, 255, 50, 50, 150);
     SetColor(BarColorType::BaseFade, 100, 255, 50, 150);
@@ -2055,7 +2055,7 @@ void ProgressBar::SetColor(BarColorType colType,
     }
 }
 
-void ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y)
+void ProgressBar::SetPosition(HorizontalAnchor anchor_X, float offset_X, VerticalAnchor anchor_Y, float offset_Y)
 {
     mXanchor = anchor_X;
     mYanchor = anchor_Y;
@@ -2097,28 +2097,28 @@ void ProgressBar::RecalculatePosition()
 {
     switch(mXanchor)
     {
-        case GUI_ANCHOR_HOR_LEFT:
+        case HorizontalAnchor::Left:
             mX = static_cast<float>(mAbsXoffset + mAbsBorderSize) * screen_info.scale_factor;
             break;
-        case GUI_ANCHOR_HOR_CENTER:
+        case HorizontalAnchor::Center:
             mX = (static_cast<float>(screen_info.w) - (static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor)) / 2 +
                 (static_cast<float>(mAbsXoffset) * screen_info.scale_factor);
             break;
-        case GUI_ANCHOR_HOR_RIGHT:
+        case HorizontalAnchor::Right:
             mX = static_cast<float>(screen_info.w) - static_cast<float>(mAbsXoffset + mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor;
             break;
     }
 
     switch(mYanchor)
     {
-        case GUI_ANCHOR_VERT_TOP:
+        case VerticalAnchor::Top:
             mY = static_cast<float>(screen_info.h) - static_cast<float>(mAbsYoffset + mAbsHeight + mAbsBorderSize * 2) * screen_info.scale_factor;
             break;
-        case GUI_ANCHOR_VERT_CENTER:
+        case VerticalAnchor::Center:
             mY = (static_cast<float>(screen_info.h) - (static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * screen_info.h_unit)) / 2 +
                 (static_cast<float>(mAbsYoffset) * screen_info.scale_factor);
             break;
-        case GUI_ANCHOR_VERT_BOTTOM:
+        case VerticalAnchor::Bottom:
             mY = (mAbsYoffset + mAbsBorderSize) * screen_info.scale_factor;
             break;
     }
@@ -2488,8 +2488,8 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = (static_cast<float>(screen_info.w) / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
-    mPosY = (static_cast<float>(screen_info.h) / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mEndPosX = (static_cast<float>(screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
+    mPosY = (static_cast<float>(screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
     mCurrPosX = screen_info.w + (static_cast<float>(screen_info.w) / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
@@ -2609,7 +2609,7 @@ FontStyleData *FontManager::GetFontStyle(const FontStyle index)
 
 bool FontManager::AddFont(const FontType index, const uint32_t size, const char* path)
 {
-    if((size < GUI_MIN_FONT_SIZE) || (size > GUI_MAX_FONT_SIZE))
+    if((size < MinFontSize) || (size > MaxFontSize))
     {
         return false;
     }
@@ -2618,7 +2618,7 @@ bool FontManager::AddFont(const FontType index, const uint32_t size, const char*
 
     if(desired_font == nullptr)
     {
-        if(this->fonts.size() >= GUI_MAX_FONTS)
+        if(this->fonts.size() >= MaxFonts)
         {
             return false;
         }
@@ -2645,7 +2645,7 @@ bool FontManager::AddFontStyle(const FontStyle index,
 
     if(desired_style == nullptr)
     {
-        if(this->styles.size() >= GUI_MAX_FONTSTYLES)
+        if(this->styles.size() >= static_cast<int>(FontStyle::Sentinel))
         {
             return false;
         }
@@ -2718,7 +2718,7 @@ void FontManager::Update()
 {
     if(this->mFadeDirection)
     {
-        this->mFadeValue += engine_frame_time * GUI_FONT_FADE_SPEED;
+        this->mFadeValue += engine_frame_time * FontFadeSpeed;
 
         if(this->mFadeValue >= 1.0)
         {
@@ -2728,11 +2728,11 @@ void FontManager::Update()
     }
     else
     {
-        this->mFadeValue -= engine_frame_time * GUI_FONT_FADE_SPEED;
+        this->mFadeValue -= engine_frame_time * FontFadeSpeed;
 
-        if(this->mFadeValue <= GUI_FONT_FADE_MIN)
+        if(this->mFadeValue <= FontFadeMin)
         {
-            this->mFadeValue = GUI_FONT_FADE_MIN;
+            this->mFadeValue = FontFadeMin;
             this->mFadeDirection = true;
         }
     }

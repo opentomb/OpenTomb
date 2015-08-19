@@ -418,7 +418,7 @@ void Engine_Start()
 
     // Make splash screen.
     Gui_FadeAssignPic(FaderType::LoadScreen, "resource/graphics/legal.png");
-    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
+    Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -472,8 +472,8 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.w = nominalW;
     screen_info.h = nominalH;
 
-    screen_info.w_unit = static_cast<float>(nominalW) / GUI_SCREEN_METERING_RESOLUTION;
-    screen_info.h_unit = static_cast<float>(nominalH) / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.w_unit = static_cast<float>(nominalW) / ScreenMeteringResolution;
+    screen_info.h_unit = static_cast<float>(nominalH) / ScreenMeteringResolution;
     screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
 
     Gui_Resize();
@@ -994,7 +994,7 @@ int Engine_LoadMap(const std::string& name)
 
     Gui_DrawLoadScreen(1000);
 
-    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_IN);
+    Gui_FadeStart(FaderType::LoadScreen, FaderDir::In);
     Gui_NotifierStop();
 
     return 1;

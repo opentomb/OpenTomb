@@ -180,11 +180,13 @@ struct SkeletalModel;
 struct RedBlackHeader_s;
 struct SSBoneFrame;
 
+enum class MenuItemType;
+
 struct BaseItem
 {
     uint32_t                    id;
     uint32_t                    world_model_id;
-    uint16_t                    type;
+    MenuItemType                type;
     uint16_t                    count;
     char                        name[64];
     std::unique_ptr<SSBoneFrame> bf;
@@ -414,7 +416,7 @@ struct World
     void calculateWaterTint(float* tint, bool fixed_colour);
 
     void addEntity(std::shared_ptr<Entity> entity);
-    bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const std::string &name);
+    bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
     Sprite* getSpriteByID(unsigned int ID);
     SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
