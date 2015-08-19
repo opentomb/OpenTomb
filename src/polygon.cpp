@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "vmath.h"
+#include "util/vmath.h"
 
 /*
  * POLYGONS
@@ -268,7 +268,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
     return !((dist1 < dist0 && dist2 < dist0) || (dist1 > 0.0 && dist2 > 0.0));
 }
 
-int Polygon::splitClassify(const Plane& plane)
+int Polygon::splitClassify(const util::Plane& plane)
 {
     size_t positive = 0, negative = 0;
     for(const auto& v : vertices)
@@ -303,7 +303,7 @@ int Polygon::splitClassify(const Plane& plane)
 /*
  * animated textures coordinates splits too!
  */
-void Polygon::split(const Plane& n, Polygon* front, Polygon* back)
+void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
 {
     front->plane = plane;
     front->anim_id = anim_id;

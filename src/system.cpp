@@ -3,15 +3,15 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "console.h"
+#include "gui/console.h"
 #include "engine.h"
-#include "gui.h"
+#include "gui/gui.h"
 
 ScreenInfo     screen_info;
 SystemSettings system_settings;
 
 
-TextLine system_fps;
+gui::TextLine system_fps;
 
 // =======================================================================
 // General routines
@@ -36,15 +36,15 @@ void Sys_Init()
 
     system_fps.X = (10.0);
     system_fps.Y = (10.0);
-    system_fps.Xanchor = HorizontalAnchor::Right;
-    system_fps.Yanchor = VerticalAnchor::Bottom;
+    system_fps.Xanchor = gui::HorizontalAnchor::Right;
+    system_fps.Yanchor = gui::VerticalAnchor::Bottom;
 
-    system_fps.font_id = FontType::Primary;
-    system_fps.style_id = FontStyle::MenuTitle;
+    system_fps.font_id = gui::FontType::Primary;
+    system_fps.style_id = gui::FontStyle::MenuTitle;
 
     system_fps.show = true;
 
-    Gui_AddLine(&system_fps);
+    gui::addLine(&system_fps);
 }
 
 void Sys_InitGlobals()

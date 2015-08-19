@@ -8,7 +8,7 @@
 #include "frustum.h"
 #include "mesh.h"
 #include "polygon.h"
-#include "vmath.h"
+#include "util/vmath.h"
 
 void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
 {

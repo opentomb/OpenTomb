@@ -4,8 +4,8 @@
 
 #include <GL/glew.h>
 
-#include "matrix4.h"
-#include "vmath.h"
+#include "util/matrix4.h"
+#include "util/vmath.h"
 #include "frustum.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0f
@@ -71,11 +71,11 @@ public:
     btVector3 m_prevPos{ 0,0,0 };            // previous camera position
     btVector3 m_ang;                 // camera orientation
 
-    matrix4 m_glViewMat = matrix4();
-    matrix4 m_glProjMat = matrix4();
-    matrix4 m_glViewProjMat = matrix4();
+    util::matrix4 m_glViewMat = util::matrix4();
+    util::matrix4 m_glProjMat = util::matrix4();
+    util::matrix4 m_glViewProjMat = util::matrix4();
 
-    Plane m_clipPlanes[4];        // frustum side clip planes
+    util::Plane m_clipPlanes[4];        // frustum side clip planes
     Frustum frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;

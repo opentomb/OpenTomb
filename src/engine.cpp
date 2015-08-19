@@ -31,12 +31,12 @@
 
 #include "gl_util.h"
 #include "polygon.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "controls.h"
-#include "console.h"
+#include "gui/console.h"
 #include "system.h"
 #include "common.h"
-#include "script.h"
+#include "script/script.h"
 #include "render.h"
 #include "game.h"
 #include "world.h"
@@ -44,12 +44,13 @@
 #include "mesh.h"
 #include "entity.h"
 #include "resource.h"
-#include "gui.h"
+#include "gui/gui.h"
 #include "audio.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "strings.h"
 
+using gui::Console;
 
 SDL_Window             *sdl_window = nullptr;
 SDL_Joystick           *sdl_joystick = nullptr;
@@ -73,8 +74,6 @@ namespace
 std::vector<btScalar> frame_vertex_buffer;
 size_t                frame_vertex_buffer_size_left = 0;
 }
-
-script::MainEngine engine_lua;
 
 btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
 btCollisionDispatcher               *bt_engine_dispatcher = nullptr;
@@ -285,12 +284,12 @@ void Engine_InitSDLVideo()
     if(SDL_GL_SetSwapInterval(screen_info.vsync))
         Sys_DebugLog(LOG_FILENAME, "Cannot set VSYNC: %s\n", SDL_GetError());
 
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), FontStyle::ConsoleInfo);
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), FontStyle::ConsoleInfo);
+    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), gui::FontStyle::ConsoleInfo);
+    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), gui::FontStyle::ConsoleInfo);
     std::string version = "OpenGL version ";
     version += reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    ConsoleInfo::instance().addLine(version, FontStyle::ConsoleInfo);
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), FontStyle::ConsoleInfo);
+    Console::instance().addLine(version, gui::FontStyle::ConsoleInfo);
+    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
 }
 
 #if !defined(__MACOSX__)
@@ -368,7 +367,7 @@ void Engine_InitAL()
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);
-    ConsoleInfo::instance().addLine(driver, FontStyle::ConsoleInfo);
+    Console::instance().addLine(driver, gui::FontStyle::ConsoleInfo);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
@@ -409,7 +408,7 @@ void Engine_Start()
     // OpenAL initialization.
     Engine_InitAL();
 
-    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_INITED);
+    Console::instance().notify(SYSNOTE_ENGINE_INITED);
 
     // Clearing up memory for initial level loading.
     engine_world.prepare();
@@ -417,8 +416,8 @@ void Engine_Start()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Make splash screen.
-    Gui_FadeAssignPic(FaderType::LoadScreen, "resource/graphics/legal.png");
-    Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
+    gui::fadeAssignPic(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
+    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -450,17 +449,17 @@ void Engine_Display()
         glPopMatrix();
     }*/
 
-    Gui_SwitchGLMode(1);
+    gui::switchGLMode(true);
     {
-        Gui_DrawNotifier();
-        if(engine_world.character && main_inventory_manager)
+        gui::drawNotifier();
+        if(engine_world.character && gui::main_inventory_manager)
         {
-            Gui_DrawInventory();
+            gui::drawInventory();
         }
     }
 
-    Gui_Render();
-    Gui_SwitchGLMode(0);
+    gui::render();
+    gui::switchGLMode(false);
 
     renderer.drawListDebugLines();
 
@@ -472,11 +471,11 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.w = nominalW;
     screen_info.h = nominalH;
 
-    screen_info.w_unit = static_cast<float>(nominalW) / ScreenMeteringResolution;
-    screen_info.h_unit = static_cast<float>(nominalH) / ScreenMeteringResolution;
+    screen_info.w_unit = static_cast<float>(nominalW) / gui::ScreenMeteringResolution;
+    screen_info.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
     screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
 
-    Gui_Resize();
+    gui::resize();
 
     engine_camera.setFovAspect(screen_info.fov, static_cast<btScalar>(nominalW) / static_cast<btScalar>(nominalH));
     engine_camera.recalcClipPlanes();
@@ -484,7 +483,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
-extern TextLine system_fps;
+extern gui::TextLine system_fps;
 
 namespace
 {
@@ -542,7 +541,7 @@ void Engine_ShowDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
+        gui::drawText(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.last_animation,
                       ent->m_bf.animations.current_animation,
                       ent->m_bf.animations.next_animation,
@@ -552,7 +551,7 @@ void Engine_ShowDebugInfo()
                       ent->m_bf.animations.current_frame
                       );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
+        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
     }
 
     if(last_cont != nullptr)
@@ -560,15 +559,15 @@ void Engine_ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->id(), static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
+                gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->id(), static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", static_cast<StaticMesh*>(last_cont->object)->object_id);
+                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<StaticMesh*>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", static_cast<Room*>(last_cont->object)->id);
+                gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<Room*>(last_cont->object)->id);
                 break;
         }
     }
@@ -578,11 +577,11 @@ void Engine_ShowDebugInfo()
         RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
-            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
+            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
+            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
+    gui::drawText(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
 }
 
 /**
@@ -653,7 +652,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 
 void Engine_InitDefaultGlobals()
 {
-    ConsoleInfo::instance().initGlobals();
+    Console::instance().initGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     renderer.initGlobals();
@@ -667,8 +666,8 @@ void Engine_Init_Pre()
     /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
 
-    Gui_InitFontManager();
-    ConsoleInfo::instance().init();
+    gui::initFontManager();
+    Console::instance().init();
 
     engine_lua["loadscript_pre"]();
 
@@ -677,7 +676,7 @@ void Engine_Init_Pre()
     frame_vertex_buffer.resize(INIT_FRAME_VERTEX_BUFFER_SIZE);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
 
-    ConsoleInfo::instance().setCompletionItems(engine_lua.getGlobals());
+    Console::instance().setCompletionItems(engine_lua.getGlobals());
 
     Com_Init();
     renderer.init();
@@ -692,9 +691,9 @@ void Engine_Init_Post()
 {
     engine_lua["loadscript_post"]();
 
-    ConsoleInfo::instance().initFonts();
+    Console::instance().initFonts();
 
-    Gui_Init();
+    gui::init();
     Sys_Init();
 }
 
@@ -774,7 +773,7 @@ void Engine_Destroy()
 
     delete bt_engine_ghostPairCallback;
 
-    Gui_Destroy();
+    gui::destroy();
 }
 
 void Engine_Shutdown(int val)
@@ -926,9 +925,9 @@ bool Engine_LoadPCLevel(const std::string& name)
 
     std::string buf = Engine_GetLevelName(name);
 
-    ConsoleInfo::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
-    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
-    ConsoleInfo::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
+    Console::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
+    Console::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
+    Console::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
 
     return true;
 }
@@ -937,11 +936,11 @@ int Engine_LoadMap(const std::string& name)
 {
     if(!Engine_FileFound(name))
     {
-        ConsoleInfo::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
+        Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
         return 0;
     }
 
-    Gui_DrawLoadScreen(0);
+    gui::drawLoadScreen(0);
 
     engine_camera.m_currentRoom = nullptr;
 
@@ -950,7 +949,7 @@ int Engine_LoadMap(const std::string& name)
 
     gameflow_manager.CurrentLevelPath = name;          // it is needed for "not in the game" levels or correct saves loading.
 
-    Gui_DrawLoadScreen(50);
+    gui::drawLoadScreen(50);
 
     engine_world.empty();
     engine_world.prepare();
@@ -959,7 +958,7 @@ int Engine_LoadMap(const std::string& name)
 
     Audio_Init();
 
-    Gui_DrawLoadScreen(100);
+    gui::drawLoadScreen(100);
 
     // Here we can place different platform-specific level loading routines.
 
@@ -992,17 +991,17 @@ int Engine_LoadMap(const std::string& name)
 
     renderer.setWorld(&engine_world);
 
-    Gui_DrawLoadScreen(1000);
+    gui::drawLoadScreen(1000);
 
-    Gui_FadeStart(FaderType::LoadScreen, FaderDir::In);
-    Gui_NotifierStop();
+    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    gui::notifierStop();
 
     return 1;
 }
 
 int Engine_ExecCmd(const char *ch)
 {
-    std::vector<char> token(ConsoleInfo::instance().lineSize());
+    std::vector<char> token(Console::instance().lineSize());
     RoomSector* sect;
     FILE *f;
 
@@ -1015,7 +1014,7 @@ int Engine_ExecCmd(const char *ch)
         {
             for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
             {
-                ConsoleInfo::instance().notify(i);
+                Console::instance().notify(i);
             }
         }
         else if(!strcmp(token.data(), "goto"))
@@ -1052,7 +1051,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "cls"))
         {
-            ConsoleInfo::instance().clean();
+            Console::instance().clean();
             return 1;
         }
         else if(!strcmp(token.data(), "spacing"))
@@ -1060,10 +1059,10 @@ int Engine_ExecCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
-                ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_SPACING, ConsoleInfo::instance().spacing());
+                Console::instance().notify(SYSNOTE_CONSOLE_SPACING, Console::instance().spacing());
                 return 1;
             }
-            ConsoleInfo::instance().setLineInterval(atof(token.data()));
+            Console::instance().setLineInterval(atof(token.data()));
             return 1;
         }
         else if(!strcmp(token.data(), "showing_lines"))
@@ -1071,20 +1070,20 @@ int Engine_ExecCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
-                ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, ConsoleInfo::instance().visibleLines());
+                Console::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, Console::instance().visibleLines());
                 return 1;
             }
             else
             {
                 const auto val = atoi(token.data());
-                if((val >=2 ) && (val <= screen_info.h/ConsoleInfo::instance().lineHeight()))
+                if((val >=2 ) && (val <= screen_info.h/Console::instance().lineHeight()))
                 {
-                    ConsoleInfo::instance().setVisibleLines(val);
-                    ConsoleInfo::instance().setCursorY(screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines());
+                    Console::instance().setVisibleLines(val);
+                    Console::instance().setCursorY(screen_info.h - Console::instance().lineHeight() * Console::instance().visibleLines());
                 }
                 else
                 {
-                    ConsoleInfo::instance().warning(SYSWARN_INVALID_LINECOUNT);
+                    Console::instance().warning(SYSWARN_INVALID_LINECOUNT);
                 }
             }
             return 1;
@@ -1154,21 +1153,21 @@ int Engine_ExecCmd(const char *ch)
             if(Room* r = renderer.camera()->m_currentRoom)
             {
                 sect = r->getSectorXYZ(renderer.camera()->getPosition());
-                ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
-                    ConsoleInfo::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
+                    Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                                    static_cast<int>(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
                     for(uint32_t i = 0; i < sect->owner_room->static_mesh.size(); i++)
                     {
-                        ConsoleInfo::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
+                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
                     }
                     for(const std::shared_ptr<EngineContainer>& cont : sect->owner_room->containers)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             Entity* e = static_cast<Entity*>(cont->object);
-                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
+                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
                         }
                     }
                 }
@@ -1188,29 +1187,29 @@ int Engine_ExecCmd(const char *ch)
                 fread(buf.data(), size, sizeof(char), f);
                 buf[size] = 0;
                 fclose(f);
-                ConsoleInfo::instance().clean();
-                ConsoleInfo::instance().addText(buf.data(), FontStyle::ConsoleInfo);
+                Console::instance().clean();
+                Console::instance().addText(buf.data(), gui::FontStyle::ConsoleInfo);
             }
             else
             {
-                ConsoleInfo::instance().addText("Not avaliable =(", FontStyle::ConsoleWarning);
+                Console::instance().addText("Not avaliable =(", gui::FontStyle::ConsoleWarning);
             }
             return 1;
         }
         else if(token[0])
         {
-            ConsoleInfo::instance().addLine(pch, FontStyle::ConsoleEvent);
+            Console::instance().addLine(pch, gui::FontStyle::ConsoleEvent);
             try
             {
                 engine_lua.doString(pch);
             }
             catch(lua::RuntimeError& error)
             {
-                ConsoleInfo::instance().addLine(error.what(), FontStyle::ConsoleWarning);
+                Console::instance().addLine(error.what(), gui::FontStyle::ConsoleWarning);
             }
             catch(lua::LoadError& error)
             {
-                ConsoleInfo::instance().addLine(error.what(), FontStyle::ConsoleWarning);
+                Console::instance().addLine(error.what(), gui::FontStyle::ConsoleWarning);
             }
             return 0;
         }
@@ -1245,7 +1244,7 @@ void Engine_InitConfig(const char *filename)
         state.parseScreen(&screen_info);
         state.parseRender(&renderer.settings());
         state.parseAudio(&audio_settings);
-        state.parseConsole(&ConsoleInfo::instance());
+        state.parseConsole(&Console::instance());
         state.parseControls(&control_mapper);
         state.parseSystem(&system_settings);
     }
@@ -1257,7 +1256,7 @@ void Engine_InitConfig(const char *filename)
 
 int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
-    ConsoleInfo::instance().addText(str, FontStyle::ConsoleNotify);
+    Console::instance().addText(str, gui::FontStyle::ConsoleNotify);
     return static_cast<int>(strlen(str));
 }
 
@@ -1276,7 +1275,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     fwrite(buf, 1, ret, f);
 
     // Write it to console, too (if it helps) und
-    ConsoleInfo::instance().addText(buf, FontStyle::ConsoleNotify);
+    Console::instance().addText(buf, gui::FontStyle::ConsoleNotify);
 
     return ret;
 }
@@ -1291,7 +1290,7 @@ int engine_lua_printf(const char *fmt, ...)
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
 
-    ConsoleInfo::instance().addText(buf, FontStyle::ConsoleNotify);
+    Console::instance().addText(buf, gui::FontStyle::ConsoleNotify);
 
     return ret;
 }

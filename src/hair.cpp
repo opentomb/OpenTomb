@@ -9,7 +9,7 @@
 
 #include "mesh.h"
 #include "render.h"
-#include "script.h"
+#include "script/script.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {

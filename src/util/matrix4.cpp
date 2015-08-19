@@ -10,6 +10,9 @@
 
 #include "vmath.h"
 
+namespace util
+{
+
 bool float4::isOnTriangle(const float4 *points) const
 {
     const float4 zero(0.0f);
@@ -265,4 +268,6 @@ bool ray4::hitsTriangle(const float4 *points, float &length) const
 std::ostream &operator<<(std::ostream &out, const float4 &vec)
 {
     return out << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w;
+}
+
 }

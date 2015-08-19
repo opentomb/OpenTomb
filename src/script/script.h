@@ -10,8 +10,12 @@
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
 
+namespace gui
+{
+struct Console;
+}
+
 struct ScreenInfo;
-struct ConsoleInfo;
 struct Entity;
 
 struct AudioSettings;
@@ -107,7 +111,7 @@ namespace script
         void parseScreen(ScreenInfo *sc);
         void parseRender(RenderSettings *rs);
         void parseAudio(AudioSettings *as);
-        void parseConsole(ConsoleInfo *cn);
+        void parseConsole(gui::Console *cn);
         void parseControls(ControlSettings *cs);
         void parseSystem(SystemSettings *ss);
 

@@ -11,6 +11,9 @@
 #define PLANE_Y        2
 #define PLANE_Z        3
 
+namespace util
+{
+
 namespace
 {
     constexpr const float DegPerRad = static_cast<float>(180 / M_PI);
@@ -89,3 +92,5 @@ void Mat4_RotateX(btTransform &mat, btScalar ang);
 void Mat4_RotateY(btTransform &mat, btScalar ang);
 void Mat4_RotateZ(btTransform &mat, btScalar ang);
 btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const btScalar& t);
+
+} // namespace util

@@ -28,6 +28,9 @@
 
 #include <LinearMath/btTransform.h>
 
+namespace util
+{
+
 #ifdef _MSC_VER
 // Microsoft Visual C++
 #ifdef max
@@ -703,3 +706,5 @@ struct matrix4
 };
 
 std::ostream &operator<<(std::ostream &out, const float4 &vec);
+
+} // namespace util

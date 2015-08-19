@@ -8,10 +8,10 @@
 #include <SDL2/SDL_haptic.h>
 
 #include "common.h"
-#include "console.h"
+#include "gui/console.h"
 #include "engine.h"
 #include "game.h"
-#include "script.h"
+#include "script/script.h"
 #include "system.h"
 
 extern bool done;
@@ -22,6 +22,8 @@ extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
 extern EngineContainer* last_cont;
+
+using gui::Console;
 
 void Controls_Key(int32_t button, bool state)
 {
@@ -117,9 +119,9 @@ void Controls_Key(int32_t button, bool state)
                 case ACT_CONSOLE:
                     if(!state)
                     {
-                        ConsoleInfo::instance().toggleVisibility();
+                        Console::instance().toggleVisibility();
 
-                        if(ConsoleInfo::instance().isVisible())
+                        if(Console::instance().isVisible())
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                             SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -457,7 +459,7 @@ void Controls_PollSDLInput()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look)
+                if(!Console::instance().isVisible() && control_states.mouse_look)
                 {
                         control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_x;
                         control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_y;
@@ -509,9 +511,9 @@ void Controls_PollSDLInput()
 
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
-                if(ConsoleInfo::instance().isVisible() && event.key.state)
+                if(Console::instance().isVisible() && event.key.state)
                 {
-                    ConsoleInfo::instance().filter(event.text.text);
+                    Console::instance().filter(event.text.text);
                     return;
                 }
                 break;
@@ -526,7 +528,7 @@ void Controls_PollSDLInput()
                     break;
                 }
 
-                if(ConsoleInfo::instance().isVisible() && event.key.state)
+                if(Console::instance().isVisible() && event.key.state)
                 {
                     switch(event.key.keysym.sym)
                     {
@@ -541,7 +543,7 @@ void Controls_PollSDLInput()
                         case SDLK_DELETE:
                         case SDLK_TAB:
                         case SDLK_v: // for Ctrl+V
-                            ConsoleInfo::instance().edit(event.key.keysym.sym, event.key.keysym.mod);
+                            Console::instance().edit(event.key.keysym.sym, event.key.keysym.mod);
                             break;
                         default:
                             break;
@@ -582,37 +584,37 @@ void Controls_DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_RETURN:
-                if(main_inventory_manager)
+                if(gui::main_inventory_manager)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Activate);
+                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Activate);
                 }
                 break;
 
             case SDLK_UP:
-                if(main_inventory_manager)
+                if(gui::main_inventory_manager)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Up);
+                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Up);
                 }
                 break;
 
             case SDLK_DOWN:
-                if(main_inventory_manager)
+                if(gui::main_inventory_manager)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Down);
+                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Down);
                 }
                 break;
 
             case SDLK_LEFT:
-                if(main_inventory_manager)
+                if(gui::main_inventory_manager)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::RLeft);
+                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::RLeft);
                 }
                 break;
 
             case SDLK_RIGHT:
-                if(main_inventory_manager)
+                if(gui::main_inventory_manager)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::RRight);
+                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::RRight);
                 }
                 break;
 

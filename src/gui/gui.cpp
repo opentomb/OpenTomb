@@ -16,21 +16,25 @@
 #include "gl_font.h"
 #include "gl_util.h"
 #include "render.h"
-#include "script.h"
+#include "script/script.h"
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "strings.h"
 #include "system.h"
 #include "vertex_array.h"
-#include "vmath.h"
+#include "util/vmath.h"
+
 
 extern SDL_Window  *sdl_window;
+
+namespace gui
+{
 
 TextLine*     gui_base_lines = nullptr;
 TextLine      gui_temp_lines[MaxTempLines];
 uint16_t      temp_lines_used = 0;
 
-gui_ItemNotifier    Notifier;
+ItemNotifier    Notifier;
 std::map<BarType, ProgressBar>     Bar;
 std::map<FaderType, Fader>         faderType;
 
@@ -40,28 +44,28 @@ InventoryManager  *main_inventory_manager = nullptr;
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
 
-matrix4 guiProjectionMatrix = matrix4();
+util::matrix4 guiProjectionMatrix = util::matrix4();
 
-void Gui_Init()
+void init()
 {
-    Gui_InitBars();
-    Gui_InitFaders();
-    Gui_InitNotifier();
-    Gui_InitTempLines();
+    initBars();
+    initFaders();
+    initNotifier();
+    initTempLines();
 
     glGenBuffers(1, &crosshairBuffer);
-    Gui_FillCrosshairBuffer();
+    fillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new InventoryManager();
 }
 
-void Gui_InitFontManager()
+void initFontManager()
 {
     fontManager = new FontManager();
 }
 
-void Gui_InitTempLines()
+void initTempLines()
 {
     for(int i = 0; i < MaxTempLines; i++)
     {
@@ -76,7 +80,7 @@ void Gui_InitTempLines()
     }
 }
 
-void Gui_InitBars()
+void initBars()
 {
     {
         const auto i = BarType::Health;
@@ -180,7 +184,7 @@ void Gui_InitBars()
     }
 }
 
-void Gui_InitFaders()
+void initFaders()
 {
     {
         const auto i = FaderType::LoadScreen;
@@ -209,7 +213,7 @@ void Gui_InitFaders()
     }
 }
 
-void Gui_InitNotifier()
+void initNotifier()
 {
     Notifier.SetPos(850.0, 850.0);
     Notifier.SetRot(180.0, 270.0);
@@ -217,7 +221,7 @@ void Gui_InitNotifier()
     Notifier.SetRotateTime(2500.0);
 }
 
-void Gui_Destroy()
+void destroy()
 {
     for(int i = 0; i < MaxTempLines; i++)
     {
@@ -251,7 +255,7 @@ void Gui_Destroy()
     }
 }
 
-void Gui_AddLine(TextLine *line)
+void addLine(TextLine *line)
 {
     if(gui_base_lines == nullptr)
     {
@@ -268,7 +272,7 @@ void Gui_AddLine(TextLine *line)
 }
 
 // line must be in the list, otherway You crash engine!
-void Gui_DeleteLine(TextLine *line)
+void deleteLine(TextLine *line)
 {
     if(line == gui_base_lines)
     {
@@ -287,7 +291,7 @@ void Gui_DeleteLine(TextLine *line)
     }
 }
 
-void Gui_MoveLine(TextLine *line)
+void moveLine(TextLine *line)
 {
     line->absXoffset = line->X * screen_info.scale_factor;
     line->absYoffset = line->Y * screen_info.scale_factor;
@@ -297,7 +301,7 @@ void Gui_MoveLine(TextLine *line)
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
-TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
+TextLine *drawText(GLfloat x, GLfloat y, const char *fmt, ...)
 {
     if(fontManager && (temp_lines_used < MaxTempLines - 1))
     {
@@ -333,7 +337,7 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
     return nullptr;
 }
 
-void Gui_Update()
+void update()
 {
     if(fontManager != nullptr)
     {
@@ -341,7 +345,7 @@ void Gui_Update()
     }
 }
 
-void Gui_Resize()
+void resize()
 {
     TextLine* l = gui_base_lines;
 
@@ -371,11 +375,11 @@ void Gui_Resize()
     }
 
     /* let us update console too */
-    ConsoleInfo::instance().setLineInterval(ConsoleInfo::instance().spacing());
-    Gui_FillCrosshairBuffer();
+    Console::instance().setLineInterval(Console::instance().spacing());
+    fillCrosshairBuffer();
 }
 
-void Gui_Render()
+void render()
 {
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -383,17 +387,17 @@ void Gui_Render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    if(screen_info.show_debuginfo) Gui_DrawCrosshair();
-    Gui_DrawBars();
-    Gui_DrawFaders();
-    Gui_RenderStrings();
-    ConsoleInfo::instance().draw();
+    if(screen_info.show_debuginfo) drawCrosshair();
+    drawBars();
+    drawFaders();
+    renderStrings();
+    Console::instance().draw();
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
 }
 
-void Gui_RenderStringLine(TextLine *l)
+void renderStringLine(TextLine *l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
@@ -473,7 +477,7 @@ void Gui_RenderStringLine(TextLine *l)
     glf_render_str(gl_font, real_x, real_y, l->text.c_str());
 }
 
-void Gui_RenderStrings()
+void renderStrings()
 {
     if(fontManager != nullptr)
     {
@@ -492,7 +496,7 @@ void Gui_RenderStrings()
 
         while(l)
         {
-            Gui_RenderStringLine(l);
+            renderStringLine(l);
             l = l->next;
         }
 
@@ -501,7 +505,7 @@ void Gui_RenderStrings()
         {
             if(l->show)
             {
-                Gui_RenderStringLine(l);
+                renderStringLine(l);
                 l->show = false;
             }
         }
@@ -564,7 +568,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
+void renderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
     const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
@@ -588,19 +592,19 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
         scaledMatrix.setIdentity();
         if(size < 1.0)          // only reduce items size...
         {
-            Mat4_Scale(scaledMatrix, size, size, size);
+            util::Mat4_Scale(scaledMatrix, size, size, size);
         }
-        matrix4 scaledMvMatrix(mvMatrix * scaledMatrix);
-        matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        util::matrix4 scaledMvMatrix(mvMatrix * scaledMatrix);
+        util::matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
-        matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        util::matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
+        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -649,8 +653,8 @@ InventoryManager::InventoryManager()
     mLabel_ItemName.style_id = FontStyle::MenuContent;
     mLabel_ItemName.show = false;
 
-    Gui_AddLine(&mLabel_ItemName);
-    Gui_AddLine(&mLabel_Title);
+    addLine(&mLabel_ItemName);
+    addLine(&mLabel_Title);
 }
 
 InventoryManager::~InventoryManager()
@@ -660,10 +664,10 @@ InventoryManager::~InventoryManager()
     mInventory = nullptr;
 
     mLabel_ItemName.show = false;
-    Gui_DeleteLine(&mLabel_ItemName);
+    deleteLine(&mLabel_ItemName);
 
     mLabel_Title.show = false;
-    Gui_DeleteLine(&mLabel_Title);
+    deleteLine(&mLabel_Title);
 }
 
 int InventoryManager::getItemsTypeCount(MenuItemType type)
@@ -1028,14 +1032,14 @@ void InventoryManager::render()
 
             btTransform matrix;
             matrix.setIdentity();
-            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0f);
+            util::Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0f);
             //Mat4_RotateX(matrix, 25.0);
-            Mat4_RotateX(matrix, 25.0f + mRingVerticalAngle);
+            util::Mat4_RotateX(matrix, 25.0f + mRingVerticalAngle);
             btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
-            Mat4_RotateY(matrix, ang);
-            Mat4_Translate(matrix, 0.0, mVerticalOffset, mRingRadius);
-            Mat4_RotateX(matrix, -90.0);
-            Mat4_RotateZ(matrix, 90.0);
+            util::Mat4_RotateY(matrix, ang);
+            util::Mat4_Translate(matrix, 0.0, mVerticalOffset, mRingRadius);
+            util::Mat4_RotateX(matrix, -90.0);
+            util::Mat4_RotateZ(matrix, 90.0);
             if(num == mItemsOffset)
             {
                 if(bi->name[0])
@@ -1051,17 +1055,17 @@ void InventoryManager::render()
                         mLabel_ItemName.text = tmp;
                     }
                 }
-                Mat4_RotateZ(matrix, 90.0f + mItemAngle - ang);
+                util::Mat4_RotateZ(matrix, 90.0f + mItemAngle - ang);
                 Item_Frame(bi->bf.get(), 0.0);                            // here will be time != 0 for using items animation
             }
             else
             {
-                Mat4_RotateZ(matrix, 90.0f - ang);
+                util::Mat4_RotateZ(matrix, 90.0f - ang);
                 Item_Frame(bi->bf.get(), 0.0);
             }
-            Mat4_Translate(matrix, -0.5f * bi->bf->centre[0], -0.5f * bi->bf->centre[1], -0.5f * bi->bf->centre[2]);
-            Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);
-            Gui_RenderItem(bi->bf.get(), 0.0, matrix);
+            util::Mat4_Translate(matrix, -0.5f * bi->bf->centre[0], -0.5f * bi->bf->centre[1], -0.5f * bi->bf->centre[2]);
+            util::Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);
+            renderItem(bi->bf.get(), 0.0, matrix);
 
             num++;
         }
@@ -1071,14 +1075,14 @@ void InventoryManager::render()
 /*
  * Other GUI options
  */
-void Gui_SwitchGLMode(char is_gui)
+void switchGLMode(bool is_gui)
 {
-    if(0 != is_gui)                                                             // set gui coordinate system
+    if(is_gui)                                                             // set gui coordinate system
     {
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix = matrix4{};                                        // identity matrix
+        guiProjectionMatrix = util::matrix4{};                                        // identity matrix
         guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(screen_info.w);
         guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(screen_info.h);
         guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
@@ -1098,7 +1102,7 @@ struct gui_buffer_entry_s
     uint8_t color[4];
 };
 
-void Gui_FillCrosshairBuffer()
+void fillCrosshairBuffer()
 {
     gui_buffer_entry_s crosshair_buf[4] = {
         {{static_cast<GLfloat>(screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
@@ -1117,7 +1121,7 @@ void Gui_FillCrosshairBuffer()
     crosshairArray = new VertexArray(0, 2, attribs);
 }
 
-void Gui_DrawCrosshair()
+void drawCrosshair()
 {
     GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
 
@@ -1135,7 +1139,7 @@ void Gui_DrawCrosshair()
     glDrawArrays(GL_LINES, 0, 4);
 }
 
-void Gui_DrawFaders()
+void drawFaders()
 {
     for(auto& i : faderType)
     {
@@ -1143,7 +1147,7 @@ void Gui_DrawFaders()
     }
 }
 
-void Gui_DrawBars()
+void drawBars()
 {
     if(engine_world.character)
     {
@@ -1160,7 +1164,7 @@ void Gui_DrawBars()
     }
 }
 
-void Gui_DrawInventory()
+void drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
     main_inventory_manager->frame(engine_frame_time);
@@ -1185,7 +1189,7 @@ void Gui_DrawInventory()
     GLfloat upper_color[4] = {0.0,0.0,0.0,0.45f};
     GLfloat lower_color[4] = {0.0,0.0,0.0,0.75f};
 
-    Gui_DrawRect(0.0, 0.0, static_cast<GLfloat>(screen_info.w), static_cast<GLfloat>(screen_info.h),
+    drawRect(0.0, 0.0, static_cast<GLfloat>(screen_info.w), static_cast<GLfloat>(screen_info.h),
                  upper_color, upper_color, lower_color, lower_color,
                  loader::BlendingMode::Opaque);
 
@@ -1195,33 +1199,33 @@ void Gui_DrawInventory()
     //GLfloat color[4] = {0,0,0,0.45};
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
-    Gui_SwitchGLMode(0);
+    switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
     main_inventory_manager->render();
-    Gui_SwitchGLMode(1);
+    switchGLMode(true);
 }
 
-void Gui_NotifierStart(int item)
+void notifierStart(int item)
 {
-    Notifier.Start(item, GUI_NOTIFIER_SHOWTIME);
+    Notifier.Start(item, NotifierShowtime);
 }
 
-void Gui_NotifierStop()
+void notifierStop()
 {
     Notifier.Reset();
 }
 
-void Gui_DrawNotifier()
+void drawNotifier()
 {
     Notifier.Draw();
     Notifier.Animate();
 }
 
-void Gui_DrawLoadScreen(int value)
+void drawLoadScreen(int value)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Gui_SwitchGLMode(1);
+    switchGLMode(true);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1235,7 +1239,7 @@ void Gui_DrawLoadScreen(int value)
 
     glDepthMask(GL_TRUE);
 
-    Gui_SwitchGLMode(0);
+    switchGLMode(false);
 
     SDL_GL_SwapWindow(sdl_window);
 }
@@ -1250,7 +1254,7 @@ namespace
 /**
  * Draws simple colored rectangle with given parameters.
  */
-void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
+void drawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
                   const float colorUpperLeft[], const float colorUpperRight[],
                   const float colorLowerLeft[], const float colorLowerRight[],
@@ -1323,11 +1327,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-bool Gui_FadeStart(FaderType fader, FaderDir fade_direction)
+bool fadeStart(FaderType fader, FaderDir fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != FaderStatus::Fading))
+    if((fader < FaderType::Sentinel) && (faderType[fader].getStatus() != FaderStatus::Fading))
     {
         faderType[fader].Engage(fade_direction);
         return true;
@@ -1338,9 +1342,9 @@ bool Gui_FadeStart(FaderType fader, FaderDir fade_direction)
     }
 }
 
-bool Gui_FadeStop(FaderType fader)
+bool fadeStop(FaderType fader)
 {
-    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != FaderStatus::Idle))
+    if((fader < FaderType::Sentinel) && (faderType[fader].getStatus() != FaderStatus::Idle))
     {
         faderType[fader].Cut();
         return true;
@@ -1351,7 +1355,7 @@ bool Gui_FadeStop(FaderType fader)
     }
 }
 
-bool Gui_FadeAssignPic(FaderType fader, const std::string& pic_name)
+bool fadeAssignPic(FaderType fader, const std::string& pic_name)
 {
     if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
     {
@@ -1410,7 +1414,7 @@ bool Gui_FadeAssignPic(FaderType fader, const std::string& pic_name)
     return false;
 }
 
-void Gui_FadeSetup(FaderType fader,
+void fadeSetup(FaderType fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed)
 {
@@ -1422,11 +1426,11 @@ void Gui_FadeSetup(FaderType fader,
     faderType[fader].SetSpeed(fadein_speed, fadeout_speed);
 }
 
-FaderStatus Gui_FadeCheck(FaderType fader)
+FaderStatus getFaderStatus(FaderType fader)
 {
     if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
     {
-        return faderType[fader].IsFading();
+        return faderType[fader].getStatus();
     }
     else
     {
@@ -1642,7 +1646,7 @@ bool Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            ConsoleInfo::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
+            Console::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
             SDL_FreeSurface(surface);
             return false;
         }
@@ -1666,7 +1670,7 @@ bool Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
+        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
         return false;
     }
 
@@ -1682,7 +1686,7 @@ bool Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
+        Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
         SDL_FreeSurface(surface);
         return true;
     }
@@ -1836,7 +1840,7 @@ void Fader::Show()
             if(mTextureWide)        // Texture is wider than the screen... Do letterbox.
             {
                 // Draw lower letterbox.
-                Gui_DrawRect(0.0,
+                drawRect(0.0,
                              0.0,
                              screen_info.w,
                              (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
@@ -1844,7 +1848,7 @@ void Fader::Show()
                              mBlendingMode);
 
                 // Draw texture.
-                Gui_DrawRect(0.0,
+                drawRect(0.0,
                              (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
                              screen_info.w,
                              screen_info.w * mTextureAspectRatio,
@@ -1853,7 +1857,7 @@ void Fader::Show()
                              mTexture);
 
                 // Draw upper letterbox.
-                Gui_DrawRect(0.0,
+                drawRect(0.0,
                              screen_info.h - (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
                              screen_info.w,
                              (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
@@ -1863,7 +1867,7 @@ void Fader::Show()
             else        // Texture is taller than the screen... Do pillarbox.
             {
                 // Draw left pillarbox.
-                Gui_DrawRect(0.0,
+                drawRect(0.0,
                              0.0,
                              (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              screen_info.h,
@@ -1871,7 +1875,7 @@ void Fader::Show()
                              mBlendingMode);
 
                 // Draw texture.
-                Gui_DrawRect((screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect((screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
                              screen_info.h / mTextureAspectRatio,
                              screen_info.h,
@@ -1880,7 +1884,7 @@ void Fader::Show()
                              mTexture);
 
                 // Draw right pillarbox.
-                Gui_DrawRect(screen_info.w - (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect(screen_info.w - (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
                              (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              screen_info.h,
@@ -1892,7 +1896,7 @@ void Fader::Show()
         {
             if(mTextureWide)    // Texture is wider than the screen - scale vertical.
             {
-                Gui_DrawRect(-(((screen_info.h / mTextureAspectRatio) - screen_info.w) / 2),
+                drawRect(-(((screen_info.h / mTextureAspectRatio) - screen_info.w) / 2),
                              0.0,
                              screen_info.h / mTextureAspectRatio,
                              screen_info.h,
@@ -1902,7 +1906,7 @@ void Fader::Show()
             }
             else                // Texture is taller than the screen - scale horizontal.
             {
-                Gui_DrawRect(0.0,
+                drawRect(0.0,
                              -(((screen_info.w / mTextureAspectRatio) - screen_info.h) / 2),
                              screen_info.w,
                              screen_info.w / mTextureAspectRatio,
@@ -1913,7 +1917,7 @@ void Fader::Show()
         }
         else    // Simple stretch!
         {
-            Gui_DrawRect(0.0,
+            drawRect(0.0,
                          0.0,
                          screen_info.w,
                          screen_info.h,
@@ -1924,13 +1928,13 @@ void Fader::Show()
     }
     else    // No texture, simply draw colored rect.
     {
-        Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h,
+        drawRect(0.0, 0.0, screen_info.w, screen_info.h,
                      mTopLeftColor, mTopRightColor, mBottomLeftColor, mBottomRightColor,
                      mBlendingMode);
     }   // end if(mTexture)
 }
 
-FaderStatus Fader::IsFading()
+FaderStatus Fader::getStatus()
 {
     if(mComplete)
     {
@@ -2268,7 +2272,7 @@ void ProgressBar::Show(float value)
     // Border rect should be rendered first, as it lies beneath actual bar,
     // and additionally, we need to show it in any case, even if bar is in
     // warning state (blinking).
-    Gui_DrawRect(mX, mY, mWidth + (mBorderWidth * 2), mHeight + (mBorderHeight * 2),
+    drawRect(mX, mY, mWidth + (mBorderWidth * 2), mHeight + (mBorderHeight * 2),
                  mBorderMainColor, mBorderMainColor,
                  mBorderFadeColor, mBorderFadeColor,
                  loader::BlendingMode::Opaque);
@@ -2294,7 +2298,7 @@ void ProgressBar::Show(float value)
     if(!value)
     {
         // Draw full-sized background rect (instead of base bar rect)
-        Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
+        drawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
                      mBackMainColor, (Vertical) ? (mBackFadeColor) : (mBackMainColor),
                      (Vertical) ? (mBackMainColor) : (mBackFadeColor), mBackFadeColor,
                      loader::BlendingMode::Opaque);
@@ -2344,14 +2348,14 @@ void ProgressBar::Show(float value)
         RectAnchor = ((Invert) ? (mY + mHeight - mBaseSize) : (mY)) + mBorderHeight;
 
         // Draw actual bar base.
-        Gui_DrawRect(mX + mBorderWidth, RectAnchor,
+        drawRect(mX + mBorderWidth, RectAnchor,
                      mWidth, mBaseSize,
                      RectFirstColor, RectFirstColor,
                      RectSecondColor, RectSecondColor,
                      loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        Gui_DrawRect(mX + mBorderWidth,
+        drawRect(mX + mBorderWidth,
                      (Invert) ? (mY + mBorderHeight) : (RectAnchor + mBaseSize),
                      mWidth, mHeight - mBaseSize,
                      mBackMainColor, mBackFadeColor,
@@ -2362,12 +2366,12 @@ void ProgressBar::Show(float value)
         {
             float transparentColor[4] = { 0 };  // Used to set counter-shade to transparent.
 
-            Gui_DrawRect(mX + mBorderWidth, RectAnchor,
+            drawRect(mX + mBorderWidth, RectAnchor,
                          mWidth / 2, mBaseSize,
                          mExtrudeDepth, transparentColor,
                          mExtrudeDepth, transparentColor,
                          loader::BlendingMode::Opaque);
-            Gui_DrawRect(mX + mBorderWidth + mWidth / 2, RectAnchor,
+            drawRect(mX + mBorderWidth + mWidth / 2, RectAnchor,
                          mWidth / 2, mBaseSize,
                          transparentColor, mExtrudeDepth,
                          transparentColor, mExtrudeDepth,
@@ -2379,14 +2383,14 @@ void ProgressBar::Show(float value)
         RectAnchor = ((Invert) ? (mX + mWidth - mBaseSize) : (mX)) + mBorderWidth;
 
         // Draw actual bar base.
-        Gui_DrawRect(RectAnchor, mY + mBorderHeight,
+        drawRect(RectAnchor, mY + mBorderHeight,
                      mBaseSize, mHeight,
                      RectSecondColor, RectFirstColor,
                      RectSecondColor, RectFirstColor,
                      loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        Gui_DrawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
+        drawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
                      mY + mBorderHeight,
                      mWidth - mBaseSize, mHeight,
                      mBackMainColor, mBackMainColor,
@@ -2397,12 +2401,12 @@ void ProgressBar::Show(float value)
         {
             float transparentColor[4] = { 0 };  // Used to set counter-shade to transparent.
 
-            Gui_DrawRect(RectAnchor, mY + mBorderHeight,
+            drawRect(RectAnchor, mY + mBorderHeight,
                          mBaseSize, mHeight / 2,
                          transparentColor, transparentColor,
                          mExtrudeDepth, mExtrudeDepth,
                          loader::BlendingMode::Opaque);
-            Gui_DrawRect(RectAnchor, mY + mBorderHeight + (mHeight / 2),
+            drawRect(RectAnchor, mY + mBorderHeight + (mHeight / 2),
                          mBaseSize, mHeight / 2,
                          mExtrudeDepth, mExtrudeDepth,
                          transparentColor, transparentColor,
@@ -2415,7 +2419,7 @@ void ProgressBar::Show(float value)
 // ======================== ITEM NOTIFIER CLASS IMPLEMENTATION =======================
 // ===================================================================================
 
-gui_ItemNotifier::gui_ItemNotifier()
+ItemNotifier::ItemNotifier()
 {
     SetPos(850, 850);
     SetRot(0, 0);
@@ -2426,7 +2430,7 @@ gui_ItemNotifier::gui_ItemNotifier()
     mActive = false;
 }
 
-void gui_ItemNotifier::Start(int item, float time)
+void ItemNotifier::Start(int item, float time)
 {
     Reset();
 
@@ -2435,7 +2439,7 @@ void gui_ItemNotifier::Start(int item, float time)
     mActive = true;
 }
 
-void gui_ItemNotifier::Animate()
+void ItemNotifier::Animate()
 {
     if(!mActive)
     {
@@ -2481,7 +2485,7 @@ void gui_ItemNotifier::Animate()
     }
 }
 
-void gui_ItemNotifier::Reset()
+void ItemNotifier::Reset()
 {
     mActive = false;
     mCurrTime = 0.0;
@@ -2490,11 +2494,11 @@ void gui_ItemNotifier::Reset()
 
     mEndPosX = (static_cast<float>(screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
     mPosY = (static_cast<float>(screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
-    mCurrPosX = screen_info.w + (static_cast<float>(screen_info.w) / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
+    mCurrPosX = screen_info.w + (static_cast<float>(screen_info.w) / NotifierOffscreenDivider * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
 
-void gui_ItemNotifier::Draw()
+void ItemNotifier::Draw()
 {
     if(!mActive)
         return;
@@ -2514,34 +2518,34 @@ void gui_ItemNotifier::Draw()
     Item_Frame(item->bf.get(), 0.0);
     btTransform matrix;
     matrix.setIdentity();
-    Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
-    Mat4_RotateY(matrix, mCurrRotX + mRotX);
-    Mat4_RotateX(matrix, mCurrRotY + mRotY);
-    Gui_RenderItem(item->bf.get(), mSize, matrix);
+    util::Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
+    util::Mat4_RotateY(matrix, mCurrRotX + mRotX);
+    util::Mat4_RotateX(matrix, mCurrRotY + mRotY);
+    renderItem(item->bf.get(), mSize, matrix);
 
     item->bf->animations.current_animation = anim;
     item->bf->animations.current_frame = frame;
     item->bf->animations.frame_time = time;
 }
 
-void gui_ItemNotifier::SetPos(float X, float Y)
+void ItemNotifier::SetPos(float X, float Y)
 {
     mAbsPosX = X;
     mAbsPosY = 1000.0f - Y;
 }
 
-void gui_ItemNotifier::SetRot(float X, float Y)
+void ItemNotifier::SetRot(float X, float Y)
 {
     mRotX = X;
     mRotY = Y;
 }
 
-void gui_ItemNotifier::SetSize(float size)
+void ItemNotifier::SetSize(float size)
 {
     mSize = size;
 }
 
-void gui_ItemNotifier::SetRotateTime(float time)
+void ItemNotifier::SetRotateTime(float time)
 {
     mRotateTime = (1000.0f / time) * 360.0f;
 }
@@ -2759,3 +2763,5 @@ void FontManager::Resize()
         glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * screen_info.scale_factor));
     }
 }
+
+} // namespace gui

@@ -12,26 +12,30 @@
 #include "anim_state_control.h"
 #include "audio.h"
 #include "character_controller.h"
-#include "console.h"
+#include "gui/console.h"
 #include "controls.h"
 #include "engine.h"
 #include "entity.h"
 #include "game.h"
 #include "gameflow.h"
 #include "hair.h"
-#include "helpers.h"
+#include "util/helpers.h"
 #include "ragdoll.h"
 #include "render.h"
 #include "strings.h"
 #include "system.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "world.h"
 
 // Debug functions
 
+using gui::Console;
+
+script::MainEngine engine_lua;
+
 void script::ScriptEngine::checkStack()
 {
-    ConsoleInfo::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
+    Console::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
 }
 
 void lua_DumpModel(int id)
@@ -39,13 +43,13 @@ void lua_DumpModel(int id)
     SkeletalModel* sm = engine_world.getModelByID(id);
     if(sm == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
+        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
         return;
     }
 
     for(int i = 0; i < sm->mesh_count; i++)
     {
-        ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->m_id);
+        Console::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->m_id);
     }
 }
 
@@ -58,7 +62,7 @@ void lua_DumpRoom(lua::Value id)
     }
     if(id.is<lua::Integer>() && static_cast<uint32_t>(id) >= engine_world.rooms.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, static_cast<int>(id));
+        Console::instance().warning(SYSWARN_WRONG_ROOM, static_cast<int>(id));
         return;
     }
     Engine_DumpRoom(engine_world.rooms[id].get());
@@ -68,7 +72,7 @@ void lua_SetRoomEnabled(int id, bool value)
 {
     if(id < 0 || id >= static_cast<int>(engine_world.rooms.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, id);
+        Console::instance().warning(SYSWARN_WRONG_ROOM, id);
     }
 
     if(!value)
@@ -88,7 +92,7 @@ void lua_SetModelCollisionMapSize(int id, int size)
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+        Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
         return;
     }
 
@@ -104,7 +108,7 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+        Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
 		return;
     }
 
@@ -261,7 +265,7 @@ void lua_SetGravity(float x, lua::Value y, lua::Value z)                        
 {
     btVector3 g(x, y.is<lua::Number>() ? y : 0, z.is<lua::Number>() ? z : 0);
     bt_engine_dynamicsWorld->setGravity(g);
-    ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+    Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
 bool lua_DropEntity(int id, float time, lua::Value only_room)
@@ -269,7 +273,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -340,7 +344,7 @@ void lua_SetEntityActivationOffset(int id, float x, float y, float z, lua::Value
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -355,7 +359,7 @@ int lua_GetCharacterParam(int id, int parameter)
 
     if(parameter >= PARAM_SENTINEL)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return -1;
     }
 
@@ -365,7 +369,7 @@ int lua_GetCharacterParam(int id, int parameter)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
+        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
         return -1;
     }
 }
@@ -376,13 +380,13 @@ void lua_SetCharacterParam(int id, int parameter, float value, lua::Value max_va
 
     if(parameter >= PARAM_SENTINEL)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return;
     }
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
+        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
         return;
     }
     else if(!max_value.is<lua::Number>())
@@ -414,7 +418,7 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
 
     if(parameter >= PARAM_SENTINEL)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return;
     }
 
@@ -425,7 +429,7 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
+        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
     }
 }
 
@@ -442,13 +446,13 @@ void lua_AddCharacterHair(int ent_id, int setup_index)
 
         if(!ent->m_hairs.back()->create(&hair_setup, ent))
         {
-            ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+            Console::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
             ent->m_hairs.pop_back();
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
+        Console::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
     }
 }
 
@@ -464,12 +468,12 @@ void lua_ResetCharacterHair(int ent_id)
         }
         else
         {
-            ConsoleInfo::instance().warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+            Console::instance().warning(SYSWARN_CANT_RESET_HAIR, ent_id);
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
+        Console::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
     }
 }
 
@@ -483,19 +487,19 @@ void lua_AddEntityRagdoll(int ent_id, int setup_index)
 
         if(!ragdoll_setup.getSetup(setup_index))
         {
-            ConsoleInfo::instance().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+            Console::instance().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
         }
         else
         {
             if(!ent->createRagdoll(&ragdoll_setup))
             {
-                ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                Console::instance().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
             }
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ent_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, ent_id);
     }
 }
 
@@ -511,12 +515,12 @@ void lua_RemoveEntityRagdoll(int ent_id)
         }
         else
         {
-            ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+            Console::instance().warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ent_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, ent_id);
     }
 }
 
@@ -540,7 +544,7 @@ bool lua_GetActionState(int act)
 {
     if(act < 0 || act >= ACT_LASTINDEX)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return false;
     }
     else
@@ -553,7 +557,7 @@ bool lua_GetActionChange(int act)
 {
     if(act < 0 || act >= ACT_LASTINDEX)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return false;
     }
     else
@@ -571,7 +575,7 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 {
     if(act < 0 || act >= ACT_LASTINDEX)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
     }
     control_mapper.action_map[act].primary = primary;
     if(secondary.is<lua::Integer>())
@@ -580,9 +584,9 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 
 void lua_AddFont(int index, const char* path, uint32_t size)
 {
-    if(!fontManager->AddFont(static_cast<FontType>(index), size, path))
+    if(!gui::fontManager->AddFont(static_cast<gui::FontType>(index), size, path))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, fontManager->GetFontCount(), MaxFonts);
+        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::fontManager->GetFontCount(), gui::MaxFonts);
     }
 }
 
@@ -592,29 +596,29 @@ void lua_AddFontStyle(int style_index,
                       float rect_R, float rect_G, float rect_B, float rect_A,
                       bool hide)
 {
-    if(!fontManager->AddFontStyle(static_cast<FontStyle>(style_index),
-                                  color_R, color_G, color_B, color_A,
-                                  shadowed, fading,
-                                  rect, rect_border, rect_R, rect_G, rect_B, rect_A,
-                                  hide))
+    if(!gui::fontManager->AddFontStyle(static_cast<gui::FontStyle>(style_index),
+                                       color_R, color_G, color_B, color_A,
+                                       shadowed, fading,
+                                       rect, rect_border, rect_R, rect_G, rect_B, rect_A,
+                                       hide))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, fontManager->GetFontStyleCount(), FontStyle::Sentinel);
+        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::fontManager->GetFontStyleCount(), gui::FontStyle::Sentinel);
     }
 }
 
 void lua_DeleteFont(int fontindex)
 {
-    if(!fontManager->RemoveFont(static_cast<FontType>(fontindex)))
+    if(!gui::fontManager->RemoveFont(static_cast<gui::FontType>(fontindex)))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_FONT);
+        Console::instance().warning(SYSWARN_CANT_REMOVE_FONT);
     }
 }
 
 void lua_DeleteFontStyle(int styleindex)
 {
-    if(!fontManager->RemoveFontStyle(static_cast<FontStyle>(styleindex)))
+    if(!gui::fontManager->RemoveFontStyle(static_cast<gui::FontStyle>(styleindex)))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
+        Console::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
     }
 }
 
@@ -628,7 +632,7 @@ int lua_AddItem(int entity_id, int item_id, lua::Value count)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return -1;
     }
 }
@@ -643,7 +647,7 @@ int lua_RemoveItem(int entity_id, int item_id, int count)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return -1;
     }
 }
@@ -658,7 +662,7 @@ void lua_RemoveAllItems(int entity_id)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
     }
 }
 
@@ -672,14 +676,14 @@ int lua_GetItemsCount(int entity_id, int item_id)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return -1;
     }
 }
 
 void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
-    engine_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
+    engine_world.createItem(item_id, model_id, world_model_id, static_cast<gui::MenuItemType>(type), count, name ? name : std::string());
 }
 
 void lua_DeleteBaseItem(int id)
@@ -692,13 +696,13 @@ void lua_PrintItems(int entity_id)
     std::shared_ptr<Character> ent = engine_world.getCharacterByID(entity_id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return;
     }
 
     for(const InventoryNode& i : ent->m_inventory)
     {
-        ConsoleInfo::instance().printf("item[id = %d]: count = %d", i.id, i.count);
+        Console::instance().printf("item[id = %d]: count = %d", i.id, i.count);
     }
 }
 
@@ -708,13 +712,13 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
 
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if((anim < 0) || (anim + 1 > static_cast<int>(model->animations.size())))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
@@ -735,7 +739,7 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
             }
             else
             {
-                ConsoleInfo::instance().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
+                Console::instance().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
             }
             break;
         }
@@ -747,13 +751,13 @@ std::tuple<int, float, float, float> lua_GetAnimCommandTransform(int id, int ani
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return{};
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return{};
     }
 
@@ -764,7 +768,7 @@ std::tuple<int, float, float, float> lua_GetAnimCommandTransform(int id, int ani
 
     if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        Console::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return{};
     }
 
@@ -782,13 +786,13 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
@@ -799,7 +803,7 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
 
     if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        Console::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return;
     }
 
@@ -814,13 +818,13 @@ void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
@@ -831,7 +835,7 @@ void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
 
     if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        Console::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return;
     }
 
@@ -876,13 +880,13 @@ std::tuple<float, float, float> lua_GetEntityVector(int id1, int id2)
     std::shared_ptr<Entity> e1 = engine_world.getEntityByID(id1);
     if(e1 == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id1);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id1);
         return{};
     }
     std::shared_ptr<Entity> e2 = engine_world.getEntityByID(id2);
     if(e2 == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id2);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
         return{};
     }
 
@@ -899,13 +903,13 @@ float lua_GetEntityDistance(int id1, int id2)
     std::shared_ptr<Entity> e1 = engine_world.getEntityByID(id1);
     if(!e1)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id1);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id1);
         return std::numeric_limits<float>::max();
     }
     std::shared_ptr<Entity> e2 = engine_world.getEntityByID(id2);
     if(!e2)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id2);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
         return std::numeric_limits<float>::max();
     }
 
@@ -917,13 +921,13 @@ float lua_GetEntityDirDot(int id1, int id2)
     std::shared_ptr<Entity> e1 = engine_world.getEntityByID(id1);
     if(!e1)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id2);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
         return std::numeric_limits<float>::max();
     }
     std::shared_ptr<Entity> e2 = engine_world.getEntityByID(id2);
     if(!e2)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id2);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
         return std::numeric_limits<float>::max();
     }
 
@@ -956,7 +960,7 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -978,7 +982,7 @@ std::tuple<float, float, float> lua_GetEntityAngles(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -996,7 +1000,7 @@ std::tuple<float, float, float> lua_GetEntityScaling(int id)
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1014,7 +1018,7 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1042,7 +1046,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1065,7 +1069,7 @@ void lua_SetEntityPosition(int id, float x, float y, float z, lua::Value ax, lua
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     ent->m_transform.getOrigin() = { x,y,z };
@@ -1081,7 +1085,7 @@ void lua_SetEntityAngles(int id, float x, lua::Value y, lua::Value z)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1099,7 +1103,7 @@ void lua_SetEntityScaling(int id, float x, float y, float z)
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1129,7 +1133,7 @@ void lua_MoveEntityGlobal(int id, float x, float y, float z)
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     ent->m_transform.getOrigin()[0] += x;
@@ -1146,7 +1150,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1228,7 +1232,7 @@ void lua_RotateEntity(int id, float rx, lua::Value ry, lua::Value rz)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1249,11 +1253,11 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
 
     if((!ent1) || (!ent2))
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
     }
     else if((axis < 0) || (axis > 2))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_AXIS, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_WRONG_AXIS, ((!ent1)?id1:id2));
     }
     else
     {
@@ -1344,7 +1348,7 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
 
     if((!ent1) || (!ent2))
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
         return 0;
     }
     else
@@ -1356,7 +1360,7 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
         btScalar theta = btDegrees(btAtan2(-facing.x(), facing.y()));
         if(add_angle_.is<lua::Number>()) theta += static_cast<btScalar>(add_angle_);
 
-        return WrapAngle(ent2->m_angles[0] - theta);
+        return util::wrapAngle(ent2->m_angles[0] - theta);
     }
 }
 
@@ -1367,7 +1371,7 @@ std::tuple<float, float, float> lua_GetEntitySpeed(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1385,7 +1389,7 @@ float lua_GetEntitySpeedLinear(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1398,7 +1402,7 @@ void lua_SetEntitySpeed(int id, float vx, lua::Value vy, lua::Value vz)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1416,7 +1420,7 @@ void lua_SetEntityAnim(int id, int anim, lua::Value frame, lua::Value otherModel
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1434,7 +1438,7 @@ void lua_SetEntityAnimFlag(int id, uint16_t anim_flag)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1447,13 +1451,13 @@ void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
     if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_bf.bone_tags.size()))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
@@ -1466,13 +1470,13 @@ void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
 
     if(model == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if((bone_id < 0) || (bone_id >= model->mesh_count))
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
@@ -1485,7 +1489,7 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1540,7 +1544,7 @@ bool lua_GetEntityVisibility(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -1553,7 +1557,7 @@ void lua_SetEntityVisibility(int id, bool value)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1566,7 +1570,7 @@ bool lua_GetEntityEnability(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -1579,7 +1583,7 @@ bool lua_GetEntityActivity(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -1592,7 +1596,7 @@ void lua_SetEntityActivity(int id, bool value)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1619,7 +1623,7 @@ void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua:
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1748,7 +1752,7 @@ std::tuple<bool, bool, bool, uint16_t, uint32_t> lua_GetEntityFlags(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1768,7 +1772,7 @@ void lua_SetEntityFlags(int id, bool active, bool enabled, bool visible, uint16_
 
     if(!ent)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1786,7 +1790,7 @@ uint32_t lua_GetEntityTypeFlag(int id, lua::Value flag)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return -1;
     }
 
@@ -1802,7 +1806,7 @@ void lua_SetEntityTypeFlag(int id, uint16_t type_flag, lua::Value value)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     if(!value.is<lua::Boolean>())
@@ -1827,7 +1831,7 @@ bool lua_GetEntityStateFlag(int id, const char* whichCstr)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -1848,7 +1852,7 @@ void lua_SetEntityStateFlag(int id, const char* whichCstr, lua::Value value)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1871,7 +1875,7 @@ uint32_t lua_GetEntityCallbackFlag(int id, lua::Value flag)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1887,7 +1891,7 @@ void lua_SetEntityCallbackFlag(int id, uint32_t flag, lua::Value value)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1931,7 +1935,7 @@ uint16_t lua_GetEntityMoveType(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return -1;
     }
 
@@ -1965,7 +1969,7 @@ int lua_GetEntityResponse(int id, int response)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 }
@@ -1999,7 +2003,7 @@ void lua_SetEntityResponse(int id, int response, int value)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
@@ -2009,7 +2013,7 @@ int16_t lua_GetEntityState(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return -1;
     }
 
@@ -2022,7 +2026,7 @@ uint32_t lua_GetEntityModel(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return -1;
     }
 
@@ -2035,7 +2039,7 @@ void lua_SetEntityState(int id, int16_t value, lua::Value next)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -2049,7 +2053,7 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -2081,7 +2085,7 @@ uint32_t lua_GetEntityMeshCount(int id)
 
     if(ent == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2116,12 +2120,12 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
         }
         else
         {
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
+        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
@@ -2136,12 +2140,12 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, int flag)
         }
         else
         {
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
+        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
@@ -2150,14 +2154,14 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     SkeletalModel* sm1 = engine_world.getModelByID(id1);
     if(sm1 == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
+        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
     SkeletalModel* sm2 = engine_world.getModelByID(id2);
     if(sm2 == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
+        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
         return;
     }
 
@@ -2167,7 +2171,7 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
+        Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
     }
 }
 
@@ -2187,7 +2191,7 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
 
     if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t = ent->m_angles[0] * RadPerDeg;
+        btScalar t = ent->m_angles[0] * util::RadPerDeg;
 
         btScalar ang1 = std::sin(t);
         btScalar ang2 = std::cos(t);
@@ -2202,7 +2206,7 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
+        Console::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
@@ -2212,7 +2216,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     if(lua_gettop(lua) < 3)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, body_number, (mass / each body mass)]");
+        Console::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, body_number, (mass / each body mass)]");
         return 0;
     }
 
@@ -2284,7 +2288,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ENTITY_OR_BODY, id, body_number);
+        Console::instance().warning(SYSWARN_WRONG_ENTITY_OR_BODY, id, body_number);
     }
 
     return 0;
@@ -2296,7 +2300,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
     if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t = ent->m_angles[0] * RadPerDeg;
+        btScalar t = ent->m_angles[0] * util::RadPerDeg;
         btScalar ang1 = std::sin(t);
         btScalar ang2 = std::cos(t);
         btScalar ang3 = 1.0;
@@ -2311,7 +2315,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
+        Console::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
@@ -2325,7 +2329,7 @@ void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
@@ -2339,7 +2343,7 @@ int lua_GetCharacterCurrentWeapon(int id)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return -1;
     }
 }
@@ -2354,7 +2358,7 @@ void lua_SetCharacterCurrentWeapon(int id, int weapon)
     }
     else
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
+        Console::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
@@ -2380,7 +2384,7 @@ void lua_CamShake(float power, float time, lua::Value id)
 
 void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
 {
-    Gui_FadeSetup(FaderType::Effect,
+    gui::fadeSetup(gui::FaderType::Effect,
                   alpha,
                   R, G, B,
                   loader::BlendingMode::Multiply,
@@ -2389,22 +2393,22 @@ void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16
 
 void lua_FlashStart()
 {
-    Gui_FadeStart(FaderType::Effect, FaderDir::Timed);
+    gui::fadeStart(gui::FaderType::Effect, gui::FaderDir::Timed);
 }
 
 void lua_FadeOut()
 {
-    Gui_FadeStart(FaderType::Black, FaderDir::Out);
+    gui::fadeStart(gui::FaderType::Black, gui::FaderDir::Out);
 }
 
 void lua_FadeIn()
 {
-    Gui_FadeStart(FaderType::Black, FaderDir::In);
+    gui::fadeStart(gui::FaderType::Black, gui::FaderDir::In);
 }
 
 bool lua_FadeCheck()
 {
-    return Gui_FadeCheck(FaderType::Black) != FaderStatus::Idle;
+    return gui::getFaderStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
 }
 
 // General gameplay functions
@@ -2413,7 +2417,7 @@ void lua_PlayStream(int id, lua::Value mask)
 {
     if(id < 0)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_STREAM_ID);
+        Console::instance().warning(SYSWARN_WRONG_STREAM_ID);
         return;
     }
 
@@ -2438,7 +2442,7 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
     if(static_cast<size_t>(id) >= engine_world.audio_map.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
         return;
     }
 
@@ -2464,11 +2468,11 @@ void lua_PlaySound(int id, lua::Value ent_id)
         switch(result)
         {
             case TR_AUDIO_SEND_NOCHANNEL:
-                ConsoleInfo::instance().warning(SYSWARN_AS_NOCHANNEL);
+                Console::instance().warning(SYSWARN_AS_NOCHANNEL);
                 break;
 
             case TR_AUDIO_SEND_NOSAMPLE:
-                ConsoleInfo::instance().warning(SYSWARN_AS_NOSAMPLE);
+                Console::instance().warning(SYSWARN_AS_NOSAMPLE);
                 break;
         }
     }
@@ -2478,7 +2482,7 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 {
     if(id >= engine_world.audio_map.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
         return;
     }
 
@@ -2500,7 +2504,7 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
     }
 
     if(result < 0)
-        ConsoleInfo::instance().warning(SYSWARN_AK_NOTPLAYED, id);
+        Console::instance().warning(SYSWARN_AK_NOTPLAYED, id);
 }
 
 int lua_GetLevel()
@@ -2510,7 +2514,7 @@ int lua_GetLevel()
 
 void lua_SetLevel(int id)
 {
-    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
+    Console::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
@@ -2523,17 +2527,17 @@ void lua_SetGame(int gameId, lua::Value levelId)
         gameflow_manager.CurrentLevelID = levelId;
 
     const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
-    Gui_FadeAssignPic(FaderType::LoadScreen, str);
-    Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
+    gui::fadeAssignPic(gui::FaderType::LoadScreen, str);
+    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
+    Console::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
 }
 
 void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
-    ConsoleInfo::instance().notify(SYSNOTE_LOADING_MAP, mapName);
+    Console::instance().notify(SYSNOTE_LOADING_MAP, mapName);
 
     if(mapName && mapName != gameflow_manager.CurrentLevelPath)
     {
@@ -2547,8 +2551,8 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         }
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(gameflow_manager.CurrentLevelID, file_path);
-        Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
-        Gui_FadeStart(FaderType::LoadScreen, FaderDir::In);
+        gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
+        gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::In);
         Engine_LoadMap(mapName);
     }
 }
@@ -2559,7 +2563,7 @@ void lua_SetFlipState(uint32_t group, bool state)
 {
     if(group >= engine_world.flip_data.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return;
     }
 
@@ -2603,7 +2607,7 @@ void lua_SetFlipMap(uint32_t group, int mask, int /*op*/)
 
     if(group >= engine_world.flip_data.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return;
     }
 
@@ -2621,7 +2625,7 @@ int lua_GetFlipMap(uint32_t group)
 {
     if(group >= engine_world.flip_data.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -2632,7 +2636,7 @@ int lua_GetFlipState(uint32_t group)
 {
     if(group >= engine_world.flip_data.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -3156,6 +3160,7 @@ void ScriptEngine::exposeConstants()
 
     EXPOSE_C(M_PI);
 
+    using gui::FontStyle;
     m_state.set( "FONTSTYLE_CONSOLE_INFO", static_cast<int>(FontStyle::ConsoleInfo) );
     m_state.set( "FONTSTYLE_CONSOLE_WARNING", static_cast<int>(FontStyle::ConsoleWarning) );
     m_state.set( "FONTSTYLE_CONSOLE_EVENT", static_cast<int>(FontStyle::ConsoleEvent) );
@@ -3172,6 +3177,7 @@ void ScriptEngine::exposeConstants()
     m_state.set( "FONTSTYLE_SAVEGAMELIST", static_cast<int>(FontStyle::SavegameList) );
     m_state.set( "FONTSTYLE_GENERIC", static_cast<int>(FontStyle::Generic) );
 
+    using gui::FontType;
     m_state.set( "FONT_PRIMARY", static_cast<int>(FontType::Primary) );
     m_state.set( "FONT_SECONDARY", static_cast<int>(FontType::Secondary) );
     m_state.set( "FONT_CONSOLE", static_cast<int>(FontType::Console) );
@@ -3201,7 +3207,7 @@ int ScriptEngine::print(lua_State* state)
 
     if(top == 0)
     {
-        ConsoleInfo::instance().addLine("nil", FontStyle::ConsoleEvent);
+        Console::instance().addLine("nil", gui::FontStyle::ConsoleEvent);
         return 0;
     }
 
@@ -3243,7 +3249,7 @@ int ScriptEngine::print(lua_State* state)
                 break;
         }
 
-        ConsoleInfo::instance().addLine(str, FontStyle::ConsoleEvent);
+        Console::instance().addLine(str, gui::FontStyle::ConsoleEvent);
     }
     return 0;
 }
@@ -3682,9 +3688,9 @@ void script::ScriptEngine::parseScreen(struct ScreenInfo *sc)
     sc->w = (*this)["screen"]["width"];
     sc->h = (*this)["screen"]["height"];
     sc->w = (*this)["screen"]["width"];
-    sc->w_unit = sc->w / ScreenMeteringResolution;
+    sc->w_unit = sc->w / gui::ScreenMeteringResolution;
     sc->h = (*this)["screen"]["height"];
-    sc->h_unit = sc->h / ScreenMeteringResolution;
+    sc->h_unit = sc->h / gui::ScreenMeteringResolution;
     sc->FS_flag = (*this)["screen"]["fullscreen"];
     sc->show_debuginfo = (*this)["screen"]["debug_info"];
     sc->fov = (*this)["screen"]["fov"];
@@ -3733,7 +3739,7 @@ void script::ScriptEngine::parseAudio(struct AudioSettings *as)
     as->music_volume = (*this)["audio"]["music_volume"];
 }
 
-void script::ScriptEngine::parseConsole(ConsoleInfo *cn)
+void script::ScriptEngine::parseConsole(Console *cn)
 {
     {
         float r = (*this)["console"]["background_color"]["r"];

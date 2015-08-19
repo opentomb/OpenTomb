@@ -9,15 +9,17 @@
 #include "engine.h"
 #include "gl_font.h"
 #include "gui.h"
-#include "script.h"
+#include "script/script.h"
 #include "shader_manager.h"
 #include "system.h"
 
-ConsoleInfo::ConsoleInfo()
+using namespace gui;
+
+Console::Console()
 {
 }
 
-void ConsoleInfo::init()
+void Console::init()
 {
     // log size check
     if(m_historyLines.size() > CON_MAX_LOG)
@@ -38,13 +40,13 @@ void ConsoleInfo::init()
     inited = true;
 }
 
-void ConsoleInfo::initFonts()
+void Console::initFonts()
 {
     m_font = fontManager->GetFont(FontType::Console);
     setLineInterval(m_spacing);
 }
 
-void ConsoleInfo::initGlobals() {
+void Console::initGlobals() {
     m_backgroundColor[0] = 1.0f;
     m_backgroundColor[1] = 0.9f;
     m_backgroundColor[2] = 0.7f;
@@ -56,7 +58,7 @@ void ConsoleInfo::initGlobals() {
     m_blinkPeriod = 0.5;
 }
 
-void ConsoleInfo::setLineInterval(float interval)
+void Console::setLineInterval(float interval)
 {
     if(!inited || !fontManager ||
        (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
@@ -77,7 +79,7 @@ void ConsoleInfo::setLineInterval(float interval)
     inited = true;
 }
 
-void ConsoleInfo::draw()
+void Console::draw()
 {
     if(!fontManager || !inited || !m_isVisible)
         return;
@@ -114,21 +116,21 @@ void ConsoleInfo::draw()
     glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(m_cursorY) + m_lineHeight, m_editingLine.c_str());
 }
 
-void ConsoleInfo::drawBackground()
+void Console::drawBackground()
 {
     /*
          * Draw console background to see the text
          */
-    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
+    drawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
-    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
+    drawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
-void ConsoleInfo::drawCursor()
+void Console::drawCursor()
 {
     GLint y = m_cursorY;
 
@@ -145,7 +147,7 @@ void ConsoleInfo::drawCursor()
     if(m_showCursor)
     {
         GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
-        Gui_DrawRect(m_cursorX,
+        drawRect(m_cursorX,
                      y + m_lineHeight * 0.9f,
                      1,
                      m_lineHeight * 0.8f,
@@ -154,7 +156,7 @@ void ConsoleInfo::drawCursor()
     }
 }
 
-void ConsoleInfo::filter(const std::string &text)
+void Console::filter(const std::string &text)
 {
     for(char c : text)
     {
@@ -177,7 +179,7 @@ bool startsWithLowercase(const std::string& haystack, const std::string& needle)
 }
 }
 
-void ConsoleInfo::edit(int key, int mod)
+void Console::edit(int key, int mod)
 {
     if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
@@ -336,7 +338,7 @@ void ConsoleInfo::edit(int key, int mod)
     calcCursorPosition();
 }
 
-void ConsoleInfo::calcCursorPosition()
+void Console::calcCursorPosition()
 {
     if(m_font)
     {
@@ -344,7 +346,7 @@ void ConsoleInfo::calcCursorPosition()
     }
 }
 
-void ConsoleInfo::addLog(const std::string &text)
+void Console::addLog(const std::string &text)
 {
     if(inited && !text.empty())
     {
@@ -355,7 +357,7 @@ void ConsoleInfo::addLog(const std::string &text)
     }
 }
 
-void ConsoleInfo::addLine(const std::string &text, FontStyle style)
+void Console::addLine(const std::string &text, FontStyle style)
 {
     if(inited && !text.empty())
     {
@@ -365,7 +367,7 @@ void ConsoleInfo::addLine(const std::string &text, FontStyle style)
     }
 }
 
-void ConsoleInfo::addText(const std::string &text, FontStyle style)
+void Console::addText(const std::string &text, FontStyle style)
 {
     size_t pos = 0;
     while(pos != std::string::npos)
@@ -379,7 +381,7 @@ void ConsoleInfo::addText(const std::string &text, FontStyle style)
     }
 }
 
-void ConsoleInfo::printf(const char *fmt, ...)
+void Console::printf(const char *fmt, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -391,7 +393,7 @@ void ConsoleInfo::printf(const char *fmt, ...)
     addLine(buf, FontStyle::ConsoleNotify);
 }
 
-void ConsoleInfo::warning(int warn_string_index, ...)
+void Console::warning(int warn_string_index, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -406,7 +408,7 @@ void ConsoleInfo::warning(int warn_string_index, ...)
     addLine(buf, FontStyle::ConsoleWarning);
 }
 
-void ConsoleInfo::notify(int notify_string_index, ...)
+void Console::notify(int notify_string_index, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -421,7 +423,7 @@ void ConsoleInfo::notify(int notify_string_index, ...)
     addLine(buf, FontStyle::ConsoleNotify);
 }
 
-void ConsoleInfo::clean()
+void Console::clean()
 {
     m_lines.clear();
 }

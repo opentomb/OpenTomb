@@ -19,25 +19,27 @@
 #include "audio.h"
 #include "bordered_texture_atlas.h"
 #include "character_controller.h"
-#include "console.h"
+#include "gui/console.h"
 #include "engine.h"
 #include "entity.h"
 #include "game.h"
 #include "gameflow.h"
 #include "gl_util.h"
-#include "gui.h"
-#include "helpers.h"
+#include "gui/gui.h"
+#include "util/helpers.h"
 #include "mesh.h"
 #include "obb.h"
 #include "polygon.h"
 #include "portal.h"
 #include "render.h"
-#include "script.h"
+#include "script/script.h"
 #include "shader_description.h"
 #include "strings.h"
 #include "system.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "world.h"
+
+using gui::Console;
 
 void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
 {
@@ -1396,7 +1398,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
                             af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
-                            ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
+                            Console::instance().printf("ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                             break;
                     }
                     pointer += 2;
@@ -1580,7 +1582,7 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
+        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1596,7 +1598,7 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Val
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
+        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1613,7 +1615,7 @@ void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
+        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1628,7 +1630,7 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == nullptr)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
+        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
         return;
     }
 
@@ -1665,74 +1667,74 @@ void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr)
 
     Res_AutoexecOpen(tr->m_gameVersion);    // Open and do preload autoexec.
     engine_lua.call("autoexec_PreLoad");
-    Gui_DrawLoadScreen(150);
+    gui::drawLoadScreen(150);
 
     Res_GenRBTrees(world);
-    Gui_DrawLoadScreen(200);
+    gui::drawLoadScreen(200);
 
     TR_GenTextures(world, tr);
-    Gui_DrawLoadScreen(300);
+    gui::drawLoadScreen(300);
 
     TR_GenAnimCommands(world, tr);
-    Gui_DrawLoadScreen(310);
+    gui::drawLoadScreen(310);
 
     TR_GenAnimTextures(world, tr);
-    Gui_DrawLoadScreen(320);
+    gui::drawLoadScreen(320);
 
     TR_GenMeshes(world, tr);
-    Gui_DrawLoadScreen(400);
+    gui::drawLoadScreen(400);
 
     TR_GenSprites(world, tr);
-    Gui_DrawLoadScreen(420);
+    gui::drawLoadScreen(420);
 
     TR_GenBoxes(world, tr);
-    Gui_DrawLoadScreen(440);
+    gui::drawLoadScreen(440);
 
     TR_GenCameras(world, tr);
-    Gui_DrawLoadScreen(460);
+    gui::drawLoadScreen(460);
 
     TR_GenRooms(world, tr);
-    Gui_DrawLoadScreen(500);
+    gui::drawLoadScreen(500);
 
     Res_GenRoomFlipMap(world);
-    Gui_DrawLoadScreen(520);
+    gui::drawLoadScreen(520);
 
     TR_GenSkeletalModels(world, tr);
-    Gui_DrawLoadScreen(600);
+    gui::drawLoadScreen(600);
 
     TR_GenEntities(world, tr);
-    Gui_DrawLoadScreen(650);
+    gui::drawLoadScreen(650);
 
     Res_GenBaseItems(world);
-    Gui_DrawLoadScreen(680);
+    gui::drawLoadScreen(680);
 
     Res_GenSpritesBuffer(world);        // Should be done ONLY after TR_GenEntities.
-    Gui_DrawLoadScreen(700);
+    gui::drawLoadScreen(700);
 
     TR_GenRoomProperties(world, tr);
-    Gui_DrawLoadScreen(750);
+    gui::drawLoadScreen(750);
 
     Res_GenRoomCollision(world);
-    Gui_DrawLoadScreen(800);
+    gui::drawLoadScreen(800);
 
     TR_GenSamples(world, tr);
-    Gui_DrawLoadScreen(850);
+    gui::drawLoadScreen(850);
 
     world->sky_box = Res_GetSkybox(world, world->engineVersion);
-    Gui_DrawLoadScreen(860);
+    gui::drawLoadScreen(860);
 
     Res_GenEntityFunctions(world->entity_tree);
-    Gui_DrawLoadScreen(910);
+    gui::drawLoadScreen(910);
 
     Res_GenVBOs(world);
-    Gui_DrawLoadScreen(950);
+    gui::drawLoadScreen(950);
 
     engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
     engine_lua.call("autoexec_PostLoad");
-    Gui_DrawLoadScreen(960);
+    gui::drawLoadScreen(960);
 
     Res_FixRooms(world);                        // Fix initial room states
-    Gui_DrawLoadScreen(970);
+    gui::drawLoadScreen(970);
 }
 
 void Res_GenRBTrees(World *world)
@@ -1836,8 +1838,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, co
         r_static->obb.transform = &room->static_mesh[i]->transform;
         r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
         r_static->transform.setIdentity();
-        Mat4_Translate(r_static->transform, r_static->pos);
-        Mat4_RotateZ(r_static->transform, r_static->rot[0]);
+        util::Mat4_Translate(r_static->transform, r_static->pos);
+        util::Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
         r_static->obb.rebuild(r_static->vbb_min, r_static->vbb_max);
         r_static->obb.doTransform();
@@ -2299,7 +2301,7 @@ void Res_GenSpritesBuffer(World *world)
 
 void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
 {
-    int border_size = Clamp(renderer.settings().texture_border, 0, 64);
+    int border_size = util::clamp(renderer.settings().texture_border, 0, 64);
 
     world->tex_atlas.reset(new BorderedTextureAtlas(border_size,
                                                     renderer.settings().save_texture_memory,
@@ -3101,7 +3103,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             tree_tag = &model->mesh_tree[k];
             bone_tag = &bone_frame->bone_tags[k];
 
-            vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+            util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
             bone_tag->offset = tree_tag->offset;
         }
         return;
@@ -3222,7 +3224,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                 {
                     tree_tag = &model->mesh_tree[k];
                     bone_tag = &bone_frame->bone_tags[k];
-                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+                    util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
                     bone_tag->offset = tree_tag->offset;
                 }
             }
@@ -3236,7 +3238,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                 {
                     tree_tag = &model->mesh_tree[k];
                     bone_tag = &bone_frame->bone_tags[k];
-                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+                    util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
                     bone_tag->offset = tree_tag->offset;
 
                     switch(tr->m_gameVersion)
@@ -3254,7 +3256,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                             rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                             rot[1] = static_cast<float>(temp2 & 0x03ff);
                             rot *= 360.0 / 1024.0;
-                            vec4_SetTRRotations(bone_tag->qrotate, rot);
+                            util::vec4_SetTRRotations(bone_tag->qrotate, rot);
                             break;
                         }
 
@@ -3275,15 +3277,15 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                             switch(temp1 & 0xc000)
                             {
                                 case 0x4000:    // x only
-                                    vec4_SetTRRotations(bone_tag->qrotate, { ang,0,0 });
+                                    util::vec4_SetTRRotations(bone_tag->qrotate, { ang,0,0 });
                                     break;
 
                                 case 0x8000:    // y only
-                                    vec4_SetTRRotations(bone_tag->qrotate, { 0,0,-ang });
+                                    util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,-ang });
                                     break;
 
                                 case 0xc000:    // z only
-                                    vec4_SetTRRotations(bone_tag->qrotate, { 0,ang,0 });
+                                    util::vec4_SetTRRotations(bone_tag->qrotate, { 0,ang,0 });
                                     break;
 
                                 default:
@@ -3296,7 +3298,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                                     rot[0] *= 360.0 / 1024.0;
                                     rot[1] *= 360.0 / 1024.0;
                                     rot[2] *= 360.0 / 1024.0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    util::vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     l++;
                                     break;
                                 }

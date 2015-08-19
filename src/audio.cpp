@@ -5,16 +5,18 @@
 
 #include <SDL2/SDL.h>
 
-#include "console.h"
+#include "gui/console.h"
 #include "camera.h"
 #include "engine.h"
 #include "entity.h"
-#include "helpers.h"
+#include "util/helpers.h"
 #include "render.h"
-#include "script.h"
+#include "script/script.h"
 #include "strings.h"
 #include "system.h"
-#include "vmath.h"
+#include "util/vmath.h"
+
+using gui::Console;
 
 #ifndef AL_ALEXT_PROTOTYPES
 
@@ -392,13 +394,13 @@ void AudioSource::SetLooping(ALboolean is_looping)
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
-    alSourcef(source_index, AL_GAIN, Clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
+    alSourcef(source_index, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
 }
 
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
-    alSourcef(source_index, AL_PITCH, Clamp(pitch_value, 0.1f, 2.0f));
+    alSourcef(source_index, AL_PITCH, util::clamp(pitch_value, 0.1f, 2.0f));
 }
 
 void AudioSource::SetRange(ALfloat range_value)
@@ -610,7 +612,7 @@ bool StreamTrack::Load_Track(const char *path)
         return false;
     }
 
-    ConsoleInfo::instance().notify(SYSNOTE_TRACK_OPENED, path,
+    Console::instance().notify(SYSNOTE_TRACK_OPENED, path,
                                    sf_info.channels, sf_info.samplerate);
 
 #ifdef AUDIO_OPENAL_FLOAT
@@ -634,7 +636,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 {
     if(index >= TR_AUDIO_STREAM_WAD_COUNT)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WAD_OUT_OF_BOUNDS, TR_AUDIO_STREAM_WAD_COUNT);
+        Console::instance().warning(SYSWARN_WAD_OUT_OF_BOUNDS, TR_AUDIO_STREAM_WAD_COUNT);
         return false;
     }
     else
@@ -643,7 +645,7 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 
         if(!wad_file)
         {
-            ConsoleInfo::instance().warning(SYSWARN_FILE_NOT_FOUND, filename);
+            Console::instance().warning(SYSWARN_FILE_NOT_FOUND, filename);
             return false;
         }
         else
@@ -662,14 +664,14 @@ bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
 
             if(!(snd_file = sf_open_fd(fileno(wad_file), SFM_READ, &sf_info, false)))
             {
-                ConsoleInfo::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
+                Console::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
                 method = -1;
                 return false;
             }
             else
             {
-                ConsoleInfo::instance().notify(SYSNOTE_WAD_PLAYING, filename, offset, length);
-                ConsoleInfo::instance().notify(SYSNOTE_TRACK_OPENED, track_name,
+                Console::instance().notify(SYSNOTE_WAD_PLAYING, filename, offset, length);
+                Console::instance().notify(SYSNOTE_TRACK_OPENED, track_name,
                                                sf_info.channels, sf_info.samplerate);
             }
 
@@ -794,7 +796,7 @@ bool StreamTrack::Update()
             damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = Clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
+            damped_volume = util::clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
             change_gain   = true;
         }
         else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
@@ -802,7 +804,7 @@ bool StreamTrack::Update()
             damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = Clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
+            damped_volume = util::clamp(damped_volume, 0.0f, TR_AUDIO_STREAM_DAMP_LEVEL);
             change_gain   = true;
         }
     }
@@ -856,7 +858,7 @@ bool StreamTrack::Update()
             }
 
             // Clamp volume.
-            current_volume = Clamp(current_volume, 0.0f, 1.0f);
+            current_volume = util::clamp(current_volume, 0.0f, 1.0f);
             change_gain    = true;
         }
     }
@@ -1034,7 +1036,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(track_index >= engine_world.stream_track_map.size())
     {
-        ConsoleInfo::instance().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
+        Console::instance().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -1043,7 +1045,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(Audio_IsTrackPlaying(track_index))
     {
-        ConsoleInfo::instance().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
+        Console::instance().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -1055,7 +1057,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_lua.getSoundtrack(track_index, file_path, &load_method, &stream_type))
     {
-        ConsoleInfo::instance().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
+        Console::instance().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -1081,7 +1083,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
         if(target_stream == -1)
         {
-            ConsoleInfo::instance().warning(SYSWARN_NO_FREE_STREAM);
+            Console::instance().warning(SYSWARN_NO_FREE_STREAM);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
         }
     }
@@ -1099,7 +1101,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
-        ConsoleInfo::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
+        Console::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -1107,7 +1109,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
     {
-        ConsoleInfo::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
+        Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 
@@ -1819,7 +1821,7 @@ int Audio_LoadALbufferFromFile(ALuint buf_number, const char *fname)
 
     if(!file)
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_OPEN_FILE);
+        Console::instance().warning(SYSWARN_CANT_OPEN_FILE);
         return -1;
     }
 

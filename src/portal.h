@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include "vmath.h"
+#include "util/vmath.h"
 
 struct Room;
 struct RoomSector;
@@ -21,7 +21,7 @@ struct RoomSector;
 struct Portal
 {
     std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
-    Plane normal;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
+    util::Plane normal;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
     btVector3 centre = { 0,0,0 };                                                         // центр портала
     std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал

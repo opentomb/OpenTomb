@@ -2,6 +2,9 @@
 
 #include <cmath>
 
+namespace util
+{
+
 void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
 {
     btQuaternion qZ;
@@ -99,3 +102,5 @@ btQuaternion Quat_Slerp(const btQuaternion& q1, const btQuaternion& q2, const bt
         return btQuaternion(q1);
     }
 }
+
+} // namespace util

@@ -4,7 +4,7 @@
 #include <cassert>
 
 #include "frustum.h"
-#include "vmath.h"
+#include "util/vmath.h"
 
 void Camera::apply()
 {
@@ -56,7 +56,7 @@ void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
 {
     m_fov = fov;
     m_aspect = aspect;
-    m_f = std::tan(m_fov * RadPerDeg / 2);
+    m_f = std::tan(m_fov * util::RadPerDeg / 2);
     m_height = 2.0f * m_distNear * m_f;
     m_width = m_height * aspect;
     m_f = 1.0f / m_f;
@@ -154,7 +154,7 @@ void Camera::recalcClipPlanes()
 
 Camera::Camera()
 {
-    m_f = 1.0f / std::tan(m_fov * RadPerDeg / 2);
+    m_f = 1.0f / std::tan(m_fov * util::RadPerDeg / 2);
     m_height = 2.0f * m_distNear / m_f;
     m_width = m_height * m_aspect;
 

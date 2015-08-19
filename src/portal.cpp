@@ -8,7 +8,7 @@
 #include <LinearMath/btScalar.h>
 
 #include "polygon.h"
-#include "vmath.h"
+#include "util/vmath.h"
 
 /*
  * CLIP PLANES

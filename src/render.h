@@ -11,7 +11,7 @@
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btIDebugDraw.h>
 
-#include "matrix4.h"
+#include "util/matrix4.h"
 #include "vertex_array.h"
 #include "loader/datatypes.h"
 
@@ -249,24 +249,24 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
-    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const matrix4 &modelViewMatrix, const matrix4 &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const matrix4 &mvMatrix, const matrix4 &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const matrix4 &mvMatrix, const matrix4 &pMatrix);
-    void renderHair(std::shared_ptr<Character> entity, const matrix4 &modelViewMatrix, const matrix4 & modelViewProjectionMatrix);
-    void renderSkyBox(const matrix4& matrix);
+    void renderEntity(Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
+    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
+    void renderHair(std::shared_ptr<Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
+    void renderSkyBox(const util::matrix4& matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
     void renderPolygonTransparency(loader::BlendingMode& currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);
     void renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
     void renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderRoom(const Room *room, const matrix4 &matrix, const matrix4 &modelViewProjectionMatrix, const matrix4 &projection);
-    void renderRoomSprites(const Room *room, const matrix4 &modelViewMatrix, const matrix4 &projectionMatrix);
+    void renderRoom(const Room *room, const util::matrix4 &matrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
+    void renderRoomSprites(const Room *room, const util::matrix4 &modelViewMatrix, const util::matrix4 &projectionMatrix);
 
     int processRoom(Portal* portal, const Frustum& frus);
 
 private:
-    const LitShaderDescription *setupEntityLight(Entity *entity, const matrix4 &modelViewMatrix, bool skin);
+    const LitShaderDescription *setupEntityLight(Entity *entity, const util::matrix4 &modelViewMatrix, bool skin);
 };
 
 extern Render renderer;

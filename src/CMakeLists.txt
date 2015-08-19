@@ -16,6 +16,15 @@ list(APPEND PRJ_SRC
     loader/tr3level.cpp
     loader/tr4level.cpp
     loader/tr5level.cpp
+
+    gui/gui.cpp
+    gui/console.cpp
+
+    script/script.cpp
+
+    util/helpers.cpp
+    util/vmath.cpp
+    util/matrix4.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -28,6 +37,15 @@ list(APPEND PRJ_HDR
     loader/tr4level.h
     loader/tr5level.h
     loader/game.h
+
+    gui/gui.h
+    gui/console.h
+
+    script/script.h
+
+    util/helpers.h
+    util/vmath.h
+    util/matrix4.h
 )
 
 if(MINGW)
@@ -69,6 +87,8 @@ elseif(APPLE)
 else()
     add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC})
 endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE .)
 
 target_link_libraries(
     ${PROJECT_NAME}

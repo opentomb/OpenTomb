@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "vmath.h"
+#include "util/vmath.h"
 
 class Camera;
 struct Polygon;
@@ -24,7 +24,7 @@ struct BSPFaceRef
 
 struct BSPNode
 {
-    Plane plane;
+    util::Plane plane;
 
     std::vector<BSPFaceRef> polygons_front;
     std::vector<BSPFaceRef> polygons_back;

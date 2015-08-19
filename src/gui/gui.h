@@ -7,6 +7,11 @@
 
 #include <list>
 
+struct InventoryNode;
+
+namespace gui
+{
+
 namespace
 {
 constexpr int MaxTempLines = 256;
@@ -33,7 +38,7 @@ constexpr float FontShadowHorizontalShift =  0.7f;
 // that are created dynamically may have variable string sizes.
 
 constexpr int LineDefaultSize = 128;
-}
+} // anonymous namespace
 
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
@@ -167,7 +172,6 @@ enum class FontStyle
     Sentinel
 };
 
-struct InventoryNode;
 
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
@@ -333,7 +337,7 @@ public:
     void Engage(FaderDir fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
 
-    FaderStatus IsFading();              // Get current state of the fader.
+    FaderStatus getStatus();              // Get current state of the fader.
 
     void SetScaleMode(FaderScale mode = FaderScale::Zoom);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner = FaderCorner::None);
@@ -484,22 +488,25 @@ private:
     float         mBaseRatio;           // Max. / actual value ratio.
 };
 
+namespace
+{
 // Offscreen divider specifies how far item notifier will be placed from
 // the final slide position. Usually it's enough to be 1/8 of the screen
 // width, but if you want to increase or decrease notifier size, you must
 // change this value properly.
 
-#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0f
+constexpr float NotifierOffscreenDivider = 8.0f;
 
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
 
-#define GUI_NOTIFIER_SHOWTIME 2.0f
+constexpr float NotifierShowtime = 2.0f;
+} // anonymous namespace
 
-class gui_ItemNotifier
+class ItemNotifier
 {
 public:
-    gui_ItemNotifier();
+    ItemNotifier();
 
     void    Start(int item, float time);
     void    Reset();
@@ -535,28 +542,28 @@ private:
     float   mRotateTime;
 };
 
-void Gui_InitFontManager();
+void initFontManager();
 
-void Gui_Init();
-void Gui_Destroy();
+void init();
+void destroy();
 
-void Gui_InitBars();
-void Gui_InitFaders();
-void Gui_InitNotifier();
-void Gui_InitTempLines();
-void Gui_FillCrosshairBuffer();
+void initBars();
+void initFaders();
+void initNotifier();
+void initTempLines();
+void fillCrosshairBuffer();
 
-void Gui_AddLine(TextLine* line);
-void Gui_DeleteLine(TextLine* line);
-void Gui_MoveLine(TextLine* line);
-void Gui_RenderStringLine(TextLine* l);
-void Gui_RenderStrings();
+void addLine(TextLine* line);
+void deleteLine(TextLine* line);
+void moveLine(TextLine* line);
+void renderStringLine(TextLine* l);
+void renderStrings();
 
 /**
  * Inventory rendering / manipulation functions
  */
 void Item_Frame(struct SSBoneFrame *bf, btScalar time);
-void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
+void renderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
 /*
  * Other inventory renderer class
  */
@@ -637,20 +644,19 @@ public:
 };
 
 extern InventoryManager  *main_inventory_manager;
-//extern gui_InventoryMenu     *main_inventory_menu;
 extern FontManager       *fontManager;
 
 /**
  * Draws text using a FontType::Secondary.
  */
-TextLine* Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
+TextLine* drawText(GLfloat x, GLfloat y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.
  *
  * Either changes to 2D matrix state (is_gui = 1) or away from it (is_gui = 0). Does not do any drawing.
  */
-void Gui_SwitchGLMode(char is_gui);
+void switchGLMode(bool is_gui);
 
 /**
  * Draws wireframe of this frustum.
@@ -676,48 +682,50 @@ void Gui_SwitchGLMode(char is_gui);
  *  - Current color will be arbitray (set by console)
  *  - Blend mode will be SRC_ALPHA, ONE_MINUS_SRC_ALPHA (set by console)
  */
-void Gui_Render();
+void render();
 
 /**
  *  Draw simple rectangle.
  *  Only state it changes is the blend mode, according to blendMode value.
  */
-void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
-                  const GLfloat &width, const GLfloat &height,
-                  const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
-                  const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
-                  const loader::BlendingMode blendMode,
-                  const GLuint texture = 0);
+void drawRect(const GLfloat &x, const GLfloat &y,
+              const GLfloat &width, const GLfloat &height,
+              const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
+              const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
+              const loader::BlendingMode blendMode,
+              const GLuint texture = 0);
 
 /**
  *  Fader functions.
  */
-bool Gui_FadeStart(FaderType fader, FaderDir fade_direction);
-bool Gui_FadeStop(FaderType fader);
-bool Gui_FadeAssignPic(FaderType fader, const std::string &pic_name);
-FaderStatus Gui_FadeCheck(FaderType fader);
-void Gui_FadeSetup(FaderType fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-                   uint16_t fadein_speed, uint16_t fadeout_speed);
+bool fadeStart(FaderType fader, FaderDir fade_direction);
+bool fadeStop(FaderType fader);
+bool fadeAssignPic(FaderType fader, const std::string &pic_name);
+FaderStatus getFaderStatus(FaderType fader);
+void fadeSetup(FaderType fader,
+               uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
+               uint16_t fadein_speed, uint16_t fadeout_speed);
 
 /**
  * Item notifier functions.
  */
-void Gui_NotifierStart(int item);
-void Gui_NotifierStop();
+void notifierStart(int item);
+void notifierStop();
 
 /**
  * General GUI drawing routines.
  */
-void Gui_DrawCrosshair();
-void Gui_DrawFaders();
-void Gui_DrawBars();
-void Gui_DrawLoadScreen(int value);
-void Gui_DrawInventory();
-void Gui_DrawNotifier();
+void drawCrosshair();
+void drawFaders();
+void drawBars();
+void drawLoadScreen(int value);
+void drawInventory();
+void drawNotifier();
 
 /**
  * General GUI update routines.
  */
-void Gui_Update();
-void Gui_Resize();  // Called every resize event.
+void update();
+void resize();  // Called every resize event.
+
+} // namespace gui

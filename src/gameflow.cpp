@@ -8,10 +8,10 @@
 
 #include "LuaState.h"
 
-#include "console.h"
+#include "gui/console.h"
 #include "engine.h"
-#include "gui.h"
-#include "script.h"
+#include "gui/gui.h"
+#include "script/script.h"
 #include "world.h"
 
 gameflow_manager_s gameflow_manager;
@@ -40,7 +40,7 @@ void Gameflow_Do()
         {
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
-                if((Gui_FadeCheck(FaderType::LoadScreen) == FaderStatus::Complete) && (!Audio_IsTrackPlaying()))
+                if((gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete) && (!Audio_IsTrackPlaying()))
                 {
                     const char* levelName;
                     const char* levelPath;

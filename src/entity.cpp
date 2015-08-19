@@ -12,15 +12,15 @@
 
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "console.h"
+#include "gui/console.h"
 #include "engine.h"
-#include "helpers.h"
+#include "util/helpers.h"
 #include "mesh.h"
 #include "obb.h"
 #include "ragdoll.h"
-#include "script.h"
+#include "script/script.h"
 #include "system.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "world.h"
 
 void Entity::createGhosts()
@@ -686,11 +686,11 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateTransform()
 {
-    m_angles[0] = WrapAngle(m_angles[0]);
-    m_angles[1] = WrapAngle(m_angles[1]);
-    m_angles[2] = WrapAngle(m_angles[2]);
+    m_angles[0] = util::wrapAngle(m_angles[0]);
+    m_angles[1] = util::wrapAngle(m_angles[1]);
+    m_angles[2] = util::wrapAngle(m_angles[2]);
 
-    m_transform.getBasis().setEulerZYX(m_angles[1] * RadPerDeg, m_angles[2] * RadPerDeg, m_angles[0] * RadPerDeg);
+    m_transform.getBasis().setEulerZYX(m_angles[1] * util::RadPerDeg, m_angles[2] * util::RadPerDeg, m_angles[0] * util::RadPerDeg);
 
     fixPenetrations(nullptr);
 }
@@ -785,7 +785,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
         if(k == 0)
         {
             btag->transform.getOrigin() += bf->pos;
-            btag->qrotate = Quat_Slerp(src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
+            btag->qrotate = util::Quat_Slerp(src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
         }
         else
         {
@@ -804,7 +804,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
                     break;
                 }
             }
-            btag->qrotate = Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
+            btag->qrotate = util::Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
         }
         btag->transform.setRotation(btag->qrotate);
     }

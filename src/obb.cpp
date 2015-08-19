@@ -6,7 +6,7 @@
 
 #include "entity.h"
 #include "polygon.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "engine.h"
 #include "frustum.h"
 

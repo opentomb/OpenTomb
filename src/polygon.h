@@ -7,7 +7,7 @@
 #include <LinearMath/btScalar.h>
 #include <GL/glew.h>
 
-#include "vmath.h"
+#include "util/vmath.h"
 
 #define SPLIT_FRONT    0x00
 #define SPLIT_BACK     0x01
@@ -37,7 +37,7 @@ struct Polygon
     uint16_t            frame_offset = 0;                                           // anim texture frame offset
     loader::BlendingMode blendMode = loader::BlendingMode::Opaque;                  // transparency information
     bool                double_side = false;                                        // double side flag
-    Plane plane;                                               // polygon plane equation
+    util::Plane plane;                                               // polygon plane equation
 
     Polygon() = default;
 
@@ -77,8 +77,8 @@ struct Polygon
     bool rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *lambda) const;
     bool intersectPolygon(Polygon* p2);
 
-    int  splitClassify(const Plane &plane);
-    void split(const Plane &n, Polygon* front, Polygon* back);
+    int  splitClassify(const util::Plane &plane);
+    void split(const util::Plane &n, Polygon* front, Polygon* back);
 
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);
     bool isInsideBQuad(const btVector3 &bb_min, const btVector3 &bb_max);

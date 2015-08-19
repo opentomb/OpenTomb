@@ -11,7 +11,7 @@
 #include "polygon.h"
 #include "portal.h"
 #include "render.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "world.h"
 
 void Frustum::splitPrepare(struct Portal *p)
@@ -22,7 +22,7 @@ void Frustum::splitPrepare(struct Portal *p)
     parent = nullptr;
 }
 
-int Frustum::split_by_plane(const Plane& splitPlane)
+int Frustum::split_by_plane(const util::Plane& splitPlane)
 {
     assert(!vertices.empty());
 
@@ -239,10 +239,10 @@ bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam) const
     }
 
     // Generate queue order...
-    const Plane* nextPlane = &planes.front();
+    const util::Plane* nextPlane = &planes.front();
     // 3 neighboring clipping planes
-    const Plane* currentPlane = &planes.back();
-    const Plane* prevPlane = currentPlane - 1;
+    const util::Plane* currentPlane = &planes.back();
+    const util::Plane* prevPlane = currentPlane - 1;
     // in case no intersection
     bool ins = true;
     // iterate through all the planes of this frustum

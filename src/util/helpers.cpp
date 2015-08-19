@@ -5,14 +5,10 @@
 
 #include <SDL2/SDL_endian.h>
 
-btScalar WrapAngle(const btScalar value)
+namespace util
 {
-    int i = static_cast<int>(value / 360.0);
-    i = (value < 0.0)?(i-1):(i);
-    return value - 360.0f * i;
-}
 
-void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
+void writeTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
 {
     std::ofstream st(filename, std::ios::out|std::ios::binary);
     if(!st.is_open())
@@ -79,3 +75,5 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
             }
     }
 }
+
+} // namespace util

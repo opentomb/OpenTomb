@@ -12,7 +12,7 @@
 #include "render.h"
 #include "resource.h"
 #include "shader_description.h"
-#include "vmath.h"
+#include "util/vmath.h"
 #include "world.h"
 
 Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
@@ -285,7 +285,7 @@ void SkeletalModel::interpolateFrames()
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
                         bf->bone_tags[k].offset = anim->frames[j - 1].bone_tags[k].offset.lerp(anim->frames[j].bone_tags[k].offset, lerp);
-                        bf->bone_tags[k].qrotate = Quat_Slerp(anim->frames[j - 1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                        bf->bone_tags[k].qrotate = util::Quat_Slerp(anim->frames[j - 1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
                     }
                     bf++;
                 }

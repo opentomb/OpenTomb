@@ -6,14 +6,14 @@
 #include "anim_state_control.h"
 #include "engine.h"
 #include "entity.h"
-#include "gui.h"
+#include "gui/gui.h"
 #include "hair.h"
 #include "mesh.h"
 #include "obb.h"
 #include "polygon.h"
 #include "resource.h"
-#include "script.h"
-#include "vmath.h"
+#include "script/script.h"
+#include "util/vmath.h"
 #include "world.h"
 
 Character::Character(uint32_t id)
@@ -45,7 +45,7 @@ Character::~Character()
 
 int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    Gui_NotifierStart(item_id);
+    gui::notifierStart(item_id);
 
     auto item = engine_world.getBaseItemByID(item_id);
     if(!item)
@@ -635,7 +635,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     ret.up[0] = 0.0;
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
-    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
+    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * util::DegPerRad;
     ret.edge_tan_xy[0] = -n2[1];
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
@@ -978,7 +978,7 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * DegPerRad;       // from -180 deg to +180 deg
+            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
                 + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
@@ -1122,7 +1122,7 @@ int Character::freeFalling()
 
     btVector3 move = applyGravity(engine_frame_time);
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
-    m_speed = m_speed.rotate({ 0,0,1 }, rot * RadPerDeg);
+    m_speed = m_speed.rotate({ 0,0,1 }, rot * util::RadPerDeg);
 
     updateCurrentHeight();
 
@@ -1304,7 +1304,7 @@ int Character::wallsClimbing()
         return 2;
     }
 
-    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * DegPerRad;
+    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * util::DegPerRad;
     updateTransform();
     pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
     pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];

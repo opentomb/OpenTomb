@@ -18,7 +18,10 @@
 #define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
 
-struct ConsoleInfo
+namespace gui
+{
+
+struct Console
 {
 private:
     struct Line
@@ -68,18 +71,18 @@ private:
 
     std::vector<std::string> m_completionItems;
 
-    ConsoleInfo();
+    Console();
 
 public:
     void init();
 
-    static ConsoleInfo& instance()
+    static Console& instance()
     {
-        static ConsoleInfo con_base;
+        static Console con_base;
         return con_base;
     }
 
-    ~ConsoleInfo() = default;
+    ~Console() = default;
 
     void initFonts();
 
@@ -199,3 +202,5 @@ public:
         m_completionItems = items;
     }
 };
+
+} // namespace gui
