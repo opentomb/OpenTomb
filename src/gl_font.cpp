@@ -12,7 +12,7 @@
 #include <vector>
 
 #include <ft2build.h>
-#include <freetype.h>
+#include FT_FREETYPE_H
 
 #include "gl_font_buffer.h"
 
