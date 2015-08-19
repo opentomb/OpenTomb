@@ -32,8 +32,6 @@ extern "C" {
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
-#include "hair.h"
-#include "ragdoll.h"
 
 float cam_angles[3] = {0.0, 0.0, 0.0};
 
@@ -743,7 +741,11 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
             ent->character->resp.kill = 1;                                      // Kill, if no HP.
         }
         Character_ApplyCommands(ent);
-        Hair_Update(ent);
+
+        for(int h = 0; h < ent->character->hair_count; h++)
+        {
+            Hair_Update(ent->character->hairs[h], ent->physics);
+        }
     }
 
     if(x->left != NULL)
@@ -772,7 +774,10 @@ void Game_UpdateCharacters()
         {
             ent->character->resp.kill = 0;   // Kill, if no HP.
         }
-        Hair_Update(ent);
+        for(int h = 0; h < ent->character->hair_count; h++)
+        {
+            Hair_Update(ent->character->hairs[h], ent->physics);
+        }
     }
 
     if(engine_world.entity_tree && engine_world.entity_tree->root)

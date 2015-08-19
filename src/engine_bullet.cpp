@@ -2,6 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
@@ -18,30 +24,11 @@
 #include "mesh.h"
 #include "character_controller.h"
 #include "engine_physics.h"
+#include "script.h"
 #include "entity.h"
 #include "render.h"
 #include "resource.h"
 #include "world.h"
-
-struct physics_object_s
-{
-    btRigidBody    *bt_body;
-};
-
-typedef struct physics_data_s
-{
-    // kinematic
-    btRigidBody                       **bt_body;
-
-    // dynamic
-    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
-    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
-    uint16_t                            objects_count;          // Ragdoll joints
-    uint16_t                            bt_joint_count;         // Ragdoll joints
-    btTypedConstraint                 **bt_joints;              // Ragdoll joints
-
-    struct engine_container_s          *cont;
-}physics_data_t, *physics_data_p;
 
 /*
  * INTERNAL BHYSICS CLASSES
@@ -143,6 +130,27 @@ private:
 };
 
 
+struct physics_object_s
+{
+    btRigidBody    *bt_body;
+};
+
+typedef struct physics_data_s
+{
+    // kinematic
+    btRigidBody                       **bt_body;
+
+    // dynamic
+    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
+    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    uint16_t                            objects_count;          // Ragdoll joints
+    uint16_t                            bt_joint_count;         // Ragdoll joints
+    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+
+    struct engine_container_s          *cont;
+}physics_data_t, *physics_data_p;
+
+
 class CBulletDebugDrawer : public btIDebugDraw
 {
 public:
@@ -177,13 +185,16 @@ public:
 
     virtual void   setDebugMode(int debugMode)
     {
-        renderer.debugDrawer->SetDebugMode(debugMode);
+        m_debugMode = debugMode;
     }
 
     virtual int    getDebugMode() const
     {
-        return renderer.debugDrawer->GetDebugMode();
+        return m_debugMode;
     }
+
+private:
+    int32_t m_debugMode;
 };
 
 btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration = NULL;
@@ -1397,4 +1408,912 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
     }
 
     return ret;
+}
+
+/* *****************************************************************************
+ * ************************  HAIR DATA  ****************************************
+ * ****************************************************************************/
+
+typedef struct hair_element_s
+{
+    struct base_mesh_s         *mesh;              // Pointer to rendered mesh.
+    btCollisionShape           *shape;             // Pointer to collision shape.
+    btRigidBody                *body;              // Pointer to dynamic body.
+    btGeneric6DofConstraint    *joint;             // Array of joints.
+}hair_element_t, *hair_element_p;
+
+
+typedef struct hair_s
+{
+    engine_container_p        container;
+    uint32_t                  owner_body;         // Owner entity's body ID.
+
+    uint8_t                   root_index;         // Index of "root" element.
+    uint8_t                   tail_index;         // Index of "tail" element.
+
+    uint8_t                   element_count;      // Overall amount of elements.
+    hair_element_s           *elements;           // Array of elements.
+
+    uint8_t                   vertex_map_count;
+    uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
+    uint32_t                 *head_vertex_map;    // Head vertex indices to link
+
+}hair_t, *hair_p;
+
+typedef struct hair_setup_s
+{
+    uint32_t     model_id;           // Hair model ID
+    uint32_t     link_body;          // Lara's head mesh index
+
+    btScalar     root_weight;        // Root and tail hair body weight. Intermediate body
+    btScalar     tail_weight;        // weights are calculated from these two parameters
+
+    btScalar     hair_damping[2];    // Damping affects hair "plasticity"
+    btScalar     hair_inertia;       // Inertia affects hair "responsiveness"
+    btScalar     hair_restitution;   // "Bounciness" of the hair
+    btScalar     hair_friction;      // How much other bodies will affect hair trajectory
+
+    btScalar     joint_overlap;      // How much two hair bodies overlap each other
+
+    btScalar     joint_cfm;          // Constraint force mixing (joint softness)
+    btScalar     joint_erp;          // Error reduction parameter (joint "inertia")
+
+    btScalar     head_offset[3];     // Linear offset to place hair to
+    btScalar     root_angle[3];      // First constraint set angle (to align hair angle)
+
+    uint32_t     vertex_map_count;   // Amount of REAL vertices to link head and hair
+    uint32_t     hair_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Hair vertex indices to link
+    uint32_t     head_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Head vertex indices to link
+
+}hair_setup_t, *hair_setup_p;
+
+
+struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *physics)
+{
+    // No setup or parent to link to - bypass function.
+
+    if(!physics || !setup || (setup->link_body >= physics->objects_count) ||
+       !physics->bt_body[setup->link_body])
+    {
+        return NULL;
+    }
+
+    skeletal_model_p model = World_GetModelByID(&engine_world, setup->model_id);
+    if((!model) || (model->mesh_count == 0))
+    {
+        return NULL;
+    }
+
+    // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
+
+    struct hair_s *hair = (struct hair_s*)calloc(1, sizeof(struct hair_s));
+    hair->container = Container_Create();
+    hair->container->room = physics->cont->room;
+    hair->container->object_type = OBJECT_HAIR;
+    hair->container->object = hair;
+
+    // Setup initial hair parameters.
+    hair->owner_body = setup->link_body;    // Entity body to refer to.
+
+    // Setup initial position / angles.
+    btTransform startTransform = physics->bt_body[hair->owner_body]->getWorldTransform();
+    // Number of elements (bodies) is equal to number of hair meshes.
+
+    hair->element_count = model->mesh_count;
+    hair->elements      = (hair_element_p)calloc(hair->element_count, sizeof(hair_element_t));
+
+    // Root index should be always zero, as it is how engine determines that it is
+    // connected to head and renders it properly. Tail index should be always the
+    // last element of the hair, as it indicates absence of "child" constraint.
+
+    hair->root_index = 0;
+    hair->tail_index = hair->element_count-1;
+
+    // Weight step is needed to determine the weight of each hair body.
+    // It is derived from root body weight and tail body weight.
+
+    btScalar weight_step = ((setup->root_weight - setup->tail_weight) / hair->element_count);
+    btScalar current_weight = setup->root_weight;
+
+    for(uint8_t i=0;i<hair->element_count;i++)
+    {
+        // Point to corresponding mesh.
+
+        hair->elements[i].mesh = model->mesh_tree[i].mesh_base;
+
+        // Begin creating ACTUAL physical hair mesh.
+        btVector3   localInertia(0, 0, 0);
+
+        // Make collision shape out of mesh.
+        hair->elements[i].shape = BT_CSfromMesh(hair->elements[i].mesh, true, true, false);
+        hair->elements[i].shape->calculateLocalInertia((current_weight * setup->hair_inertia), localInertia);
+        hair->elements[i].joint = NULL;
+
+        // Decrease next body weight to weight_step parameter.
+        current_weight -= weight_step;
+
+        // Initialize motion state for body.
+        btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+
+        // Make rigid body.
+        hair->elements[i].body = new btRigidBody(current_weight, motionState, hair->elements[i].shape, localInertia);
+
+        // Damping makes body stop in space by itself, to prevent it from continous movement.
+        hair->elements[i].body->setDamping(setup->hair_damping[0], setup->hair_damping[1]);
+
+        // Restitution and friction parameters define "bounciness" and "dullness" of hair.
+        hair->elements[i].body->setRestitution(setup->hair_restitution);
+        hair->elements[i].body->setFriction(setup->hair_friction);
+
+        // Since hair is always moving with Lara, even if she's in still state (like, hanging
+        // on a ledge), hair bodies shouldn't deactivate over time.
+        hair->elements[i].body->forceActivationState(DISABLE_DEACTIVATION);
+
+        // Hair bodies must not collide with each other, and also collide ONLY with kinematic
+        // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
+        // collide with hair!
+        hair->elements[i].body->setUserPointer(hair->container);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+
+        hair->elements[i].body->activate();
+    }
+
+    // GENERATE CONSTRAINTS.
+    // All constraints are generic 6-DOF type, as they seem perfect fit for hair.
+
+    // If multiple joints per body is specified, joints are placed in circular manner,
+    // with obvious step of (SIMD_2_PI) / joint count. It means that all joints will form
+    // circle-like figure.
+
+    for(uint16_t i=0; i<hair->element_count; i++)
+    {
+        btRigidBody* prev_body;
+        btScalar     body_length;
+
+        // Each body width and height are used to calculate position of each joint.
+
+        //btScalar body_width = fabs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
+        //btScalar body_depth = fabs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
+
+        btTransform localA; localA.setIdentity();
+        btTransform localB; localB.setIdentity();
+
+        btScalar joint_x = 0.0;
+        btScalar joint_y = 0.0;
+
+        if(i == 0)  // First joint group
+        {
+            // Adjust pivot point A to parent body.
+            localA.setOrigin(btVector3(setup->head_offset[0] + joint_x, setup->head_offset[1], setup->head_offset[2] + joint_y));
+            localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
+
+            localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
+            localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
+
+            prev_body = physics->bt_body[hair->owner_body];                     // Previous body is parent body.
+        }
+        else
+        {
+            // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
+
+            body_length = fabs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
+
+            localA.setOrigin(btVector3(joint_x, body_length, joint_y));
+            localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+
+            // Pivot point B is automatically adjusted by Bullet.
+
+            localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
+            localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+
+            prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
+        }
+
+        // Create 6DOF constraint.
+        hair->elements[i].joint = new btGeneric6DofConstraint(*prev_body, *(hair->elements[i].body), localA, localB, true);
+
+        // CFM and ERP parameters are critical for making joint "hard" and link
+        // to Lara's head. With wrong values, constraints may become "elastic".
+        for(int axis=0;axis<=5;axis++)
+        {
+            hair->elements[i].joint->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
+            hair->elements[i].joint->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
+        }
+
+        if(i == 0)
+        {
+            // First joint group should be more limited in motion, as it is connected
+            // right to the head. NB: Should we make it scriptable as well?
+            hair->elements[i].joint->setLinearLowerLimit(btVector3(0., 0., 0.));
+            hair->elements[i].joint->setLinearUpperLimit(btVector3(0., 0., 0.));
+            hair->elements[i].joint->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
+            hair->elements[i].joint->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
+
+            // Increased solver iterations make constraint even more stable.
+            hair->elements[i].joint->setOverrideNumSolverIterations(100);
+        }
+        else
+        {
+            // Normal joint with more movement freedom.
+            hair->elements[i].joint->setLinearLowerLimit(btVector3(0., 0., 0.));
+            hair->elements[i].joint->setLinearUpperLimit(btVector3(0., 0., 0.));
+            hair->elements[i].joint->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
+            hair->elements[i].joint->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
+        }
+        hair->elements[i].joint->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
+
+        // Add constraint to the world.
+        bt_engine_dynamicsWorld->addConstraint(hair->elements[i].joint, true);
+    }
+
+    return hair;
+}
+
+void Hair_Delete(struct hair_s *hair)
+{
+    if(hair)
+    {
+        for(int i=0; i<hair->element_count; i++)
+        {
+            if(hair->elements[i].joint)
+            {
+                bt_engine_dynamicsWorld->removeConstraint(hair->elements[i].joint);
+                delete hair->elements[i].joint;
+                hair->elements[i].joint = NULL;
+            }
+        }
+
+        for(int i=0; i<hair->element_count; i++)
+        {
+            if(hair->elements[i].body)
+            {
+                hair->elements[i].body->setUserPointer(NULL);
+                bt_engine_dynamicsWorld->removeRigidBody(hair->elements[i].body);
+                delete hair->elements[i].body;
+                hair->elements[i].body = NULL;
+            }
+            if(hair->elements[i].shape)
+            {
+                delete hair->elements[i].shape;
+                hair->elements[i].shape = NULL;
+            }
+        }
+        free(hair->elements);
+        hair->elements = NULL;
+        hair->element_count = 0;
+
+        free(hair->container);
+        hair->container = NULL;
+        hair->owner_body = 0;
+
+        hair->root_index = 0;
+        hair->tail_index = 0;
+        free(hair);
+    }
+}
+
+
+void Hair_Update(struct hair_s *hair, struct physics_data_s *physics)
+{
+    if(hair && (hair->element_count > 0))
+    {
+        /*btScalar new_transform[16];
+
+        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf->bone_tags[hair->owner_body].full_transform);
+
+        // Calculate mixed velocities.
+        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
+                          new_transform[12+1] - hair->owner_body_transform[12+1],
+                          new_transform[12+2] - hair->owner_body_transform[12+2]);
+        mix_vel *= 1.0 / engine_frame_time;
+
+        if(0)
+        {
+            btScalar sub_tr[16];
+            btTransform ang_tr;
+            btVector3 mix_ang;
+            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+            ang_tr.setFromOpenGLMatrix(sub_tr);
+            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            mix_ang *= 1.0 / engine_frame_time;
+
+            // Looks like angular velocity breaks up constraints on VERY fast moves,
+            // like mid-air turn. Probably, I've messed up with multiplier value...
+
+            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        }
+        Mat4_Copy(hair->owner_body_transform, new_transform);*/
+
+        // Set mixed velocities to both parent body and first hair body.
+
+        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+
+        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        for(int j=0;j<hair->element_count;j++)
+        {
+            hair->elements[j].body->applyCentralForce(mix_vel);
+        }*/
+
+        hair->container->room = physics->cont->room;
+    }
+}
+
+struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index)
+{
+    struct hair_setup_s *hair_setup = NULL;
+    int top = lua_gettop(lua);
+
+    lua_getglobal(lua, "getHairSetup");
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    lua_pushinteger(lua, hair_entry_index);
+    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    hair_setup = (struct hair_setup_s*)malloc(sizeof(struct hair_setup_s));
+    hair_setup->model_id            = (uint32_t)lua_GetScalarField(lua, "model");
+    hair_setup->link_body           = (uint32_t)lua_GetScalarField(lua, "link_body");
+    hair_setup->vertex_map_count    = (uint32_t)lua_GetScalarField(lua, "v_count");
+
+    lua_getfield(lua, -1, "props");
+    if(!lua_istable(lua, -1))
+    {
+        free(hair_setup);
+        lua_settop(lua, top);
+        return NULL;
+    }
+    hair_setup->root_weight      = lua_GetScalarField(lua, "root_weight");
+    hair_setup->tail_weight      = lua_GetScalarField(lua, "tail_weight");
+    hair_setup->hair_inertia     = lua_GetScalarField(lua, "hair_inertia");
+    hair_setup->hair_friction    = lua_GetScalarField(lua, "hair_friction");
+    hair_setup->hair_restitution = lua_GetScalarField(lua, "hair_bouncing");
+    hair_setup->joint_overlap    = lua_GetScalarField(lua, "joint_overlap");
+    hair_setup->joint_cfm        = lua_GetScalarField(lua, "joint_cfm");
+    hair_setup->joint_erp        = lua_GetScalarField(lua, "joint_erp");
+
+    lua_getfield(lua, -1, "hair_damping");
+    if(!lua_istable(lua, -1))
+    {
+        free(hair_setup);
+        lua_settop(lua, top);
+        return NULL;
+    }
+    hair_setup->hair_damping[0] = lua_GetScalarField(lua, 1);
+    hair_setup->hair_damping[1] = lua_GetScalarField(lua, 2);
+
+    lua_pop(lua, 1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "v_index");
+    if(!lua_istable(lua, -1))
+    {
+        free(hair_setup);
+        lua_settop(lua, top);
+        return NULL;
+    }
+    for(int i=1; i<=hair_setup->vertex_map_count; i++)
+    {
+        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_GetScalarField(lua, i);
+    }
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "offset");
+    if(!lua_istable(lua, -1))
+    {
+        free(hair_setup);
+        lua_settop(lua, top);
+        return NULL;
+    }
+    hair_setup->head_offset[0] = lua_GetScalarField(lua, 1);
+    hair_setup->head_offset[1] = lua_GetScalarField(lua, 2);
+    hair_setup->head_offset[2] = lua_GetScalarField(lua, 3);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "root_angle");
+    if(!lua_istable(lua, -1))
+    {
+        free(hair_setup);
+        lua_settop(lua, top);
+        return NULL;
+    }
+    hair_setup->root_angle[0] = lua_GetScalarField(lua, 1);
+    hair_setup->root_angle[1] = lua_GetScalarField(lua, 2);
+    hair_setup->root_angle[2] = lua_GetScalarField(lua, 3);
+
+    lua_settop(lua, top);
+    return hair_setup;
+}
+
+int Hair_GetElementsCount(struct hair_s *hair)
+{
+    return (hair)?(hair->element_count):(0);
+}
+
+int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16])
+{
+#ifndef BT_USE_DOUBLE_PRECISION
+    hair->elements[element].body->getWorldTransform().getOpenGLMatrix(tr);
+#else
+    btScalar btTr[16];
+    hair->elements[element].body->getWorldTransform().getOpenGLMatrix(btTr);
+    for(int i = 0; i < 16; i++)
+    {
+        tr[i] = btTr[i];
+    }
+#endif
+    *mesh = hair->elements[element].mesh;
+}
+
+
+/* *****************************************************************************
+ * ************************  RAGDOLL DATA  *************************************
+ * ****************************************************************************/
+
+// Joint setup struct is used to parse joint script entry to
+// actual joint.
+
+typedef struct rd_joint_setup_s
+{
+    uint16_t        body_index;     // Primary body index
+    uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
+
+    float           body1_offset[3];   // Primary pivot point offset
+    float           body2_offset[3];   // Secondary pivot point offset
+
+    float           body1_angle[3]; // Primary pivot point angle
+    float           body2_angle[3]; // Secondary pivot point angle
+
+    float           joint_limit[3]; // Only first two are used for hinge constraint.
+
+}rd_joint_setup_t, *rd_joint_setup_p;
+
+
+// Ragdoll body setup is used to modify body properties for ragdoll needs.
+
+typedef struct rd_body_setup_s
+{
+    float        mass;
+
+    float        damping[2];
+    float        restitution;
+    float        friction;
+
+}rd_body_setup_t, *rd_body_setup_p;
+
+
+// Ragdoll setup struct is an unified structure which contains settings
+// for ALL joints and bodies of a given ragdoll.
+
+typedef struct rd_setup_s
+{
+    uint32_t            joint_count;
+    uint32_t            body_count;
+
+    float               joint_cfm;      // Constraint force mixing (joint softness)
+    float               joint_erp;      // Error reduction parameter (joint "inertia")
+
+    rd_joint_setup_s   *joint_setup;
+    rd_body_setup_s    *body_setup;
+
+    char               *hit_func;   // Later to be implemented as hit callback function.
+}rd_setup_t, *rd_setup_p;
+
+
+btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
+{
+    btScalar r = bb_max[0] - bb_min[0];
+    btScalar t = bb_max[1] - bb_min[1];
+    r = (t > r)?(r):(t);
+    t = bb_max[2] - bb_min[2];
+    return (t > r)?(r):(t);
+}
+
+bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct rd_setup_s *setup)
+{
+    // No entity, setup or body count overflow - bypass function.
+
+    if(!physics || !setup || (setup->body_count > physics->objects_count))
+    {
+        return false;
+    }
+
+    bool result = true;
+
+    // If ragdoll already exists, overwrite it with new one.
+
+    if(physics->bt_joint_count > 0)
+    {
+        result = Ragdoll_Delete(physics);
+    }
+
+    // Setup bodies.
+    physics->bt_joint_count = 0;
+    // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
+    /*Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+    entity->no_fix_all = 0x00;
+    entity->no_fix_skeletal_parts = 0x00000000;
+    int map_size = entity->bf->animations.model->collision_map_size;             // does not works, strange...
+    entity->bf->animations.model->collision_map_size = entity->bf->animations.model->mesh_count;
+    Entity_FixPenetrations(entity, NULL);
+    entity->bf->animations.model->collision_map_size = map_size;*/
+
+    for(int i=0; i < setup->body_count; i++)
+    {
+        if(physics->bt_body[i] == NULL)
+        {
+            result = false;
+            continue;   // If body is absent, return false and bypass this body setup.
+        }
+
+        btVector3 inertia (0.0, 0.0, 0.0);
+        btScalar  mass = setup->body_setup[i].mass;
+
+            bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+
+            physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+            physics->bt_body[i]->setMassProps(mass, inertia);
+
+            physics->bt_body[i]->updateInertiaTensor();
+            physics->bt_body[i]->clearForces();
+
+            physics->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+            physics->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+
+            physics->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+            physics->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+            physics->bt_body[i]->setFriction(setup->body_setup[i].friction);
+            physics->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
+
+            if(bf->bone_tags[i].parent == NULL)
+            {
+                btScalar r = getInnerBBRadius(bf->bone_tags[i].mesh_base->bb_min, bf->bone_tags[i].mesh_base->bb_max);
+                physics->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+                physics->bt_body[i]->setCcdSweptSphereRadius(r);
+            }
+    }
+
+    for(uint16_t i = 0; i < setup->body_count; i++)
+    {
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
+        physics->bt_body[i]->activate();
+        physics->bt_body[i]->setLinearVelocity(btVector3(0.0, 0.0, 0.0));
+        if(physics->ghostObjects[i])
+        {
+            bt_engine_dynamicsWorld->removeCollisionObject(physics->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(physics->ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
+        }
+    }
+
+    // Setup constraints.
+    physics->bt_joint_count = setup->joint_count;
+    physics->bt_joints = (btTypedConstraint**)calloc(physics->bt_joint_count, sizeof(btTypedConstraint*));
+
+    for(int i=0; i<physics->bt_joint_count; i++)
+    {
+        if( (setup->joint_setup[i].body_index >= setup->body_count) ||
+            (physics->bt_body[setup->joint_setup[i].body_index] == NULL) )
+        {
+            result = false;
+            break;       // If body 1 or body 2 are absent, return false and bypass this joint.
+        }
+
+        btTransform localA, localB;
+        ss_bone_tag_p btB = bf->bone_tags + setup->joint_setup[i].body_index;
+        ss_bone_tag_p btA = btB->parent;
+        if(btA == NULL)
+        {
+            result = false;
+            break;
+        }
+#if 0
+        localA.setFromOpenGLMatrix(btB->transform);
+        localB.setIdentity();
+#else
+        localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
+        //localA.setOrigin(setup->joint_setup[i].body1_offset);
+        localA.setOrigin(btVector3(btB->transform[12+0], btB->transform[12+1], btB->transform[12+2]));
+
+        localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
+        //localB.setOrigin(setup->joint_setup[i].body2_offset);
+        localB.setOrigin(btVector3(0.0, 0.0, 0.0));
+#endif
+
+        switch(setup->joint_setup[i].joint_type)
+        {
+            case RD_CONSTRAINT_POINT:
+                {
+                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*physics->bt_body[btA->index], *physics->bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
+                    physics->bt_joints[i] = pointC;
+                }
+                break;
+
+            case RD_CONSTRAINT_HINGE:
+                {
+                    btHingeConstraint* hingeC = new btHingeConstraint(*physics->bt_body[btA->index], *physics->bt_body[btB->index], localA, localB);
+                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
+                    physics->bt_joints[i] = hingeC;
+                }
+                break;
+
+            case RD_CONSTRAINT_CONE:
+                {
+                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*physics->bt_body[btA->index], *physics->bt_body[btB->index], localA, localB);
+                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
+                    physics->bt_joints[i] = coneC;
+                }
+                break;
+        }
+
+        physics->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        physics->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
+
+        physics->bt_joints[i]->setDbgDrawSize(64.0);
+        bt_engine_dynamicsWorld->addConstraint(physics->bt_joints[i], true);
+    }
+
+    if(result == false)
+    {
+        Ragdoll_Delete(physics);  // PARANOID: Clean up the mess, if something went wrong.
+    }
+    return result;
+}
+
+
+bool Ragdoll_Delete(struct physics_data_s *physics)
+{
+    if(physics->bt_joint_count == 0)
+    {
+        return false;
+    }
+
+    for(int i=0; i<physics->bt_joint_count; i++)
+    {
+        if(physics->bt_joints[i])
+        {
+            bt_engine_dynamicsWorld->removeConstraint(physics->bt_joints[i]);
+            delete physics->bt_joints[i];
+            physics->bt_joints[i] = NULL;
+        }
+    }
+
+    for(int i=0; i < physics->objects_count; i++)
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+        physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        if(physics->ghostObjects[i])
+        {
+            bt_engine_dynamicsWorld->removeCollisionObject(physics->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(physics->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_MASK_ALL);
+        }
+    }
+
+    free(physics->bt_joints);
+    physics->bt_joints = NULL;
+    physics->bt_joint_count = 0;
+
+    return true;
+
+    // NB! Bodies remain in the same state!
+    // To make them static again, additionally call setEntityBodyMass script function.
+}
+
+
+struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
+{
+    struct rd_setup_s *setup = NULL;
+    int top = lua_gettop(lua);
+
+    lua_getglobal(lua, "getRagdollSetup");
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    lua_pushinteger(lua, ragdoll_index);
+    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    lua_getfield(lua, -1, "hit_callback");
+    if(!lua_isstring(lua, -1))
+    {
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    setup = (rd_setup_p)malloc(sizeof(rd_setup_t));
+    setup->body_count = 0;
+    setup->joint_count = 0;
+    setup->body_setup = NULL;
+    setup->joint_setup = NULL;
+    setup->hit_func = NULL;
+    setup->joint_cfm = 0.0;
+    setup->joint_erp = 0.0;
+
+    size_t string_length = 0;
+    const char* func_name = lua_tolstring(lua, -1, &string_length);
+    setup->hit_func = (char*)calloc(string_length, sizeof(char));
+    memcpy(setup->hit_func, func_name, string_length * sizeof(char));
+    lua_pop(lua, 1);
+
+    setup->joint_count = (uint32_t)lua_GetScalarField(lua, "joint_count");
+    setup->body_count  = (uint32_t)lua_GetScalarField(lua, "body_count");
+
+    setup->joint_cfm   = lua_GetScalarField(lua, "joint_cfm");
+    setup->joint_erp   = lua_GetScalarField(lua, "joint_erp");
+
+    if((setup->body_count <= 0) || (setup->joint_count <= 0))
+    {
+        Ragdoll_DeleteSetup(setup);
+        setup = NULL;
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    lua_getfield(lua, -1, "body");
+    if(!lua_istable(lua, -1))
+    {
+        Ragdoll_DeleteSetup(setup);
+        setup = NULL;
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    setup->body_setup  = (rd_body_setup_p)calloc(setup->body_count, sizeof(rd_body_setup_t));
+    setup->joint_setup = (rd_joint_setup_p)calloc(setup->joint_count, sizeof(rd_joint_setup_t));
+
+    for(int i=0; i<setup->body_count; i++)
+    {
+        lua_rawgeti(lua, -1, i+1);
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->body_setup[i].mass = lua_GetScalarField(lua, "mass");
+        setup->body_setup[i].restitution = lua_GetScalarField(lua, "restitution");
+        setup->body_setup[i].friction = lua_GetScalarField(lua, "friction");
+
+        lua_getfield(lua, -1, "damping");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+
+        setup->body_setup[i].damping[0] = lua_GetScalarField(lua, 1);
+        setup->body_setup[i].damping[1] = lua_GetScalarField(lua, 2);
+        lua_pop(lua, 1);
+        lua_pop(lua, 1);
+    }
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "joint");
+    if(!lua_istable(lua, -1))
+    {
+        Ragdoll_DeleteSetup(setup);
+        setup = NULL;
+        lua_settop(lua, top);
+        return NULL;
+    }
+
+    for(int i=0; i<setup->joint_count; i++)
+    {
+        lua_rawgeti(lua, -1, i+1);
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].body_index = (uint16_t)lua_GetScalarField(lua, "body_index");
+        setup->joint_setup[i].joint_type = (uint16_t)lua_GetScalarField(lua, "joint_type");
+
+        lua_getfield(lua, -1, "body1_offset");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].body1_offset[0] = lua_GetScalarField(lua, 1);
+        setup->joint_setup[i].body1_offset[1] = lua_GetScalarField(lua, 2);
+        setup->joint_setup[i].body1_offset[2] = lua_GetScalarField(lua, 3);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "body2_offset");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].body2_offset[0] = lua_GetScalarField(lua, 1);
+        setup->joint_setup[i].body2_offset[1] = lua_GetScalarField(lua, 2);
+        setup->joint_setup[i].body2_offset[2] = lua_GetScalarField(lua, 3);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "body1_angle");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].body1_angle[0] = lua_GetScalarField(lua, 1);
+        setup->joint_setup[i].body1_angle[1] = lua_GetScalarField(lua, 2);
+        setup->joint_setup[i].body1_angle[2] = lua_GetScalarField(lua, 3);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "body2_angle");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].body2_angle[0] = lua_GetScalarField(lua, 1);
+        setup->joint_setup[i].body2_angle[1] = lua_GetScalarField(lua, 2);
+        setup->joint_setup[i].body2_angle[2] = lua_GetScalarField(lua, 3);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joint_limit");
+        if(!lua_istable(lua, -1))
+        {
+            Ragdoll_DeleteSetup(setup);
+            setup = NULL;
+            lua_settop(lua, top);
+            return NULL;
+        }
+        setup->joint_setup[i].joint_limit[0] = lua_GetScalarField(lua, 1);
+        setup->joint_setup[i].joint_limit[1] = lua_GetScalarField(lua, 2);
+        setup->joint_setup[i].joint_limit[2] = lua_GetScalarField(lua, 3);
+        lua_pop(lua, 1);
+        lua_pop(lua, 1);
+    }
+
+    lua_settop(lua, top);
+    return setup;
+}
+
+
+void Ragdoll_DeleteSetup(struct rd_setup_s *setup)
+{
+    if(setup)
+    {
+        free(setup->body_setup);
+        setup->body_setup = NULL;
+        setup->body_count = 0;
+
+        free(setup->joint_setup);
+        setup->joint_setup = NULL;
+        setup->joint_count = 0;
+
+        free(setup->hit_func);
+        setup->hit_func = NULL;
+
+        free(setup);
+    }
 }

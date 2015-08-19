@@ -13,7 +13,6 @@
 #include "entity.h"
 #include "gui.h"
 #include "mesh.h"
-#include "hair.h"
 #include "resource.h"
 #include "engine_string.h"
 

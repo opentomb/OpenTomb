@@ -117,13 +117,10 @@ class CRenderDebugDrawer
         // physics debug interface
         void   DrawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);
         void   DrawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3]);
-        void   SetDebugMode(int debugMode) {m_debugMode = debugMode;};
-        int    GetDebugMode() const {return m_debugMode;}
         void     SetDrawFlags(uint32_t flags) {m_drawFlags = flags;};
         uint32_t GetDrawFlags() const {return m_drawFlags;}
         
     private:
-        uint32_t m_debugMode;
         uint32_t m_drawFlags;
         uint32_t m_max_lines;
         uint32_t m_lines;

@@ -32,6 +32,7 @@ typedef struct collision_result_s
     float                       normale[3];
 }collision_result_t, *collision_result_p;
 
+struct lua_State;
 
 struct entity_s;
 struct engine_container_s;
@@ -80,5 +81,65 @@ void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t i
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index);
 struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics);
 
+
+/* Ragdoll interface */
+#define RD_CONSTRAINT_POINT 0
+#define RD_CONSTRAINT_HINGE 1
+#define RD_CONSTRAINT_CONE  2
+
+#define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
+
+struct rd_setup_s;
+
+bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct rd_setup_s *setup);
+bool Ragdoll_Delete(struct physics_data_s *physics);
+
+struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index);
+void Ragdoll_DeleteSetup(struct rd_setup_s *setup);
+
+
+/* Hair interface */
+#define HAIR_TR1       0
+#define HAIR_TR2       1
+#define HAIR_TR3       2
+#define HAIR_TR4_KID_1 3
+#define HAIR_TR4_KID_2 4
+#define HAIR_TR4_OLD   5
+#define HAIR_TR5_KID_1 6
+#define HAIR_TR5_KID_2 7
+#define HAIR_TR5_OLD   8
+
+// Maximum amount of joint hair vertices. By default, TR4-5 used four
+// vertices for each hair (unused TR1 hair mesh even used three).
+// It's hardly possible if anyone will exceed a limit of 8 vertices,
+// but if it happens, this should be edited.
+
+#define HAIR_VERTEX_MAP_LIMIT 8
+
+// Since we apply TR4 hair scheme to TR2-3 as well, we need to discard
+// polygons which are unused. These are 0 and 5 in both TR2 and TR3.
+
+#define HAIR_DISCARD_ROOT_FACE 0
+#define HAIR_DISCARD_TAIL_FACE 5
+
+struct hair_s;
+struct hair_setup_s;
+
+// Gets scripted hair set-up to specified hair set-up structure.
+struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index);
+
+// Creates hair into allocated hair structure, using previously defined setup and
+// entity index.
+struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *physics);
+
+// Removes specified hair from entity and clears it from memory.
+void Hair_Delete(struct hair_s *hair);
+
+// Constantly updates some specific parameters to keep hair aligned to entity.
+void Hair_Update(struct hair_s *hair, struct physics_data_s *physics);
+
+int Hair_GetElementsCount(struct hair_s *hair);
+
+int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16]);
 
 #endif	/* ENGINE_PHYSICS_H */

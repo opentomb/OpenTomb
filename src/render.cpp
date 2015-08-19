@@ -18,7 +18,6 @@
 #include "camera.h"
 #include "script.h"
 #include "mesh.h"
-#include "hair.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "engine.h"
@@ -1281,7 +1280,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
  * DEBUG PRIMITIVES RENDERING
  */
 CRenderDebugDrawer::CRenderDebugDrawer():
-m_debugMode(0),
+m_drawFlags(0x00000000),
 m_lines(0),
 m_max_lines(DEBUG_DRAWER_DEFAULT_BUFFER_SIZE),
 m_gl_vbo(0),

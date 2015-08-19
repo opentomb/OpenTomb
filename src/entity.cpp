@@ -18,7 +18,6 @@
 #include "character_controller.h"
 #include "gameflow.h"
 #include "engine_string.h"
-#include "ragdoll.h"
 
 
 entity_p Entity_Create()
@@ -102,7 +101,8 @@ void Entity_Clear(entity_p entity)
             entity->obb = NULL;
         }
 
-        Ragdoll_Delete(entity);
+        Ragdoll_Delete(entity->physics);
+        entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 
         if(entity->character)
         {

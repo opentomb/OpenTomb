@@ -24,8 +24,6 @@ extern "C" {
 #include "audio.h"
 #include "camera.h"
 #include "controls.h"
-#include "hair.h"
-#include "ragdoll.h"
 #include "world.h"
 
 
@@ -759,7 +757,7 @@ int lua_AddCharacterHair(lua_State *lua)
             {
                 ent->character->hair_count++;
                 ent->character->hairs = (struct hair_s**)realloc(ent->character->hairs, (sizeof(struct hair_s*) * ent->character->hair_count));
-                ent->character->hairs[ent->character->hair_count-1] = Hair_Create(hair_setup, ent);
+                ent->character->hairs[ent->character->hair_count-1] = Hair_Create(hair_setup, ent->physics);
                 if(!ent->character->hairs[ent->character->hair_count-1])
                 {
                     Con_Warning("can not create hair for entity_id = %d", ent_id);
@@ -828,19 +826,19 @@ int lua_AddEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            rd_setup_s ragdoll_setup;
-            memset(&ragdoll_setup, 0, sizeof(rd_setup_t));
-
-            if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
+            struct rd_setup_s *ragdoll_setup = Ragdoll_GetSetup(lua, setup_index);
+            if(ragdoll_setup)
             {
-                Con_Warning("no ragdoll setup with id = %d", setup_index);
-            }
-            else
-            {
-                if(!Ragdoll_Create(ent, &ragdoll_setup))
+                if(!Ragdoll_Create(ent->physics, ent->bf, ragdoll_setup))
                 {
                     Con_Warning("can not create ragdoll for entity_id = %d", ent_id);
                 }
+                ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
+                Ragdoll_DeleteSetup(ragdoll_setup);
+            }
+            else
+            {
+                Con_Warning("no ragdoll setup with id = %d", setup_index);
             }
         }
         else
@@ -865,10 +863,11 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(!Ragdoll_Delete(ent))
+            if(!Ragdoll_Delete(ent->physics))
             {
                 Con_Warning("can not remove ragdoll for entity_id = %d", ent_id);
             }
+            ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
         }
         else
         {
