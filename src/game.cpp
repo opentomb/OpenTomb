@@ -783,19 +783,19 @@ void Game_Frame(btScalar time)
     if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
     {
         if((is_character) &&
-           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
+           (main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_DISABLED))
         {
             main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
+            main_inventory_manager->send(InventoryManager::INVENTORY_OPEN);
         }
-        if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+        if(main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_IDLE)
         {
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
+            main_inventory_manager->send(InventoryManager::INVENTORY_CLOSE);
         }
     }
 
     // If console or inventory is active, only thing to update is audio.
-    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::INVENTORY_DISABLED)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {

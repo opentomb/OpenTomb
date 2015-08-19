@@ -25,16 +25,16 @@
 
 extern SDL_Window  *sdl_window;
 
-gui_text_line_p     gui_base_lines = nullptr;
-gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
-uint16_t            temp_lines_used = 0;
+TextLine*     gui_base_lines = nullptr;
+TextLine      gui_temp_lines[GUI_MAX_TEMP_LINES];
+uint16_t      temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
-gui_ProgressBar     Bar[BAR_LASTINDEX];
-gui_Fader           Fader[FADER_LASTINDEX];
+ProgressBar     Bar[BAR_LASTINDEX];
+Fader           FaderType[FADER_LASTINDEX];
 
-gui_FontManager       *FontManager = nullptr;
-gui_InventoryManager  *main_inventory_manager = nullptr;
+FontManager       *fontManager = nullptr;
+InventoryManager  *main_inventory_manager = nullptr;
 
 GLuint crosshairBuffer;
 VertexArray *crosshairArray;
@@ -52,12 +52,12 @@ void Gui_Init()
     Gui_FillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
-    main_inventory_manager = new gui_InventoryManager();
+    main_inventory_manager = new InventoryManager();
 }
 
 void Gui_InitFontManager()
 {
-    FontManager = new gui_FontManager();
+    fontManager = new FontManager();
 }
 
 void Gui_InitTempLines()
@@ -199,30 +199,30 @@ void Gui_InitFaders()
         {
             case FADER_LOADSCREEN:
             {
-                Fader[i].SetAlpha(255);
-                Fader[i].SetColor(0, 0, 0);
-                Fader[i].SetBlendingMode(loader::BlendingMode::Opaque);
-                Fader[i].SetSpeed(500);
-                Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+                FaderType[i].SetAlpha(255);
+                FaderType[i].SetColor(0, 0, 0);
+                FaderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
+                FaderType[i].SetSpeed(500);
+                FaderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
             }
             break;
 
             case FADER_EFFECT:
             {
-                Fader[i].SetAlpha(255);
-                Fader[i].SetColor(255, 180, 0);
-                Fader[i].SetBlendingMode(loader::BlendingMode::Multiply);
-                Fader[i].SetSpeed(10, 800);
+                FaderType[i].SetAlpha(255);
+                FaderType[i].SetColor(255, 180, 0);
+                FaderType[i].SetBlendingMode(loader::BlendingMode::Multiply);
+                FaderType[i].SetSpeed(10, 800);
             }
             break;
 
             case FADER_BLACK:
             {
-                Fader[i].SetAlpha(255);
-                Fader[i].SetColor(0, 0, 0);
-                Fader[i].SetBlendingMode(loader::BlendingMode::Opaque);
-                Fader[i].SetSpeed(500);
-                Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+                FaderType[i].SetAlpha(255);
+                FaderType[i].SetColor(0, 0, 0);
+                FaderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
+                FaderType[i].SetSpeed(500);
+                FaderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
             }
             break;
         }
@@ -247,7 +247,7 @@ void Gui_Destroy()
 
     for(int i = 0; i < FADER_LASTINDEX; i++)
     {
-        Fader[i].Cut();
+        FaderType[i].Cut();
     }
 
     temp_lines_used = GUI_MAX_TEMP_LINES;
@@ -264,14 +264,14 @@ void Gui_Destroy()
         main_inventory_manager = nullptr;
     }
 
-    if(FontManager)
+    if(fontManager)
     {
-        delete FontManager;
-        FontManager = nullptr;
+        delete fontManager;
+        fontManager = nullptr;
     }
 }
 
-void Gui_AddLine(gui_text_line_p line)
+void Gui_AddLine(TextLine *line)
 {
     if(gui_base_lines == nullptr)
     {
@@ -288,7 +288,7 @@ void Gui_AddLine(gui_text_line_p line)
 }
 
 // line must be in the list, otherway You crash engine!
-void Gui_DeleteLine(gui_text_line_p line)
+void Gui_DeleteLine(TextLine *line)
 {
     if(line == gui_base_lines)
     {
@@ -307,7 +307,7 @@ void Gui_DeleteLine(gui_text_line_p line)
     }
 }
 
-void Gui_MoveLine(gui_text_line_p line)
+void Gui_MoveLine(TextLine *line)
 {
     line->absXoffset = line->X * screen_info.scale_factor;
     line->absYoffset = line->Y * screen_info.scale_factor;
@@ -317,12 +317,12 @@ void Gui_MoveLine(gui_text_line_p line)
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
-gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
+TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(FontManager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
+    if(fontManager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
     {
         va_list argptr;
-        gui_text_line_p l = gui_temp_lines + temp_lines_used;
+        TextLine* l = gui_temp_lines + temp_lines_used;
 
         l->font_id = FONT_SECONDARY;
         l->style_id = FONTSTYLE_GENERIC;
@@ -355,15 +355,15 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
 void Gui_Update()
 {
-    if(FontManager != nullptr)
+    if(fontManager != nullptr)
     {
-        FontManager->Update();
+        fontManager->Update();
     }
 }
 
 void Gui_Resize()
 {
-    gui_text_line_p l = gui_base_lines;
+    TextLine* l = gui_base_lines;
 
     while(l)
     {
@@ -385,9 +385,9 @@ void Gui_Resize()
         Bar[i].Resize();
     }
 
-    if(FontManager)
+    if(fontManager)
     {
-        FontManager->Resize();
+        fontManager->Resize();
     }
 
     /* let us update console too */
@@ -413,17 +413,17 @@ void Gui_Render()
     glEnable(GL_DEPTH_TEST);
 }
 
-void Gui_RenderStringLine(gui_text_line_p l)
+void Gui_RenderStringLine(TextLine *l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
-    if(FontManager == nullptr)
+    if(fontManager == nullptr)
     {
         return;
     }
 
-    gl_tex_font_p gl_font = FontManager->GetFont(static_cast<font_Type>(l->font_id));
-    gui_fontstyle_p style = FontManager->GetFontStyle(static_cast<font_Style>(l->style_id));
+    FontTexture* gl_font = fontManager->GetFont(static_cast<FontType>(l->font_id));
+    FontStyleData* style = fontManager->GetFontStyle(static_cast<FontStyle>(l->style_id));
 
     if((gl_font == nullptr) || (style == nullptr) || (!l->show) || (style->hidden))
     {
@@ -495,9 +495,9 @@ void Gui_RenderStringLine(gui_text_line_p l)
 
 void Gui_RenderStrings()
 {
-    if(FontManager != nullptr)
+    if(fontManager != nullptr)
     {
-        gui_text_line_p l = gui_base_lines;
+        TextLine* l = gui_base_lines;
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -627,7 +627,7 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 /*
  * GUI RENDEDR CLASS
  */
-gui_InventoryManager::gui_InventoryManager()
+InventoryManager::InventoryManager()
 {
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
@@ -673,7 +673,7 @@ gui_InventoryManager::gui_InventoryManager()
     Gui_AddLine(&mLabel_Title);
 }
 
-gui_InventoryManager::~gui_InventoryManager()
+InventoryManager::~InventoryManager()
 {
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
@@ -686,7 +686,7 @@ gui_InventoryManager::~gui_InventoryManager()
     Gui_DeleteLine(&mLabel_Title);
 }
 
-int gui_InventoryManager::getItemsTypeCount(int type)
+int InventoryManager::getItemsTypeCount(int type)
 {
     int ret = 0;
     for(const InventoryNode& i : *mInventory)
@@ -700,7 +700,7 @@ int gui_InventoryManager::getItemsTypeCount(int type)
     return ret;
 }
 
-void gui_InventoryManager::restoreItemAngle(float time)
+void InventoryManager::restoreItemAngle(float time)
 {
     if(mItemAngle > 0.0)
     {
@@ -723,14 +723,14 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::setInventory(std::list<InventoryNode> *i)
+void InventoryManager::setInventory(std::list<InventoryNode> *i)
 {
     mInventory = i;
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
 }
 
-void gui_InventoryManager::setTitle(int items_type)
+void InventoryManager::setTitle(int items_type)
 {
     int string_index;
 
@@ -755,7 +755,7 @@ void gui_InventoryManager::setTitle(int items_type)
     mLabel_Title.text = buffer;
 }
 
-int gui_InventoryManager::setItemsType(int type)
+int InventoryManager::setItemsType(int type)
 {
     if(!mInventory || mInventory->empty())
     {
@@ -791,7 +791,7 @@ int gui_InventoryManager::setItemsType(int type)
     return -1;
 }
 
-void gui_InventoryManager::frame(float time)
+void InventoryManager::frame(float time)
 {
     if(!mInventory || mInventory->empty())
     {
@@ -1033,9 +1033,9 @@ void gui_InventoryManager::frame(float time)
     }
 }
 
-void gui_InventoryManager::render()
+void InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != nullptr) && !mInventory->empty() && (FontManager != nullptr))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != nullptr) && !mInventory->empty() && (fontManager != nullptr))
     {
         int num = 0;
         for(InventoryNode& i : *mInventory)
@@ -1159,7 +1159,7 @@ void Gui_DrawFaders()
 {
     for(int i = 0; i < FADER_LASTINDEX; i++)
     {
-        Fader[i].Show();
+        FaderType[i].Show();
     }
 }
 
@@ -1184,7 +1184,7 @@ void Gui_DrawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
     main_inventory_manager->frame(engine_frame_time);
-    if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED)
+    if(main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_DISABLED)
     {
         return;
     }
@@ -1250,7 +1250,7 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    Fader[FADER_LOADSCREEN].Show();
+    FaderType[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
@@ -1347,9 +1347,9 @@ bool Gui_FadeStart(int fader, int fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_FADING))
+    if((fader < FADER_LASTINDEX) && (FaderType[fader].IsFading() != GUI_FADER_STATUS_FADING))
     {
-        Fader[fader].Engage(fade_direction);
+        FaderType[fader].Engage(fade_direction);
         return true;
     }
     else
@@ -1360,9 +1360,9 @@ bool Gui_FadeStart(int fader, int fade_direction)
 
 bool Gui_FadeStop(int fader)
 {
-    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_IDLE))
+    if((fader < FADER_LASTINDEX) && (FaderType[fader].IsFading() != GUI_FADER_STATUS_IDLE))
     {
-        Fader[fader].Cut();
+        FaderType[fader].Cut();
         return true;
     }
     else
@@ -1424,7 +1424,7 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
             }
         }
 
-        return Fader[fader].SetTexture(buf);
+        return FaderType[fader].SetTexture(buf);
     }
 
     return false;
@@ -1436,17 +1436,17 @@ void Gui_FadeSetup(int fader,
 {
     if(fader >= FADER_LASTINDEX) return;
 
-    Fader[fader].SetAlpha(alpha);
-    Fader[fader].SetColor(R, G, B);
-    Fader[fader].SetBlendingMode(blending_mode);
-    Fader[fader].SetSpeed(fadein_speed, fadeout_speed);
+    FaderType[fader].SetAlpha(alpha);
+    FaderType[fader].SetColor(R, G, B);
+    FaderType[fader].SetBlendingMode(blending_mode);
+    FaderType[fader].SetSpeed(fadein_speed, fadeout_speed);
 }
 
 int Gui_FadeCheck(int fader)
 {
     if((fader >= 0) && (fader < FADER_LASTINDEX))
     {
-        return Fader[fader].IsFading();
+        return FaderType[fader].IsFading();
     }
     else
     {
@@ -1458,7 +1458,7 @@ int Gui_FadeCheck(int fader)
 // ============================ FADER CLASS IMPLEMENTATION ===========================
 // ===================================================================================
 
-gui_Fader::gui_Fader()
+Fader::Fader()
 {
     SetColor(0, 0, 0);
     SetBlendingMode(loader::BlendingMode::Opaque);
@@ -1473,17 +1473,17 @@ gui_Fader::gui_Fader()
     mTexture = 0;
 }
 
-void gui_Fader::SetAlpha(uint8_t alpha)
+void Fader::SetAlpha(uint8_t alpha)
 {
     mMaxAlpha = static_cast<float>(alpha) / 255;
 }
 
-void gui_Fader::SetScaleMode(uint8_t mode)
+void Fader::SetScaleMode(uint8_t mode)
 {
     mTextureScaleMode = mode;
 }
 
-void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
+void Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
 {
     // Each corner of the fader could be colored independently, thus allowing
     // to create gradient faders. It is nifty yet not so useful feature, so
@@ -1530,23 +1530,23 @@ void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
     }
 }
 
-void gui_Fader::SetBlendingMode(loader::BlendingMode mode)
+void Fader::SetBlendingMode(loader::BlendingMode mode)
 {
     mBlendingMode = mode;
 }
 
-void gui_Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
+void Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
 {
     mSpeed = 1000.0 / static_cast<float>(fade_speed);
     mSpeedSecondary = 1000.0 / static_cast<float>(fade_speed_secondary);
 }
 
-void gui_Fader::SetDelay(uint32_t delay_msec)
+void Fader::SetDelay(uint32_t delay_msec)
 {
     mMaxTime = static_cast<float>(delay_msec) / 1000.0;
 }
 
-void gui_Fader::SetAspect()
+void Fader::SetAspect()
 {
     if(mTexture)
     {
@@ -1563,7 +1563,7 @@ void gui_Fader::SetAspect()
     }
 }
 
-bool gui_Fader::SetTexture(const char *texture_path)
+bool Fader::SetTexture(const char *texture_path)
 {
 #ifdef __APPLE_CC__
     // Load the texture file using ImageIO
@@ -1719,7 +1719,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 #endif
 }
 
-bool gui_Fader::DropTexture()
+bool Fader::DropTexture()
 {
     if(mTexture)
     {
@@ -1737,7 +1737,7 @@ bool gui_Fader::DropTexture()
     }
 }
 
-void gui_Fader::Engage(int fade_dir)
+void Fader::Engage(int fade_dir)
 {
     mDirection = fade_dir;
     mActive = true;
@@ -1754,7 +1754,7 @@ void gui_Fader::Engage(int fade_dir)
     }
 }
 
-void gui_Fader::Cut()
+void Fader::Cut()
 {
     mActive = false;
     mComplete = false;
@@ -1764,7 +1764,7 @@ void gui_Fader::Cut()
     DropTexture();
 }
 
-void gui_Fader::Show()
+void Fader::Show()
 {
     if(!mActive)
     {
@@ -1950,7 +1950,7 @@ void gui_Fader::Show()
     }   // end if(mTexture)
 }
 
-int gui_Fader::IsFading()
+int Fader::IsFading()
 {
     if(mComplete)
     {
@@ -1970,7 +1970,7 @@ int gui_Fader::IsFading()
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================
 // ===================================================================================
 
-gui_ProgressBar::gui_ProgressBar()
+ProgressBar::ProgressBar()
 {
     // Set up some defaults.
     Visible = false;
@@ -2000,14 +2000,14 @@ gui_ProgressBar::gui_ProgressBar()
 // Resize bar.
 // This function should be called every time resize event occurs.
 
-void gui_ProgressBar::Resize()
+void ProgressBar::Resize()
 {
     RecalculateSize();
     RecalculatePosition();
 }
 
 // Set specified color.
-void gui_ProgressBar::SetColor(BarColorType colType,
+void ProgressBar::SetColor(BarColorType colType,
                                uint8_t R, uint8_t G, uint8_t B, uint8_t A)
 {
     float maxColValue = 255.0;
@@ -2075,7 +2075,7 @@ void gui_ProgressBar::SetColor(BarColorType colType,
     }
 }
 
-void gui_ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y)
+void ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y)
 {
     mXanchor = anchor_X;
     mYanchor = anchor_Y;
@@ -2086,7 +2086,7 @@ void gui_ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor
 }
 
 // Set bar size
-void gui_ProgressBar::SetSize(float width, float height, float borderSize)
+void ProgressBar::SetSize(float width, float height, float borderSize)
 {
     // Absolute values are needed to recalculate actual bar size according to resolution.
     mAbsWidth = width;
@@ -2097,7 +2097,7 @@ void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 }
 
 // Recalculate size, according to viewport resolution.
-void gui_ProgressBar::RecalculateSize()
+void ProgressBar::RecalculateSize()
 {
     mWidth = static_cast<float>(mAbsWidth)  * screen_info.scale_factor;
     mHeight = static_cast<float>(mAbsHeight) * screen_info.scale_factor;
@@ -2113,7 +2113,7 @@ void gui_ProgressBar::RecalculateSize()
 }
 
 // Recalculate position, according to viewport resolution.
-void gui_ProgressBar::RecalculatePosition()
+void ProgressBar::RecalculatePosition()
 {
     switch(mXanchor)
     {
@@ -2145,7 +2145,7 @@ void gui_ProgressBar::RecalculatePosition()
 }
 
 // Set maximum and warning state values.
-void gui_ProgressBar::SetValues(float maxValue, float warnValue)
+void ProgressBar::SetValues(float maxValue, float warnValue)
 {
     mMaxValue = maxValue;
     mWarnValue = warnValue;
@@ -2154,14 +2154,14 @@ void gui_ProgressBar::SetValues(float maxValue, float warnValue)
 }
 
 // Set warning state blinking interval.
-void gui_ProgressBar::SetBlink(int interval)
+void ProgressBar::SetBlink(int interval)
 {
     mBlinkInterval = static_cast<float>(interval) / 1000;
     mBlinkCnt = static_cast<float>(interval) / 1000;  // Also reset blink counter.
 }
 
 // Set extrude overlay effect parameters.
-void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
+void ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
@@ -2171,7 +2171,7 @@ void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 
 // Set autoshow and fade parameters.
 // Please note that fade parameters are actually independent of autoshow.
-void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
+void ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
 {
     mAutoShow = enabled;
 
@@ -2186,7 +2186,7 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 // Main bar show procedure.
 // Draws a bar with a given value. Please note that it also accepts float,
 // so effectively you can create bars for floating-point parameters.
-void gui_ProgressBar::Show(float value)
+void ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
     value = (value >= 0) ? (value) : (0);
@@ -2570,7 +2570,7 @@ void gui_ItemNotifier::SetRotateTime(float time)
 // ======================== FONT MANAGER  CLASS IMPLEMENTATION =======================
 // ===================================================================================
 
-gui_FontManager::gui_FontManager()
+FontManager::FontManager()
 {
     this->font_library = nullptr;
     FT_Init_FreeType(&this->font_library);
@@ -2579,7 +2579,7 @@ gui_FontManager::gui_FontManager()
     this->mFadeDirection = true;
 }
 
-gui_FontManager::~gui_FontManager()
+FontManager::~FontManager()
 {
     // must be freed before releasing the library
     styles.clear();
@@ -2588,9 +2588,9 @@ gui_FontManager::~gui_FontManager()
     this->font_library = nullptr;
 }
 
-gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
+FontTexture *FontManager::GetFont(const FontType index)
 {
-    for(const gui_font_s& current_font : this->fonts)
+    for(const Font& current_font : this->fonts)
     {
         if(current_font.index == index)
         {
@@ -2601,9 +2601,9 @@ gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
     return nullptr;
 }
 
-gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
+Font *FontManager::GetFontAddress(const FontType index)
 {
-    for(gui_font_t& current_font : this->fonts)
+    for(Font& current_font : this->fonts)
     {
         if(current_font.index == index)
         {
@@ -2614,9 +2614,9 @@ gui_font_p gui_FontManager::GetFontAddress(const font_Type index)
     return nullptr;
 }
 
-gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
+FontStyleData *FontManager::GetFontStyle(const FontStyle index)
 {
-    for(gui_fontstyle_t& current_style : this->styles)
+    for(FontStyleData& current_style : this->styles)
     {
         if(current_style.index == index)
         {
@@ -2627,14 +2627,14 @@ gui_fontstyle_p gui_FontManager::GetFontStyle(const font_Style index)
     return nullptr;
 }
 
-bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const char* path)
+bool FontManager::AddFont(const FontType index, const uint32_t size, const char* path)
 {
     if((size < GUI_MIN_FONT_SIZE) || (size > GUI_MAX_FONT_SIZE))
     {
         return false;
     }
 
-    gui_font_s* desired_font = GetFontAddress(index);
+    Font* desired_font = GetFontAddress(index);
 
     if(desired_font == nullptr)
     {
@@ -2654,14 +2654,14 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
     return true;
 }
 
-bool gui_FontManager::AddFontStyle(const font_Style index,
+bool FontManager::AddFontStyle(const FontStyle index,
                                    const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
                                    const bool shadow, const bool fading,
                                    const bool rect, const GLfloat rect_border,
                                    const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
                                    const bool hide)
 {
-    gui_fontstyle_p desired_style = GetFontStyle(index);
+    FontStyleData* desired_style = GetFontStyle(index);
 
     if(desired_style == nullptr)
     {
@@ -2696,7 +2696,7 @@ bool gui_FontManager::AddFontStyle(const font_Style index,
     return true;
 }
 
-bool gui_FontManager::RemoveFont(const font_Type index)
+bool FontManager::RemoveFont(const FontType index)
 {
     if(this->fonts.empty())
     {
@@ -2715,7 +2715,7 @@ bool gui_FontManager::RemoveFont(const font_Type index)
     return false;
 }
 
-bool gui_FontManager::RemoveFontStyle(const font_Style index)
+bool FontManager::RemoveFontStyle(const FontStyle index)
 {
     if(this->styles.empty())
     {
@@ -2734,7 +2734,7 @@ bool gui_FontManager::RemoveFontStyle(const font_Style index)
     return false;
 }
 
-void gui_FontManager::Update()
+void FontManager::Update()
 {
     if(this->mFadeDirection)
     {
@@ -2757,7 +2757,7 @@ void gui_FontManager::Update()
         }
     }
 
-    for(gui_fontstyle_s& current_style : this->styles)
+    for(FontStyleData& current_style : this->styles)
     {
         if(current_style.fading)
         {
@@ -2772,9 +2772,9 @@ void gui_FontManager::Update()
     }
 }
 
-void gui_FontManager::Resize()
+void FontManager::Resize()
 {
-    for(gui_font_s& current_font : this->fonts)
+    for(Font& current_font : this->fonts)
     {
         glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * screen_info.scale_factor));
     }

@@ -580,9 +580,9 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 
 void lua_AddFont(int index, const char* path, uint32_t size)
 {
-    if(!FontManager->AddFont(static_cast<font_Type>(index), size, path))
+    if(!fontManager->AddFont(static_cast<FontType>(index), size, path))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, fontManager->GetFontCount(), GUI_MAX_FONTS);
     }
 }
 
@@ -592,19 +592,19 @@ void lua_AddFontStyle(int style_index,
                       float rect_R, float rect_G, float rect_B, float rect_A,
                       bool hide)
 {
-    if(!FontManager->AddFontStyle(static_cast<font_Style>(style_index),
+    if(!fontManager->AddFontStyle(static_cast<FontStyle>(style_index),
                                   color_R, color_G, color_B, color_A,
                                   shadowed, fading,
                                   rect, rect_border, rect_R, rect_G, rect_B, rect_A,
                                   hide))
     {
-        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, fontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
     }
 }
 
 void lua_DeleteFont(int fontindex)
 {
-    if(!FontManager->RemoveFont(static_cast<font_Type>(fontindex)))
+    if(!fontManager->RemoveFont(static_cast<FontType>(fontindex)))
     {
         ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_FONT);
     }
@@ -612,7 +612,7 @@ void lua_DeleteFont(int fontindex)
 
 void lua_DeleteFontStyle(int styleindex)
 {
-    if(!FontManager->RemoveFontStyle(static_cast<font_Style>(styleindex)))
+    if(!fontManager->RemoveFontStyle(static_cast<FontStyle>(styleindex)))
     {
         ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
     }

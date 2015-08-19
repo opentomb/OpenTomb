@@ -18,11 +18,11 @@
 
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 
-std::shared_ptr<gl_tex_font_s> glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size)
+std::shared_ptr<FontTexture> glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size)
 {
     if(ft_library != nullptr)
     {
-        std::shared_ptr<gl_tex_font_s> glf = std::make_shared<gl_tex_font_s>();
+        std::shared_ptr<FontTexture> glf = std::make_shared<FontTexture>();
 
         FT_Face face = nullptr;
         if(FT_New_Face(ft_library, file_name, 0, &face))                //T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
@@ -59,11 +59,11 @@ std::shared_ptr<gl_tex_font_s> glf_create_font(FT_Library ft_library, const char
  * @param font_size: size of font glyph?
  * @return pointer to the gl_tex_font_s structure;
  */
-gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
+FontTexture *glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
 {
     if(ft_library != nullptr)
     {
-        gl_tex_font_p glf = new gl_tex_font_t();
+        FontTexture* glf = new FontTexture();
 
         FT_Face face;
         if(FT_New_Memory_Face(ft_library, static_cast<const FT_Byte*>(face_data), face_data_size, 0, &face))
@@ -147,7 +147,7 @@ static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
     }
 }
 
-void glf_resize(gl_tex_font_p glf, uint16_t font_size)
+void glf_resize(FontTexture *glf, uint16_t font_size)
 {
     if((glf != nullptr) && (glf->ft_face != nullptr))
     {
@@ -279,7 +279,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
     }
 }
 
-void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
+void glf_reface(FontTexture *glf, const char *file_name, uint16_t font_size)
 {
     FT_Face face;
     if(FT_New_Face(glf->ft_library, file_name, 0, &face))
@@ -290,7 +290,7 @@ void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
     glf_resize(glf, font_size);
 }
 
-float glf_get_ascender(gl_tex_font_p glf)
+float glf_get_ascender(FontTexture *glf)
 {
     if((glf->font_size == 0) || (glf->ft_face == nullptr))
     {
@@ -300,7 +300,7 @@ float glf_get_ascender(gl_tex_font_p glf)
     return static_cast<float>(glf->ft_face->ascender) / 64.0f;
 }
 
-uint16_t glf_get_font_size(gl_tex_font_p glf)
+uint16_t glf_get_font_size(FontTexture *glf)
 {
     if((glf != nullptr) && (glf->ft_face != nullptr))
     {
@@ -312,7 +312,7 @@ uint16_t glf_get_font_size(gl_tex_font_p glf)
     }
 }
 
-float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
+float glf_get_string_len(FontTexture *glf, const char *text, int n)
 {
     float x = 0.0;
 
@@ -343,7 +343,7 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
     return x;
 }
 
-void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1)
+void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1)
 {
     *x0 = 0.0;
     *x1 = 0.0;
@@ -366,7 +366,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
         for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
-            char_info_p g = &glf->glyphs[curr_utf32];
+            CharInfo* g = &glf->glyphs[curr_utf32];
 
             nch2 = utf8_to_utf32(nch, &next_utf32);
 
@@ -389,7 +389,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
     }
 }
 
-void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
+void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
 {
     const uint8_t *nch;
     const uint8_t *ch = (const uint8_t*)text;
@@ -412,7 +412,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
         while(*ch)
         {
-            char_info_p g;
+            CharInfo* g;
             const uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 
             next_utf32 = FT_Get_Char_Index(glf->ft_face.get(), next_utf32);
@@ -488,7 +488,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         for(; *ch;)
         {
             GLfloat *p = FontBuffer_ResizeAndMap(sizeof(GLfloat[32]));
-            char_info_p g;
+            CharInfo* g;
             const uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 
             next_utf32 = FT_Get_Char_Index(glf->ft_face.get(), next_utf32);

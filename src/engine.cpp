@@ -484,7 +484,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
-extern gui_text_line_t system_fps;
+extern TextLine system_fps;
 
 namespace
 {

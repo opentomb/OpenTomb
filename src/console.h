@@ -24,17 +24,17 @@ private:
     struct Line
     {
         std::string text{};
-        font_Style styleId = FONTSTYLE_GENERIC;
+        FontStyle styleId = FONTSTYLE_GENERIC;
 
         Line() = default;
-        Line(const std::string& t, font_Style s = FONTSTYLE_GENERIC)
+        Line(const std::string& t, FontStyle s = FONTSTYLE_GENERIC)
             : text(t)
             , styleId(s)
         {
         }
     };
 
-    gl_tex_font_s *m_font = nullptr;                       // Texture font renderer
+    FontTexture *m_font = nullptr;                       // Texture font renderer
 
     GLfloat m_backgroundColor[4];
 
@@ -101,9 +101,9 @@ public:
 
     void addLog(const std::string& text);
 
-    void addLine(const std::string& text, font_Style style);
+    void addLine(const std::string& text, FontStyle style);
 
-    void addText(const std::string& text, font_Style style);
+    void addText(const std::string& text, FontStyle style);
 
     void printf(const char *fmt, ...);
 

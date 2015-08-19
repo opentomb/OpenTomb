@@ -11,7 +11,7 @@ ScreenInfo     screen_info;
 SystemSettings system_settings;
 
 
-gui_text_line_t system_fps;
+TextLine system_fps;
 
 // =======================================================================
 // General routines

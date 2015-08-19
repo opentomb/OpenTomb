@@ -584,35 +584,35 @@ void Controls_DebugKeys(int button, int state)
             case SDLK_RETURN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                    main_inventory_manager->send(InventoryManager::INVENTORY_ACTIVATE);
                 }
                 break;
 
             case SDLK_UP:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
+                    main_inventory_manager->send(InventoryManager::INVENTORY_UP);
                 }
                 break;
 
             case SDLK_DOWN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
+                    main_inventory_manager->send(InventoryManager::INVENTORY_DOWN);
                 }
                 break;
 
             case SDLK_LEFT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
+                    main_inventory_manager->send(InventoryManager::INVENTORY_R_LEFT);
                 }
                 break;
 
             case SDLK_RIGHT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
+                    main_inventory_manager->send(InventoryManager::INVENTORY_R_RIGHT);
                 }
                 break;
 

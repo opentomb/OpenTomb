@@ -33,7 +33,7 @@
 // can generate and use additional font types via script, but engine
 // behaviour with extra font types is undefined.
 
-enum font_Type
+enum FontType
 {
     FONT_PRIMARY,
     FONT_SECONDARY,
@@ -48,7 +48,7 @@ enum font_Type
 // This is predefined enumeration of font styles, which can be extended
 // with user-defined script functions.
 ///@TODO: add system message console style
-enum font_Style
+enum FontStyle
 {
     FONTSTYLE_CONSOLE_INFO,
     FONTSTYLE_CONSOLE_WARNING,
@@ -74,20 +74,20 @@ struct InventoryNode;
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
 
-typedef struct gui_font_s
+struct Font
 {
-    font_Type                   index;
+    FontType                   index;
     uint16_t                    size;
-    std::shared_ptr<gl_tex_font_s> gl_font;
-}gui_font_t, *gui_font_p;
+    std::shared_ptr<FontTexture> gl_font;
+};
 
 // Font style is different to font itself - whereas engine can have
 // only three fonts, there could be unlimited amount of font styles.
 // Font style management is done via font manager.
 
-typedef struct gui_fontstyle_s
+struct FontStyleData
 {
-    font_Style                  index;          // Unique index which is used to identify style.
+    FontStyle                  index;          // Unique index which is used to identify style.
 
     GLfloat                     color[4];
     GLfloat                     real_color[4];
@@ -98,7 +98,7 @@ typedef struct gui_fontstyle_s
     bool                        rect;
     bool                        fading;         // TR4-like looped fading font effect.
     bool                        hidden;         // Used to bypass certain GUI lines easily.
-} gui_fontstyle_t, *gui_fontstyle_p;
+};
 
 #define GUI_FONT_FADE_SPEED 1.0f                 // Global fading style speed.
 #define GUI_FONT_FADE_MIN   0.3f                 // Minimum fade multiplier.
@@ -111,26 +111,26 @@ typedef struct gui_fontstyle_s
 // and font styles. Every time you want to change font or style, font manager
 // functions should be used.
 
-class gui_FontManager
+class FontManager
 {
 public:
-    gui_FontManager();
-    ~gui_FontManager();
+    FontManager();
+    ~FontManager();
 
-    bool             AddFont(const font_Type index,
+    bool             AddFont(const FontType index,
                              const uint32_t size,
                              const char* path);
-    bool             RemoveFont(const font_Type index);
-    gl_tex_font_p    GetFont(const font_Type index);
+    bool             RemoveFont(const FontType index);
+    FontTexture*     GetFont(const FontType index);
 
-    bool             AddFontStyle(const font_Style index,
+    bool             AddFontStyle(const FontStyle index,
                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
                                   const bool shadow, const bool fading,
                                   const bool rect, const GLfloat rect_border,
                                   const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
                                   const bool hide);
-    bool             RemoveFontStyle(const font_Style index);
-    gui_fontstyle_p GetFontStyle(const font_Style index);
+    bool             RemoveFontStyle(const FontStyle index);
+    FontStyleData*  GetFontStyle(const FontStyle index);
 
     uint32_t         GetFontCount()
     {
@@ -145,14 +145,14 @@ public:
     void             Resize(); // Resize fonts on window resize event.
 
 private:
-    gui_font_p       GetFontAddress(const font_Type index);
+    Font*            GetFontAddress(const FontType index);
 
     GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
     bool             mFadeDirection;
 
-    std::list<gui_fontstyle_s> styles;
+    std::list<FontStyleData> styles;
 
-    std::list<gui_font_s> fonts;
+    std::list<Font>  fonts;
 
     FT_Library       font_library;  // GLF font library unit.
 };
@@ -170,7 +170,7 @@ private:
 
 #define GUI_LINE_DEFAULTSIZE 128
 
-typedef struct gui_text_line_s
+struct TextLine
 {
     std::string                 text;
 
@@ -188,11 +188,11 @@ typedef struct gui_text_line_s
 
     bool                        show;
 
-    struct gui_text_line_s     *next;
-    struct gui_text_line_s     *prev;
-} gui_text_line_t, *gui_text_line_p;
+    TextLine     *next;
+    TextLine     *prev;
+};
 
-typedef struct gui_rect_s
+struct Rect
 {
     GLfloat                     rect[4];
     GLfloat                     absRect[4];
@@ -206,7 +206,7 @@ typedef struct gui_rect_s
     uint32_t                    blending_mode;
 
     int16_t                     line_count;
-    gui_text_line_s            *lines;
+    TextLine            *lines;
 
     int8_t                      state;      // Opening / static / closing
     int8_t                      show;
@@ -219,7 +219,7 @@ typedef struct gui_rect_s
     int8_t                      selection_index;
 
     char                       *lua_click_function;
-} gui_rect_t, *gui_rect_p;
+};
 
 // Fader is a simple full-screen rectangle, which always sits above the scene,
 // and, when activated, either shows or hides gradually - hence, creating illusion
@@ -234,7 +234,7 @@ typedef struct gui_rect_s
 // Immutable fader enumeration.
 // These faders always exist in engine, and rarely you will need more than these.
 
-enum Faders
+enum FaderType
 {
     FADER_EFFECT,       // Effect fader (flashes, etc.)
     FADER_SUN,          // Sun fader (engages on looking at the sun)
@@ -276,10 +276,10 @@ enum Faders
 
 // Main fader class.
 
-class gui_Fader
+class Fader
 {
 public:
-    gui_Fader();                  // Fader constructor.
+    Fader();                  // Fader constructor.
 
     void Show();                  // Shows and updates fader.
     void Engage(int fade_dir);    // Resets and starts fader.
@@ -331,7 +331,7 @@ private:
 // These are the bars that are always exist in GUI.
 // Scripted bars could be created and drawn separately later.
 
-enum Bars
+enum BarType
 {
     BAR_HEALTH,     // TR 1-5
     BAR_AIR,        // TR 1-5, alternate state - gas (TR5)
@@ -358,10 +358,10 @@ enum BarColorType
 
 // Main bar class.
 
-class gui_ProgressBar
+class ProgressBar
 {
 public:
-    gui_ProgressBar();  // Bar constructor.
+    ProgressBar();  // Bar constructor.
 
     void Show(float value);    // Main show bar procedure.
     void Resize();
@@ -498,10 +498,10 @@ void Gui_InitNotifier();
 void Gui_InitTempLines();
 void Gui_FillCrosshairBuffer();
 
-void Gui_AddLine(gui_text_line_p line);
-void Gui_DeleteLine(gui_text_line_p line);
-void Gui_MoveLine(gui_text_line_p line);
-void Gui_RenderStringLine(gui_text_line_p l);
+void Gui_AddLine(TextLine* line);
+void Gui_DeleteLine(TextLine* line);
+void Gui_MoveLine(TextLine* line);
+void Gui_RenderStringLine(TextLine* l);
 void Gui_RenderStrings();
 
 /**
@@ -509,113 +509,10 @@ void Gui_RenderStrings();
  */
 void Item_Frame(struct SSBoneFrame *bf, btScalar time);
 void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
-#if 0
-typedef struct gui_invmenu_item_ammo_s
-{
-    struct inventory_node_s    *linked_item;
-
-    //float                       size;
-    uint16_t                    type;
-    //uint32_t                    id;
-    //uint32_t                    count;
-    //uint32_t                    max_count;
-    //char                       *name;
-    char                       *description;
-}gui_invmenu_item_ammo_t, *gui_invmenu_item_ammo_p;
-
-typedef struct gui_invmenu_item_s
-{
-    struct inventory_node_s    *linked_item;
-
-    float                       angle;
-    int8_t                      angle_dir;              // rotation direction: 0, 1 or -1
-    //float                       size;
-    //uint16_t                    type;
-    //uint32_t                    id;
-    //uint32_t                    count;
-    //char                       *name;
-    char                       *description;
-    int8_t                      selected_ammo;
-
-    gui_invmenu_item_ammo_s   **ammo;                   // array of ammo structs
-    gui_invmenu_item_s        **combinables;            // array of items it can be combined with
-    gui_invmenu_item_s         *next;                   // next item in the row
-}gui_invmenu_item_t, *gui_invmenu_item_p;
-
-class gui_InventoryMenu
-{
-private:
-    bool                        mVisible;
-
-    int                         mRowOffset;
-    int                         mRow1Max;
-    int                         mRow2Max;
-    int                         mRow3Max;
-    int                         mSelected;
-    int                         mMaxItems;
-
-    gui_invmenu_item_s         *mFirstInRow1;
-    gui_invmenu_item_s         *mFirstInRow2;
-    gui_invmenu_item_s         *mFirstInRow3;
-
-    int                         mFrame;
-    int                         mAnim;
-    float                       mTime;
-    float                       mMovementH;
-    float                       mMovementV;
-    float                       mMovementC;
-    int                         mMovementDirectionH;
-    int                         mMovementDirectionV;
-    int                         mMovementDirectionC;
-    float                       mShiftBig;
-    float                       mShiftSmall;
-    float                       mAngle;
-
-    int                         mFontSize;
-    int                         mFontHeight;
-    // background settings
-public:
-    gui_text_line_s             mLabel_Title;                // Styles
-    char                        mLabel_Title_text[128];
-    gui_text_line_s             mLabel_ItemName;
-    char                        mLabel_ItemName_text[128];
-
-    gui_InventoryMenu();
-    ~gui_InventoryMenu();
-
-    void DestroyItems();
-    void Toggle();
-    bool IsVisible()
-    {
-        return mVisible;
-    }
-    bool IsMoving()
-    {
-        if(mMovementH != 0 || mMovementDirectionV != 0 || mMovementDirectionC != 0)
-            return true;
-        return false;
-    }
-    void SetRowOffset(int dy)               /// Scrolling inventory
-    {
-        mRowOffset = dy;
-    }
-    void AddItem(inventory_node_p item);
-    void UpdateItemRemoval(inventory_node_p item);
-    void RemoveAllItems();
-    void UpdateItemsOrder(int row);
-    void MoveSelectHorisontal(int dx);
-    void MoveSelectVertical(int dy);
-
-    void UpdateMovements();
-    void Render();
-    // inventory parameters calculation
-    // mouse callback
-};
-#endif
 /*
  * Other inventory renderer class
  */
-class gui_InventoryManager
+class InventoryManager
 {
 private:
     std::list<InventoryNode>* mInventory;
@@ -657,11 +554,11 @@ public:
         INVENTORY_ACTIVATE
     };
 
-    gui_text_line_s             mLabel_Title;
-    gui_text_line_s             mLabel_ItemName;
+    TextLine             mLabel_Title;
+    TextLine             mLabel_ItemName;
 
-    gui_InventoryManager();
-    ~gui_InventoryManager();
+    InventoryManager();
+    ~InventoryManager();
 
     int getCurrentState()
     {
@@ -690,14 +587,14 @@ public:
     void render();
 };
 
-extern gui_InventoryManager  *main_inventory_manager;
+extern InventoryManager  *main_inventory_manager;
 //extern gui_InventoryMenu     *main_inventory_menu;
-extern gui_FontManager       *FontManager;
+extern FontManager       *fontManager;
 
 /**
  * Draws text using a FONT_SECONDARY.
  */
-gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
+TextLine* Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.
