@@ -33,11 +33,11 @@
 // can generate and use additional font types via script, but engine
 // behaviour with extra font types is undefined.
 
-enum FontType
+enum class FontType
 {
-    FONT_PRIMARY,
-    FONT_SECONDARY,
-    FONT_CONSOLE
+    Primary,
+    Secondary,
+    Console
 };
 
 #define GUI_MAX_FONTS 8     // 8 fonts is PLENTY.
@@ -48,23 +48,23 @@ enum FontType
 // This is predefined enumeration of font styles, which can be extended
 // with user-defined script functions.
 ///@TODO: add system message console style
-enum FontStyle
+enum class FontStyle
 {
-    FONTSTYLE_CONSOLE_INFO,
-    FONTSTYLE_CONSOLE_WARNING,
-    FONTSTYLE_CONSOLE_EVENT,
-    FONTSTYLE_CONSOLE_NOTIFY,
-    FONTSTYLE_MENU_TITLE,
-    FONTSTYLE_MENU_HEADING1,
-    FONTSTYLE_MENU_HEADING2,
-    FONTSTYLE_MENU_ITEM_ACTIVE,
-    FONTSTYLE_MENU_ITEM_INACTIVE,
-    FONTSTYLE_MENU_CONTENT,
-    FONTSTYLE_STATS_TITLE,
-    FONTSTYLE_STATS_CONTENT,
-    FONTSTYLE_NOTIFIER,
-    FONTSTYLE_SAVEGAMELIST,
-    FONTSTYLE_GENERIC
+    ConsoleInfo,
+    ConsoleWarning,
+    ConsoleEvent,
+    ConsoleNotify,
+    MenuTitle,
+    MenuHeading1,
+    MenuHeading2,
+    MenuItemActive,
+    MenuItemInactive,
+    MenuContent,
+    StatsTitle,
+    StatsContent,
+    Notifier,
+    SavegameList,
+    Generic
 };
 
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
@@ -174,8 +174,8 @@ struct TextLine
 {
     std::string                 text;
 
-    uint16_t                    font_id;
-    uint16_t                    style_id;
+    FontType                    font_id;
+    FontStyle                   style_id;
 
     GLfloat                     X;
     uint8_t                     Xanchor;
@@ -234,14 +234,14 @@ struct Rect
 // Immutable fader enumeration.
 // These faders always exist in engine, and rarely you will need more than these.
 
-enum FaderType
+enum class FaderType
 {
-    FADER_EFFECT,       // Effect fader (flashes, etc.)
-    FADER_SUN,          // Sun fader (engages on looking at the sun)
-    FADER_VIGNETTE,     // Just for fun - death fader.
-    FADER_LOADSCREEN,   // Loading screen
-    FADER_BLACK,        // Classic black fader
-    FADER_LASTINDEX
+    Effect,       // Effect fader (flashes, etc.)
+    Sun,          // Sun fader (engages on looking at the sun)
+    Vignette,     // Just for fun - death fader.
+    LoadScreen,   // Loading screen
+    Black,        // Classic black fader
+    Sentinel
 };
 
 #define GUI_FADER_DIR_IN    0    // Normal fade-in.
@@ -331,29 +331,29 @@ private:
 // These are the bars that are always exist in GUI.
 // Scripted bars could be created and drawn separately later.
 
-enum BarType
+enum class BarType
 {
-    BAR_HEALTH,     // TR 1-5
-    BAR_AIR,        // TR 1-5, alternate state - gas (TR5)
-    BAR_STAMINA,    // TR 3-5
-    BAR_WARMTH,     // TR 3 only
-    BAR_LOADING,
-    BAR_LASTINDEX
+    Health,     // TR 1-5
+    Air,        // TR 1-5, alternate state - gas (TR5)
+    Stamina,    // TR 3-5
+    Warmth,     // TR 3 only
+    Loading,
+    Sentinel
 };
 
 // Bar color types.
 // Each bar part basically has two colours - main and fade.
 
-enum BarColorType
+enum class BarColorType
 {
-    BASE_MAIN,
-    BASE_FADE,
-    ALT_MAIN,
-    ALT_FADE,
-    BACK_MAIN,
-    BACK_FADE,
-    BORDER_MAIN,
-    BORDER_FADE
+    BaseMain,
+    BaseFade,
+    AltMain,
+    AltFade,
+    BackMain,
+    BackFade,
+    BorderMain,
+    BorderFade
 };
 
 // Main bar class.
@@ -514,10 +514,24 @@ void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mv
  */
 class InventoryManager
 {
+public:
+    enum class InventoryState
+    {
+        Disabled = 0,
+        Idle,
+        Open,
+        Closed,
+        RLeft,
+        RRight,
+        Up,
+        Down,
+        Activate
+    };
+
 private:
     std::list<InventoryNode>* mInventory;
-    int                         mCurrentState;
-    int                         mNextState;
+    InventoryState              mCurrentState;
+    InventoryState              mNextState;
     int                         mNextItemsCount;
 
     int                         mCurrentItemsType;
@@ -541,36 +555,23 @@ private:
     void restoreItemAngle(float time);
 
 public:
-    enum inventoryState
-    {
-        INVENTORY_DISABLED = 0,
-        INVENTORY_IDLE,
-        INVENTORY_OPEN,
-        INVENTORY_CLOSE,
-        INVENTORY_R_LEFT,
-        INVENTORY_R_RIGHT,
-        INVENTORY_UP,
-        INVENTORY_DOWN,
-        INVENTORY_ACTIVATE
-    };
-
     TextLine             mLabel_Title;
     TextLine             mLabel_ItemName;
 
     InventoryManager();
     ~InventoryManager();
 
-    int getCurrentState()
+    InventoryState getCurrentState()
     {
         return mCurrentState;
     }
 
-    int getNextState()
+    InventoryState getNextState()
     {
         return mNextState;
     }
 
-    void send(inventoryState state)
+    void send(InventoryState state)
     {
         mNextState = state;
     }
@@ -592,7 +593,7 @@ extern InventoryManager  *main_inventory_manager;
 extern FontManager       *fontManager;
 
 /**
- * Draws text using a FONT_SECONDARY.
+ * Draws text using a FontType::Secondary.
  */
 TextLine* Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
@@ -643,11 +644,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 /**
  *  Fader functions.
  */
-bool Gui_FadeStart(int fader, int fade_direction);
-bool Gui_FadeStop(int fader);
-bool Gui_FadeAssignPic(int fader, const std::string &pic_name);
-int  Gui_FadeCheck(int fader);
-void Gui_FadeSetup(int fader,
+bool Gui_FadeStart(FaderType fader, int fade_direction);
+bool Gui_FadeStop(FaderType fader);
+bool Gui_FadeAssignPic(FaderType fader, const std::string &pic_name);
+int  Gui_FadeCheck(FaderType fader);
+void Gui_FadeSetup(FaderType fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed);
 

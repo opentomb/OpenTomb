@@ -1152,7 +1152,7 @@ void RenderDebugDrawer::draw3dText(const btVector3& /*location*/, const char* /*
 
 void RenderDebugDrawer::reportErrorWarning(const char* warningString)
 {
-    ConsoleInfo::instance().addLine(warningString, FONTSTYLE_CONSOLE_WARNING);
+    ConsoleInfo::instance().addLine(warningString, FontStyle::ConsoleWarning);
 }
 
 void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB, const btVector3& normalOnB, btScalar distance, int /*lifeTime*/, const btVector3& color)

@@ -285,12 +285,12 @@ void Engine_InitSDLVideo()
     if(SDL_GL_SetSwapInterval(screen_info.vsync))
         Sys_DebugLog(LOG_FILENAME, "Cannot set VSYNC: %s\n", SDL_GetError());
 
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), FONTSTYLE_CONSOLE_INFO);
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), FontStyle::ConsoleInfo);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), FontStyle::ConsoleInfo);
     std::string version = "OpenGL version ";
     version += reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    ConsoleInfo::instance().addLine(version, FONTSTYLE_CONSOLE_INFO);
-    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(version, FontStyle::ConsoleInfo);
+    ConsoleInfo::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), FontStyle::ConsoleInfo);
 }
 
 #if !defined(__MACOSX__)
@@ -368,7 +368,7 @@ void Engine_InitAL()
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);
-    ConsoleInfo::instance().addLine(driver, FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine(driver, FontStyle::ConsoleInfo);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
@@ -417,8 +417,8 @@ void Engine_Start()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Make splash screen.
-    Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    Gui_FadeAssignPic(FaderType::LoadScreen, "resource/graphics/legal.png");
+    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -994,7 +994,7 @@ int Engine_LoadMap(const std::string& name)
 
     Gui_DrawLoadScreen(1000);
 
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
+    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_IN);
     Gui_NotifierStop();
 
     return 1;
@@ -1189,28 +1189,28 @@ int Engine_ExecCmd(const char *ch)
                 buf[size] = 0;
                 fclose(f);
                 ConsoleInfo::instance().clean();
-                ConsoleInfo::instance().addText(buf.data(), FONTSTYLE_CONSOLE_INFO);
+                ConsoleInfo::instance().addText(buf.data(), FontStyle::ConsoleInfo);
             }
             else
             {
-                ConsoleInfo::instance().addText("Not avaliable =(", FONTSTYLE_CONSOLE_WARNING);
+                ConsoleInfo::instance().addText("Not avaliable =(", FontStyle::ConsoleWarning);
             }
             return 1;
         }
         else if(token[0])
         {
-            ConsoleInfo::instance().addLine(pch, FONTSTYLE_CONSOLE_EVENT);
+            ConsoleInfo::instance().addLine(pch, FontStyle::ConsoleEvent);
             try
             {
                 engine_lua.doString(pch);
             }
             catch(lua::RuntimeError& error)
             {
-                ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
+                ConsoleInfo::instance().addLine(error.what(), FontStyle::ConsoleWarning);
             }
             catch(lua::LoadError& error)
             {
-                ConsoleInfo::instance().addLine(error.what(), FONTSTYLE_CONSOLE_WARNING);
+                ConsoleInfo::instance().addLine(error.what(), FontStyle::ConsoleWarning);
             }
             return 0;
         }
@@ -1257,7 +1257,7 @@ void Engine_InitConfig(const char *filename)
 
 int engine_lua_fputs(const char *str, FILE* /*f*/)
 {
-    ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(str, FontStyle::ConsoleNotify);
     return static_cast<int>(strlen(str));
 }
 
@@ -1276,7 +1276,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     fwrite(buf, 1, ret, f);
 
     // Write it to console, too (if it helps) und
-    ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(buf, FontStyle::ConsoleNotify);
 
     return ret;
 }
@@ -1291,7 +1291,7 @@ int engine_lua_printf(const char *fmt, ...)
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
 
-    ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(buf, FontStyle::ConsoleNotify);
 
     return ret;
 }

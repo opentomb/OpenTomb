@@ -783,19 +783,19 @@ void Game_Frame(btScalar time)
     if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
     {
         if((is_character) &&
-           (main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_DISABLED))
+           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
         {
             main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            main_inventory_manager->send(InventoryManager::INVENTORY_OPEN);
+            main_inventory_manager->send(InventoryManager::InventoryState::Open);
         }
-        if(main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_IDLE)
+        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            main_inventory_manager->send(InventoryManager::INVENTORY_CLOSE);
+            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
         }
     }
 
     // If console or inventory is active, only thing to update is audio.
-    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::INVENTORY_DISABLED)
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
@@ -903,8 +903,8 @@ void Game_LevelTransition(uint16_t level_index)
     char file_path[MAX_ENGINE_PATH];
 
     engine_lua.getLoadingScreen(level_index, file_path);
-    Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
+    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
 
     Audio_EndStreams();
 }

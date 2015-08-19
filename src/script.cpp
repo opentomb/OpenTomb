@@ -2380,7 +2380,7 @@ void lua_CamShake(float power, float time, lua::Value id)
 
 void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
 {
-    Gui_FadeSetup(FADER_EFFECT,
+    Gui_FadeSetup(FaderType::Effect,
                   alpha,
                   R, G, B,
                   loader::BlendingMode::Multiply,
@@ -2389,22 +2389,22 @@ void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16
 
 void lua_FlashStart()
 {
-    Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
+    Gui_FadeStart(FaderType::Effect, GUI_FADER_DIR_TIMED);
 }
 
 void lua_FadeOut()
 {
-    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_OUT);
+    Gui_FadeStart(FaderType::Black, GUI_FADER_DIR_OUT);
 }
 
 void lua_FadeIn()
 {
-    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_IN);
+    Gui_FadeStart(FaderType::Black, GUI_FADER_DIR_IN);
 }
 
 bool lua_FadeCheck()
 {
-    return Gui_FadeCheck(FADER_BLACK);
+    return Gui_FadeCheck(FaderType::Black);
 }
 
 // General gameplay functions
@@ -2523,8 +2523,8 @@ void lua_SetGame(int gameId, lua::Value levelId)
         gameflow_manager.CurrentLevelID = levelId;
 
     const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
-    Gui_FadeAssignPic(FADER_LOADSCREEN, str);
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    Gui_FadeAssignPic(FaderType::LoadScreen, str);
+    Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_OUT);
 
     ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
@@ -2547,8 +2547,8 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         }
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(gameflow_manager.CurrentLevelID, file_path);
-        Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-        Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
+        Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
+        Gui_FadeStart(FaderType::LoadScreen, GUI_FADER_DIR_IN);
         Engine_LoadMap(mapName);
     }
 }
@@ -3156,25 +3156,25 @@ void ScriptEngine::exposeConstants()
 
     EXPOSE_C(M_PI);
 
-    EXPOSE_CC(FONTSTYLE_CONSOLE_INFO);
-    EXPOSE_CC(FONTSTYLE_CONSOLE_WARNING);
-    EXPOSE_CC(FONTSTYLE_CONSOLE_EVENT);
-    EXPOSE_CC(FONTSTYLE_CONSOLE_NOTIFY);
-    EXPOSE_CC(FONTSTYLE_MENU_TITLE);
-    EXPOSE_CC(FONTSTYLE_MENU_HEADING1);
-    EXPOSE_CC(FONTSTYLE_MENU_HEADING2);
-    EXPOSE_CC(FONTSTYLE_MENU_ITEM_ACTIVE);
-    EXPOSE_CC(FONTSTYLE_MENU_ITEM_INACTIVE);
-    EXPOSE_CC(FONTSTYLE_MENU_CONTENT);
-    EXPOSE_CC(FONTSTYLE_STATS_TITLE);
-    EXPOSE_CC(FONTSTYLE_STATS_CONTENT);
-    EXPOSE_CC(FONTSTYLE_NOTIFIER);
-    EXPOSE_CC(FONTSTYLE_SAVEGAMELIST);
-    EXPOSE_CC(FONTSTYLE_GENERIC);
+    m_state.set( "FONTSTYLE_CONSOLE_INFO", static_cast<int>(FontStyle::ConsoleInfo) );
+    m_state.set( "FONTSTYLE_CONSOLE_WARNING", static_cast<int>(FontStyle::ConsoleWarning) );
+    m_state.set( "FONTSTYLE_CONSOLE_EVENT", static_cast<int>(FontStyle::ConsoleEvent) );
+    m_state.set( "FONTSTYLE_CONSOLE_NOTIFY", static_cast<int>(FontStyle::ConsoleNotify) );
+    m_state.set( "FONTSTYLE_MENU_TITLE", static_cast<int>(FontStyle::MenuTitle) );
+    m_state.set( "FONTSTYLE_MENU_HEADING1", static_cast<int>(FontStyle::MenuHeading1) );
+    m_state.set( "FONTSTYLE_MENU_HEADING2", static_cast<int>(FontStyle::MenuHeading2) );
+    m_state.set( "FONTSTYLE_MENU_ITEM_ACTIVE", static_cast<int>(FontStyle::MenuItemActive) );
+    m_state.set( "FONTSTYLE_MENU_ITEM_INACTIVE", static_cast<int>(FontStyle::MenuItemInactive) );
+    m_state.set( "FONTSTYLE_MENU_CONTENT", static_cast<int>(FontStyle::MenuContent) );
+    m_state.set( "FONTSTYLE_STATS_TITLE", static_cast<int>(FontStyle::StatsTitle) );
+    m_state.set( "FONTSTYLE_STATS_CONTENT", static_cast<int>(FontStyle::StatsContent) );
+    m_state.set( "FONTSTYLE_NOTIFIER", static_cast<int>(FontStyle::Notifier) );
+    m_state.set( "FONTSTYLE_SAVEGAMELIST", static_cast<int>(FontStyle::SavegameList) );
+    m_state.set( "FONTSTYLE_GENERIC", static_cast<int>(FontStyle::Generic) );
 
-    EXPOSE_CC(FONT_PRIMARY);
-    EXPOSE_CC(FONT_SECONDARY);
-    EXPOSE_CC(FONT_CONSOLE);
+    m_state.set( "FONT_PRIMARY", static_cast<int>(FontType::Primary) );
+    m_state.set( "FONT_SECONDARY", static_cast<int>(FontType::Secondary) );
+    m_state.set( "FONT_CONSOLE", static_cast<int>(FontType::Console) );
 
 #undef EXPOSE_C
 #undef EXPOSE_CC
@@ -3201,7 +3201,7 @@ int ScriptEngine::print(lua_State* state)
 
     if(top == 0)
     {
-        ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
+        ConsoleInfo::instance().addLine("nil", FontStyle::ConsoleEvent);
         return 0;
     }
 
@@ -3243,7 +3243,7 @@ int ScriptEngine::print(lua_State* state)
                 break;
         }
 
-        ConsoleInfo::instance().addLine(str, FONTSTYLE_CONSOLE_EVENT);
+        ConsoleInfo::instance().addLine(str, FontStyle::ConsoleEvent);
     }
     return 0;
 }

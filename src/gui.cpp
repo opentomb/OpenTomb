@@ -1,6 +1,7 @@
 #include "gui.h"
 
 #include <cstdint>
+#include <map>
 
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
@@ -30,8 +31,8 @@ TextLine      gui_temp_lines[GUI_MAX_TEMP_LINES];
 uint16_t      temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
-ProgressBar     Bar[BAR_LASTINDEX];
-Fader           FaderType[FADER_LASTINDEX];
+std::map<BarType, ProgressBar>     Bar;
+std::map<FaderType, Fader>         faderType;
 
 FontManager       *fontManager = nullptr;
 InventoryManager  *main_inventory_manager = nullptr;
@@ -70,162 +71,141 @@ void Gui_InitTempLines()
         gui_temp_lines[i].next = nullptr;
         gui_temp_lines[i].prev = nullptr;
 
-        gui_temp_lines[i].font_id = FONT_SECONDARY;
-        gui_temp_lines[i].style_id = FONTSTYLE_GENERIC;
+        gui_temp_lines[i].font_id = FontType::Secondary;
+        gui_temp_lines[i].style_id = FontStyle::Generic;
     }
 }
 
 void Gui_InitBars()
 {
-    for(int i = 0; i < BAR_LASTINDEX; i++)
     {
-        switch(i)
-        {
-            case BAR_HEALTH:
-            {
-                Bar[i].Visible = false;
-                Bar[i].Alternate = false;
-                Bar[i].Invert = false;
-                Bar[i].Vertical = false;
+        const auto i = BarType::Health;
+        Bar[i].Visible = false;
+        Bar[i].Alternate = false;
+        Bar[i].Invert = false;
+        Bar[i].Vertical = false;
 
-                Bar[i].SetSize(250, 15, 3);
-                Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
-                Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
-                Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
-                Bar[i].SetColor(ALT_FADE, 255, 255, 0, 255);
-                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
-                Bar[i].SetBlink(300);
-                Bar[i].SetExtrude(true, 100);
-                Bar[i].SetAutoshow(true, 2000, true, 400);
-            }
-            break;
-            case BAR_AIR:
-            {
-                Bar[i].Visible = false;
-                Bar[i].Alternate = false;
-                Bar[i].Invert = true;
-                Bar[i].Vertical = false;
+        Bar[i].SetSize(250, 15, 3);
+        Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
+        Bar[i].SetColor(BarColorType::BaseMain, 255, 50, 50, 200);
+        Bar[i].SetColor(BarColorType::BaseFade, 100, 255, 50, 200);
+        Bar[i].SetColor(BarColorType::AltMain, 255, 180, 0, 255);
+        Bar[i].SetColor(BarColorType::AltFade, 255, 255, 0, 255);
+        Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
+        Bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 130);
+        Bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
+        Bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
+        Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
+        Bar[i].SetBlink(300);
+        Bar[i].SetExtrude(true, 100);
+        Bar[i].SetAutoshow(true, 2000, true, 400);
+    }
+    {
+        const auto i = BarType::Air;
+        Bar[i].Visible = false;
+        Bar[i].Alternate = false;
+        Bar[i].Invert = true;
+        Bar[i].Vertical = false;
 
-                Bar[i].SetSize(250, 15, 3);
-                Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
-                Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
-                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
-                Bar[i].SetBlink(300);
-                Bar[i].SetExtrude(true, 100);
-                Bar[i].SetAutoshow(true, 2000, true, 400);
-            }
-            break;
-            case BAR_STAMINA:
-            {
-                Bar[i].Visible = false;
-                Bar[i].Alternate = false;
-                Bar[i].Invert = false;
-                Bar[i].Vertical = false;
+        Bar[i].SetSize(250, 15, 3);
+        Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
+        Bar[i].SetColor(BarColorType::BaseMain, 0, 50, 255, 200);
+        Bar[i].SetColor(BarColorType::BaseFade, 190, 190, 255, 200);
+        Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
+        Bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 130);
+        Bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
+        Bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
+        Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
+        Bar[i].SetBlink(300);
+        Bar[i].SetExtrude(true, 100);
+        Bar[i].SetAutoshow(true, 2000, true, 400);
+    }
+    {
+        const auto i = BarType::Stamina;
+        Bar[i].Visible = false;
+        Bar[i].Alternate = false;
+        Bar[i].Invert = false;
+        Bar[i].Vertical = false;
 
-                Bar[i].SetSize(250, 15, 3);
-                Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
-                Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
-                Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
-                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
-                Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
-                Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
-                Bar[i].SetExtrude(true, 100);
-                Bar[i].SetAutoshow(true, 500, true, 300);
-            }
-            break;
-            case BAR_WARMTH:
-            {
-                Bar[i].Visible = false;
-                Bar[i].Alternate = false;
-                Bar[i].Invert = true;
-                Bar[i].Vertical = false;
+        Bar[i].SetSize(250, 15, 3);
+        Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
+        Bar[i].SetColor(BarColorType::BaseMain, 255, 100, 50, 200);
+        Bar[i].SetColor(BarColorType::BaseFade, 255, 200, 0, 200);
+        Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
+        Bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 130);
+        Bar[i].SetColor(BarColorType::BorderMain, 110, 110, 110, 100);
+        Bar[i].SetColor(BarColorType::BorderFade, 60, 60, 60, 180);
+        Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
+        Bar[i].SetExtrude(true, 100);
+        Bar[i].SetAutoshow(true, 500, true, 300);
+    }
+    {
+        const auto i = BarType::Warmth;
+        Bar[i].Visible = false;
+        Bar[i].Alternate = false;
+        Bar[i].Invert = true;
+        Bar[i].Vertical = false;
 
-                Bar[i].SetSize(250, 15, 3);
-                Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
-                Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
-                Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
-                Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                Bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
-                Bar[i].SetBlink(200);
-                Bar[i].SetExtrude(true, 60);
-                Bar[i].SetAutoshow(true, 500, true, 300);
-            }
-            break;
+        Bar[i].SetSize(250, 15, 3);
+        Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
+        Bar[i].SetColor(BarColorType::BaseMain, 255, 0, 255, 255);
+        Bar[i].SetColor(BarColorType::BaseFade, 190, 120, 255, 255);
+        Bar[i].SetColor(BarColorType::BackMain, 0, 0, 0, 160);
+        Bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 130);
+        Bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
+        Bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
+        Bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
+        Bar[i].SetBlink(200);
+        Bar[i].SetExtrude(true, 60);
+        Bar[i].SetAutoshow(true, 500, true, 300);
+    }
+    {
+        const auto i = BarType::Loading;
+        Bar[i].Visible = true;
+        Bar[i].Alternate = false;
+        Bar[i].Invert = false;
+        Bar[i].Vertical = false;
 
-            case BAR_LOADING:
-            {
-                Bar[i].Visible = true;
-                Bar[i].Alternate = false;
-                Bar[i].Invert = false;
-                Bar[i].Vertical = false;
-
-                Bar[i].SetSize(800, 25, 3);
-                Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
-                Bar[i].SetColor(BASE_MAIN, 255, 225, 127, 230);
-                Bar[i].SetColor(BASE_FADE, 255, 187, 136, 230);
-                Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
-                Bar[i].SetColor(BACK_FADE, 60, 60, 60, 100);
-                Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 80);
-                Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 80);
-                Bar[i].SetValues(1000, 0);
-                Bar[i].SetExtrude(true, 70);
-                Bar[i].SetAutoshow(false, 500, false, 300);
-            }
-            break;
-        } // end switch(i)
-    } // end for(int i = 0; i < BAR_LASTINDEX; i++)
+        Bar[i].SetSize(800, 25, 3);
+        Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
+        Bar[i].SetColor(BarColorType::BaseMain, 255, 225, 127, 230);
+        Bar[i].SetColor(BarColorType::BaseFade, 255, 187, 136, 230);
+        Bar[i].SetColor(BarColorType::BackMain, 30, 30, 30, 100);
+        Bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 100);
+        Bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 80);
+        Bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 80);
+        Bar[i].SetValues(1000, 0);
+        Bar[i].SetExtrude(true, 70);
+        Bar[i].SetAutoshow(false, 500, false, 300);
+    }
 }
 
 void Gui_InitFaders()
 {
-    for(int i = 0; i < FADER_LASTINDEX; i++)
     {
-        switch(i)
-        {
-            case FADER_LOADSCREEN:
-            {
-                FaderType[i].SetAlpha(255);
-                FaderType[i].SetColor(0, 0, 0);
-                FaderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
-                FaderType[i].SetSpeed(500);
-                FaderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-            }
-            break;
+        const auto i = FaderType::LoadScreen;
+        faderType[i].SetAlpha(255);
+        faderType[i].SetColor(0, 0, 0);
+        faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
+        faderType[i].SetSpeed(500);
+        faderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+    }
 
-            case FADER_EFFECT:
-            {
-                FaderType[i].SetAlpha(255);
-                FaderType[i].SetColor(255, 180, 0);
-                FaderType[i].SetBlendingMode(loader::BlendingMode::Multiply);
-                FaderType[i].SetSpeed(10, 800);
-            }
-            break;
+    {
+        const auto i = FaderType::Effect;
+        faderType[i].SetAlpha(255);
+        faderType[i].SetColor(255, 180, 0);
+        faderType[i].SetBlendingMode(loader::BlendingMode::Multiply);
+        faderType[i].SetSpeed(10, 800);
+    }
 
-            case FADER_BLACK:
-            {
-                FaderType[i].SetAlpha(255);
-                FaderType[i].SetColor(0, 0, 0);
-                FaderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
-                FaderType[i].SetSpeed(500);
-                FaderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
-            }
-            break;
-        }
+    {
+        const auto i = FaderType::Black;
+        faderType[i].SetAlpha(255);
+        faderType[i].SetColor(0, 0, 0);
+        faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
+        faderType[i].SetSpeed(500);
+        faderType[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
     }
 }
 
@@ -245,9 +225,9 @@ void Gui_Destroy()
         gui_temp_lines[i].text.clear();
     }
 
-    for(int i = 0; i < FADER_LASTINDEX; i++)
+    for(auto& fader : faderType)
     {
-        FaderType[i].Cut();
+        fader.second.Cut();
     }
 
     temp_lines_used = GUI_MAX_TEMP_LINES;
@@ -324,8 +304,8 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         va_list argptr;
         TextLine* l = gui_temp_lines + temp_lines_used;
 
-        l->font_id = FONT_SECONDARY;
-        l->style_id = FONTSTYLE_GENERIC;
+        l->font_id = FontType::Secondary;
+        l->style_id = FontStyle::Generic;
 
         va_start(argptr, fmt);
         char tmpStr[GUI_LINE_DEFAULTSIZE];
@@ -380,9 +360,9 @@ void Gui_Resize()
         l->absYoffset = l->Y * screen_info.scale_factor;
     }
 
-    for(int i = 0; i < BAR_LASTINDEX; i++)
+    for(auto& i : Bar)
     {
-        Bar[i].Resize();
+        i.second.Resize();
     }
 
     if(fontManager)
@@ -629,8 +609,8 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
  */
 InventoryManager::InventoryManager()
 {
-    mCurrentState = INVENTORY_DISABLED;
-    mNextState = INVENTORY_DISABLED;
+    mCurrentState = InventoryState::Disabled;
+    mNextState = InventoryState::Disabled;
     mCurrentItemsType = GUI_MENU_ITEMTYPE_SYSTEM;
     mCurrentItemsCount = 0;
     mItemsOffset = 0;
@@ -656,8 +636,8 @@ InventoryManager::InventoryManager()
     mLabel_Title.Xanchor = GUI_ANCHOR_HOR_CENTER;
     mLabel_Title.Yanchor = GUI_ANCHOR_VERT_TOP;
 
-    mLabel_Title.font_id = FONT_PRIMARY;
-    mLabel_Title.style_id = FONTSTYLE_MENU_TITLE;
+    mLabel_Title.font_id = FontType::Primary;
+    mLabel_Title.style_id = FontStyle::MenuTitle;
     mLabel_Title.show = false;
 
     mLabel_ItemName.X = 0.0;
@@ -665,8 +645,8 @@ InventoryManager::InventoryManager()
     mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
     mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 
-    mLabel_ItemName.font_id = FONT_PRIMARY;
-    mLabel_ItemName.style_id = FONTSTYLE_MENU_CONTENT;
+    mLabel_ItemName.font_id = FontType::Primary;
+    mLabel_ItemName.style_id = FontStyle::MenuContent;
     mLabel_ItemName.show = false;
 
     Gui_AddLine(&mLabel_ItemName);
@@ -675,8 +655,8 @@ InventoryManager::InventoryManager()
 
 InventoryManager::~InventoryManager()
 {
-    mCurrentState = INVENTORY_DISABLED;
-    mNextState = INVENTORY_DISABLED;
+    mCurrentState = InventoryState::Disabled;
+    mNextState = InventoryState::Disabled;
     mInventory = nullptr;
 
     mLabel_ItemName.show = false;
@@ -726,8 +706,8 @@ void InventoryManager::restoreItemAngle(float time)
 void InventoryManager::setInventory(std::list<InventoryNode> *i)
 {
     mInventory = i;
-    mCurrentState = INVENTORY_DISABLED;
-    mNextState = INVENTORY_DISABLED;
+    mCurrentState = InventoryState::Disabled;
+    mNextState = InventoryState::Disabled;
 }
 
 void InventoryManager::setTitle(int items_type)
@@ -795,23 +775,23 @@ void InventoryManager::frame(float time)
 {
     if(!mInventory || mInventory->empty())
     {
-        mCurrentState = INVENTORY_DISABLED;
-        mNextState = INVENTORY_DISABLED;
+        mCurrentState = InventoryState::Disabled;
+        mNextState = InventoryState::Disabled;
         return;
     }
 
     switch(mCurrentState)
     {
-        case INVENTORY_R_LEFT:
+        case InventoryState::RLeft:
             mRingTime += time;
             mRingAngle = mRingAngleStep * mRingTime / mRingRotatePeriod;
-            mNextState = INVENTORY_R_LEFT;
+            mNextState = InventoryState::RLeft;
             if(mRingTime >= mRingRotatePeriod)
             {
                 mRingTime = 0.0;
                 mRingAngle = 0.0;
-                mNextState = INVENTORY_IDLE;
-                mCurrentState = INVENTORY_IDLE;
+                mNextState = InventoryState::Idle;
+                mCurrentState = InventoryState::Idle;
                 mItemsOffset--;
                 if(mItemsOffset < 0)
                 {
@@ -821,16 +801,16 @@ void InventoryManager::frame(float time)
             restoreItemAngle(time);
             break;
 
-        case INVENTORY_R_RIGHT:
+        case InventoryState::RRight:
             mRingTime += time;
             mRingAngle = -mRingAngleStep * mRingTime / mRingRotatePeriod;
-            mNextState = INVENTORY_R_RIGHT;
+            mNextState = InventoryState::RRight;
             if(mRingTime >= mRingRotatePeriod)
             {
                 mRingTime = 0.0;
                 mRingAngle = 0.0;
-                mNextState = INVENTORY_IDLE;
-                mCurrentState = INVENTORY_IDLE;
+                mNextState = InventoryState::Idle;
+                mCurrentState = InventoryState::Idle;
                 mItemsOffset++;
                 if(mItemsOffset >= mCurrentItemsCount)
                 {
@@ -840,12 +820,12 @@ void InventoryManager::frame(float time)
             restoreItemAngle(time);
             break;
 
-        case INVENTORY_IDLE:
+        case InventoryState::Idle:
             mRingTime = 0.0;
             switch(mNextState)
             {
                 default:
-                case INVENTORY_IDLE:
+                case InventoryState::Idle:
                     mItemTime += time;
                     mItemAngle = 360.0f * mItemTime / mItemRotatePeriod;
                     if(mItemTime >= mItemRotatePeriod)
@@ -857,22 +837,22 @@ void InventoryManager::frame(float time)
                     mLabel_Title.show = true;
                     break;
 
-                case INVENTORY_CLOSE:
+                case InventoryState::Closed:
                     Audio_Send(engine_lua.getGlobalSound(TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     mCurrentState = mNextState;
                     break;
 
-                case INVENTORY_R_LEFT:
-                case INVENTORY_R_RIGHT:
+                case InventoryState::RLeft:
+                case InventoryState::RRight:
                     Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
                     mLabel_ItemName.show = false;
                     mCurrentState = mNextState;
                     mItemTime = 0.0;
                     break;
 
-                case INVENTORY_UP:
+                case InventoryState::Up:
                     mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType + 1);
                     if(mNextItemsCount > 0)
                     {
@@ -882,13 +862,13 @@ void InventoryManager::frame(float time)
                     }
                     else
                     {
-                        mNextState = INVENTORY_IDLE;
+                        mNextState = InventoryState::Idle;
                     }
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     break;
 
-                case INVENTORY_DOWN:
+                case InventoryState::Down:
                     mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType - 1);
                     if(mNextItemsCount > 0)
                     {
@@ -898,7 +878,7 @@ void InventoryManager::frame(float time)
                     }
                     else
                     {
-                        mNextState = INVENTORY_IDLE;
+                        mNextState = InventoryState::Idle;
                     }
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
@@ -906,22 +886,22 @@ void InventoryManager::frame(float time)
             };
             break;
 
-        case INVENTORY_DISABLED:
-            if(mNextState == INVENTORY_OPEN)
+        case InventoryState::Disabled:
+            if(mNextState == InventoryState::Open)
             {
                 if(setItemsType(mCurrentItemsType) >= 0)
                 {
                     Audio_Send(engine_lua.getGlobalSound(TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-                    mCurrentState = INVENTORY_OPEN;
+                    mCurrentState = InventoryState::Open;
                     mRingAngle = 180.0;
                     mRingVerticalAngle = 180.0;
                 }
             }
             break;
 
-        case INVENTORY_UP:
-            mCurrentState = INVENTORY_UP;
-            mNextState = INVENTORY_UP;
+        case InventoryState::Up:
+            mCurrentState = InventoryState::Up;
+            mNextState = InventoryState::Up;
             mRingTime += time;
             if(mRingTime < mRingRotatePeriod)
             {
@@ -950,16 +930,16 @@ void InventoryManager::frame(float time)
             }
             else
             {
-                mNextState = INVENTORY_IDLE;
-                mCurrentState = INVENTORY_IDLE;
+                mNextState = InventoryState::Idle;
+                mCurrentState = InventoryState::Idle;
                 mRingAngle = 0.0;
                 mVerticalOffset = 0.0;
             }
             break;
 
-        case INVENTORY_DOWN:
-            mCurrentState = INVENTORY_DOWN;
-            mNextState = INVENTORY_DOWN;
+        case InventoryState::Down:
+            mCurrentState = InventoryState::Down;
+            mNextState = InventoryState::Down;
             mRingTime += time;
             if(mRingTime < mRingRotatePeriod)
             {
@@ -988,22 +968,22 @@ void InventoryManager::frame(float time)
             }
             else
             {
-                mNextState = INVENTORY_IDLE;
-                mCurrentState = INVENTORY_IDLE;
+                mNextState = InventoryState::Idle;
+                mCurrentState = InventoryState::Idle;
                 mRingAngle = 0.0;
                 mVerticalOffset = 0.0;
             }
             break;
 
-        case INVENTORY_OPEN:
+        case InventoryState::Open:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * mRingTime / mRingRotatePeriod;
             mRingAngle -= 180.0f * time / mRingRotatePeriod;
             mRingVerticalAngle -= 180.0f * time / mRingRotatePeriod;
             if(mRingTime >= mRingRotatePeriod)
             {
-                mCurrentState = INVENTORY_IDLE;
-                mNextState = INVENTORY_IDLE;
+                mCurrentState = InventoryState::Idle;
+                mNextState = InventoryState::Idle;
                 mRingVerticalAngle = 0;
 
                 mRingRadius = mBaseRingRadius;
@@ -1014,15 +994,15 @@ void InventoryManager::frame(float time)
             }
             break;
 
-        case INVENTORY_CLOSE:
+        case InventoryState::Closed:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
             mRingAngle += 180.0f * time / mRingRotatePeriod;
             mRingVerticalAngle += 180.0f * time / mRingRotatePeriod;
             if(mRingTime >= mRingRotatePeriod)
             {
-                mCurrentState = INVENTORY_DISABLED;
-                mNextState = INVENTORY_DISABLED;
+                mCurrentState = InventoryState::Disabled;
+                mNextState = InventoryState::Disabled;
                 mRingVerticalAngle = 180.0;
                 mRingTime = 0.0;
                 mLabel_Title.show = false;
@@ -1035,7 +1015,7 @@ void InventoryManager::frame(float time)
 
 void InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != nullptr) && !mInventory->empty() && (fontManager != nullptr))
+    if((mCurrentState != InventoryState::Disabled) && (mInventory != nullptr) && !mInventory->empty() && (fontManager != nullptr))
     {
         int num = 0;
         for(InventoryNode& i : *mInventory)
@@ -1157,9 +1137,9 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawFaders()
 {
-    for(int i = 0; i < FADER_LASTINDEX; i++)
+    for(auto& i : faderType)
     {
-        FaderType[i].Show();
+        i.second.Show();
     }
 }
 
@@ -1168,15 +1148,15 @@ void Gui_DrawBars()
     if(engine_world.character)
     {
         if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
-            Bar[BAR_HEALTH].Forced = true;
+            Bar[BarType::Health].Forced = true;
 
         if(engine_world.character->getParam(PARAM_POISON) > 0.0)
-            Bar[BAR_HEALTH].Alternate = true;
+            Bar[BarType::Health].Alternate = true;
 
-        Bar[BAR_AIR].Show(engine_world.character->getParam(PARAM_AIR));
-        Bar[BAR_STAMINA].Show(engine_world.character->getParam(PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show(engine_world.character->getParam(PARAM_HEALTH));
-        Bar[BAR_WARMTH].Show(engine_world.character->getParam(PARAM_WARMTH));
+        Bar[BarType::Air].Show(engine_world.character->getParam(PARAM_AIR));
+        Bar[BarType::Stamina].Show(engine_world.character->getParam(PARAM_STAMINA));
+        Bar[BarType::Health].Show(engine_world.character->getParam(PARAM_HEALTH));
+        Bar[BarType::Warmth].Show(engine_world.character->getParam(PARAM_WARMTH));
     }
 }
 
@@ -1184,7 +1164,7 @@ void Gui_DrawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
     main_inventory_manager->frame(engine_frame_time);
-    if(main_inventory_manager->getCurrentState() == InventoryManager::INVENTORY_DISABLED)
+    if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
     }
@@ -1250,8 +1230,8 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    FaderType[FADER_LOADSCREEN].Show();
-    Bar[BAR_LOADING].Show(value);
+    faderType[FaderType::LoadScreen].Show();
+    Bar[BarType::Loading].Show(value);
 
     glDepthMask(GL_TRUE);
 
@@ -1343,13 +1323,13 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-bool Gui_FadeStart(int fader, int fade_direction)
+bool Gui_FadeStart(FaderType fader, int fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FADER_LASTINDEX) && (FaderType[fader].IsFading() != GUI_FADER_STATUS_FADING))
+    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != GUI_FADER_STATUS_FADING))
     {
-        FaderType[fader].Engage(fade_direction);
+        faderType[fader].Engage(fade_direction);
         return true;
     }
     else
@@ -1358,11 +1338,11 @@ bool Gui_FadeStart(int fader, int fade_direction)
     }
 }
 
-bool Gui_FadeStop(int fader)
+bool Gui_FadeStop(FaderType fader)
 {
-    if((fader < FADER_LASTINDEX) && (FaderType[fader].IsFading() != GUI_FADER_STATUS_IDLE))
+    if((fader < FaderType::Sentinel) && (faderType[fader].IsFading() != GUI_FADER_STATUS_IDLE))
     {
-        FaderType[fader].Cut();
+        faderType[fader].Cut();
         return true;
     }
     else
@@ -1371,9 +1351,9 @@ bool Gui_FadeStop(int fader)
     }
 }
 
-bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
+bool Gui_FadeAssignPic(FaderType fader, const std::string& pic_name)
 {
-    if((fader >= 0) && (fader < FADER_LASTINDEX))
+    if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
     {
         char buf[MAX_ENGINE_PATH];
 
@@ -1424,29 +1404,29 @@ bool Gui_FadeAssignPic(int fader, const std::string& pic_name)
             }
         }
 
-        return FaderType[fader].SetTexture(buf);
+        return faderType[fader].SetTexture(buf);
     }
 
     return false;
 }
 
-void Gui_FadeSetup(int fader,
+void Gui_FadeSetup(FaderType fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                    uint16_t fadein_speed, uint16_t fadeout_speed)
 {
-    if(fader >= FADER_LASTINDEX) return;
+    if(fader >= FaderType::Sentinel) return;
 
-    FaderType[fader].SetAlpha(alpha);
-    FaderType[fader].SetColor(R, G, B);
-    FaderType[fader].SetBlendingMode(blending_mode);
-    FaderType[fader].SetSpeed(fadein_speed, fadeout_speed);
+    faderType[fader].SetAlpha(alpha);
+    faderType[fader].SetColor(R, G, B);
+    faderType[fader].SetBlendingMode(blending_mode);
+    faderType[fader].SetSpeed(fadein_speed, fadeout_speed);
 }
 
-int Gui_FadeCheck(int fader)
+int Gui_FadeCheck(FaderType fader)
 {
-    if((fader >= 0) && (fader < FADER_LASTINDEX))
+    if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
     {
-        return FaderType[fader].IsFading();
+        return faderType[fader].IsFading();
     }
     else
     {
@@ -1983,14 +1963,14 @@ ProgressBar::ProgressBar()
     // By default, bar is initialized with TR5-like health bar properties.
     SetPosition(GUI_ANCHOR_HOR_LEFT, 20, GUI_ANCHOR_VERT_TOP, 20);
     SetSize(250, 25, 3);
-    SetColor(BASE_MAIN, 255, 50, 50, 150);
-    SetColor(BASE_FADE, 100, 255, 50, 150);
-    SetColor(ALT_MAIN, 255, 180, 0, 220);
-    SetColor(ALT_FADE, 255, 255, 0, 220);
-    SetColor(BACK_MAIN, 0, 0, 0, 160);
-    SetColor(BACK_FADE, 60, 60, 60, 130);
-    SetColor(BORDER_MAIN, 200, 200, 200, 50);
-    SetColor(BORDER_FADE, 80, 80, 80, 100);
+    SetColor(BarColorType::BaseMain, 255, 50, 50, 150);
+    SetColor(BarColorType::BaseFade, 100, 255, 50, 150);
+    SetColor(BarColorType::AltMain, 255, 180, 0, 220);
+    SetColor(BarColorType::AltFade, 255, 255, 0, 220);
+    SetColor(BarColorType::BackMain, 0, 0, 0, 160);
+    SetColor(BarColorType::BackFade, 60, 60, 60, 130);
+    SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
+    SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
     SetValues(1000, 300);
     SetBlink(300);
     SetExtrude(true, 100);
@@ -2014,56 +1994,56 @@ void ProgressBar::SetColor(BarColorType colType,
 
     switch(colType)
     {
-        case BASE_MAIN:
+        case BarColorType::BaseMain:
             mBaseMainColor[0] = static_cast<float>(R) / maxColValue;
             mBaseMainColor[1] = static_cast<float>(G) / maxColValue;
             mBaseMainColor[2] = static_cast<float>(B) / maxColValue;
             mBaseMainColor[3] = static_cast<float>(A) / maxColValue;
             mBaseMainColor[4] = mBaseMainColor[3];
             return;
-        case BASE_FADE:
+        case BarColorType::BaseFade:
             mBaseFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBaseFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBaseFadeColor[2] = static_cast<float>(B) / maxColValue;
             mBaseFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBaseFadeColor[4] = mBaseFadeColor[3];
             return;
-        case ALT_MAIN:
+        case BarColorType::AltMain:
             mAltMainColor[0] = static_cast<float>(R) / maxColValue;
             mAltMainColor[1] = static_cast<float>(G) / maxColValue;
             mAltMainColor[2] = static_cast<float>(B) / maxColValue;
             mAltMainColor[3] = static_cast<float>(A) / maxColValue;
             mAltMainColor[4] = mAltMainColor[3];
             return;
-        case ALT_FADE:
+        case BarColorType::AltFade:
             mAltFadeColor[0] = static_cast<float>(R) / maxColValue;
             mAltFadeColor[1] = static_cast<float>(G) / maxColValue;
             mAltFadeColor[2] = static_cast<float>(B) / maxColValue;
             mAltFadeColor[3] = static_cast<float>(A) / maxColValue;
             mAltFadeColor[4] = mAltFadeColor[3];
             return;
-        case BACK_MAIN:
+        case BarColorType::BackMain:
             mBackMainColor[0] = static_cast<float>(R) / maxColValue;
             mBackMainColor[1] = static_cast<float>(G) / maxColValue;
             mBackMainColor[2] = static_cast<float>(B) / maxColValue;
             mBackMainColor[3] = static_cast<float>(A) / maxColValue;
             mBackMainColor[4] = mBackMainColor[3];
             return;
-        case BACK_FADE:
+        case BarColorType::BackFade:
             mBackFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBackFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBackFadeColor[2] = static_cast<float>(B) / maxColValue;
             mBackFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBackFadeColor[4] = mBackFadeColor[3];
             return;
-        case BORDER_MAIN:
+        case BarColorType::BorderMain:
             mBorderMainColor[0] = static_cast<float>(R) / maxColValue;
             mBorderMainColor[1] = static_cast<float>(G) / maxColValue;
             mBorderMainColor[2] = static_cast<float>(B) / maxColValue;
             mBorderMainColor[3] = static_cast<float>(A) / maxColValue;
             mBorderMainColor[4] = mBorderMainColor[3];
             return;
-        case BORDER_FADE:
+        case BarColorType::BorderFade:
             mBorderFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBorderFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBorderFadeColor[2] = static_cast<float>(B) / maxColValue;

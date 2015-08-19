@@ -24,10 +24,10 @@ private:
     struct Line
     {
         std::string text{};
-        FontStyle styleId = FONTSTYLE_GENERIC;
+        FontStyle styleId = FontStyle::Generic;
 
         Line() = default;
-        Line(const std::string& t, FontStyle s = FONTSTYLE_GENERIC)
+        Line(const std::string& t, FontStyle s = FontStyle::Generic)
             : text(t)
             , styleId(s)
         {
