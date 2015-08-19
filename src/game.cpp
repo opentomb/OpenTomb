@@ -828,6 +828,11 @@ void Game_Frame(btScalar time)
     // Includes animations, camera movement, and so on.
     Game_ApplyControls(engine_world.character);
 
+
+//    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
+    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1.0/30.0);
+
+    // FIXME: globlal lerp...
     gLerp += engine_frame_time / (1.0/30.0);
     btScalar lerp = gLerp;
     if( lerp > 1.0 ) {
@@ -835,25 +840,24 @@ void Game_Frame(btScalar time)
     }
 
     if(engine_world.character) {
-        engine_world.character->lerpBones(lerp);
-        engine_world.character->updateRigidBody(false);
-    }
+        engine_world.character->slerpBones(lerp);
+        engine_world.character->lerpTransform(lerp);
 
+        engine_world.character->updateRigidBody(false);
+        engine_world.character->ghostUpdate();
+
+        Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
+    }
     for(auto entityPair : engine_world.entity_tree)
     {
         std::shared_ptr<Entity> entity = entityPair.second;
-        entity->lerpBones(lerp);
+        entity->slerpBones(lerp);
+        entity->lerpTransform(lerp);
+
         entity->updateRigidBody(false);
+        entity->ghostUpdate();
     }
 
-
-//    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
-    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1.0/30.0);
-
-
-    if(is_character) {
-        Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
-    }
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();

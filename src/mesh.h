@@ -268,6 +268,11 @@ struct SSAnimation
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 
+    // lerp:
+    btScalar                    myLerp = 0.0f;
+    int16_t                     lerp_last_animation = 0;
+    int16_t                     lerp_last_frame = 0;
+
     void(*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model

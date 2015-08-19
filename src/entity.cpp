@@ -753,15 +753,15 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
     SSBoneTag* btag = bf->bone_tags.data();
     BoneTag* src_btag, *next_btag;
     SkeletalModel* model = bf->animations.model;
-    BoneFrame* curr_bf, *next_bf;
+    BoneFrame* last_bf, *next_bf;
 
-    next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
-    curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
+    next_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
+    last_bf = &model->animations[bf->animations.lerp_last_animation].frames[bf->animations.lerp_last_frame];
 
     btVector3 tr, cmd_tr;
-    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
+    if(etr && (last_bf->command & ANIM_CMD_MOVE))
     {
-        tr = etr->getBasis() * curr_bf->move;
+        tr = etr->getBasis() * last_bf->move;
         cmd_tr = tr * bf->animations.lerp;
     }
     else
@@ -770,14 +770,14 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
         cmd_tr.setZero();
     }
 
-    bf->bb_max = curr_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
-    bf->bb_min = curr_bf->bb_min.lerp(next_bf->bb_min, bf->animations.lerp) + cmd_tr;
-    bf->centre = curr_bf->centre.lerp(next_bf->centre, bf->animations.lerp) + cmd_tr;
-    bf->pos = curr_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
+    bf->bb_max = last_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
+    bf->bb_min = last_bf->bb_min.lerp(next_bf->bb_min, bf->animations.lerp) + cmd_tr;
+    bf->centre = last_bf->centre.lerp(next_bf->centre, bf->animations.lerp) + cmd_tr;
+    bf->pos = last_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
 
     next_btag = next_bf->bone_tags.data();
-    src_btag = curr_bf->bone_tags.data();
-    for(uint16_t k = 0; k < curr_bf->bone_tags.size(); k++, btag++, src_btag++, next_btag++)
+    src_btag = last_bf->bone_tags.data();
+    for(uint16_t k = 0; k < last_bf->bone_tags.size(); k++, btag++, src_btag++, next_btag++)
     {
         btag->offset = src_btag->offset.lerp(next_btag->offset, bf->animations.lerp);
         btag->transform.getOrigin() = btag->offset;
@@ -796,9 +796,9 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
             {
                 if((ov_anim->model != nullptr) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
-                    BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
-                    BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
-                    ov_src_btag = &ov_curr_bf->bone_tags[k];
+                    BoneFrame* ov_last_bf = &ov_anim->model->animations[ov_anim->lerp_last_animation].frames[ov_anim->lerp_last_frame];
+                    BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
+                    ov_src_btag = &ov_last_bf->bone_tags[k];
                     ov_next_btag = &ov_next_bf->bone_tags[k];
                     ov_lerp = ov_anim->lerp;
                     break;
@@ -815,7 +815,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
     btag = bf->bone_tags.data();
     btag->full_transform = btag->transform;
     btag++;
-    for(uint16_t k = 1; k < curr_bf->bone_tags.size(); k++, btag++)
+    for(uint16_t k = 1; k < last_bf->bone_tags.size(); k++, btag++)
     {
         btag->full_transform = btag->parent->full_transform * btag->transform;
     }
@@ -1151,7 +1151,7 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 }
 
 // ----------------------------------------
-void Entity::lerpBones(btScalar lerp)
+void Entity::slerpBones(btScalar lerp)
 {
 //    m_bf.animations.lerp += lerp;
 //    if(m_bf.animations.lerp > 1.0) {
@@ -1163,17 +1163,57 @@ void Entity::lerpBones(btScalar lerp)
     return;
 }
 
+void Entity::lerpTransform(btScalar lerp)
+{
+    if(m_lerp_valid)
+    {
+        btQuaternion q,ql,qc;
+        ql = m_lerp_last_transform.getRotation();
+        qc = m_lerp_curr_transform.getRotation();
+        q = Quat_Slerp(ql, qc, lerp);
+        m_transform.setRotation(q);
+        m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
+    }
+}
+
+/** Find a possible state change to \c stateid
+ * \param[in]     stclist  statechange list
+ * \param[in]     stateid  the desired target state
+ * \param[out]    animid   reference to anim id, receives found anim
+ * \param[in,out] frameid  reference to frame id, receives found frame
+ * \return true if state is found, false otherwise
+ */
+bool findStateChange(const std::vector<StateChange> &stclist, uint32_t stateid, int16_t &animid_out, int16_t &frameid_inout)
+{
+    for(const StateChange& stc : stclist)
+    {
+        if(stc.id == stateid)
+        {
+            for(const AnimDispatch& dispatch : stc.anim_dispatch)
+            {
+                if(   frameid_inout >= dispatch.frame_low
+                   && frameid_inout <= dispatch.frame_high)
+                {
+                    animid_out  = dispatch.next_anim;
+                    frameid_inout = dispatch.next_frame;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
 int Entity::frame(btScalar time)
 {
-    int16_t frame, anim, ret = ENTITY_ANIM_NONE;
+    int16_t frame_id, anim_id, ret = ENTITY_ANIM_NONE;
     long int t;
     btScalar dt;
     StateChange* stc;
-    SSAnimation* ss_anim;
+//    SSAnimation* ss_anim;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
@@ -1183,59 +1223,120 @@ int Entity::frame(btScalar time)
 
     if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
 
-    ss_anim = &m_bf.animations;
+//    ss_anim = &m_bf.animations;
 
-    ghostUpdate();
+    // ----------------
+    /*
+     * -> nextState is set by action code to control state/animation flow
+     * -> currState is usually only set by statechange handler or end-of-anim (nextanim.state)
+     *              (exceptions exist)
+     *
+     * per Gamestep:
+     * - increase current anim frame
+     * - check state change:
+     *      if  currState != nextState
+     *          and nextState is in statechange-list,
+     *          and currFrame is in the from-to range of this state
+     *          (compared in statechange-list order, first range-match wins)
+     *      then
+     *          currAnim  = statechanges[nextState].anim
+     *          currFrame = statechanges[nextState].frame
+     *          currState = nextState
+     *
+     * - check Anim endframe:
+     *      if  currFrame > anim.lastFrame (anim.frame_end)
+     *      then
+     *          do AnimCmds 1,2,3 (still with unchanged curranim/frame/state)
+     *
+     *          currAnim  = anim.nextAnim
+     *          currFrame = anim.nextFrame
+     *          currState = anims[anim.nextAnim].state
+     *
+     * - do per-frame anim commands: 5,6
+     */
 
-    m_bf.animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
-    getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.anim_flags);
-    if(m_bf.animations.current_animation != anim)
+    // increase current frame:
+    SSAnimation& anim = m_bf.animations;
+    const std::vector<AnimationFrame>& animlist = m_bf.animations.model->animations;
+
+    anim_id  = anim.current_animation;
+    frame_id = anim.current_frame;
+
+    anim.lerp_last_animation = anim_id;
+    anim.lerp_last_frame = frame_id;
+
+//    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
+
+    anim.frame_time += time;
+    if( (anim.frame_time + (1.0/120.0)) < ((frame_id+1) * anim.period))
+//    if( (anim.frame_time) < ((frame_id+1) * anim.period))
     {
-        m_bf.animations.last_animation = m_bf.animations.current_animation;
-
-        ret = ENTITY_ANIM_NEWANIM;
-        doAnimCommands(&m_bf.animations, ret);
-        doAnimMove(&anim, &frame);
-
-        setAnimation(anim, frame);
-        stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
+        return ENTITY_ANIM_NONE;
     }
-    else if(m_bf.animations.current_frame != frame)
+    frame_id++;
+    anim.frame_time = frame_id * anim.period;
+
+    anim.lerp = 0.0;
+    anim.myLerp = 0.0;
+
+    if(anim.next_state != anim.last_state)
     {
-        if(m_bf.animations.current_frame == 0)
+        if( findStateChange(animlist[anim_id].state_change, anim.next_state, anim_id, frame_id) )
         {
-            m_bf.animations.last_animation = m_bf.animations.current_animation;
+            anim.current_animation = anim_id;
+            anim.current_frame = frame_id;
+            anim.last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
+            anim.next_state = anim.last_state;  // t4: different for non-lara
+            // obsolete: ... ?
+            anim.last_animation = anim_id;
+            anim.next_animation = anim_id;
+            anim.next_frame = frame_id;
         }
-
-        ret = ENTITY_ANIM_NEWFRAME;
-        doAnimCommands(&m_bf.animations, ret);
-        doAnimMove(&anim, &frame);
     }
 
-    // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
-    m_bf.animations.frame_time += time;
+    // last frame is never rendered:
+    if(frame_id >= animlist[anim_id].frames.size()-1)  // FIXME: does frames exclude tranim.frame_end ?
+    {
+        // doAnimCmds 1,2,3/4:
+        doAnimMove(&anim_id, &frame_id);
 
-    t = (m_bf.animations.frame_time) / m_bf.animations.period;
-    dt = m_bf.animations.frame_time - static_cast<btScalar>(t) * m_bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period + dt;
+        frame_id = animlist[anim_id].next_frame;
+        anim_id = animlist[anim_id].next_anim->id;
 
-//    m_bf.animations.lerp = dt / m_bf.animations.period;
-    m_bf.animations.lerp = (dt-time) / m_bf.animations.period;
-    if(m_bf.animations.lerp < 0.0) {
-        m_bf.animations.lerp = 0.0;
-    } else if(m_bf.animations.lerp > 1.0) {
-        m_bf.animations.lerp = 1.0;
+        anim.current_animation = anim_id;
+        anim.current_frame = frame_id;
+        anim.last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
+        anim.next_state = anim.last_state;  // t4: different for non-lara
+        // obsolete: ... ?
+        anim.last_animation = anim_id;
+        anim.next_animation = anim_id;
+        anim.next_frame = frame_id;
     }
 
-    getNextFrame(&m_bf, m_bf.animations.period, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
+    // setAnimation and doAnimMove (which calls setanimation)
+    // set nextstate=laststate,
+    // which is bad for interp...
 
-    frameImpl(time, frame, ret);
+    // doAnimCmds 5,6:
+    doAnimCommands(&m_bf.animations, ret);
+
+    // need this here?
+    doAnimMove(&anim_id, &frame_id);
+
+//    if(anim_id != anim.lerp_last_animation)
+//    {
+        setAnimation(anim_id, frame_id);
+//    }
+
+    frameImpl(time, frame_id, ret);
 
     updateCurrentBoneFrame(&m_bf, &m_transform);
     fixPenetrations(nullptr);
 
     return ret;
+
+    // ? do basic movement
+
 }
 
 
@@ -1316,6 +1417,10 @@ Entity::Entity(uint32_t id)
     , m_self(std::make_shared<EngineContainer>())
 {
     m_transform.setIdentity();
+
+    m_lerp_last_transform = m_lerp_curr_transform = m_transform;
+    m_lerp_valid = false;
+
     m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;
     m_self->room = nullptr;

@@ -146,6 +146,10 @@ public:
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
+    btTransform m_lerp_last_transform; // interp
+    btTransform m_lerp_curr_transform; // interp
+    bool    m_lerp_valid;
+
     OBB m_obb;                // oriented bounding box
 
     RoomSector* m_currentSector = nullptr;
@@ -182,7 +186,8 @@ public:
     static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
-    void lerpBones(btScalar lerp);
+    void slerpBones(btScalar lerp);
+    void lerpTransform(btScalar lerp);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);

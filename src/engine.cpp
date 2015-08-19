@@ -549,6 +549,10 @@ void Engine_ShowDebugInfo()
                       engine_world.character->m_currentSpeed,
                       ent->m_bf.animations.current_frame
                       );
+        Gui_OutTextXY(40.0, 20.0, "lerp_last_anim = %3d, lerp_last_frame = %3d",
+                ent->m_bf.animations.lerp_last_animation,
+                ent->m_bf.animations.lerp_last_frame
+                );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
     }
@@ -662,13 +666,39 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
     gLerp = 0.0f;
 
+    // FIXME: do this in pre-step!
+
     btScalar engine_frame_time_backup = engine_frame_time;
     engine_frame_time = timeStep;
+
+    // FIXME: restore interp transform:
+    if(engine_world.character)
+    {
+        if(engine_world.character->m_lerp_valid)
+        {
+            engine_world.character->m_transform = engine_world.character->m_lerp_curr_transform;
+        }
+        engine_world.character->m_lerp_last_transform = engine_world.character->m_transform;
+//        engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
+    }
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        std::shared_ptr<Entity> entity = entityPair.second;
+        if(entity->m_enabled)
+        {
+            if(entity->m_lerp_valid)
+            {
+                entity->m_transform = entity->m_lerp_curr_transform;
+            }
+            entity->m_lerp_last_transform = entity->m_transform;
+//            entity->m_lerp_curr_transform = entity->m_transform;
+        }
+    }
+
 
     engine_lua.doTasks(GAME_LOGIC_REFRESH_INTERVAL);
     Game_UpdateAI();
     Audio_Update();
-
 
     if(engine_world.character)
     {
@@ -710,6 +740,22 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             {
                 cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
             }
+        }
+    }
+
+    // set interp transform:
+    if(engine_world.character)
+    {
+        engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
+        engine_world.character->m_lerp_valid = true;
+    }
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        std::shared_ptr<Entity> entity = entityPair.second;
+        if(entity->m_enabled)
+        {
+            entity->m_lerp_curr_transform = entity->m_transform;
+            entity->m_lerp_valid = true;
         }
     }
 
