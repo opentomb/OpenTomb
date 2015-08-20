@@ -11,7 +11,7 @@
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 
 #include "engine.h"
-#include "entity.h"
+#include "world/entity.h"
 
 /*------ Lara's model-------
              .=.
@@ -74,6 +74,10 @@
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
+namespace world
+{
+struct Hair;
+}
 
 namespace
 {
@@ -186,11 +190,15 @@ enum CharParameters
 };
 
 struct EngineContainer;
-struct Entity;
 class BtEngineClosestConvexResultCallback;
 class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
+
+namespace world
+{
+struct Entity;
+} // namespace world
 
 enum class ClimbType
 {
@@ -313,9 +321,6 @@ struct InventoryNode
     uint32_t                    max_count;
 };
 
-struct Hair;
-struct SSAnimation;
-
 enum class WeaponState
 {
     Hide,
@@ -327,7 +332,7 @@ enum class WeaponState
     IdleToHide
 };
 
-struct Character : public Entity
+struct Character : public world::Entity
 {
     CharacterCommand   m_command;                    // character control commands
     CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
@@ -336,12 +341,12 @@ struct Character : public Entity
     CharacterParam     m_parameters{};
     CharacterStats     m_statistics;
 
-    std::vector<std::shared_ptr<Hair>> m_hairs{};
+    std::vector<std::shared_ptr<world::Hair>> m_hairs{};
 
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int(*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    int(*state_func)(Character* entity, world::core::SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -383,7 +388,7 @@ struct Character : public Entity
         pos[1] = m_transform.getOrigin()[1];
         return pos;
     }
-    void transferToRoom(Room* /*room*/) override
+    void transferToRoom(world::Room* /*room*/) override
     {
     }
     void updateHair() override;
@@ -394,7 +399,7 @@ struct Character : public Entity
     {
         m_response.killed = true;
     }
-    virtual Substance getSubstanceState() const override;
+    virtual world::Substance getSubstanceState() const override;
     void updateTransform() override
     {
         ghostUpdate();
@@ -452,5 +457,4 @@ struct Character : public Entity
     int   setWeaponModel(int weapon_model, int armed);
 };
 
-bool IsCharacter(std::shared_ptr<Entity> ent);
-int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
+int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);

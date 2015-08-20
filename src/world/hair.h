@@ -8,9 +8,12 @@
 
 #include "character_controller.h"
 #include "engine.h"
-#include "entity.h"
-#include "mesh.h"
-#include "world.h"
+#include "world/entity.h"
+#include "world/core/mesh.h"
+#include "world/world.h"
+
+namespace world
+{
 
 #define HAIR_TR1       0
 #define HAIR_TR2       1
@@ -30,7 +33,7 @@
 
 struct HairElement
 {
-    std::shared_ptr<BaseMesh> mesh;           // Pointer to rendered mesh.
+    std::shared_ptr<core::BaseMesh> mesh;           // Pointer to rendered mesh.
     std::unique_ptr<btCollisionShape> shape;          // Pointer to collision shape.
     std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
     btVector3 position;     // Position of this hair element
@@ -55,7 +58,7 @@ struct Hair : public Object
 
     std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;             // Array of joints.
 
-    std::shared_ptr<BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
+    std::shared_ptr<core::BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
 
     ~Hair();
 
@@ -64,7 +67,7 @@ struct Hair : public Object
     bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
 
 private:
-    void createHairMesh(const SkeletalModel *model);
+    void createHairMesh(const core::SkeletalModel *model);
 };
 
 struct HairSetup
@@ -91,3 +94,5 @@ struct HairSetup
     // Gets scripted hair set-up to specified hair set-up structure.
     void getSetup(uint32_t hair_entry_index);
 };
+
+} // namespace world

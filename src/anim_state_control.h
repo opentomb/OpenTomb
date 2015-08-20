@@ -1,14 +1,21 @@
 #pragma once
 
-class VT_Level;
-struct Polygon;
-struct BaseMesh;
+namespace world
+{
 struct Room;
+struct RoomSector;
 struct World;
 class Camera;
-struct SSAnimation;
 struct Entity;
-struct RoomSector;
+
+namespace core
+{
+struct Polygon;
+struct BaseMesh;
+struct SSAnimation;
+} // namespace core
+} // namespace world
+
 struct CharacterCommand;
 
 #define LEFT_LEG                    (3)
@@ -764,4 +771,4 @@ namespace
 #define TR_EFFECT_KILLALLENEMIES        46
 
 struct Character;
-int State_Control_Lara(Character* ent, struct SSAnimation *ss_anim);
+int State_Control_Lara(Character* ent, world::core::SSAnimation *ss_anim);

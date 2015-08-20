@@ -6,6 +6,11 @@
 
 #include "util/vmath.h"
 
+namespace world
+{
+namespace core
+{
+
 /*
  * POLYGONS
  */
@@ -413,3 +418,6 @@ bool Polygon::isInsideBQuad(const btVector3& bb_min, const btVector3& bb_max)
 
     return true;
 }
+
+} // namespace core
+} // namespace world

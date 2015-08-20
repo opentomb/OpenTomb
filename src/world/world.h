@@ -12,6 +12,26 @@
 #include "camera.h"
 #include "object.h"
 
+struct EngineContainer;
+struct Character;
+class btCollisionShape;
+class btRigidBody;
+
+namespace gui
+{
+enum class MenuItemType;
+}
+
+namespace world
+{
+namespace core
+{
+struct SpriteBuffer;
+struct Sprite;
+struct AnimSeq;
+struct Light;
+} // namespace core
+
 // Native TR floor data functions
 
 #define TR_FD_FUNC_PORTALSECTOR                 0x01
@@ -164,35 +184,32 @@
 #define AMASK_OP_OR  0
 #define AMASK_OP_XOR 1
 
-class btCollisionShape;
-class btRigidBody;
 
 struct Room;
-struct Polygon;
 class Camera;
 struct Portal;
 class Render;
-struct Frustum;
-struct BaseMesh;
-struct StaticMesh;
 struct Entity;
-struct SkeletalModel;
-struct RedBlackHeader_s;
-struct SSBoneFrame;
 
-namespace gui
+namespace core
 {
-enum class MenuItemType;
-}
+struct BaseMesh;
+struct SkeletalModel;
+struct StaticMesh;
+struct SSBoneFrame;
+struct Frustum;
+struct Polygon;
+} // namespace core
+
 
 struct BaseItem
 {
     uint32_t                    id;
     uint32_t                    world_model_id;
-    gui::MenuItemType                type;
+    gui::MenuItemType           type;
     uint16_t                    count;
     char                        name[64];
-    std::unique_ptr<SSBoneFrame> bf;
+    std::unique_ptr<core::SSBoneFrame> bf;
 
     ~BaseItem();
 };
@@ -273,20 +290,13 @@ struct SectorTween
     uint8_t                     ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
 };
 
-struct Sprite;
 
 struct RoomSprite
 {
-    Sprite             *sprite;
+    core::Sprite* sprite;
     btVector3 pos;
     bool was_rendered;
 };
-
-struct EngineContainer;
-struct SpriteBuffer;
-struct Light;
-struct AnimSeq;
-struct Character;
 
 struct Room : public Object
 {
@@ -299,11 +309,11 @@ struct Room : public Object
 
     bool active;                                         // flag: is active
     bool hide;                                           // do not render
-    std::shared_ptr<BaseMesh> mesh;                                           // room's base mesh
+    std::shared_ptr<core::BaseMesh> mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
-    SpriteBuffer *sprite_buffer;               // Render data for sprites
+    core::SpriteBuffer *sprite_buffer;               // Render data for sprites
 
-    std::vector<std::shared_ptr<StaticMesh>> static_mesh;
+    std::vector<std::shared_ptr<core::StaticMesh>> static_mesh;
     std::vector<RoomSprite> sprites;
 
     std::vector<std::shared_ptr<EngineContainer>> containers;                                     // engine containers with moveables objects
@@ -313,7 +323,7 @@ struct Room : public Object
     btTransform transform;                                  // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
-    std::vector<Light> lights;
+    std::vector<core::Light> lights;
 
     std::vector<Portal> portals;                                        // room portals array
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
@@ -323,7 +333,7 @@ struct Room : public Object
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
 
-    std::vector<std::unique_ptr<Frustum>> frustum;
+    std::vector<std::unique_ptr<core::Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     std::vector<std::shared_ptr<Room>> near_room_list;
@@ -385,16 +395,16 @@ struct World
     std::unique_ptr<BorderedTextureAtlas> tex_atlas;
     std::vector<GLuint> textures;               // OpenGL textures indexes
 
-    std::vector<AnimSeq> anim_sequences;         // Animated textures
+    std::vector<core::AnimSeq> anim_sequences;         // Animated textures
 
-    std::vector<std::shared_ptr<BaseMesh>> meshes;                 // Base meshes data
+    std::vector<std::shared_ptr<core::BaseMesh>> meshes;                 // Base meshes data
 
-    std::vector<Sprite> sprites;                // Base sprites data
+    std::vector<core::Sprite> sprites;                // Base sprites data
 
-    std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
+    std::vector<core::SkeletalModel> skeletal_models;        // base skeletal models data
 
     std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
-    SkeletalModel    *sky_box = nullptr;                // global skybox
+    core::SkeletalModel* sky_box = nullptr;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity>   > entity_tree;            // tree of world active objects
     uint32_t                                       next_entity_id = 0;
@@ -421,8 +431,8 @@ struct World
     void addEntity(std::shared_ptr<Entity> entity);
     bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, gui::MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
-    Sprite* getSpriteByID(unsigned int ID);
-    SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
+    core::Sprite* getSpriteByID(unsigned int ID);
+    core::SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
 
     void prepare();
     void empty();
@@ -439,3 +449,5 @@ struct World
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
+
+} // namespace world

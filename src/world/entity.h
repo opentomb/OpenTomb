@@ -10,24 +10,33 @@
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
 #include "game.h"
-#include "mesh.h"
-#include "object.h"
+#include "world/core/mesh.h"
+#include "world/object.h"
+#include "world/core/obb.h"
 
 #define ENTITY_ANIM_NONE     0x00
 #define ENTITY_ANIM_NEWFRAME 0x01
 #define ENTITY_ANIM_NEWANIM  0x02
-#include "obb.h"
 
 class btCollisionShape;
 class btRigidBody;
+struct Character;
+struct EngineContainer;
 
+struct RDSetup;
+class BtEngineClosestConvexResultCallback;
+
+namespace world
+{
 struct Room;
 struct RoomSector;
+
+namespace core
+{
 struct OBB;
-struct Character;
 struct SSAnimation;
 struct SSBoneFrame;
-struct RDSetup;
+} // namespace core
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -86,7 +95,6 @@ struct BtEntityData
     std::vector<EntityCollisionNode> last_collisions;
 };
 
-class BtEngineClosestConvexResultCallback;
 
 /*
  * ENTITY MOVEMENT TYPES
@@ -140,18 +148,18 @@ public:
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
 
-    SSBoneFrame m_bf;                 // current boneframe with full frame information
+    world::core::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
-    OBB m_obb;                // oriented bounding box
+    world::core::OBB m_obb;                // oriented bounding box
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
 
-    std::shared_ptr<EngineContainer> m_self;
+    std::shared_ptr< EngineContainer > m_self;
 
     btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
@@ -179,7 +187,7 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+    static void getNextFrame(world::core::SSBoneFrame *bf, btScalar time, core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
     virtual void updateTransform();
@@ -192,8 +200,8 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(SSAnimation *ss_anim, int changing);
+    static void updateCurrentBoneFrame(world::core::SSBoneFrame *bf, const btTransform *etr);
+    void doAnimCommands(world::core::SSAnimation *ss_anim, int changing);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -261,5 +269,7 @@ private:
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
 
-struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim);
-struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id);
+core::StateChange *Anim_FindStateChangeByAnim(core::AnimationFrame *anim, int state_change_anim);
+core::StateChange *Anim_FindStateChangeByID(core::AnimationFrame *anim, uint32_t id);
+
+} // namespace world

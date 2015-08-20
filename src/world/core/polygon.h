@@ -8,6 +8,12 @@
 #include <GL/glew.h>
 
 #include "util/vmath.h"
+#include "loader/datatypes.h"
+
+namespace world
+{
+namespace core
+{
 
 #define SPLIT_FRONT    0x00
 #define SPLIT_BACK     0x01
@@ -15,7 +21,6 @@
 #define SPLIT_IN_BOTH  0x03
 
 #define SPLIT_EPSILON (0.02)
-#include "loader/datatypes.h"
 
 /*
  * The structure taken from Cochrane. Next I realise one in my style.
@@ -83,3 +88,6 @@ struct Polygon
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);
     bool isInsideBQuad(const btVector3 &bb_min, const btVector3 &bb_max);
 };
+
+} // namespace core
+} // namespace world

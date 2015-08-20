@@ -5,16 +5,21 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "camera.h"
+#include "world/camera.h"
 #include "engine.h"
 #include "obb.h"
 #include "polygon.h"
-#include "portal.h"
+#include "world/portal.h"
 #include "render/render.h"
 #include "util/vmath.h"
-#include "world.h"
+#include "world/world.h"
 
-void Frustum::splitPrepare(struct Portal *p)
+namespace world
+{
+namespace core
+{
+
+void Frustum::splitPrepare(Portal *p)
 {
     vertices = p->vertices;
     norm = p->normal;
@@ -527,3 +532,6 @@ bool Frustum::isOBBVisible(OBB *obb, const Camera& cam)
 
     return ins;
 }
+
+} // namespace core
+} // namespace world

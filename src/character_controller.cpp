@@ -5,16 +5,16 @@
 
 #include "anim_state_control.h"
 #include "engine.h"
-#include "entity.h"
+#include "world/entity.h"
 #include "gui/gui.h"
-#include "hair.h"
-#include "mesh.h"
-#include "obb.h"
-#include "polygon.h"
+#include "world/hair.h"
+#include "world/core/mesh.h"
+#include "world/core/obb.h"
+#include "world/core/polygon.h"
 #include "resource.h"
 #include "script/script.h"
 #include "util/vmath.h"
-#include "world.h"
+#include "world/world.h"
 
 Character::Character(uint32_t id)
     : Entity(id)
@@ -216,8 +216,8 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
-    RoomSector* rs;
+    world::Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
+    world::RoomSector* rs;
 
     fc->floor_hit = false;
     fc->ceiling_hit = false;
@@ -964,7 +964,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
-            m_moveType = MoveType::FreeFalling;
+            m_moveType = world::MoveType::FreeFalling;
             m_speed[2] = 0.0;
             return -1;                                                          // nothing to do here
         }
@@ -1033,7 +1033,7 @@ int Character::moveOnFloor()
     {
         m_response.slide = SlideType::None;
         m_response.vertical_collide = 0x00;
-        m_moveType = MoveType::FreeFalling;
+        m_moveType = world::MoveType::FreeFalling;
         m_speed[2] = 0.0;
         return -1;                                                              // nothing to do here
     }
@@ -1077,7 +1077,7 @@ int Character::moveOnFloor()
         }
         else
         {
-            m_moveType = MoveType::FreeFalling;
+            m_moveType = world::MoveType::FreeFalling;
             m_speed[2] = 0.0;
             updateRoomPos();
             return 2;
@@ -1091,7 +1091,7 @@ int Character::moveOnFloor()
     }
     else if(!(m_response.vertical_collide & 0x01))
     {
-        m_moveType = MoveType::FreeFalling;
+        m_moveType = world::MoveType::FreeFalling;
         m_speed[2] = 0.0;
         updateRoomPos();
         return 2;
@@ -1139,7 +1139,7 @@ int Character::freeFalling()
         {
             if(!m_heightInfo.water || (m_currentSector->floor <= m_heightInfo.transition_level))
             {
-                m_moveType = MoveType::Underwater;
+                m_moveType = world::MoveType::Underwater;
                 return 2;
             }
         }
@@ -1147,7 +1147,7 @@ int Character::freeFalling()
         {
             if(!m_heightInfo.water || (m_currentSector->floor + m_height <= m_heightInfo.transition_level))
             {
-                m_moveType = MoveType::Underwater;
+                m_moveType = world::MoveType::Underwater;
                 return 2;
             }
         }
@@ -1172,7 +1172,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = MoveType::OnFloor;
+            m_moveType = world::MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1198,7 +1198,7 @@ int Character::freeFalling()
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = MoveType::OnFloor;
+            m_moveType = world::MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1271,7 +1271,7 @@ int Character::monkeyClimbing()
     }
     else
     {
-        m_moveType = MoveType::FreeFalling;
+        m_moveType = world::MoveType::FreeFalling;
         updateRoomPos();
         return 2;
     }
@@ -1422,7 +1422,7 @@ int Character::moveUnderWater()
 
     if(m_self->room && !(m_self->room->flags & TR_ROOM_FLAG_WATER))
     {
-        m_moveType = MoveType::FreeFalling;
+        m_moveType = world::MoveType::FreeFalling;
         return 2;
     }
 
@@ -1468,7 +1468,7 @@ int Character::moveUnderWater()
     {
         if(/*(spd[2] > 0.0)*/m_transform.getBasis().getColumn(1)[2] > 0.67)             ///@FIXME: magick!
         {
-            m_moveType = MoveType::OnWater;
+            m_moveType = world::MoveType::OnWater;
             //pos[2] = fc.transition_level;
             return 2;
         }
@@ -1528,7 +1528,7 @@ int Character::moveOnWater()
         }
         else
         {
-            m_moveType = MoveType::OnFloor;
+            m_moveType = world::MoveType::OnFloor;
             return 2;
         }
         return 1;
@@ -1550,7 +1550,7 @@ int Character::moveOnWater()
     }
     else
     {
-        m_moveType = MoveType::OnFloor;
+        m_moveType = world::MoveType::OnFloor;
         return 2;
     }
 
@@ -1559,7 +1559,7 @@ int Character::moveOnWater()
 
 int Character::findTraverse()
 {
-    RoomSector* ch_s, *obj_s = nullptr;
+    world::RoomSector* ch_s, *obj_s = nullptr;
     ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
 
     if(ch_s == nullptr)
@@ -1596,7 +1596,7 @@ int Character::findTraverse()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == world::core::OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     int oz = (m_angles[0] + 45.0f) / 90.0f;
                     m_angles[0] = oz * 90.0f;
@@ -1617,7 +1617,7 @@ int Character::findTraverse()
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& container)
+int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& container)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -1645,7 +1645,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
         if(std::abs(v[2] - floor) < 1.1)
         {
             EngineContainer* cont = static_cast<EngineContainer*>(cb.m_collisionObject->getUserPointer());
-            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<world::Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -1662,8 +1662,8 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
  */
 int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
-    RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
+    world::RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
+    world::RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
@@ -1715,7 +1715,7 @@ int Character::checkTraverse(const Entity& obj)
     }
 
     int ret = TraverseNone;
-    RoomSector* next_s = nullptr;
+    world::RoomSector* next_s = nullptr;
 
     /*
      * PUSH MOVE CHECK
@@ -1832,36 +1832,36 @@ void Character::applyCommands()
 
     switch(m_moveType)
     {
-        case MoveType::OnFloor:
+        case world::MoveType::OnFloor:
             moveOnFloor();
             break;
 
-        case MoveType::FreeFalling:
+        case world::MoveType::FreeFalling:
             freeFalling();
             break;
 
-        case MoveType::Climbing:
+        case world::MoveType::Climbing:
             climbing();
             break;
 
-        case MoveType::Monkeyswing:
+        case world::MoveType::Monkeyswing:
             monkeyClimbing();
             break;
 
-        case MoveType::WallsClimb:
+        case world::MoveType::WallsClimb:
             wallsClimbing();
             break;
 
-        case MoveType::Underwater:
+        case world::MoveType::Underwater:
             moveUnderWater();
             break;
 
-        case MoveType::OnWater:
+        case world::MoveType::OnWater:
             moveOnWater();
             break;
 
         default:
-            m_moveType = MoveType::OnFloor;
+            m_moveType = world::MoveType::OnFloor;
             break;
     };
 
@@ -1883,14 +1883,14 @@ void Character::updateParams()
 
     switch(m_moveType)
     {
-        case MoveType::OnFloor:
-        case MoveType::FreeFalling:
-        case MoveType::Climbing:
-        case MoveType::Monkeyswing:
-        case MoveType::WallsClimb:
+        case world::MoveType::OnFloor:
+        case world::MoveType::FreeFalling:
+        case world::MoveType::Climbing:
+        case world::MoveType::Monkeyswing:
+        case world::MoveType::WallsClimb:
 
             if(m_heightInfo.quicksand == QuicksandPosition::Drowning &&
-               m_moveType == MoveType::OnFloor)
+               m_moveType == world::MoveType::OnFloor)
             {
                 if(!changeParam(PARAM_AIR, -3.0))
                     changeParam(PARAM_HEALTH, -3.0);
@@ -1915,11 +1915,11 @@ void Character::updateParams()
             }
             break;
 
-        case MoveType::OnWater:
+        case world::MoveType::OnWater:
             changeParam(PARAM_AIR, 3.0);;
             break;
 
-        case MoveType::Underwater:
+        case world::MoveType::Underwater:
             if(!changeParam(PARAM_AIR, -1.0))
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
@@ -1932,11 +1932,6 @@ void Character::updateParams()
         default:
             break;  // Add quicksand later...
     }
-}
-
-bool IsCharacter(std::shared_ptr<Entity> ent)
-{
-    return std::dynamic_pointer_cast<Character>(ent) != nullptr;
 }
 
 int Character::setParamMaximum(int parameter, float max_value)
@@ -2012,11 +2007,11 @@ int Character::changeParam(int parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character::setWeaponModel(int weapon_model, int armed)
 {
-    SkeletalModel* sm = engine_world.getModelByID(weapon_model);
+    world::core::SkeletalModel* sm = engine_world.getModelByID(weapon_model);
 
     if((sm != nullptr) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {
-        SkeletalModel* bm = m_bf.animations.model;
+        world::core::SkeletalModel* bm = m_bf.animations.model;
         if(m_bf.animations.next == nullptr)
         {
             addOverrideAnim(weapon_model);
@@ -2067,7 +2062,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
     else
     {
         // do unarmed default model
-        SkeletalModel* bm = m_bf.animations.model;
+        world::core::SkeletalModel* bm = m_bf.animations.model;
         for(int i = 0; i < bm->mesh_count; i++)
         {
             m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
@@ -2189,7 +2184,7 @@ void Character::updateHair()
     if(m_hairs.empty())
         return;
 
-    for(std::shared_ptr<Hair> hair : m_hairs)
+    for(std::shared_ptr<world::Hair> hair : m_hairs)
     {
         if(!hair || hair->m_elements.empty())
             continue;
@@ -2260,9 +2255,9 @@ void Character::frameImpl(btScalar time, int16_t frame, int state)
 void Character::processSectorImpl()
 {
     assert(m_currentSector != nullptr);
-    RoomSector* highest_sector = m_currentSector->getHighestSector();
+    world::RoomSector* highest_sector = m_currentSector->getHighestSector();
     assert(highest_sector != nullptr);
-    RoomSector* lowest_sector = m_currentSector->getLowestSector();
+    world::RoomSector* lowest_sector = m_currentSector->getLowestSector();
     assert(lowest_sector != nullptr);
 
     m_heightInfo.walls_climb_dir = 0;
@@ -2281,9 +2276,9 @@ void Character::processSectorImpl()
 
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
-        if((m_moveType == MoveType::OnFloor) ||
-           (m_moveType == MoveType::Wade)    ||
-           (m_moveType == MoveType::Quicksand))
+        if((m_moveType == world::MoveType::OnFloor) ||
+           (m_moveType == world::MoveType::Wade)    ||
+           (m_moveType == world::MoveType::Quicksand))
         {
             if(m_heightInfo.floor_hit)
             {
@@ -2296,8 +2291,8 @@ void Character::processSectorImpl()
                 }
             }
         }
-        else if((m_moveType == MoveType::Underwater) ||
-                (m_moveType == MoveType::OnWater))
+        else if((m_moveType == world::MoveType::Underwater) ||
+                (m_moveType == world::MoveType::OnWater))
         {
             setParam(PARAM_HEALTH, 0.0);
             m_response.killed = true;
@@ -2346,40 +2341,40 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
 
     // Apply vertical speed.
     m_speed[2] = v_vertical * m_speedMult;
-    m_moveType = MoveType::FreeFalling;
+    m_moveType = world::MoveType::FreeFalling;
 }
 
-Substance Character::getSubstanceState() const
+world::Substance Character::getSubstanceState() const
 {
     if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_height)
         {
-            return Substance::QuicksandConsumed;
+            return world::Substance::QuicksandConsumed;
         }
         else
         {
-            return Substance::QuicksandShallow;
+            return world::Substance::QuicksandShallow;
         }
     }
     else if(!m_heightInfo.water)
     {
-        return Substance::None;
+        return world::Substance::None;
     }
     else if(m_heightInfo.water &&
             (m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
             (m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_wadeDepth))
     {
-        return Substance::WaterShallow;
+        return world::Substance::WaterShallow;
     }
     else if(m_heightInfo.water &&
             (m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_wadeDepth))
     {
-        return Substance::WaterWade;
+        return world::Substance::WaterWade;
     }
     else
     {
-        return Substance::WaterSwim;
+        return world::Substance::WaterSwim;
     }
 }
 
@@ -2434,7 +2429,7 @@ void Character::doWeaponFrame(btScalar time)
     btScalar dt;
     int t;
 
-    for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
+    for(world::core::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {

@@ -33,6 +33,17 @@ list(APPEND PRJ_SRC
     render/shader_description.cpp
     render/shader_manager.cpp
     render/vertex_array.cpp
+
+    world/entity.cpp
+    world/portal.cpp
+    world/world.cpp
+    world/camera.cpp
+    world/hair.cpp
+
+    world/core/mesh.cpp
+    world/core/obb.cpp
+    world/core/polygon.cpp
+    world/core/frustum.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -62,6 +73,18 @@ list(APPEND PRJ_HDR
     render/shader_description.h
     render/shader_manager.h
     render/vertex_array.h
+
+    world/entity.h
+    world/object.h
+    world/portal.h
+    world/world.h
+    world/camera.h
+    world/hair.h
+
+    world/core/mesh.h
+    world/core/obb.h
+    world/core/polygon.h
+    world/core/frustum.h
 )
 
 if(MINGW)

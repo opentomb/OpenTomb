@@ -11,13 +11,13 @@
 #include "LuaState.h"
 
 #include "util/vmath.h"
-#include "polygon.h"
+#include "world/core/polygon.h"
 #include "engine.h"
 #include "controls.h"
-#include "world.h"
-#include "mesh.h"
-#include "entity.h"
-#include "camera.h"
+#include "world/world.h"
+#include "world/core/mesh.h"
+#include "world/entity.h"
+#include "world/camera.h"
 #include "render/render.h"
 #include "system.h"
 #include "script/script.h"
@@ -33,8 +33,8 @@ btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 extern btScalar time_scale;
 extern script::MainEngine engine_lua;
 
-void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
-void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
+void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<world::Entity> > &map);
+void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent);
 
 using gui::Console;
 
@@ -214,9 +214,9 @@ int Game_Load(const char* name)
     return 1;
 }
 
-void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> >& map)
+void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<world::Entity> >& map)
 {
-    for(std::map<uint32_t, std::shared_ptr<Entity> >::const_iterator it = map.begin();
+    for(std::map<uint32_t, std::shared_ptr<world::Entity> >::const_iterator it = map.begin();
     it != map.end();
         ++it)
     {
@@ -227,7 +227,7 @@ void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> 
 /**
  * Entity save function, based on engine lua scripts;
  */
-void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
+void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 {
     if(ent == nullptr)
     {
@@ -344,7 +344,7 @@ int Game_Save(const char* name)
     return 1;
 }
 
-void Game_ApplyControls(std::shared_ptr<Entity> ent)
+void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 {
     int8_t look_logic[3];
 
@@ -516,7 +516,7 @@ bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTrans
     return cb->hasHit();
 }
 
-void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btScalar dz)
+void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, btScalar dx, btScalar dz)
 {
     btTransform cameraFrom, cameraTo;
 
@@ -679,11 +679,11 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition(), cam->m_currentRoom);
 }
 
-void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
+void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<world::Entity> > &entities)
 {
     for(auto entityPair : entities)
     {
-        std::shared_ptr<Entity> entity = entityPair.second;
+        std::shared_ptr<world::Entity> entity = entityPair.second;
         if(entity->m_enabled)
         {
             entity->processSector();
@@ -695,11 +695,11 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
     }
 }
 
-void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
+void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<world::Entity> > &entities)
 {
     for(auto entityPair : entities)
     {
-        std::shared_ptr<Entity> entity = entityPair.second;
+        std::shared_ptr<world::Entity> entity = entityPair.second;
         if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
             entity->updateRigidBody(false);
@@ -719,7 +719,7 @@ void Game_UpdateAI()
     }
 }
 
-void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> >& entities)
+void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<world::Entity> >& entities)
 {
     for(const auto& entPair : entities)
     {

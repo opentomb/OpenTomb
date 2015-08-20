@@ -1,7 +1,7 @@
 #pragma once
 
 #include "character_controller.h"
-#include "entity.h"
+#include "world/entity.h"
 #include "gl_font.h"
 #include "render/render.h"
 
@@ -562,8 +562,8 @@ void renderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(struct SSBoneFrame *bf, btScalar time);
-void renderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
+void Item_Frame(world::core::SSBoneFrame *bf, btScalar time);
+void renderItem(world::core::SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
 /*
  * Other inventory renderer class
  */

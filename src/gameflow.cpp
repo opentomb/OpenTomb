@@ -12,7 +12,7 @@
 #include "engine.h"
 #include "gui/gui.h"
 #include "script/script.h"
-#include "world.h"
+#include "world/world.h"
 
 gameflow_manager_s gameflow_manager;
 

@@ -6,7 +6,7 @@
 
 #include "util/matrix4.h"
 #include "util/vmath.h"
-#include "frustum.h"
+#include "world/core/frustum.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0f
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0f
@@ -32,9 +32,16 @@
 #define TR_CAM_TARG_LEFT  (2)
 #define TR_CAM_TARG_RIGHT (3)
 
+
+namespace world
+{
 struct Room;
+
+namespace core
+{
 struct Polygon;
 struct Frustum;
+} // namespace core
 
 class Camera
 {
@@ -76,7 +83,7 @@ public:
     util::matrix4 m_glViewProjMat = util::matrix4();
 
     util::Plane m_clipPlanes[4];        // frustum side clip planes
-    Frustum frustum;               // camera frustum structure
+    world::core::Frustum frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;
     GLfloat m_distFar = 65536;
@@ -148,3 +155,5 @@ struct FlybyCamera
 
     uint16_t    flags;      // See TRLE manual
 };
+
+} // namespace world

@@ -30,7 +30,7 @@
 #include "loader/level.h"
 
 #include "render/gl_util.h"
-#include "polygon.h"
+#include "world/core/polygon.h"
 #include "util/vmath.h"
 #include "controls.h"
 #include "gui/console.h"
@@ -39,10 +39,10 @@
 #include "script/script.h"
 #include "render/render.h"
 #include "game.h"
-#include "world.h"
-#include "camera.h"
-#include "mesh.h"
-#include "entity.h"
+#include "world/world.h"
+#include "world/camera.h"
+#include "world/core/mesh.h"
+#include "world/entity.h"
 #include "resource.h"
 #include "gui/gui.h"
 #include "audio/audio.h"
@@ -70,8 +70,8 @@ Settings      audio_settings{};
 
 btScalar           engine_frame_time = 0.0;
 
-Camera             engine_camera;
-World              engine_world;
+world::Camera             engine_camera;
+world::World              engine_world;
 
 namespace
 {
@@ -566,22 +566,22 @@ void Engine_ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->id(), static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
+                gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<world::Entity*>(last_cont->object)->id(), static_cast<world::Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<StaticMesh*>(last_cont->object)->object_id);
+                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::core::StaticMesh*>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<Room*>(last_cont->object)->id);
+                gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<world::Room*>(last_cont->object)->id);
                 break;
         }
     }
 
     if(engine_camera.m_currentRoom != nullptr)
     {
-        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
+        world::RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
             gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
@@ -599,9 +599,9 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
     EngineContainer* c0, *c1;
 
     c0 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
-    Room* r0 = c0 ? c0->room : nullptr;
+    world::Room* r0 = c0 ? c0->room : nullptr;
     c1 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
-    Room* r1 = c1 ? c1->room : nullptr;
+    world::Room* r1 = c1 ? c1->room : nullptr;
 
     if(c1 && c1 == c0)
     {
@@ -732,13 +732,13 @@ void Engine_InitBullet()
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
-void Engine_DumpRoom(Room* r)
+void Engine_DumpRoom(world::Room* r)
 {
     if(r != nullptr)
     {
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->id) : (-1), (r->base_room != nullptr) ? (r->base_room->id) : (-1));
-        for(const RoomSector& rs : r->sectors)
+        for(const world::RoomSector& rs : r->sectors)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs.index_x, rs.index_y, rs.floor, rs.ceiling, rs.portal_to_room);
         }
@@ -750,7 +750,7 @@ void Engine_DumpRoom(Room* r)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                Entity* ent = static_cast<Entity*>(cont->object);
+                world::Entity* ent = static_cast<world::Entity*>(cont->object);
                 Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
             }
         }
@@ -1009,7 +1009,7 @@ int Engine_LoadMap(const std::string& name)
 int Engine_ExecCmd(const char *ch)
 {
     std::vector<char> token(Console::instance().lineSize());
-    RoomSector* sect;
+    world::RoomSector* sect;
     FILE *f;
 
     while(ch != nullptr)
@@ -1157,7 +1157,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "room_info"))
         {
-            if(Room* r = render::renderer.camera()->m_currentRoom)
+            if(world::Room* r = render::renderer.camera()->m_currentRoom)
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
                 Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
@@ -1173,7 +1173,7 @@ int Engine_ExecCmd(const char *ch)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
-                            Entity* e = static_cast<Entity*>(cont->object);
+                            world::Entity* e = static_cast<world::Entity*>(cont->object);
                             Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
                         }
                     }

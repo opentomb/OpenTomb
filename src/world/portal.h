@@ -11,6 +11,8 @@
 
 #include "util/vmath.h"
 
+namespace world
+{
 struct Room;
 struct RoomSector;
 
@@ -60,3 +62,5 @@ struct Portal
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
+
+} // namespace world

@@ -7,12 +7,15 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "polygon.h"
+#include "world/core/polygon.h"
 #include "util/vmath.h"
 
 /*
  * CLIP PLANES
  */
+
+namespace world
+{
 
 void Portal::move(const btVector3& mv)
 {
@@ -77,3 +80,5 @@ void Portal::genNormale()
     auto v2 = vertices[2] - vertices[1];
     normal.assign(v1, v2, vertices[0]);
 }
+
+} // namespace world

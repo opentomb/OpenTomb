@@ -5,12 +5,12 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "frustum.h"
-#include "mesh.h"
-#include "polygon.h"
+#include "world/core/frustum.h"
+#include "world/core/mesh.h"
+#include "world/core/polygon.h"
 #include "util/vmath.h"
 
-void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
+void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const world::core::Polygon& transformed)
 {
     if(!root)
         root.reset(new BSPNode());
@@ -26,7 +26,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     size_t positive = 0;
     size_t negative = 0;
     size_t in_plane = 0;
-    for(const Vertex& v : transformed.vertices)
+    for(const world::core::Vertex& v : transformed.vertices)
     {
         const auto dist = root->plane.distance(v.position);
         if(dist > SPLIT_EPSILON)
@@ -58,11 +58,11 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
 }
 
-void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const Frustum& frustum, const Camera& cam)
+void DynamicBSP::addNewPolygonList(const std::vector<world::core::TransparentPolygonReference>& p, const btTransform& transform, const world::core::Frustum& frustum, const world::Camera& cam)
 {
-    for(const TransparentPolygonReference& pp : p)
+    for(const world::core::TransparentPolygonReference& pp : p)
     {
-        struct Polygon transformed;
+        world::core::Polygon transformed;
         transformed.vertices.resize(pp.polygon->vertices.size());
         transformed.transform(*pp.polygon, transform);
         transformed.double_side = pp.polygon->double_side;

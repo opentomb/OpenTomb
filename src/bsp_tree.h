@@ -5,17 +5,24 @@
 
 #include "util/vmath.h"
 
+namespace world
+{
 class Camera;
+
+namespace core
+{
 struct Polygon;
 struct Frustum;
 struct TransparentPolygonReference;
+} // namespace core
+} // namespace world
 
 struct BSPFaceRef
 {
     btTransform transform;
-    const TransparentPolygonReference* polygon;
+    const world::core::TransparentPolygonReference* polygon;
 
-    BSPFaceRef(const btTransform& matrix, const TransparentPolygonReference* polygon)
+    BSPFaceRef(const btTransform& matrix, const world::core::TransparentPolygonReference* polygon)
         : transform(matrix)
         , polygon(polygon)
     {
@@ -41,10 +48,10 @@ class DynamicBSP
 private:
     std::unique_ptr<BSPNode> m_root{ new BSPNode() };
 
-    void addPolygon(std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct Polygon &transformed);
+    void addPolygon(std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct world::core::Polygon &transformed);
 
 public:
-    void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const Frustum& f, const Camera& cam);
+    void addNewPolygonList(const std::vector<world::core::TransparentPolygonReference> &p, const btTransform &transform, const world::core::Frustum& f, const world::Camera& cam);
 
     const std::unique_ptr<BSPNode>& root() const
     {

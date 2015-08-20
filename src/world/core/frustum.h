@@ -6,16 +6,22 @@
 
 #include "util/vmath.h"
 
-struct Room;
-struct Portal;
-struct OBB;
-struct Polygon;
-class Camera;
 
 namespace render
 {
 class  Render;
 } // namespace render
+
+namespace world
+{
+struct Room;
+class Camera;
+struct Portal;
+
+namespace core
+{
+struct OBB;
+struct Polygon;
 
 struct Frustum
 {
@@ -57,3 +63,6 @@ struct Frustum
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
+
+} // namespace core
+} // namespace world

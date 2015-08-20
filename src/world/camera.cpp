@@ -3,8 +3,11 @@
 #include <cmath>
 #include <cassert>
 
-#include "frustum.h"
+#include "world/core/frustum.h"
 #include "util/vmath.h"
+
+namespace world
+{
 
 void Camera::apply()
 {
@@ -161,3 +164,5 @@ Camera::Camera()
     frustum.vertices.resize(3, { 0,0,0 });
     frustum.planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
 }
+
+} // namespace world

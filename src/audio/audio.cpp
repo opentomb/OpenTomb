@@ -6,9 +6,9 @@
 #include <SDL2/SDL.h>
 
 #include "gui/console.h"
-#include "camera.h"
+#include "world/camera.h"
 #include "engine.h"
-#include "entity.h"
+#include "world/entity.h"
 #include "util/helpers.h"
 #include "render/render.h"
 #include "script/script.h"
@@ -487,7 +487,7 @@ void Source::LinkEmitter()
     switch(emitter_type)
     {
         case EmitterType::Entity:
-            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(emitter_ID))
+            if(std::shared_ptr<world::Entity> ent = engine_world.getEntityByID(emitter_ID))
             {
                 SetPosition(ent->m_transform.getOrigin());
                 SetVelocity(ent->m_speed);
@@ -1260,7 +1260,7 @@ bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
     switch(entity_type)
     {
         case EmitterType::Entity:
-            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_ID))
+            if(std::shared_ptr<world::Entity> ent = engine_world.getEntityByID(entity_ID))
             {
                 vec = ent->m_transform.getOrigin();
             }
@@ -1537,7 +1537,7 @@ Error kill(int effect_ID, EmitterType entity_type, int entity_ID)
     return Error::Ignored;
 }
 
-void loadOverridedSamples(struct World *world)
+void loadOverridedSamples(world::World *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;
@@ -1864,7 +1864,7 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_IN
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void updateListenerByCamera(Camera *cam)
+void updateListenerByCamera(world::Camera *cam)
 {
     ALfloat v[6] = {
         cam->getViewDir()[0], cam->getViewDir()[1], cam->getViewDir()[2],
@@ -1906,7 +1906,7 @@ void updateListenerByCamera(Camera *cam)
     }
 }
 
-void updateListenerByEntity(std::shared_ptr<Entity> /*ent*/)
+void updateListenerByEntity(std::shared_ptr<world::Entity> /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }

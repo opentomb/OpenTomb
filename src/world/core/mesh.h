@@ -10,8 +10,31 @@
 
 #include "LuaState.h"
 
-#include "object.h"
+#include "world/object.h"
 #include "render/vertex_array.h"
+#include "loader/datatypes.h"
+#include "obb.h"
+
+struct Character;
+struct EngineContainer;
+class btCollisionShape;
+class btRigidBody;
+class btCollisionShape;
+
+namespace render
+{
+class Render;
+} // namespace render
+
+namespace world
+{
+struct RoomSector;
+struct SectorTween;
+struct Room;
+struct Entity;
+
+namespace core
+{
 
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
@@ -19,29 +42,16 @@
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
-#include "loader/datatypes.h"
-#include "obb.h"
 
-class btCollisionShape;
-class btRigidBody;
-class btCollisionShape;
 
 struct Polygon;
-struct Room;
-struct EngineContainer;
 struct OBB;
 struct Vertex;
-struct Entity;
-
-namespace render
-{
-class Render;
-} // namespace render
 
 struct TransparentPolygonReference
 {
     const struct Polygon *polygon;
-    std::shared_ptr<render::VertexArray> used_vertex_array;
+    std::shared_ptr< ::render::VertexArray > used_vertex_array;
     size_t firstIndex;
     size_t count;
     bool isAnimated;
@@ -98,7 +108,7 @@ struct BaseMesh
     GLuint                m_vboVertexArray = 0;
     GLuint                m_vboIndexArray = 0;
     GLuint                m_vboSkinArray = 0;
-    std::shared_ptr<render::VertexArray> m_mainVertexArray;
+    std::shared_ptr< ::render::VertexArray > m_mainVertexArray;
 
     // Buffers for animated polygons
     // The first contains position, normal and color.
@@ -106,7 +116,7 @@ struct BaseMesh
     GLuint                m_animatedVboVertexArray;
     GLuint                m_animatedVboTexCoordArray;
     GLuint                m_animatedVboIndexArray;
-    std::shared_ptr<render::VertexArray> m_animatedVertexArray;
+    std::shared_ptr< ::render::VertexArray > m_animatedVertexArray;
 
     ~BaseMesh()
     {
@@ -143,7 +153,7 @@ struct Sprite
 struct SpriteBuffer
 {
     // Vertex data for the sprites
-    std::unique_ptr<render::VertexArray> data{};
+    std::unique_ptr< ::render::VertexArray > data{};
 
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages = 0;
@@ -261,7 +271,6 @@ struct SSBoneTag
 };
 
 struct SkeletalModel;
-struct Character;
 
 struct SSAnimation
 {
@@ -408,8 +417,6 @@ struct SkeletalModel
     void fillSkinnedMeshMap();
 };
 
-struct RoomSector;
-struct SectorTween;
 
 void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);
 MeshTreeTag* SkeletonClone(MeshTreeTag* src, int tags_count);
@@ -421,3 +428,6 @@ btCollisionShape *BT_CSfromSphere(const btScalar& radius);
 btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
+
+} // namespace core
+} // namespace world

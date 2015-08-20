@@ -10,8 +10,8 @@
 #include "LuaState.h"
 
 #include "controls.h"
-#include "object.h"
-#include "world.h"
+#include "world/object.h"
+#include "world/world.h"
 
 #define MAX_ENGINE_PATH                         (1024)
 
@@ -62,15 +62,18 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
+namespace world
+{
 class Camera;
+} // namespace world
 
 struct EngineContainer
 {
     uint16_t object_type = 0;
     lua::Integer collision_type = COLLISION_TYPE_NONE;
     lua::Integer collision_shape = 0;
-    Object* object = nullptr;
-    Room* room = nullptr;
+    world::Object* object = nullptr;
+    world::Room* room = nullptr;
 };
 
 //! @todo Use bools where appropriate.
@@ -124,8 +127,8 @@ extern Settings                  audio_settings;
 } // namespace audio
 
 extern btScalar                                 engine_frame_time;
-extern Camera                          engine_camera;
-extern World                           engine_world;
+extern world::Camera                            engine_camera;
+extern world::World                             engine_world;
 
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
 extern btCollisionDispatcher                   *bt_engine_dispatcher;
@@ -152,8 +155,8 @@ public:
             return 1.0;
         }
 
-        const Room* r0 = m_container ? m_container->room : nullptr;
-        const Room* r1 = c1 ? c1->room : nullptr;
+        const world::Room* r0 = m_container ? m_container->room : nullptr;
+        const world::Room* r1 = c1 ? c1->room : nullptr;
 
         if(!r0 || !r1)
         {
@@ -191,9 +194,9 @@ public:
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
     {
-        const Room* r0 = m_container ? m_container->room : nullptr;
+        const world::Room* r0 = m_container ? m_container->room : nullptr;
         const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
-        const Room* r1 = c1 ? c1->room : nullptr;
+        const world::Room* r1 = c1 ? c1->room : nullptr;
 
         if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
@@ -277,7 +280,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 void Engine_PrimaryMouseDown();
 void Engine_SecondaryMouseDown();
 void Engine_ShowDebugInfo();
-void Engine_DumpRoom(Room* r);
+void Engine_DumpRoom(world::Room* r);
 
 // PC-specific level loader routines.
 

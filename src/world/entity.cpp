@@ -15,13 +15,16 @@
 #include "gui/console.h"
 #include "engine.h"
 #include "util/helpers.h"
-#include "mesh.h"
-#include "obb.h"
+#include "world/core/mesh.h"
+#include "world/core/obb.h"
 #include "ragdoll.h"
 #include "script/script.h"
 #include "system.h"
 #include "util/vmath.h"
 #include "world.h"
+
+namespace world
+{
 
 void Entity::createGhosts()
 {
@@ -116,25 +119,25 @@ void Entity::genRigidBody()
 
     for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        std::shared_ptr<BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
+        std::shared_ptr<core::BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape;
         switch(m_self->collision_shape)
         {
             case COLLISION_SHAPE_SPHERE:
-                cshape = BT_CSfromSphere(mesh->m_radius);
+                cshape = core::BT_CSfromSphere(mesh->m_radius);
                 break;
 
             case COLLISION_SHAPE_TRIMESH_CONVEX:
-                cshape = BT_CSfromMesh(mesh, true, true, false);
+                cshape = core::BT_CSfromMesh(mesh, true, true, false);
                 break;
 
             case COLLISION_SHAPE_TRIMESH:
-                cshape = BT_CSfromMesh(mesh, true, true, true);
+                cshape = core::BT_CSfromMesh(mesh, true, true, true);
                 break;
 
             case COLLISION_SHAPE_BOX:
             default:
-                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
+                cshape = core::BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
                 break;
         };
 
@@ -356,7 +359,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
     for(size_t i = 0; i < m_bf.animations.model->collision_map.size(); i++)
     {
         uint16_t m = m_bf.animations.model->collision_map[i];
-        SSBoneTag* btag = &m_bf.bone_tags[m];
+        core::SSBoneTag* btag = &m_bf.bone_tags[m];
 
         if(btag->body_part & m_bt.no_fix_body_parts)
         {
@@ -726,11 +729,11 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    SkeletalModel* sm = engine_world.getModelByID(model_id);
+    world::core::SkeletalModel* sm = engine_world.getModelByID(model_id);
 
     if((sm != nullptr) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
-        SSAnimation* ss_anim = new SSAnimation();
+        world::core::SSAnimation* ss_anim = new world::core::SSAnimation();
 
         ss_anim->model = sm;
         ss_anim->onFrame = nullptr;
@@ -748,12 +751,12 @@ void Entity::addOverrideAnim(int model_id)
     }
 }
 
-void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
+void Entity::updateCurrentBoneFrame(core::SSBoneFrame *bf, const btTransform* etr)
 {
-    SSBoneTag* btag = bf->bone_tags.data();
-    BoneTag* src_btag, *next_btag;
-    SkeletalModel* model = bf->animations.model;
-    BoneFrame* curr_bf, *next_bf;
+    core::SSBoneTag* btag = bf->bone_tags.data();
+    core::BoneTag* src_btag, *next_btag;
+    core::SkeletalModel* model = bf->animations.model;
+    core::BoneFrame* curr_bf, *next_bf;
 
     next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
     curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
@@ -789,15 +792,15 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
         }
         else
         {
-            BoneTag* ov_src_btag = src_btag;
-            BoneTag* ov_next_btag = next_btag;
+            core::BoneTag* ov_src_btag = src_btag;
+            core::BoneTag* ov_next_btag = next_btag;
             btScalar ov_lerp = bf->animations.lerp;
-            for(SSAnimation* ov_anim = bf->animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
+            for(core::SSAnimation* ov_anim = bf->animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
             {
                 if((ov_anim->model != nullptr) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
-                    BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
-                    BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
+                    core::BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
+                    core::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
                     ov_src_btag = &ov_curr_bf->bone_tags[k];
                     ov_next_btag = &ov_next_bf->bone_tags[k];
                     ov_lerp = ov_anim->lerp;
@@ -826,14 +829,14 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
+void Entity::doAnimCommands(core::SSAnimation *ss_anim, int /*changing*/)
 {
     if(engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
     {
         return;  // If no anim commands
     }
 
-    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
+    core::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
     if(af->num_anim_commands > 0 && af->num_anim_commands <= 255)
     {
         assert(af->anim_command < engine_world.anim_commands.size());
@@ -959,13 +962,13 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        SkeletalModel* model = engine_world.getModelByID(another_model);
+        world::core::SkeletalModel* model = engine_world.getModelByID(another_model);
         if(!model || animation >= static_cast<int>(model->animations.size()))
             return;
         m_bf.animations.model = model;
     }
 
-    AnimationFrame* anim = &m_bf.animations.model->animations[animation];
+    world::core::AnimationFrame* anim = &m_bf.animations.model->animations[animation];
 
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
@@ -987,11 +990,11 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     updateRigidBody(false);
 }
 
-struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim)
+world::core::StateChange *Anim_FindStateChangeByAnim(world::core::AnimationFrame *anim, int state_change_anim)
 {
     if(state_change_anim >= 0)
     {
-        StateChange* ret = anim->state_change.data();
+        world::core::StateChange* ret = anim->state_change.data();
         for(uint16_t i = 0; i < anim->state_change.size(); i++, ret++)
         {
             for(uint16_t j = 0; j < ret->anim_dispatch.size(); j++)
@@ -1007,9 +1010,9 @@ struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int 
     return nullptr;
 }
 
-struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id)
+world::core::StateChange *Anim_FindStateChangeByID(world::core::AnimationFrame *anim, uint32_t id)
 {
-    StateChange* ret = anim->state_change.data();
+    world::core::StateChange* ret = anim->state_change.data();
     for(uint16_t i = 0; i < anim->state_change.size(); i++, ret++)
     {
         if(ret->id == id)
@@ -1023,14 +1026,14 @@ struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32
 
 int Entity::getAnimDispatchCase(uint32_t id)
 {
-    AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    StateChange* stc = anim->state_change.data();
+    world::core::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    world::core::StateChange* stc = anim->state_change.data();
 
     for(uint16_t i = 0; i < anim->state_change.size(); i++, stc++)
     {
         if(stc->id == id)
         {
-            AnimDispatch* disp = stc->anim_dispatch.data();
+            world::core::AnimDispatch* disp = stc->anim_dispatch.data();
             for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++, disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
@@ -1048,9 +1051,9 @@ int Entity::getAnimDispatchCase(uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Entity::getNextFrame(world::core::SSBoneFrame *bf, btScalar time, world::core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
+    world::core::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
 
     *frame = (bf->animations.frame_time + time) / bf->animations.period;
     *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
@@ -1097,7 +1100,7 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
      */
     if(stc != nullptr)
     {
-        AnimDispatch* disp = stc->anim_dispatch.data();
+        core::AnimDispatch* disp = stc->anim_dispatch.data();
         for(uint16_t i = 0; i < stc->anim_dispatch.size(); i++, disp++)
         {
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
@@ -1115,8 +1118,8 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 {
     if(m_bf.animations.model != nullptr)
     {
-        AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.current_frame];
+        core::AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+        core::BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.current_frame];
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
@@ -1159,8 +1162,8 @@ int Entity::frame(btScalar time)
     int16_t frame, anim, ret = ENTITY_ANIM_NONE;
     long int t;
     btScalar dt;
-    StateChange* stc;
-    SSAnimation* ss_anim;
+    core::StateChange* stc;
+    core::SSAnimation* ss_anim;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
@@ -1251,7 +1254,7 @@ void Entity::checkActivators()
         if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-            if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
+            if((e != this) && (core::OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
@@ -1371,9 +1374,9 @@ Entity::~Entity()
 
     m_bf.bone_tags.clear();
 
-    for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr;)
+    for(world::core::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr;)
     {
-        SSAnimation* ss_anim_next = ss_anim->next;
+        world::core::SSAnimation* ss_anim_next = ss_anim->next;
         ss_anim->next = nullptr;
         delete ss_anim;
         ss_anim = ss_anim_next;
@@ -1475,8 +1478,8 @@ bool Entity::createRagdoll(RDSetup* setup)
         }
 
         btTransform localA, localB;
-        SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
-        SSBoneTag* btA = btB->parent;
+        world::core::SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
+        world::core::SSBoneTag* btA = btB->parent;
         if(!btA)
         {
             result = false;
@@ -1582,3 +1585,5 @@ btVector3 Entity::applyGravity(btScalar time)
     m_speed += gravitySpeed;
     return move;
 }
+
+} // namespace world

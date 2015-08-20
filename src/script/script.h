@@ -16,7 +16,11 @@ struct Console;
 } // namespace gui
 
 struct ScreenInfo;
+
+namespace world
+{
 struct Entity;
+} // namespace world
 
 namespace audio
 {

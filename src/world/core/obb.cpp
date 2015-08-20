@@ -4,11 +4,16 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "entity.h"
-#include "polygon.h"
+#include "world/entity.h"
+#include "world/core/polygon.h"
 #include "util/vmath.h"
 #include "engine.h"
 #include "frustum.h"
+
+namespace world
+{
+namespace core
+{
 
 void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
@@ -339,3 +344,6 @@ bool OBB::isVisibleInRoom(const Room& room, const Camera& cam)
 
     return false;
 }
+
+} // namespace core
+} // namespace world

@@ -12,14 +12,19 @@
 #include "gui/console.h"
 #include "engine.h"
 #include "entity.h"
-#include "mesh.h"
-#include "obb.h"
-#include "polygon.h"
-#include "portal.h"
+#include "world/core/mesh.h"
+#include "world/core/obb.h"
+#include "world/core/polygon.h"
+#include "world/portal.h"
 #include "render/render.h"
 #include "resource.h"
 #include "script/script.h"
 #include "util/vmath.h"
+
+extern EngineContainer* last_cont;
+
+namespace world
+{
 
 void Room::empty()
 {
@@ -394,7 +399,6 @@ void World::prepare()
     anim_commands.clear();
 }
 
-extern EngineContainer* last_cont;
 
 void World::empty()
 {
@@ -487,7 +491,7 @@ bool World::deleteEntity(uint32_t id)
 
 uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
-    if(SkeletalModel* model = getModelByID(model_id))
+    if(core::SkeletalModel* model = getModelByID(model_id))
     {
         if(std::shared_ptr<Entity> ent = getEntityByID(id))
         {
@@ -958,13 +962,13 @@ void World::addEntity(std::shared_ptr<Entity> entity)
 
 bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, gui::MenuItemType type, uint16_t count, const std::string& name)
 {
-    SkeletalModel* model = getModelByID(model_id);
+    core::SkeletalModel* model = getModelByID(model_id);
     if(!model)
     {
         return false;
     }
 
-    std::unique_ptr<SSBoneFrame> bf(new SSBoneFrame());
+    std::unique_ptr<core::SSBoneFrame> bf(new core::SSBoneFrame());
     bf->fromModel(model);
 
     auto item = std::make_shared<BaseItem>();
@@ -987,7 +991,7 @@ int World::deleteItem(uint32_t item_id)
     return 1;
 }
 
-SkeletalModel* World::getModelByID(uint32_t id)
+core::SkeletalModel* World::getModelByID(uint32_t id)
 {
     if(skeletal_models.front().id == id)
     {
@@ -1020,9 +1024,9 @@ SkeletalModel* World::getModelByID(uint32_t id)
 // Find sprite by ID.
 // Not a binary search - sprites may be not sorted by ID.
 
-Sprite* World::getSpriteByID(unsigned int ID)
+core::Sprite* World::getSpriteByID(unsigned int ID)
 {
-    for(Sprite& sp : sprites)
+    for(core::Sprite& sp : sprites)
     {
         if(sp.id == ID)
         {
@@ -1099,7 +1103,7 @@ BaseItem::~BaseItem()
 
 void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    for(AnimSeq& seq : anim_sequences)
+    for(core::AnimSeq& seq : anim_sequences)
     {
         if(seq.frame_lock)
         {
@@ -1114,7 +1118,7 @@ void World::updateAnimTextures()                                                
 
             switch(seq.anim_type)
             {
-                case AnimTextureType::Reverse:
+                case core::AnimTextureType::Reverse:
                     if(seq.reverse_direction)
                     {
                         if(seq.current_frame == 0)
@@ -1142,8 +1146,8 @@ void World::updateAnimTextures()                                                
                     }
                     break;
 
-                case AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
-                case AnimTextureType::Backward:
+                case core::AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
+                case core::AnimTextureType::Backward:
                     seq.current_frame++;
                     seq.current_frame %= seq.frames.size();
                     break;
@@ -1245,7 +1249,7 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
         return;
     }
 
-    mesh = std::make_shared<BaseMesh>();
+    mesh = std::make_shared<core::BaseMesh>();
     mesh->m_id = room_index;
     mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
     mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
@@ -1284,7 +1288,7 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
     /*
     * let us normalise normales %)
     */
-    for(Vertex& v : mesh->m_vertices)
+    for(world::core::Vertex& v : mesh->m_vertices)
     {
         v.normal.safeNormalize();
     }
@@ -1310,3 +1314,5 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
     mesh->genFaces();
     mesh->polySortInMesh();
 }
+
+} // namespace world

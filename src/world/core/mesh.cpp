@@ -13,7 +13,12 @@
 #include "resource.h"
 #include "render/shader_description.h"
 #include "util/vmath.h"
-#include "world.h"
+#include "world/world.h"
+
+namespace world
+{
+namespace core
+{
 
 Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
 
@@ -963,3 +968,6 @@ void BaseMesh::polySortInMesh()
         }
     }
 }
+
+} // namespace core
+} // namespace world

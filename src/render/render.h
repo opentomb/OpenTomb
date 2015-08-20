@@ -14,19 +14,27 @@
 #include "util/matrix4.h"
 #include "vertex_array.h"
 #include "loader/datatypes.h"
-#include "obb.h"
+#include "world/core/obb.h"
 
+namespace world
+{
 struct Portal;
-struct Frustum;
 struct World;
 struct Room;
+struct RoomSector;
 class Camera;
 struct Entity;
+
+namespace core
+{
+struct Frustum;
+struct OBB;
 struct Sprite;
 struct BaseMesh;
-struct OBB;
 struct SSBoneFrame;
-struct RoomSector;
+} // namespace core
+} // namespace world
+
 struct BSPNode;
 struct BSPFaceRef;
 struct Character;
@@ -52,7 +60,7 @@ class RenderDebugDrawer : public btIDebugDraw
     std::array<GLfloat, 3> m_color{ {0,0,0} };
     std::vector<std::array<GLfloat, 3>> m_buffer;
 
-    OBB m_obb;
+    world::core::OBB m_obb;
 
     void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &end);
     void addLine(const btVector3& start, const btVector3& end);
@@ -78,15 +86,15 @@ public:
         m_color[2] = b;
     }
     void drawAxis(btScalar r, const btTransform& transform);
-    void drawPortal(const Portal &p);
-    void drawFrustum(const Frustum &f);
+    void drawPortal(const world::Portal &p);
+    void drawFrustum(const world::core::Frustum &f);
     void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
-    void drawOBB(const OBB& obb);
-    void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
-    void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
-    void drawEntityDebugLines(Entity *entity, Render *render);
-    void drawSectorDebugLines(RoomSector *rs);
-    void drawRoomDebugLines(const Room *room, Render *render, const Camera& cam);
+    void drawOBB(const world::core::OBB& obb);
+    void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
+    void drawSkeletalModelDebugLines(world::core::SSBoneFrame *bframe, const btTransform& transform, Render *render);
+    void drawEntityDebugLines(world::Entity *entity, Render *render);
+    void drawSectorDebugLines(world::RoomSector *rs);
+    void drawRoomDebugLines(const world::Room *room, Render *render, const world::Camera& cam);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;
@@ -131,12 +139,12 @@ class Render
     friend class RenderDebugDrawer;
 private:
     bool m_blocked = true;
-    World* m_world = nullptr;
-    Camera* m_cam = nullptr;
+    world::World* m_world = nullptr;
+    world::Camera* m_cam = nullptr;
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
 
-    std::vector<Room*> m_renderList{};
+    std::vector<world::Room*> m_renderList{};
 
     bool m_drawWire = false;
     bool m_drawRoomBoxes = false;
@@ -162,8 +170,8 @@ public:
     void initGlobals();
     void init();
     void empty();
-    bool addRoom(Room *room);
-    void setWorld(World* m_world);
+    bool addRoom(world::Room *room);
+    void setWorld(world::World* m_world);
     void resetWorld()
     {
         m_world = nullptr;
@@ -174,16 +182,16 @@ public:
     {
         return m_shaderManager;
     }
-    Camera* camera()
+    world::Camera* camera()
     {
         return m_cam;
     }
-    void setCamera(Camera* cam)
+    void setCamera(world::Camera* cam)
     {
         m_cam = cam;
     }
 
-    World* world()
+    world::World* world()
     {
         return m_world;
     }
@@ -249,24 +257,24 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
-    void renderDynamicEntity(const LitShaderDescription *shader, Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
+    void renderEntity(world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
+    void renderDynamicEntity(const LitShaderDescription *shader, world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, world::core::SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
     void renderHair(std::shared_ptr<Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
     void renderSkyBox(const util::matrix4& matrix);
-    void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
+    void renderMesh(const std::shared_ptr<world::core::BaseMesh> &mesh);
     void renderPolygonTransparency(loader::BlendingMode& currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);
     void renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
     void renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderRoom(const Room *room, const util::matrix4 &matrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
-    void renderRoomSprites(const Room *room, const util::matrix4 &modelViewMatrix, const util::matrix4 &projectionMatrix);
+    void renderRoom(const world::Room *room, const util::matrix4 &matrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
+    void renderRoomSprites(const world::Room *room, const util::matrix4 &modelViewMatrix, const util::matrix4 &projectionMatrix);
 
-    int processRoom(Portal* portal, const Frustum& frus);
+    int processRoom(world::Portal* portal, const world::core::Frustum& frus);
 
 private:
-    const LitShaderDescription *setupEntityLight(Entity *entity, const util::matrix4 &modelViewMatrix, bool skin);
+    const LitShaderDescription *setupEntityLight(world::Entity *entity, const util::matrix4 &modelViewMatrix, bool skin);
 };
 
 extern Render renderer;

@@ -9,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include "camera.h"
+#include "world/camera.h"
 #include "character_controller.h"
 #include "console.h"
 #include "engine.h"
@@ -518,16 +518,16 @@ void renderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(struct SSBoneFrame *bf, btScalar time)
+void Item_Frame(world::core::SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
     long int t;
     btScalar dt;
-    StateChange* stc;
+    world::core::StateChange* stc;
 
     bf->animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
-    Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    stc = world::Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
+    world::Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
@@ -540,7 +540,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
         bf->current_frame = frame;
         bf->next_animation = anim;
         bf->next_frame = frame;*/
-        stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
+        stc = world::Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
     }
     else if(bf->animations.current_frame != frame)
     {
@@ -557,8 +557,8 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
     dt = bf->animations.frame_time - static_cast<btScalar>(t) * bf->animations.period;
     bf->animations.frame_time = static_cast<btScalar>(frame) * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity::updateCurrentBoneFrame(bf, nullptr);
+    world::Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    world::Entity::updateCurrentBoneFrame(bf, nullptr);
 }
 
 /**
@@ -568,7 +568,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
+void renderItem(world::core::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
     const render::LitShaderDescription *shader = render::renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);

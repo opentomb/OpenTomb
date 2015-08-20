@@ -12,8 +12,11 @@
 #include "loader/level.h"
 #include "game.h"
 
+namespace world
+{
 class Camera;
 struct Entity;
+} // namespace world
 
 namespace audio
 {
@@ -439,13 +442,13 @@ void pauseAllSources();    // Used to pause all effects currently playing.
 void stopAllSources();     // Used in audio deinit.
 void resumeAllSources();   // Used to resume all effects currently paused.
 void updateSources();      // Main sound loop.
-void updateListenerByCamera(Camera *cam);
-void updateListenerByEntity(std::shared_ptr<Entity> ent);
+void updateListenerByCamera(world::Camera *cam);
+void updateListenerByEntity(std::shared_ptr<world::Entity> ent);
 
 bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  loadALbufferFromFile(ALuint buf_number, const char *fname);
-void loadOverridedSamples(World *world);
+void loadOverridedSamples(world::World *world);
 
 int  loadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 

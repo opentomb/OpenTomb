@@ -17,9 +17,14 @@
   * In base_edges we safe the initial shape polygons
   */
 
+namespace world
+{
 class Camera;
 struct Entity;
 struct Room;
+
+namespace core
+{
 
 struct OBB
 {
@@ -38,3 +43,6 @@ struct OBB
 };
 
 int OBB_OBB_Test(const Entity &e1, const Entity &e2, btScalar overlap = DEFAULT_OBB_TEST_OVERLAP);
+
+} // namespace core
+} // namespace world

@@ -7,9 +7,12 @@
 
 #include "LuaState.h"
 
-#include "mesh.h"
+#include "world/core/mesh.h"
 #include "render/render.h"
 #include "script/script.h"
+
+namespace world
+{
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
@@ -19,7 +22,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
        (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
        (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))) return false;
 
-    SkeletalModel* model = engine_world.getModelByID(setup->m_model);
+    core::SkeletalModel* model = engine_world.getModelByID(setup->m_model);
 
     // No model to link to - bypass function.
 
@@ -220,16 +223,16 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 // Internal utility function:
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
-void Hair::createHairMesh(const SkeletalModel *model)
+void Hair::createHairMesh(const core::SkeletalModel *model)
 {
-    m_mesh = std::make_shared<BaseMesh>();
+    m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_elementsPerTexture.resize(engine_world.textures.size(), 0);
     size_t totalElements = 0;
 
     // Gather size information
     for(int i = 0; i < model->mesh_count; i++)
     {
-        const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
+        const std::shared_ptr<core::BaseMesh> original = model->mesh_tree[i].mesh_base;
 
         m_mesh->m_texturePageCount = std::max(m_mesh->m_texturePageCount, original->m_texturePageCount);
 
@@ -251,7 +254,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
     m_mesh->m_vertices.clear();
     for(int i = 0; i < model->mesh_count; i++)
     {
-        const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
+        const std::shared_ptr<core::BaseMesh> original = model->mesh_tree[i].mesh_base;
 
         // Copy vertices
         const size_t verticesStart = m_mesh->m_vertices.size();
@@ -365,3 +368,5 @@ Hair::~Hair()
         }
     }
 }
+
+} // namespace world
