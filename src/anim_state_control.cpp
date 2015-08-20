@@ -59,15 +59,15 @@ void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*st
 
     if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
     {
-        auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-        ent->setAnimation(af->next_anim->id, af->next_frame);
-        auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-        move -= p;
-        ent->m_transform.getOrigin() += move;
-        ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
-        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
-        ent->updateRigidBody(false);
-        ent->ghostUpdate();
+//        auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
+//        ent->setAnimation(af->next_anim->id, af->next_frame);
+//        auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
+//        move -= p;
+//        ent->m_transform.getOrigin() += move;
+//        ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
+//        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
+//        ent->updateRigidBody(false);
+//        ent->ghostUpdate();
         ent->m_moveType = MoveType::OnFloor;
         ss_anim->onFrame = nullptr;
     }

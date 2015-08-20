@@ -549,9 +549,15 @@ void Engine_ShowDebugInfo()
                       engine_world.character->m_currentSpeed,
                       ent->m_bf.animations.current_frame
                       );
-        Gui_OutTextXY(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d",
+        Gui_OutTextXY(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
                 ent->m_bf.animations.lerp_last_animation,
-                ent->m_bf.animations.lerp_last_frame
+                ent->m_bf.animations.lerp_last_frame,
+                ent->m_lerp_last_transform.getOrigin().x(),
+                ent->m_lerp_last_transform.getOrigin().y(),
+                ent->m_lerp_last_transform.getOrigin().z(),
+                ent->m_lerp_curr_transform.getOrigin().x(),
+                ent->m_lerp_curr_transform.getOrigin().y(),
+                ent->m_lerp_curr_transform.getOrigin().z()
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);

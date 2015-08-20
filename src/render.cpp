@@ -854,7 +854,7 @@ void Render::drawList()
     if(m_world->character)
     {
         renderEntity(m_world->character.get(), m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
-        renderHair(m_world->character, m_cam->m_glViewMat, m_cam->m_glProjMat);
+//        renderHair(m_world->character, m_cam->m_glViewMat, m_cam->m_glProjMat);
     }
 
     /*

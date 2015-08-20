@@ -1372,12 +1372,14 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     af->frames[af->frames.size() - 1].command |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
                     pointer += 3;
+                    ConsoleInfo::instance().printf("ACmd MOVE: anim = %d, x = %d, y = %d, z = %d @ frame %d", static_cast<int>(anim), pointer[0], pointer[1], pointer[2],af->frames.size()-1);
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
                     af->frames[af->frames.size() - 1].v_Vertical = pointer[0];
                     af->frames[af->frames.size() - 1].v_Horizontal = pointer[1];
                     af->frames[af->frames.size() - 1].command |= ANIM_CMD_JUMP;
+                    ConsoleInfo::instance().printf("ACmd JUMP: anim = %d, vVert = %d, vHoriz = %d @ frame %d", static_cast<int>(anim), pointer[0], pointer[1], af->frames.size()-1);
                     pointer += 2;
                     break;
 
@@ -1396,7 +1398,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
                             af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
-                            ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
+                            ConsoleInfo::instance().printf("ACmd ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                             break;
                     }
                     pointer += 2;
@@ -3399,8 +3401,18 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                         uint16_t low = tr_adisp->low - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low = low  % anim->frames.size();
-                        adsp->frame_high = (high - 1) % anim->frames.size();
+                        // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
+                        // secifically fall anims (75,77 etc), which may fail to change state),
+                        // And: if theses values are > framesize, then they're probably faulty and won't be fixed by modulo anyway:
+//                        adsp->frame_low = low  % anim->frames.size();
+//                        adsp->frame_high = (high - 1) % anim->frames.size();
+                        if(low > anim->frames.size() || high > anim->frames.size())
+                        {
+                            //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
+                            ConsoleInfo::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
+                        }
+                        adsp->frame_low = low;
+                        adsp->frame_high = high;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 

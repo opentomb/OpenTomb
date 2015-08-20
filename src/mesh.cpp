@@ -278,7 +278,6 @@ void SkeletalModel::interpolateFrames()
 
                 destIdx -= rate;
             }
-
         }
     }
 }

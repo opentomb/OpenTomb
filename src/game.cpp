@@ -847,7 +847,8 @@ void Game_Frame(btScalar time)
         engine_world.character->updateRigidBody(false);
         engine_world.character->ghostUpdate();
 
-        Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
+        if(!control_states.noclip && !control_states.free_look)
+            Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
     }
     for(auto entityPair : engine_world.entity_tree)
     {

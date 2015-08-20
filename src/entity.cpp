@@ -691,8 +691,6 @@ void Entity::updateTransform()
     m_angles[2] = WrapAngle(m_angles[2]);
 
     m_transform.getBasis().setEulerZYX(m_angles[1] * RadPerDeg, m_angles[2] * RadPerDeg, m_angles[0] * RadPerDeg);
-
-    fixPenetrations(nullptr);
 }
 
 void Entity::updateCurrentSpeed(bool zeroVz)
@@ -758,22 +756,10 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
     next_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
     last_bf = &model->animations[bf->animations.lerp_last_animation].frames[bf->animations.lerp_last_frame];
 
-    btVector3 tr, cmd_tr;
-    if(etr && (last_bf->command & ANIM_CMD_MOVE))
-    {
-        tr = etr->getBasis() * last_bf->move;
-        cmd_tr = tr * bf->animations.lerp;
-    }
-    else
-    {
-        tr.setZero();
-        cmd_tr.setZero();
-    }
-
-    bf->bb_max = last_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
-    bf->bb_min = last_bf->bb_min.lerp(next_bf->bb_min, bf->animations.lerp) + cmd_tr;
-    bf->centre = last_bf->centre.lerp(next_bf->centre, bf->animations.lerp) + cmd_tr;
-    bf->pos = last_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
+    bf->bb_max = last_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp);
+    bf->bb_min = last_bf->bb_min.lerp(next_bf->bb_min, bf->animations.lerp);
+    bf->centre = last_bf->centre.lerp(next_bf->centre, bf->animations.lerp);
+    bf->pos = last_bf->pos.lerp(next_bf->pos, bf->animations.lerp);
 
     next_btag = next_bf->bone_tags.data();
     src_btag = last_bf->bone_tags.data();
@@ -1117,43 +1103,17 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
     {
         AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
         BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.current_frame];
+//        AnimationFrame* curr_af = &m_bf.animations.model->animations[*anim];
+//        BoneFrame* curr_bf = &curr_af->frames[*frame];
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
-            printf("*** CMD JUMP [%d, %d]\n",*anim,*frame);
+//            printf("*** CMD JUMP [%d, %d]:   v: %f, h: %f\n",*anim,*frame,-curr_bf->v_Vertical, curr_bf->v_Horizontal);
             jump(-curr_bf->v_Vertical, curr_bf->v_Horizontal);
-        }
-        if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
-        {
-            printf("*** CMD FLIP [%d, %d]\n",*anim,*frame);
-            // bad for quat lerp:
-//            m_angles[0] += 180.0;
-
-            // fixme: quat flip lerp hack:
-            m_angles[0] += 90.0;
-            updateTransform();
-            m_angles[0] += 90.0;
-
-            if(m_moveType == MoveType::Underwater)
-            {
-                m_angles[1] = -m_angles[1];                         // for underwater case
-            }
-            if(m_dirFlag == ENT_MOVE_BACKWARD)
-            {
-                m_dirFlag = ENT_MOVE_FORWARD;
-            }
-            else if(m_dirFlag == ENT_MOVE_FORWARD)
-            {
-                m_dirFlag = ENT_MOVE_BACKWARD;
-            }
-            updateTransform();
-//            setAnimation(curr_af->next_anim->id, curr_af->next_frame);
-//            *anim = m_bf.animations.current_animation;
-//            *frame = m_bf.animations.current_frame;
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
-            printf("*** CMD MOVE [%d, %d]\n",*anim,*frame);
+//            printf("*** CMD MOVE [%d, %d]:  x: %f, y: %f, z: %f\n",*anim,*frame,curr_bf->move.x(),curr_bf->move.y(),curr_bf->move.z());
             btVector3 tr = m_transform.getBasis() * curr_bf->move;
             m_transform.getOrigin() += tr;
         }
@@ -1163,11 +1123,6 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 // ----------------------------------------
 void Entity::slerpBones(btScalar lerp)
 {
-//    m_bf.animations.lerp += lerp;
-//    if(m_bf.animations.lerp > 1.0) {
-//        m_bf.animations.lerp = 1.0;
-//    }
-
     m_bf.animations.lerp = lerp;
     updateCurrentBoneFrame(&m_bf, &m_transform);
     return;
@@ -1293,6 +1248,8 @@ int Entity::frame(btScalar time)
     {
         if( findStateChange(animlist[anim_id].state_change, anim.next_state, anim_id, frame_id) )
         {
+//            if(anim.current_animation != 0)
+//                printf("**** STC [%d -> %d]: Anim: %d, Frame: %d -> Anim: %d, Frame: %d\n",anim.last_state, anim.next_state, anim.current_animation, anim.current_frame, anim_id, frame_id);
             anim.current_animation = anim_id;
             anim.current_frame = frame_id;
             anim.last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
@@ -1304,16 +1261,16 @@ int Entity::frame(btScalar time)
         }
     }
 
-    // FIXME: move should happen on switch to first frame of next anim,
-    //        not at the beginning of last anim frame:
-    doAnimMove(&anim_id, &frame_id);
     if(frame_id >= animlist[anim_id].frames.size())
     {
         // doAnimCmds 1,2,3/4:
-//        doAnimMove(&anim_id, &frame_id);
+        doAnimMove(&anim_id, &frame_id);
 
         frame_id = animlist[anim_id].next_frame;
         anim_id = animlist[anim_id].next_anim->id;
+
+//        if(anim.current_animation != 0)
+//            printf("**** EOA: Anim: %d, Frame: %d -> Anim: %d, Frame: %d\n",anim.current_animation, anim.current_frame, anim_id, frame_id);
 
         anim.current_animation = anim_id;
         anim.current_frame = frame_id;
@@ -1330,10 +1287,36 @@ int Entity::frame(btScalar time)
     // which is bad for interp...
 
     // doAnimCmds 5,6:
+    setAnimation(anim_id, frame_id);
+
     doAnimCommands(&m_bf.animations, ret);
 
+    // -- AC FLIP --
+    if(animlist[anim_id].frames[frame_id].command & ANIM_CMD_CHANGE_DIRECTION)
+    {
+//            printf("*** CMD FLIP [%d, %d]\n",anim_id,frame_id);
 
-    setAnimation(anim_id, frame_id);
+//            printf("***          [%d, %d]\n",m_bf.animations.current_animation,m_bf.animations.current_frame);
+            // bad for quat lerp:
+//            m_angles[0] += 180.0;
+        m_angles[0] += 180.0;
+
+        if(m_moveType == MoveType::Underwater)
+        {
+            m_angles[1] = -m_angles[1];                         // for underwater case
+        }
+        if(m_dirFlag == ENT_MOVE_BACKWARD)
+        {
+            m_dirFlag = ENT_MOVE_FORWARD;
+        }
+        else if(m_dirFlag == ENT_MOVE_FORWARD)
+        {
+            m_dirFlag = ENT_MOVE_BACKWARD;
+        }
+        updateTransform();
+//        updateCurrentBoneFrame(&m_bf, &m_transform);
+    }
+    // -------------
 
     frameImpl(time, frame_id, ret);
 
