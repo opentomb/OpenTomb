@@ -234,8 +234,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
     if(resp->killed)  // Stop any music, if Lara is dead.
     {
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
+        audio::endStreams(audio::StreamType::Oneshot);
+        audio::endStreams(audio::StreamType::Chat);
     }
 
     StepType nextStep = StepType::Horizontal;
@@ -286,7 +286,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             }
             else if(resp->slide == SlideType::Front)
             {
-                Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, character->id());
+                audio::send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, character->id());
 
                 if(cmd->jump)
                 {
@@ -304,7 +304,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 {
                     character->m_dirFlag = ENT_MOVE_BACKWARD;
                     character->setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-                    Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, character->id());
                 }
                 else
                 {
@@ -1321,7 +1321,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 break;
             }
 
-            Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, character->id());
+            audio::kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, character->id());
             break;
 
         case TR_STATE_LARA_SLIDE_FORWARD:
@@ -1355,7 +1355,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 break;
             }
 
-            Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, character->id());
+            audio::kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, character->id());
             break;
 
             // Miscellaneous animations
@@ -1449,12 +1449,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 {
                     if(was_traversed)
                     {
-                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id()) == -1)
-                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id()) == -1)
+                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                     else
                     {
-                        Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                 }
                 else
@@ -1463,8 +1463,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                        (ss_anim->current_frame == 110) ||
                        (ss_anim->current_frame == 142))
                     {
-                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id()) == -1)
-                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id()) == -1)
+                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                 }
 
@@ -1474,7 +1474,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if(engine_world.engineVersion > loader::Engine::TR3)
                 {
-                    Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                 }
             }
             break;
@@ -1536,13 +1536,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 {
                     if(was_traversed)
                     {
-                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id()) == -1)
-
-                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id()) == -1)
+                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                     else
                     {
-                        Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                 }
                 else
@@ -1552,8 +1551,8 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                        (ss_anim->current_frame == 124) ||
                        (ss_anim->current_frame == 156))
                     {
-                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id()) == -1)
-                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id()) == -1)
+                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                     }
                 }
 
@@ -1563,7 +1562,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             {
                 if(engine_world.engineVersion > loader::Engine::TR3)
                 {
-                    Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, character->id());
                 }
             }
             break;
@@ -2236,7 +2235,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                (int(character->m_speed[2]) >= (-FREE_FALL_SPEED_CRITICAL - 100)))
             {
                 character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-                Audio_Send(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());       // Scream
+                audio::send(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, character->id());       // Scream
             }
             else if(character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
             {
@@ -2251,12 +2250,12 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 cmd->rot[1] = 0.0;
                 character->updateTransform();                                     // needed here to fix underwater in wall collision bug
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-                Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());       // Stop scream
+                audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, character->id());       // Stop scream
 
                 // Splash sound is hardcoded, beginning with TR3.
                 if(engine_world.engineVersion > loader::Engine::TR2)
                 {
-                    Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::send(TR_AUDIO_SOUND_SPLASH, audio::EmitterType::Entity, character->id());
                 }
             }
             else if((resp->vertical_collide & 0x01) || (character->m_moveType == MoveType::OnFloor))
@@ -2264,7 +2263,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 if(character->m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
                 {
                     character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
-                    Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, character->id());
                 }
                 else if(character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
                 {
@@ -2291,7 +2290,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 if(resp->killed)
                 {
                     ss_anim->next_state = TR_STATE_LARA_DEATH;
-                    Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->id());
+                    audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, character->id());
                 }
             }
             else if(cmd->action)

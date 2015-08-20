@@ -7,7 +7,7 @@
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
-#include "audio.h"
+#include "audio/audio.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
 #include "object.h"
@@ -406,13 +406,13 @@ struct World
 
     std::vector<int16_t> anim_commands;
 
-    std::vector<AudioEmitter> audio_emitters;         // Audio emitters.
+    std::vector<audio::Emitter> audio_emitters;         // Audio emitters.
     std::vector<int16_t> audio_map;              // Effect indexes.
-    std::vector<AudioEffect> audio_effects;          // Effects and their parameters.
+    std::vector<audio::Effect> audio_effects;          // Effects and their parameters.
 
     std::vector<ALuint> audio_buffers;          // Samples.
-    std::vector<AudioSource> audio_sources;          // Channels.
-    std::vector<StreamTrack> stream_tracks;          // Stream tracks.
+    std::vector<audio::Source> audio_sources;          // Channels.
+    std::vector<audio::StreamTrack> stream_tracks;          // Stream tracks.
     std::vector<uint8_t> stream_track_map;       // Stream track flag map.
 
     void updateAnimTextures();

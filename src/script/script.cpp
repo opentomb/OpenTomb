@@ -10,7 +10,7 @@
 #include "LuaState.h"
 
 #include "anim_state_control.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "character_controller.h"
 #include "gui/console.h"
 #include "controls.h"
@@ -2423,17 +2423,17 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        Audio_StreamPlay(id, mask.to<int>());
+        audio::streamPlay(id, mask.to<int>());
     }
     else
     {
-        Audio_StreamPlay(id);
+        audio::streamPlay(id);
     }
 }
 
 void lua_StopStreams()
 {
-    Audio_StopStreams();
+    audio::stopStreams();
 }
 
 void lua_PlaySound(int id, lua::Value ent_id)
@@ -2452,29 +2452,29 @@ void lua_PlaySound(int id, lua::Value ent_id)
     if(eid < 0 || !engine_world.getEntityByID(eid))
         eid = -1;
 
-    int result;
+    audio::Error result;
 
     if(eid >= 0)
     {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, eid);
+        result = audio::send(id, audio::EmitterType::Entity, eid);
     }
     else
     {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
+        result = audio::send(id, audio::EmitterType::Global);
     }
 
-    if(result < 0)
+    switch(result)
     {
-        switch(result)
-        {
-            case TR_AUDIO_SEND_NOCHANNEL:
-                Console::instance().warning(SYSWARN_AS_NOCHANNEL);
-                break;
+        case audio::Error::NoChannel:
+            Console::instance().warning(SYSWARN_AS_NOCHANNEL);
+            break;
 
-            case TR_AUDIO_SEND_NOSAMPLE:
-                Console::instance().warning(SYSWARN_AS_NOSAMPLE);
-                break;
-        }
+        case audio::Error::NoSample:
+            Console::instance().warning(SYSWARN_AS_NOSAMPLE);
+            break;
+
+        default:
+            break;
     }
 }
 
@@ -2492,18 +2492,18 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
     if(eid < 0 || engine_world.getEntityByID(eid) == nullptr)
         eid = -1;
 
-    int result;
+    audio::Error result;
 
     if(eid == -1)
     {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
+        result = audio::kill(id, audio::EmitterType::Global);
     }
     else
     {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, eid);
+        result = audio::kill(id, audio::EmitterType::Entity, eid);
     }
 
-    if(result < 0)
+    if(result == audio::Error::NoSample || result == audio::Error::NoChannel)
         Console::instance().warning(SYSWARN_AK_NOTPLAYED, id);
 }
 
@@ -2760,6 +2760,15 @@ void ScriptEngine::exposeConstants()
     m_state["Engine"].set("IV", static_cast<int>(loader::Engine::TR4));
     m_state["Engine"].set("V", static_cast<int>(loader::Engine::TR5));
     m_state["Engine"].set("Unknown", static_cast<int>(loader::Engine::Unknown));
+
+    m_state.set("StreamMethod", lua::Table());
+    m_state["StreamMethod"].set("Track", static_cast<int>(audio::StreamMethod::Track));
+    m_state["StreamMethod"].set("WAD", static_cast<int>(audio::StreamMethod::WAD));
+
+    m_state.set("StreamType", lua::Table());
+    m_state["StreamType"].set("Background", static_cast<int>(audio::StreamType::Background));
+    m_state["StreamType"].set("Chat", static_cast<int>(audio::StreamType::Chat));
+    m_state["StreamType"].set("Oneshot", static_cast<int>(audio::StreamType::Oneshot));
 
 #if 0
     // Unused, but kept here for reference
@@ -3592,15 +3601,15 @@ bool script::MainEngine::getOverridedSample(int sound_id, int *first_sample_numb
     return *first_sample_number != -1 && *samples_count != -1;
 }
 
-bool script::MainEngine::getSoundtrack(int track_index, char *file_path, int *load_method, int *stream_type)
+bool script::MainEngine::getSoundtrack(int track_index, char *file_path, audio::StreamMethod *load_method, audio::StreamType *stream_type)
 {
     const char* realPath;
     int _load_method, _stream_type;
 
     lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", static_cast<int>(engine_world.engineVersion), track_index);
     if(file_path) strcpy(file_path, realPath);
-    if(load_method) *load_method = _load_method;
-    if(stream_type) *stream_type = _stream_type;
+    if(load_method) *load_method = static_cast<audio::StreamMethod>(_load_method);
+    if(stream_type) *stream_type = static_cast<audio::StreamType>(_stream_type);
     return _stream_type != -1;
 }
 
@@ -3725,7 +3734,7 @@ void script::ScriptEngine::parseRender(struct RenderSettings *rs)
         rs->z_depth = 24;
 }
 
-void script::ScriptEngine::parseAudio(struct AudioSettings *as)
+void script::ScriptEngine::parseAudio(audio::Settings *as)
 {
     as->music_volume = (*this)["audio"]["music_volume"];
     as->sound_volume = (*this)["audio"]["sound_volume"];

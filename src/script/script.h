@@ -18,7 +18,13 @@ struct Console;
 struct ScreenInfo;
 struct Entity;
 
-struct AudioSettings;
+namespace audio
+{
+struct Settings;
+enum class StreamType;
+enum class StreamMethod;
+}
+
 struct ControlSettings;
 struct RenderSettings;
 struct SystemSettings;
@@ -110,7 +116,7 @@ namespace script
 
         void parseScreen(ScreenInfo *sc);
         void parseRender(RenderSettings *rs);
-        void parseAudio(AudioSettings *as);
+        void parseAudio(audio::Settings *as);
         void parseConsole(gui::Console *cn);
         void parseControls(ControlSettings *cs);
         void parseSystem(SystemSettings *ss);
@@ -181,7 +187,7 @@ namespace script
         int  getGlobalSound(int global_sound_id);
         int  getSecretTrackNumber();
         int  getNumTracks();
-        bool getSoundtrack(int track_index, char *track_path, int *load_method, int *stream_type);
+        bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);
         bool getLoadingScreen(int level_index, char *pic_path);
         bool getString(int string_index, size_t string_size, char *buffer);
         bool getSysNotify(int string_index, size_t string_size, char *buffer);

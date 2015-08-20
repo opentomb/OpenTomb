@@ -16,7 +16,7 @@
 #include "loader/level.h"
 
 #include "anim_state_control.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "bordered_texture_atlas.h"
 #include "character_controller.h"
 #include "gui/console.h"
@@ -1001,9 +1001,10 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
                             // triggering looped tracks, ignore it, as BGM is always set in script.
                             if(engine_world.engineVersion < loader::Engine::TR2)
                             {
-                                int looped;
+                                audio::StreamType looped;
                                 engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
-                                if(looped == TR_AUDIO_STREAM_TYPE_BACKGROUND) break;
+                                if(looped == audio::StreamType::Background)
+                                    break;
                             }
 
                             snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
@@ -3697,7 +3698,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
     // If script had no such parameter, we define map bounds by default.
     world->stream_track_map.resize(engine_lua.getNumTracks(), 0);
     if(world->stream_track_map.empty())
-        world->stream_track_map.resize(TR_AUDIO_STREAM_MAP_SIZE, 0);
+        world->stream_track_map.resize(audio::StreamMapSize, 0);
 
     // Generate new audio effects array.
     world->audio_effects.resize(tr->m_soundDetails.size());
@@ -3728,7 +3729,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
                 {
                     pointer = tr->m_samplesData.data() + tr->m_sampleIndices[i];
                     uint32_t size = tr->m_sampleIndices[(i + 1)] - tr->m_sampleIndices[i];
-                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, size);
+                    audio::loadALbufferFromMem(world->audio_buffers[i], pointer, size);
                 }
                 break;
 
@@ -3756,7 +3757,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
                         {
                             size_t uncomp_size = ind2 - ind1;
                             auto* srcData = tr->m_samplesData.data() + ind1;
-                            Audio_LoadALbufferFromMem(world->audio_buffers[i], srcData, uncomp_size);
+                            audio::loadALbufferFromMem(world->audio_buffers[i], srcData, uncomp_size);
                             i++;
                             if(i >= world->audio_buffers.size())
                             {
@@ -3771,7 +3772,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
                 pointer = tr->m_samplesData.data() + ind1;
                 if(i < world->audio_buffers.size())
                 {
-                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, uncomp_size);
+                    audio::loadALbufferFromMem(world->audio_buffers[i], pointer, uncomp_size);
                 }
                 break;
             }
@@ -3791,7 +3792,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromMem(world->audio_buffers[i], pointer, comp_size, uncomp_size);
+                    audio::loadALbufferFromMem(world->audio_buffers[i], pointer, comp_size, uncomp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;
@@ -3845,7 +3846,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
     // NB! We need to override samples AFTER audio effects array is inited, as override
     //     routine refers to existence of certain audio effect in level.
 
-    Audio_LoadOverridedSamples(world);
+    audio::loadOverridedSamples(world);
 
     // Hardcoded version-specific fixes!
 

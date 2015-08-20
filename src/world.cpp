@@ -7,7 +7,7 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "audio.h"
+#include "audio/audio.h"
 #include "camera.h"
 #include "gui/console.h"
 #include "engine.h"
@@ -401,7 +401,7 @@ void World::empty()
     last_cont = nullptr;
     engine_lua.clearTasks();
 
-    Audio_DeInit(); // De-initialize and destroy all audio objects.
+    audio::deInit(); // De-initialize and destroy all audio objects.
 
     if(gui::main_inventory_manager != nullptr)
     {

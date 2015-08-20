@@ -884,16 +884,16 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
                         if(pointer[1] & TR_ANIMCOMMAND_CONDITION_WATER)
                         {
                             if(getSubstanceState() == Substance::WaterShallow)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                audio::send(sound_index, audio::EmitterType::Entity, m_id);
                         }
                         else if(pointer[1] & TR_ANIMCOMMAND_CONDITION_LAND)
                         {
                             if(getSubstanceState() != Substance::WaterShallow)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                audio::send(sound_index, audio::EmitterType::Entity, m_id);
                         }
                         else
                         {
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                            audio::send(sound_index, audio::EmitterType::Entity, m_id);
                         }
                     }
                     pointer += 2;

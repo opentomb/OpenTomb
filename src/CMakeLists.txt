@@ -25,6 +25,8 @@ list(APPEND PRJ_SRC
     util/helpers.cpp
     util/vmath.cpp
     util/matrix4.cpp
+
+    audio/audio.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -46,6 +48,8 @@ list(APPEND PRJ_HDR
     util/helpers.h
     util/vmath.h
     util/matrix4.h
+
+    audio/audio.h
 )
 
 if(MINGW)

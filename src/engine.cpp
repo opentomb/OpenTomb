@@ -45,7 +45,7 @@
 #include "entity.h"
 #include "resource.h"
 #include "gui/gui.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "strings.h"
@@ -62,7 +62,11 @@ ALCcontext             *al_context = nullptr;
 
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
-AudioSettings      audio_settings{};
+
+namespace audio
+{
+Settings      audio_settings{};
+} // namespace audio
 
 btScalar           engine_frame_time = 0.0;
 
@@ -310,8 +314,8 @@ void Engine_InitAL()
 #if !NO_AUDIO
 
     ALCint paramList[] = {
-        ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
-        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
+        ALC_STEREO_SOURCES,  audio::StreamSourceCount,
+        ALC_MONO_SOURCES,   (audio::MaxChannels - audio::StreamSourceCount),
         ALC_FREQUENCY,       44100, 0 };
 
     Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
@@ -329,7 +333,7 @@ void Engine_InitAL()
         Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
         ALCdevice* dev = alcOpenDevice(devlist);
 
-        if(audio_settings.use_effects)
+        if(audio::audio_settings.use_effects)
         {
             if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
@@ -363,7 +367,7 @@ void Engine_InitAL()
 
     alcMakeContextCurrent(al_context);
 
-    Audio_LoadALExtFunctions(al_device);
+    audio::loadALExtFunctions(al_device);
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);
@@ -656,7 +660,7 @@ void Engine_InitDefaultGlobals()
     Controls_InitGlobals();
     Game_InitGlobals();
     renderer.initGlobals();
-    Audio_InitGlobals();
+    audio::initGlobals();
 }
 
 // First stage of initialization.
@@ -956,7 +960,7 @@ int Engine_LoadMap(const std::string& name)
 
     engine_lua.clean();
 
-    Audio_Init();
+    audio::init();
 
     gui::drawLoadScreen(100);
 
@@ -1243,7 +1247,7 @@ void Engine_InitConfig(const char *filename)
 
         state.parseScreen(&screen_info);
         state.parseRender(&renderer.settings());
-        state.parseAudio(&audio_settings);
+        state.parseAudio(&audio::audio_settings);
         state.parseConsole(&Console::instance());
         state.parseControls(&control_mapper);
         state.parseSystem(&system_settings);

@@ -40,7 +40,7 @@ void Gameflow_Do()
         {
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
-                if((gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete) && (!Audio_IsTrackPlaying()))
+                if((gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete) && (!audio::isTrackPlaying()))
                 {
                     const char* levelName;
                     const char* levelPath;

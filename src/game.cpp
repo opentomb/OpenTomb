@@ -465,7 +465,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             {
                 ch->setParam(PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                audio::send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_small_medi = !control_states.use_small_medi;
@@ -478,7 +478,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             {
                 ch->setParam(PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                audio::send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_big_medi = !control_states.use_big_medi;
@@ -801,7 +801,7 @@ void Game_Frame(btScalar time)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
-            Audio_Update();
+            audio::update();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -815,7 +815,7 @@ void Game_Frame(btScalar time)
         btScalar dt = Game_Tick(&game_logic_time);
         engine_lua.doTasks(dt);
         Game_UpdateAI();
-        Audio_Update();
+        audio::update();
 
         if(is_character)
         {
@@ -908,5 +908,5 @@ void Game_LevelTransition(uint16_t level_index)
     gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
     gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    Audio_EndStreams();
+    audio::endStreams();
 }

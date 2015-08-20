@@ -118,7 +118,10 @@ struct EngineControlState
 extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
 
-extern AudioSettings                  audio_settings;
+namespace audio
+{
+extern Settings                  audio_settings;
+} // namespace audio
 
 extern btScalar                                 engine_frame_time;
 extern Camera                          engine_camera;
