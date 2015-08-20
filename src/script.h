@@ -27,6 +27,7 @@ bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, co
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc);
 int lua_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as);
+int lua_ParseConsole(lua_State *lua);
 int lua_ParseControls(lua_State *lua, struct control_settings_s *cs);
 
 bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);

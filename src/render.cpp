@@ -413,41 +413,39 @@ void CRender::DrawList()
 
 void CRender::DrawListDebugLines()
 {
-    if (!m_world || !(r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
+    if (m_world && (r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
     {
-        return;
-    }
+        debugDrawer->SetDrawFlags(r_flags);
 
-    debugDrawer->SetDrawFlags(r_flags);
+        if(m_world->Character)
+        {
+            debugDrawer->DrawEntityDebugLines(m_world->Character);
+        }
 
-    if(m_world->Character)
-    {
-        debugDrawer->DrawEntityDebugLines(m_world->Character);
-    }
+        /*
+         * Render world debug information
+         */
+        if((r_flags & R_DRAW_NORMALS) && (m_world->sky_box != NULL))
+        {
+            GLfloat tr[16];
+            float *p;
+            Mat4_E_macro(tr);
+            p = m_world->sky_box->animations->frames->bone_tags->offset;
+            vec3_add(tr+12, m_camera->pos, p);
+            p = m_world->sky_box->animations->frames->bone_tags->qrotate;
+            Mat4_set_qrotation(tr, p);
+            debugDrawer->DrawMeshDebugLines(m_world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
+        }
 
-    /*
-     * Render world debug information
-     */
-    if((r_flags & R_DRAW_NORMALS) && (m_world->sky_box != NULL))
-    {
-        GLfloat tr[16];
-        float *p;
-        Mat4_E_macro(tr);
-        p = m_world->sky_box->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, m_camera->pos, p);
-        p = m_world->sky_box->animations->frames->bone_tags->qrotate;
-        Mat4_set_qrotation(tr, p);
-        debugDrawer->DrawMeshDebugLines(m_world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
-    }
+        for(uint32_t i=0; i<r_list_active_count; i++)
+        {
+            debugDrawer->DrawRoomDebugLines(r_list[i].room);
+        }
 
-    for(uint32_t i=0; i<r_list_active_count; i++)
-    {
-        debugDrawer->DrawRoomDebugLines(r_list[i].room);
-    }
-
-    if(r_flags & R_DRAW_COLL)
-    {
-        Physics_DebugDrawWorld();
+        if(r_flags & R_DRAW_COLL)
+        {
+            Physics_DebugDrawWorld();
+        }
     }
 
     if(!debugDrawer->IsEmpty())

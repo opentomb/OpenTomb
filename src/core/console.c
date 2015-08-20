@@ -62,13 +62,13 @@ void Con_Init()
     con_base.log_pos = 0;
 
     // lines count check
-    if(con_base.line_count < CON_MIN_LOG)
+    if(con_base.line_count < CON_MIN_LINES)
     {
-        con_base.line_count = CON_MIN_LOG;
+        con_base.line_count = CON_MIN_LINES;
     }
-    if(con_base.line_count > CON_MAX_LOG)
+    if(con_base.line_count > CON_MAX_LINES)
     {
-        con_base.line_count = CON_MAX_LOG;
+        con_base.line_count = CON_MAX_LINES;
     }
 
     // log size check
@@ -86,9 +86,9 @@ void Con_Init()
     {
         con_base.showing_lines = CON_MIN_LINES;
     }
-    if(con_base.showing_lines > CON_MAX_LINES)
+    if(con_base.showing_lines > con_base.line_count)
     {
-        con_base.showing_lines = CON_MAX_LINES;
+        con_base.showing_lines = con_base.line_count;
     }
 
     // spacing check
@@ -200,88 +200,6 @@ void Con_Destroy()
 }
 
 
-void Con_ParseSettings(struct lua_State *lua)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        float t;
-        
-        lua_getglobal(lua, "console");
-        lua_getfield(lua, -1, "background_color");
-        if(lua_istable(lua, -1))
-        {
-            lua_getfield(lua, -1, "r");
-            con_base.background_color[0] = lua_tonumber(lua, -1) / 255.0;
-            lua_pop(lua, 1);
-            
-            lua_getfield(lua, -1, "g");
-            con_base.background_color[1] = lua_tonumber(lua, -1) / 255.0;
-            lua_pop(lua, 1);
-            
-            lua_getfield(lua, -1, "b");
-            con_base.background_color[2] = lua_tonumber(lua, -1) / 255.0;
-            lua_pop(lua, 1);
-            
-            lua_getfield(lua, -1, "a");
-            con_base.background_color[3] = lua_tonumber(lua, -1) / 255.0;
-            lua_pop(lua, 1);
-        }
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "spacing");
-        t = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        if(t >= CON_MIN_LINE_INTERVAL && t <= CON_MAX_LINE_INTERVAL)
-        {
-            con_base.spacing = t;
-        }
-        
-        lua_getfield(lua, -1, "line_size");
-        t = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
-        {
-            con_base.line_size = t;
-        }
-        
-        lua_getfield(lua, -1, "showing_lines");
-        t = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        if(t >= CON_MIN_LINES && t <= CON_MAX_LINES)
-        {
-            con_base.showing_lines = t;
-        }
-        
-        lua_getfield(lua, -1, "log_size");
-        t = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            con_base.log_lines_count = t;
-        }
-        
-        lua_getfield(lua, -1, "lines_count");
-        t = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
-        {
-            con_base.line_count = t;
-        }
-
-        lua_getfield(lua, -1, "show");
-        con_base.show_console = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-        
-        lua_getfield(lua, -1, "show_cursor_period");
-        con_base.show_cursor_period = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_settop(lua, top);
-    }
-}
-
-
 float Con_GetLineInterval()
 {
     return con_base.spacing;
@@ -290,13 +208,18 @@ float Con_GetLineInterval()
 
 void Con_SetLineInterval(float interval)
 {
-    if(!con_font_manager || (con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL) ||
-       (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
+    if((interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
     }
 
     con_base.spacing = interval;
+    
+    if(!con_font_manager || (con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL))
+    {
+        return;
+    }
+    
     // con_base.font->font_size has absolute size (after scaling)
     con_base.line_height = (1.0 + con_base.spacing) * con_font_manager->fonts[FONT_CONSOLE].gl_font->font_size;
     con_base.cursor_x = 8 + 1;
@@ -316,10 +239,49 @@ uint16_t Con_GetShowingLines()
 
 void Con_SetShowingLines(uint16_t value)
 {
-    if((value >=2 ) && (value <= con_base.line_count))
+    if((value >= 2) && (value <= con_base.line_count))
     {
         con_base.showing_lines = value;
         con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
+    }
+}
+
+
+void Con_SetBackgroundColor(float color[4])
+{
+    vec4_copy(con_base.background_color, color);
+}
+
+
+void Con_SetShowCursorPeriod(float time)
+{
+    con_base.show_cursor_period = time;
+}
+
+
+void Con_SetLinesCount(uint16_t count)
+{
+    if((count >= CON_MIN_LINES) && (count <= CON_MAX_LINES) && (con_base.line_text == NULL))
+    {
+        con_base.line_count = count;
+    }
+}
+
+
+void Con_SetLogLinesCount(uint16_t count)
+{
+    if((count >= CON_MIN_LOG) && (count <= CON_MAX_LOG) && (con_base.log_lines == NULL))
+    {
+        con_base.log_lines_count = count;
+    }
+}
+
+
+void Con_SetMaxLineLenght(uint16_t line_size)
+{
+    if((line_size >= CON_MIN_LINE_SIZE) && (line_size <= CON_MAX_LINE_SIZE) && (con_base.line_text == NULL) && (con_base.log_lines == NULL))
+    {
+        con_base.line_size = line_size;
     }
 }
 

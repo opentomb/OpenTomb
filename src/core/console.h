@@ -16,7 +16,7 @@ extern "C" {
 #define CON_MAX_LOG 128
 
 #define CON_MIN_LINES 64
-#define CON_MAX_LINES 256
+#define CON_MAX_LINES 512
 
 #define CON_MIN_LINE_SIZE 80
 #define CON_MAX_LINE_SIZE 256
@@ -65,18 +65,21 @@ enum font_Type
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 #define GUI_MAX_FONTS      8    // 8 fonts is PLENTY.
 
-struct lua_State;
-
 void Con_Init();
 void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();
-void Con_ParseSettings(struct lua_State *lua);
 
 float Con_GetLineInterval();
 void  Con_SetLineInterval(float interval);
 uint16_t Con_GetShowingLines();
 void Con_SetShowingLines(uint16_t value);
+void Con_SetBackgroundColor(float color[4]);
+void Con_SetShowCursorPeriod(float time);
+
+void Con_SetLinesCount(uint16_t count);
+void Con_SetLogLinesCount(uint16_t count);
+void Con_SetMaxLineLenght(uint16_t line_size);
 
 void Con_Filter(char *text);
 void Con_Edit(int key);

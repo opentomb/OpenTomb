@@ -716,7 +716,7 @@ void Engine_InitConfig(const char *filename)
             lua_ParseScreen(lua, &screen_info);
             lua_ParseRender(lua, &renderer.settings);
             lua_ParseAudio(lua, &audio_settings);
-            Con_ParseSettings(lua);
+            lua_ParseConsole(lua);
             lua_ParseControls(lua, &control_mapper);
             lua_close(lua);
         }

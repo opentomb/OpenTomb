@@ -276,7 +276,7 @@ void Physics_Destroy()
 }
 
 
-void Physics_StepSimulation(btScalar time)
+void Physics_StepSimulation(float time)
 {
     bt_engine_dynamicsWorld->stepSimulation(time, 0);
     collision_nodes_pool_used = 0;
@@ -1957,28 +1957,28 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
 
-            bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+        bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
 
-            physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-            physics->bt_body[i]->setMassProps(mass, inertia);
+        physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+        physics->bt_body[i]->setMassProps(mass, inertia);
 
-            physics->bt_body[i]->updateInertiaTensor();
-            physics->bt_body[i]->clearForces();
+        physics->bt_body[i]->updateInertiaTensor();
+        physics->bt_body[i]->clearForces();
 
-            physics->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-            physics->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+        physics->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+        physics->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
 
-            physics->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
-            physics->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
-            physics->bt_body[i]->setFriction(setup->body_setup[i].friction);
-            physics->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
+        physics->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+        physics->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+        physics->bt_body[i]->setFriction(setup->body_setup[i].friction);
+        physics->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
-            if(bf->bone_tags[i].parent == NULL)
-            {
-                btScalar r = getInnerBBRadius(bf->bone_tags[i].mesh_base->bb_min, bf->bone_tags[i].mesh_base->bb_max);
-                physics->bt_body[i]->setCcdMotionThreshold(0.8 * r);
-                physics->bt_body[i]->setCcdSweptSphereRadius(r);
-            }
+        if(bf->bone_tags[i].parent == NULL)
+        {
+            btScalar r = getInnerBBRadius(bf->bone_tags[i].mesh_base->bb_min, bf->bone_tags[i].mesh_base->bb_max);
+            physics->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+            physics->bt_body[i]->setCcdSweptSphereRadius(r);
+        }
     }
 
     for(uint16_t i = 0; i < setup->body_count; i++)

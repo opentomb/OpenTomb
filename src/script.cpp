@@ -683,6 +683,70 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     return -1;
 }
 
+int lua_ParseConsole(lua_State *lua)
+{
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+
+        lua_getglobal(lua, "console");
+        lua_getfield(lua, -1, "background_color");
+        if(lua_istable(lua, -1))
+        {
+            float color[4];
+            lua_getfield(lua, -1, "r");
+            color[0] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
+            lua_getfield(lua, -1, "g");
+            color[1] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
+            lua_getfield(lua, -1, "b");
+            color[2] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
+            lua_getfield(lua, -1, "a");
+            color[3] = lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+            Con_SetBackgroundColor(color);
+        }
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "spacing");
+        Con_SetLineInterval(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "line_size");
+        Con_SetMaxLineLenght(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "lines_count");
+        Con_SetLinesCount(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "log_size");
+        Con_SetLogLinesCount(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "showing_lines");
+        Con_SetShowingLines(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "show");
+        Con_SetShown(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "show_cursor_period");
+        Con_SetShowCursorPeriod(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
+
+        lua_settop(lua, top);
+        return 1;
+    }
+
+    return -1;
+}
 
 void lua_Clean(lua_State *lua)
 {
