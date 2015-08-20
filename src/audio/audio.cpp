@@ -10,7 +10,7 @@
 #include "engine.h"
 #include "entity.h"
 #include "util/helpers.h"
-#include "render.h"
+#include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
 #include "system.h"
@@ -1922,7 +1922,7 @@ void update()
     }
     else
     {
-        updateListenerByCamera(renderer.camera());
+        updateListenerByCamera(render::renderer.camera());
     }
 }
 

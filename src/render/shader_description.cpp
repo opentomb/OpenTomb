@@ -10,6 +10,8 @@
 #include <cassert>
 #include <cstdlib>
 
+namespace render
+{
 
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
@@ -33,7 +35,7 @@ ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStag
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
 
-    checkOpenGLError();
+    CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
 
     sampler = glGetUniformLocation(program, "color_map");
@@ -56,7 +58,7 @@ GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const Shad
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
 
-    checkOpenGLError();
+    CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
 }
 
@@ -71,7 +73,7 @@ TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const Sh
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
 
-    checkOpenGLError();
+    CHECK_OPENGL_ERROR();
 
     printShaderInfoLog(program);
 
@@ -91,7 +93,7 @@ SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, cons
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
 
-    checkOpenGLError();
+    CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
 }
 
@@ -108,7 +110,7 @@ UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const 
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
     assert(isLinked == GL_TRUE);
 
-    checkOpenGLError();
+    CHECK_OPENGL_ERROR();
 
     printShaderInfoLog(program);
 
@@ -134,3 +136,5 @@ UnlitTintedShaderDescription::UnlitTintedShaderDescription(const ShaderStage &ve
     current_tick = glGetUniformLocation(program, "fCurrentTick");
     tint_mult = glGetUniformLocation(program, "tintMult");
 }
+
+} // namespace render

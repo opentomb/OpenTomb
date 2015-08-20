@@ -29,7 +29,7 @@
 #include "LuaState.h"
 #include "loader/level.h"
 
-#include "gl_util.h"
+#include "render/gl_util.h"
 #include "polygon.h"
 #include "util/vmath.h"
 #include "controls.h"
@@ -37,7 +37,7 @@
 #include "system.h"
 #include "common.h"
 #include "script/script.h"
-#include "render.h"
+#include "render/render.h"
 #include "game.h"
 #include "world.h"
 #include "camera.h"
@@ -87,7 +87,10 @@ btSequentialImpulseConstraintSolver *bt_engine_solver = nullptr;
 btDiscreteDynamicsWorld             *bt_engine_dynamicsWorld = nullptr;
 btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 
-RenderDebugDrawer                    debugDrawer;
+namespace render
+{
+render::RenderDebugDrawer                    debugDrawer;
+} // namespace render
 
 // Debug globals.
 
@@ -111,7 +114,7 @@ void Engine_InitGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(renderer.settings().antialias)
+    if(render::renderer.settings().antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -217,7 +220,7 @@ void Engine_InitSDLVideo()
         Sys_Error("Could not init OpenGL driver");
     }
 
-    if(renderer.settings().use_gl3)
+    if(render::renderer.settings().use_gl3)
     {
         /* Request opengl 3.2 context. */
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -239,29 +242,29 @@ void Engine_InitSDLVideo()
 
     // Check for correct number of antialias samples.
 
-    if(renderer.settings().antialias)
+    if(render::renderer.settings().antialias)
     {
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         maxSamples = (maxSamples > 16) ? (16) : (maxSamples);   // Fix for faulty GL max. sample number.
 
-        if(renderer.settings().antialias_samples > maxSamples)
+        if(render::renderer.settings().antialias_samples > maxSamples)
         {
             if(maxSamples == 0)
             {
-                renderer.settings().antialias = 0;
-                renderer.settings().antialias_samples = 0;
+                render::renderer.settings().antialias = 0;
+                render::renderer.settings().antialias_samples = 0;
                 Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
             }
             else
             {
-                renderer.settings().antialias_samples = maxSamples;   // Limit to max.
+                render::renderer.settings().antialias_samples = maxSamples;   // Limit to max.
                 Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
             }
         }
 
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings().antialias);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings().antialias_samples);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, render::renderer.settings().antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, render::renderer.settings().antialias_samples);
     }
     else
     {
@@ -275,7 +278,7 @@ void Engine_InitSDLVideo()
     SDL_DestroyWindow(sdl_window);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render::renderer.settings().z_depth);
 
 #if STENCIL_FRUSTUM
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -401,7 +404,7 @@ void Engine_Start()
 
     // Additional OpenGL initialization.
     Engine_InitGL();
-    renderer.doShaders();
+    render::renderer.doShaders();
 
     // Secondary (deferred) initialization.
     Engine_Init_Post();
@@ -440,8 +443,8 @@ void Engine_Display()
 
     glFrontFace(GL_CW);
 
-    renderer.genWorldList();
-    renderer.drawList();
+    render::renderer.genWorldList();
+    render::renderer.drawList();
 
     //glDisable(GL_CULL_FACE);
     //Render_DrawAxis(10000.0);
@@ -465,7 +468,7 @@ void Engine_Display()
     gui::render();
     gui::switchGLMode(false);
 
-    renderer.drawListDebugLines();
+    render::renderer.drawListDebugLines();
 
     SDL_GL_SwapWindow(sdl_window);
 }
@@ -659,7 +662,7 @@ void Engine_InitDefaultGlobals()
     Console::instance().initGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
-    renderer.initGlobals();
+    render::renderer.initGlobals();
     audio::initGlobals();
 }
 
@@ -677,14 +680,14 @@ void Engine_Init_Pre()
 
     Gameflow_Init();
 
-    frame_vertex_buffer.resize(INIT_FRAME_VERTEX_BUFFER_SIZE);
+    frame_vertex_buffer.resize(render::InitFrameVertexBufferSize);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
 
     Console::instance().setCompletionItems(engine_lua.getGlobals());
 
     Com_Init();
-    renderer.init();
-    renderer.setCamera(&engine_camera);
+    render::renderer.init();
+    render::renderer.setCamera(&engine_camera);
 
     Engine_InitBullet();
 }
@@ -724,8 +727,8 @@ void Engine_InitBullet()
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
-    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
-    bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
+    render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
+    bt_engine_dynamicsWorld->setDebugDrawer(&render::debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
@@ -756,7 +759,7 @@ void Engine_DumpRoom(Room* r)
 
 void Engine_Destroy()
 {
-    renderer.empty();
+    render::renderer.empty();
     //ConsoleInfo::instance().destroy();
     Com_Destroy();
     Sys_Destroy();
@@ -783,7 +786,7 @@ void Engine_Destroy()
 void Engine_Shutdown(int val)
 {
     engine_lua.clearTasks();
-    renderer.empty();
+    render::renderer.empty();
     engine_world.empty();
     Engine_Destroy();
 
@@ -948,8 +951,8 @@ int Engine_LoadMap(const std::string& name)
 
     engine_camera.m_currentRoom = nullptr;
 
-    renderer.hideSkyBox();
-    renderer.resetWorld();
+    render::renderer.hideSkyBox();
+    render::renderer.resetWorld();
 
     gameflow_manager.CurrentLevelPath = name;          // it is needed for "not in the game" levels or correct saves loading.
 
@@ -993,7 +996,7 @@ int Engine_LoadMap(const std::string& name)
 
     engine_lua.prepare();
 
-    renderer.setWorld(&engine_world);
+    render::renderer.setWorld(&engine_world);
 
     gui::drawLoadScreen(1000);
 
@@ -1027,7 +1030,7 @@ int Engine_ExecCmd(const char *ch)
             const auto x = script::MainEngine::parseFloat(&ch);
             const auto y = script::MainEngine::parseFloat(&ch);
             const auto z = script::MainEngine::parseFloat(&ch);
-            renderer.camera()->setPosition({ x, y, z });
+            render::renderer.camera()->setPosition({ x, y, z });
             return 1;
         }
         else if(!strcmp(token.data(), "save"))
@@ -1094,69 +1097,69 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "r_wireframe"))
         {
-            renderer.toggleWireframe();
+            render::renderer.toggleWireframe();
             return 1;
         }
         else if(!strcmp(token.data(), "r_points"))
         {
-            renderer.toggleDrawPoints();
+            render::renderer.toggleDrawPoints();
             return 1;
         }
         else if(!strcmp(token.data(), "r_coll"))
         {
-            renderer.toggleDrawColl();
+            render::renderer.toggleDrawColl();
             return 1;
         }
         else if(!strcmp(token.data(), "r_normals"))
         {
-            renderer.toggleDrawNormals();
+            render::renderer.toggleDrawNormals();
             return 1;
         }
         else if(!strcmp(token.data(), "r_portals"))
         {
-            renderer.toggleDrawPortals();
+            render::renderer.toggleDrawPortals();
             return 1;
         }
         else if(!strcmp(token.data(), "r_frustums"))
         {
-            renderer.toggleDrawFrustums();
+            render::renderer.toggleDrawFrustums();
             return 1;
         }
         else if(!strcmp(token.data(), "r_room_boxes"))
         {
-            renderer.toggleDrawRoomBoxes();
+            render::renderer.toggleDrawRoomBoxes();
             return 1;
         }
         else if(!strcmp(token.data(), "r_boxes"))
         {
-            renderer.toggleDrawBoxes();
+            render::renderer.toggleDrawBoxes();
             return 1;
         }
         else if(!strcmp(token.data(), "r_axis"))
         {
-            renderer.toggleDrawAxis();
+            render::renderer.toggleDrawAxis();
             return 1;
         }
         else if(!strcmp(token.data(), "r_allmodels"))
         {
-            renderer.toggleDrawAllModels();
+            render::renderer.toggleDrawAllModels();
             return 1;
         }
         else if(!strcmp(token.data(), "r_dummy_statics"))
         {
-            renderer.toggleDrawDummyStatics();
+            render::renderer.toggleDrawDummyStatics();
             return 1;
         }
         else if(!strcmp(token.data(), "r_skip_room"))
         {
-            renderer.toggleSkipRoom();
+            render::renderer.toggleSkipRoom();
             return 1;
         }
         else if(!strcmp(token.data(), "room_info"))
         {
-            if(Room* r = renderer.camera()->m_currentRoom)
+            if(Room* r = render::renderer.camera()->m_currentRoom)
             {
-                sect = r->getSectorXYZ(renderer.camera()->getPosition());
+                sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
                 Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
@@ -1246,7 +1249,7 @@ void Engine_InitConfig(const char *filename)
         }
 
         state.parseScreen(&screen_info);
-        state.parseRender(&renderer.settings());
+        state.parseRender(&render::renderer.settings());
         state.parseAudio(&audio::audio_settings);
         state.parseConsole(&Console::instance());
         state.parseControls(&control_mapper);

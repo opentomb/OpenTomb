@@ -18,7 +18,7 @@
 #include "mesh.h"
 #include "entity.h"
 #include "camera.h"
-#include "render.h"
+#include "render/render.h"
 #include "system.h"
 #include "script/script.h"
 #include "gui/console.h"
@@ -368,7 +368,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     cam_angles[2] += 2.2f * engine_frame_time * look_logic[2];
 
     // FIXME: Duplicate code - do we need cam control with no world??
-    if(!renderer.world())
+    if(!render::renderer.world())
     {
         if(control_mapper.use_joy)
         {
@@ -390,11 +390,11 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             control_states.look_axis_y = 0.0;
         }
 
-        renderer.camera()->setRotation(cam_angles);
+        render::renderer.camera()->setRotation(cam_angles);
         btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
-        renderer.camera()->moveAlong(dist * move_logic[0]);
-        renderer.camera()->moveStrafe(dist * move_logic[1]);
-        renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->moveAlong(dist * move_logic[0]);
+        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
+        render::renderer.camera()->moveVertical(dist * move_logic[2]);
 
         return;
     }
@@ -422,24 +422,24 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
     {
         btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
-        renderer.camera()->setRotation(cam_angles);
-        renderer.camera()->moveAlong(dist * move_logic[0]);
-        renderer.camera()->moveStrafe(dist * move_logic[1]);
-        renderer.camera()->moveVertical(dist * move_logic[2]);
-        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->getPosition(), renderer.camera()->m_currentRoom);
+        render::renderer.camera()->setRotation(cam_angles);
+        render::renderer.camera()->moveAlong(dist * move_logic[0]);
+        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
+        render::renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
     }
     else if(control_states.noclip)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
-        renderer.camera()->setRotation(cam_angles);
-        renderer.camera()->moveAlong(dist * move_logic[0]);
-        renderer.camera()->moveStrafe(dist * move_logic[1]);
-        renderer.camera()->moveVertical(dist * move_logic[2]);
-        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->getPosition(), renderer.camera()->m_currentRoom);
+        render::renderer.camera()->setRotation(cam_angles);
+        render::renderer.camera()->moveAlong(dist * move_logic[0]);
+        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
+        render::renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = cam_angles[0] * util::DegPerRad;
-        pos = renderer.camera()->getPosition() + renderer.camera()->getViewDir() * control_states.cam_distance;
+        pos = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
         pos[2] -= 512.0;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
@@ -615,12 +615,12 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam_pos = ent->camPosForFollowing(dz);
 
     //Code to manage screen shaking effects
-    if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
+    if((render::renderer.camera()->m_shakeTime > 0.0) && (render::renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
-        cam_pos[1] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
-        cam_pos[2] += (std::fmod(rand(), std::abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2.0f)) * renderer.camera()->m_shakeTime;;
-        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0f):(renderer.camera()->m_shakeTime)-engine_frame_time;
+        cam_pos[0] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
+        cam_pos[1] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
+        cam_pos[2] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
+        render::renderer.camera()->m_shakeTime  = (render::renderer.camera()->m_shakeTime < 0.0)?(0.0f):(render::renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -843,7 +843,7 @@ void Game_Frame(btScalar time)
             engine_world.character->frame(engine_frame_time);
             engine_world.character->applyCommands();
             engine_world.character->frame(0.0);
-            Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
+            Cam_FollowEntity(render::renderer.camera(), engine_world.character, 16.0, 128.0);
         }
     }
 

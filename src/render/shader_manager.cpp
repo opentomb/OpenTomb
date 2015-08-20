@@ -3,6 +3,9 @@
 #include <cassert>
 #include <sstream>
 
+namespace render
+{
+
 ShaderManager::ShaderManager()
 {
     ShaderStage staticMeshVsh(GL_VERTEX_SHADER, "shaders/static_mesh.vsh");
@@ -28,7 +31,7 @@ ShaderManager::ShaderManager()
     // Entity prog
     ShaderStage entityVertexShader(GL_VERTEX_SHADER, "shaders/entity.vsh");
     ShaderStage entitySkinVertexShader(GL_VERTEX_SHADER, "shaders/entity_skin.vsh");
-    for(int i = 0; i <= MAX_NUM_LIGHTS; i++)
+    for(int i = 0; i < EntityShaderLightsLimit; i++)
     {
         std::ostringstream stream;
         stream << "#define NUMBER_OF_LIGHTS " << i << std::endl;
@@ -62,3 +65,5 @@ ShaderManager::ShaderManager()
     ShaderStage debugFsh(GL_FRAGMENT_SHADER, "shaders/debuglines.fsh");
     m_debugline = new UnlitShaderDescription(debugVsh, debugFsh);
 }
+
+} // namespace render

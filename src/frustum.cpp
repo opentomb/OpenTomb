@@ -10,7 +10,7 @@
 #include "obb.h"
 #include "polygon.h"
 #include "portal.h"
-#include "render.h"
+#include "render/render.h"
 #include "util/vmath.h"
 #include "world.h"
 
@@ -129,7 +129,7 @@ void Frustum::genClipPlanes(Camera *cam)
  * receiver - points to the base room frustum, which portal leads to - it's taken from the portal!
  * returns a pointer to newly generated frustum.
  */
-Frustum* Frustum::portalFrustumIntersect(Portal *portal, const Frustum& emitter, Render *render)
+Frustum* Frustum::portalFrustumIntersect(Portal *portal, const Frustum& emitter, render::Render *render)
 {
     if(!portal->dest_room)
         return nullptr;

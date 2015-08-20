@@ -10,7 +10,7 @@
 #include "gl_font.h"
 #include "gui.h"
 #include "script/script.h"
-#include "shader_manager.h"
+#include "render/shader_manager.h"
 #include "system.h"
 
 using namespace gui;
@@ -89,7 +89,7 @@ void Console::draw()
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
+    render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {

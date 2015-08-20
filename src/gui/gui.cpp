@@ -14,14 +14,14 @@
 #include "console.h"
 #include "engine.h"
 #include "gl_font.h"
-#include "gl_util.h"
-#include "render.h"
+#include "render/gl_util.h"
+#include "render/render.h"
 #include "script/script.h"
-#include "shader_description.h"
-#include "shader_manager.h"
+#include "render/shader_description.h"
+#include "render/shader_manager.h"
 #include "strings.h"
 #include "system.h"
-#include "vertex_array.h"
+#include "render/vertex_array.h"
 #include "util/vmath.h"
 
 
@@ -42,7 +42,7 @@ FontManager       *fontManager = nullptr;
 InventoryManager  *main_inventory_manager = nullptr;
 
 GLuint crosshairBuffer;
-VertexArray *crosshairArray;
+render::VertexArray *crosshairArray;
 
 util::matrix4 guiProjectionMatrix = util::matrix4();
 
@@ -485,7 +485,7 @@ void renderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
+        render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
         glUseProgram(shader->program);
         GLfloat screenSize[2] = {
             static_cast<GLfloat>(screen_info.w),
@@ -570,7 +570,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void renderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
+    const render::LitShaderDescription *shader = render::renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
     glUniform1i(shader->number_of_lights, 0);
     glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -599,12 +599,12 @@ void renderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        render::renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         util::matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        render::renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -1114,16 +1114,16 @@ void fillCrosshairBuffer()
     glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
 
-    VertexArrayAttribute attribs[] = {
-        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
-        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+    render::VertexArrayAttribute attribs[] = {
+        render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray = new VertexArray(0, 2, attribs);
+    crosshairArray = new render::VertexArray(0, 2, attribs);
 }
 
 void drawCrosshair()
 {
-    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
+    render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(false);
 
     glUseProgram(shader->program);
     GLfloat factor[2] = {
@@ -1248,7 +1248,7 @@ namespace
 {
     GLuint rectanglePositionBuffer = 0;
     GLuint rectangleColorBuffer = 0;
-    std::unique_ptr<VertexArray> rectangleArray = nullptr;
+    std::unique_ptr<render::VertexArray> rectangleArray = nullptr;
 }
 
 /**
@@ -1292,11 +1292,11 @@ void drawRect(const GLfloat &x, const GLfloat &y,
 
         glGenBuffers(1, &rectangleColorBuffer);
 
-        VertexArrayAttribute attribs[] = {
-            VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat[2]), 0),
-            VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat[4]), 0),
+        render::VertexArrayAttribute attribs[] = {
+            render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat[2]), 0),
+            render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat[4]), 0),
         };
-        rectangleArray.reset(new VertexArray(0, 2, attribs));
+        rectangleArray.reset(new render::VertexArray(0, 2, attribs));
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
@@ -1311,7 +1311,7 @@ void drawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(texture != 0);
+    render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     if(texture)

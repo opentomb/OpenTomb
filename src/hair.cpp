@@ -8,7 +8,7 @@
 #include "LuaState.h"
 
 #include "mesh.h"
-#include "render.h"
+#include "render/render.h"
 #include "script/script.h"
 
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
@@ -323,7 +323,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
         }
     }
 
-    m_mesh->genVBO(&renderer);
+    m_mesh->genVBO(&render::renderer);
 }
 
 void HairSetup::getSetup(uint32_t hair_entry_index)

@@ -11,7 +11,7 @@
 #include "LuaState.h"
 
 #include "object.h"
-#include "vertex_array.h"
+#include "render/vertex_array.h"
 
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
@@ -31,13 +31,17 @@ struct Room;
 struct EngineContainer;
 struct OBB;
 struct Vertex;
-class Render;
 struct Entity;
+
+namespace render
+{
+class Render;
+} // namespace render
 
 struct TransparentPolygonReference
 {
     const struct Polygon *polygon;
-    std::shared_ptr<VertexArray> used_vertex_array;
+    std::shared_ptr<render::VertexArray> used_vertex_array;
     size_t firstIndex;
     size_t count;
     bool isAnimated;
@@ -94,7 +98,7 @@ struct BaseMesh
     GLuint                m_vboVertexArray = 0;
     GLuint                m_vboIndexArray = 0;
     GLuint                m_vboSkinArray = 0;
-    std::shared_ptr<VertexArray> m_mainVertexArray;
+    std::shared_ptr<render::VertexArray> m_mainVertexArray;
 
     // Buffers for animated polygons
     // The first contains position, normal and color.
@@ -102,7 +106,7 @@ struct BaseMesh
     GLuint                m_animatedVboVertexArray;
     GLuint                m_animatedVboTexCoordArray;
     GLuint                m_animatedVboIndexArray;
-    std::shared_ptr<VertexArray> m_animatedVertexArray;
+    std::shared_ptr<render::VertexArray> m_animatedVertexArray;
 
     ~BaseMesh()
     {
@@ -111,7 +115,7 @@ struct BaseMesh
 
     void clear();
     void findBB();
-    void genVBO(const Render *renderer);
+    void genVBO(const render::Render *renderer);
     void genFaces();
     uint32_t addVertex(const Vertex& v);
     uint32_t addAnimatedVertex(const Vertex& v);
@@ -139,7 +143,7 @@ struct Sprite
 struct SpriteBuffer
 {
     // Vertex data for the sprites
-    std::unique_ptr<VertexArray> data{};
+    std::unique_ptr<render::VertexArray> data{};
 
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages = 0;
@@ -173,6 +177,14 @@ struct TexFrame
     uint16_t    tex_ind;
 };
 
+// Animated texture types
+enum class AnimTextureType
+{
+    Forward,
+    Backward,
+    Reverse
+};
+
 struct AnimSeq
 {
     bool        uvrotate;               // UVRotate mode flag.
@@ -182,7 +194,7 @@ struct AnimSeq
     btScalar    blend_rate;             // Blend rate.  Reserved for future use!
     btScalar    blend_time;             // Blend value. Reserved for future use!
 
-    int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
+    AnimTextureType anim_type;          // 0 = normal, 1 = back, 2 = reverse.
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
     btScalar    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.

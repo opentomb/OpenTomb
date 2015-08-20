@@ -24,16 +24,16 @@
 #include "entity.h"
 #include "game.h"
 #include "gameflow.h"
-#include "gl_util.h"
+#include "render/gl_util.h"
 #include "gui/gui.h"
 #include "util/helpers.h"
 #include "mesh.h"
 #include "obb.h"
 #include "polygon.h"
 #include "portal.h"
-#include "render.h"
+#include "render/render.h"
 #include "script/script.h"
-#include "shader_description.h"
+#include "render/shader_description.h"
 #include "strings.h"
 #include "system.h"
 #include "util/vmath.h"
@@ -2302,10 +2302,10 @@ void Res_GenSpritesBuffer(World *world)
 
 void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
 {
-    int border_size = util::clamp(renderer.settings().texture_border, 0, 64);
+    int border_size = util::clamp(render::renderer.settings().texture_border, 0, 64);
 
     world->tex_atlas.reset(new BorderedTextureAtlas(border_size,
-                                                    renderer.settings().save_texture_memory,
+                                                    render::renderer.settings().save_texture_memory,
                                                     tr->m_textures,
                                                     tr->m_objectTextures,
                                                     tr->m_spriteTextures));
@@ -2323,7 +2323,7 @@ void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
     // Select mipmap mode
-    switch(renderer.settings().mipmap_mode)
+    switch(render::renderer.settings().mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -2348,13 +2348,13 @@ void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings().mipmaps);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, render::renderer.settings().mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings().anisotropy);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, render::renderer.settings().anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings().lod_bias);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, render::renderer.settings().lod_bias);
 
     glBindTexture(GL_TEXTURE_2D, world->textures.back());          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -2394,7 +2394,7 @@ void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr)
         seq->frame_list.resize(seq->frames.size());
 
         // Fill up new sequence with frame list.
-        seq->anim_type = TR_ANIMTEXTURE_FORWARD;
+        seq->anim_type = AnimTextureType::Forward;
         seq->frame_lock = false; // by default anim is playing
         seq->uvrotate = false; // by default uvrotate
         seq->reverse_direction = false; // Needed for proper reverse-type start-up.
@@ -2433,11 +2433,11 @@ void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr)
 
             if(uvrotate_script > 0)
             {
-                seq->anim_type = TR_ANIMTEXTURE_FORWARD;
+                seq->anim_type = AnimTextureType::Forward;
             }
             else if(uvrotate_script < 0)
             {
-                seq->anim_type = TR_ANIMTEXTURE_BACKWARD;
+                seq->anim_type = AnimTextureType::Backward;
             }
 
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
@@ -2913,13 +2913,13 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements[0]) * elements.size(), elements.data(), GL_STATIC_DRAW);
     elements.clear();
 
-    VertexArrayAttribute attribs[3] = {
-        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position,      3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), 0),
-        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::tex_coord,     2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
-        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
+    render::VertexArrayAttribute attribs[3] = {
+        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::position,      3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), 0),
+        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::tex_coord,     2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
-    room->sprite_buffer->data.reset(new VertexArray(elementBuffer, 3, attribs));
+    room->sprite_buffer->data.reset(new render::VertexArray(elementBuffer, 3, attribs));
 }
 
 void Res_GenVBOs(World *world)
@@ -2928,7 +2928,7 @@ void Res_GenVBOs(World *world)
     {
         if(!world->meshes[i]->m_vertices.empty() || !world->meshes[i]->m_animatedVertices.empty())
         {
-            world->meshes[i]->genVBO(&renderer);
+            world->meshes[i]->genVBO(&render::renderer);
         }
     }
 
@@ -2936,7 +2936,7 @@ void Res_GenVBOs(World *world)
     {
         if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || !world->rooms[i]->mesh->m_animatedVertices.empty()))
         {
-            world->rooms[i]->mesh->genVBO(&renderer);
+            world->rooms[i]->mesh->genVBO(&render::renderer);
         }
     }
 }

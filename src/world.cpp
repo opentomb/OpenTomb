@@ -16,7 +16,7 @@
 #include "obb.h"
 #include "polygon.h"
 #include "portal.h"
-#include "render.h"
+#include "render/render.h"
 #include "resource.h"
 #include "script/script.h"
 #include "util/vmath.h"
@@ -876,7 +876,7 @@ void Room::swapToBase()
 {
     if((base_room != nullptr) && active)                        //If room is active alternate room
     {
-        renderer.cleanList();
+        render::renderer.cleanList();
         disable();                             //Disable current room
         base_room->disable();                  //Paranoid
         swapPortals(base_room);        //Update portals to match this room
@@ -889,7 +889,7 @@ void Room::swapToAlternate()
 {
     if((alternate_room != nullptr) && active)              //If room is active base room
     {
-        renderer.cleanList();
+        render::renderer.cleanList();
         disable();                             //Disable current room
         alternate_room->disable();             //Paranoid
         swapPortals(alternate_room);   //Update portals to match this room
@@ -1114,7 +1114,7 @@ void World::updateAnimTextures()                                                
 
             switch(seq.anim_type)
             {
-                case TR_ANIMTEXTURE_REVERSE:
+                case AnimTextureType::Reverse:
                     if(seq.reverse_direction)
                     {
                         if(seq.current_frame == 0)
@@ -1142,8 +1142,8 @@ void World::updateAnimTextures()                                                
                     }
                     break;
 
-                case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
-                case TR_ANIMTEXTURE_BACKWARD:
+                case AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
+                case AnimTextureType::Backward:
                     seq.current_frame++;
                     seq.current_frame %= seq.frames.size();
                     break;

@@ -4,8 +4,14 @@
 
 #include "shader_description.h"
 
+namespace render
+{
+
+namespace
+{
 // Highest number of lights that will show up in the entity shader.
-#define MAX_NUM_LIGHTS 8
+constexpr int EntityShaderLightsLimit = 8;
+} // anonymous namespace
 
 
 // Class containing all shaders used by OpenTomb. The shader objects
@@ -18,7 +24,7 @@ private:
     UnlitTintedShaderDescription    *m_staticMeshShader;
     UnlitShaderDescription          *m_stencil;
     UnlitShaderDescription          *m_debugline;
-    LitShaderDescription            *m_entityShader[MAX_NUM_LIGHTS + 1][2];
+    LitShaderDescription            *m_entityShader[EntityShaderLightsLimit][2];
     GuiShaderDescription            *m_gui;
     GuiShaderDescription            *m_guiTextured;
     TextShaderDescription           *m_text;
@@ -38,7 +44,7 @@ public:
 
     LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const
     {
-        assert(numberOfLights <= MAX_NUM_LIGHTS);
+        assert(numberOfLights < EntityShaderLightsLimit);
 
         return m_entityShader[numberOfLights][skin ? 1 : 0];
     }
@@ -79,3 +85,5 @@ public:
         return m_sprites;
     }
 };
+
+} // namespace render

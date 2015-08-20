@@ -6,12 +6,12 @@
 #include <btBulletDynamicsCommon.h>
 
 #include "engine.h"
-#include "gl_util.h"
+#include "render/gl_util.h"
 #include "obb.h"
 #include "polygon.h"
-#include "render.h"
+#include "render/render.h"
 #include "resource.h"
-#include "shader_description.h"
+#include "render/shader_description.h"
 #include "util/vmath.h"
 #include "world.h"
 
@@ -62,7 +62,7 @@ void BaseMesh::findBB()
     }
 }
 
-void BaseMesh::genVBO(const Render* /*renderer*/)
+void BaseMesh::genVBO(const render::Render* /*renderer*/)
 {
     if(m_vboIndexArray || m_vboVertexArray || m_vboSkinArray)
         return;
@@ -92,16 +92,16 @@ void BaseMesh::genVBO(const Render* /*renderer*/)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementsSize, m_elements.data(), GL_STATIC_DRAW);
 
     // Prepare vertex array
-    VertexArrayAttribute attribs[] = {
-        VertexArrayAttribute(LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, position)),
-        VertexArrayAttribute(LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, normal)),
-        VertexArrayAttribute(LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, color)),
-        VertexArrayAttribute(LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, tex_coord)),
+    render::VertexArrayAttribute attribs[] = {
+        render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, position)),
+        render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, normal)),
+        render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, color)),
+        render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, tex_coord)),
         // Only used for skinned meshes
-        VertexArrayAttribute(LitShaderDescription::VertexAttribs::MatrixIndex, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
+        render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::MatrixIndex, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
     };
     int numAttribs = !m_matrixIndices.empty() ? 5 : 4;
-    m_mainVertexArray = std::make_shared<VertexArray>(m_vboIndexArray, numAttribs, attribs);
+    m_mainVertexArray = std::make_shared<render::VertexArray>(m_vboIndexArray, numAttribs, attribs);
 
     // Now for animated polygons, if any
     if(!m_allAnimatedElements.empty())
@@ -121,14 +121,14 @@ void BaseMesh::genVBO(const Render* /*renderer*/)
         glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[2]) * m_animatedVertices.size(), nullptr, GL_STREAM_DRAW);
 
         // Create vertex array object.
-        VertexArrayAttribute attribs2[] = {
-            VertexArrayAttribute(LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, position)),
-            VertexArrayAttribute(LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, color)),
-            VertexArrayAttribute(LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, normal)),
+        render::VertexArrayAttribute attribs2[] = {
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, position)),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, color)),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, normal)),
 
-            VertexArrayAttribute(LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat[2]), 0),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat[2]), 0),
         };
-        m_animatedVertexArray = std::make_shared<VertexArray>(m_animatedVboIndexArray, 4, attribs2);
+        m_animatedVertexArray = std::make_shared<render::VertexArray>(m_animatedVboIndexArray, 4, attribs2);
     }
     else
     {

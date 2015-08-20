@@ -2,6 +2,9 @@
 
 #include "gl_util.h"
 
+namespace render
+{
+
 // A shader stage is a simple wrapper to load an OpenGL shader
 // object more easily.
 
@@ -127,3 +130,5 @@ struct UnlitTintedShaderDescription : public UnlitShaderDescription
 
     UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
+
+} // namespace render

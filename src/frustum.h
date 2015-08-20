@@ -8,10 +8,14 @@
 
 struct Room;
 struct Portal;
-class  Render;
 struct OBB;
 struct Polygon;
 class Camera;
+
+namespace render
+{
+class  Render;
+} // namespace render
 
 struct Frustum
 {
@@ -27,7 +31,7 @@ struct Frustum
     bool isAABBVisible(const btVector3 &bbmin, const btVector3 &bbmax, const Camera& cam);
     bool isOBBVisible(OBB *obb, const Camera& cam);
 
-    static Frustum* portalFrustumIntersect(Portal* portal, const Frustum& emitter, Render *render);         // Основная функция для работы с порталами.
+    static Frustum* portalFrustumIntersect(Portal* portal, const Frustum& emitter, render::Render *render);         // Основная функция для работы с порталами.
     void splitPrepare(struct Portal *p);// подготовка фрустума к сплиту
     void genClipPlanes(Camera* cam);                      // генерация плоскостей отсечения
     int split_by_plane(const util::Plane &splitPlane);              // отсечение части портала плоскостью

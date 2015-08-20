@@ -27,6 +27,12 @@ list(APPEND PRJ_SRC
     util/matrix4.cpp
 
     audio/audio.cpp
+
+    render/gl_util.cpp
+    render/render.cpp
+    render/shader_description.cpp
+    render/shader_manager.cpp
+    render/vertex_array.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -50,6 +56,12 @@ list(APPEND PRJ_HDR
     util/matrix4.h
 
     audio/audio.h
+
+    render/gl_util.h
+    render/render.h
+    render/shader_description.h
+    render/shader_manager.h
+    render/vertex_array.h
 )
 
 if(MINGW)

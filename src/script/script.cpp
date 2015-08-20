@@ -21,7 +21,7 @@
 #include "hair.h"
 #include "util/helpers.h"
 #include "ragdoll.h"
-#include "render.h"
+#include "render/render.h"
 #include "strings.h"
 #include "system.h"
 #include "util/vmath.h"
@@ -2370,7 +2370,7 @@ void lua_CamShake(float power, float time, lua::Value id)
     {
         std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
-        btVector3 cam_pos = renderer.camera()->getPosition();
+        btVector3 cam_pos = render::renderer.camera()->getPosition();
 
         btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
         dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : (1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
@@ -2379,7 +2379,7 @@ void lua_CamShake(float power, float time, lua::Value id)
     }
 
     if(power > 0.0)
-        renderer.camera()->shake(power, time);
+        render::renderer.camera()->shake(power, time);
 }
 
 void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
@@ -2665,7 +2665,7 @@ void lua_genUVRotateAnimation(int id)
 
     // Fill up new sequence with frame list.
 
-    seq->anim_type = TR_ANIMTEXTURE_FORWARD;
+    seq->anim_type = AnimTextureType::Forward;
     seq->frame_lock = false;              // by default anim is playing
     seq->uvrotate = true;
     seq->frames.resize(16);
@@ -3706,7 +3706,7 @@ void script::ScriptEngine::parseScreen(struct ScreenInfo *sc)
     sc->vsync = (*this)["screen"]["vsync"];
 }
 
-void script::ScriptEngine::parseRender(struct RenderSettings *rs)
+void script::ScriptEngine::parseRender(render::RenderSettings *rs)
 {
     rs->mipmap_mode = (*this)["render"]["mipmap_mode"];
     rs->mipmaps = (*this)["render"]["mipmaps"];

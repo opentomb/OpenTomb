@@ -9,6 +9,9 @@
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
+namespace render
+{
+
 /*
  * Shaders generation section
  */
@@ -77,7 +80,7 @@ void printShaderInfoLog(GLuint object)
     GLint       logLength = 0;
     GLint       charsWritten = 0;
 
-    checkOpenGLError();                         // check for OpenGL errors
+    CHECK_OPENGL_ERROR();                         // check for OpenGL errors
     if(isProgram)
         glGetProgramiv(object, GL_INFO_LOG_LENGTH, &logLength);
     else
@@ -105,7 +108,7 @@ int loadShaderFromBuff(GLuint ShaderObj, char * source)
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
     Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
-    if(checkOpenGLError())                          // check for OpenGL errors
+    if(CHECK_OPENGL_ERROR())                          // check for OpenGL errors
     {
         Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
         return 0;
@@ -176,3 +179,5 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
 
     return compileStatus != 0;
 }
+
+} // namespace render

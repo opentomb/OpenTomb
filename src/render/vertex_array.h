@@ -2,6 +2,9 @@
 
 #include <GL/glew.h>
 
+namespace render
+{
+
 // This class encapsulates a set of vertex state. Depending on whether the
 // current OpenGL context supports it or not (at creation time), this is
 // stored in a VAO, or not.
@@ -49,3 +52,5 @@ public:
 
     void bind();
 };
+
+} // namespace render

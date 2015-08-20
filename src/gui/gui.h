@@ -3,7 +3,7 @@
 #include "character_controller.h"
 #include "entity.h"
 #include "gl_font.h"
-#include "render.h"
+#include "render/render.h"
 
 #include <list>
 

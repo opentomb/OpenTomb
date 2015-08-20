@@ -14,11 +14,6 @@
 #include "util/matrix4.h"
 #include "vertex_array.h"
 #include "loader/datatypes.h"
-
-#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
-#define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
-
-#define STENCIL_FRUSTUM 1
 #include "obb.h"
 
 struct Portal;
@@ -30,9 +25,24 @@ struct Entity;
 struct Sprite;
 struct BaseMesh;
 struct OBB;
-struct LitShaderDescription;
 struct SSBoneFrame;
 struct RoomSector;
+struct BSPNode;
+struct BSPFaceRef;
+struct Character;
+
+namespace render
+{
+
+namespace
+{
+constexpr int DebugDrawerDefaultBufferSize = 128 * 1024;
+constexpr int InitFrameVertexBufferSize = 1024 * 1024;
+} // anonymous namespace
+
+#define STENCIL_FRUSTUM 1
+
+struct LitShaderDescription;
 class Render;
 
 class RenderDebugDrawer : public btIDebugDraw
@@ -90,12 +100,6 @@ public:
     }
 };
 
-// Animated texture types
-
-#define TR_ANIMTEXTURE_FORWARD           0
-#define TR_ANIMTEXTURE_BACKWARD          1
-#define TR_ANIMTEXTURE_REVERSE           2
-
 struct RenderSettings
 {
     float     lod_bias = 0;
@@ -120,11 +124,7 @@ struct RenderSettings
 };
 
 class  ShaderManager;
-struct BSPNode;
 struct UnlitTintedShaderDescription;
-struct SSBoneFrame;
-struct BSPFaceRef;
-struct Character;
 
 class Render
 {
@@ -270,3 +270,5 @@ private:
 };
 
 extern Render renderer;
+
+} // namespace render

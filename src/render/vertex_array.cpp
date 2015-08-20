@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+namespace render
+{
+
 VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexArrayAttribute *attributes)
 {
     glGenVertexArrays(1, &m_vertexArrayObject);
@@ -36,3 +39,5 @@ VertexArray::~VertexArray()
 {
     glDeleteVertexArrays(1, &m_vertexArrayObject);
 }
+
+} // namespace render

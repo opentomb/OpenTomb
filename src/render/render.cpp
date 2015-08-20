@@ -22,6 +22,9 @@
 #include "util/vmath.h"
 #include "world.h"
 
+namespace render
+{
+
 Render renderer;
 DynamicBSP render_dBSP;
 extern RenderDebugDrawer debugDrawer;
@@ -440,15 +443,15 @@ const LitShaderDescription *Render::setupEntityLight(Entity* entity, const util:
 
     GLenum current_light_number = 0;
 
-    GLfloat positions[MAX_NUM_LIGHTS * 3];
-    GLfloat colors[MAX_NUM_LIGHTS * 4];
-    GLfloat innerRadiuses[1 * MAX_NUM_LIGHTS];
-    GLfloat outerRadiuses[1 * MAX_NUM_LIGHTS];
+    GLfloat positions[EntityShaderLightsLimit * 3];
+    GLfloat colors[EntityShaderLightsLimit * 4];
+    GLfloat innerRadiuses[1 * EntityShaderLightsLimit];
+    GLfloat outerRadiuses[1 * EntityShaderLightsLimit];
     memset(colors, 0, sizeof(colors));
     memset(innerRadiuses, 0, sizeof(innerRadiuses));
     memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-    for(uint32_t i = 0; i < room->lights.size() && current_light_number < MAX_NUM_LIGHTS; i++)
+    for(uint32_t i = 0; i < room->lights.size() && current_light_number < EntityShaderLightsLimit; i++)
     {
         Light *current_light = &room->lights[i];
 
@@ -1426,3 +1429,5 @@ void RenderDebugDrawer::drawRoomDebugLines(const Room* room, Render* render, con
         };
     }
 }
+
+} // namespace render
