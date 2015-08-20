@@ -3153,7 +3153,19 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
+//        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
+        // FIXME: number of frames is always (frame_end - frame_start + 1)
+        // this matters for transitional anims, which run through their frame length with the same anim frame.
+        // This should ideally be solved without filling identical frames,
+        // but due to the amount of currFrame-indexing, waste dummy frames for now:
+        // (I haven't seen this for framerate==1 animation, but it would be possible,
+        //  also, resizing now saves re-allocations in interpolateFrames later)
+        anim->frames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
+
+        int numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
+        if(numFrameData > anim->frames.size()) {
+            numFrameData = anim->frames.size();
+        }
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -3210,8 +3222,13 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
          */
         bone_frame = anim->frames.data();
         for(uint16_t j = 0; j < anim->frames.size(); j++, bone_frame++, frame_offset += frame_step)
+//        for(uint16_t j = 0; j < numFrameData; j++, bone_frame++, frame_offset += frame_step)
         {
+            // !Need bonetags in empty frames:
             bone_frame->bone_tags.resize(model->mesh_count);
+
+            if(j >= numFrameData) continue; // only create bone_tags for rate>1 fill-frames
+
             bone_frame->pos.setZero();
             bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
@@ -3315,7 +3332,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     /*
      * state change's loading
      */
-
 #if LOG_ANIM_DISPATCHES
     if(model->animations.size() > 1)
     {

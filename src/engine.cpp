@@ -549,7 +549,7 @@ void Engine_ShowDebugInfo()
                       engine_world.character->m_currentSpeed,
                       ent->m_bf.animations.current_frame
                       );
-        Gui_OutTextXY(40.0, 20.0, "lerp_last_anim = %3d, lerp_last_frame = %3d",
+        Gui_OutTextXY(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d",
                 ent->m_bf.animations.lerp_last_animation,
                 ent->m_bf.animations.lerp_last_frame
                 );

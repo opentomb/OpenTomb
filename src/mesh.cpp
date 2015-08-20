@@ -232,70 +232,53 @@ void SkeletalModel::interpolateFrames()
 
     for(uint16_t i = 0; i < animations.size(); i++, anim++)
     {
-        if(anim->frames.size() > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
+        // effective anim length may be shorter than rate*frame_data_count,
+        // at most, last_real_frame = last_data_frame (no extrapolation!)
+        // (see frame.resize() in TR_GenSkeletalModel())
+
+        // frames are reserved, but filled only partially,
+        // - need to expand to fill the frame range:
+        // ! Watch copy order: always fill from last to first frame !
+        int length = anim->frames.size();
+        int rate = anim->original_frame_rate;
+        if(length > 1 && rate > 1)                      // we can't interpolate one frame or rate < 2!
         {
-            std::vector<BoneFrame> new_bone_frames(anim->original_frame_rate * (anim->frames.size() - 1) + 1);
-            /*
-             * the first frame does not changes
-             */
-            BoneFrame* bf = new_bone_frames.data();
-            bf->bone_tags.resize(mesh_count);
-            bf->pos.setZero();
-            bf->move.setZero();
-            bf->command = 0x00;
-            bf->centre = anim->frames[0].centre;
-            bf->pos = anim->frames[0].pos;
-            bf->bb_max = anim->frames[0].bb_max;
-            bf->bb_min = anim->frames[0].bb_min;
-            for(uint16_t k = 0; k < mesh_count; k++)
+            int destIdx = int((length-1) / rate) * rate;
+            int srcIdx = 0;
+
+            while(destIdx >= 0)
             {
-                bf->bone_tags[k].offset = anim->frames[0].bone_tags[k].offset;
-                bf->bone_tags[k].qrotate = anim->frames[0].bone_tags[k].qrotate;
-            }
-            bf++;
+                srcIdx = destIdx / rate;
+                for(int j=rate-1; j>0; j--) {
+                    if(destIdx+j >= length) continue;
 
-            for(uint16_t j = 1; j < anim->frames.size(); j++)
-            {
-                for(uint16_t l = 1; l <= anim->original_frame_rate; l++)
-                {
-                    bf->pos.setZero();
-                    bf->move.setZero();
-                    bf->command = 0x00;
-                    btScalar lerp = static_cast<btScalar>(l) / static_cast<btScalar>(anim->original_frame_rate);
-                    btScalar t = 1.0 - lerp;
+                    btScalar lerp = static_cast<btScalar>(j) / static_cast<btScalar>(rate);
 
-                    bf->bone_tags.resize(mesh_count);
+                    anim->frames[destIdx + j].move.setZero();
+                    anim->frames[destIdx + j].command = 0;
 
-                    bf->centre[0] = t * anim->frames[j - 1].centre[0] + lerp * anim->frames[j].centre[0];
-                    bf->centre[1] = t * anim->frames[j - 1].centre[1] + lerp * anim->frames[j].centre[1];
-                    bf->centre[2] = t * anim->frames[j - 1].centre[2] + lerp * anim->frames[j].centre[2];
+                    anim->frames[destIdx + j].centre = anim->frames[srcIdx].centre.lerp(anim->frames[srcIdx+1].centre, lerp);
+                    anim->frames[destIdx + j].pos    = anim->frames[srcIdx].pos.lerp(   anim->frames[srcIdx+1].pos,    lerp);
+                    anim->frames[destIdx + j].bb_max = anim->frames[srcIdx].bb_max.lerp(anim->frames[srcIdx+1].bb_max, lerp);
+                    anim->frames[destIdx + j].bb_min = anim->frames[srcIdx].bb_min.lerp(anim->frames[srcIdx+1].bb_min, lerp);
 
-                    bf->pos[0] = t * anim->frames[j - 1].pos[0] + lerp * anim->frames[j].pos[0];
-                    bf->pos[1] = t * anim->frames[j - 1].pos[1] + lerp * anim->frames[j].pos[1];
-                    bf->pos[2] = t * anim->frames[j - 1].pos[2] + lerp * anim->frames[j].pos[2];
-
-                    bf->bb_max[0] = t * anim->frames[j - 1].bb_max[0] + lerp * anim->frames[j].bb_max[0];
-                    bf->bb_max[1] = t * anim->frames[j - 1].bb_max[1] + lerp * anim->frames[j].bb_max[1];
-                    bf->bb_max[2] = t * anim->frames[j - 1].bb_max[2] + lerp * anim->frames[j].bb_max[2];
-
-                    bf->bb_min[0] = t * anim->frames[j - 1].bb_min[0] + lerp * anim->frames[j].bb_min[0];
-                    bf->bb_min[1] = t * anim->frames[j - 1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
-                    bf->bb_min[2] = t * anim->frames[j - 1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
-                        bf->bone_tags[k].offset = anim->frames[j - 1].bone_tags[k].offset.lerp(anim->frames[j].bone_tags[k].offset, lerp);
-                        bf->bone_tags[k].qrotate = Quat_Slerp(anim->frames[j - 1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].offset  = anim->frames[srcIdx  ].bone_tags[k].offset.lerp(
+                                                                         anim->frames[srcIdx+1].bone_tags[k].offset, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].qrotate = Quat_Slerp(anim->frames[srcIdx  ].bone_tags[k].qrotate,
+                                                                                    anim->frames[srcIdx+1].bone_tags[k].qrotate, lerp);
                     }
-                    bf++;
                 }
+                if(destIdx > 0)
+                {
+                    anim->frames[destIdx] = anim->frames[srcIdx];
+                }
+
+                destIdx -= rate;
             }
 
-            /*
-             * swap old and new animation bone brames
-             * free old bone frames;
-             */
-            anim->frames = std::move(new_bone_frames);
         }
     }
 }

@@ -1120,11 +1120,20 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
+            printf("*** CMD JUMP [%d, %d]\n",*anim,*frame);
             jump(-curr_bf->v_Vertical, curr_bf->v_Horizontal);
         }
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
-            m_angles[0] += 180.0;
+            printf("*** CMD FLIP [%d, %d]\n",*anim,*frame);
+            // bad for quat lerp:
+//            m_angles[0] += 180.0;
+
+            // fixme: quat flip lerp hack:
+            m_angles[0] += 90.0;
+            updateTransform();
+            m_angles[0] += 90.0;
+
             if(m_moveType == MoveType::Underwater)
             {
                 m_angles[1] = -m_angles[1];                         // for underwater case
@@ -1138,12 +1147,13 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
                 m_dirFlag = ENT_MOVE_BACKWARD;
             }
             updateTransform();
-            setAnimation(curr_af->next_anim->id, curr_af->next_frame);
-            *anim = m_bf.animations.current_animation;
-            *frame = m_bf.animations.current_frame;
+//            setAnimation(curr_af->next_anim->id, curr_af->next_frame);
+//            *anim = m_bf.animations.current_animation;
+//            *frame = m_bf.animations.current_frame;
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
+            printf("*** CMD MOVE [%d, %d]\n",*anim,*frame);
             btVector3 tr = m_transform.getBasis() * curr_bf->move;
             m_transform.getOrigin() += tr;
         }
@@ -1294,11 +1304,13 @@ int Entity::frame(btScalar time)
         }
     }
 
-    // last frame is never rendered:
-    if(frame_id >= animlist[anim_id].frames.size()-1)  // FIXME: does frames exclude tranim.frame_end ?
+    // FIXME: move should happen on switch to first frame of next anim,
+    //        not at the beginning of last anim frame:
+    doAnimMove(&anim_id, &frame_id);
+    if(frame_id >= animlist[anim_id].frames.size())
     {
         // doAnimCmds 1,2,3/4:
-        doAnimMove(&anim_id, &frame_id);
+//        doAnimMove(&anim_id, &frame_id);
 
         frame_id = animlist[anim_id].next_frame;
         anim_id = animlist[anim_id].next_anim->id;
@@ -1320,13 +1332,8 @@ int Entity::frame(btScalar time)
     // doAnimCmds 5,6:
     doAnimCommands(&m_bf.animations, ret);
 
-    // need this here?
-    doAnimMove(&anim_id, &frame_id);
 
-//    if(anim_id != anim.lerp_last_animation)
-//    {
-        setAnimation(anim_id, frame_id);
-//    }
+    setAnimation(anim_id, frame_id);
 
     frameImpl(time, frame_id, ret);
 
