@@ -22,7 +22,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
        (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
        (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))) return false;
 
-    core::SkeletalModel* model = engine_world.getModelByID(setup->m_model);
+    core::SkeletalModel* model = engine::engine_world.getModelByID(setup->m_model);
 
     // No model to link to - bypass function.
 
@@ -30,7 +30,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    m_container.reset(new EngineContainer());
+    m_container.reset(new engine::EngineContainer());
     m_container->room = parent_entity->m_self->room;
     m_container->object_type = OBJECT_HAIR;
     m_container->object = this;
@@ -109,7 +109,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         // collide with hair!
 
         m_elements[i].body->setUserPointer(m_container.get());
-        bt_engine_dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+        engine::bt_engine_dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         m_elements[i].body->activate();
     }
@@ -210,7 +210,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Add constraint to the world.
 
-        bt_engine_dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
+        engine::bt_engine_dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
 
         curr_joint++;   // Point to the next joint.
     }
@@ -226,7 +226,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 void Hair::createHairMesh(const core::SkeletalModel *model)
 {
     m_mesh = std::make_shared<core::BaseMesh>();
-    m_mesh->m_elementsPerTexture.resize(engine_world.textures.size(), 0);
+    m_mesh->m_elementsPerTexture.resize(engine::engine_world.textures.size(), 0);
     size_t totalElements = 0;
 
     // Gather size information
@@ -356,7 +356,7 @@ Hair::~Hair()
     for(auto& joint : m_joints)
     {
         if(joint)
-            bt_engine_dynamicsWorld->removeConstraint(joint.get());
+            engine::bt_engine_dynamicsWorld->removeConstraint(joint.get());
     }
 
     for(auto& element : m_elements)
@@ -364,7 +364,7 @@ Hair::~Hair()
         if(element.body)
         {
             element.body->setUserPointer(nullptr);
-            bt_engine_dynamicsWorld->removeRigidBody(element.body.get());
+            engine::bt_engine_dynamicsWorld->removeRigidBody(element.body.get());
         }
     }
 }

@@ -8,7 +8,7 @@
 #include "bsp_tree.h"
 #include "world/camera.h"
 #include "gui/console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "world/entity.h"
 #include "world/core/frustum.h"
 #include "world/hair.h"
@@ -16,7 +16,7 @@
 #include "world/core/obb.h"
 #include "world/core/polygon.h"
 #include "world/portal.h"
-#include "resource.h"
+#include "world/resource.h"
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "util/vmath.h"
@@ -120,7 +120,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
                 continue;
             }
 
-            world::core::AnimSeq* seq = &engine_world.anim_sequences[p.anim_id - 1];
+            world::core::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
 
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
             world::core::TexFrame* tf = &seq->frames[frame];
@@ -219,7 +219,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
 
 void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = root->plane.distance(engine_camera.getPosition());
+    btScalar d = root->plane.distance(engine::engine_camera.getPosition());
 
     if(d >= 0)
     {
@@ -267,7 +267,7 @@ void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, con
 
 void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = root->plane.distance(engine_camera.getPosition());
+    btScalar d = root->plane.distance(engine::engine_camera.getPosition());
 
     if(d >= 0)
     {
@@ -438,7 +438,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
 
     if(room->flags & TR_ROOM_FLAG_WATER)
     {
-        engine_world.calculateWaterTint(ambient_component, false);
+        engine::engine_world.calculateWaterTint(ambient_component, false);
     }
 
     GLenum current_light_number = 0;
@@ -466,7 +466,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
 
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            engine_world.calculateWaterTint(&colors[current_light_number * 4], false);
+            engine::engine_world.calculateWaterTint(&colors[current_light_number * 4], false);
         }
 
         // Find position
@@ -640,7 +640,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
         {
             UnlitShaderDescription *shader = m_shaderManager->getStencilShader();
             glUseProgram(shader->program);
-            glUniformMatrix4fv(shader->model_view_projection, 1, false, engine_camera.m_glViewProjMat.c_ptr());
+            glUniformMatrix4fv(shader->model_view_projection, 1, false, engine::engine_camera.m_glViewProjMat.c_ptr());
             glEnable(GL_STENCIL_TEST);
             glClear(GL_STENCIL_BUFFER_BIT);
             glStencilFunc(GL_NEVER, 1, 0x00);
@@ -687,7 +687,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
         float tint[4];
-        engine_world.calculateWaterTint(tint, true);
+        engine::engine_world.calculateWaterTint(tint, true);
         glUseProgram(shader->program);
 
         glUniform4fv(shader->tint_mult, 1, tint);
@@ -720,7 +720,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
             //If this static mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
-                engine_world.calculateWaterTint(tint.data(), false);
+                engine::engine_world.calculateWaterTint(tint.data(), false);
             }
             glUniform4fv(m_shaderManager->getStaticMeshShader()->tint_mult, 1, tint.data());
             renderMesh(sm->mesh);
@@ -730,7 +730,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
 
     if(!room->containers.empty())
     {
-        for(const std::shared_ptr<EngineContainer>& cont : room->containers)
+        for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
         {
             switch(cont->object_type)
             {
@@ -805,7 +805,7 @@ bool Render::addRoom(world::Room* room)
         sm->was_rendered_lines = 0;
     }
 
-    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
+    for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {
@@ -903,7 +903,7 @@ void Render::drawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(const std::shared_ptr<EngineContainer>& cont : room->containers)
+        for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -923,9 +923,9 @@ void Render::drawList()
         }
     }
 
-    if((engine_world.character != nullptr) && (engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine::engine_world.character != nullptr) && (engine::engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
-        world::Entity *ent = engine_world.character.get();
+        world::Entity *ent = engine::engine_world.character.get();
         for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
         {
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
@@ -983,7 +983,7 @@ void Render::drawListDebugLines()
 
     if(m_drawColl)
     {
-        bt_engine_dynamicsWorld->debugDrawWorld();
+        engine::bt_engine_dynamicsWorld->debugDrawWorld();
     }
 
     if(!debugDrawer.IsEmpty())
@@ -992,7 +992,7 @@ void Render::drawListDebugLines()
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
-        glBindTexture(GL_TEXTURE_2D, engine_world.textures.back());
+        glBindTexture(GL_TEXTURE_2D, engine::engine_world.textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
         debugDrawer.render();
@@ -1067,7 +1067,7 @@ void Render::genWorldList()
             }
         }
     }
-    else if(control_states.noclip)  // camera is out of all rooms AND noclip is on
+    else if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
@@ -1095,9 +1095,9 @@ void Render::setWorld(world::World *world)
     m_drawSkybox = false;
     m_renderList.clear();
 
-    m_cam = &engine_camera;
+    m_cam = &engine::engine_camera;
     //engine_camera.frustum->next = NULL;
-    engine_camera.m_currentRoom = nullptr;
+    engine::engine_camera.m_currentRoom = nullptr;
 }
 
 
@@ -1344,8 +1344,8 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
 
 void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
 {
-    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->floor) };
-    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->ceiling) };
+    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] - world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->floor) };
+    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] + world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->ceiling) };
 
     drawBBox(bb_min, bb_max, nullptr);
 }
@@ -1409,7 +1409,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         sm->was_rendered_lines = 1;
     }
 
-    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
+    for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {

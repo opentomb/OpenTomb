@@ -7,9 +7,11 @@
 #include "engine.h"
 #include "gui/gui.h"
 
+namespace engine
+{
+
 ScreenInfo     screen_info;
 SystemSettings system_settings;
-
 
 gui::TextLine system_fps;
 
@@ -114,3 +116,5 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
     }
     fwrite(data, strlen(data), 1, stderr);
 }
+
+} // namespace engine

@@ -33,17 +33,27 @@ list(APPEND PRJ_SRC
     render/shader_description.cpp
     render/shader_manager.cpp
     render/vertex_array.cpp
+    render/bsp_tree.cpp
 
     world/entity.cpp
     world/portal.cpp
     world/world.cpp
     world/camera.cpp
     world/hair.cpp
+    world/resource.cpp
+    world/ragdoll.cpp
 
     world/core/mesh.cpp
     world/core/obb.cpp
     world/core/polygon.cpp
     world/core/frustum.cpp
+
+    engine/game.cpp
+    engine/system.cpp
+    engine/engine.cpp
+    engine/controls.cpp
+    engine/gameflow.cpp
+    engine/anim_state_control.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -73,6 +83,7 @@ list(APPEND PRJ_HDR
     render/shader_description.h
     render/shader_manager.h
     render/vertex_array.h
+    render/bsp_tree.h
 
     world/entity.h
     world/object.h
@@ -80,11 +91,20 @@ list(APPEND PRJ_HDR
     world/world.h
     world/camera.h
     world/hair.h
+    world/resource.h
+    world/ragdoll.h
 
     world/core/mesh.h
     world/core/obb.h
     world/core/polygon.h
     world/core/frustum.h
+
+    engine/game.h
+    engine/system.h
+    engine/engine.h
+    engine/controls.h
+    engine/gameflow.h
+    engine/anim_state_control.h
 )
 
 if(MINGW)

@@ -4,6 +4,9 @@
 
 #include "script/script.h"
 
+namespace world
+{
+
 bool RDSetup::getSetup(int ragdoll_index)
 {
     lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
@@ -75,3 +78,5 @@ void RDSetup::clearSetup()
     joint_setup.clear();
     hit_func.clear();
 }
+
+} // namespace world

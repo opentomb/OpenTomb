@@ -9,12 +9,15 @@
 
 #include "common.h"
 #include "gui/console.h"
-#include "engine.h"
-#include "game.h"
+#include "engine/engine.h"
+#include "engine/game.h"
 #include "script/script.h"
-#include "system.h"
+#include "engine/system.h"
 
 extern bool done;
+
+namespace engine
+{
 
 extern SDL_Joystick         *sdl_joystick;
 extern SDL_GameController   *sdl_controller;
@@ -706,3 +709,5 @@ void Controls_SecondaryMouseDown()
         }
     }
 }
+
+} // namespace engine

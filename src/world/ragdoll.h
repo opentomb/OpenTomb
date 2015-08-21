@@ -7,6 +7,9 @@
 #include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
+namespace world
+{
+
 #define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
 // Joint setup struct is used to parse joint script entry to
@@ -60,3 +63,5 @@ struct RDSetup
     bool getSetup(int ragdoll_index);
     void clearSetup();
 };
+
+} // namespace world

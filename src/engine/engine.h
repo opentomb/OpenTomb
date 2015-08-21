@@ -13,6 +13,25 @@
 #include "world/object.h"
 #include "world/world.h"
 
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btBroadphaseInterface;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
+
+namespace world
+{
+class Camera;
+} // namespace world
+
+namespace audio
+{
+extern Settings                  audio_settings;
+} // namespace audio
+
+namespace engine
+{
+
 #define MAX_ENGINE_PATH                         (1024)
 
 #define LEVEL_FORMAT_PC         0
@@ -55,17 +74,6 @@
 #define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4f)
 #define COLLISION_CAMERA_SPHERE_RADIUS          (16.0f)
 #define COLLISION_TRAVERSE_TEST_RADIUS          (0.48f)
-
-class btDefaultCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
-class btDiscreteDynamicsWorld;
-
-namespace world
-{
-class Camera;
-} // namespace world
 
 struct EngineContainer
 {
@@ -121,10 +129,6 @@ struct EngineControlState
 extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
 
-namespace audio
-{
-extern Settings                  audio_settings;
-} // namespace audio
 
 extern btScalar                                 engine_frame_time;
 extern world::Camera                            engine_camera;
@@ -305,3 +309,5 @@ int  Engine_ExecCmd(const char *ch);
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+
+} // namespace engine

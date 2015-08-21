@@ -28,10 +28,13 @@
 #include "gui/gui.h"
 #include "inventory.h"
 
-btVector3 cam_angles = { 0.0, 0.0, 0.0 };
-
 extern btScalar time_scale;
 extern script::MainEngine engine_lua;
+
+namespace engine
+{
+
+btVector3 cam_angles = { 0.0, 0.0, 0.0 };
 
 void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<world::Entity> > &map);
 void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent);
@@ -169,7 +172,7 @@ int Game_Load(const char* name)
         f = fopen(token, "rb");
         if(f == nullptr)
         {
-            Sys_extWarn("Can not read file \"%s\"", token);
+            SYS_EXT_WARN("Can not read file \"%s\"", token);
             return 0;
         }
         fclose(f);
@@ -192,7 +195,7 @@ int Game_Load(const char* name)
         f = fopen(name, "rb");
         if(f == nullptr)
         {
-            Sys_extWarn("Can not read file \"%s\"", name);
+            SYS_EXT_WARN("Can not read file \"%s\"", name);
             return 0;
         }
         fclose(f);
@@ -321,7 +324,7 @@ int Game_Save(const char* name)
 
     if(!f)
     {
-        Sys_extWarn("Can not create file \"%s\"", name);
+        SYS_EXT_WARN("Can not create file \"%s\"", name);
         return 0;
     }
 
@@ -910,3 +913,5 @@ void Game_LevelTransition(uint16_t level_index)
 
     audio::endStreams();
 }
+
+} // namespace engine

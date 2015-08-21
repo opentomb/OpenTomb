@@ -10,7 +10,7 @@
 #include "audio/audio.h"
 #include "camera.h"
 #include "gui/console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "entity.h"
 #include "world/core/mesh.h"
 #include "world/core/obb.h"
@@ -21,7 +21,10 @@
 #include "script/script.h"
 #include "util/vmath.h"
 
+namespace engine
+{
 extern EngineContainer* last_cont;
+} // namespace engine
 
 namespace world
 {
@@ -52,7 +55,7 @@ void Room::empty()
                 }
                 body->setCollisionShape(nullptr);
 
-                bt_engine_dynamicsWorld->removeRigidBody(body);
+                engine::bt_engine_dynamicsWorld->removeRigidBody(body);
                 delete body;
                 static_mesh[i]->bt_body = nullptr;
             }
@@ -80,7 +83,7 @@ void Room::empty()
             bt_body->setCollisionShape(nullptr);
         }
 
-        bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
         bt_body.reset();
     }
 
@@ -97,7 +100,7 @@ void Room::empty()
 
 void Room::addEntity(Entity* entity)
 {
-    for(const std::shared_ptr<EngineContainer>& curr : containers)
+    for(const std::shared_ptr<engine::EngineContainer>& curr : containers)
     {
         if(curr == entity->m_self)
         {
@@ -179,7 +182,7 @@ RoomSector* RoomSector::checkPortalPointerRaw()
 {
     if(portal_to_room >= 0)
     {
-        std::shared_ptr<Room> r = engine_world.rooms[portal_to_room];
+        std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
         int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
         int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
@@ -195,7 +198,7 @@ RoomSector* RoomSector::checkPortalPointer()
 {
     if(portal_to_room >= 0)
     {
-        std::shared_ptr<Room> r = engine_world.rooms[portal_to_room];
+        std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
         if((owner_room->base_room != nullptr) && (r->alternate_room != nullptr))
         {
             r = r->alternate_room;
@@ -402,7 +405,7 @@ void World::prepare()
 
 void World::empty()
 {
-    last_cont = nullptr;
+    engine::last_cont = nullptr;
     engine_lua.clearTasks();
 
     audio::deInit(); // De-initialize and destroy all audio objects.
@@ -424,14 +427,14 @@ void World::empty()
     // Destroy Bullet's MISC objects (debug spheres etc.)
     ///@FIXME: Hide it somewhere, it is nasty being here.
 
-    if(bt_engine_dynamicsWorld != nullptr)
+    if(engine::bt_engine_dynamicsWorld != nullptr)
     {
-        for(int i = bt_engine_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+        for(int i = engine::bt_engine_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
         {
-            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* obj = engine::bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
             if(btRigidBody* body = btRigidBody::upcast(obj))
             {
-                EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
+                engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(body->getUserPointer());
                 body->setUserPointer(nullptr);
 
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
@@ -444,7 +447,7 @@ void World::empty()
 
                     body->setCollisionShape(nullptr);
 
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
+                    engine::bt_engine_dynamicsWorld->removeRigidBody(body);
                     cont->room = nullptr;
                     delete cont;
                     delete body;
@@ -625,7 +628,7 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
 {
     if(room == nullptr)
     {
-        return engine_world.findRoomByPosition(new_pos).get();
+        return engine::engine_world.findRoomByPosition(new_pos).get();
     }
 
     if(room->active &&
@@ -657,7 +660,7 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
     RoomSector* new_sector = room->getSectorRaw(new_pos);
     if((new_sector != nullptr) && (new_sector->portal_to_room >= 0))
     {
-        return engine_world.rooms[new_sector->portal_to_room]->checkFlip();
+        return engine::engine_world.rooms[new_sector->portal_to_room]->checkFlip();
     }
 
     for(const std::shared_ptr<Room>& r : room->near_room_list)
@@ -671,7 +674,7 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
         }
     }
 
-    return engine_world.findRoomByPosition(new_pos).get();
+    return engine::engine_world.findRoomByPosition(new_pos).get();
 }
 
 std::shared_ptr<Room> World::getByID(unsigned int ID)
@@ -815,14 +818,14 @@ void Room::enable()
 
     if(bt_body)
     {
-        bt_engine_dynamicsWorld->addRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->addRigidBody(bt_body.get());
     }
 
     for(auto sm : static_mesh)
     {
         if(sm->bt_body != nullptr)
         {
-            bt_engine_dynamicsWorld->addRigidBody(sm->bt_body);
+            engine::bt_engine_dynamicsWorld->addRigidBody(sm->bt_body);
         }
     }
 
@@ -850,14 +853,14 @@ void Room::disable()
 
     if(bt_body)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
     }
 
     for(auto sm : static_mesh)
     {
         if(sm->bt_body != nullptr)
         {
-            bt_engine_dynamicsWorld->removeRigidBody(sm->bt_body);
+            engine::bt_engine_dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
 
@@ -922,7 +925,7 @@ Room* Room::checkFlip()
 void Room::swapPortals(std::shared_ptr<Room> dest_room)
 {
     //Update portals in room rooms
-    for(auto r : engine_world.rooms)//For every room in the world itself
+    for(auto r : engine::engine_world.rooms)//For every room in the world itself
     {
         for(Portal& p : r->portals) //For every portal in this room
         {
@@ -938,12 +941,12 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
 
 void Room::swapItems(std::shared_ptr<Room> dest_room)
 {
-    for(std::shared_ptr<EngineContainer> t : containers)
+    for(std::shared_ptr<engine::EngineContainer> t : containers)
     {
         t->room = dest_room.get();
     }
 
-    for(std::shared_ptr<EngineContainer> t : dest_room->containers)
+    for(std::shared_ptr<engine::EngineContainer> t : dest_room->containers)
     {
         t->room = this;
     }
@@ -1087,7 +1090,7 @@ void Room::buildOverlappedRoomsList()
 {
     overlapped_room_list.clear();
 
-    for(auto r : engine_world.rooms)
+    for(auto r : engine::engine_world.rooms)
     {
         if(isOverlapped(r.get()))
         {
@@ -1110,7 +1113,7 @@ void World::updateAnimTextures()                                                
             continue;
         }
 
-        seq.frame_time += engine_frame_time;
+        seq.frame_time += engine::engine_frame_time;
         if(seq.frame_time >= seq.frame_rate)
         {
             int j = (seq.frame_time / seq.frame_rate);

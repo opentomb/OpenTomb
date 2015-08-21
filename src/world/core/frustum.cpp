@@ -6,7 +6,7 @@
 #include <LinearMath/btScalar.h>
 
 #include "world/camera.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "obb.h"
 #include "polygon.h"
 #include "world/portal.h"

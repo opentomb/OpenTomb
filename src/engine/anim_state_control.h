@@ -1,5 +1,7 @@
 #pragma once
 
+struct CharacterCommand;
+
 namespace world
 {
 struct Room;
@@ -16,7 +18,10 @@ struct SSAnimation;
 } // namespace core
 } // namespace world
 
-struct CharacterCommand;
+struct Character;
+
+namespace engine
+{
 
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
@@ -770,5 +775,6 @@ namespace
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-struct Character;
 int State_Control_Lara(Character* ent, world::core::SSAnimation *ss_anim);
+
+} // namespace engine

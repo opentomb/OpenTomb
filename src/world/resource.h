@@ -7,6 +7,9 @@
 #include "world/entity.h"
 #include "world/world.h"
 
+namespace world
+{
+
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
 // (derived from actual room mesh).
@@ -62,8 +65,6 @@ constexpr float TR_METERING_SECTORSIZE = 1024.0f;
 #define LOG_ANIM_DISPATCHES 0
 
 
-namespace world
-{
 struct SectorTween;
 struct World;
 struct Room;
@@ -74,8 +75,7 @@ namespace core
 struct BaseMesh;
 struct SkeletalModel;
 struct BoneFrame;
-}
-} // namespace world
+} // namespace core
 
 // NOTE: Functions which take native TR level structures as argument will have
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
@@ -165,3 +165,4 @@ void     TR_Sector_Calculate(world::World *world, const std::unique_ptr<loader::
 void tr_setupRoomVertices(world::World *world, const std::unique_ptr<loader::Level>& tr, loader::Room *tr_room, const std::shared_ptr<world::core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, world::core::Polygon *p);
 void tr_copyNormals(world::core::Polygon *polygon, const std::shared_ptr<world::core::BaseMesh>& mesh, const uint16_t *mesh_vertex_indices);
 
+} // namespace world

@@ -3,18 +3,21 @@
 #include <cstdint>
 #include <string>
 
+namespace engine
+{
+
 #define TR_GAMEFLOW_MAX_ACTIONS 32
 #define TR_GAMEFLOW_MAX_SECRETS 256
 
 #define TR_GAMEFLOW_NOENTRY     -1
 
-typedef struct gameflow_action_s
+struct GameflowAction
 {
     int8_t      opcode;
     uint8_t     operand;
-} gameflow_action_t, *gameflow_action_p;
+};
 
-typedef struct gameflow_manager_s
+struct GameflowManager
 {
     std::string CurrentLevelName;
     std::string CurrentLevelPath;
@@ -22,11 +25,11 @@ typedef struct gameflow_manager_s
     int CurrentLevelID;
 
     bool                NextAction;
-    gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS+1];
+    GameflowAction   Actions[TR_GAMEFLOW_MAX_ACTIONS+1];
 
     bool SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS+1];                     //Info for what secrets have been triggered in a level
 
-} gameflow_manager_t, *gameflow_manager_p;
+};
 
 enum TR_GAMEFLOW_OP
 {
@@ -56,8 +59,10 @@ enum TR_GAMEFLOW_OP
     TR_GAMEFLOW_OP_LASTINDEX
 };
 
-extern gameflow_manager_s gameflow_manager;
+extern GameflowManager gameflow_manager;
 
 void Gameflow_Init();
 void Gameflow_Do();
 bool Gameflow_Send(int opcode, int operand = -1);
+
+} // namespace engine

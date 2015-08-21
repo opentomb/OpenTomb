@@ -6,12 +6,14 @@
 #include "loader/game.h"
 
 #include "character_controller.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "world/entity.h"
-#include "resource.h"
-#include "system.h"
+#include "world/resource.h"
+#include "engine/system.h"
 #include "world/world.h"
 
+namespace engine
+{
 
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
@@ -23,10 +25,10 @@ void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, int st
     if(state == ENTITY_ANIM_NEWANIM)
     {
         btVector3& v = ent->m_traversedObject->m_transform.getOrigin();
-        int i = static_cast<int>(v[0] / TR_METERING_SECTORSIZE);
-        v[0] = i * TR_METERING_SECTORSIZE + 512.0f;
-        i = static_cast<int>(v[1] / TR_METERING_SECTORSIZE);
-        v[1] = i * TR_METERING_SECTORSIZE + 512.0f;
+        int i = static_cast<int>(v[0] / world::TR_METERING_SECTORSIZE);
+        v[0] = i * world::TR_METERING_SECTORSIZE + 512.0f;
+        i = static_cast<int>(v[1] / world::TR_METERING_SECTORSIZE);
+        v[1] = i * world::TR_METERING_SECTORSIZE + 512.0f;
         ent->m_traversedObject->updateRigidBody(true);
         ent->m_traversedObject = nullptr;
         ss_anim->onFrame = nullptr;
@@ -1620,7 +1622,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                        (character->m_speed[2] < 0.0)) // Only hang if speed is lower than zero.
                     {
                         // Fix the position to the TR metering step.
-                        character->m_transform.getOrigin()[2] = std::floor(character->m_transform.getOrigin()[2] / TR_METERING_STEP) * TR_METERING_STEP;
+                        character->m_transform.getOrigin()[2] = std::floor(character->m_transform.getOrigin()[2] / world::TR_METERING_STEP) * world::TR_METERING_STEP;
                         character->m_moveType = world::MoveType::WallsClimb;
                         character->setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
                         break;
@@ -2378,7 +2380,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
         case TR_STATE_LARA_WATER_DEATH:
             if(character->m_moveType != world::MoveType::OnWater)
             {
-                pos[2] += (TR_METERING_SECTORSIZE / 4) * engine_frame_time;     // go to the air
+                pos[2] += (world::TR_METERING_SECTORSIZE / 4) * engine_frame_time;     // go to the air
             }
             break;
 
@@ -3157,3 +3159,5 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
     return 0;
 }
+
+} // namespace engine

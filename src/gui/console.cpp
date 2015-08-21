@@ -6,12 +6,12 @@
 #include <GL/glew.h>
 #include <SDL2/SDL_keycode.h>
 
-#include "engine.h"
+#include "engine/engine.h"
 #include "gl_font.h"
 #include "gui.h"
 #include "script/script.h"
 #include "render/shader_manager.h"
-#include "system.h"
+#include "engine/system.h"
 
 using namespace gui;
 
@@ -71,7 +71,7 @@ void Console::setLineInterval(float interval)
     // font->font_size has absolute size (after scaling)
     m_lineHeight = (1 + m_spacing) * m_font->font_size;
     m_cursorX = 8 + 1;
-    m_cursorY = screen_info.h - m_lineHeight * m_visibleLines;
+    m_cursorY = engine::screen_info.h - m_lineHeight * m_visibleLines;
     if(m_cursorY < 8)
     {
         m_cursorY = 8;
@@ -93,8 +93,8 @@ void Console::draw()
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {
-        static_cast<GLfloat>(screen_info.w),
-        static_cast<GLfloat>(screen_info.h)
+        static_cast<GLfloat>(engine::screen_info.w),
+        static_cast<GLfloat>(engine::screen_info.h)
     };
     glUniform2fv(shader->screenSize, 1, screenSize);
 
@@ -121,13 +121,13 @@ void Console::drawBackground()
     /*
          * Draw console background to see the text
          */
-    drawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
+    drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, engine::screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
-    drawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
+    drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
 void Console::drawCursor()
@@ -136,7 +136,7 @@ void Console::drawCursor()
 
     if(m_blinkPeriod)
     {
-        m_blinkTime += engine_frame_time;
+        m_blinkTime += engine::engine_frame_time;
         if(m_blinkTime > m_blinkPeriod)
         {
             m_blinkTime = 0.0;
@@ -190,7 +190,7 @@ void Console::edit(int key, int mod)
     {
         addLog(m_editingLine);
         addLine(std::string("> ") + m_editingLine, FontStyle::ConsoleInfo);
-        Engine_ExecCmd(m_editingLine.c_str());
+        engine::Engine_ExecCmd(m_editingLine.c_str());
         m_editingLine.clear();
         m_cursorPos = 0;
         m_cursorX = 8 + 1;

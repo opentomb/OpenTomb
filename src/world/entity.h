@@ -9,7 +9,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
-#include "game.h"
+#include "engine/game.h"
 #include "world/core/mesh.h"
 #include "world/object.h"
 #include "world/core/obb.h"
@@ -21,15 +21,18 @@
 class btCollisionShape;
 class btRigidBody;
 struct Character;
-struct EngineContainer;
 
-struct RDSetup;
+namespace engine
+{
 class BtEngineClosestConvexResultCallback;
+struct EngineContainer;
+} // namespace engine
 
 namespace world
 {
 struct Room;
 struct RoomSector;
+struct RDSetup;
 
 namespace core
 {
@@ -159,7 +162,7 @@ public:
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
 
-    std::shared_ptr< EngineContainer > m_self;
+    std::shared_ptr<engine::EngineContainer> m_self;
 
     btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
@@ -242,7 +245,7 @@ public:
     virtual void updateGhostRigidBody()
     {
     }
-    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const;
+    virtual std::shared_ptr<engine::BtEngineClosestConvexResultCallback> callbackForCamera() const;
 
     virtual btVector3 camPosForFollowing(btScalar dz)
     {

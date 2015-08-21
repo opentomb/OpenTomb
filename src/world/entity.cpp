@@ -10,16 +10,16 @@
 
 #include "LuaState.h"
 
-#include "anim_state_control.h"
+#include "engine/anim_state_control.h"
 #include "character_controller.h"
 #include "gui/console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "util/helpers.h"
 #include "world/core/mesh.h"
 #include "world/core/obb.h"
 #include "ragdoll.h"
 #include "script/script.h"
-#include "system.h"
+#include "engine/system.h"
 #include "util/vmath.h"
 #include "world.h"
 
@@ -53,7 +53,7 @@ void Entity::createGhosts()
         m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
         m_bt.ghostObjects.back()->setUserPointer(m_self.get());
         m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
-        bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+        engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
         m_bt.last_collisions.emplace_back();
     }
@@ -90,7 +90,7 @@ void Entity::enableCollision()
         {
             if(b && !b->isInWorld())
             {
-                bt_engine_dynamicsWorld->addRigidBody(b.get());
+                engine::bt_engine_dynamicsWorld->addRigidBody(b.get());
             }
         }
     }
@@ -104,7 +104,7 @@ void Entity::disableCollision()
         {
             if(b && b->isInWorld())
             {
-                bt_engine_dynamicsWorld->removeRigidBody(b.get());
+                engine::bt_engine_dynamicsWorld->removeRigidBody(b.get());
             }
         }
     }
@@ -174,7 +174,7 @@ void Entity::genRigidBody()
                     break;
             }
 
-            bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+            engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             m_bt.bt_body.back()->setUserPointer(m_self.get());
         }
     }
@@ -199,8 +199,8 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
     btVector3 aabb_min, aabb_max, t;
 
     ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-    bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
-    bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
+    engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
+    engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
 
     correction->setZero();
     num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
@@ -227,8 +227,8 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
-            EngineContainer* cont0 = static_cast<EngineContainer*>(manifold->getBody0()->getUserPointer());
-            EngineContainer* cont1 = static_cast<EngineContainer*>(manifold->getBody1()->getUserPointer());
+            engine::EngineContainer* cont0 = static_cast<engine::EngineContainer*>(manifold->getBody0()->getUserPointer());
+            engine::EngineContainer* cont1 = static_cast<engine::EngineContainer*>(manifold->getBody1()->getUserPointer());
             if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
             {
                 continue;
@@ -304,8 +304,8 @@ void Entity::updateCurrentCollisions()
         btVector3 aabb_min, aabb_max;
 
         ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-        bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
-        bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
+        engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
+        engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
 
         int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
         for(int j = 0; j < num_pairs; j++)
@@ -332,7 +332,7 @@ void Entity::updateCurrentCollisions()
                     {
                         cn.obj.emplace_back();
                         cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody0());
-                        if(m_self.get() == static_cast<EngineContainer*>(cn.obj.back()->getUserPointer()))
+                        if(m_self.get() == static_cast<engine::EngineContainer*>(cn.obj.back()->getUserPointer()))
                         {
                             cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody1());
                         }
@@ -447,9 +447,9 @@ void Entity::transferToRoom(Room* room)
     }
 }
 
-std::shared_ptr<BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const
+std::shared_ptr<engine::BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const
 {
-    auto cb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
+    auto cb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(m_self);
     cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     return cb;
 }
@@ -466,7 +466,7 @@ void Entity::checkCollisionCallbacks()
     {
         // do callbacks here:
         int type = -1;
-        EngineContainer* cont = static_cast<EngineContainer*>(cobj->getUserPointer());
+        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cobj->getUserPointer());
         if(cont != nullptr)
         {
             type = cont->object_type;
@@ -729,7 +729,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    world::core::SkeletalModel* sm = engine_world.getModelByID(model_id);
+    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 
     if((sm != nullptr) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
@@ -831,7 +831,7 @@ btScalar Entity::findDistance(const Entity& other)
 
 void Entity::doAnimCommands(core::SSAnimation *ss_anim, int /*changing*/)
 {
-    if(engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
+    if(engine::engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
     {
         return;  // If no anim commands
     }
@@ -839,12 +839,12 @@ void Entity::doAnimCommands(core::SSAnimation *ss_anim, int /*changing*/)
     core::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
     if(af->num_anim_commands > 0 && af->num_anim_commands <= 255)
     {
-        assert(af->anim_command < engine_world.anim_commands.size());
-        int16_t *pointer = &engine_world.anim_commands[af->anim_command];
+        assert(af->anim_command < engine::engine_world.anim_commands.size());
+        int16_t *pointer = &engine::engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
-            assert(pointer < &engine_world.anim_commands.back());
+            assert(pointer < &engine::engine_world.anim_commands.back());
             const auto command = *pointer;
             ++pointer;
             switch(command)
@@ -945,7 +945,7 @@ void Entity::processSector()
 		}
 		catch (lua::RuntimeError& error)
 		{
-			Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
 		}
     }
 }
@@ -962,7 +962,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        world::core::SkeletalModel* model = engine_world.getModelByID(another_model);
+        world::core::SkeletalModel* model = engine::engine_world.getModelByID(another_model);
         if(!model || animation >= static_cast<int>(model->animations.size()))
             return;
         m_bf.animations.model = model;
@@ -1242,7 +1242,7 @@ void Entity::checkActivators()
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
 	auto containers = m_self->room->containers;
-    for(const std::shared_ptr<EngineContainer>& cont : containers)
+    for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
 		if (cont->object_type != OBJECT_ENTITY || !cont->object)
 			continue;
@@ -1294,7 +1294,7 @@ Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
     , m_moveType(MoveType::OnFloor)
-    , m_self(std::make_shared<EngineContainer>())
+    , m_self(std::make_shared<engine::EngineContainer>())
 {
     m_transform.setIdentity();
     m_self->object = this;
@@ -1342,7 +1342,7 @@ Entity::~Entity()
     for(std::unique_ptr<btPairCachingGhostObject>& ghost : m_bt.ghostObjects)
     {
         ghost->setUserPointer(nullptr);
-        bt_engine_dynamicsWorld->removeCollisionObject(ghost.get());
+        engine::bt_engine_dynamicsWorld->removeCollisionObject(ghost.get());
     }
     m_bt.ghostObjects.clear();
 
@@ -1364,7 +1364,7 @@ Entity::~Entity()
                 }
                 body->setCollisionShape(nullptr);
 
-                bt_engine_dynamicsWorld->removeRigidBody(body.get());
+                engine::bt_engine_dynamicsWorld->removeRigidBody(body.get());
             }
         }
         m_bt.bt_body.clear();
@@ -1428,7 +1428,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         btVector3 inertia(0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
 
-        bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
 
         m_bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
         m_bt.bt_body[i]->setMassProps(mass, inertia);
@@ -1456,13 +1456,13 @@ bool Entity::createRagdoll(RDSetup* setup)
     updateRigidBody(true);
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
+        engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->activate();
         m_bt.bt_body[i]->setLinearVelocity(m_speed);
         if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
         {
-            bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
-            bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_NONE, COLLISION_NONE);
+            engine::bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
+            engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_NONE, COLLISION_NONE);
         }
     }
 
@@ -1527,7 +1527,7 @@ bool Entity::createRagdoll(RDSetup* setup)
         m_bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         m_bt.bt_joints[i]->setDbgDrawSize(64.0);
-        bt_engine_dynamicsWorld->addConstraint(m_bt.bt_joints[i].get(), true);
+        engine::bt_engine_dynamicsWorld->addConstraint(m_bt.bt_joints[i].get(), true);
     }
 
     if(!result)
@@ -1550,20 +1550,20 @@ bool Entity::deleteRagdoll()
     {
         if(joint)
         {
-            bt_engine_dynamicsWorld->removeConstraint(joint.get());
+            engine::bt_engine_dynamicsWorld->removeConstraint(joint.get());
             joint.reset();
         }
     }
 
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
         {
-            bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
-            bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            engine::bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
+            engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
         }
     }
 
@@ -1579,7 +1579,7 @@ bool Entity::deleteRagdoll()
 
 btVector3 Entity::applyGravity(btScalar time)
 {
-    const btVector3 gravityAccelleration = bt_engine_dynamicsWorld->getGravity();
+    const btVector3 gravityAccelleration = engine::bt_engine_dynamicsWorld->getGravity();
     const btVector3 gravitySpeed = gravityAccelleration * time;
     btVector3 move = (m_speed + gravitySpeed/2) * time;
     m_speed += gravitySpeed;

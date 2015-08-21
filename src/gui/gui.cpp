@@ -12,7 +12,7 @@
 #include "world/camera.h"
 #include "character_controller.h"
 #include "console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "gl_font.h"
 #include "render/gl_util.h"
 #include "render/render.h"
@@ -20,12 +20,14 @@
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
 #include "strings.h"
-#include "system.h"
+#include "engine/system.h"
 #include "render/vertex_array.h"
 #include "util/vmath.h"
 
-
+namespace engine
+{
 extern SDL_Window  *sdl_window;
+} // namespace engine
 
 namespace gui
 {
@@ -293,8 +295,8 @@ void deleteLine(TextLine *line)
 
 void moveLine(TextLine *line)
 {
-    line->absXoffset = line->X * screen_info.scale_factor;
-    line->absYoffset = line->Y * screen_info.scale_factor;
+    line->absXoffset = line->X * engine::screen_info.scale_factor;
+    line->absYoffset = line->Y * engine::screen_info.scale_factor;
 }
 
 /**
@@ -327,8 +329,8 @@ TextLine *drawText(GLfloat x, GLfloat y, const char *fmt, ...)
         l->Xanchor = HorizontalAnchor::Left;
         l->Yanchor = VerticalAnchor::Bottom;
 
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
+        l->absXoffset = l->X * engine::screen_info.scale_factor;
+        l->absYoffset = l->Y * engine::screen_info.scale_factor;
 
         l->show = true;
         return l;
@@ -351,8 +353,8 @@ void resize()
 
     while(l)
     {
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
+        l->absXoffset = l->X * engine::screen_info.scale_factor;
+        l->absYoffset = l->Y * engine::screen_info.scale_factor;
 
         l = l->next;
     }
@@ -360,8 +362,8 @@ void resize()
     l = gui_temp_lines;
     for(uint16_t i = 0; i < temp_lines_used; i++, l++)
     {
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
+        l->absXoffset = l->X * engine::screen_info.scale_factor;
+        l->absYoffset = l->Y * engine::screen_info.scale_factor;
     }
 
     for(auto& i : Bar)
@@ -387,7 +389,8 @@ void render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    if(screen_info.show_debuginfo) drawCrosshair();
+    if(engine::screen_info.show_debuginfo)
+        drawCrosshair();
     drawBars();
     drawFaders();
     renderStrings();
@@ -422,10 +425,10 @@ void renderStringLine(TextLine *l)
             real_x = l->absXoffset;   // Used with center and right alignments.
             break;
         case HorizontalAnchor::Right:
-            real_x = static_cast<float>(screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
+            real_x = static_cast<float>(engine::screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
         case HorizontalAnchor::Center:
-            real_x = (static_cast<float>(screen_info.w) / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            real_x = (static_cast<float>(engine::screen_info.w) / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
             break;
     }
 
@@ -435,10 +438,10 @@ void renderStringLine(TextLine *l)
             real_y += l->absYoffset;
             break;
         case VerticalAnchor::Top:
-            real_y = static_cast<float>(screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
+            real_y = static_cast<float>(engine::screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case VerticalAnchor::Center:
-            real_y = (static_cast<float>(screen_info.h) / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = (static_cast<float>(engine::screen_info.h) / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 
@@ -488,8 +491,8 @@ void renderStrings()
         render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
         glUseProgram(shader->program);
         GLfloat screenSize[2] = {
-            static_cast<GLfloat>(screen_info.w),
-            static_cast<GLfloat>(screen_info.h)
+            static_cast<GLfloat>(engine::screen_info.w),
+            static_cast<GLfloat>(engine::screen_info.h)
         };
         glUniform2fv(shader->screenSize, 1, screenSize);
         glUniform1i(shader->sampler, 0);
@@ -675,7 +678,7 @@ int InventoryManager::getItemsTypeCount(MenuItemType type)
     int ret = 0;
     for(const InventoryNode& i : *mInventory)
     {
-        auto bi = engine_world.getBaseItemByID(i.id);
+        auto bi = engine::engine_world.getBaseItemByID(i.id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -752,7 +755,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     {
         for(const InventoryNode& i : *mInventory)
         {
-            if(auto bi = engine_world.getBaseItemByID(i.id))
+            if(auto bi = engine::engine_world.getBaseItemByID(i.id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(mCurrentItemsType);
@@ -1024,7 +1027,7 @@ void InventoryManager::render()
         int num = 0;
         for(InventoryNode& i : *mInventory)
         {
-            auto bi = engine_world.getBaseItemByID(i.id);
+            auto bi = engine::engine_world.getBaseItemByID(i.id);
             if(!bi || bi->type != mCurrentItemsType)
             {
                 continue;
@@ -1083,8 +1086,8 @@ void switchGLMode(bool is_gui)
         const GLfloat near_dist = -1.0f;
 
         guiProjectionMatrix = util::matrix4{};                                        // identity matrix
-        guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(screen_info.h);
+        guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(engine::screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(engine::screen_info.h);
         guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
         guiProjectionMatrix[3][0] =-1.0f;
         guiProjectionMatrix[3][1] =-1.0f;
@@ -1092,7 +1095,7 @@ void switchGLMode(bool is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        guiProjectionMatrix = engine_camera.m_glProjMat;
+        guiProjectionMatrix = engine::engine_camera.m_glProjMat;
     }
 }
 
@@ -1105,10 +1108,10 @@ struct gui_buffer_entry_s
 void fillCrosshairBuffer()
 {
     gui_buffer_entry_s crosshair_buf[4] = {
-        {{static_cast<GLfloat>(screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(screen_info.w / 2.0f + 5.f), (static_cast<GLfloat>(screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(screen_info.w / 2.0f), (static_cast<GLfloat>(screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(screen_info.w / 2.0f), (static_cast<GLfloat>(screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f + 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
@@ -1127,8 +1130,8 @@ void drawCrosshair()
 
     glUseProgram(shader->program);
     GLfloat factor[2] = {
-        2.0f / screen_info.w,
-        2.0f / screen_info.h
+        2.0f / engine::screen_info.w,
+        2.0f / engine::screen_info.h
     };
     glUniform2fv(shader->factor, 1, factor);
     GLfloat offset[2] = { -1.f, -1.f };
@@ -1149,25 +1152,25 @@ void drawFaders()
 
 void drawBars()
 {
-    if(engine_world.character)
+    if(engine::engine_world.character)
     {
-        if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
+        if(engine::engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BarType::Health].Forced = true;
 
-        if(engine_world.character->getParam(PARAM_POISON) > 0.0)
+        if(engine::engine_world.character->getParam(PARAM_POISON) > 0.0)
             Bar[BarType::Health].Alternate = true;
 
-        Bar[BarType::Air].Show(engine_world.character->getParam(PARAM_AIR));
-        Bar[BarType::Stamina].Show(engine_world.character->getParam(PARAM_STAMINA));
-        Bar[BarType::Health].Show(engine_world.character->getParam(PARAM_HEALTH));
-        Bar[BarType::Warmth].Show(engine_world.character->getParam(PARAM_WARMTH));
+        Bar[BarType::Air].Show(engine::engine_world.character->getParam(PARAM_AIR));
+        Bar[BarType::Stamina].Show(engine::engine_world.character->getParam(PARAM_STAMINA));
+        Bar[BarType::Health].Show(engine::engine_world.character->getParam(PARAM_HEALTH));
+        Bar[BarType::Warmth].Show(engine::engine_world.character->getParam(PARAM_WARMTH));
     }
 }
 
 void drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
-    main_inventory_manager->frame(engine_frame_time);
+    main_inventory_manager->frame(engine::engine_frame_time);
     if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
@@ -1189,7 +1192,7 @@ void drawInventory()
     GLfloat upper_color[4] = {0.0,0.0,0.0,0.45f};
     GLfloat lower_color[4] = {0.0,0.0,0.0,0.75f};
 
-    drawRect(0.0, 0.0, static_cast<GLfloat>(screen_info.w), static_cast<GLfloat>(screen_info.h),
+    drawRect(0.0, 0.0, static_cast<GLfloat>(engine::screen_info.w), static_cast<GLfloat>(engine::screen_info.h),
                  upper_color, upper_color, lower_color, lower_color,
                  loader::BlendingMode::Opaque);
 
@@ -1241,7 +1244,7 @@ void drawLoadScreen(int value)
 
     switchGLMode(false);
 
-    SDL_GL_SwapWindow(sdl_window);
+    SDL_GL_SwapWindow(engine::sdl_window);
 }
 
 namespace
@@ -1308,8 +1311,8 @@ void drawRect(const GLfloat &x, const GLfloat &y,
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
-    const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
-    const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
+    const GLfloat offset[2] = { x / (engine::screen_info.w*0.5f) - 1.f, y / (engine::screen_info.h*0.5f) - 1.f };
+    const GLfloat factor[2] = { (width / engine::screen_info.w) * 2.0f, (height / engine::screen_info.h) * 2.0f };
 
     render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
@@ -1363,7 +1366,7 @@ bool fadeAssignPic(FaderType fader, const std::string& pic_name)
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
         strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
-        if(!Engine_FileFound(buf, false))
+        if(!engine::Engine_FileFound(buf, false))
         {
             size_t ext_len = 0;
             
@@ -1384,22 +1387,22 @@ bool fadeAssignPic(FaderType fader, const std::string& pic_name)
             buf[pic_name.length() - ext_len + 1] = 'm';
             buf[pic_name.length() - ext_len + 2] = 'p';
             buf[pic_name.length() - ext_len + 3] = 0;
-            if(!Engine_FileFound(buf, false))
+            if(!engine::Engine_FileFound(buf, false))
             {
                 buf[pic_name.length() - ext_len + 0] = 'j';
                 buf[pic_name.length() - ext_len + 1] = 'p';
                 buf[pic_name.length() - ext_len + 2] = 'g';
-                if(!Engine_FileFound(buf, false))
+                if(!engine::Engine_FileFound(buf, false))
                 {
                     buf[pic_name.length() - ext_len + 0] = 'p';
                     buf[pic_name.length() - ext_len + 1] = 'n';
                     buf[pic_name.length() - ext_len + 2] = 'g';
-                    if(!Engine_FileFound(buf, false))
+                    if(!engine::Engine_FileFound(buf, false))
                     {
                         buf[pic_name.length() - ext_len + 0] = 't';
                         buf[pic_name.length() - ext_len + 1] = 'g';
                         buf[pic_name.length() - ext_len + 2] = 'a';
-                        if(!Engine_FileFound(buf, false))
+                        if(!engine::Engine_FileFound(buf, false))
                         {
                             return false;
                         }
@@ -1534,7 +1537,7 @@ void Fader::SetAspect()
 {
     if(mTexture)
     {
-        if((static_cast<float>(mTextureWidth) / static_cast<float>(screen_info.w)) >= (static_cast<float>(mTextureHeight) / static_cast<float>(screen_info.h)))
+        if((static_cast<float>(mTextureWidth) / static_cast<float>(engine::screen_info.w)) >= (static_cast<float>(mTextureHeight) / static_cast<float>(engine::screen_info.h)))
         {
             mTextureWide = true;
             mTextureAspectRatio = static_cast<float>(mTextureHeight) / static_cast<float>(mTextureWidth);
@@ -1760,7 +1763,7 @@ void Fader::Show()
     {
         if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
         {
-            mCurrentAlpha -= engine_frame_time * mSpeed;
+            mCurrentAlpha -= engine::engine_frame_time * mSpeed;
         }
         else
         {
@@ -1774,7 +1777,7 @@ void Fader::Show()
     {
         if(mCurrentAlpha < mMaxAlpha)   // If alpha is less than maximum, continue to fade.
         {
-            mCurrentAlpha += engine_frame_time * mSpeed;
+            mCurrentAlpha += engine::engine_frame_time * mSpeed;
         }
         else
         {
@@ -1792,11 +1795,11 @@ void Fader::Show()
         {
             if(mCurrentAlpha == mMaxAlpha)
             {
-                mCurrentTime += engine_frame_time;
+                mCurrentTime += engine::engine_frame_time;
             }
             else if(mCurrentAlpha < mMaxAlpha)
             {
-                mCurrentAlpha += engine_frame_time * mSpeed;
+                mCurrentAlpha += engine::engine_frame_time * mSpeed;
             }
             else
             {
@@ -1807,7 +1810,7 @@ void Fader::Show()
         {
             if(mCurrentAlpha > 0.0)
             {
-                mCurrentAlpha -= engine_frame_time * mSpeedSecondary;
+                mCurrentAlpha -= engine::engine_frame_time * mSpeedSecondary;
             }
             else
             {
@@ -1842,25 +1845,25 @@ void Fader::Show()
                 // Draw lower letterbox.
                 drawRect(0.0,
                              0.0,
-                             screen_info.w,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
+                             engine::screen_info.w,
+                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
                              mBottomLeftColor, mBottomRightColor, mBottomLeftColor, mBottomRightColor,
                              mBlendingMode);
 
                 // Draw texture.
                 drawRect(0.0,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             screen_info.w,
-                             screen_info.w * mTextureAspectRatio,
+                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             engine::screen_info.w,
+                             engine::screen_info.w * mTextureAspectRatio,
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
 
                 // Draw upper letterbox.
                 drawRect(0.0,
-                             screen_info.h - (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
-                             screen_info.w,
-                             (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
+                             engine::screen_info.h - (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             engine::screen_info.w,
+                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
                              mTopLeftColor, mTopRightColor, mTopLeftColor, mTopRightColor,
                              mBlendingMode);
             }
@@ -1869,25 +1872,25 @@ void Fader::Show()
                 // Draw left pillarbox.
                 drawRect(0.0,
                              0.0,
-                             (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             screen_info.h,
+                             (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                             engine::screen_info.h,
                              mTopLeftColor, mTopLeftColor, mBottomLeftColor, mBottomLeftColor,
                              mBlendingMode);
 
                 // Draw texture.
-                drawRect((screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect((engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
-                             screen_info.h / mTextureAspectRatio,
-                             screen_info.h,
+                             engine::screen_info.h / mTextureAspectRatio,
+                             engine::screen_info.h,
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
 
                 // Draw right pillarbox.
-                drawRect(screen_info.w - (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect(engine::screen_info.w - (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
-                             (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
-                             screen_info.h,
+                             (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                             engine::screen_info.h,
                              mTopRightColor, mTopRightColor, mBottomRightColor, mBottomRightColor,
                              mBlendingMode);
             }
@@ -1896,10 +1899,10 @@ void Fader::Show()
         {
             if(mTextureWide)    // Texture is wider than the screen - scale vertical.
             {
-                drawRect(-(((screen_info.h / mTextureAspectRatio) - screen_info.w) / 2),
+                drawRect(-(((engine::screen_info.h / mTextureAspectRatio) - engine::screen_info.w) / 2),
                              0.0,
-                             screen_info.h / mTextureAspectRatio,
-                             screen_info.h,
+                             engine::screen_info.h / mTextureAspectRatio,
+                             engine::screen_info.h,
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
@@ -1907,9 +1910,9 @@ void Fader::Show()
             else                // Texture is taller than the screen - scale horizontal.
             {
                 drawRect(0.0,
-                             -(((screen_info.w / mTextureAspectRatio) - screen_info.h) / 2),
-                             screen_info.w,
-                             screen_info.w / mTextureAspectRatio,
+                             -(((engine::screen_info.w / mTextureAspectRatio) - engine::screen_info.h) / 2),
+                             engine::screen_info.w,
+                             engine::screen_info.w / mTextureAspectRatio,
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
@@ -1919,8 +1922,8 @@ void Fader::Show()
         {
             drawRect(0.0,
                          0.0,
-                         screen_info.w,
-                         screen_info.h,
+                         engine::screen_info.w,
+                         engine::screen_info.h,
                          tex_color, tex_color, tex_color, tex_color,
                          mBlendingMode,
                          mTexture);
@@ -1928,7 +1931,7 @@ void Fader::Show()
     }
     else    // No texture, simply draw colored rect.
     {
-        drawRect(0.0, 0.0, screen_info.w, screen_info.h,
+        drawRect(0.0, 0.0, engine::screen_info.w, engine::screen_info.h,
                      mTopLeftColor, mTopRightColor, mBottomLeftColor, mBottomRightColor,
                      mBlendingMode);
     }   // end if(mTexture)
@@ -2083,11 +2086,11 @@ void ProgressBar::SetSize(float width, float height, float borderSize)
 // Recalculate size, according to viewport resolution.
 void ProgressBar::RecalculateSize()
 {
-    mWidth = static_cast<float>(mAbsWidth)  * screen_info.scale_factor;
-    mHeight = static_cast<float>(mAbsHeight) * screen_info.scale_factor;
+    mWidth = static_cast<float>(mAbsWidth)  * engine::screen_info.scale_factor;
+    mHeight = static_cast<float>(mAbsHeight) * engine::screen_info.scale_factor;
 
-    mBorderWidth = static_cast<float>(mAbsBorderSize)  * screen_info.scale_factor;
-    mBorderHeight = static_cast<float>(mAbsBorderSize)  * screen_info.scale_factor;
+    mBorderWidth = static_cast<float>(mAbsBorderSize)  * engine::screen_info.scale_factor;
+    mBorderHeight = static_cast<float>(mAbsBorderSize)  * engine::screen_info.scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
@@ -2102,28 +2105,28 @@ void ProgressBar::RecalculatePosition()
     switch(mXanchor)
     {
         case HorizontalAnchor::Left:
-            mX = static_cast<float>(mAbsXoffset + mAbsBorderSize) * screen_info.scale_factor;
+            mX = static_cast<float>(mAbsXoffset + mAbsBorderSize) * engine::screen_info.scale_factor;
             break;
         case HorizontalAnchor::Center:
-            mX = (static_cast<float>(screen_info.w) - (static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor)) / 2 +
-                (static_cast<float>(mAbsXoffset) * screen_info.scale_factor);
+            mX = (static_cast<float>(engine::screen_info.w) - (static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * engine::screen_info.scale_factor)) / 2 +
+                (static_cast<float>(mAbsXoffset) * engine::screen_info.scale_factor);
             break;
         case HorizontalAnchor::Right:
-            mX = static_cast<float>(screen_info.w) - static_cast<float>(mAbsXoffset + mAbsWidth + mAbsBorderSize * 2) * screen_info.scale_factor;
+            mX = static_cast<float>(engine::screen_info.w) - static_cast<float>(mAbsXoffset + mAbsWidth + mAbsBorderSize * 2) * engine::screen_info.scale_factor;
             break;
     }
 
     switch(mYanchor)
     {
         case VerticalAnchor::Top:
-            mY = static_cast<float>(screen_info.h) - static_cast<float>(mAbsYoffset + mAbsHeight + mAbsBorderSize * 2) * screen_info.scale_factor;
+            mY = static_cast<float>(engine::screen_info.h) - static_cast<float>(mAbsYoffset + mAbsHeight + mAbsBorderSize * 2) * engine::screen_info.scale_factor;
             break;
         case VerticalAnchor::Center:
-            mY = (static_cast<float>(screen_info.h) - (static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * screen_info.h_unit)) / 2 +
-                (static_cast<float>(mAbsYoffset) * screen_info.scale_factor);
+            mY = (static_cast<float>(engine::screen_info.h) - (static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * engine::screen_info.h_unit)) / 2 +
+                (static_cast<float>(mAbsYoffset) * engine::screen_info.scale_factor);
             break;
         case VerticalAnchor::Bottom:
-            mY = (mAbsYoffset + mAbsBorderSize) * screen_info.scale_factor;
+            mY = (mAbsYoffset + mAbsBorderSize) * engine::screen_info.scale_factor;
             break;
     }
 }
@@ -2213,7 +2216,7 @@ void ProgressBar::Show(float value)
         if(mAutoShowCnt > 0)
         {
             Visible = true;
-            mAutoShowCnt -= engine_frame_time;
+            mAutoShowCnt -= engine::engine_frame_time;
 
             if(mAutoShowCnt <= 0)
             {
@@ -2235,7 +2238,7 @@ void ProgressBar::Show(float value)
             }
             else
             {
-                mAutoShowFadeCnt -= engine_frame_time * mAutoShowFadeDelay;
+                mAutoShowFadeCnt -= engine::engine_frame_time * mAutoShowFadeDelay;
                 if(mAutoShowFadeCnt < 0)
                     mAutoShowFadeCnt = 0;
             }
@@ -2246,7 +2249,7 @@ void ProgressBar::Show(float value)
             // increase fade counter, until it's 1 (i. e. fully opaque).
             if(mAutoShowFadeCnt < 1)
             {
-                mAutoShowFadeCnt += engine_frame_time * mAutoShowFadeDelay;
+                mAutoShowFadeCnt += engine::engine_frame_time * mAutoShowFadeDelay;
                 if(mAutoShowFadeCnt > 1)
                     mAutoShowFadeCnt = 1;
             }
@@ -2282,7 +2285,7 @@ void ProgressBar::Show(float value)
     // We check if bar is in a warning state. If it is, we blink it continously.
     if(mBlink)
     {
-        mBlinkCnt -= engine_frame_time;
+        mBlinkCnt -= engine::engine_frame_time;
         if(mBlinkCnt > mBlinkInterval)
         {
             value = 0; // Force zero value, which results in empty bar.
@@ -2449,7 +2452,7 @@ void ItemNotifier::Animate()
     {
         if(mRotateTime)
         {
-            mCurrRotX += (engine_frame_time * mRotateTime);
+            mCurrRotX += (engine::engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
 
             mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0) : (mCurrRotX);
@@ -2458,22 +2461,22 @@ void ItemNotifier::Animate()
 
         if(mCurrTime == 0)
         {
-            float step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
+            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0);
             step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX -= step;
             mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
 
             if(mCurrPosX == mEndPosX)
-                mCurrTime += engine_frame_time;
+                mCurrTime += engine::engine_frame_time;
         }
         else if(mCurrTime < mShowTime)
         {
-            mCurrTime += engine_frame_time;
+            mCurrTime += engine::engine_frame_time;
         }
         else
         {
-            float step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
+            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0);
             step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX += step;
@@ -2492,9 +2495,9 @@ void ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = (static_cast<float>(screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
-    mPosY = (static_cast<float>(screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
-    mCurrPosX = screen_info.w + (static_cast<float>(screen_info.w) / NotifierOffscreenDivider * mSize);
+    mEndPosX = (static_cast<float>(engine::screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
+    mPosY = (static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
+    mCurrPosX = engine::screen_info.w + (static_cast<float>(engine::screen_info.w) / NotifierOffscreenDivider * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
 
@@ -2503,7 +2506,7 @@ void ItemNotifier::Draw()
     if(!mActive)
         return;
 
-    auto item = engine_world.getBaseItemByID(mItem);
+    auto item = engine::engine_world.getBaseItemByID(mItem);
     if(!item)
         return;
 
@@ -2722,7 +2725,7 @@ void FontManager::Update()
 {
     if(this->mFadeDirection)
     {
-        this->mFadeValue += engine_frame_time * FontFadeSpeed;
+        this->mFadeValue += engine::engine_frame_time * FontFadeSpeed;
 
         if(this->mFadeValue >= 1.0)
         {
@@ -2732,7 +2735,7 @@ void FontManager::Update()
     }
     else
     {
-        this->mFadeValue -= engine_frame_time * FontFadeSpeed;
+        this->mFadeValue -= engine::engine_frame_time * FontFadeSpeed;
 
         if(this->mFadeValue <= FontFadeMin)
         {
@@ -2760,7 +2763,7 @@ void FontManager::Resize()
 {
     for(Font& current_font : this->fonts)
     {
-        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * screen_info.scale_factor));
+        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * engine::screen_info.scale_factor));
     }
 }
 

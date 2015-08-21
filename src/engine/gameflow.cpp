@@ -9,12 +9,15 @@
 #include "LuaState.h"
 
 #include "gui/console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "gui/gui.h"
 #include "script/script.h"
 #include "world/world.h"
 
-gameflow_manager_s gameflow_manager;
+namespace engine
+{
+
+GameflowManager gameflow_manager;
 
 void Gameflow_Init()
 {
@@ -83,3 +86,5 @@ bool Gameflow_Send(int opcode, int operand)
     }
     return false;
 }
+
+} // namespace engine

@@ -17,6 +17,9 @@ struct TransparentPolygonReference;
 } // namespace core
 } // namespace world
 
+namespace render
+{
+
 struct BSPFaceRef
 {
     btTransform transform;
@@ -63,3 +66,5 @@ public:
         m_root.reset(new BSPNode());
     }
 };
+
+} // namespace render

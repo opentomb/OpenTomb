@@ -7,13 +7,13 @@
 
 #include "gui/console.h"
 #include "world/camera.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "world/entity.h"
 #include "util/helpers.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
-#include "system.h"
+#include "engine/system.h"
 #include "util/vmath.h"
 
 using gui::Console;
@@ -365,7 +365,7 @@ void Source::Update()
 
 void Source::SetBuffer(ALint buffer)
 {
-    ALint buffer_index = engine_world.audio_buffers[buffer];
+    ALint buffer_index = engine::engine_world.audio_buffers[buffer];
 
     if(alIsSource(source_index) && alIsBuffer(buffer_index))
     {
@@ -487,7 +487,7 @@ void Source::LinkEmitter()
     switch(emitter_type)
     {
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine_world.getEntityByID(emitter_ID))
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(emitter_ID))
             {
                 SetPosition(ent->m_transform.getOrigin());
                 SetVelocity(ent->m_speed);
@@ -495,7 +495,7 @@ void Source::LinkEmitter()
             return;
 
         case EmitterType::SoundSource:
-            SetPosition(engine_world.audio_emitters[emitter_ID].position);
+            SetPosition(engine::engine_world.audio_emitters[emitter_ID].position);
             return;
     }
 }
@@ -607,7 +607,7 @@ bool StreamTrack::Load_Track(const char *path)
     memset(&sf_info, 0, sizeof(sf_info));
     if(!(snd_file = sf_open(path, SFM_READ, &sf_info)))
     {
-        Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
+        engine::Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
         method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
         return false;
     }
@@ -711,7 +711,7 @@ bool StreamTrack::Play(bool fade_in)
         {
             if(!i)
             {
-                Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
+                engine::Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
                 return false;
             }
             else
@@ -1034,7 +1034,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
 
-    if(track_index >= engine_world.stream_track_map.size())
+    if(track_index >= engine::engine_world.stream_track_map.size())
     {
         Console::instance().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
         return StreamError::WrongTrack;
@@ -1099,7 +1099,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Finally - load our track.
 
-    if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
+    if(!engine::engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
         Console::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
         return StreamError::LoadError;
@@ -1107,7 +1107,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
+    if(!engine::engine_world.stream_tracks[target_stream].Play(do_fade_in))
     {
         Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
@@ -1127,11 +1127,11 @@ void updateStreamsDamping()
     // NOT background. So we simply check this condition and set damp activity flag
     // if condition is met.
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if(engine_world.stream_tracks[i].IsPlaying())
+        if(engine::engine_world.stream_tracks[i].IsPlaying())
         {
-            if(!engine_world.stream_tracks[i].IsType(StreamType::Background))
+            if(!engine::engine_world.stream_tracks[i].IsType(StreamType::Background))
             {
                 StreamTrack::damp_active = true;
                 return; // No need to check more, we found at least one condition.
@@ -1146,18 +1146,18 @@ void updateStreams()
 {
     updateStreamsDamping();
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        engine_world.stream_tracks[i].Update();
+        engine::engine_world.stream_tracks[i].Update();
     }
 }
 
 bool isTrackPlaying(int32_t track_index)
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if(((track_index == -1) || (engine_world.stream_tracks[i].IsTrack(track_index))) &&
-           engine_world.stream_tracks[i].IsPlaying())
+        if(((track_index == -1) || (engine::engine_world.stream_tracks[i].IsTrack(track_index))) &&
+           engine::engine_world.stream_tracks[i].IsPlaying())
         {
             return true;
         }
@@ -1173,7 +1173,7 @@ bool trackAlreadyPlayed(uint32_t track_index, int8_t mask)
         return false;   // No mask, play in any case.
     }
 
-    if(track_index >= engine_world.stream_track_map.size())
+    if(track_index >= engine::engine_world.stream_track_map.size())
     {
         return true;    // No such track, hence "already" played.
     }
@@ -1181,20 +1181,20 @@ bool trackAlreadyPlayed(uint32_t track_index, int8_t mask)
     {
         mask &= 0x3F;   // Clamp mask just in case.
 
-        if(engine_world.stream_track_map[track_index] == mask)
+        if(engine::engine_world.stream_track_map[track_index] == mask)
         {
             return true;    // Immediately return true, if flags are directly equal.
         }
         else
         {
-            int8_t played = engine_world.stream_track_map[track_index] & mask;
+            int8_t played = engine::engine_world.stream_track_map[track_index] & mask;
             if(played == mask)
             {
                 return true;    // Bits were set, hence already played.
             }
             else
             {
-                engine_world.stream_track_map[track_index] |= mask;
+                engine::engine_world.stream_track_map[track_index] |= mask;
                 return false;   // Not yet played, set bits and return false.
             }
         }
@@ -1203,10 +1203,10 @@ bool trackAlreadyPlayed(uint32_t track_index, int8_t mask)
 
 int getFreeStream()
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if((!engine_world.stream_tracks[i].IsPlaying()) &&
-           (!engine_world.stream_tracks[i].IsActive()))
+        if((!engine::engine_world.stream_tracks[i].IsPlaying()) &&
+           (!engine::engine_world.stream_tracks[i].IsActive()))
         {
             return i;
         }
@@ -1219,14 +1219,14 @@ bool stopStreams(StreamType stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if(engine_world.stream_tracks[i].IsPlaying() &&
-           (engine_world.stream_tracks[i].IsType(stream_type) ||
+        if(engine::engine_world.stream_tracks[i].IsPlaying() &&
+           (engine::engine_world.stream_tracks[i].IsType(stream_type) ||
             stream_type == StreamType::Any)) // Stop ALL streams at once.
         {
             result = true;
-            engine_world.stream_tracks[i].Stop();
+            engine::engine_world.stream_tracks[i].Stop();
         }
     }
 
@@ -1237,14 +1237,14 @@ bool endStreams(StreamType stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
         if((stream_type == StreamType::Any) ||                              // End ALL streams at once.
-           ((engine_world.stream_tracks[i].IsPlaying()) &&
-            (engine_world.stream_tracks[i].IsType(stream_type))))
+           ((engine::engine_world.stream_tracks[i].IsPlaying()) &&
+            (engine::engine_world.stream_tracks[i].IsType(stream_type))))
         {
             result = true;
-            engine_world.stream_tracks[i].End();
+            engine::engine_world.stream_tracks[i].End();
         }
     }
 
@@ -1260,7 +1260,7 @@ bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
     switch(entity_type)
     {
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine_world.getEntityByID(entity_ID))
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(entity_ID))
             {
                 vec = ent->m_transform.getOrigin();
             }
@@ -1271,11 +1271,11 @@ bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
             break;
 
         case EmitterType::SoundSource:
-            if(static_cast<uint32_t>(entity_ID) + 1 > engine_world.audio_emitters.size())
+            if(static_cast<uint32_t>(entity_ID) + 1 > engine::engine_world.audio_emitters.size())
             {
                 return false;
             }
-            vec = engine_world.audio_emitters[entity_ID].position;
+            vec = engine::engine_world.audio_emitters[entity_ID].position;
             break;
 
         case EmitterType::Global:
@@ -1297,59 +1297,59 @@ bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
 
 void updateSources()
 {
-    if(engine_world.audio_sources.size() < 1)
+    if(engine::engine_world.audio_sources.size() < 1)
     {
         return;
     }
 
     alGetListenerfv(AL_POSITION, listener_position);
 
-    for(uint32_t i = 0; i < engine_world.audio_emitters.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_emitters.size(); i++)
     {
-        send(engine_world.audio_emitters[i].sound_index, EmitterType::SoundSource, i);
+        send(engine::engine_world.audio_emitters[i].sound_index, EmitterType::SoundSource, i);
     }
 
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        engine_world.audio_sources[i].Update();
+        engine::engine_world.audio_sources[i].Update();
     }
 }
 
 void pauseAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        if(engine_world.audio_sources[i].IsActive())
+        if(engine::engine_world.audio_sources[i].IsActive())
         {
-            engine_world.audio_sources[i].Pause();
+            engine::engine_world.audio_sources[i].Pause();
         }
     }
 }
 
 void stopAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        engine_world.audio_sources[i].Stop();
+        engine::engine_world.audio_sources[i].Stop();
     }
 }
 
 void resumeAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        if(engine_world.audio_sources[i].IsActive())
+        if(engine::engine_world.audio_sources[i].IsActive())
         {
-            engine_world.audio_sources[i].Play();
+            engine::engine_world.audio_sources[i].Play();
         }
     }
 }
 
 int getFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        if(!engine_world.audio_sources[i].IsActive())
+        if(!engine::engine_world.audio_sources[i].IsActive())
         {
             return i;
         }
@@ -1360,13 +1360,14 @@ int getFreeSource()   ///@FIXME: add condition (compare max_dist with new source
 
 int isEffectPlaying(int effect_ID, EmitterType entity_type, int entity_ID)
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
+    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        if(((entity_type == EmitterType::Any) || (engine_world.audio_sources[i].emitter_type == entity_type)) &&
-           ((entity_ID == -1) || (engine_world.audio_sources[i].emitter_ID == static_cast<int32_t>(entity_ID))) &&
-           ((effect_ID == -1) || (engine_world.audio_sources[i].effect_index == static_cast<uint32_t>(effect_ID))))
+        if(((entity_type == EmitterType::Any) || (engine::engine_world.audio_sources[i].emitter_type == entity_type)) &&
+           ((entity_ID == -1) || (engine::engine_world.audio_sources[i].emitter_ID == static_cast<int32_t>(entity_ID))) &&
+           ((effect_ID == -1) || (engine::engine_world.audio_sources[i].effect_index == static_cast<uint32_t>(effect_ID))))
         {
-            if(engine_world.audio_sources[i].IsPlaying()) return i;
+            if(engine::engine_world.audio_sources[i].IsPlaying())
+                return i;
         }
     }
 
@@ -1382,16 +1383,17 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers.empty() || effect_ID < 0) return Error::Ignored;
+    if(engine::engine_world.audio_buffers.empty() || effect_ID < 0)
+        return Error::Ignored;
 
     // Remap global engine effect ID to local effect ID.
 
-    if(static_cast<uint32_t>(effect_ID) >= engine_world.audio_map.size())
+    if(static_cast<uint32_t>(effect_ID) >= engine::engine_world.audio_map.size())
     {
         return Error::NoSample;  // Sound is out of bounds; stop.
     }
 
-    int real_ID = static_cast<int>(engine_world.audio_map[effect_ID]);
+    int real_ID = static_cast<int>(engine::engine_world.audio_map[effect_ID]);
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
@@ -1401,7 +1403,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
     }
     else
     {
-        effect = &engine_world.audio_effects[real_ID];
+        effect = &engine::engine_world.audio_effects[real_ID];
     }
 
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
@@ -1437,7 +1439,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
     {
         if(effect->loop == loader::LoopType::PingPong)
         {
-            engine_world.audio_sources[source_number].Stop();
+            engine::engine_world.audio_sources[source_number].Stop();
         }
         else if(effect->loop != loader::LoopType::None) // Any other looping case (Wait / Loop).
         {
@@ -1467,7 +1469,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
             buffer_index = effect->sample_index;
         }
 
-        Source *source = &engine_world.audio_sources[source_number];
+        Source *source = &engine::engine_world.audio_sources[source_number];
 
         source->SetBuffer(buffer_index);
 
@@ -1530,7 +1532,7 @@ Error kill(int effect_ID, EmitterType entity_type, int entity_ID)
 
     if(playing_sound != -1)
     {
-        engine_world.audio_sources[playing_sound].Stop();
+        engine::engine_world.audio_sources[playing_sound].Stop();
         return Error::Processed;
     }
 
@@ -1557,7 +1559,7 @@ void loadOverridedSamples(world::World *world)
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
-                        if(Engine_FileFound(sample_name))
+                        if(engine::Engine_FileFound(sample_name))
                         {
                             loadALbufferFromFile(world->audio_buffers[buffer_counter], sample_name);
                         }
@@ -1645,7 +1647,7 @@ int loadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
     }
     else
     {
-        Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
+        engine::Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
         return 0;
     }
 
@@ -1661,11 +1663,11 @@ void init(uint32_t num_Sources)
     // Generate new source array.
 
     num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
-    engine_world.audio_sources.resize(num_Sources);
+    engine::engine_world.audio_sources.resize(num_Sources);
 
     // Generate stream tracks array.
 
-    engine_world.stream_tracks.resize(StreamSourceCount);
+    engine::engine_world.stream_tracks.resize(StreamSourceCount);
 
     // Reset last room type used for assigning reverb.
 
@@ -1679,17 +1681,17 @@ int deInit()
 
     deInitDelay();
 
-    engine_world.audio_sources.clear();
-    engine_world.stream_tracks.clear();
-    engine_world.stream_track_map.clear();
+    engine::engine_world.audio_sources.clear();
+    engine::engine_world.stream_tracks.clear();
+    engine::engine_world.stream_track_map.clear();
 
     ///@CRITICAL: You must delete all sources before deleting buffers!
 
-    alDeleteBuffers(static_cast<ALsizei>(engine_world.audio_buffers.size()), engine_world.audio_buffers.data());
-    engine_world.audio_buffers.clear();
+    alDeleteBuffers(static_cast<ALsizei>(engine::engine_world.audio_buffers.size()), engine::engine_world.audio_buffers.data());
+    engine::engine_world.audio_buffers.clear();
 
-    engine_world.audio_effects.clear();
-    engine_world.audio_map.clear();
+    engine::engine_world.audio_effects.clear();
+    engine::engine_world.audio_map.clear();
 
     if(audio_settings.effects_initialized)
     {
@@ -1720,7 +1722,7 @@ bool deInitDelay()
 
         if(curr_time > AudioDeinitDelay)
         {
-            Sys_DebugLog(LOG_FILENAME, "Audio deinit timeout reached! Something is wrong with audio driver.");
+            engine::Sys_DebugLog(LOG_FILENAME, "Audio deinit timeout reached! Something is wrong with audio driver.");
             break;
         }
     }
@@ -1733,7 +1735,7 @@ bool logALError(int error_marker)
     ALenum err = alGetError();
     if(err != AL_NO_ERROR)
     {
-        Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
+        engine::Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
         return true;
     }
     return false;
@@ -1741,7 +1743,7 @@ bool logALError(int error_marker)
 
 void logSndfileError(int code)
 {
-    Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
+    engine::Sys_DebugLog(LOG_FILENAME, sf_error_number(code));
 }
 
 float getByteDepth(SF_INFO sfInfo)
@@ -1776,7 +1778,7 @@ int loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sam
 
     if(!sample)
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        engine::Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
         return -1;
     }
 
@@ -1840,7 +1842,7 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_IN
 {
     if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
-        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
+        engine::Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
         return false;
     }
 
@@ -1875,7 +1877,7 @@ void updateListenerByCamera(world::Camera *cam)
 
     alListenerfv(AL_POSITION, cam->getPosition());
 
-    btVector3 v2 = (cam->getPosition() - cam->m_prevPos) / engine_frame_time;
+    btVector3 v2 = (cam->getPosition() - cam->m_prevPos) / engine::engine_frame_time;
     alListenerfv(AL_VELOCITY, v2);
     cam->m_prevPos = cam->getPosition();
 
@@ -1918,7 +1920,7 @@ void update()
 
     if(audio_settings.listener_is_player)
     {
-        updateListenerByEntity(engine_world.character);
+        updateListenerByEntity(engine::engine_world.character);
     }
     else
     {

@@ -1,8 +1,8 @@
 #include <chrono>
 #include <cstdlib>
 
-#include "engine.h"
-#include "system.h"
+#include "engine/engine.h"
+#include "engine/system.h"
 
 #define NO_AUDIO  0
 
@@ -11,7 +11,7 @@ btScalar time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    Engine_Start();
+    engine::Engine_Start();
 
     // Entering main loop.
 
@@ -23,12 +23,12 @@ int main(int /*argc*/, char** /*argv*/)
         auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
         prev_time = now;
 
-        Engine_Frame(delta * time_scale);
-        Engine_Display();
+        engine::Engine_Frame(delta * time_scale);
+        engine::Engine_Display();
     }
 
     // Main loop interrupted; shutting down.
 
-    Engine_Shutdown(EXIT_SUCCESS);
+    engine::Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }

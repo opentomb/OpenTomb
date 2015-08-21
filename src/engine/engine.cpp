@@ -34,16 +34,16 @@
 #include "util/vmath.h"
 #include "controls.h"
 #include "gui/console.h"
-#include "system.h"
+#include "engine/system.h"
 #include "common.h"
 #include "script/script.h"
 #include "render/render.h"
-#include "game.h"
+#include "engine/game.h"
 #include "world/world.h"
 #include "world/camera.h"
 #include "world/core/mesh.h"
 #include "world/entity.h"
-#include "resource.h"
+#include "world/resource.h"
 #include "gui/gui.h"
 #include "audio/audio.h"
 #include "character_controller.h"
@@ -51,6 +51,19 @@
 #include "strings.h"
 
 using gui::Console;
+
+namespace audio
+{
+Settings audio_settings{};
+} // namespace audio
+
+namespace render
+{
+RenderDebugDrawer                    debugDrawer;
+} // namespace render
+
+namespace engine
+{
 
 SDL_Window             *sdl_window = nullptr;
 SDL_Joystick           *sdl_joystick = nullptr;
@@ -62,11 +75,6 @@ ALCcontext             *al_context = nullptr;
 
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
-
-namespace audio
-{
-Settings      audio_settings{};
-} // namespace audio
 
 btScalar           engine_frame_time = 0.0;
 
@@ -87,10 +95,6 @@ btSequentialImpulseConstraintSolver *bt_engine_solver = nullptr;
 btDiscreteDynamicsWorld             *bt_engine_dynamicsWorld = nullptr;
 btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 
-namespace render
-{
-render::RenderDebugDrawer                    debugDrawer;
-} // namespace render
 
 // Debug globals.
 
@@ -114,7 +118,7 @@ void Engine_InitGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(render::renderer.settings().antialias)
+    if(::render::renderer.settings().antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -1301,3 +1305,5 @@ int engine_lua_printf(const char *fmt, ...)
 
     return ret;
 }
+
+} // namespace engine

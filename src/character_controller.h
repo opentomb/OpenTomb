@@ -10,7 +10,7 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 
-#include "engine.h"
+#include "engine/engine.h"
 #include "world/entity.h"
 
 /*------ Lara's model-------
@@ -189,9 +189,13 @@ enum CharParameters
     PARAM_SENTINEL
 };
 
+namespace engine
+{
 struct EngineContainer;
 class BtEngineClosestConvexResultCallback;
 class BtEngineClosestRayResultCallback;
+} // namespace engine
+
 class btCollisionObject;
 class btConvexShape;
 
@@ -243,8 +247,8 @@ struct HeightInfo
         sp->setMargin(COLLISION_MARGIN_DEFAULT);
     }
 
-    std::shared_ptr<BtEngineClosestRayResultCallback> cb;
-    std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
+    std::shared_ptr<engine::BtEngineClosestRayResultCallback> cb;
+    std::shared_ptr<engine::BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
     bool                                        ceiling_climb = false;
@@ -370,8 +374,8 @@ struct Character : public world::Entity
 
     Entity* m_traversedObject = nullptr;
 
-    std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
-    std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
+    std::shared_ptr<engine::BtEngineClosestRayResultCallback> m_rayCb;
+    std::shared_ptr<engine::BtEngineClosestConvexResultCallback> m_convexCb;
 
     Character(uint32_t id);
     ~Character();
@@ -406,7 +410,7 @@ struct Character : public world::Entity
         Entity::updateTransform();
     }
     void updateGhostRigidBody() override;
-    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override
+    virtual std::shared_ptr<engine::BtEngineClosestConvexResultCallback> callbackForCamera() const override
     {
         return m_convexCb;
     }
@@ -457,4 +461,4 @@ struct Character : public world::Entity
     int   setWeaponModel(int weapon_model, int armed);
 };
 
-int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
+int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer> &cont);

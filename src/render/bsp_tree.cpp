@@ -10,6 +10,9 @@
 #include "world/core/polygon.h"
 #include "util/vmath.h"
 
+namespace render
+{
+
 void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const world::core::Polygon& transformed)
 {
     if(!root)
@@ -73,3 +76,5 @@ void DynamicBSP::addNewPolygonList(const std::vector<world::core::TransparentPol
         }
     }
 }
+
+} // namespace render

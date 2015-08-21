@@ -35,12 +35,13 @@ struct SSBoneFrame;
 } // namespace core
 } // namespace world
 
-struct BSPNode;
-struct BSPFaceRef;
 struct Character;
 
 namespace render
 {
+
+struct BSPNode;
+struct BSPFaceRef;
 
 namespace
 {

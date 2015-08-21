@@ -16,10 +16,14 @@
 #include "obb.h"
 
 struct Character;
-struct EngineContainer;
 class btCollisionShape;
 class btRigidBody;
 class btCollisionShape;
+
+namespace engine
+{
+struct EngineContainer;
+} // namespace engine
 
 namespace render
 {
@@ -238,7 +242,7 @@ struct StaticMesh : public Object
 
     btTransform transform;                                  // gl transformation matrix
     OBB obb;
-    std::shared_ptr<EngineContainer> self;
+    std::shared_ptr<engine::EngineContainer> self;
 
     std::shared_ptr<BaseMesh> mesh;                                           // base model
     btRigidBody                *bt_body;

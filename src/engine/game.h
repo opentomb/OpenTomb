@@ -23,8 +23,6 @@ namespace script
     class ScriptEngine;
 }
 
-class VT_Level;
-
 namespace world
 {
 struct Room;
@@ -38,6 +36,9 @@ struct Polygon;
 struct BaseMesh;
 } // namespace core
 } // namespace world
+
+namespace engine
+{
 
 class BtEngineClosestConvexResultCallback;
 
@@ -63,3 +64,5 @@ void Game_UpdateCharacters();
 
 void Cam_FollowEntity(world::Camera *cam, world::Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
+
+}

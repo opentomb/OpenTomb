@@ -5,6 +5,9 @@
 #include <LinearMath/btScalar.h>
 #include <GL/glew.h>
 
+namespace engine
+{
+
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"
 #define GL_LOG_FILENAME  "gl.log"
@@ -46,6 +49,8 @@ void Sys_Error(const char *error, ...);
 void Sys_Warn(const char *warning, ...);
 void Sys_DebugLog(const char *file, const char *fmt, ...);
 
-#define Sys_LogCurrPlace Sys_DebugLog(LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
-#define Sys_extError(...) {Sys_LogCurrPlace Sys_Error(__VA_ARGS__);}
-#define Sys_extWarn(...) {Sys_LogCurrPlace Sys_Warn(__VA_ARGS__);}
+#define SYS_LOG_CURR_PLACE Sys_DebugLog(LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
+#define SYS_EXT_ERROR(...) {SYS_LOG_CURR_PLACE Sys_Error(__VA_ARGS__);}
+#define SYS_EXT_WARN(...) {SYS_LOG_CURR_PLACE Sys_Warn(__VA_ARGS__);}
+
+} // namespace engine

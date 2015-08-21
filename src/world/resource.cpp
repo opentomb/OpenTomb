@@ -15,15 +15,15 @@
 #include "LuaState.h"
 #include "loader/level.h"
 
-#include "anim_state_control.h"
+#include "engine/anim_state_control.h"
 #include "audio/audio.h"
 #include "bordered_texture_atlas.h"
 #include "character_controller.h"
 #include "gui/console.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "world/entity.h"
-#include "game.h"
-#include "gameflow.h"
+#include "engine/game.h"
+#include "engine/gameflow.h"
 #include "render/gl_util.h"
 #include "gui/gui.h"
 #include "util/helpers.h"
@@ -35,18 +35,21 @@
 #include "script/script.h"
 #include "render/shader_description.h"
 #include "strings.h"
-#include "system.h"
+#include "engine/system.h"
 #include "util/vmath.h"
 #include "world/world.h"
 
 using gui::Console;
+
+namespace world
+{
 
 void Res_SetEntityProperties(std::shared_ptr<world::Entity> ent)
 {
     if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine_world.engineVersion), ent->m_bf.animations.model->id);
+        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
 
         ent->m_visible = !ent->m_visible;
         ent->m_typeFlags |= flg;
@@ -57,7 +60,7 @@ void Res_SetEntityFunction(std::shared_ptr<world::Entity> ent)
 {
     if(ent->m_bf.animations.model)
     {
-        const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine_world.engineVersion), ent->m_bf.animations.model->id);
+        const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
         if(funcName)
             Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
     }
@@ -582,7 +585,8 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
 
-    if(!engine_world.getEntityByID(entity_index)) return true;
+    if(!engine::engine_world.getEntityByID(entity_index))
+        return true;
 
     int32_t *curr_table_index = lookup_table;
 
@@ -635,7 +639,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if(*entry < engine_world.rooms.size())
+                    if(*entry < engine::engine_world.rooms.size())
                     {
                         sector->portal_to_room = *entry;
                         sector->floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
@@ -876,7 +880,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                                         {
                                             // Switch action type case.
                                             snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                            if(engine_world.engineVersion >= loader::Engine::TR3 && only_once)
+                                            if(engine::engine_world.engineVersion >= loader::Engine::TR3 && only_once)
                                             {
                                                 // Just lock out activator, no anti-action needed.
                                                 snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -944,7 +948,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                             entry++;
                             uint8_t cam_timer = ((*entry) & 0x00FF);
                             uint8_t cam_once = ((*entry) & 0x0100) >> 8;
-                            uint8_t cam_zoom = (engine_world.engineVersion < loader::Engine::TR2)?(((*entry) & 0x0400) >> 10):(((*entry) & 0x1000) >> 12);
+                            uint8_t cam_zoom = (engine::engine_world.engineVersion < loader::Engine::TR2)?(((*entry) & 0x0400) >> 10):(((*entry) & 0x1000) >> 12);
                             cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
 
                             snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
@@ -999,7 +1003,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         case TR_FD_TRIGFUNC_PLAYTRACK:
                             // Override for looped BGM tracks in TR1: if there are any sectors
                             // triggering looped tracks, ignore it, as BGM is always set in script.
-                            if(engine_world.engineVersion < loader::Engine::TR2)
+                            if(engine::engine_world.engineVersion < loader::Engine::TR2)
                             {
                                 audio::StreamType looped;
                                 engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
@@ -1120,7 +1124,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                         {
                             script += buf2;
-                            if(engine_world.engineVersion < loader::Engine::TR3 || !only_once)
+                            if(engine::engine_world.engineVersion < loader::Engine::TR3 || !only_once)
                             {
                                 script += single_events;
                                 script += anti_events;    // Single/continous events are engaged along with
@@ -1336,13 +1340,13 @@ void Res_Sector_FixHeights(world::RoomSector* sector)
     for(size_t i = 0; i < 4; i++)
     {
         if(sector->ceiling_corners[i].m_floats[2] == sector->floor_corners[i].m_floats[2])
-            sector->ceiling_corners[i].m_floats[2] += LARA_HANG_VERTICAL_EPSILON;
+            sector->ceiling_corners[i].m_floats[2] += engine::LARA_HANG_VERTICAL_EPSILON;
     }
 }
 
 void GenerateAnimCommandsTransform(world::core::SkeletalModel* model)
 {
-    if(engine_world.anim_commands.empty())
+    if(engine::engine_world.anim_commands.empty())
     {
         return;
     }
@@ -1358,8 +1362,8 @@ void GenerateAnimCommandsTransform(world::core::SkeletalModel* model)
         if(af->num_anim_commands == 0)
             continue;
 
-        assert(af->anim_command < engine_world.anim_commands.size());
-        int16_t *pointer = &engine_world.anim_commands[af->anim_command];
+        assert(af->anim_command < engine::engine_world.anim_commands.size());
+        int16_t *pointer = &engine::engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++)
         {
@@ -1534,7 +1538,7 @@ void TR_Sector_Calculate(world::World *world, const std::unique_ptr<loader::Leve
                 if((p.normal.normal[2] < 0.01) && ((p.normal.normal[2] > -0.01)))
                 {
                     world::RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
-                    world::RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
+                    world::RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
 
                     if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
@@ -1564,12 +1568,12 @@ void TR_color_to_arr(std::array<GLfloat, 4>& v, const loader::FloatColor& tr_c)
 
 world::RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
-    if(room_id >= engine_world.rooms.size())
+    if(room_id >= engine::engine_world.rooms.size())
     {
         return nullptr;
     }
 
-    auto room = engine_world.rooms[room_id];
+    auto room = engine::engine_world.rooms[room_id];
     if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
     {
         return nullptr;
@@ -1620,7 +1624,7 @@ void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
         return;
     }
 
-    if(p < engine_world.rooms.size())
+    if(p < engine::engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
@@ -1643,9 +1647,9 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
 
 void Res_AutoexecOpen(loader::Game engine_version)
 {
-    std::string temp_script_name = Engine_GetAutoexecName(engine_version, std::string());
+    std::string temp_script_name = engine::Engine_GetAutoexecName(engine_version, std::string());
 
-    if(Engine_FileFound(temp_script_name, false))
+    if(engine::Engine_FileFound(temp_script_name, false))
     {
         try
         {
@@ -1653,11 +1657,11 @@ void Res_AutoexecOpen(loader::Game engine_version)
         }
         catch(lua::RuntimeError& error)
         {
-            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
         catch(lua::LoadError& error)
         {
-            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
         }
     }
 }
@@ -1780,7 +1784,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
     room->ambient_lighting[0] = tr->m_rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->m_rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->m_rooms[room_index].light_colour.b * 2;
-    room->self.reset(new EngineContainer());
+    room->self.reset(new engine::EngineContainer());
     room->self->room = room.get();
     room->self->object = room.get();
     room->self->object_type = OBJECT_ROOM_BASE;
@@ -1804,7 +1808,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         }
         room->static_mesh.emplace_back(std::make_shared<world::core::StaticMesh>());
         std::shared_ptr<world::core::StaticMesh> r_static = room->static_mesh.back();
-        r_static->self = std::make_shared<EngineContainer>();
+        r_static->self = std::make_shared<engine::EngineContainer>();
         r_static->self->room = room.get();
         r_static->self->object = room->static_mesh[i].get();
         r_static->self->object_type = OBJECT_STATIC_MESH;
@@ -1898,7 +1902,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
                 startTransform = r_static->transform;
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+                engine::bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
                 r_static->bt_body->setUserPointer(r_static->self.get());
             }
         }
@@ -2184,7 +2188,7 @@ void Res_GenRoomCollision(world::World *world)
             btVector3 localInertia(0, 0, 0);
             btDefaultMotionState* motionState = new btDefaultMotionState(room->transform);
             room->bt_body.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-            bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            engine::bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             room->bt_body->setUserPointer(room->self.get());
             room->bt_body->setRestitution(1.0);
             room->bt_body->setFriction(1.0);
@@ -2440,10 +2444,10 @@ void TR_GenAnimTextures(world::World *world, const std::unique_ptr<loader::Level
                 seq->anim_type = world::core::AnimTextureType::Backward;
             }
 
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
+            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
             for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, static_cast<GLfloat>(j) * seq->uvrotate_speed, true);
+                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, static_cast<GLfloat>(j) * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -2469,10 +2473,10 @@ void TR_GenAnimTextures(world::World *world, const std::unique_ptr<loader::Level
         }
         else
         {
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
+            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
             for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
+                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -3616,7 +3620,7 @@ void TR_GenEntities(world::World *world, const std::unique_ptr<loader::Level>& t
             switch(loader::gameToEngine(tr->m_gameVersion))
             {
                 case loader::Engine::TR1:
-                    if(gameflow_manager.CurrentLevelID == 0)
+                    if(engine::gameflow_manager.CurrentLevelID == 0)
                     {
                         LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
@@ -3671,7 +3675,7 @@ void TR_GenEntities(world::World *world, const std::unique_ptr<loader::Level>& t
             lara->genRigidBody();
             lara->createGhosts();
             lara->m_height = 768.0;
-            lara->state_func = State_Control_Lara;
+            lara->state_func = &engine::State_Control_Lara;
 
             continue;
         }
@@ -3892,9 +3896,9 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<world::BaseItem> >& map
     {
         std::shared_ptr<world::BaseItem> item = it->second;
 
-        for(const std::shared_ptr<world::Room>& room : engine_world.rooms)
+        for(const std::shared_ptr<world::Room>& room : engine::engine_world.rooms)
         {
-            for(const std::shared_ptr<EngineContainer>& cont : room->containers)
+            for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
             {
                 if(cont->object_type != OBJECT_ENTITY)
                     continue;
@@ -3913,3 +3917,5 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<world::BaseItem> >& map
         }
     }
 }
+
+} // namespace world

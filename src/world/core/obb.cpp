@@ -7,7 +7,7 @@
 #include "world/entity.h"
 #include "world/core/polygon.h"
 #include "util/vmath.h"
-#include "engine.h"
+#include "engine/engine.h"
 #include "frustum.h"
 
 namespace world
@@ -317,8 +317,8 @@ bool OBB::isVisibleInRoom(const Room& room, const Camera& cam)
         bool ins = true;                                                        // Let's assume camera is inside OBB.
         for(int i = 0; i < 6; i++)
         {
-            auto t = polygons[i].plane.distance(engine_camera.getPosition());
-            if((t > 0.0) && engine_camera.frustum.isPolyVisible(&polygons[i], cam))
+            auto t = polygons[i].plane.distance(engine::engine_camera.getPosition());
+            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(&polygons[i], cam))
             {
                 return true;
             }

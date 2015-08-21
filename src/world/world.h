@@ -12,7 +12,6 @@
 #include "camera.h"
 #include "object.h"
 
-struct EngineContainer;
 struct Character;
 class btCollisionShape;
 class btRigidBody;
@@ -20,7 +19,12 @@ class btRigidBody;
 namespace gui
 {
 enum class MenuItemType;
-}
+} // namespace gui
+
+namespace engine
+{
+struct EngineContainer;
+} // namespace engine
 
 namespace world
 {
@@ -316,7 +320,7 @@ struct Room : public Object
     std::vector<std::shared_ptr<core::StaticMesh>> static_mesh;
     std::vector<RoomSprite> sprites;
 
-    std::vector<std::shared_ptr<EngineContainer>> containers;                                     // engine containers with moveables objects
+    std::vector<std::shared_ptr<engine::EngineContainer>> containers;                                     // engine containers with moveables objects
 
     btVector3 bb_min;                                      // room's bounding box
     btVector3 bb_max;                                      // room's bounding box
@@ -340,7 +344,7 @@ struct Room : public Object
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
     std::unique_ptr<btRigidBody> bt_body;
 
-    std::unique_ptr<EngineContainer> self;
+    std::unique_ptr<engine::EngineContainer> self;
 
     void enable();
     void disable();

@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 
-#include "system.h"
+#include "engine/system.h"
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
@@ -28,27 +28,27 @@ int checkOpenGLErrorDetailed(const char *file, int line)
         switch(glErr)
         {
             case GL_INVALID_VALUE:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE in %s:%d", file, line);
                 return 1;
 
             case GL_INVALID_ENUM:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM in %s:%d", file, line);
                 return 1;
 
             case GL_INVALID_OPERATION:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION in %s:%d", file, line);
                 return 1;
 
             case GL_STACK_OVERFLOW:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW in %s:%d", file, line);
                 return 1;
 
             case GL_STACK_UNDERFLOW:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW in %s:%d", file, line);
                 return 1;
 
             case GL_OUT_OF_MEMORY:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY in %s:%d", file, line);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY in %s:%d", file, line);
                 return 1;
 
                 /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
@@ -60,7 +60,7 @@ int checkOpenGLErrorDetailed(const char *file, int line)
                    GL_NO_RESET_NOTIFICATION_ARB*/
 
             default:
-                Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X in %s:%d", file, line, glErr);
+                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X in %s:%d", file, line, glErr);
                 return 1;
         };
     }
@@ -73,7 +73,7 @@ void printShaderInfoLog(GLuint object)
 
     if(!(isProgram^isShader))
     {
-        Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
         return;
     }
 
@@ -94,8 +94,8 @@ void printShaderInfoLog(GLuint object)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog.data());
         else
             glGetShaderInfoLog(object, logLength, &charsWritten, infoLog.data());
-        Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
-        Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog.data()));
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog.data()));
     }
 }
 
@@ -105,19 +105,19 @@ int loadShaderFromBuff(GLuint ShaderObj, char * source)
     GLint compileStatus = 0;
     size = strlen(source);
     glShaderSource(ShaderObj, 1, const_cast<const char **>(&source), &size);
-    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
+    engine::Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
-    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+    engine::Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     if(CHECK_OPENGL_ERROR())                          // check for OpenGL errors
     {
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
         return 0;
     }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 
     if(!compileStatus)
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
 
     return compileStatus != 0;
 }
@@ -127,11 +127,11 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     GLint   compileStatus;
     int size;
     FILE * file;
-    Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
+    engine::Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
     file = fopen(fileName, "rb");
     if(file == nullptr)
     {
-        Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
         return 0;
     }
 
@@ -141,7 +141,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     if(size < 1)
     {
         fclose(file);
-        Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s: size < 1", fileName);
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s: size < 1", fileName);
         return 0;
     }
 
@@ -165,17 +165,17 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
         const GLint lengths[2] = { versionLen, size };
         glShaderSource(ShaderObj, 2, bufs, lengths);
     }
-    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
+    engine::Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
     buf.clear();                                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
-    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+    engine::Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 
     if(compileStatus != GL_TRUE)
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
     else
-        Sys_DebugLog(GL_LOG_FILENAME, "compilation succeeded");
+        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation succeeded");
 
     return compileStatus != 0;
 }

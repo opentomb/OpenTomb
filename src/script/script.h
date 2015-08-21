@@ -15,7 +15,6 @@ namespace gui
 struct Console;
 } // namespace gui
 
-struct ScreenInfo;
 
 namespace world
 {
@@ -29,8 +28,12 @@ enum class StreamType;
 enum class StreamMethod;
 } // namespace audio
 
+namespace engine
+{
 struct ControlSettings;
 struct SystemSettings;
+struct ScreenInfo;
+} // namespace engine
 
 namespace render
 {
@@ -122,12 +125,12 @@ namespace script
         void exposeConstants();
         std::vector<std::string> getGlobals();
 
-        void parseScreen(ScreenInfo *sc);
+        void parseScreen(engine::ScreenInfo *sc);
         void parseRender(render::RenderSettings *rs);
         void parseAudio(audio::Settings *as);
         void parseConsole(gui::Console *cn);
-        void parseControls(ControlSettings *cs);
-        void parseSystem(SystemSettings *ss);
+        void parseControls(engine::ControlSettings *cs);
+        void parseSystem(engine::SystemSettings *ss);
 
     protected:
         void checkStack();
