@@ -1366,7 +1366,7 @@ bool fadeAssignPic(FaderType fader, const std::string& pic_name)
 
         ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
         strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
-        if(!engine::Engine_FileFound(buf, false))
+        if(!engine::fileExists(buf, false))
         {
             size_t ext_len = 0;
             
@@ -1387,22 +1387,22 @@ bool fadeAssignPic(FaderType fader, const std::string& pic_name)
             buf[pic_name.length() - ext_len + 1] = 'm';
             buf[pic_name.length() - ext_len + 2] = 'p';
             buf[pic_name.length() - ext_len + 3] = 0;
-            if(!engine::Engine_FileFound(buf, false))
+            if(!engine::fileExists(buf, false))
             {
                 buf[pic_name.length() - ext_len + 0] = 'j';
                 buf[pic_name.length() - ext_len + 1] = 'p';
                 buf[pic_name.length() - ext_len + 2] = 'g';
-                if(!engine::Engine_FileFound(buf, false))
+                if(!engine::fileExists(buf, false))
                 {
                     buf[pic_name.length() - ext_len + 0] = 'p';
                     buf[pic_name.length() - ext_len + 1] = 'n';
                     buf[pic_name.length() - ext_len + 2] = 'g';
-                    if(!engine::Engine_FileFound(buf, false))
+                    if(!engine::fileExists(buf, false))
                     {
                         buf[pic_name.length() - ext_len + 0] = 't';
                         buf[pic_name.length() - ext_len + 1] = 'g';
                         buf[pic_name.length() - ext_len + 2] = 'a';
-                        if(!engine::Engine_FileFound(buf, false))
+                        if(!engine::fileExists(buf, false))
                         {
                             return false;
                         }

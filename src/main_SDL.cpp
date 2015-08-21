@@ -11,7 +11,7 @@ btScalar time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    engine::Engine_Start();
+    engine::start();
 
     // Entering main loop.
 
@@ -23,12 +23,12 @@ int main(int /*argc*/, char** /*argv*/)
         auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
         prev_time = now;
 
-        engine::Engine_Frame(delta * time_scale);
-        engine::Engine_Display();
+        engine::frame(delta * time_scale);
+        engine::display();
     }
 
     // Main loop interrupted; shutting down.
 
-    engine::Engine_Shutdown(EXIT_SUCCESS);
+    engine::shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }

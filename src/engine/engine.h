@@ -240,74 +240,74 @@ int engine_lua_printf(const char *fmt, ...);
 
 // Starter and destructor.
 
-void Engine_Start();
-void Engine_Destroy();
+void start();
+void destroy();
 #ifdef __GNUC__
-void Engine_Shutdown(int val) __attribute__((noreturn));
+void shutdown(int val) __attribute__((noreturn));
 #else
-void Engine_Shutdown(int val);
+void shutdown(int val);
 #endif
 
 // Initializers
 
-void Engine_Init_Pre();     // Initial init
-void Engine_Init_Post();    // Finalizing init
+void initPre();     // Initial init
+void initPost();    // Finalizing init
 
-void Engine_InitDefaultGlobals();
+void initDefaultGlobals();
 
-void Engine_InitGL();
-void Engine_InitSDLControls();
-void Engine_InitSDLVideo();
-void Engine_InitSDLImage();
-void Engine_InitAL();
-void Engine_InitBullet();
+void initGL();
+void initSDLControls();
+void initSDLVideo();
+void initSDLImage();
+void initAL();
+void initBullet();
 
 // Config parser
 
-void Engine_InitConfig(const char *filename);
-void Engine_SaveConfig();
+void initConfig(const char *filename);
+void saveConfig();
 
 // Core system routines - display and tick.
 
-void Engine_Display();
-void Engine_Frame(btScalar time);
+void display();
+void frame(btScalar time);
 
 // Resize event.
 // Nominal values are used e.g. to set the size for the console.
 // pixel values are used for glViewport. Both will be the same on
 // normal displays, but on retina displays or similar, pixels will be twice nominal (or more).
 
-void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
+void resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
 // Debug functions.
 
-void Engine_PrimaryMouseDown();
-void Engine_SecondaryMouseDown();
-void Engine_ShowDebugInfo();
-void Engine_DumpRoom(world::Room* r);
+void primaryMouseDown();
+void secondaryMouseDown();
+void showDebugInfo();
+void dumpRoom(world::Room* r);
 
 // PC-specific level loader routines.
 
-bool Engine_LoadPCLevel(const std::string &name);
+bool loadPCLevel(const std::string &name);
 
 // General level loading routines.
 
-bool Engine_FileFound(const std::string &name, bool Write = false);
-int  Engine_GetLevelFormat(const std::string &name);
-int  Engine_LoadMap(const std::string &name);
+bool fileExists(const std::string &name, bool Write = false);
+int  getLevelFormat(const std::string &name);
+int  loadMap(const std::string &name);
 
 // String getters.
 
-std::string Engine_GetLevelName(const std::string &path);
-std::string Engine_GetAutoexecName(loader::Game game_version, const std::string &postfix = nullptr);
+std::string getLevelName(const std::string &path);
+std::string getAutoexecName(loader::Game game_version, const std::string &postfix = nullptr);
 
 // Console command parser.
 
-int  Engine_ExecCmd(const char *ch);
+int  execCmd(const char *ch);
 
 // Bullet global methods.
 
-void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+void internalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
 } // namespace engine

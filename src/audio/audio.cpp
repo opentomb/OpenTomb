@@ -1559,7 +1559,7 @@ void loadOverridedSamples(world::World *world)
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
-                        if(engine::Engine_FileFound(sample_name))
+                        if(engine::fileExists(sample_name))
                         {
                             loadALbufferFromFile(world->audio_buffers[buffer_counter], sample_name);
                         }

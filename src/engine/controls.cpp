@@ -568,7 +568,7 @@ void Controls_PollSDLInput()
             case SDL_WINDOWEVENT:
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                    resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
                 }
                 break;
 

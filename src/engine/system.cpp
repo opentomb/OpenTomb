@@ -78,7 +78,7 @@ void Sys_Error(const char *error, ...)
     va_end(argptr);
 
     Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
-    Engine_Shutdown(1);
+    shutdown(1);
 }
 
 void Sys_Warn(const char *warning, ...)

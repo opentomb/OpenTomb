@@ -50,7 +50,7 @@ void Gameflow_Do()
                     lua::tie(levelPath, levelName, gameflow_manager.CurrentLevelID) = engine_lua["getNextLevel"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), int(gameflow_manager.Actions[i].operand));
                     gameflow_manager.CurrentLevelName = levelName;
                     gameflow_manager.CurrentLevelPath = levelPath;
-                    Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+                    loadMap(gameflow_manager.CurrentLevelPath);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 }
                 else

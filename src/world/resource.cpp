@@ -1647,9 +1647,9 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
 
 void Res_AutoexecOpen(loader::Game engine_version)
 {
-    std::string temp_script_name = engine::Engine_GetAutoexecName(engine_version, std::string());
+    std::string temp_script_name = engine::getAutoexecName(engine_version, std::string());
 
-    if(engine::Engine_FileFound(temp_script_name, false))
+    if(engine::fileExists(temp_script_name, false))
     {
         try
         {

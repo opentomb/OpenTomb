@@ -57,7 +57,7 @@ void lua_DumpRoom(lua::Value id)
 {
     if(id.is<lua::Nil>())
     {
-        engine::Engine_DumpRoom(engine::engine_camera.m_currentRoom);
+        engine::dumpRoom(engine::engine_camera.m_currentRoom);
         return;
     }
     if(id.is<lua::Integer>() && static_cast<uint32_t>(id) >= engine::engine_world.rooms.size())
@@ -65,7 +65,7 @@ void lua_DumpRoom(lua::Value id)
         Console::instance().warning(SYSWARN_WRONG_ROOM, static_cast<int>(id));
         return;
     }
-    engine::Engine_DumpRoom(engine::engine_world.rooms[id].get());
+    engine::dumpRoom(engine::engine_world.rooms[id].get());
 }
 
 void lua_SetRoomEnabled(int id, bool value)
@@ -2553,7 +2553,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         engine_lua.getLoadingScreen(engine::gameflow_manager.CurrentLevelID, file_path);
         gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
         gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::In);
-        engine::Engine_LoadMap(mapName);
+        engine::loadMap(mapName);
     }
 }
 

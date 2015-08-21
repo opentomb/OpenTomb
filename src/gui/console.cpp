@@ -190,7 +190,7 @@ void Console::edit(int key, int mod)
     {
         addLog(m_editingLine);
         addLine(std::string("> ") + m_editingLine, FontStyle::ConsoleInfo);
-        engine::Engine_ExecCmd(m_editingLine.c_str());
+        engine::execCmd(m_editingLine.c_str());
         m_editingLine.clear();
         m_cursorPos = 0;
         m_cursorX = 8 + 1;

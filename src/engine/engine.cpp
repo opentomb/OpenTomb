@@ -103,7 +103,7 @@ GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 EngineContainer* last_cont = nullptr;
 
-void Engine_InitGL()
+void initGL()
 {
     glewExperimental = GL_TRUE;
     glewInit();
@@ -128,7 +128,7 @@ void Engine_InitGL()
     }
 }
 
-void Engine_InitSDLControls()
+void initSDLControls()
 {
     Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
 
@@ -204,7 +204,7 @@ void Engine_InitSDLControls()
     }
 }
 
-void Engine_InitSDLVideo()
+void initSDLVideo()
 {
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
@@ -304,7 +304,7 @@ void Engine_InitSDLVideo()
 }
 
 #if !defined(__MACOSX__)
-void Engine_InitSDLImage()
+void initSDLImage()
 {
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
     int init = IMG_Init(flags);
@@ -316,7 +316,7 @@ void Engine_InitSDLImage()
 }
 #endif
 
-void Engine_InitAL()
+void initAL()
 {
 #if !NO_AUDIO
 
@@ -386,38 +386,38 @@ void Engine_InitAL()
 #endif
 }
 
-void Engine_Start()
+void start()
 {
 #if defined(__MACOSX__)
     FindConfigFile();
 #endif
 
     // Set defaults parameters and load config file.
-    Engine_InitConfig("config.lua");
+    initConfig("config.lua");
 
     // Primary initialization.
-    Engine_Init_Pre();
+    initPre();
 
     // Init generic SDL interfaces.
-    Engine_InitSDLControls();
-    Engine_InitSDLVideo();
+    initSDLControls();
+    initSDLVideo();
 
 #if !defined(__MACOSX__)
-    Engine_InitSDLImage();
+    initSDLImage();
 #endif
 
     // Additional OpenGL initialization.
-    Engine_InitGL();
+    initGL();
     render::renderer.doShaders();
 
     // Secondary (deferred) initialization.
-    Engine_Init_Post();
+    initPost();
 
     // Initial window resize.
-    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+    resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     // OpenAL initialization.
-    Engine_InitAL();
+    initAL();
 
     Console::instance().notify(SYSNOTE_ENGINE_INITED);
 
@@ -433,7 +433,7 @@ void Engine_Start()
     engine_lua.doFile("autoexec.lua");
 }
 
-void Engine_Display()
+void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
@@ -442,7 +442,7 @@ void Engine_Display()
     // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
     if(screen_info.show_debuginfo)
     {
-        Engine_ShowDebugInfo();
+        showDebugInfo();
     }
 
     glFrontFace(GL_CW);
@@ -477,7 +477,7 @@ void Engine_Display()
     SDL_GL_SwapWindow(sdl_window);
 }
 
-void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
+void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 {
     screen_info.w = nominalW;
     screen_info.h = nominalH;
@@ -520,7 +520,7 @@ namespace
     }
 }
 
-void Engine_Frame(btScalar time)
+void frame(btScalar time)
 {
     if(time > 0.1)
     {
@@ -534,7 +534,7 @@ void Engine_Frame(btScalar time)
     Gameflow_Do();
 }
 
-void Engine_ShowDebugInfo()
+void showDebugInfo()
 {
     GLfloat color_array[] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
@@ -598,7 +598,7 @@ void Engine_ShowDebugInfo()
 /**
  * overlapping room collision filter
  */
-void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     EngineContainer* c0, *c1;
 
@@ -641,7 +641,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 /**
  * update current room of bullet object
  */
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
+void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 {
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
@@ -661,7 +661,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
     }
 }
 
-void Engine_InitDefaultGlobals()
+void initDefaultGlobals()
 {
     Console::instance().initGlobals();
     Controls_InitGlobals();
@@ -672,7 +672,7 @@ void Engine_InitDefaultGlobals()
 
 // First stage of initialization.
 
-void Engine_Init_Pre()
+void initPre()
 {
     /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
@@ -693,12 +693,12 @@ void Engine_Init_Pre()
     render::renderer.init();
     render::renderer.setCamera(&engine_camera);
 
-    Engine_InitBullet();
+    initBullet();
 }
 
 // Second stage of initialization.
 
-void Engine_Init_Post()
+void initPost()
 {
     engine_lua["loadscript_post"]();
 
@@ -710,14 +710,14 @@ void Engine_Init_Post()
 
 // Bullet Physics initialization.
 
-void Engine_InitBullet()
+void initBullet()
 {
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
-    bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
+    bt_engine_dispatcher->setNearCallback(roomNearCallback);
 
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
@@ -728,7 +728,7 @@ void Engine_InitBullet()
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
-    bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
+    bt_engine_dynamicsWorld->setInternalTickCallback(internalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
@@ -736,7 +736,7 @@ void Engine_InitBullet()
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
-void Engine_DumpRoom(world::Room* r)
+void dumpRoom(world::Room* r)
 {
     if(r != nullptr)
     {
@@ -761,7 +761,7 @@ void Engine_DumpRoom(world::Room* r)
     }
 }
 
-void Engine_Destroy()
+void destroy()
 {
     render::renderer.empty();
     //ConsoleInfo::instance().destroy();
@@ -787,12 +787,12 @@ void Engine_Destroy()
     gui::destroy();
 }
 
-void Engine_Shutdown(int val)
+void shutdown(int val)
 {
     engine_lua.clearTasks();
     render::renderer.empty();
     engine_world.empty();
-    Engine_Destroy();
+    destroy();
 
     /* no more renderings */
     SDL_GL_DeleteContext(sdl_gl_context);
@@ -836,7 +836,7 @@ void Engine_Shutdown(int val)
     exit(val);
 }
 
-bool Engine_FileFound(const std::string& name, bool Write)
+bool fileExists(const std::string& name, bool Write)
 {
     FILE *ff;
 
@@ -860,14 +860,14 @@ bool Engine_FileFound(const std::string& name, bool Write)
     }
 }
 
-int Engine_GetLevelFormat(const std::string& /*name*/)
+int getLevelFormat(const std::string& /*name*/)
 {
     // PLACEHOLDER: Currently, only PC levels are supported.
 
     return LEVEL_FORMAT_PC;
 }
 
-std::string Engine_GetLevelName(const std::string& path)
+std::string getLevelName(const std::string& path)
 {
     if(path.empty())
     {
@@ -886,9 +886,9 @@ std::string Engine_GetLevelName(const std::string& path)
     return path.substr(start, ext - start);
 }
 
-std::string Engine_GetAutoexecName(loader::Game game_version, const std::string& postfix)
+std::string getAutoexecName(loader::Game game_version, const std::string& postfix)
 {
-    std::string level_name = Engine_GetLevelName(gameflow_manager.CurrentLevelPath);
+    std::string level_name = getLevelName(gameflow_manager.CurrentLevelPath);
 
     std::string name = "scripts/autoexec/";
 
@@ -924,7 +924,7 @@ std::string Engine_GetAutoexecName(loader::Game game_version, const std::string&
     return name;
 }
 
-bool Engine_LoadPCLevel(const std::string& name)
+bool loadPCLevel(const std::string& name)
 {
     std::unique_ptr<loader::Level> loader = loader::Level::createLoader(name, loader::Game::Unknown);
     if(!loader)
@@ -934,7 +934,7 @@ bool Engine_LoadPCLevel(const std::string& name)
 
     TR_GenWorld(&engine_world, loader);
 
-    std::string buf = Engine_GetLevelName(name);
+    std::string buf = getLevelName(name);
 
     Console::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
     Console::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
@@ -943,9 +943,9 @@ bool Engine_LoadPCLevel(const std::string& name)
     return true;
 }
 
-int Engine_LoadMap(const std::string& name)
+int loadMap(const std::string& name)
 {
-    if(!Engine_FileFound(name))
+    if(!fileExists(name))
     {
         Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
         return 0;
@@ -973,10 +973,10 @@ int Engine_LoadMap(const std::string& name)
 
     // Here we can place different platform-specific level loading routines.
 
-    switch(Engine_GetLevelFormat(name))
+    switch(getLevelFormat(name))
     {
         case LEVEL_FORMAT_PC:
-            if(Engine_LoadPCLevel(name) == false) return 0;
+            if(loadPCLevel(name) == false) return 0;
             break;
 
         case LEVEL_FORMAT_PSX:
@@ -1010,7 +1010,7 @@ int Engine_LoadMap(const std::string& name)
     return 1;
 }
 
-int Engine_ExecCmd(const char *ch)
+int execCmd(const char *ch)
 {
     std::vector<char> token(Console::instance().lineSize());
     world::RoomSector* sect;
@@ -1057,7 +1057,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "exit"))
         {
-            Engine_Shutdown(0);
+            shutdown(0);
             return 1;
         }
         else if(!strcmp(token.data(), "cls"))
@@ -1229,11 +1229,11 @@ int Engine_ExecCmd(const char *ch)
     return 0;
 }
 
-void Engine_InitConfig(const char *filename)
+void initConfig(const char *filename)
 {
-    Engine_InitDefaultGlobals();
+    initDefaultGlobals();
 
-    if((filename != nullptr) && Engine_FileFound(filename))
+    if((filename != nullptr) && fileExists(filename))
     {
         script::ScriptEngine state;
         state.registerC("bind", &script::MainEngine::bindKey);                             // get and set key bindings
