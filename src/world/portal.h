@@ -27,7 +27,6 @@ struct Portal
     btVector3 centre = { 0,0,0 };                                                         // центр портала
     std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
-    unsigned int flag = 0;                                                          // хз, мб потом понадобится
 
     explicit Portal(size_t vcount = 0)
         : vertices(vcount)
@@ -41,26 +40,5 @@ struct Portal
 
     void genNormale();
 };
-
-/**
- * Draws wireframe of this portal.
- *
- * Expected state:
- *  - Vertex array is enabled, color, tex coord, normal disabled
- *  - No vertex buffer object is bound
- *  - Texturing is disabled
- *  - Alpha test is disabled
- *  - Blending is enabled
- *  - Lighting is disabled
- *  - Line width is set to desired width (typically 3.0)
- *  - Current color set to desired color (typically black)
- * Ignored state:
- *  - Currently bound texture.
- *  - Currently bound element buffer.
- *  - Vertex pointer (changes it)
- * Changed state:
- *  - Current position will be arbitrary.
- *  - Vertex pointer will be arbitray.
- */
 
 } // namespace world

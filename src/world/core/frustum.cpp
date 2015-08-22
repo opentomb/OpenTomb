@@ -44,17 +44,17 @@ int Frustum::split_by_plane(const util::Plane& splitPlane)
     {
         dist[1] = splitPlane.distance(*nextVertex);
 
-        if(dist[1] > SPLIT_EPSILON)
+        if(dist[1] > SplitEpsilon)
         {
-            if(dist[0] < -SPLIT_EPSILON)
+            if(dist[0] < -SplitEpsilon)
             {
                 buf.emplace_back(splitPlane.rayIntersect(*currentVertex, *nextVertex - *currentVertex));            // Shifting...
             }
             buf.emplace_back(*nextVertex);   // Adding...
         }
-        else if(dist[1] < -SPLIT_EPSILON)
+        else if(dist[1] < -SplitEpsilon)
         {
-            if(dist[0] > SPLIT_EPSILON)
+            if(dist[0] > SplitEpsilon)
             {
                 buf.emplace_back(splitPlane.rayIntersect(*currentVertex, *nextVertex - *currentVertex));
             }
@@ -85,7 +85,7 @@ int Frustum::split_by_plane(const util::Plane& splitPlane)
     vertices.clear();
     for(size_t i = 0; i<buf.size(); i++)
     {
-        if(currentVertex->distance2(*nextVertex) > SPLIT_EPSILON * SPLIT_EPSILON)
+        if(currentVertex->distance2(*nextVertex) > SplitEpsilon * SplitEpsilon)
         {
             vertices.emplace_back(*nextVertex);
         }
@@ -139,7 +139,7 @@ Frustum* Frustum::portalFrustumIntersect(Portal *portal, const Frustum& emitter,
     if(!portal->dest_room)
         return nullptr;
 
-    if(portal->normal.distance(render->camera()->getPosition()) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(portal->normal.distance(render->camera()->getPosition()) < -SplitEpsilon)    // non face or degenerate to the line portal
     {
         return nullptr;
     }
@@ -264,11 +264,11 @@ bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam) const
         {
             btScalar dist1 = currentPlane->distance(currentVertex->position);
             // the split point in the plane
-            if(std::abs(dist0) < SPLIT_EPSILON)
+            if(std::abs(dist0) < SplitEpsilon)
             {
-                if((prevPlane->distance(prevVertex->position) > -SPLIT_EPSILON) &&
-                   (nextPlane->distance(prevVertex->position) > -SPLIT_EPSILON) &&
-                   (norm.distance(prevVertex->position) > -SPLIT_EPSILON))
+                if((prevPlane->distance(prevVertex->position) > -SplitEpsilon) &&
+                   (nextPlane->distance(prevVertex->position) > -SplitEpsilon) &&
+                   (norm.distance(prevVertex->position) > -SplitEpsilon))
                 {
                     // Frustum-vertex intersection test is passed.
                     return true;
@@ -276,13 +276,13 @@ bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam) const
             }
 
             // vertices from different sides of the plane (or on it)
-            if((dist0 * dist1 < 0) && std::abs(dist1) >= SPLIT_EPSILON)
+            if((dist0 * dist1 < 0) && std::abs(dist1) >= SplitEpsilon)
             {
                 // vector connecting vertices
                 dir = currentVertex->position - prevVertex->position;
                 // We are looking for the point of intersection
                 const btVector3 T = currentPlane->rayIntersect(prevVertex->position, dir);
-                if((prevPlane->distance(T) > -SPLIT_EPSILON) && (nextPlane->distance(T) > -SPLIT_EPSILON))
+                if((prevPlane->distance(T) > -SplitEpsilon) && (nextPlane->distance(T) > -SplitEpsilon))
                 {
                     // Frustum-ray intersection test is passed.
                     return true;
@@ -290,7 +290,7 @@ bool Frustum::isPolyVisible(const Polygon *p, const Camera& cam) const
             }
 
             // point is outside
-            if(dist1 < -SPLIT_EPSILON)
+            if(dist1 < -SplitEpsilon)
             {
                 ins = false;
             }
@@ -513,7 +513,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax, cons
     return ins;
 }
 
-bool Frustum::isOBBVisible(OBB *obb, const Camera& cam)
+bool Frustum::isOBBVisible(OrientedBoundingBox *obb, const Camera& cam)
 {
     bool ins = true;
     struct Polygon *p = obb->polygons;

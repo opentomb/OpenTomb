@@ -723,18 +723,18 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
     }
 
     world::core::AnimationFrame* af = &model->animations[anim];
-    for(uint16_t i = 0; i < af->state_change.size(); i++)
+    for(uint16_t i = 0; i < af->stateChanges.size(); i++)
     {
-        if(af->state_change[i].id == static_cast<uint32_t>(state))
+        if(af->stateChanges[i].id == static_cast<uint32_t>(state))
         {
-            if(dispatch >= 0 && dispatch < static_cast<int>(af->state_change[i].anim_dispatch.size()))
+            if(dispatch >= 0 && dispatch < static_cast<int>(af->stateChanges[i].anim_dispatch.size()))
             {
-                af->state_change[i].anim_dispatch[dispatch].frame_low = frame_low;
-                af->state_change[i].anim_dispatch[dispatch].frame_high = frame_high;
+                af->stateChanges[i].anim_dispatch[dispatch].frame_low = frame_low;
+                af->stateChanges[i].anim_dispatch[dispatch].frame_high = frame_high;
                 if(!next_anim.is<lua::Nil>() && !next_frame.is<lua::Nil>())
                 {
-                    af->state_change[i].anim_dispatch[dispatch].next_anim = next_anim;
-                    af->state_change[i].anim_dispatch[dispatch].next_frame = next_frame;
+                    af->stateChanges[i].anim_dispatch[dispatch].next_anim = next_anim;
+                    af->stateChanges[i].anim_dispatch[dispatch].next_frame = next_frame;
                 }
             }
             else
@@ -2373,7 +2373,7 @@ void lua_CamShake(float power, float time, lua::Value id)
         btVector3 cam_pos = render::renderer.camera()->getPosition();
 
         btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
-        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : (1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
+        dist = (dist > world::MaxShakeDistance) ? (0) : (1.0 - (dist / world::MaxShakeDistance));
 
         power *= dist;
     }

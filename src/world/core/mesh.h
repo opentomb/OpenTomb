@@ -36,12 +36,10 @@ struct RoomSector;
 struct SectorTween;
 struct Room;
 struct Entity;
+enum class AnimUpdate;
 
 namespace core
 {
-
-#define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
-#define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
@@ -49,12 +47,11 @@ namespace core
 
 
 struct Polygon;
-struct OBB;
 struct Vertex;
 
 struct TransparentPolygonReference
 {
-    const struct Polygon *polygon;
+    const Polygon *polygon;
     std::shared_ptr< ::render::VertexArray > used_vertex_array;
     size_t firstIndex;
     size_t count;
@@ -79,9 +76,9 @@ struct BaseMesh
     uint32_t m_id;                                                   // mesh's ID
     bool m_usesVertexColors;                                   // does this mesh have prebaked vertex lighting
 
-    std::vector<struct Polygon> m_polygons;                                             // polygons data
+    std::vector<Polygon> m_polygons;                                             // polygons data
 
-    std::vector<struct Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
+    std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
     std::vector<uint32_t> m_elementsPerTexture;                            //
@@ -241,7 +238,7 @@ struct StaticMesh : public Object
     btVector3 cbb_max;
 
     btTransform transform;                                  // gl transformation matrix
-    OBB obb;
+    OrientedBoundingBox obb;
     std::shared_ptr<engine::EngineContainer> self;
 
     std::shared_ptr<BaseMesh> mesh;                                           // base model
@@ -293,7 +290,7 @@ struct SSAnimation
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 
-    void(*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
+    void(*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
@@ -389,10 +386,42 @@ struct AnimationFrame
     uint16_t                    state_id;
     std::vector<BoneFrame> frames;                 // Frame data
 
-    std::vector<StateChange> state_change;           // Animation statechanges data
+    std::vector<StateChange> stateChanges;           // Animation statechanges data
 
     AnimationFrame   *next_anim;              // Next default animation
     int                         next_frame;             // Next default frame
+
+    StateChange* findStateChangeByAnim(int state_change_anim)
+    {
+        if(state_change_anim < 0)
+            return nullptr;
+
+        for(StateChange& stateChange : stateChanges)
+        {
+            for(const AnimDispatch& dispatch : stateChange.anim_dispatch)
+            {
+                if(dispatch.next_anim == state_change_anim)
+                {
+                    return &stateChange;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    StateChange* findStateChangeByID(uint32_t id)
+    {
+        for(StateChange& stateChange : stateChanges)
+        {
+            if(stateChange.id == id)
+            {
+                return &stateChange;
+            }
+        }
+
+        return nullptr;
+    }
 };
 
 /*
@@ -402,7 +431,7 @@ struct AnimationFrame
 struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
-    uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
+    bool                        has_transparency;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
 
     btVector3                   bbox_min;                                    // bbox info
     btVector3                   bbox_max;

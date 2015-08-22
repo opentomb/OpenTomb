@@ -8,9 +8,6 @@
 #include "util/vmath.h"
 #include "world/core/frustum.h"
 
-#define TR_CAM_MAX_SHAKE_DISTANCE   8192.0f
-#define TR_CAM_DEFAULT_SHAKE_POWER  100.0f
-
 /*
   ======================
         CAM TARGET
@@ -27,12 +24,6 @@
 
 */
 
-#define TR_CAM_TARG_BACK  (0)
-#define TR_CAM_TARG_FRONT (1)
-#define TR_CAM_TARG_LEFT  (2)
-#define TR_CAM_TARG_RIGHT (3)
-
-
 namespace world
 {
 struct Room;
@@ -42,6 +33,20 @@ namespace core
 struct Polygon;
 struct Frustum;
 } // namespace core
+
+enum class CameraTarget
+{
+    Back,
+    Front,
+    Left,
+    Right
+};
+
+namespace
+{
+constexpr float MaxShakeDistance = 8192;
+constexpr float DefaultShakePower = 100;
+}
 
 class Camera
 {
@@ -97,7 +102,7 @@ public:
     GLfloat m_shakeValue = 0;
     GLfloat m_shakeTime = 0;
 
-    int8_t m_targetDir = 1;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
+    CameraTarget m_targetDir = CameraTarget::Front;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
     Room* m_currentRoom = nullptr;
 

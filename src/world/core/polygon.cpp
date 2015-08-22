@@ -144,7 +144,7 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
 
 bool Polygon::intersectPolygon(Polygon* p2)
 {
-    if(SPLIT_IN_BOTH != splitClassify(p2->plane) || (SPLIT_IN_BOTH != p2->splitClassify(plane)))
+    if(SplitType::InBoth != splitClassify(p2->plane) || (SplitType::InBoth != p2->splitClassify(plane)))
     {
         return false;  // quick check
     }
@@ -160,17 +160,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
     for(size_t i = 0; i < vertices.size(); i++)
     {
         btScalar dist1 = p2->plane.distance(curr_v->position);
-        if(dist1 > SPLIT_EPSILON)
+        if(dist1 > SplitEpsilon)
         {
-            if(dist0 < -SPLIT_EPSILON)
+            if(dist0 < -SplitEpsilon)
             {
                 result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
                                                                curr_v->position - prev_v->position));
             }
         }
-        else if(dist1 < -SPLIT_EPSILON)
+        else if(dist1 < -SplitEpsilon)
         {
-            if(dist0 > SPLIT_EPSILON)
+            if(dist0 > SplitEpsilon)
             {
                 result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
                                                                curr_v->position - prev_v->position));
@@ -199,17 +199,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
     for(size_t i = 0; i < p2->vertices.size(); i++)
     {
         btScalar dist1 = plane.distance(curr_v->position);
-        if(dist1 > SPLIT_EPSILON)
+        if(dist1 > SplitEpsilon)
         {
-            if(dist0 < -SPLIT_EPSILON)
+            if(dist0 < -SplitEpsilon)
             {
                 result_buf.emplace_back(plane.rayIntersect(prev_v->position,
                                                            curr_v->position - prev_v->position));
             }
         }
-        else if(dist1 < -SPLIT_EPSILON)
+        else if(dist1 < -SplitEpsilon)
         {
-            if(dist0 > SPLIT_EPSILON)
+            if(dist0 > SplitEpsilon)
             {
                 result_buf.emplace_back(plane.rayIntersect(prev_v->position,
                                                            curr_v->position - prev_v->position));
@@ -273,17 +273,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
     return !((dist1 < dist0 && dist2 < dist0) || (dist1 > 0.0 && dist2 > 0.0));
 }
 
-int Polygon::splitClassify(const util::Plane& plane)
+SplitType Polygon::splitClassify(const util::Plane& plane)
 {
     size_t positive = 0, negative = 0;
     for(const auto& v : vertices)
     {
         auto dist = plane.distance(v.position);
-        if(dist > SPLIT_EPSILON)
+        if(dist > SplitEpsilon)
         {
             positive++;
         }
-        else if(dist < -SPLIT_EPSILON)
+        else if(dist < -SplitEpsilon)
         {
             negative++;
         }
@@ -291,18 +291,18 @@ int Polygon::splitClassify(const util::Plane& plane)
 
     if(positive > 0 && negative == 0)
     {
-        return SPLIT_FRONT;
+        return SplitType::Front;
     }
     else if(positive == 0 && negative > 0)
     {
-        return SPLIT_BACK;
+        return SplitType::Back;
     }
     else if(positive < 1 && negative < 1)
     {
-        return SPLIT_IN_PLANE;
+        return SplitType::InPlane;
     }
 
-    return SPLIT_IN_BOTH;
+    return SplitType::InBoth;
 }
 
 /*
@@ -332,9 +332,9 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
     {
         auto dist1 = n.distance(curr_v->position);
 
-        if(dist1 > SPLIT_EPSILON)
+        if(dist1 > SplitEpsilon)
         {
-            if(dist0 < -SPLIT_EPSILON)
+            if(dist0 < -SplitEpsilon)
             {
                 auto dir = curr_v->position - prev_v->position;
                 btScalar t;
@@ -355,9 +355,9 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
             }
             front->vertices.emplace_back(*curr_v);
         }
-        else if(dist1 < -SPLIT_EPSILON)
+        else if(dist1 < -SplitEpsilon)
         {
-            if(dist0 > SPLIT_EPSILON)
+            if(dist0 > SplitEpsilon)
             {
                 auto dir = curr_v->position - prev_v->position;
                 btScalar t;

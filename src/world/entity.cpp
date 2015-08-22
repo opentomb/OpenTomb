@@ -729,11 +729,11 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
+    core::SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 
     if((sm != nullptr) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
-        world::core::SSAnimation* ss_anim = new world::core::SSAnimation();
+        core::SSAnimation* ss_anim = new core::SSAnimation();
 
         ss_anim->model = sm;
         ss_anim->onFrame = nullptr;
@@ -829,7 +829,7 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(core::SSAnimation *ss_anim, int /*changing*/)
+void Entity::doAnimCommands(core::SSAnimation *ss_anim, AnimUpdate /*changing*/)
 {
     if(engine::engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
     {
@@ -962,13 +962,13 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        world::core::SkeletalModel* model = engine::engine_world.getModelByID(another_model);
+        core::SkeletalModel* model = engine::engine_world.getModelByID(another_model);
         if(!model || animation >= static_cast<int>(model->animations.size()))
             return;
         m_bf.animations.model = model;
     }
 
-    world::core::AnimationFrame* anim = &m_bf.animations.model->animations[animation];
+    core::AnimationFrame* anim = &m_bf.animations.model->animations[animation];
 
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
@@ -990,50 +990,16 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     updateRigidBody(false);
 }
 
-world::core::StateChange *Anim_FindStateChangeByAnim(world::core::AnimationFrame *anim, int state_change_anim)
-{
-    if(state_change_anim >= 0)
-    {
-        world::core::StateChange* ret = anim->state_change.data();
-        for(uint16_t i = 0; i < anim->state_change.size(); i++, ret++)
-        {
-            for(uint16_t j = 0; j < ret->anim_dispatch.size(); j++)
-            {
-                if(ret->anim_dispatch[j].next_anim == state_change_anim)
-                {
-                    return ret;
-                }
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-world::core::StateChange *Anim_FindStateChangeByID(world::core::AnimationFrame *anim, uint32_t id)
-{
-    world::core::StateChange* ret = anim->state_change.data();
-    for(uint16_t i = 0; i < anim->state_change.size(); i++, ret++)
-    {
-        if(ret->id == id)
-        {
-            return ret;
-        }
-    }
-
-    return nullptr;
-}
-
 int Entity::getAnimDispatchCase(uint32_t id)
 {
-    world::core::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    world::core::StateChange* stc = anim->state_change.data();
+    core::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    core::StateChange* stc = anim->stateChanges.data();
 
-    for(uint16_t i = 0; i < anim->state_change.size(); i++, stc++)
+    for(uint16_t i = 0; i < anim->stateChanges.size(); i++, stc++)
     {
         if(stc->id == id)
         {
-            world::core::AnimDispatch* disp = stc->anim_dispatch.data();
+            core::AnimDispatch* disp = stc->anim_dispatch.data();
             for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++, disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
@@ -1051,9 +1017,9 @@ int Entity::getAnimDispatchCase(uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity::getNextFrame(world::core::SSBoneFrame *bf, btScalar time, world::core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Entity::getNextFrame(core::SSBoneFrame *bf, btScalar time, core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    world::core::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
+    core::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
 
     *frame = (bf->animations.frame_time + time) / bf->animations.period;
     *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
@@ -1157,9 +1123,9 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
  ///@TODO: rewrite as a cycle through all bf.animations list
-int Entity::frame(btScalar time)
+AnimUpdate Entity::frame(btScalar time)
 {
-    int16_t frame, anim, ret = ENTITY_ANIM_NONE;
+    int16_t frame, anim;
     long int t;
     btScalar dt;
     core::StateChange* stc;
@@ -1168,28 +1134,31 @@ int Entity::frame(btScalar time)
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
-        return ENTITY_ANIM_NONE;
+        return AnimUpdate::None;
     }
 
-    if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
+    if(m_bf.animations.anim_flags & ANIM_LOCK)
+        return AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
     ss_anim = &m_bf.animations;
 
     ghostUpdate();
 
     m_bf.animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
+    stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
     getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.anim_flags);
+
+    AnimUpdate ret = AnimUpdate::None;
     if(m_bf.animations.current_animation != anim)
     {
         m_bf.animations.last_animation = m_bf.animations.current_animation;
 
-        ret = ENTITY_ANIM_NEWANIM;
+        ret = AnimUpdate::NewAnim;
         doAnimCommands(&m_bf.animations, ret);
         doAnimMove(&anim, &frame);
 
         setAnimation(anim, frame);
-        stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
+        stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
     }
     else if(m_bf.animations.current_frame != frame)
     {
@@ -1198,7 +1167,7 @@ int Entity::frame(btScalar time)
             m_bf.animations.last_animation = m_bf.animations.current_animation;
         }
 
-        ret = ENTITY_ANIM_NEWFRAME;
+        ret = AnimUpdate::NewFrame;
         doAnimCommands(&m_bf.animations, ret);
         doAnimMove(&anim, &frame);
     }
@@ -1254,7 +1223,7 @@ void Entity::checkActivators()
         if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-            if((e != this) && (core::OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
+            if((e != this) && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
@@ -1374,9 +1343,9 @@ Entity::~Entity()
 
     m_bf.bone_tags.clear();
 
-    for(world::core::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr;)
+    for(core::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr;)
     {
-        world::core::SSAnimation* ss_anim_next = ss_anim->next;
+        core::SSAnimation* ss_anim_next = ss_anim->next;
         ss_anim->next = nullptr;
         delete ss_anim;
         ss_anim = ss_anim_next;
@@ -1478,8 +1447,8 @@ bool Entity::createRagdoll(RDSetup* setup)
         }
 
         btTransform localA, localB;
-        world::core::SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
-        world::core::SSBoneTag* btA = btB->parent;
+        core::SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
+        core::SSBoneTag* btA = btB->parent;
         if(!btA)
         {
             result = false;

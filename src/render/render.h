@@ -28,7 +28,7 @@ struct Entity;
 namespace core
 {
 struct Frustum;
-struct OBB;
+struct OrientedBoundingBox;
 struct Sprite;
 struct BaseMesh;
 struct SSBoneFrame;
@@ -61,7 +61,7 @@ class RenderDebugDrawer : public btIDebugDraw
     std::array<GLfloat, 3> m_color{ {0,0,0} };
     std::vector<std::array<GLfloat, 3>> m_buffer;
 
-    world::core::OBB m_obb;
+    world::core::OrientedBoundingBox m_obb;
 
     void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &end);
     void addLine(const btVector3& start, const btVector3& end);
@@ -90,7 +90,7 @@ public:
     void drawPortal(const world::Portal &p);
     void drawFrustum(const world::core::Frustum &f);
     void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
-    void drawOBB(const world::core::OBB& obb);
+    void drawOBB(const world::core::OrientedBoundingBox& obb);
     void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
     void drawSkeletalModelDebugLines(world::core::SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(world::Entity *entity, Render *render);

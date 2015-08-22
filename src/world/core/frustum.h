@@ -20,7 +20,7 @@ struct Portal;
 
 namespace core
 {
-struct OBB;
+struct OrientedBoundingBox;
 struct Polygon;
 
 struct Frustum
@@ -35,7 +35,7 @@ struct Frustum
     bool hasParent(const Frustum& parent) const;
     bool isPolyVisible(const Polygon *p, const Camera& cam) const;
     bool isAABBVisible(const btVector3 &bbmin, const btVector3 &bbmax, const Camera& cam);
-    bool isOBBVisible(OBB *obb, const Camera& cam);
+    bool isOBBVisible(OrientedBoundingBox *obb, const Camera& cam);
 
     static Frustum* portalFrustumIntersect(Portal* portal, const Frustum& emitter, render::Render *render);         // Основная функция для работы с порталами.
     void splitPrepare(struct Portal *p);// подготовка фрустума к сплиту

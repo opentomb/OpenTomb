@@ -529,7 +529,7 @@ void Item_Frame(world::core::SSBoneFrame *bf, btScalar time)
     world::core::StateChange* stc;
 
     bf->animations.lerp = 0.0;
-    stc = world::Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
+    stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
     world::Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
@@ -543,7 +543,7 @@ void Item_Frame(world::core::SSBoneFrame *bf, btScalar time)
         bf->current_frame = frame;
         bf->next_animation = anim;
         bf->next_frame = frame;*/
-        stc = world::Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
+        stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
     }
     else if(bf->animations.current_frame != frame)
     {

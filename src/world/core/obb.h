@@ -11,12 +11,6 @@
 
 #include "polygon.h"
 
-#define DEFAULT_OBB_TEST_OVERLAP (1.2)
-
- /*
-  * In base_edges we safe the initial shape polygons
-  */
-
 namespace world
 {
 class Camera;
@@ -26,10 +20,10 @@ struct Room;
 namespace core
 {
 
-struct OBB
+struct OrientedBoundingBox
 {
-    struct Polygon base_polygons[6];               // bv base surface
-    struct Polygon polygons[6];                    // bv world coordinate surface
+    Polygon base_polygons[6];               // bv base surface
+    Polygon polygons[6];                    // bv world coordinate surface
     const btTransform* transform = nullptr;        // Object transform matrix
     btScalar radius;
 
@@ -42,7 +36,12 @@ struct OBB
     bool isVisibleInRoom(const Room& room, const Camera& cam);
 };
 
-int OBB_OBB_Test(const Entity &e1, const Entity &e2, btScalar overlap = DEFAULT_OBB_TEST_OVERLAP);
+namespace
+{
+constexpr btScalar DefaultTestOverlap = 1.2f;
+}
+
+bool testOverlap(const Entity &e1, const Entity &e2, btScalar overlap = DefaultTestOverlap);
 
 } // namespace core
 } // namespace world

@@ -296,8 +296,8 @@ bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
     if(this == s2) return true;
 
     if((ceiling != s2->ceiling) ||
-       (ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-       (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+       (ceiling_penetration_config == PenetrationConfig::Wall) ||
+       (s2->ceiling_penetration_config == PenetrationConfig::Wall) ||
        (!ignore_doors && (sector_above || s2->sector_above)))
         return false;
 
@@ -315,8 +315,8 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
     if(this == s2) return true;
 
     if((floor != s2->floor) ||
-       (floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-       (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+       (floor_penetration_config == PenetrationConfig::Wall) ||
+       (s2->floor_penetration_config == PenetrationConfig::Wall) ||
        (!ignore_doors && (sector_below || s2->sector_below)))
         return false;
 

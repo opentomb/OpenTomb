@@ -542,7 +542,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
         if(ent->m_bf.animations.last_state == TR_STATE_LARA_REACH)
         {
-            if(cam->m_targetDir == TR_CAM_TARG_BACK)
+            if(cam->m_targetDir == world::CameraTarget::Back)
             {
                 btVector3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
@@ -561,23 +561,23 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
 
                     //If collided we want to go to back else right
                     if(Cam_HasHit(cb, cameraFrom, cameraTo))
-                        cam->m_targetDir = TR_CAM_TARG_BACK;
+                        cam->m_targetDir = world::CameraTarget::Back;
                     else
-                        cam->m_targetDir = TR_CAM_TARG_RIGHT;
+                        cam->m_targetDir = world::CameraTarget::Right;
                 }
                 else
                 {
-                    cam->m_targetDir = TR_CAM_TARG_LEFT;
+                    cam->m_targetDir = world::CameraTarget::Left;
                 }
             }
         }
         else if(ent->m_bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
         {
-            cam->m_targetDir = TR_CAM_TARG_FRONT;
+            cam->m_targetDir = world::CameraTarget::Front;
         }
-        else if(cam->m_targetDir != TR_CAM_TARG_BACK)
+        else if(cam->m_targetDir != world::CameraTarget::Back)
         {
-            cam->m_targetDir = TR_CAM_TARG_BACK;//Reset to back
+            cam->m_targetDir = world::CameraTarget::Back;
         }
 
         //If target mis-matches current we need to update the camera's angle to reach target!
@@ -585,16 +585,16 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
         {
             switch(cam->m_targetDir)
             {
-                case TR_CAM_TARG_BACK:
+                case world::CameraTarget::Back:
                     targetAngle = (ent->m_angles[0]) * util::RadPerDeg;
                     break;
-                case TR_CAM_TARG_FRONT:
+                case world::CameraTarget::Front:
                     targetAngle = (ent->m_angles[0] - 180.0) * util::RadPerDeg;
                     break;
-                case TR_CAM_TARG_LEFT:
+                case world::CameraTarget::Left:
                     targetAngle = (ent->m_angles[0] - 75.0) * util::RadPerDeg;
                     break;
-                case TR_CAM_TARG_RIGHT:
+                case world::CameraTarget::Right:
                     targetAngle = (ent->m_angles[0] + 75.0) * util::RadPerDeg;
                     break;
                 default:
@@ -707,7 +707,7 @@ void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<world::Entity> > 
         {
             entity->updateRigidBody(false);
         }
-        else if(entity->frame(engine_frame_time))
+        else if(entity->frame(engine_frame_time) != world::AnimUpdate::None)
         {
             entity->updateRigidBody(false);
         }

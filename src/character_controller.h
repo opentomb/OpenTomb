@@ -350,7 +350,7 @@ struct Character : public world::Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    int(*state_func)(Character* entity, world::core::SSAnimation *ssAnim) = nullptr;
+    void (*state_func)(Character* entity, world::core::SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -396,7 +396,7 @@ struct Character : public world::Entity
     {
     }
     void updateHair() override;
-    void frameImpl(btScalar time, int16_t frame, int state) override;
+    void frameImpl(btScalar time, int16_t frame, world::AnimUpdate state) override;
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override

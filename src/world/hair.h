@@ -25,12 +25,6 @@ namespace world
 #define HAIR_TR5_KID_2 7
 #define HAIR_TR5_OLD   8
 
-// Since we apply TR4 hair scheme to TR2-3 as well, we need to discard
-// polygons which are unused. These are 0 and 5 in both TR2 and TR3.
-
-#define HAIR_DISCARD_ROOT_FACE 0
-#define HAIR_DISCARD_TAIL_FACE 5
-
 struct HairElement
 {
     std::shared_ptr<core::BaseMesh> mesh;           // Pointer to rendered mesh.

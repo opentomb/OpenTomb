@@ -15,12 +15,18 @@ namespace world
 namespace core
 {
 
-#define SPLIT_FRONT    0x00
-#define SPLIT_BACK     0x01
-#define SPLIT_IN_PLANE 0x02
-#define SPLIT_IN_BOTH  0x03
+enum class SplitType
+{
+    Front,
+    Back,
+    InPlane,
+    InBoth
+};
 
-#define SPLIT_EPSILON (0.02)
+namespace
+{
+constexpr float SplitEpsilon = 0.02f;
+}
 
 /*
  * The structure taken from Cochrane. Next I realise one in my style.
@@ -44,32 +50,6 @@ struct Polygon
     bool                double_side = false;                                        // double side flag
     util::Plane plane;                                               // polygon plane equation
 
-    Polygon() = default;
-
-    Polygon(const Polygon& rhs)
-        : vertices(rhs.vertices)
-        , tex_index(rhs.tex_index)
-        , anim_id(rhs.anim_id)
-        , frame_offset(rhs.frame_offset)
-        , blendMode(rhs.blendMode)
-        , double_side(rhs.double_side)
-        , plane(rhs.plane)
-    {
-    }
-
-    Polygon& operator=(const Polygon& rhs)
-    {
-        vertices = rhs.vertices;
-        tex_index = rhs.tex_index;
-        anim_id = rhs.anim_id;
-        frame_offset = rhs.frame_offset;
-        blendMode = rhs.blendMode;
-        double_side = rhs.double_side;
-        plane = rhs.plane;
-        // keep next
-        return *this;
-    }
-
     bool isBroken() const;
 
     void moveSelf(const btVector3 &move);
@@ -82,7 +62,7 @@ struct Polygon
     bool rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *lambda) const;
     bool intersectPolygon(Polygon* p2);
 
-    int  splitClassify(const util::Plane &plane);
+    SplitType splitClassify(const util::Plane &plane);
     void split(const util::Plane &n, Polygon* front, Polygon* back);
 
     bool isInsideBBox(const btVector3 &bb_min, const btVector3 &bb_max);

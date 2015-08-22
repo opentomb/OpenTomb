@@ -32,9 +32,9 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     for(const world::core::Vertex& v : transformed.vertices)
     {
         const auto dist = root->plane.distance(v.position);
-        if(dist > SPLIT_EPSILON)
+        if(dist > world::core::SplitEpsilon)
             positive++;
-        else if(dist < -SPLIT_EPSILON)
+        else if(dist < -world::core::SplitEpsilon)
             negative++;
         else
             in_plane++;

@@ -20,9 +20,9 @@ namespace engine
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         btVector3& v = ent->m_traversedObject->m_transform.getOrigin();
         int i = static_cast<int>(v[0] / world::TR_METERING_SECTORSIZE);
@@ -35,9 +35,9 @@ void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, int st
     }
 }
 
-void ent_set_on_floor(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_set_on_floor(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::OnFloor;
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.floor_point[2];
@@ -46,16 +46,16 @@ void ent_set_on_floor(Character* ent, world::core::SSAnimation* ss_anim, int sta
     }
 }
 
-void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::core::SSAnimation* ss_anim, int state)
+void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_bf.animations.next_state = TR_STATE_LARA_TURN_FAST;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, world::core::SSAnimation* ss_anim, int /*state*/)
+void ent_set_on_floor_after_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate /*state*/)
 {
     world::core::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
 
@@ -75,36 +75,36 @@ void ent_set_on_floor_after_climb(Character* ent, world::core::SSAnimation* ss_a
     }
 }
 
-void ent_set_underwater(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_set_underwater(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Underwater;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_free_falling(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_set_free_falling(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::FreeFalling;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_cmd_slide(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_set_cmd_slide(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_response.slide = SlideType::Back;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_correct_diving_angle(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_correct_diving_angle(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_angles[1] = -45.0;
         ent->updateTransform();
@@ -112,9 +112,9 @@ void ent_correct_diving_angle(Character* ent, world::core::SSAnimation* ss_anim,
     }
 }
 
-void ent_to_on_water(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_to_on_water(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.transition_level;
         ent->ghostUpdate();
@@ -123,9 +123,9 @@ void ent_to_on_water(Character* ent, world::core::SSAnimation* ss_anim, int stat
     }
 }
 
-void ent_climb_out_of_water(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_climb_out_of_water(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         const auto& v = ent->m_climb.point;
 
@@ -136,9 +136,9 @@ void ent_climb_out_of_water(Character* ent, world::core::SSAnimation* ss_anim, i
     }
 }
 
-void ent_to_edge_climb(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_to_edge_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         btScalar *v = ent->m_climb.point;
 
@@ -150,9 +150,9 @@ void ent_to_edge_climb(Character* ent, world::core::SSAnimation* ss_anim, int st
     }
 }
 
-void ent_to_monkey_swing(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_to_monkey_swing(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Monkeyswing;
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.bb_max[2];
@@ -161,9 +161,9 @@ void ent_to_monkey_swing(Character* ent, world::core::SSAnimation* ss_anim, int 
     }
 }
 
-void ent_to_tightrope(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_to_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Climbing;
         ent->ghostUpdate();
@@ -171,9 +171,9 @@ void ent_to_tightrope(Character* ent, world::core::SSAnimation* ss_anim, int sta
     }
 }
 
-void ent_from_tightrope(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_from_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::OnFloor;
         ent->ghostUpdate();
@@ -181,9 +181,9 @@ void ent_from_tightrope(Character* ent, world::core::SSAnimation* ss_anim, int s
     }
 }
 
-void ent_crawl_to_climb(Character* ent, world::core::SSAnimation* ss_anim, int state)
+void ent_crawl_to_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
 {
-    if(state == ENTITY_ANIM_NEWANIM)
+    if(state == world::AnimUpdate::NewAnim)
     {
         CharacterCommand* cmd = &ent->m_command;
 
@@ -207,7 +207,7 @@ void ent_crawl_to_climb(Character* ent, world::core::SSAnimation* ss_anim, int s
 // State control is based on original TR system, where several animations may
 // belong to the same state.
 
-int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss_anim)
+void State_Control_Lara(Character* character, world::core::SSAnimation *ss_anim)
 {
     int i;
     btVector3& pos = character->m_transform.getOrigin();
@@ -231,7 +231,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
     character->updateCurrentHeight();
 
-    bool low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point[2] - curr_fc->floor_point[2] < character->m_height - LARA_HANG_VERTICAL_EPSILON));
+    bool low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point[2] - curr_fc->floor_point[2] < character->m_height - LaraHangVerticalEpsilon));
     const bool last_frame = static_cast<int>(ss_anim->model->animations[ss_anim->current_animation].frames.size()) <= ss_anim->current_frame + 1;
 
     if(resp->killed)  // Stop any music, if Lara is dead.
@@ -265,7 +265,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             character->lean(cmd, 0.0);
 
             if((climb->can_hang &&
-                (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON) &&
+                (climb->next_z_space >= character->m_height - LaraHangVerticalEpsilon) &&
                 (character->m_moveType == world::MoveType::Climbing)) ||
                (ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID))
             {
@@ -362,8 +362,8 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             {
                 if(cmd->shift)
                 {
-                    move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
-                    global_offset = character->m_transform.getBasis().getColumn(1) * WALK_FORWARD_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
+                    global_offset = character->m_transform.getBasis().getColumn(1) * WalkForwardOffset;
                     global_offset[2] += character->m_bf.bb_max[2];
                     global_offset += pos;
                     Character::getHeightInfo(global_offset, &next_fc);
@@ -384,8 +384,8 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 }       // end IF CMD->SHIFT
                 else
                 {
-                    move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
-                    global_offset = character->m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
+                    global_offset = character->m_transform.getBasis().getColumn(1) * RunForwardOffset;
                     global_offset[2] += character->m_bf.bb_max[2];
                     character->checkNextStep(global_offset, &next_fc);
                     if(((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00)) && !character->hasStopSlant(next_fc))
@@ -409,13 +409,13 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT) ||
                     (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)))
                 {
-                    t = character->m_forwardSize + LARA_TRY_HANG_WALL_OFFSET;
+                    t = character->m_forwardSize + LaraTryHangWallOffset;
                     global_offset = character->m_transform.getBasis().getColumn(1) * t;
 
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
                     *climb = character->checkClimbability(global_offset, &next_fc, 0.5 * DEFAULT_CLIMB_UP_HEIGHT);
                     if(climb->edge_hit &&
-                       (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON) &&
+                       (climb->next_z_space >= character->m_height - LaraHangVerticalEpsilon) &&
                        (pos[2] + character->m_maxStepUpHeight < next_fc.floor_point[2]) &&
                        (pos[2] + 2944.0 >= next_fc.floor_point[2]) &&
                        (next_fc.floor_normale[2] >= character->m_criticalSlantZComponent)) // trying to climb on
@@ -445,7 +445,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
                     *climb = character->checkClimbability(global_offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
                     if(climb->edge_hit &&
-                       (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON) &&
+                       (climb->next_z_space >= character->m_height - LaraHangVerticalEpsilon) &&
                        (pos[2] + character->m_maxStepUpHeight < next_fc.floor_point[2]) &&
                        (pos[2] + 2944.0 >= next_fc.floor_point[2]))  // Trying to climb on
                     {
@@ -470,10 +470,10 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             {
                 if(cmd->shift)
                 {
-                    move = character->m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(1) * -PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00))
                     {
-                        global_offset = character->m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
+                        global_offset = character->m_transform.getBasis().getColumn(1) * -WalkBackOffset;
                         global_offset[2] += character->m_bf.bb_max[2];
                         global_offset += pos;
                         Character::getHeightInfo(global_offset, &next_fc);
@@ -486,7 +486,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 }
                 else    // RUN BACK
                 {
-                    move = character->m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(1) * -PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00))
                     {
                         character->m_dirFlag = ENT_MOVE_BACKWARD;
@@ -505,10 +505,10 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             {
                 if(cmd->shift)
                 {
-                    move = character->m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(0) * PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00))
                     {
-                        global_offset = character->m_transform.getBasis().getColumn(0) * RUN_FORWARD_OFFSET;
+                        global_offset = character->m_transform.getBasis().getColumn(0) * RunForwardOffset;
                         global_offset[2] += character->m_bf.bb_max[2];
                         if((resp->horizontal_collide == 0) && isLittleStep(character->checkNextStep(global_offset, &next_fc)))
                         {
@@ -527,10 +527,10 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             {
                 if(cmd->shift)
                 {
-                    move = character->m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(0) * -PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00))
                     {
-                        global_offset = character->m_transform.getBasis().getColumn(0) * -RUN_FORWARD_OFFSET;
+                        global_offset = character->m_transform.getBasis().getColumn(0) * -RunForwardOffset;
                         global_offset[2] += character->m_bf.bb_max[2];
                         if((resp->horizontal_collide == 0) && isLittleStep(character->checkNextStep(global_offset, &next_fc)))
                         {
@@ -570,7 +570,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             else if(cmd->move[0] == 1)
             {
                 character->m_dirFlag = ENT_MOVE_FORWARD;
-                move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
                 if(character->checkNextPenetration(move) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;  // Jump forward
@@ -579,7 +579,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             else if(cmd->move[0] == -1)
             {
                 character->m_dirFlag = ENT_MOVE_BACKWARD;
-                move = character->m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(1) * -PenetrationTestOffset;
                 if(character->checkNextPenetration(move) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;  // Jump backward
@@ -588,7 +588,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             else if(cmd->move[1] == 1)
             {
                 character->m_dirFlag = ENT_MOVE_RIGHT;
-                move = character->m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(0) * PenetrationTestOffset;
                 if(character->checkNextPenetration(move) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_LEFT;  // Jump right
@@ -597,7 +597,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             else if(cmd->move[1] == -1)
             {
                 character->m_dirFlag = ENT_MOVE_LEFT;
-                move = character->m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(0) * -PenetrationTestOffset;
                 if(character->checkNextPenetration(move) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_RIGHT;  // Jump left
@@ -787,7 +787,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             // Run and walk animations
 
         case TR_STATE_LARA_RUN_FORWARD:
-            global_offset = character->m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * RunForwardOffset;
             global_offset[2] += character->m_bf.bb_max[2];
             nextStep = character->checkNextStep(global_offset, &next_fc);
             character->m_dirFlag = ENT_MOVE_FORWARD;
@@ -843,7 +843,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else if(resp->horizontal_collide & 0x01)
             {
-                global_offset = character->m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+                global_offset = character->m_transform.getBasis().getColumn(1) * RunForwardOffset;
                 global_offset[2] += 1024.0;
                 if(ss_anim->current_animation == TR_ANIMATION_LARA_STAY_TO_RUN)
                 {
@@ -903,7 +903,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             break;
 
         case TR_STATE_LARA_SPRINT:
-            global_offset = character->m_transform.getBasis().getColumn(1) * RUN_FORWARD_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * RunForwardOffset;
             character->lean(cmd, 12.0);
             global_offset[2] += character->m_bf.bb_max[2];
             nextStep = character->checkNextStep(global_offset, &next_fc);
@@ -995,7 +995,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             cmd->rot[0] *= 0.4f;
             character->lean(cmd, 0.0);
 
-            global_offset = character->m_transform.getBasis().getColumn(1) * WALK_FORWARD_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * WalkForwardOffset;
             global_offset[2] += character->m_bf.bb_max[2];
             nextStep = character->checkNextStep(global_offset, &next_fc);
             character->m_dirFlag = ENT_MOVE_FORWARD;
@@ -1089,7 +1089,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(cmd->move[0] == 1)
             {
-                move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
                 character->checkNextPenetration(move);
             }
 
@@ -1163,7 +1163,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 character->m_currentSpeed = std::min(character->m_currentSpeed, MAX_SPEED_QUICKSAND);
             }
 
-            global_offset = character->m_transform.getBasis().getColumn(1) * -WALK_BACK_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * -WalkBackOffset;
             global_offset[2] += character->m_bf.bb_max[2];
             nextStep = character->checkNextStep(global_offset, &next_fc);
             if(character->m_moveType == world::MoveType::FreeFalling)
@@ -1227,7 +1227,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else if(cmd->move[1] == -1 && cmd->shift)
             {
-                global_offset = character->m_transform.getBasis().getColumn(0) * -RUN_FORWARD_OFFSET;  // not an error - RUN_... more correct here
+                global_offset = character->m_transform.getBasis().getColumn(0) * -RunForwardOffset;  // not an error - RUN_... more correct here
                 global_offset[2] += character->m_bf.bb_max[2];
                 global_offset += pos;
                 Character::getHeightInfo(global_offset, &next_fc);
@@ -1265,7 +1265,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             else if(cmd->move[1] == 1 && cmd->shift)
             {
                 // Not a error - RUN_... constant is more correct here
-                global_offset = character->m_transform.getBasis().getColumn(0) * RUN_FORWARD_OFFSET;
+                global_offset = character->m_transform.getBasis().getColumn(0) * RunForwardOffset;
                 global_offset[2] += character->m_bf.bb_max[2];
                 global_offset += pos;
                 Character::getHeightInfo(global_offset, &next_fc);
@@ -1599,9 +1599,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             cmd->rot[0] = 0.0;
             if(cmd->action && (character->m_moveType != world::MoveType::WallsClimb) && (character->m_moveType != world::MoveType::Climbing))
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * character->m_speed[2];
+                global_offset[2] += character->m_bf.bb_max[2] + LaraHangVerticalEpsilon + engine_frame_time * character->m_speed[2];
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit)
                 {
@@ -1611,9 +1611,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     character->m_moveType = world::MoveType::Climbing;                             // hang on
                     character->m_speed.setZero();
 
-                    pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[0];
-                    pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[1];
-                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                    pos[0] = climb->point[0] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[0];
+                    pos[1] = climb->point[1] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[1];
+                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LaraHangVerticalOffset;
                 }
                 else
                 {
@@ -1697,9 +1697,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(cmd->action && (character->m_moveType == world::MoveType::FreeFalling))
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * character->m_speed[2];
+                global_offset[2] += character->m_bf.bb_max[2] + LaraHangVerticalEpsilon + engine_frame_time * character->m_speed[2];
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit && climb->can_hang)
                 {
@@ -1814,9 +1814,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(!resp->killed && cmd->action)  // We have to update climb point every time so entity can move
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+                global_offset[2] += character->m_bf.bb_max[2] + LaraHangVerticalEpsilon;
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->can_hang)
                 {
@@ -1837,12 +1837,12 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             {
                 if(cmd->move[0] == 1)
                 {
-                    if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < character->m_height - LARA_HANG_VERTICAL_EPSILON) || cmd->crouch))
+                    if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < character->m_height - LaraHangVerticalEpsilon) || cmd->crouch))
                     {
                         climb->point = climb->edge_point;
                         ss_anim->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;  // Crawlspace climb
                     }
-                    else if(climb->edge_hit && (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON))
+                    else if(climb->edge_hit && (climb->next_z_space >= character->m_height - LaraHangVerticalEpsilon))
                     {
                         Sys_DebugLog(LOG_FILENAME, "Zspace = %f", climb->next_z_space);
                         climb->point = climb->edge_point;
@@ -1850,9 +1850,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     }
                     else
                     {
-                        pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[0];
-                        pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[1];
-                        pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                        pos[0] = climb->point[0] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[0];
+                        pos[1] = climb->point[1] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[1];
+                        pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LaraHangVerticalOffset;
                         character->m_speed.setZero();
                         ss_anim->anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
                     }
@@ -1868,7 +1868,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 }
                 else if(cmd->move[1] == -1)
                 {
-                    move = character->m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(0) * -PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
                         character->m_dirFlag = ENT_MOVE_LEFT;
@@ -1881,7 +1881,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 }
                 else if(cmd->move[1] == 1)
                 {
-                    move = character->m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+                    move = character->m_transform.getBasis().getColumn(0) * PenetrationTestOffset;
                     if((character->checkNextPenetration(move) == 0) || (character->m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
                         character->m_dirFlag = ENT_MOVE_RIGHT;
@@ -1895,9 +1895,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 else
                 {
                     ss_anim->anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
-                    pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[0];
-                    pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[1];
-                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                    pos[0] = climb->point[0] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[0];
+                    pos[1] = climb->point[1] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[1];
+                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LaraHangVerticalOffset;
                     character->m_speed.setZero();
                 }
             }
@@ -1935,9 +1935,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else if(cmd->move[0] == 1)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+                global_offset[2] += character->m_bf.bb_max[2] + LaraHangVerticalEpsilon;
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
@@ -1997,9 +1997,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(cmd->action && character->m_climb.wall_hit != ClimbType::None)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
+                global_offset[2] += character->m_bf.bb_max[2] + LaraHangVerticalEpsilon;
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
@@ -2061,9 +2061,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += LARA_HANG_SENSOR_Z + LARA_HANG_VERTICAL_EPSILON;
+                global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit)
                 {
@@ -2071,9 +2071,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     character->m_angles[0] = climb->edge_z_ang;
                     character->updateTransform();
                     character->m_moveType = world::MoveType::Climbing;                             // hang on
-                    pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[0];
-                    pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[1];
-                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                    pos[0] = climb->point[0] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[0];
+                    pos[1] = climb->point[1] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[1];
+                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LaraHangVerticalOffset;
                     character->m_speed.setZero();
                 }
                 else
@@ -2086,7 +2086,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(cmd->move[1] == -1)
             {
-                move = character->m_transform.getBasis().getColumn(0) * -PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(0) * -PenetrationTestOffset;
                 if((character->checkNextPenetration(move) > 0) && (character->m_response.horizontal_collide != 0x00))
                 {
                     ss_anim->next_state = TR_STATE_LARA_HANG;
@@ -2121,9 +2121,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                t = LaraTryHangWallOffset + LaraHangWallDistance;
                 global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += LARA_HANG_SENSOR_Z + LARA_HANG_VERTICAL_EPSILON;
+                global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
                 *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                 if(climb->edge_hit)
                 {
@@ -2131,9 +2131,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                     character->m_angles[0] = climb->edge_z_ang;
                     character->updateTransform();
                     character->m_moveType = world::MoveType::Climbing;                             // hang on
-                    pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[0];
-                    pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE)* character->m_transform.getBasis().getColumn(1)[1];
-                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
+                    pos[0] = climb->point[0] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[0];
+                    pos[1] = climb->point[1] - (LaraHangWallDistance)* character->m_transform.getBasis().getColumn(1)[1];
+                    pos[2] = climb->point[2] - character->m_bf.bb_max[2] + LaraHangVerticalOffset;
                     character->m_speed.setZero();
                 }
                 else
@@ -2146,7 +2146,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
 
             if(cmd->move[1] == 1)
             {
-                move = character->m_transform.getBasis().getColumn(0) * PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(0) * PenetrationTestOffset;
                 if((character->checkNextPenetration(move) > 0) && (character->m_response.horizontal_collide != 0x00))
                 {
                     ss_anim->next_state = TR_STATE_LARA_HANG;
@@ -2509,9 +2509,9 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 {
                     if(character->m_moveType != world::MoveType::Climbing)
                     {
-                        t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                        t = LaraTryHangWallOffset + LaraHangWallDistance;
                         global_offset = character->m_transform.getBasis().getColumn(1) * t;
-                        global_offset[2] += LARA_HANG_VERTICAL_EPSILON;                        // inc for water_surf.z
+                        global_offset[2] += LaraHangVerticalEpsilon;                        // inc for water_surf.z
                         *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                         if(climb->edge_hit)
                         {
@@ -2520,11 +2520,11 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                         else
                         {
                             low_vertical_space = false;
-                            global_offset[2] += character->m_maxStepUpHeight + LARA_HANG_VERTICAL_EPSILON;
+                            global_offset[2] += character->m_maxStepUpHeight + LaraHangVerticalEpsilon;
                             *climb = character->checkClimbability(global_offset, &next_fc, 0.0);
                         }
 
-                        if(climb->edge_hit && (climb->next_z_space >= character->m_height - LARA_HANG_VERTICAL_EPSILON))// && (climb->edge_point[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
+                        if(climb->edge_hit && (climb->next_z_space >= character->m_height - LaraHangVerticalEpsilon))// && (climb->edge_point[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
                         {
                             character->m_dirFlag = ENT_STAY;
                             character->m_moveType = world::MoveType::Climbing;
@@ -2548,7 +2548,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                         {
                             character->setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
                         }
-                        ent_climb_out_of_water(character, ss_anim, ENTITY_ANIM_NEWANIM);
+                        ent_climb_out_of_water(character, ss_anim, world::AnimUpdate::NewAnim);
                     }
                 }
                 else if(!curr_fc->floor_hit || (pos[2] - character->m_height > curr_fc->floor_point[2] - character->m_swimDepth))
@@ -2700,7 +2700,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
 
-            move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+            move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
             if((character->checkNextPenetration(move) > 0) && (resp->horizontal_collide != 0x00))  // Smash into wall
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
@@ -2727,10 +2727,10 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else if(cmd->move[0] == 1)
             {
-                move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
                 if((character->checkNextPenetration(move) == 0) || (resp->horizontal_collide == 0x00))
                 {
-                    global_offset = character->m_transform.getBasis().getColumn(1) * CRAWL_FORWARD_OFFSET;
+                    global_offset = character->m_transform.getBasis().getColumn(1) * CrawlForwardOffset;
                     global_offset[2] += 0.5f * (character->m_bf.bb_max[2] + character->m_bf.bb_min[2]);
                     global_offset += pos;
                     Character::getHeightInfo(global_offset, &next_fc);
@@ -2743,10 +2743,10 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             }
             else if(cmd->move[0] == -1)
             {
-                move = character->m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+                move = character->m_transform.getBasis().getColumn(1) * -PenetrationTestOffset;
                 if((character->checkNextPenetration(move) == 0) || (resp->horizontal_collide == 0x00))
                 {
-                    global_offset = character->m_transform.getBasis().getColumn(1) * -CRAWL_FORWARD_OFFSET;
+                    global_offset = character->m_transform.getBasis().getColumn(1) * -CrawlForwardOffset;
                     global_offset[2] += 0.5f * (character->m_bf.bb_max[2] + character->m_bf.bb_min[2]);
                     global_offset += pos;
                     Character::getHeightInfo(global_offset, &next_fc);
@@ -2762,7 +2762,7 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                         auto temp = pos;                                       // save entity position
                         pos[0] = next_fc.floor_point[0];
                         pos[1] = next_fc.floor_point[1];
-                        global_offset = character->m_transform.getBasis().getColumn(1) * 0.5 * CRAWL_FORWARD_OFFSET;
+                        global_offset = character->m_transform.getBasis().getColumn(1) * 0.5 * CrawlForwardOffset;
                         global_offset[2] += 128.0;
                         curr_fc->floor_hit = next_fc.floor_hit;
                         curr_fc->floor_point = next_fc.floor_point;
@@ -2801,14 +2801,14 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             character->m_dirFlag = ENT_MOVE_FORWARD;
             character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] = cmd->rot[0] * 0.5f;
-            move = character->m_transform.getBasis().getColumn(1) * PENETRATION_TEST_OFFSET;
+            move = character->m_transform.getBasis().getColumn(1) * PenetrationTestOffset;
             if((character->checkNextPenetration(move) > 0) && (resp->horizontal_collide != 0x00))
             {
                 character->m_dirFlag = ENT_STAY;
                 character->setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
                 break;
             }
-            global_offset = character->m_transform.getBasis().getColumn(1) * CRAWL_FORWARD_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * CrawlForwardOffset;
             global_offset[2] += 0.5f * (character->m_bf.bb_max[2] + character->m_bf.bb_min[2]);
             global_offset += pos;
             Character::getHeightInfo(global_offset, &next_fc);
@@ -2829,14 +2829,14 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
             character->m_dirFlag = ENT_MOVE_FORWARD;   // Absurd? No, Core Design.
             character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] = cmd->rot[0] * 0.5f;
-            move = character->m_transform.getBasis().getColumn(1) * -PENETRATION_TEST_OFFSET;
+            move = character->m_transform.getBasis().getColumn(1) * -PenetrationTestOffset;
             if((character->checkNextPenetration(move) > 0) && (resp->horizontal_collide != 0x00))
             {
                 character->m_dirFlag = ENT_STAY;
                 character->setAnimation(TR_ANIMATION_LARA_CRAWL_IDLE, 0);
                 break;
             }
-            global_offset = character->m_transform.getBasis().getColumn(1) * -CRAWL_FORWARD_OFFSET;
+            global_offset = character->m_transform.getBasis().getColumn(1) * -CrawlForwardOffset;
             global_offset[2] += 0.5f * (character->m_bf.bb_max[2] + character->m_bf.bb_min[2]);
             global_offset += pos;
             Character::getHeightInfo(global_offset, &next_fc);
@@ -3156,8 +3156,6 @@ int State_Control_Lara(Character* character, struct world::core::SSAnimation *ss
                 character->setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
             break;
     };
-
-    return 0;
 }
 
 } // namespace engine

@@ -28,18 +28,18 @@ namespace engine
 
 namespace
 {
-	constexpr float PENETRATION_TEST_OFFSET = 48.0f;        ///@TODO: tune it!
-	constexpr float WALK_FORWARD_OFFSET = 96.0f;        ///@FIXME: find real offset
-	constexpr float WALK_BACK_OFFSET = 16.0f;
-	constexpr float WALK_FORWARD_STEP_UP = 256.0f;       // by bone frame bb
-	constexpr float RUN_FORWARD_OFFSET = 128.0f;       ///@FIXME: find real offset
-	constexpr float RUN_FORWARD_STEP_UP = 320.0f;       // by bone frame bb
-	constexpr float CRAWL_FORWARD_OFFSET = 256.0f;
-	constexpr float LARA_HANG_WALL_DISTANCE = 128.0f - 24.0f;
-	constexpr float LARA_HANG_VERTICAL_EPSILON = 64.0f;
-	constexpr float LARA_HANG_VERTICAL_OFFSET = 12.0f;        // in original is 0, in real life hands are little more higher than edge
-	constexpr float LARA_TRY_HANG_WALL_OFFSET = 72.0f;        // It works more stable than 32 or 128
-	constexpr float LARA_HANG_SENSOR_Z = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
+    constexpr float PenetrationTestOffset = 48.0f;        ///@TODO: tune it!
+    constexpr float WalkForwardOffset = 96.0f;        ///@FIXME: find real offset
+    constexpr float WalkBackOffset = 16.0f;
+    constexpr float WalkForwardStepUp = 256.0f;       // by bone frame bb
+    constexpr float RunForwardOffset = 128.0f;       ///@FIXME: find real offset
+    constexpr float RunForwardStepUp = 320.0f;       // by bone frame bb
+    constexpr float CrawlForwardOffset = 256.0f;
+    constexpr float LaraHangWallDistance = 128.0f - 24.0f;
+    constexpr float LaraHangVerticalEpsilon = 64.0f;
+    constexpr float LaraHangVerticalOffset = 12.0f;        // in original is 0, in real life hands are little more higher than edge
+    constexpr float LaraTryHangWallOffset = 72.0f;        // It works more stable than 32 or 128
+    constexpr float LaraHangSensorZ = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
 }
 
 
@@ -775,6 +775,6 @@ namespace
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-int State_Control_Lara(Character* ent, world::core::SSAnimation *ss_anim);
+void State_Control_Lara(Character* ent, world::core::SSAnimation *ss_anim);
 
 } // namespace engine

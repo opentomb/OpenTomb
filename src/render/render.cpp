@@ -908,7 +908,7 @@ void Render::drawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 world::Entity* ent = static_cast<world::Entity*>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
+                if(ent->m_bf.animations.model->has_transparency && ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
                 {
                     for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
                     {
@@ -923,7 +923,7 @@ void Render::drawList()
         }
     }
 
-    if((engine::engine_world.character != nullptr) && (engine::engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_bf.animations.model->has_transparency)
     {
         world::Entity *ent = engine::engine_world.character.get();
         for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
@@ -1248,7 +1248,7 @@ void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_ma
     drawOBB(m_obb);
 }
 
-void RenderDebugDrawer::drawOBB(const world::core::OBB& obb)
+void RenderDebugDrawer::drawOBB(const world::core::OrientedBoundingBox& obb)
 {
     const world::core::Polygon *p = obb.polygons;
     addLine(p->vertices[0].position, (p + 1)->vertices[0].position);

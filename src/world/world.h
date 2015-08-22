@@ -100,20 +100,24 @@ struct Light;
 // Action type specifies a kind of action which trigger performs. Mostly
 // it's only related to item activation, as any other trigger operations
 // are not affected by action type in original engines.
-
-#define TR_ACTIONTYPE_NORMAL  0
-#define TR_ACTIONTYPE_ANTI    1
-#define TR_ACTIONTYPE_SWITCH  2
-#define TR_ACTIONTYPE_BYPASS -1 // Used for "dummy" triggers from originals.
+enum class ActionType
+{
+    Normal,
+    Anti,
+    Switch,
+    Bypass  //!< Used for "dummy" triggers from originals.
+};
 
 // Activator specifies a kind of triggering event (NOT to be confused
 // with activator type mentioned below) to occur, like ordinary trigger,
 // triggering by inserting a key, turning a switch or picking up item.
-
-#define TR_ACTIVATOR_NORMAL 0
-#define TR_ACTIVATOR_SWITCH 1
-#define TR_ACTIVATOR_KEY    2
-#define TR_ACTIVATOR_PICKUP 3
+enum class ActivatorType
+{
+    Normal,
+    Switch,
+    Key,
+    Pickup
+};
 
 // Activator type is used to identify activator kind for specific
 // trigger types (so-called HEAVY triggers). HEAVY means that trigger
@@ -228,6 +232,9 @@ struct RoomBox
     int32_t     overlap_index;
 };
 
+enum class PenetrationConfig;
+enum class DiagonalType;
+
 struct RoomSector
 {
     uint32_t                    trig_index; // Trigger function index.
@@ -248,12 +255,12 @@ struct RoomSector
     btVector3 pos;
 
     btVector3                   ceiling_corners[4];
-    uint8_t                     ceiling_diagonal_type;
-    uint8_t                     ceiling_penetration_config;
+    DiagonalType                ceiling_diagonal_type;
+    PenetrationConfig           ceiling_penetration_config;
 
     btVector3                   floor_corners[4];
-    uint8_t                     floor_diagonal_type;
-    uint8_t                     floor_penetration_config;
+    DiagonalType                floor_diagonal_type;
+    PenetrationConfig           floor_penetration_config;
 
     int32_t                     portal_to_room;
 
@@ -278,20 +285,22 @@ struct RoomSector
 // case we use NONE type. If only one of two heights' pairs is similar, then tween is
 // either right or left pointed triangle (where "left" or "right" is derived by viewing
 // triangle from front side). If none of the heights are similar, we need quad tween.
-
-#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
-#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
+enum class TweenType
+{
+    None,          //!< Degenerated vertical polygon.
+    TriangleRight, //!< Triangle pointing right (viewed front).
+    TriangleLeft,  //!< Triangle pointing left (viewed front).
+    Quad,
+    TwoTriangles   //!< it looks like a butterfly
+};
 
 struct SectorTween
 {
     btVector3                   floor_corners[4];
-    uint8_t                     floor_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+    TweenType                   floor_tween_type = TweenType::None;
 
     btVector3                   ceiling_corners[4];
-    uint8_t                     ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+    TweenType                   ceiling_tween_type = TweenType::None;
 };
 
 

@@ -10,12 +10,6 @@
 namespace world
 {
 
-// Here you can specify the way OpenTomb processes room collision -
-// in a classic TR way (floor data collision) or in a modern way
-// (derived from actual room mesh).
-
-#define TR_MESH_ROOM_COLLISION 0
-
 // Metering step and sector size are basic Tomb Raider world metrics.
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
@@ -33,20 +27,24 @@ constexpr float TR_METERING_SECTORSIZE = 1024.0f;
 
 // Penetration configuration specifies collision type for floor and ceiling
 // sectors (squares).
-
-#define TR_PENETRATION_CONFIG_SOLID             0   // Ordinary sector.
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_A   1   // TR3-5 triangulated door.
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_B   2   // TR3-5 triangulated door.
-#define TR_PENETRATION_CONFIG_WALL              3   // Wall (0x81 == TR_METERING_WALLHEIGHT)
-#define TR_PENETRATION_CONFIG_GHOST             4   // No collision.
+enum class PenetrationConfig
+{
+    Solid,         //!< Ordinary sector.
+    DoorVerticalA, //!< TR3-5 triangulated door.
+    DoorVerticalB, //!< TR3-5 triangulated door.
+    Wall,          //!< Wall (0x81 == TR_METERING_WALLHEIGHT)
+    Ghost          //!< No collision.
+};
 
 // There are two types of diagonal splits - we call them north-east (NE) and
 // north-west (NW). In case there is no diagonal in sector (TR1-2 classic sector),
 // then NONE type is used.
-
-#define TR_SECTOR_DIAGONAL_TYPE_NONE            0
-#define TR_SECTOR_DIAGONAL_TYPE_NE              1
-#define TR_SECTOR_DIAGONAL_TYPE_NW              2
+enum class DiagonalType
+{
+    None,
+    NE,
+    NW
+};
 
 ///@FIXME: Move skybox item IDs to script!
 

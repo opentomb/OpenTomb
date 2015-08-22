@@ -15,7 +15,7 @@ namespace world
 namespace core
 {
 
-void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
+void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
     extent = (bb_max - bb_min) / 2;
     base_centre = (bb_min + bb_max) / 2;
@@ -136,7 +136,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     p->findNormal();
 }
 
-void OBB::doTransform()
+void OrientedBoundingBox::doTransform()
 {
     if(transform != nullptr)
     {
@@ -159,7 +159,7 @@ void OBB::doTransform()
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
+bool testOverlap(const Entity& e1, const Entity& e2, btScalar overlap)
 {
     //translation, in parent frame
     auto v = e2.m_obb.centre - e1.m_obb.centre;
@@ -172,12 +172,11 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     //B's basis with respect to A's local frame
     btScalar R[3][3];
     btScalar ra, rb, t;
-    int i, k;
 
     //calculate rotation matrix
-    for(i = 0; i < 3; i++)
+    for(int i = 0; i < 3; i++)
     {
-        for(k = 0; k < 3; k++)
+        for(int k = 0; k < 3; k++)
         {
             const btVector3 e1b = e1.m_transform.getBasis().getColumn(i);
             const btVector3 e2b = e2.m_transform.getBasis().getColumn(k);
@@ -190,7 +189,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
     boxes overlap. */
 
     //A's basis vectors
-    for(i = 0; i < 3; i++)
+    for(int i = 0; i < 3; i++)
     {
         ra = a[i];
         rb = b[0] * std::abs(R[i][0]) + b[1] * std::abs(R[i][1]) + b[2] * std::abs(R[i][2]);
@@ -198,19 +197,19 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
         if(t > ra + rb)
         {
-            return 0;
+            return false;
         }
     }
 
     //B's basis vectors
-    for(k = 0; k < 3; k++)
+    for(int k = 0; k < 3; k++)
     {
         ra = a[0] * std::abs(R[0][k]) + a[1] * std::abs(R[1][k]) + a[2] * std::abs(R[2][k]);
         rb = b[k];
         t = std::abs(T[0] * R[0][k] + T[1] * R[1][k] + T[2] * R[2][k]);
         if(t > ra + rb)
         {
-            return 0;
+            return false;
         }
     }
 
@@ -222,7 +221,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A0 x B1
@@ -232,7 +231,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A0 x B2
@@ -242,7 +241,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A1 x B0
@@ -252,7 +251,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A1 x B1
@@ -262,7 +261,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A1 x B2
@@ -272,7 +271,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A2 x B0
@@ -282,7 +281,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A2 x B1
@@ -292,7 +291,7 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     //L = A2 x B2
@@ -302,15 +301,15 @@ int OBB_OBB_Test(const Entity& e1, const Entity& e2, btScalar overlap)
 
     if(t > ra + rb)
     {
-        return 0;
+        return false;
     }
 
     /*no separating axis found,
     the two boxes overlap */
-    return 1;
+    return true;
 }
 
-bool OBB::isVisibleInRoom(const Room& room, const Camera& cam)
+bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam)
 {
     if(room.frustum.empty())                                                    // There's no active frustum in room, using camera frustum instead.
     {

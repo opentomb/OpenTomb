@@ -14,10 +14,6 @@
 #include "world/object.h"
 #include "world/core/obb.h"
 
-#define ENTITY_ANIM_NONE     0x00
-#define ENTITY_ANIM_NEWFRAME 0x01
-#define ENTITY_ANIM_NEWANIM  0x02
-
 class btCollisionShape;
 class btRigidBody;
 struct Character;
@@ -36,10 +32,17 @@ struct RDSetup;
 
 namespace core
 {
-struct OBB;
+struct OrientedBoundingBox;
 struct SSAnimation;
 struct SSBoneFrame;
 } // namespace core
+
+enum class AnimUpdate
+{
+    None,
+    NewFrame,
+    NewAnim
+};
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -157,7 +160,7 @@ public:
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
-    world::core::OBB m_obb;                // oriented bounding box
+    world::core::OrientedBoundingBox m_obb;                // oriented bounding box
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
@@ -191,7 +194,7 @@ public:
 
     int  getAnimDispatchCase(uint32_t id);
     static void getNextFrame(world::core::SSBoneFrame *bf, btScalar time, core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-    int  frame(btScalar time);  // process frame + trying to change state
+    AnimUpdate frame(btScalar time);  // process frame + trying to change state
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -204,7 +207,7 @@ public:
     }
 
     static void updateCurrentBoneFrame(world::core::SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(world::core::SSAnimation *ss_anim, int changing);
+    void doAnimCommands(world::core::SSAnimation *ss_anim, AnimUpdate changing);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -228,7 +231,7 @@ public:
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t frame, int /*state*/)
+    virtual void frameImpl(btScalar /*time*/, int16_t frame, AnimUpdate /*state*/)
     {
         m_bf.animations.current_frame = frame;
     }
@@ -271,8 +274,5 @@ private:
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
-
-core::StateChange *Anim_FindStateChangeByAnim(core::AnimationFrame *anim, int state_change_anim);
-core::StateChange *Anim_FindStateChangeByID(core::AnimationFrame *anim, uint32_t id);
 
 } // namespace world

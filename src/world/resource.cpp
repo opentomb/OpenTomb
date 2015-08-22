@@ -118,24 +118,24 @@ void Res_Sector_SetTweenFloorConfig(world::SectorTween *tween)
 
     if(tween->floor_corners[3][2] > tween->floor_corners[2][2])
     {
-        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
+        tween->floor_tween_type = TweenType::TwoTriangles;              // like a butterfly
     }
     else if((tween->floor_corners[0][2] != tween->floor_corners[1][2]) &&
             (tween->floor_corners[2][2] != tween->floor_corners[3][2]))
     {
-        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
+        tween->floor_tween_type = TweenType::Quad;
     }
     else if(tween->floor_corners[0][2] != tween->floor_corners[1][2])
     {
-        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
+        tween->floor_tween_type = TweenType::TriangleLeft;
     }
     else if(tween->floor_corners[2][2] != tween->floor_corners[3][2])
     {
-        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
+        tween->floor_tween_type = TweenType::TriangleRight;
     }
     else
     {
-        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+        tween->floor_tween_type = TweenType::None;
     }
 }
 
@@ -149,38 +149,38 @@ void Res_Sector_SetTweenCeilingConfig(world::SectorTween *tween)
 
     if(tween->ceiling_corners[3][2] > tween->ceiling_corners[2][2])
     {
-        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
+        tween->ceiling_tween_type = TweenType::TwoTriangles;            // like a butterfly
     }
     else if((tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2]) &&
             (tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2]))
     {
-        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
+        tween->ceiling_tween_type = TweenType::Quad;
     }
     else if(tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2])
     {
-        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
+        tween->ceiling_tween_type = TweenType::TriangleLeft;
     }
     else if(tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2])
     {
-        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
+        tween->ceiling_tween_type = TweenType::TriangleRight;
     }
     else
     {
-        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+        tween->ceiling_tween_type = TweenType::None;
     }
 }
 
 int Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns)
 {
-    if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
+    if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == PenetrationConfig::Wall))
     {
         return 1;
     }
 
-    if((ns->portal_to_room < 0) && (ns->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (ws->portal_to_room >= 0))
+    if((ns->portal_to_room < 0) && (ns->floor_penetration_config != PenetrationConfig::Wall) && (ws->portal_to_room >= 0))
     {
         ws = ws->checkPortalPointer();
-        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || !ns->is2SidePortals(ws))
+        if((ws->floor_penetration_config == PenetrationConfig::Wall) || !ns->is2SidePortals(ws))
         {
             return 1;
         }
@@ -227,7 +227,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
 
             if(w > 0)
             {
-                if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
+                if((next_heightmap->floor_penetration_config != PenetrationConfig::Wall) || (current_heightmap->floor_penetration_config != PenetrationConfig::Wall))                                                           // Init X-plane tween [ | ]
                 {
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
@@ -236,7 +236,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[1][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
-                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        room_tween->ceiling_tween_type = TweenType::None;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
@@ -247,7 +247,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[2][2];
                         room_tween->floor_corners[3][2] = next_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
-                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        room_tween->ceiling_tween_type = TweenType::None;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
@@ -258,9 +258,9 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             next_heightmap = next_heightmap->checkPortalPointer();
-                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                             {
-                                if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                                 {
                                     room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
                                     room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
@@ -269,7 +269,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
-                                if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                if((current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid) || (next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                                 {
                                     room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
                                     room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
@@ -288,7 +288,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
@@ -305,7 +305,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
@@ -322,7 +322,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                     {
                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
                         room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
@@ -337,7 +337,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
@@ -354,7 +354,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
@@ -371,7 +371,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                     {
                         room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
                         room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
@@ -413,7 +413,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
 
             if(h > 0)
             {
-                if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                if((next_heightmap->floor_penetration_config != PenetrationConfig::Wall) || (current_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                 {
                     // Init Y-plane tween  [ - ]
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
@@ -423,7 +423,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[2][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
-                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        room_tween->ceiling_tween_type = TweenType::None;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
@@ -434,7 +434,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[3][2];
                         room_tween->floor_corners[3][2] = next_heightmap->floor_corners[3][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
-                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        room_tween->ceiling_tween_type = TweenType::None;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
@@ -445,9 +445,9 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             next_heightmap = next_heightmap->checkPortalPointer();
-                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                             {
-                                if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                                 {
                                     room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
                                     room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
@@ -456,7 +456,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
-                                if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                if((current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid) || (next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                                 {
                                     room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
                                     room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -475,7 +475,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
@@ -492,7 +492,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
@@ -509,7 +509,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                     {
                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
                         room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
@@ -524,7 +524,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
-                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
@@ -541,7 +541,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
@@ -558,7 +558,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                     }
 
-                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                     {
                         room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
                         room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -642,8 +642,8 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     if(*entry < engine::engine_world.rooms.size())
                     {
                         sector->portal_to_room = *entry;
-                        sector->floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
-                        sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+                        sector->floor_penetration_config = PenetrationConfig::Ghost;
+                        sector->ceiling_penetration_config = PenetrationConfig::Ghost;
                     }
                     entry++;
                 }
@@ -655,8 +655,8 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     int8_t raw_y_slant = (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
 
-                    sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
-                    sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                    sector->floor_diagonal_type = DiagonalType::None;
+                    sector->floor_penetration_config = PenetrationConfig::Solid;
 
                     if(raw_x_slant > 0)
                     {
@@ -690,8 +690,8 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     int8_t raw_y_slant = (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
 
-                    sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
-                    sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                    sector->ceiling_diagonal_type = DiagonalType::None;
+                    sector->ceiling_penetration_config = PenetrationConfig::Solid;
 
                     if(raw_x_slant > 0)
                     {
@@ -733,8 +733,8 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                 char buf[512];                  buf[0] = 0;    // Stream buffer
                 char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
 
-                int activator = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
-                int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
+                ActivatorType activator = ActivatorType::Normal;      // Activator is normal by default.
+                ActionType action_type = ActionType::Normal;     // Action type is normal by default.
                 int condition = 0;                        // No condition by default.
                 int mask_mode = AMASK_OP_OR;              // Activation mask by default.
 
@@ -766,38 +766,39 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                 {
                     case TR_FD_TRIGTYPE_TRIGGER:
                     case TR_FD_TRIGTYPE_HEAVY:
-                        activator = TR_ACTIVATOR_NORMAL;
+                        activator = ActivatorType::Normal;
                         break;
 
                     case TR_FD_TRIGTYPE_PAD:
                     case TR_FD_TRIGTYPE_ANTIPAD:
                         // Check move type for triggering entity.
                         snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", world::MoveType::OnFloor);
-                        if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
+                        if(sub_function == TR_FD_TRIGTYPE_ANTIPAD)
+                            action_type = ActionType::Anti;
                         condition = 1;  // Set additional condition.
                         break;
 
                     case TR_FD_TRIGTYPE_SWITCH:
                         // Set activator and action type for now; conditions are linked with first item in operand chain.
-                        activator = TR_ACTIVATOR_SWITCH;
-                        action_type = TR_ACTIONTYPE_SWITCH;
+                        activator = ActivatorType::Switch;
+                        action_type = ActionType::Switch;
                         mask_mode = AMASK_OP_XOR;
                         break;
 
                     case TR_FD_TRIGTYPE_HEAVYSWITCH:
                         // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
-                        activator = TR_ACTIVATOR_SWITCH;
+                        activator = ActivatorType::Switch;
                         mask_mode = AMASK_OP_XOR;
                         break;
 
                     case TR_FD_TRIGTYPE_KEY:
                         // Action type remains normal, as key acts one-way (no need in switch routines).
-                        activator = TR_ACTIVATOR_KEY;
+                        activator = ActivatorType::Key;
                         break;
 
                     case TR_FD_TRIGTYPE_PICKUP:
                         // Action type remains normal, as pick-up acts one-way (no need in switch routines).
-                        activator = TR_ACTIVATOR_PICKUP;
+                        activator = ActivatorType::Pickup;
                         break;
 
                     case TR_FD_TRIGTYPE_COMBAT:
@@ -809,12 +810,12 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     case TR_FD_TRIGTYPE_DUMMY:
                     case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
                         // These triggers are being parsed, but not added to trigger script!
-                        action_type = TR_ACTIONTYPE_BYPASS;
+                        action_type = ActionType::Bypass;
                         break;
 
                     case TR_FD_TRIGTYPE_ANTITRIGGER:
                     case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-                        action_type = TR_ACTIONTYPE_ANTI;
+                        action_type = ActionType::Anti;
                         break;
 
                     case TR_FD_TRIGTYPE_MONKEY:
@@ -856,12 +857,12 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
                             // If activator is specified, first item operand counts as activator index (except
                             // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                            if((argn == 0) && (activator))
+                            if((argn == 0) && activator != ActivatorType::Normal)
                             {
                                 switch(activator)
                                 {
-                                    case TR_ACTIVATOR_SWITCH:
-                                        if(action_type == TR_ACTIONTYPE_SWITCH)
+                                    case ActivatorType::Switch:
+                                        if(action_type == ActionType::Switch)
                                         {
                                             // Switch action type case.
                                             snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
@@ -876,7 +877,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                                         // Trigger activation mask is here filtered through activator's own mask.
                                         snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
                                         script += buf;
-                                        if(action_type == TR_ACTIONTYPE_SWITCH)
+                                        if(action_type == ActionType::Switch)
                                         {
                                             // Switch action type case.
                                             snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
@@ -900,11 +901,11 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                                         }
                                         break;
 
-                                    case TR_ACTIVATOR_KEY:
+                                    case ActivatorType::Key:
                                         snprintf(buf, 256, " if((getEntityLock(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                         break;
 
-                                    case TR_ACTIVATOR_PICKUP:
+                                    case ActivatorType::Pickup:
                                         snprintf(buf, 256, " if((not getEntityEnability(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
                                         break;
                                 }
@@ -923,7 +924,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                                     // function is fed with activation mask argument derived from activator mask filter (switch_mask),
                                     // and also we need to process deactivation in a same way as activation, excluding resetting timer
                                     // field. This is needed for two-way switch combinations (e.g. Palace Midas).
-                                    if(activator == TR_ACTIVATOR_SWITCH)
+                                    if(activator == ActivatorType::Switch)
                                     {
                                         snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
                                         item_events += buf;
@@ -964,7 +965,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         case TR_FD_TRIGFUNC_FLIPMAP:
                             // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
                             // anti-events array.
-                            if(activator == TR_ACTIVATOR_SWITCH)
+                            if(activator == ActivatorType::Switch)
                             {
                                 snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
                                 single_events += buf;
@@ -1064,7 +1065,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
                        (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
                     {
-                        if(action_type == TR_ACTIONTYPE_ANTI)
+                        if(action_type == ActionType::Anti)
                         {
                             single_events += anti_events;
                         }
@@ -1077,7 +1078,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         item_events.clear();
                     }
 
-                    if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
+                    if(activator == ActivatorType::Normal)    // Ordinary trigger cases.
                     {
                         if(!single_events.empty())
                         {
@@ -1103,7 +1104,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         // in cycle with other continous commands. It is needed to prevent timer dispatch
                         // before activator leaves trigger sector.
 
-                        if(action_type == TR_ACTIONTYPE_ANTI)
+                        if(action_type == ActionType::Anti)
                         {
                             script += anti_events;
                         }
@@ -1121,7 +1122,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                         script += single_events;
                         script += item_events;
                         script += cont_events;
-                        if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
+                        if((action_type == ActionType::Switch) && (activator == ActivatorType::Switch))
                         {
                             script += buf2;
                             if(engine::engine_world.engineVersion < loader::Engine::TR3 || !only_once)
@@ -1137,7 +1138,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     script += "return 1;\nend }\n";  // Finalize the entry.
                 }
 
-                if(action_type != TR_ACTIONTYPE_BYPASS)
+                if(action_type != ActionType::Bypass)
                 {
                     // Sys_DebugLog("triggers.lua", script);    // Debug!
                     engine_lua.doString(script);
@@ -1219,7 +1220,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE))
                     {
-                        sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
+                        sector->floor_diagonal_type = DiagonalType::NW;
 
                         sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
                         sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
@@ -1228,22 +1229,22 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                            sector->floor_penetration_config = PenetrationConfig::DoorVerticalA;
                         }
                         else if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                            sector->floor_penetration_config = PenetrationConfig::DoorVerticalB;
                         }
                         else
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                            sector->floor_penetration_config = PenetrationConfig::Solid;
                         }
                     }
                     else if((function == TR_FD_FUNC_FLOORTRIANGLE_NE) ||
                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE))
                     {
-                        sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
+                        sector->floor_diagonal_type = DiagonalType::NE;
 
                         sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
                         sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
@@ -1252,22 +1253,22 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                            sector->floor_penetration_config = PenetrationConfig::DoorVerticalA;
                         }
                         else if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                            sector->floor_penetration_config = PenetrationConfig::DoorVerticalB;
                         }
                         else
                         {
-                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                            sector->floor_penetration_config = PenetrationConfig::Solid;
                         }
                     }
                     else if((function == TR_FD_FUNC_CEILINGTRIANGLE_NW) ||
                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE))
                     {
-                        sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
+                        sector->ceiling_diagonal_type = DiagonalType::NW;
 
                         sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
                         sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
@@ -1276,22 +1277,22 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                            sector->ceiling_penetration_config = PenetrationConfig::DoorVerticalA;
                         }
                         else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                            sector->ceiling_penetration_config = PenetrationConfig::DoorVerticalB;
                         }
                         else
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                            sector->ceiling_penetration_config = PenetrationConfig::Solid;
                         }
                     }
                     else if((function == TR_FD_FUNC_CEILINGTRIANGLE_NE) ||
                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE))
                     {
-                        sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
+                        sector->ceiling_diagonal_type = DiagonalType::NE;
 
                         sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
                         sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
@@ -1300,15 +1301,15 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                            sector->ceiling_penetration_config = PenetrationConfig::DoorVerticalA;
                         }
                         else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                            sector->ceiling_penetration_config = PenetrationConfig::DoorVerticalB;
                         }
                         else
                         {
-                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                            sector->ceiling_penetration_config = PenetrationConfig::Solid;
                         }
                     }
                 }
@@ -1328,11 +1329,11 @@ void Res_Sector_FixHeights(world::RoomSector* sector)
 {
     if(sector->floor == TR_METERING_WALLHEIGHT)
     {
-        sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
+        sector->floor_penetration_config = PenetrationConfig::Wall;
     }
     if(sector->ceiling == TR_METERING_WALLHEIGHT)
     {
-        sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
+        sector->ceiling_penetration_config = PenetrationConfig::Wall;
     }
 
     // Fix non-material crevices
@@ -1340,7 +1341,7 @@ void Res_Sector_FixHeights(world::RoomSector* sector)
     for(size_t i = 0; i < 4; i++)
     {
         if(sector->ceiling_corners[i].m_floats[2] == sector->floor_corners[i].m_floats[2])
-            sector->ceiling_corners[i].m_floats[2] += engine::LARA_HANG_VERTICAL_EPSILON;
+            sector->ceiling_corners[i].m_floats[2] += engine::LaraHangVerticalEpsilon;
     }
 }
 
@@ -1591,8 +1592,8 @@ void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value
         return;
     }
 
-    if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<int>(pen);
-    if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(diag);
+    if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
+    if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(diag.toInt());
     if(floor.is<lua::Integer>()) rs->floor = floor;
     rs->floor_corners[0] = { z0,z1,z2 };
     rs->floor_corners[0][3] = z3;
@@ -1607,8 +1608,8 @@ void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Val
         return;
     }
 
-    if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(pen);
-    if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<int>(diag);
+    if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
+    if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<DiagonalType>(diag.toInt());
     if(ceil.is<lua::Integer>()) rs->ceiling = ceil;
 
     rs->ceiling_corners[0] = { z0,z1,z2 };
@@ -1639,10 +1640,10 @@ void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ft
         return;
     }
 
-    if(fpflag.is<lua::Integer>())  rs->floor_penetration_config = static_cast<int>(fpflag);
-    if(ftflag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<int>(ftflag);
-    if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<int>(cpflag);
-    if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<int>(ctflag);
+    if(fpflag.is<lua::Integer>())  rs->floor_penetration_config = static_cast<PenetrationConfig>(fpflag.toInt());
+    if(ftflag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(ftflag.toInt());
+    if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(cpflag.toInt());
+    if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<DiagonalType>(ctflag.toInt());
 }
 
 void Res_AutoexecOpen(loader::Game engine_version)
@@ -1985,22 +1986,22 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
 
         if(sector->ceiling == TR_METERING_WALLHEIGHT)
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
+            room->sectors[i].ceiling_penetration_config = PenetrationConfig::Wall;
         }
         else if(tr_room->sector_list[i].room_above != 0xFF)
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+            room->sectors[i].ceiling_penetration_config = PenetrationConfig::Ghost;
         }
         else
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+            room->sectors[i].ceiling_penetration_config = PenetrationConfig::Solid;
         }
 
         // Reset some sector parameters to avoid garbaged memory issues.
 
         room->sectors[i].portal_to_room = -1;
-        room->sectors[i].ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
-        room->sectors[i].floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        room->sectors[i].ceiling_diagonal_type = DiagonalType::None;
+        room->sectors[i].floor_diagonal_type = DiagonalType::None;
 
         // Now, we define heightmap cells position and draft (flat) height.
         // Draft height is derived from sector's floor and ceiling values, which are
@@ -2029,15 +2030,15 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
 
         if(sector->floor == TR_METERING_WALLHEIGHT)
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
+            room->sectors[i].floor_penetration_config = PenetrationConfig::Wall;
         }
         else if(tr_room->sector_list[i].room_below != 0xFF)
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+            room->sectors[i].floor_penetration_config = PenetrationConfig::Ghost;
         }
         else
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+            room->sectors[i].floor_penetration_config = PenetrationConfig::Solid;
         }
 
         room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
@@ -2104,7 +2105,6 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         world::Portal* p = &room->portals[i];
         std::shared_ptr<world::Room> r_dest = world->rooms[tr_portal->adjoining_room];
         p->vertices.resize(4); // in original TR all portals are axis aligned rectangles
-        p->flag = 0;
         p->dest_room = r_dest;
         p->current_room = room;
         TR_vertex_to_arr(p->vertices[0], tr_portal->vertices[3]);
@@ -3093,7 +3093,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
         model->animations.front().id = 0;
         model->animations.front().next_anim = nullptr;
         model->animations.front().next_frame = 0;
-        model->animations.front().state_change.clear();
+        model->animations.front().stateChanges.clear();
         model->animations.front().original_frame_rate = 1;
 
         bone_frame->bone_tags.resize(model->mesh_count);
@@ -3300,9 +3300,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
                                     rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
                                     rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                     rot[1] = static_cast<float>(temp2 & 0x03ff);
-                                    rot[0] *= 360.0 / 1024.0;
-                                    rot[1] *= 360.0 / 1024.0;
-                                    rot[2] *= 360.0 / 1024.0;
+                                    rot *= 360.0 / 1024.0;
                                     util::vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     l++;
                                     break;
@@ -3332,7 +3330,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
     anim = model->animations.data();
     for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
     {
-        anim->state_change.clear();
+        anim->stateChanges.clear();
 
         tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
         int16_t animId = tr_animation->next_animation - tr_moveable->animation_index;
@@ -3357,7 +3355,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
             anim->next_frame = 0;
         }
 
-        anim->state_change.clear();
+        anim->stateChanges.clear();
 
         if((tr_animation->num_state_changes > 0) && (model->animations.size() > 1))
         {
@@ -3365,8 +3363,8 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
 #endif
-            anim->state_change.resize(tr_animation->num_state_changes);
-            sch_p = anim->state_change.data();
+            anim->stateChanges.resize(tr_animation->num_state_changes);
+            sch_p = anim->stateChanges.data();
 
             for(uint16_t j = 0; j < tr_animation->num_state_changes; j++, sch_p++)
             {

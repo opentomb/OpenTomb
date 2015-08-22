@@ -347,7 +347,7 @@ StepType Character::checkNextStep(const btVector3& offset, struct HeightInfo *nf
     if(m_heightInfo.floor_hit && nfc->floor_hit)
     {
         delta = nfc->floor_point[2] - m_heightInfo.floor_point[2];
-        if(std::abs(delta) < SPLIT_EPSILON)
+        if(std::abs(delta) < world::core::SplitEpsilon)
         {
             from[2] = m_heightInfo.floor_point[2];
             ret = StepType::Horizontal;                                    // horizontal
@@ -1602,7 +1602,7 @@ int Character::findTraverse()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == world::core::OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && world::core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1))
                 {
                     int oz = (m_angles[0] + 45.0f) / 90.0f;
                     m_angles[0] = oz * 90.0f;
@@ -2241,7 +2241,7 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, int state)
+void Character::frameImpl(btScalar time, int16_t frame, world::AnimUpdate state)
 {
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
@@ -2802,6 +2802,6 @@ void Character::doWeaponFrame(btScalar time)
             };
         }
 
-        doAnimCommands(ss_anim, 0);
+        doAnimCommands(ss_anim, world::AnimUpdate::None);
     }
 }
