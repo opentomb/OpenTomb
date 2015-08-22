@@ -660,24 +660,24 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                     if(raw_x_slant > 0)
                     {
-                        sector->floor_corners[2][2] -= (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (static_cast<btScalar>(raw_x_slant) * MeteringStep);
+                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_x_slant) * MeteringStep);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
+                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->floor_corners[0][2] -= (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (static_cast<btScalar>(raw_y_slant) * MeteringStep);
+                        sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_y_slant) * MeteringStep);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
+                        sector->floor_corners[2][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
                     }
 
                     entry++;
@@ -695,24 +695,24 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                     if(raw_x_slant > 0)
                     {
-                        sector->ceiling_corners[3][2] += (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (static_cast<btScalar>(raw_x_slant) * MeteringStep);
+                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_x_slant) * MeteringStep);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
+                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->ceiling_corners[1][2] += (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (static_cast<btScalar>(raw_y_slant) * MeteringStep);
+                        sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_y_slant) * MeteringStep);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
+                        sector->ceiling_corners[3][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
                     }
 
                     entry++;
@@ -1214,7 +1214,7 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
                     entry++;
 
-                    float overall_adjustment = static_cast<float>(Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13)) * TR_METERING_STEP;
+                    float overall_adjustment = static_cast<float>(Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13)) * MeteringStep;
 
                     if((function == TR_FD_FUNC_FLOORTRIANGLE_NW) ||
                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
@@ -1222,10 +1222,10 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     {
                         sector->floor_diagonal_type = DiagonalType::NW;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * MeteringStep);
+                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * MeteringStep);
+                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * MeteringStep);
+                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * MeteringStep);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1246,10 +1246,10 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     {
                         sector->floor_diagonal_type = DiagonalType::NE;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * MeteringStep);
+                        sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * MeteringStep);
+                        sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * MeteringStep);
+                        sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * MeteringStep);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1270,10 +1270,10 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     {
                         sector->ceiling_diagonal_type = DiagonalType::NW;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * MeteringStep);
+                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * MeteringStep);
+                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * MeteringStep);
+                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * MeteringStep);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1294,10 +1294,10 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
                     {
                         sector->ceiling_diagonal_type = DiagonalType::NE;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * MeteringStep);
+                        sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * MeteringStep);
+                        sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * MeteringStep);
+                        sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * MeteringStep);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1327,11 +1327,11 @@ int TR_Sector_TranslateFloorData(world::RoomSector* sector, const std::unique_pt
 
 void Res_Sector_FixHeights(world::RoomSector* sector)
 {
-    if(sector->floor == TR_METERING_WALLHEIGHT)
+    if(sector->floor == MeteringWallHeight)
     {
         sector->floor_penetration_config = PenetrationConfig::Wall;
     }
-    if(sector->ceiling == TR_METERING_WALLHEIGHT)
+    if(sector->ceiling == MeteringWallHeight)
     {
         sector->ceiling_penetration_config = PenetrationConfig::Wall;
     }
@@ -1541,7 +1541,7 @@ void TR_Sector_Calculate(world::World *world, const std::unique_ptr<loader::Leve
                     world::RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
                     world::RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
 
-                    if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p.dest_room->id;
                         orig_dst = dst;
@@ -1949,8 +1949,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
-        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
+        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
+        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
         sector->pos[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
@@ -1970,8 +1970,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
 
         sector->flags = 0;  // Clear sector flags.
 
-        sector->floor = -TR_METERING_STEP * static_cast<int>(tr_room->sector_list[i].floor);
-        sector->ceiling = -TR_METERING_STEP * static_cast<int>(tr_room->sector_list[i].ceiling);
+        sector->floor = -MeteringStep * static_cast<int>(tr_room->sector_list[i].floor);
+        sector->ceiling = -MeteringStep * static_cast<int>(tr_room->sector_list[i].ceiling);
         sector->trig_index = tr_room->sector_list[i].fd_index;
 
         // BUILDING CEILING HEIGHTMAP.
@@ -1984,7 +1984,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         // Door penetration config means that we should either ignore sector collision
         // completely (classic door) or ignore one of the triangular sector parts (TR3+).
 
-        if(sector->ceiling == TR_METERING_WALLHEIGHT)
+        if(sector->ceiling == world::MeteringWallHeight)
         {
             room->sectors[i].ceiling_penetration_config = PenetrationConfig::Wall;
         }
@@ -2008,27 +2008,27 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
 
-        room->sectors[i].ceiling_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][0] = (btScalar)sector->index_x * MeteringSectorSize;
+        room->sectors[i].ceiling_corners[0][1] = (btScalar)sector->index_y * MeteringSectorSize + MeteringSectorSize;
         room->sectors[i].ceiling_corners[0][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][0] = (btScalar)sector->index_x * MeteringSectorSize + MeteringSectorSize;
+        room->sectors[i].ceiling_corners[1][1] = (btScalar)sector->index_y * MeteringSectorSize + MeteringSectorSize;
         room->sectors[i].ceiling_corners[1][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][0] = (btScalar)sector->index_x * MeteringSectorSize + MeteringSectorSize;
+        room->sectors[i].ceiling_corners[2][1] = (btScalar)sector->index_y * MeteringSectorSize;
         room->sectors[i].ceiling_corners[2][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][0] = (btScalar)sector->index_x * MeteringSectorSize;
+        room->sectors[i].ceiling_corners[3][1] = (btScalar)sector->index_y * MeteringSectorSize;
         room->sectors[i].ceiling_corners[3][2] = (btScalar)sector->ceiling;
 
         // BUILDING FLOOR HEIGHTMAP.
 
         // Features same steps as for the ceiling.
 
-        if(sector->floor == TR_METERING_WALLHEIGHT)
+        if(sector->floor == world::MeteringWallHeight)
         {
             room->sectors[i].floor_penetration_config = PenetrationConfig::Wall;
         }
@@ -2041,20 +2041,20 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
             room->sectors[i].floor_penetration_config = PenetrationConfig::Solid;
         }
 
-        room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * MeteringSectorSize;
+        room->sectors[i].floor_corners[0][1] = (btScalar)sector->index_y * MeteringSectorSize + MeteringSectorSize;
         room->sectors[i].floor_corners[0][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][0] = (btScalar)sector->index_x * MeteringSectorSize + MeteringSectorSize;
+        room->sectors[i].floor_corners[1][1] = (btScalar)sector->index_y * MeteringSectorSize + MeteringSectorSize;
         room->sectors[i].floor_corners[1][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][0] = (btScalar)sector->index_x * MeteringSectorSize + MeteringSectorSize;
+        room->sectors[i].floor_corners[2][1] = (btScalar)sector->index_y * MeteringSectorSize;
         room->sectors[i].floor_corners[2][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][0] = (btScalar)sector->index_x * MeteringSectorSize;
+        room->sectors[i].floor_corners[3][1] = (btScalar)sector->index_y * MeteringSectorSize;
         room->sectors[i].floor_corners[3][2] = (btScalar)sector->floor;
     }
 
@@ -2146,10 +2146,10 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
     room->bb_min[2] = tr_room->y_bottom;
     room->bb_max[2] = tr_room->y_top;
 
-    room->bb_min[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE;
-    room->bb_min[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE;
-    room->bb_max[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
-    room->bb_max[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
+    room->bb_min[0] = room->transform.getOrigin()[0] + MeteringSectorSize;
+    room->bb_min[1] = room->transform.getOrigin()[1] + MeteringSectorSize;
+    room->bb_max[0] = room->transform.getOrigin()[0] + MeteringSectorSize * room->sectors_x - MeteringSectorSize;
+    room->bb_max[1] = room->transform.getOrigin()[1] + MeteringSectorSize * room->sectors_y - MeteringSectorSize;
 
     /*
      * alternate room pointer calculation if one exists.
@@ -2644,7 +2644,7 @@ void TR_GenMesh(world::World *world, size_t mesh_index, std::shared_ptr<world::c
         vertex->normal.setZero();                                          // paranoid
     }
 
-    mesh->findBB();
+    mesh->updateBoundingBox();
 
     mesh->m_polygons.clear();
 
@@ -3525,7 +3525,7 @@ void TR_GenSkeletalModels(world::World *world, const std::unique_ptr<loader::Lev
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(world, i, smodel, tr);
-        smodel->fillTransparency();
+        smodel->updateTransparencyFlag();
     }
 }
 

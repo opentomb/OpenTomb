@@ -775,6 +775,4 @@ namespace
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-void State_Control_Lara(Character* ent, world::core::SSAnimation *ss_anim);
-
 } // namespace engine

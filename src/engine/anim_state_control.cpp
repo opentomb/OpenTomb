@@ -25,10 +25,10 @@ void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, world:
     if(state == world::AnimUpdate::NewAnim)
     {
         btVector3& v = ent->m_traversedObject->m_transform.getOrigin();
-        int i = static_cast<int>(v[0] / world::TR_METERING_SECTORSIZE);
-        v[0] = i * world::TR_METERING_SECTORSIZE + 512.0f;
-        i = static_cast<int>(v[1] / world::TR_METERING_SECTORSIZE);
-        v[1] = i * world::TR_METERING_SECTORSIZE + 512.0f;
+        int i = static_cast<int>(v[0] / world::MeteringSectorSize);
+        v[0] = i * world::MeteringSectorSize + 512.0f;
+        i = static_cast<int>(v[1] / world::MeteringSectorSize);
+        v[1] = i * world::MeteringSectorSize + 512.0f;
         ent->m_traversedObject->updateRigidBody(true);
         ent->m_traversedObject = nullptr;
         ss_anim->onFrame = nullptr;
@@ -1619,7 +1619,7 @@ void Character::state_func()
                        (m_speed[2] < 0.0)) // Only hang if speed is lower than zero.
                     {
                         // Fix the position to the TR metering step.
-                        m_transform.getOrigin()[2] = std::floor(m_transform.getOrigin()[2] / world::TR_METERING_STEP) * world::TR_METERING_STEP;
+                        m_transform.getOrigin()[2] = std::floor(m_transform.getOrigin()[2] / world::MeteringStep) * world::MeteringStep;
                         m_moveType = world::MoveType::WallsClimb;
                         setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
                         break;
@@ -2377,7 +2377,7 @@ void Character::state_func()
         case TR_STATE_LARA_WATER_DEATH:
             if(m_moveType != world::MoveType::OnWater)
             {
-                m_transform.getOrigin()[2] += (world::TR_METERING_SECTORSIZE / 4) * engine::engine_frame_time;     // go to the air
+                m_transform.getOrigin()[2] += (world::MeteringSectorSize / 4) * engine::engine_frame_time;     // go to the air
             }
             break;
 

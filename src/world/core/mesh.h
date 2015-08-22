@@ -125,12 +125,13 @@ struct BaseMesh
     }
 
     void clear();
-    void findBB();
+    void updateBoundingBox();
     void genVBO(const render::Render *renderer);
     void genFaces();
     uint32_t addVertex(const Vertex& v);
     uint32_t addAnimatedVertex(const Vertex& v);
     void polySortInMesh();
+    Vertex* findVertex(const btVector3& v);
 };
 
 /*
@@ -430,14 +431,14 @@ struct AnimationFrame
 
 struct SkeletalModel
 {
-    uint32_t                    id;                                             // ID
-    bool                        has_transparency;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
+    uint32_t                    id;
+    bool                        has_transparency;
 
-    btVector3                   bbox_min;                                    // bbox info
+    btVector3                   bbox_min;
     btVector3                   bbox_max;
     btVector3                   centre;                                      // the centre of model
 
-    std::vector<AnimationFrame> animations;                                     // animations data
+    std::vector<AnimationFrame> animations;
 
     uint16_t                    mesh_count;                                     // number of model meshes
     std::vector<MeshTreeTag>    mesh_tree;                                      // base mesh tree.
@@ -445,7 +446,7 @@ struct SkeletalModel
     std::vector<uint16_t>       collision_map;
 
     void clear();
-    void fillTransparency();
+    void updateTransparencyFlag();
     void interpolateFrames();
     void fillSkinnedMeshMap();
 };

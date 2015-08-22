@@ -1022,7 +1022,7 @@ int Render::processRoom(world::Portal* portal, const world::core::Frustum& frus)
         if(p.dest_room && p.dest_room->active && p.dest_room != current)
         {
             // The main function of portal renderer. Here comes the check.
-            auto gen_frus = world::core::Frustum::portalFrustumIntersect(&p, frus, this);
+            auto gen_frus = world::core::Frustum::portalFrustumIntersect(p, frus, *m_cam);
             if(gen_frus)
             {
                 ret++;
@@ -1058,7 +1058,7 @@ void Render::genWorldList()
         addRoom(curr_room);                   // room with camera inside adds to the render list immediately
         for(world::Portal& p : curr_room->portals)   // go through all start room portals
         {
-            auto last_frus = world::core::Frustum::portalFrustumIntersect(&p, m_cam->frustum, this);
+            auto last_frus = world::core::Frustum::portalFrustumIntersect(p, m_cam->frustum, *m_cam);
             if(last_frus)
             {
                 addRoom(p.dest_room.get());   // portal destination room
@@ -1344,8 +1344,8 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
 
 void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
 {
-    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] - world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->floor) };
-    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->pos[1] + world::TR_METERING_SECTORSIZE / 2.0), static_cast<btScalar>(rs->ceiling) };
+    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
+    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
 
     drawBBox(bb_min, bb_max, nullptr);
 }

@@ -33,7 +33,7 @@ struct OrientedBoundingBox
 
     void doTransform();
     void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
-    bool isVisibleInRoom(const Room& room, const Camera& cam);
+    bool isVisibleInRoom(const Room& room, const Camera& cam) const;
 };
 
 namespace

@@ -20,8 +20,6 @@ namespace world
 namespace core
 {
 
-Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
-
 void BaseMesh::clear()
 {
     if(m_vboVertexArray)
@@ -47,7 +45,7 @@ void BaseMesh::clear()
 /**
  * Bounding box calculation
  */
-void BaseMesh::findBB()
+void BaseMesh::updateBoundingBox()
 {
     if(!m_vertices.empty())
     {
@@ -305,7 +303,7 @@ void SkeletalModel::interpolateFrames()
     }
 }
 
-void SkeletalModel::fillTransparency()
+void SkeletalModel::updateTransparencyFlag()
 {
     has_transparency = false;
     for(uint16_t i = 0; i < mesh_count; i++)
@@ -350,9 +348,9 @@ void SkeletonCopyMeshes2(MeshTreeTag *dst, MeshTreeTag *src, int tags_count)
     }
 }
 
-Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh>& mesh, const btVector3& v)
+Vertex* BaseMesh::findVertex(const btVector3& v)
 {
-    for(Vertex& mv : mesh->m_vertices)
+    for(Vertex& mv : m_vertices)
     {
         if((v - mv.position).length2() < 4.0)
         {
@@ -365,10 +363,7 @@ Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh>& mesh, const btVector3&
 
 void SkeletalModel::fillSkinnedMeshMap()
 {
-    Vertex* v, *rv;
-    MeshTreeTag* tree_tag, *prev_tree_tag;
-
-    tree_tag = mesh_tree.data();
+    MeshTreeTag* tree_tag = mesh_tree.data();
     for(uint16_t i = 0; i < mesh_count; i++, tree_tag++)
     {
         if(!tree_tag->mesh_skin)
@@ -378,10 +373,10 @@ void SkeletalModel::fillSkinnedMeshMap()
 
         tree_tag->mesh_skin->m_matrixIndices.resize(tree_tag->mesh_skin->m_vertices.size());
         BaseMesh::MatrixIndex* ch = tree_tag->mesh_skin->m_matrixIndices.data();
-        v = tree_tag->mesh_skin->m_vertices.data();
+        Vertex* v = tree_tag->mesh_skin->m_vertices.data();
         for(size_t k = 0; k < tree_tag->mesh_skin->m_vertices.size(); k++, v++, ch++)
         {
-            rv = FindVertexInMesh(tree_tag->mesh_base, v->position);
+            Vertex* rv = tree_tag->mesh_base->findVertex(v->position);
             if(rv != nullptr)
             {
                 ch->i = 0;
@@ -394,10 +389,10 @@ void SkeletalModel::fillSkinnedMeshMap()
                 ch->i = 0;
                 ch->j = 1;
                 auto tv = v->position + tree_tag->offset;
-                prev_tree_tag = mesh_tree.data();
+                MeshTreeTag* prev_tree_tag = mesh_tree.data();
                 for(uint16_t l = 0; l < mesh_count; l++, prev_tree_tag++)
                 {
-                    rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv);
+                    rv = prev_tree_tag->mesh_base->findVertex(tv);
                     if(rv != nullptr)
                     {
                         ch->i = 1;
@@ -953,7 +948,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
 
 void BaseMesh::polySortInMesh()
 {
-    for(struct Polygon &p : m_polygons)
+    for(Polygon& p : m_polygons)
     {
         if(p.anim_id > 0 && p.anim_id <= engine::engine_world.anim_sequences.size())
         {

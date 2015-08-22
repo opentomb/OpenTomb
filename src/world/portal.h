@@ -3,9 +3,6 @@
 #define PORTAL_NORMAL 0x00
 #define PORTAL_FICTIVE 0x01
 
-#define SPLIT_EMPTY 0x00
-#define SPLIT_SUCCES 0x01
-
 #include <memory>
 #include <vector>
 

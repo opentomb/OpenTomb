@@ -309,7 +309,7 @@ bool testOverlap(const Entity& e1, const Entity& e2, btScalar overlap)
     return true;
 }
 
-bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam)
+bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam) const
 {
     if(room.frustum.empty())                                                    // There's no active frustum in room, using camera frustum instead.
     {
@@ -317,7 +317,7 @@ bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam)
         for(int i = 0; i < 6; i++)
         {
             auto t = polygons[i].plane.distance(engine::engine_camera.getPosition());
-            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(&polygons[i], cam))
+            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(polygons[i], cam))
             {
                 return true;
             }
@@ -334,7 +334,7 @@ bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam)
         for(int i = 0; i < 6; i++)
         {
             auto t = polygons[i].plane.distance(cam.getPosition());
-            if((t > 0.0) && frustum->isPolyVisible(&polygons[i], cam))
+            if((t > 0.0) && frustum->isPolyVisible(polygons[i], cam))
             {
                 return true;
             }

@@ -1578,20 +1578,20 @@ int Character::findTraverse()
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(obj_s != nullptr)
@@ -1632,7 +1632,7 @@ int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::share
         return 0x00;
     }
 
-    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= world::TR_METERING_SECTORSIZE))
+    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= world::MeteringSectorSize))
     {
         return 0x01;
     }
@@ -1641,8 +1641,8 @@ int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::share
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
-    from[2] = floor + world::TR_METERING_SECTORSIZE * 0.5f;
-    to[2] = floor - world::TR_METERING_SECTORSIZE * 0.5f;
+    from[2] = floor + world::MeteringSectorSize * 0.5f;
+    to[2] = floor - world::MeteringSectorSize * 0.5f;
     engine::bt_engine_dynamicsWorld->rayTest(from, to, cb);
     if(cb.hasHit())
     {
@@ -1675,20 +1675,20 @@ int Character::checkTraverse(const Entity& obj)
     {
         if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         // OY move case
         else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
         }
         ch_s = ch_s->checkPortalPointer();
     }
@@ -1708,8 +1708,8 @@ int Character::checkTraverse(const Entity& obj)
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
-    v0[2] = floor + world::TR_METERING_SECTORSIZE * 0.5f;
-    v1[2] = floor + world::TR_METERING_SECTORSIZE * 2.5f;
+    v0[2] = floor + world::MeteringSectorSize * 0.5f;
+    v1[2] = floor + world::MeteringSectorSize * 2.5f;
     engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
@@ -1729,20 +1729,20 @@ int Character::checkTraverse(const Entity& obj)
      // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1752,13 +1752,13 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * world::TR_METERING_SECTORSIZE));
+        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * world::MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * world::TR_METERING_SECTORSIZE));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * world::MeteringSectorSize));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::TR_METERING_SECTORSIZE);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(obj.m_self);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
@@ -1776,20 +1776,20 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1799,13 +1799,13 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * world::TR_METERING_SECTORSIZE));
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * world::MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * world::TR_METERING_SECTORSIZE));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * world::MeteringSectorSize));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::TR_METERING_SECTORSIZE);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(m_self);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);

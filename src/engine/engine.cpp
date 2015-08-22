@@ -1167,8 +1167,11 @@ int execCmd(const char *ch)
                 Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
-                    Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                                                   static_cast<int>(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
+                    Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
+                                               sect->index_x,
+                                               sect->index_y,
+                                               static_cast<int>(sect->ceiling == world::MeteringWallHeight || sect->floor == world::MeteringWallHeight),
+                                               static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
                     for(uint32_t i = 0; i < sect->owner_room->static_mesh.size(); i++)
                     {
                         Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);

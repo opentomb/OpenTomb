@@ -183,8 +183,8 @@ RoomSector* RoomSector::checkPortalPointerRaw()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -207,8 +207,8 @@ RoomSector* RoomSector::checkPortalPointer()
         {
             r = r->base_room;
         }
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -223,8 +223,8 @@ RoomSector* RoomSector::checkBaseRoom()
     if(owner_room->base_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->base_room;
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -239,8 +239,8 @@ RoomSector* RoomSector::checkAlternateRoom()
     if(owner_room->alternate_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->alternate_room;
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -1265,7 +1265,7 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
         vertex->normal.setZero();                                          // paranoid
     }
 
-    mesh->findBB();
+    mesh->updateBoundingBox();
 
     mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
     auto p = mesh->m_polygons.begin();
