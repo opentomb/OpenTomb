@@ -22,8 +22,8 @@ namespace core
 
 struct OrientedBoundingBox
 {
-    Polygon base_polygons[6];               // bv base surface
-    Polygon polygons[6];                    // bv world coordinate surface
+    std::array<Polygon,6> base_polygons;           // bv base surface
+    std::array<Polygon,6> polygons;                // bv world coordinate surface
     const btTransform* transform = nullptr;        // Object transform matrix
     btScalar radius;
 

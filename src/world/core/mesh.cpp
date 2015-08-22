@@ -661,19 +661,18 @@ btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max
     int cnt = 0;
 
     OrientedBoundingBox obb;
-    struct Polygon *p = obb.base_polygons;
     obb.rebuild(bb_min, bb_max);
-    for(uint16_t i = 0; i < 6; i++, p++)
+    for(const Polygon& p : obb.base_polygons)
     {
-        if(p->isBroken())
+        if(p.isBroken())
         {
             continue;
         }
-        for(size_t j = 1; j + 1 < p->vertices.size(); j++)
+        for(size_t j = 1; j + 1 < p.vertices.size(); j++)
         {
-            const auto& v0 = p->vertices[j + 1].position;
-            const auto& v1 = p->vertices[j].position;
-            const auto& v2 = p->vertices[0].position;
+            const auto& v0 = p.vertices[j + 1].position;
+            const auto& v1 = p.vertices[j].position;
+            const auto& v2 = p.vertices[0].position;
             trimesh->addTriangle(v0, v1, v2, true);
         }
         cnt++;

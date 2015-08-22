@@ -1250,7 +1250,7 @@ void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_ma
 
 void RenderDebugDrawer::drawOBB(const world::core::OrientedBoundingBox& obb)
 {
-    const world::core::Polygon *p = obb.polygons;
+    const world::core::Polygon *p = obb.polygons.data();
     addLine(p->vertices[0].position, (p + 1)->vertices[0].position);
     addLine(p->vertices[1].position, (p + 1)->vertices[3].position);
     addLine(p->vertices[2].position, (p + 1)->vertices[2].position);

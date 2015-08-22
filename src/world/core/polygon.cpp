@@ -34,23 +34,23 @@ bool Polygon::isBroken() const
         btVector3 dif = v.position - curr_v->position;
         if(dif.length2() < 0.0001)
         {
-            return 1;
+            return true;
         }
 
         curr_v = &v;
     }
 
-    return 0;
+    return false;
 }
 
-void Polygon::findNormal()
+void Polygon::updateNormal()
 {
     auto v1 = vertices[0].position - vertices[1].position;
     auto v2 = vertices[2].position - vertices[1].position;
     plane.assign(v1, v2, { 0,0,0 });
 }
 
-void Polygon::moveSelf(const btVector3& move)
+void Polygon::move(const btVector3& move)
 {
     for(auto& v : vertices)
     {
@@ -59,18 +59,18 @@ void Polygon::moveSelf(const btVector3& move)
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::move(Polygon* src, const btVector3& move)
+void Polygon::copyMoved(const Polygon& src, const btVector3& move)
 {
-    for(size_t i = 0; i < src->vertices.size(); i++)
+    for(size_t i = 0; i < src.vertices.size(); i++)
     {
-        vertices[i].position = src->vertices[i].position + move;
+        vertices[i].position = src.vertices[i].position + move;
     }
 
-    plane = src->plane;
+    plane = src.plane;
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::transformSelf(const btTransform& tr)
+void Polygon::transform(const btTransform& tr)
 {
     plane.normal = tr.getBasis() * plane.normal;
     for(Vertex& vp : vertices)
@@ -82,26 +82,14 @@ void Polygon::transformSelf(const btTransform& tr)
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::transform(const Polygon& src, const btTransform& tr)
+void Polygon::copyTransformed(const Polygon& src, const btTransform& tr, bool copyNormals)
 {
-    vertices.resize(src.vertices.size());
-
     plane.normal = tr.getBasis() * src.plane.normal;
     for(size_t i = 0; i < src.vertices.size(); i++)
     {
         vertices[i].position = tr * src.vertices[i].position;
-        vertices[i].normal = tr.getBasis() * src.vertices[i].normal;
-    }
-
-    plane.moveTo(vertices[0].position);
-}
-
-void Polygon::vTransform(Polygon* src, const btTransform& tr)
-{
-    plane.normal = tr.getBasis() * src->plane.normal;
-    for(size_t i = 0; i < src->vertices.size(); i++)
-    {
-        vertices[i].position = tr * src->vertices[i].position;
+        if(copyNormals)
+            vertices[i].normal = tr.getBasis() * src.vertices[i].normal;
     }
 
     plane.moveTo(vertices[0].position);

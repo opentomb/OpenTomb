@@ -67,7 +67,7 @@ void DynamicBSP::addNewPolygonList(const std::vector<world::core::TransparentPol
     {
         world::core::Polygon transformed;
         transformed.vertices.resize(pp.polygon->vertices.size());
-        transformed.transform(*pp.polygon, transform);
+        transformed.copyTransformed(*pp.polygon, transform, true);
         transformed.double_side = pp.polygon->double_side;
 
         if(frustum.isPolyVisible(transformed, cam))

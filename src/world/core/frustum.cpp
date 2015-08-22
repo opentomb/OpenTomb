@@ -511,10 +511,10 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax, cons
 bool Frustum::isOBBVisible(const OrientedBoundingBox& obb, const Camera& cam) const
 {
     bool ins = true;
-    for(int i = 0; i < 6; i++)
+    for(const Polygon& p : obb.polygons)
     {
-        auto t = obb.polygons[i].plane.distance(cam.getPosition());
-        if((t > 0.0) && isPolyVisible(obb.polygons[i], cam))
+        auto t = p.plane.distance(cam.getPosition());
+        if((t > 0.0) && isPolyVisible(p, cam))
         {
             return true;
         }

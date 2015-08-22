@@ -21,9 +21,9 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     base_centre = (bb_min + bb_max) / 2;
     radius = extent.length();
 
-    struct Polygon *p = base_polygons;
+    Polygon *p = base_polygons.data();
     // UP
-    struct Polygon *p_up = p;
+    Polygon *p_up = p;
     auto v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -56,7 +56,7 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     //p->plane[1] = 0.0;
     //p->plane[2] = 1.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    p->findNormal();
+    p->updateNormal();
     p++;
 
     // DOWN
@@ -89,7 +89,7 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     v->position[1] = bb_max[1];
     v->position[2] = bb_min[2];
 
-    p->findNormal();
+    p->updateNormal();
     p++;
 
     // RIGHT: OX+
@@ -99,7 +99,7 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     v[2].position = p_down->vertices[1].position;                     // 1 0  down
     v[3].position = p_down->vertices[0].position;                     // 0 1  down
 
-    p->findNormal();
+    p->updateNormal();
     p++;
 
     // LEFT: OX-
@@ -109,7 +109,7 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     v[2].position = p_down->vertices[2].position;                     // 1 0  down
     v[1].position = p_down->vertices[3].position;                     // 0 1  down
 
-    p->findNormal();
+    p->updateNormal();
     p++;
 
     // FORWARD: OY+
@@ -119,7 +119,7 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     v[2].position = p_down->vertices[3].position;                     // 1 0  down
     v[1].position = p_down->vertices[0].position;                     // 0 1  down
 
-    p->findNormal();
+    p->updateNormal();
     p++;
 
     // BACKWARD: OY-
@@ -133,22 +133,22 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     //p->plane[1] = 1.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    p->findNormal();
+    p->updateNormal();
 }
 
 void OrientedBoundingBox::doTransform()
 {
     if(transform != nullptr)
     {
-        for(int i = 0; i < 6; i++)
+        for(size_t i = 0; i < polygons.size(); i++)
         {
-            polygons[i].vTransform(&base_polygons[i], *transform);
+            polygons[i].copyTransformed(base_polygons[i], *transform);
         }
         centre = *transform * base_centre;
     }
     else
     {
-        for(int i = 0; i < 6; i++)
+        for(size_t i = 0; i < polygons.size(); i++)
         {
             polygons[i] = base_polygons[i];
         }
@@ -314,10 +314,10 @@ bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam) c
     if(room.frustum.empty())                                                    // There's no active frustum in room, using camera frustum instead.
     {
         bool ins = true;                                                        // Let's assume camera is inside OBB.
-        for(int i = 0; i < 6; i++)
+        for(const Polygon& p : polygons)
         {
-            auto t = polygons[i].plane.distance(engine::engine_camera.getPosition());
-            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(polygons[i], cam))
+            auto t = p.plane.distance(engine::engine_camera.getPosition());
+            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(p, cam))
             {
                 return true;
             }
@@ -331,10 +331,10 @@ bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam) c
 
     for(const auto& frustum : room.frustum)
     {
-        for(int i = 0; i < 6; i++)
+        for(const Polygon& p : polygons)
         {
-            auto t = polygons[i].plane.distance(cam.getPosition());
-            if((t > 0.0) && frustum->isPolyVisible(polygons[i], cam))
+            auto t = p.plane.distance(cam.getPosition());
+            if((t > 0.0) && frustum->isPolyVisible(p, cam))
             {
                 return true;
             }

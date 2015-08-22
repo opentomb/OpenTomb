@@ -2560,7 +2560,7 @@ void tr_accumulateNormals(loader::Mesh *tr_mesh, world::core::BaseMesh* mesh, in
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_mesh->vertices[vertex_indices[i]]);
     }
-    p->findNormal();
+    p->updateNormal();
 
     for(int i = 0; i < numCorners; i++)
     {
@@ -2793,7 +2793,7 @@ void tr_setupRoomVertices(world::World *world, const std::unique_ptr<loader::Lev
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_room->vertices[vertices[i]].vertex);
     }
-    p->findNormal();
+    p->updateNormal();
 
     for(int i = 0; i < numCorners; i++)
     {

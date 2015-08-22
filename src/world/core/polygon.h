@@ -52,13 +52,12 @@ struct Polygon
 
     bool isBroken() const;
 
-    void moveSelf(const btVector3 &move);
-    void move(Polygon* src, const btVector3 &move);
-    void vTransform(Polygon* src, const btTransform &tr);
-    void transform(const Polygon &src, const btTransform &tr);
-    void transformSelf(const btTransform &tr);
+    void move(const btVector3 &copyMoved);
+    void copyMoved(const Polygon &src, const btVector3 &copyMoved);
+    void copyTransformed(const Polygon &src, const btTransform &tr, bool copyNormals = false);
+    void transform(const btTransform &tr);
 
-    void findNormal();
+    void updateNormal();
     bool rayIntersect(const btVector3 &rayDir, const btVector3 &dot, btScalar *lambda) const;
     bool intersectPolygon(Polygon* p2);
 
