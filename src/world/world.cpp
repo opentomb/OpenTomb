@@ -971,7 +971,7 @@ bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model
         return false;
     }
 
-    std::unique_ptr<core::SSBoneFrame> bf(new core::SSBoneFrame());
+    std::unique_ptr<animation::SSBoneFrame> bf(new animation::SSBoneFrame());
     bf->fromModel(model);
 
     auto item = std::make_shared<BaseItem>();
@@ -1106,7 +1106,7 @@ BaseItem::~BaseItem()
 
 void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    for(core::AnimSeq& seq : anim_sequences)
+    for(animation::AnimSeq& seq : anim_sequences)
     {
         if(seq.frame_lock)
         {
@@ -1121,7 +1121,7 @@ void World::updateAnimTextures()                                                
 
             switch(seq.anim_type)
             {
-                case core::AnimTextureType::Reverse:
+                case animation::AnimTextureType::Reverse:
                     if(seq.reverse_direction)
                     {
                         if(seq.current_frame == 0)
@@ -1149,8 +1149,8 @@ void World::updateAnimTextures()                                                
                     }
                     break;
 
-                case core::AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
-                case core::AnimTextureType::Backward:
+                case animation::AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
+                case animation::AnimTextureType::Backward:
                     seq.current_frame++;
                     seq.current_frame %= seq.frames.size();
                     break;

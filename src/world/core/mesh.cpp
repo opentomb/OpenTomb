@@ -20,6 +20,11 @@ namespace world
 namespace core
 {
 
+BaseMesh::~BaseMesh()
+{
+    clear();
+}
+
 void BaseMesh::clear()
 {
     if(m_vboVertexArray)
@@ -112,7 +117,7 @@ void BaseMesh::genVBO(const render::Render* /*renderer*/)
         // And upload.
         glGenBuffers(1, &m_animatedVboVertexArray);
         glBindBuffer(GL_ARRAY_BUFFER, m_animatedVboVertexArray);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(AnimatedVertex) * m_animatedVertices.size(), m_animatedVertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(animation::AnimatedVertex) * m_animatedVertices.size(), m_animatedVertices.data(), GL_STATIC_DRAW);
 
         glGenBuffers(1, &m_animatedVboIndexArray);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_animatedVboIndexArray);
@@ -125,9 +130,9 @@ void BaseMesh::genVBO(const render::Render* /*renderer*/)
 
         // Create vertex array object.
         render::VertexArrayAttribute attribs2[] = {
-            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, position)),
-            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, color)),
-            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, normal)),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(animation::AnimatedVertex), offsetof(animation::AnimatedVertex, position)),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(animation::AnimatedVertex), offsetof(animation::AnimatedVertex, color)),
+            render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(animation::AnimatedVertex), offsetof(animation::AnimatedVertex, normal)),
 
             render::VertexArrayAttribute(render::LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat[2]), 0),
         };
@@ -142,7 +147,7 @@ void BaseMesh::genVBO(const render::Render* /*renderer*/)
     }
 
     // Update references for transparent polygons
-    for(TransparentPolygonReference& p : m_transparentPolygons)
+    for(render::TransparentPolygonReference& p : m_transparentPolygons)
     {
         p.used_vertex_array = p.isAnimated ? m_animatedVertexArray : m_mainVertexArray;
     }
@@ -155,93 +160,19 @@ void SkeletalModel::clear()
     animations.clear();
 }
 
-void SSBoneFrame::fromModel(SkeletalModel* model)
-{
-    hasSkin = false;
-    bb_min.setZero();
-    bb_max.setZero();
-    centre.setZero();
-    pos.setZero();
-    animations = SSAnimation();
-
-    animations.next = nullptr;
-    animations.onFrame = nullptr;
-    animations.model = model;
-    bone_tags.resize(model->mesh_count);
-
-    int stack = 0;
-    std::vector<SSBoneTag*> parents(bone_tags.size());
-    parents[0] = NULL;
-    bone_tags[0].parent = NULL;                                             // root
-    for(uint16_t i=0;i<bone_tags.size();i++)
-    {
-        bone_tags[i].index = i;
-        bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
-        bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
-        if(bone_tags[i].mesh_skin)
-            hasSkin = true;
-        bone_tags[i].mesh_slot = nullptr;
-        bone_tags[i].body_part = model->mesh_tree[i].body_part;
-
-        bone_tags[i].offset = model->mesh_tree[i].offset;
-        bone_tags[i].qrotate = { 0,0,0,0 };
-        bone_tags[i].transform.setIdentity();
-        bone_tags[i].full_transform.setIdentity();
-
-        if(i > 0)
-        {
-            bone_tags[i].parent = &bone_tags[i - 1];
-            if(model->mesh_tree[i].flag & 0x01)                                 // POP
-            {
-                if(stack > 0)
-                {
-                    bone_tags[i].parent = parents[stack];
-                    stack--;
-                }
-            }
-            if(model->mesh_tree[i].flag & 0x02)                                 // PUSH
-            {
-                if(stack + 1 < static_cast<int16_t>(model->mesh_count))
-                {
-                    stack++;
-                    parents[stack] = bone_tags[i].parent;
-                }
-            }
-        }
-    }
-}
-
-void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
-{
-    dst->bone_tags.resize(src->bone_tags.size());
-    dst->pos = src->pos;
-    dst->centre = src->centre;
-    dst->bb_max = src->bb_max;
-    dst->bb_min = src->bb_min;
-
-    dst->command = src->command;
-    dst->move = src->move;
-
-    for(uint16_t i = 0; i < dst->bone_tags.size(); i++)
-    {
-        dst->bone_tags[i].qrotate = src->bone_tags[i].qrotate;
-        dst->bone_tags[i].offset = src->bone_tags[i].offset;
-    }
-}
-
 void SkeletalModel::interpolateFrames()
 {
-    AnimationFrame* anim = animations.data();
+    animation::AnimationFrame* anim = animations.data();
 
     for(uint16_t i = 0; i < animations.size(); i++, anim++)
     {
         if(anim->frames.size() > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
         {
-            std::vector<BoneFrame> new_bone_frames(anim->original_frame_rate * (anim->frames.size() - 1) + 1);
+            std::vector<animation::BoneFrame> new_bone_frames(anim->original_frame_rate * (anim->frames.size() - 1) + 1);
             /*
              * the first frame does not changes
              */
-            BoneFrame* bf = new_bone_frames.data();
+            animation::BoneFrame* bf = new_bone_frames.data();
             bf->bone_tags.resize(mesh_count);
             bf->pos.setZero();
             bf->move.setZero();
@@ -443,7 +374,7 @@ uint32_t BaseMesh::addAnimatedVertex(const Vertex& vertex)
 
     m_animatedVertices.emplace_back();
 
-    AnimatedVertex& v = m_animatedVertices.back();
+    animation::AnimatedVertex& v = m_animatedVertices.back();
     v.position = vertex.position;
     v.color = vertex.color;
     v.normal = vertex.normal;
@@ -951,7 +882,7 @@ void BaseMesh::polySortInMesh()
     {
         if(p.anim_id > 0 && p.anim_id <= engine::engine_world.anim_sequences.size())
         {
-            AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
+            animation::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
             // set tex coordinates to the first frame for correct texture transform in renderer
             engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
         }

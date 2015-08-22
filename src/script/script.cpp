@@ -722,7 +722,7 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
         return;
     }
 
-    world::core::AnimationFrame* af = &model->animations[anim];
+    world::animation::AnimationFrame* af = &model->animations[anim];
     for(uint16_t i = 0; i < af->stateChanges.size(); i++)
     {
         if(af->stateChanges[i].id == static_cast<uint32_t>(state))
@@ -2661,11 +2661,11 @@ void lua_genUVRotateAnimation(int id)
         return;
 
     engine::engine_world.anim_sequences.emplace_back();
-    world::core::AnimSeq* seq = &engine::engine_world.anim_sequences.back();
+    world::animation::AnimSeq* seq = &engine::engine_world.anim_sequences.back();
 
     // Fill up new sequence with frame list.
 
-    seq->anim_type = world::core::AnimTextureType::Forward;
+    seq->anim_type = world::animation::AnimTextureType::Forward;
     seq->frame_lock = false;              // by default anim is playing
     seq->uvrotate = true;
     seq->frames.resize(16);

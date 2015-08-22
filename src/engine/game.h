@@ -33,7 +33,6 @@ struct Entity;
 namespace core
 {
 struct Polygon;
-struct BaseMesh;
 } // namespace core
 } // namespace world
 

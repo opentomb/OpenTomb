@@ -32,9 +32,12 @@ namespace core
 {
 struct SpriteBuffer;
 struct Sprite;
-struct AnimSeq;
 struct Light;
 } // namespace core
+namespace animation
+{
+struct AnimSeq;
+} // namespace animation
 
 // Native TR floor data functions
 
@@ -204,11 +207,14 @@ namespace core
 struct BaseMesh;
 struct SkeletalModel;
 struct StaticMesh;
-struct SSBoneFrame;
 struct Frustum;
 struct Polygon;
 } // namespace core
 
+namespace animation
+{
+struct SSBoneFrame;
+} // namespace animation
 
 struct BaseItem
 {
@@ -217,7 +223,7 @@ struct BaseItem
     gui::MenuItemType           type;
     uint16_t                    count;
     char                        name[64];
-    std::unique_ptr<core::SSBoneFrame> bf;
+    std::unique_ptr<animation::SSBoneFrame> bf;
 
     ~BaseItem();
 };
@@ -408,7 +414,7 @@ struct World
     std::unique_ptr<BorderedTextureAtlas> tex_atlas;
     std::vector<GLuint> textures;               // OpenGL textures indexes
 
-    std::vector<core::AnimSeq> anim_sequences;         // Animated textures
+    std::vector<animation::AnimSeq> anim_sequences;         // Animated textures
 
     std::vector<std::shared_ptr<core::BaseMesh>> meshes;                 // Base meshes data
 

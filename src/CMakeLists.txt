@@ -48,6 +48,8 @@ list(APPEND PRJ_SRC
     world/core/polygon.cpp
     world/core/frustum.cpp
 
+    world/animation/animation.cpp
+
     engine/game.cpp
     engine/system.cpp
     engine/engine.cpp
@@ -98,6 +100,8 @@ list(APPEND PRJ_HDR
     world/core/obb.h
     world/core/polygon.h
     world/core/frustum.h
+
+    world/animation/animation.h
 
     engine/game.h
     engine/system.h

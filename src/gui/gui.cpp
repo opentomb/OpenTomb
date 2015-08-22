@@ -23,6 +23,7 @@
 #include "engine/system.h"
 #include "render/vertex_array.h"
 #include "util/vmath.h"
+#include "world/animation/animation.h"
 
 namespace engine
 {
@@ -521,12 +522,12 @@ void renderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(world::core::SSBoneFrame *bf, btScalar time)
+void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
     long int t;
     btScalar dt;
-    world::core::StateChange* stc;
+    world::animation::StateChange* stc;
 
     bf->animations.lerp = 0.0;
     stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
@@ -571,7 +572,7 @@ void Item_Frame(world::core::SSBoneFrame *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(world::core::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
+void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
     const render::LitShaderDescription *shader = render::renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);

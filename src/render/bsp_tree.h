@@ -13,19 +13,19 @@ namespace core
 {
 struct Polygon;
 struct Frustum;
-struct TransparentPolygonReference;
 } // namespace core
 } // namespace world
 
 namespace render
 {
+struct TransparentPolygonReference;
 
 struct BSPFaceRef
 {
     btTransform transform;
-    const world::core::TransparentPolygonReference* polygon;
+    const TransparentPolygonReference* polygon;
 
-    BSPFaceRef(const btTransform& matrix, const world::core::TransparentPolygonReference* polygon)
+    BSPFaceRef(const btTransform& matrix, const TransparentPolygonReference* polygon)
         : transform(matrix)
         , polygon(polygon)
     {
@@ -54,7 +54,7 @@ private:
     void addPolygon(std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct world::core::Polygon &transformed);
 
 public:
-    void addNewPolygonList(const std::vector<world::core::TransparentPolygonReference> &p, const btTransform &transform, const world::core::Frustum& f, const world::Camera& cam);
+    void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const world::core::Frustum& f, const world::Camera& cam);
 
     const std::unique_ptr<BSPNode>& root() const
     {

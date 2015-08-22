@@ -9,6 +9,7 @@
 #include "world/core/mesh.h"
 #include "world/core/polygon.h"
 #include "util/vmath.h"
+#include "render.h"
 
 namespace render
 {
@@ -61,9 +62,9 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
 }
 
-void DynamicBSP::addNewPolygonList(const std::vector<world::core::TransparentPolygonReference>& p, const btTransform& transform, const world::core::Frustum& frustum, const world::Camera& cam)
+void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const world::core::Frustum& frustum, const world::Camera& cam)
 {
-    for(const world::core::TransparentPolygonReference& pp : p)
+    for(const render::TransparentPolygonReference& pp : p)
     {
         world::core::Polygon transformed;
         transformed.vertices.resize(pp.polygon->vertices.size());

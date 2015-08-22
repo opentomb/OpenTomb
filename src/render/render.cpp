@@ -21,6 +21,7 @@
 #include "shader_manager.h"
 #include "util/vmath.h"
 #include "world/world.h"
+#include "world/animation/animation.h"
 
 namespace render
 {
@@ -120,10 +121,10 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
                 continue;
             }
 
-            world::core::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
+            world::animation::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
 
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
-            world::core::TexFrame* tf = &seq->frames[frame];
+            world::animation::TexFrame* tf = &seq->frames[frame];
             for(const world::core::Vertex& vert : p.vertices)
             {
                 const auto& v = vert.tex_coord;
@@ -175,7 +176,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
     // Note that modes above 2 aren't explicitly used in TR textures, only for
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
-    const world::core::TransparentPolygonReference* ref = bsp_ref.polygon;
+    const TransparentPolygonReference* ref = bsp_ref.polygon;
     const world::core::Polygon *p = ref->polygon;
     if(currentTransparency != p->blendMode)
     {
@@ -316,9 +317,9 @@ void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, con
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const LitShaderDescription *shader, world::core::SSBoneFrame *bframe, const util::matrix4& mvMatrix, const util::matrix4& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame *bframe, const util::matrix4& mvMatrix, const util::matrix4& mvpMatrix)
 {
-    for(const world::core::SSBoneTag& btag : bframe->bone_tags)
+    for(const world::animation::SSBoneTag& btag : bframe->bone_tags)
     {
         util::matrix4 mvTransform = mvMatrix * btag.full_transform;
         glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
@@ -336,7 +337,7 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, world::core
 
 void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity* ent, const util::matrix4& mvMatrix, const util::matrix4& pMatrix)
 {
-    world::core::SSBoneTag* btag = ent->m_bf.bone_tags.data();
+    world::animation::SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
     glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
 
@@ -380,7 +381,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
-        world::core::SSBoneTag &btag = ent->m_bf.bone_tags[i];
+        world::animation::SSBoneTag &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
         for(size_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
         {
@@ -538,7 +539,7 @@ void Render::renderEntity(world::Entity* entity, const util::matrix4 &modelViewM
 
 void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity, const util::matrix4& modelViewMatrix, const util::matrix4& modelViewProjectionMatrix)
 {
-    world::core::SSBoneTag* btag = entity->m_bf.bone_tags.data();
+    world::animation::SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
     for(uint16_t i = 0; i < entity->m_bf.bone_tags.size(); i++, btag++)
     {
@@ -1301,11 +1302,11 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
     }
 }
 
-void RenderDebugDrawer::drawSkeletalModelDebugLines(world::core::SSBoneFrame *bframe, const btTransform& transform, Render *render)
+void RenderDebugDrawer::drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const btTransform& transform, Render *render)
 {
     if(render->m_drawNormals)
     {
-        world::core::SSBoneTag* btag = bframe->bone_tags.data();
+        world::animation::SSBoneTag* btag = bframe->bone_tags.data();
         for(uint16_t i = 0; i < bframe->bone_tags.size(); i++, btag++)
         {
             btTransform tr = transform * btag->full_transform;

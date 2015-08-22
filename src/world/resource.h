@@ -70,7 +70,6 @@ namespace core
 {
 struct BaseMesh;
 struct SkeletalModel;
-struct BoneFrame;
 } // namespace core
 
 // NOTE: Functions which take native TR level structures as argument will have
@@ -147,7 +146,7 @@ void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
 
-void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, world::core::BoneFrame* bone_frame);
+void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, world::animation::BoneFrame* bone_frame);
 int      TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::Level>& tr);

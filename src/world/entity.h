@@ -33,16 +33,7 @@ struct RDSetup;
 namespace core
 {
 struct OrientedBoundingBox;
-struct SSAnimation;
-struct SSBoneFrame;
 } // namespace core
-
-enum class AnimUpdate
-{
-    None,
-    NewFrame,
-    NewAnim
-};
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -154,13 +145,13 @@ public:
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
 
-    world::core::SSBoneFrame m_bf;                 // current boneframe with full frame information
+    animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
-    world::core::OrientedBoundingBox m_obb;                // oriented bounding box
+    core::OrientedBoundingBox m_obb;                // oriented bounding box
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
@@ -193,8 +184,8 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(world::core::SSBoneFrame *bf, btScalar time, core::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-    AnimUpdate frame(btScalar time);  // process frame + trying to change state
+    static void getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+    animation::AnimUpdate frame(btScalar time);  // process frame + trying to change state
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -206,8 +197,8 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(world::core::SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(world::core::SSAnimation *ss_anim, AnimUpdate changing);
+    static void updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransform *etr);
+    void doAnimCommands(animation::SSAnimation *ss_anim, animation::AnimUpdate changing);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -231,7 +222,7 @@ public:
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t frame, AnimUpdate /*state*/)
+    virtual void frameImpl(btScalar /*time*/, int16_t frame, animation::AnimUpdate /*state*/)
     {
         m_bf.animations.current_frame = frame;
     }

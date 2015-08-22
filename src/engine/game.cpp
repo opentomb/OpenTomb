@@ -707,7 +707,7 @@ void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<world::Entity> > 
         {
             entity->updateRigidBody(false);
         }
-        else if(entity->frame(engine_frame_time) != world::AnimUpdate::None)
+        else if(entity->frame(engine_frame_time) != world::animation::AnimUpdate::None)
         {
             entity->updateRigidBody(false);
         }

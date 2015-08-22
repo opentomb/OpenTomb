@@ -20,9 +20,9 @@ namespace engine
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_stop_traverse(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         btVector3& v = ent->m_traversedObject->m_transform.getOrigin();
         int i = static_cast<int>(v[0] / world::MeteringSectorSize);
@@ -35,9 +35,9 @@ void ent_stop_traverse(Character* ent, world::core::SSAnimation* ss_anim, world:
     }
 }
 
-void ent_set_on_floor(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_set_on_floor(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::OnFloor;
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.floor_point[2];
@@ -46,18 +46,18 @@ void ent_set_on_floor(Character* ent, world::core::SSAnimation* ss_anim, world::
     }
 }
 
-void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_bf.animations.next_state = TR_STATE_LARA_TURN_FAST;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate /*state*/)
+void ent_set_on_floor_after_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate /*state*/)
 {
-    world::core::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
+    world::animation::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
 
     if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
     {
@@ -75,36 +75,36 @@ void ent_set_on_floor_after_climb(Character* ent, world::core::SSAnimation* ss_a
     }
 }
 
-void ent_set_underwater(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_set_underwater(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Underwater;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_free_falling(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_set_free_falling(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::FreeFalling;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_set_cmd_slide(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_set_cmd_slide(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_response.slide = SlideType::Back;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_correct_diving_angle(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_correct_diving_angle(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_angles[1] = -45.0;
         ent->updateTransform();
@@ -112,9 +112,9 @@ void ent_correct_diving_angle(Character* ent, world::core::SSAnimation* ss_anim,
     }
 }
 
-void ent_to_on_water(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_to_on_water(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.transition_level;
         ent->ghostUpdate();
@@ -123,9 +123,9 @@ void ent_to_on_water(Character* ent, world::core::SSAnimation* ss_anim, world::A
     }
 }
 
-void ent_climb_out_of_water(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_climb_out_of_water(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         const auto& v = ent->m_climb.point;
 
@@ -136,9 +136,9 @@ void ent_climb_out_of_water(Character* ent, world::core::SSAnimation* ss_anim, w
     }
 }
 
-void ent_to_edge_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_to_edge_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         btScalar *v = ent->m_climb.point;
 
@@ -150,9 +150,9 @@ void ent_to_edge_climb(Character* ent, world::core::SSAnimation* ss_anim, world:
     }
 }
 
-void ent_to_monkey_swing(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_to_monkey_swing(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Monkeyswing;
         ent->m_transform.getOrigin()[2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.bb_max[2];
@@ -161,9 +161,9 @@ void ent_to_monkey_swing(Character* ent, world::core::SSAnimation* ss_anim, worl
     }
 }
 
-void ent_to_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_to_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Climbing;
         ent->ghostUpdate();
@@ -171,9 +171,9 @@ void ent_to_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world::
     }
 }
 
-void ent_from_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_from_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::OnFloor;
         ent->ghostUpdate();
@@ -181,9 +181,9 @@ void ent_from_tightrope(Character* ent, world::core::SSAnimation* ss_anim, world
     }
 }
 
-void ent_crawl_to_climb(Character* ent, world::core::SSAnimation* ss_anim, world::AnimUpdate state)
+void ent_crawl_to_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
-    if(state == world::AnimUpdate::NewAnim)
+    if(state == world::animation::AnimUpdate::NewAnim)
     {
         CharacterCommand* cmd = &ent->m_command;
 
@@ -2545,7 +2545,7 @@ void Character::state_func()
                         {
                             setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
                         }
-                        engine::ent_climb_out_of_water(this, &m_bf.animations, world::AnimUpdate::NewAnim);
+                        engine::ent_climb_out_of_water(this, &m_bf.animations, world::animation::AnimUpdate::NewAnim);
                     }
                 }
                 else if(!m_heightInfo.floor_hit || (m_transform.getOrigin()[2] - m_height > m_heightInfo.floor_point[2] - m_swimDepth))

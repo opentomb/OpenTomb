@@ -31,8 +31,12 @@ struct Frustum;
 struct OrientedBoundingBox;
 struct Sprite;
 struct BaseMesh;
-struct SSBoneFrame;
 } // namespace core
+
+namespace animation
+{
+struct SSBoneFrame;
+} // namespace animation
 } // namespace world
 
 struct Character;
@@ -42,6 +46,15 @@ namespace render
 
 struct BSPNode;
 struct BSPFaceRef;
+
+struct TransparentPolygonReference
+{
+    const world::core::Polygon *polygon;
+    std::shared_ptr< VertexArray > used_vertex_array;
+    size_t firstIndex;
+    size_t count;
+    bool isAnimated;
+};
 
 namespace
 {
@@ -92,7 +105,7 @@ public:
     void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
     void drawOBB(const world::core::OrientedBoundingBox& obb);
     void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
-    void drawSkeletalModelDebugLines(world::core::SSBoneFrame *bframe, const btTransform& transform, Render *render);
+    void drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(world::Entity *entity, Render *render);
     void drawSectorDebugLines(world::RoomSector *rs);
     void drawRoomDebugLines(const world::Room *room, Render *render, const world::Camera& cam);
@@ -261,7 +274,7 @@ public:
     void renderEntity(world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
     void renderDynamicEntity(const LitShaderDescription *shader, world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix);
     void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, world::core::SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
     void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
     void renderHair(std::shared_ptr<Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
     void renderSkyBox(const util::matrix4& matrix);

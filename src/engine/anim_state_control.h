@@ -13,8 +13,6 @@ struct Entity;
 namespace core
 {
 struct Polygon;
-struct BaseMesh;
-struct SSAnimation;
 } // namespace core
 } // namespace world
 

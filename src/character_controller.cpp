@@ -2238,7 +2238,7 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, world::AnimUpdate state)
+void Character::frameImpl(btScalar time, int16_t frame, world::animation::AnimUpdate state)
 {
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
@@ -2432,7 +2432,7 @@ void Character::doWeaponFrame(btScalar time)
     btScalar dt;
     int t;
 
-    for(world::core::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
+    for(world::animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
@@ -2799,6 +2799,6 @@ void Character::doWeaponFrame(btScalar time)
             };
         }
 
-        doAnimCommands(ss_anim, world::AnimUpdate::None);
+        doAnimCommands(ss_anim, world::animation::AnimUpdate::None);
     }
 }

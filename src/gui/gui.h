@@ -562,8 +562,8 @@ void renderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(world::core::SSBoneFrame *bf, btScalar time);
-void renderItem(world::core::SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
+void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time);
+void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
 /*
  * Other inventory renderer class
  */

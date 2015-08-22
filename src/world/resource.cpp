@@ -1359,7 +1359,7 @@ void GenerateAnimCommandsTransform(world::core::SkeletalModel* model)
             continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
         }
 
-        world::core::AnimationFrame* af = &model->animations[anim];
+        world::animation::AnimationFrame* af = &model->animations[anim];
         if(af->num_anim_commands == 0)
             continue;
 
@@ -2391,14 +2391,14 @@ void TR_GenAnimTextures(world::World *world, const std::unique_ptr<loader::Level
 
     world->anim_sequences.resize(num_sequences);
 
-    world::core::AnimSeq* seq = world->anim_sequences.data();
+    world::animation::AnimSeq* seq = world->anim_sequences.data();
     for(uint16_t i = 0; i < num_sequences; i++, seq++)
     {
         seq->frames.resize(*(pointer++) + 1);
         seq->frame_list.resize(seq->frames.size());
 
         // Fill up new sequence with frame list.
-        seq->anim_type = world::core::AnimTextureType::Forward;
+        seq->anim_type = world::animation::AnimTextureType::Forward;
         seq->frame_lock = false; // by default anim is playing
         seq->uvrotate = false; // by default uvrotate
         seq->reverse_direction = false; // Needed for proper reverse-type start-up.
@@ -2437,11 +2437,11 @@ void TR_GenAnimTextures(world::World *world, const std::unique_ptr<loader::Level
 
             if(uvrotate_script > 0)
             {
-                seq->anim_type = world::core::AnimTextureType::Forward;
+                seq->anim_type = world::animation::AnimTextureType::Forward;
             }
             else if(uvrotate_script < 0)
             {
-                seq->anim_type = world::core::AnimTextureType::Backward;
+                seq->anim_type = world::animation::AnimTextureType::Backward;
             }
 
             engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
@@ -3035,10 +3035,10 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
 {
     loader::Animation *tr_animation;
 
-    world::core::BoneTag* bone_tag;
-    world::core::BoneFrame* bone_frame;
+    world::animation::BoneTag* bone_tag;
+    world::animation::BoneFrame* bone_frame;
     world::core::MeshTreeTag* tree_tag;
-    world::core::AnimationFrame* anim;
+    world::animation::AnimationFrame* anim;
 
     loader::Moveable *tr_moveable = &tr->m_moveables[model_num];  // original tr structure
 
@@ -3359,7 +3359,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
 
         if((tr_animation->num_state_changes > 0) && (model->animations.size() > 1))
         {
-            world::core::StateChange* sch_p;
+            world::animation::StateChange* sch_p;
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
 #endif
@@ -3381,7 +3381,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
                     {
                         sch_p->anim_dispatch.emplace_back();
 
-                        world::core::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
+                        world::animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
                         uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
                         uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
 
@@ -3478,7 +3478,7 @@ int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, world::core::BoneFrame *bone_frame)
+void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, world::animation::BoneFrame *bone_frame)
 {
     if(frame_offset < tr->m_frameData.size())
     {

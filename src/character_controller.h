@@ -396,7 +396,7 @@ struct Character : public world::Entity
     {
     }
     void updateHair() override;
-    void frameImpl(btScalar time, int16_t frame, world::AnimUpdate state) override;
+    void frameImpl(btScalar time, int16_t frame, world::animation::AnimUpdate state) override;
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override
