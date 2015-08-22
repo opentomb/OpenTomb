@@ -482,9 +482,11 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     float pos[3], from[3], to[3], delta;
     height_info_p fc = &ent->character->height_info;
     int ret = CHARACTER_STEP_HORIZONTAL;
+    const float color[3] = {1.0, 0.0, 0.0};
     ///penetration test?
 
     vec3_add(pos, ent->transform + 12, offset);
+    renderer.debugDrawer->DrawLine(ent->transform + 12, pos, color, color);
     Character_GetHeightInfo(pos, nfc);
 
     if(fc->floor_hit && nfc->floor_hit)
@@ -596,15 +598,12 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
 {
     climb_info_t ret;
     float from[3], to[3], tmp[3];
-    float d, *pos = ent->transform + 12;
+    float d, z_step, *pos = ent->transform + 12;
     float n0[4], n1[4], n2[4];                                                  // planes equations
     char up_founded;
     collision_result_t cb;
-    // GLfloat cast_ray[6];
+    const float color[3] = {1.0, 0.0, 0.0};
 
-    /*
-     * init callbacks functions
-     */
     vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
@@ -618,7 +617,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     {
         ret.ceiling_limit = nfc->ceiling_point[2];
     }
-    vec3_copy(ret.point, ent->character->climb.point);
+    //vec3_copy(ret.point, ent->character->climb.point);
     /*
      * check max height
      */
@@ -630,22 +629,40 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - ent->transform[4 + 0] * ent->character->climb_r * 2.0;
-    from[1] = pos[1] - ent->transform[4 + 1] * ent->character->climb_r * 2.0;
+    from[0] = pos[0] + ent->transform[4 + 0] * (ent->bf->bb_max[1] - ent->character->climb_r * 2.0);
+    from[1] = pos[1] + ent->transform[4 + 1] * (ent->bf->bb_max[1] - ent->character->climb_r * 2.0);
     from[2] = tmp[2];
     vec3_copy(to, tmp);
-
-    //vec3_copy(cast_ray, from.m_floats);
-    //vec3_copy(cast_ray+3, to.m_floats);
 
     up_founded = 0;
     test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
     d = pos[2] + ent->bf->bb_max[2] - test_height;
-    //vec3_copy(cast_ray, to);
-    //vec3_copy(cast_ray+3, cast_ray);
-    //cast_ray[5] -= d;
+
+    // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
+    // close to 1.0 - bad precision, good speed;
+    // close to 0.0 - bad speed, bad precision;
+    // close to 0.5 - middle speed, good precision
+    z_step = -0.66 * ent->character->climb_r;
+    tmp[2] -= d;
+    //renderer.debugDrawer->DrawLine(to, tmp, color, color);
+    if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
+    {
+        from[2] = to[2] = d = cb.point[2];
+        if(ent->transform[4 + 0] * cb.normale[0] + ent->transform[4 + 1] * cb.normale[1] <= 0.0)
+        {
+            from[2] = to[2] = cb.point[2] + 0.5 * ent->character->climb_r;
+            d = cb.point[2] - 2.0 * ent->character->climb_r;
+        }
+        else
+        {
+            from[2] = to[2] = cb.point[2] + 2.0 * ent->character->climb_r;
+            d = cb.point[2] - 0.5 * ent->character->climb_r;
+        }
+    }
+
     do
     {
+        renderer.debugDrawer->DrawLine(from, to, color, color);
         if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
         {
             if(cb.normale[2] >= 0.1)
@@ -663,18 +680,18 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                 break;
             }
         }
-        else
+        else if(up_founded == 0)
         {
             tmp[0] = to[0];
             tmp[1] = to[1];
             tmp[2] = d;
-            //vec3_copy(cast_ray, to.m_floats);
-            //vec3_copy(cast_ray+3, tmp.m_floats);
+            renderer.debugDrawer->DrawLine(to, tmp, color, color);
             if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
             {
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);
                 n0[3] = -vec3_dot(n0, cb.point);
+                from[2] = to[2] = cb.point[2];
             }
             else
             {
@@ -682,12 +699,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
             }
         }
 
-        // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
-        // close to 1.0 - bad precision, good speed;
-        // close to 0.0 - bad speed, bad precision;
-        // close to 0.5 - middle speed, good precision
-        from[2] -= 0.66 * ent->character->climb_r;
-        to[2] -= 0.66 * ent->character->climb_r;
+        from[2] += z_step;
+        to[2] += z_step;
     }
     while(to[2] >= d);                                                          // we can't climb under floor!
 
@@ -729,7 +742,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                         n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
     ret.edge_point[2] /= d;
     vec3_copy(ret.point, ret.edge_point);
-    //vec3_copy(cast_ray+3, ret.point);
+    renderer.debugDrawer->DrawLine(to, ret.point, color, color);
     /*
      * unclimbable edge slant %)
      */

@@ -231,7 +231,6 @@ void CRender::GenWorldList(struct camera_s *cam)
     }
 
     this->CleanList();                                                          // clear old render list
-    this->debugDrawer->Reset();
     this->dynamicBSP->Reset(m_world->anim_sequences);
     this->frustumManager->Reset();
     cam->frustum->next = NULL;
@@ -463,6 +462,7 @@ void CRender::DrawListDebugLines()
         glLineWidth( 3.0f );
         debugDrawer->Render();
     }
+    debugDrawer->Reset();
 }
 
 void CRender::CleanList()

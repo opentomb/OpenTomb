@@ -257,7 +257,6 @@ int Sys_FileFound(const char *name, int checkWrite)
 
     if(checkWrite)
     {
-        
         ff = SDL_RWFromFile(name, "ab");
     }
     else

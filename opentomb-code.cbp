@@ -3017,10 +3017,6 @@
 		<Unit filename="src/gui.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/hair.cpp" />
-		<Unit filename="src/hair.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/inventory.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -3244,10 +3240,6 @@
 		</Unit>
 		<Unit filename="src/portal.cpp" />
 		<Unit filename="src/portal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ragdoll.cpp" />
-		<Unit filename="src/ragdoll.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/render.cpp" />
