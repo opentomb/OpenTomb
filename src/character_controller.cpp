@@ -769,14 +769,14 @@ ClimbInfo Character::checkWallsClimbability()
     return ret;
 }
 
-void Character::lean(CharacterCommand *cmd, btScalar max_lean)
+void Character::lean(btScalar max_lean)
 {
     btScalar neg_lean = 360.0 - max_lean;
     btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
-    if((cmd->move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
+    if((m_command.move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -792,7 +792,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
         }
     }
-    else if(cmd->move[1] == 1) // Right direction
+    else if(m_command.move[1] == 1) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
@@ -814,7 +814,7 @@ void Character::lean(CharacterCommand *cmd, btScalar max_lean)
             }
         }
     }
-    else if(cmd->move[1] == -1)     // Left direction
+    else if(m_command.move[1] == -1)     // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
@@ -1831,10 +1831,7 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    if(state_func)
-    {
-        state_func(this, &m_bf.animations);
-    }
+    state_func();
 
     switch(m_moveType)
     {

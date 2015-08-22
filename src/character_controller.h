@@ -350,7 +350,7 @@ struct Character : public world::Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    void (*state_func)(Character* entity, world::core::SSAnimation *ssAnim) = nullptr;
+    void state_func();
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -431,7 +431,7 @@ struct Character : public world::Entity
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void lean(CharacterCommand* cmd, btScalar max_lean);
+    void lean(btScalar max_lean);
     btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 

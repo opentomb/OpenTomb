@@ -3673,7 +3673,6 @@ void TR_GenEntities(world::World *world, const std::unique_ptr<loader::Level>& t
             lara->genRigidBody();
             lara->createGhosts();
             lara->m_height = 768.0;
-            lara->state_func = &engine::State_Control_Lara;
 
             continue;
         }
