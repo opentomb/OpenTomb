@@ -636,7 +636,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     z_min = pos[2] + ent->bf->bb_max[2] - test_height;
 
     tmp[2] = z_min;
-    //renderer.debugDrawer->DrawLine(to, tmp, color, color);
+    renderer.debugDrawer->DrawLine(to, tmp, color, color);
     if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
     {
         from[2] = to[2] = cb.point[2];
@@ -696,6 +696,10 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                 vec3_copy(n0, cb.normale);
                 n0[3] = -vec3_dot(n0, cb.point);
                 from[2] = to[2] = cb.point[2];
+                if(cb.point[2] + z_step < z_min)
+                {
+                    from[2] = to[2] = z_min - z_step + 0.5 * ent->character->climb_r;
+                }
             }
             else
             {
