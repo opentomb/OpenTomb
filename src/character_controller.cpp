@@ -482,11 +482,9 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     float pos[3], from[3], to[3], delta;
     height_info_p fc = &ent->character->height_info;
     int ret = CHARACTER_STEP_HORIZONTAL;
-    const float color[3] = {1.0, 0.0, 0.0};
     ///penetration test?
 
     vec3_add(pos, ent->transform + 12, offset);
-    renderer.debugDrawer->DrawLine(ent->transform + 12, pos, color, color);
     Character_GetHeightInfo(pos, nfc);
 
     if(fc->floor_hit && nfc->floor_hit)
@@ -598,26 +596,26 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
 {
     climb_info_t ret;
     float from[3], to[3], tmp[3];
-    float d, z_step, *pos = ent->transform + 12;
-    float n0[4], n1[4], n2[4];                                                  // planes equations
+    float z_min, z_step, *pos = ent->transform + 12;
+    float n0[4], n1[4];                                                         // planes equations
     char up_founded;
     collision_result_t cb;
     const float color[3] = {1.0, 0.0, 0.0};
 
+    pos[2] + offset[2];
     vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
-    offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
-    ret.height_info = Character_CheckNextStep(ent, offset, nfc);
-    offset[2] -= 128.0;
-    ret.can_hang = 0;
+
+    nfc->floor_hit = 0x00;
+    nfc->ceiling_hit = 0x00;
+
+    ret.height_info = CHARACTER_STEP_HORIZONTAL;
+    ret.can_hang = 0x00;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
     ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
     ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
-    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
-    {
-        ret.ceiling_limit = nfc->ceiling_point[2];
-    }
-    //vec3_copy(ret.point, ent->character->climb.point);
+    vec3_copy(ret.point, ent->character->climb.point);
+
     /*
      * check max height
      */
@@ -634,33 +632,38 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     from[2] = tmp[2];
     vec3_copy(to, tmp);
 
-    up_founded = 0;
     test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
-    d = pos[2] + ent->bf->bb_max[2] - test_height;
+    z_min = pos[2] + ent->bf->bb_max[2] - test_height;
 
-    // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
-    // close to 1.0 - bad precision, good speed;
-    // close to 0.0 - bad speed, bad precision;
-    // close to 0.5 - middle speed, good precision
-    z_step = -0.66 * ent->character->climb_r;
-    tmp[2] -= d;
+    tmp[2] = z_min;
     //renderer.debugDrawer->DrawLine(to, tmp, color, color);
     if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
     {
-        from[2] = to[2] = d = cb.point[2];
+        from[2] = to[2] = cb.point[2];
         if(ent->transform[4 + 0] * cb.normale[0] + ent->transform[4 + 1] * cb.normale[1] <= 0.0)
         {
             from[2] = to[2] = cb.point[2] + 0.5 * ent->character->climb_r;
-            d = cb.point[2] - 2.0 * ent->character->climb_r;
+            z_min = cb.point[2] - 2.0 * ent->character->climb_r;
         }
         else
         {
             from[2] = to[2] = cb.point[2] + 2.0 * ent->character->climb_r;
-            d = cb.point[2] - 0.5 * ent->character->climb_r;
+            z_min = cb.point[2] - 0.5 * ent->character->climb_r;
         }
     }
+    else
+    {
+        return ret;
+    }
 
-    do
+    tmp[2] = to[2];
+    // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
+    // close to 1.0 - bad precision, good speed;
+    // close to 0.0 - bad speed, bad precision;
+    // close to 0.5 - middle speed, good precision
+    up_founded = 0;
+    z_step = -0.66 * ent->character->climb_r;
+    for(;to[2] >= z_min; from[2] += z_step, to[2] += z_step)                    // we can't climb under floor!
     {
         renderer.debugDrawer->DrawLine(from, to, color, color);
         if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
@@ -670,12 +673,13 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);
                 n0[3] = -vec3_dot(n0, cb.point);
+                continue;
             }
             if(up_founded && (cb.normale[2] < 0.001))
             {
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
-                ent->character->climb.edge_obj = cb.obj;
+                ret.edge_obj = cb.obj;
                 up_founded = 2;
                 break;
             }
@@ -684,7 +688,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
         {
             tmp[0] = to[0];
             tmp[1] = to[1];
-            tmp[2] = d;
+            tmp[2] = z_min;
             renderer.debugDrawer->DrawLine(to, tmp, color, color);
             if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
             {
@@ -698,98 +702,101 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
                 return ret;
             }
         }
-
-        from[2] += z_step;
-        to[2] += z_step;
-    }
-    while(to[2] >= d);                                                          // we can't climb under floor!
-
-    if(up_founded != 2)
-    {
-        return ret;
     }
 
-    // get the character plane equation
-    vec3_copy(n2, ent->transform + 0);
-    n2[3] = -vec3_dot(n2, pos);
-
-    /*
-     * Solve system of the linear equations by Kramer method!
-     * I know - It may be slow, but it has a good precision!
-     * The root is point of 3 planes intersection.
-     */
-    d =-n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) +
-        n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
-        n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
-
-    if(fabs(d) < 0.005)
+    if(up_founded == 2)
     {
-        return ret;
-    }
+        float d, n2[4];
+        // get the character plane equation
+        vec3_copy(n2, ent->transform + 0);
+        n2[3] = -vec3_dot(n2, pos);
 
-    ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                        n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                        n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
-    ret.edge_point[0] /= d;
+        /*
+         * Solve system of the linear equations by Kramer method!
+         * I know - It may be slow, but it has a good precision!
+         * The root is point of 3 planes intersection.
+         */
+        d =-n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) +
+            n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
+            n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-    ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
-                        n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
-                        n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
-    ret.edge_point[1] /= d;
+        if(fabs(d) < 0.005)
+        {
+            return ret;
+        }
 
-    ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
-                        n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
-                        n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
-    ret.edge_point[2] /= d;
-    vec3_copy(ret.point, ret.edge_point);
-    renderer.debugDrawer->DrawLine(to, ret.point, color, color);
-    /*
-     * unclimbable edge slant %)
-     */
-    vec3_cross(n2, n0, n1);
-    d = ent->character->critical_slant_z_component;
-    d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
-    if(n2[2] * n2[2] > d)
-    {
-        return ret;
-    }
+        ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
+                            n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                            n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
+        ret.edge_point[0] /= d;
 
-    /*
-     * Now, let us calculate z_angle
-     */
-    ret.edge_hit = 0x01;
+        ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
+                            n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
+                            n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
+        ret.edge_point[1] /= d;
 
-    n2[2] = n2[0];
-    n2[0] = n2[1];
-    n2[1] =-n2[2];
-    n2[2] = 0.0;
-    if(n2[0] * ent->transform[4 + 0] + n2[1] * ent->transform[4 + 1] > 0)       // direction fixing
-    {
-        n2[0] = -n2[0];
-        n2[1] = -n2[1];
-    }
+        ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
+                            n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
+                            n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
+        ret.edge_point[2] /= d;
+        vec3_copy(ret.point, ret.edge_point);
+        renderer.debugDrawer->DrawLine(to, ret.point, color, color);
+        /*
+         * unclimbable edge slant %)
+         */
+        vec3_cross(n2, n0, n1);
+        d = ent->character->critical_slant_z_component;
+        d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
+        if(n2[2] * n2[2] > d)
+        {
+            return ret;
+        }
 
-    vec3_copy(ret.n, n2);
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
-    ret.edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
-    ret.edge_tan_xy[0] = -n2[1];
-    ret.edge_tan_xy[1] = n2[0];
-    d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
-    ret.edge_tan_xy[0] /= d;
-    ret.edge_tan_xy[1] /= d;
-    vec3_copy(ret.t, ret.edge_tan_xy);
+        /*
+         * Now, let us calculate z_angle
+         */
+        ret.edge_hit = 0x01;
 
-    if(!ent->character->height_info.floor_hit || (ret.edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
-    {
-        ret.can_hang = 1;
-    }
+        n2[2] = n2[0];
+        n2[0] = n2[1];
+        n2[1] =-n2[2];
+        n2[2] = 0.0;
+        if(n2[0] * ent->transform[4 + 0] + n2[1] * ent->transform[4 + 1] > 0)   // direction fixing
+        {
+            n2[0] = -n2[0];
+            n2[1] = -n2[1];
+        }
 
-    ret.next_z_space = 2.0 * ent->character->Height;
-    if(nfc->floor_hit && nfc->ceiling_hit)
-    {
-        ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+        vec3_copy(ret.n, n2);
+        ret.up[0] = 0.0;
+        ret.up[1] = 0.0;
+        ret.up[2] = 1.0;
+        ret.edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
+        ret.edge_tan_xy[0] = -n2[1];
+        ret.edge_tan_xy[1] = n2[0];
+        d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
+        ret.edge_tan_xy[0] /= d;
+        ret.edge_tan_xy[1] /= d;
+        vec3_copy(ret.t, ret.edge_tan_xy);
+
+        vec3_sub(tmp, ret.edge_point, ent->transform + 12);
+        tmp[2] += 2.0 * ent->character->climb_r;
+        ret.height_info = Character_CheckNextStep(ent, tmp, nfc);
+        if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
+        {
+            ret.ceiling_limit = nfc->ceiling_point[2];
+        }
+
+        if(!ent->character->height_info.floor_hit || (ret.edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
+        {
+            ret.can_hang = 0x01;
+        }
+
+        ret.next_z_space = 2.0 * ent->character->Height;
+        if(nfc->floor_hit && nfc->ceiling_hit)
+        {
+            ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+        }
     }
 
     return ret;
