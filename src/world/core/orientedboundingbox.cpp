@@ -1,4 +1,4 @@
-#include "obb.h"
+#include "orientedboundingbox.h"
 
 #include <cmath>
 
@@ -15,10 +15,10 @@ namespace world
 namespace core
 {
 
-void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_max)
+void OrientedBoundingBox::rebuild(const BoundingBox& boundingBox)
 {
-    extent = (bb_max - bb_min) / 2;
-    base_centre = (bb_min + bb_max) / 2;
+    extent = boundingBox.getDiameter() / 2;
+    base_centre = boundingBox.getCenter();
     radius = extent.length();
 
     Polygon *p = base_polygons.data();
@@ -27,30 +27,30 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     auto v = &p->vertices.front();
     // 0 1
     // 0 0
-    v->position[0] = bb_max[0];
-    v->position[1] = bb_max[1];
-    v->position[2] = bb_max[2];
+    v->position[0] = boundingBox.max[0];
+    v->position[1] = boundingBox.max[1];
+    v->position[2] = boundingBox.max[2];
     v++;
 
     // 1 0
     // 0 0
-    v->position[0] = bb_min[0];
-    v->position[1] = bb_max[1];
-    v->position[2] = bb_max[2];
+    v->position[0] = boundingBox.min[0];
+    v->position[1] = boundingBox.max[1];
+    v->position[2] = boundingBox.max[2];
     v++;
 
     // 0 0
     // 1 0
-    v->position[0] = bb_min[0];
-    v->position[1] = bb_min[1];
-    v->position[2] = bb_max[2];
+    v->position[0] = boundingBox.min[0];
+    v->position[1] = boundingBox.min[1];
+    v->position[2] = boundingBox.max[2];
     v++;
 
     // 0 0
     // 0 1
-    v->position[0] = bb_max[0];
-    v->position[1] = bb_min[1];
-    v->position[2] = bb_max[2];
+    v->position[0] = boundingBox.max[0];
+    v->position[1] = boundingBox.min[1];
+    v->position[2] = boundingBox.max[2];
 
     //p->plane[0] = 0.0;
     //p->plane[1] = 0.0;
@@ -64,30 +64,30 @@ void OrientedBoundingBox::rebuild(const btVector3& bb_min, const btVector3& bb_m
     v = &p->vertices.front();
     // 0 1
     // 0 0
-    v->position[0] = bb_max[0];
-    v->position[1] = bb_max[1];
-    v->position[2] = bb_min[2];
+    v->position[0] = boundingBox.max[0];
+    v->position[1] = boundingBox.max[1];
+    v->position[2] = boundingBox.min[2];
     v++;
 
     // 0 0
     // 0 1
-    v->position[0] = bb_max[0];
-    v->position[1] = bb_min[1];
-    v->position[2] = bb_min[2];
+    v->position[0] = boundingBox.max[0];
+    v->position[1] = boundingBox.min[1];
+    v->position[2] = boundingBox.min[2];
     v++;
 
     // 0 0
     // 1 0
-    v->position[0] = bb_min[0];
-    v->position[1] = bb_min[1];
-    v->position[2] = bb_min[2];
+    v->position[0] = boundingBox.min[0];
+    v->position[1] = boundingBox.min[1];
+    v->position[2] = boundingBox.min[2];
     v++;
 
     // 1 0
     // 0 0
-    v->position[0] = bb_min[0];
-    v->position[1] = bb_max[1];
-    v->position[2] = bb_min[2];
+    v->position[0] = boundingBox.min[0];
+    v->position[1] = boundingBox.max[1];
+    v->position[2] = boundingBox.min[2];
 
     p->updateNormal();
     p++;

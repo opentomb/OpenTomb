@@ -20,6 +20,8 @@ struct Room;
 namespace core
 {
 
+struct BoundingBox;
+
 struct OrientedBoundingBox
 {
     std::array<Polygon,6> base_polygons;           // bv base surface
@@ -32,7 +34,7 @@ struct OrientedBoundingBox
     btVector3 extent;
 
     void doTransform();
-    void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
+    void rebuild(const BoundingBox &boundingBox);
     bool isVisibleInRoom(const Room& room, const Camera& cam) const;
 };
 

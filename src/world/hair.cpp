@@ -156,7 +156,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = std::abs(m_elements[i - 1].mesh->m_bbMax[1] - m_elements[i - 1].mesh->m_bbMin[1]) * setup->m_jointOverlap;
+            body_length = std::abs(m_elements[i - 1].mesh->boundingBox.max[1] - m_elements[i - 1].mesh->boundingBox.min[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
             localA.getBasis().setEulerZYX(0, SIMD_HALF_PI, 0);

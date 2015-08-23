@@ -16,7 +16,7 @@
 #include "engine/engine.h"
 #include "util/helpers.h"
 #include "world/core/mesh.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 #include "ragdoll.h"
 #include "script/script.h"
 #include "engine/system.h"
@@ -37,7 +37,7 @@ void Entity::createGhosts()
     m_bt.last_collisions.clear();
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        btVector3 box = COLLISION_GHOST_VOLUME_COEFFICIENT * (m_bf.bone_tags[i].mesh_base->m_bbMax - m_bf.bone_tags[i].mesh_base->m_bbMin);
+        btVector3 box = COLLISION_GHOST_VOLUME_COEFFICIENT * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
         m_bt.shapes.emplace_back(new btBoxShape(box));
         m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
         m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
@@ -137,7 +137,7 @@ void Entity::genRigidBody()
 
             case COLLISION_SHAPE_BOX:
             default:
-                cshape = core::BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
+                cshape = core::BT_CSfromBBox(mesh->boundingBox, true, true);
                 break;
         };
 
@@ -616,49 +616,46 @@ void Entity::updateRigidBody(bool force)
 
         if(m_bf.bone_tags.size() == 1)
         {
-            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->m_bbMin;
-            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->m_bbMax;
+            m_bf.boundingBox = m_bf.bone_tags[0].mesh_base->boundingBox;
         }
         else
         {
-            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->m_bbMin;
-            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->m_bbMax;
+            m_bf.boundingBox = m_bf.bone_tags[0].mesh_base->boundingBox;
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {
                 auto& pos = m_bf.bone_tags[i].full_transform.getOrigin();
-                auto& bb_min = m_bf.bone_tags[i].mesh_base->m_bbMin;
-                auto& bb_max = m_bf.bone_tags[i].mesh_base->m_bbMax;
-                btScalar r = bb_max[0] - bb_min[0];
-                btScalar t = bb_max[1] - bb_min[1];
+                auto& boundingBox = m_bf.bone_tags[i].mesh_base->boundingBox;
+                btScalar r = boundingBox.max[0] - boundingBox.min[0];
+                btScalar t = boundingBox.max[1] - boundingBox.min[1];
                 r = (t > r) ? (t) : (r);
-                t = bb_max[2] - bb_min[2];
+                t = boundingBox.max[2] - boundingBox.min[2];
                 r = (t > r) ? (t) : (r);
                 r *= 0.5;
 
-                if(m_bf.bb_min[0] > pos[0] - r)
+                if(m_bf.boundingBox.min[0] > pos[0] - r)
                 {
-                    m_bf.bb_min[0] = pos[0] - r;
+                    m_bf.boundingBox.min[0] = pos[0] - r;
                 }
-                if(m_bf.bb_min[1] > pos[1] - r)
+                if(m_bf.boundingBox.min[1] > pos[1] - r)
                 {
-                    m_bf.bb_min[1] = pos[1] - r;
+                    m_bf.boundingBox.min[1] = pos[1] - r;
                 }
-                if(m_bf.bb_min[2] > pos[2] - r)
+                if(m_bf.boundingBox.min[2] > pos[2] - r)
                 {
-                    m_bf.bb_min[2] = pos[2] - r;
+                    m_bf.boundingBox.min[2] = pos[2] - r;
                 }
 
-                if(m_bf.bb_max[0] < pos[0] + r)
+                if(m_bf.boundingBox.max[0] < pos[0] + r)
                 {
-                    m_bf.bb_max[0] = pos[0] + r;
+                    m_bf.boundingBox.max[0] = pos[0] + r;
                 }
-                if(m_bf.bb_max[1] < pos[1] + r)
+                if(m_bf.boundingBox.max[1] < pos[1] + r)
                 {
-                    m_bf.bb_max[1] = pos[1] + r;
+                    m_bf.boundingBox.max[1] = pos[1] + r;
                 }
-                if(m_bf.bb_max[2] < pos[2] + r)
+                if(m_bf.boundingBox.max[2] < pos[2] + r)
                 {
-                    m_bf.bb_max[2] = pos[2] + r;
+                    m_bf.boundingBox.max[2] = pos[2] + r;
                 }
             }
         }
@@ -773,8 +770,8 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
         cmd_tr.setZero();
     }
 
-    bf->bb_max = curr_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
-    bf->bb_min = curr_bf->bb_min.lerp(next_bf->bb_min, bf->animations.lerp) + cmd_tr;
+    bf->boundingBox.max = curr_bf->boundingBox.max.lerp(next_bf->boundingBox.max, bf->animations.lerp) + cmd_tr;
+    bf->boundingBox.min = curr_bf->boundingBox.min.lerp(next_bf->boundingBox.min, bf->animations.lerp) + cmd_tr;
     bf->centre = curr_bf->centre.lerp(next_bf->centre, bf->animations.lerp) + cmd_tr;
     bf->pos = curr_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
 
@@ -1199,7 +1196,7 @@ void Entity::rebuildBV()
         /*
          * get current BB from animation
          */
-        m_obb.rebuild(m_bf.bb_min, m_bf.bb_max);
+        m_obb.rebuild(m_bf.boundingBox);
         m_obb.doTransform();
     }
 }
@@ -1209,7 +1206,7 @@ void Entity::checkActivators()
 	if (m_self->room == nullptr)
 		return;
 
-    btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.bb_max[1];
+    btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
 	auto containers = m_self->room->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
@@ -1235,8 +1232,8 @@ void Entity::checkActivators()
 			const btVector3& v = e->m_transform.getOrigin();
             if(    (e != this)
 				&& ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
-				&& (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2])
-				&& (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
+                && (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.boundingBox.min[2])
+                && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.boundingBox.max[2]))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
@@ -1292,8 +1289,8 @@ Entity::Entity(uint32_t id)
     m_bf.animations.next_frame = 0;
     m_bf.animations.next = nullptr;
     m_bf.bone_tags.clear();
-    m_bf.bb_max.setZero();
-    m_bf.bb_min.setZero();
+    m_bf.boundingBox.max.setZero();
+    m_bf.boundingBox.min.setZero();
     m_bf.centre.setZero();
     m_bf.pos.setZero();
     m_speed.setZero();
@@ -1416,7 +1413,7 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         if(!m_bf.bone_tags[i].parent)
         {
-            btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
+            btScalar r = m_bf.bone_tags[i].mesh_base->boundingBox.getInnerRadius();
             m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
         }

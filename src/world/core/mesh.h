@@ -14,7 +14,7 @@
 #include "world/animation/animation.h"
 #include "render/vertex_array.h"
 #include "loader/datatypes.h"
-#include "obb.h"
+#include "orientedboundingbox.h"
 
 struct Character;
 class btCollisionShape;
@@ -82,8 +82,7 @@ struct BaseMesh
     std::vector<render::TransparentPolygonReference> m_transparentPolygons;
 
     btVector3 m_center;                                            // geometry centre of mesh
-    btVector3 m_bbMin;                                            // AABB bounding volume
-    btVector3 m_bbMax;                                            // AABB bounding volume
+    BoundingBox boundingBox; //!< AABB bounding volume
     btScalar m_radius;                                            // radius of the bounding sphere
 #pragma pack(push,1)
     struct MatrixIndex
@@ -175,10 +174,8 @@ struct StaticMesh : public Object
     btVector3 rot;                                         // model angles
     std::array<float, 4> tint;                                        // model tint
 
-    btVector3 vbb_min;                                     // visible bounding box
-    btVector3 vbb_max;
-    btVector3 cbb_min;                                     // collision bounding box
-    btVector3 cbb_max;
+    BoundingBox visibleBoundingBox;
+    BoundingBox collisionBoundingBox;
 
     btTransform transform;                                  // gl transformation matrix
     OrientedBoundingBox obb;
@@ -219,8 +216,7 @@ struct SkeletalModel
     uint32_t                    id;
     bool                        has_transparency;
 
-    btVector3                   bbox_min;
-    btVector3                   bbox_max;
+    BoundingBox boundingBox;
     btVector3                   centre;                                      // the centre of model
 
     std::vector<animation::AnimationFrame> animations;
@@ -243,7 +239,7 @@ void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 
 /* bullet collision model calculation */
 btCollisionShape *BT_CSfromSphere(const btScalar& radius);
-btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromBBox(const BoundingBox &boundingBox, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 

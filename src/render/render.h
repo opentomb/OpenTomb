@@ -14,7 +14,7 @@
 #include "util/matrix4.h"
 #include "vertex_array.h"
 #include "loader/datatypes.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 
 namespace world
 {
@@ -102,7 +102,7 @@ public:
     void drawAxis(btScalar r, const btTransform& transform);
     void drawPortal(const world::Portal &p);
     void drawFrustum(const world::core::Frustum &f);
-    void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
+    void drawBBox(const world::core::BoundingBox &boundingBox, const btTransform *transform);
     void drawOBB(const world::core::OrientedBoundingBox& obb);
     void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
     void drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const btTransform& transform, Render *render);

@@ -9,7 +9,7 @@
 #include "gui/gui.h"
 #include "world/hair.h"
 #include "world/core/mesh.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/resource.h"
 #include "script/script.h"
@@ -505,7 +505,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     t2.setIdentity();
     up_founded = 0;
     test_height = (test_height >= m_maxStepUpHeight) ? (test_height) : (m_maxStepUpHeight);
-    d = pos[2] + m_bf.bb_max[2] - test_height;
+    d = pos[2] + m_bf.boundingBox.max[2] - test_height;
     std::copy(to + 0, to + 3, engine::cast_ray + 0);
     std::copy(to + 0, to + 3, engine::cast_ray + 3);
     engine::cast_ray[5] -= d;
@@ -679,9 +679,9 @@ ClimbInfo Character::checkWallsClimbability()
     ret.up = { 0,0,1 };
 
     btVector3& pos = m_transform.getOrigin();
-    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.boundingBox.max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
     btVector3 to = from;
-    btScalar t = m_forwardSize + m_bf.bb_max[1];
+    btScalar t = m_forwardSize + m_bf.boundingBox.max[1];
     to += m_transform.getBasis().getColumn(1) * t;
 
     auto ccb = m_convexCb;
@@ -736,7 +736,7 @@ ClimbInfo Character::checkWallsClimbability()
         t = 0.67f * m_height;
         from -= m_transform.getBasis().getColumn(2) * t;
         to = from;
-        t = m_forwardSize + m_bf.bb_max[1];
+        t = m_forwardSize + m_bf.boundingBox.max[1];
         to += m_transform.getBasis().getColumn(1) * t;
 
         ccb->m_closestHitFraction = 1.0;
@@ -947,7 +947,7 @@ int Character::moveOnFloor()
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
-    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.bb_min[2]))
+    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.boundingBox.min[2]))
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
         if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY))
@@ -1163,9 +1163,9 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + pos[2])
         {
-            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
@@ -1174,7 +1174,7 @@ int Character::freeFalling()
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.bb_min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.boundingBox.min[2] + move[2])
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1191,16 +1191,16 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + pos[2])
         {
-            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.bb_min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.boundingBox.min[2] + move[2])
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1271,9 +1271,9 @@ int Character::monkeyClimbing()
     pos += move;
     fixPenetrations(&move);                              // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.bb_max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.boundingBox.max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
-        pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+        pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
     }
     else
     {
@@ -1312,8 +1312,8 @@ int Character::wallsClimbing()
 
     m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * util::DegPerRad;
     updateTransform();
-    pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
-    pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
+    pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.boundingBox.max[1];
+    pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.boundingBox.max[1];
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
@@ -1346,9 +1346,9 @@ int Character::wallsClimbing()
     updateRoomPos();
 
     *climb = checkWallsClimbability();
-    if(pos[2] + m_bf.bb_max[2] > climb->ceiling_limit)
+    if(pos[2] + m_bf.boundingBox.max[2] > climb->ceiling_limit)
     {
-        pos[2] = climb->ceiling_limit - m_bf.bb_max[2];
+        pos[2] = climb->ceiling_limit - m_bf.boundingBox.max[2];
     }
 
     return 1;
@@ -1470,7 +1470,7 @@ int Character::moveUnderWater()
     fixPenetrations(&move);                              // get horizontal collide
 
     updateRoomPos();
-    if(m_heightInfo.water && (pos[2] + m_bf.bb_max[2] >= m_heightInfo.transition_level))
+    if(m_heightInfo.water && (pos[2] + m_bf.boundingBox.max[2] >= m_heightInfo.transition_level))
     {
         if(/*(spd[2] > 0.0)*/m_transform.getBasis().getColumn(1)[2] > 0.67)             ///@FIXME: magick!
         {
@@ -1480,7 +1480,7 @@ int Character::moveUnderWater()
         }
         if(!m_heightInfo.floor_hit || (m_heightInfo.transition_level - m_heightInfo.floor_point[2] >= m_height))
         {
-            pos[2] = m_heightInfo.transition_level - m_bf.bb_max[2];
+            pos[2] = m_heightInfo.transition_level - m_bf.boundingBox.max[2];
         }
     }
 

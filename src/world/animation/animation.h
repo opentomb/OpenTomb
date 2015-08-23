@@ -1,5 +1,7 @@
 #pragma once
 
+#include "world/core/boundingbox.h"
+
 #include <btBulletCollisionCommon.h>
 
 #include <array>
@@ -108,8 +110,7 @@ struct BoneFrame
     uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
     std::vector<BoneTag> bone_tags;                                              // bones data
     btVector3 pos;                                                 // position (base offset)
-    btVector3 bb_min;                                              // bounding box min coordinates
-    btVector3 bb_max;                                              // bounding box max coordinates
+    core::BoundingBox boundingBox;
     btVector3 centre;                                              // bounding box centre
     btVector3 move;                                                // move command data
     btScalar            v_Vertical;                                             // jump command data
@@ -216,8 +217,7 @@ struct SSBoneFrame
 {
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
     btVector3 pos;                                         // position (base offset)
-    btVector3 bb_min;                                      // bounding box min coordinates
-    btVector3 bb_max;                                      // bounding box max coordinates
+    core::BoundingBox boundingBox;
     btVector3 centre;                                      // bounding box centre
 
     SSAnimation       animations;                                     // animations list

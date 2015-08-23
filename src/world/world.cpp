@@ -13,7 +13,7 @@
 #include "engine/engine.h"
 #include "entity.h"
 #include "world/core/mesh.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/portal.h"
 #include "render/render.h"
@@ -364,12 +364,8 @@ bool Room::isOverlapped(Room* r1)
         return false;
     }
 
-    if(bb_min[0] >= r1->bb_max[0] || bb_max[0] <= r1->bb_min[0] ||
-       bb_min[1] >= r1->bb_max[1] || bb_max[1] <= r1->bb_min[1] ||
-       bb_min[2] >= r1->bb_max[2] || bb_max[2] <= r1->bb_min[2])
-    {
+    if(!boundingBox.overlaps(r1->boundingBox))
         return false;
-    }
 
     return !isJoined(r1);
 }
@@ -613,10 +609,7 @@ std::shared_ptr<Room> World::findRoomByPosition(const btVector3& pos)
 {
     for(auto r : rooms)
     {
-        if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+        if(r->active && r->boundingBox.contains(pos))
         {
             return r;
         }
@@ -632,14 +625,14 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
     }
 
     if(room->active &&
-       (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
-       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]))
+       (new_pos[0] >= room->boundingBox.min[0]) && (new_pos[0] < room->boundingBox.max[0]) &&
+       (new_pos[1] >= room->boundingBox.min[1]) && (new_pos[1] < room->boundingBox.max[1]))
     {
-        if((new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+        if((new_pos[2] >= room->boundingBox.min[2]) && (new_pos[2] < room->boundingBox.max[2]))
         {
             return room;
         }
-        else if(new_pos[2] >= room->bb_max[2])
+        else if(new_pos[2] >= room->boundingBox.max[2])
         {
             RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_above != nullptr)
@@ -647,7 +640,7 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
                 return orig_sector->sector_above->owner_room->checkFlip();
             }
         }
-        else if(new_pos[2] < room->bb_min[2])
+        else if(new_pos[2] < room->boundingBox.min[2])
         {
             RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_below != nullptr)
@@ -665,10 +658,7 @@ Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
 
     for(const std::shared_ptr<Room>& r : room->near_room_list)
     {
-        if(r->active &&
-           (new_pos[0] >= r->bb_min[0]) && (new_pos[0] < r->bb_max[0]) &&
-           (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
-           (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
+        if(r->active && r->boundingBox.contains(new_pos))
         {
             return r.get();
         }

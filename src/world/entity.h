@@ -12,7 +12,7 @@
 #include "engine/game.h"
 #include "world/core/mesh.h"
 #include "world/object.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -218,8 +218,7 @@ public:
     virtual void fixPenetrations(const btVector3* move);
     virtual btVector3 getRoomPos() const
     {
-        btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
-        return m_transform * v;
+        return m_transform * m_bf.boundingBox.getCenter();
     }
     virtual void transferToRoom(Room *room);
     virtual void frameImpl(btScalar /*time*/, int16_t frame, animation::AnimUpdate /*state*/)
@@ -256,12 +255,6 @@ public:
 
 private:
     void doAnimMove(int16_t *anim, int16_t *frame);
-
-    static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
-    {
-        btVector3 d = bb_max - bb_min;
-        return btMin(d[0], btMin(d[1], d[2]));
-    }
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);

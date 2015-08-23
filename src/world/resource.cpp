@@ -28,7 +28,7 @@
 #include "gui/gui.h"
 #include "util/helpers.h"
 #include "world/core/mesh.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/portal.h"
 #include "render/render.h"
@@ -1826,20 +1826,20 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
 
-        r_static->cbb_min[0] = tr_static->collision_box[0].x;
-        r_static->cbb_min[1] = -tr_static->collision_box[0].z;
-        r_static->cbb_min[2] = tr_static->collision_box[1].y;
-        r_static->cbb_max[0] = tr_static->collision_box[1].x;
-        r_static->cbb_max[1] = -tr_static->collision_box[1].z;
-        r_static->cbb_max[2] = tr_static->collision_box[0].y;
+        r_static->collisionBoundingBox.min[0] = tr_static->collision_box[0].x;
+        r_static->collisionBoundingBox.min[1] = -tr_static->collision_box[0].z;
+        r_static->collisionBoundingBox.min[2] = tr_static->collision_box[1].y;
+        r_static->collisionBoundingBox.max[0] = tr_static->collision_box[1].x;
+        r_static->collisionBoundingBox.max[1] = -tr_static->collision_box[1].z;
+        r_static->collisionBoundingBox.max[2] = tr_static->collision_box[0].y;
 
-        r_static->vbb_min[0] = tr_static->visibility_box[0].x;
-        r_static->vbb_min[1] = -tr_static->visibility_box[0].z;
-        r_static->vbb_min[2] = tr_static->visibility_box[1].y;
+        r_static->visibleBoundingBox.min[0] = tr_static->visibility_box[0].x;
+        r_static->visibleBoundingBox.min[1] = -tr_static->visibility_box[0].z;
+        r_static->visibleBoundingBox.min[2] = tr_static->visibility_box[1].y;
 
-        r_static->vbb_max[0] = tr_static->visibility_box[1].x;
-        r_static->vbb_max[1] = -tr_static->visibility_box[1].z;
-        r_static->vbb_max[2] = tr_static->visibility_box[0].y;
+        r_static->visibleBoundingBox.max[0] = tr_static->visibility_box[1].x;
+        r_static->visibleBoundingBox.max[1] = -tr_static->visibility_box[1].z;
+        r_static->visibleBoundingBox.max[2] = tr_static->visibility_box[0].y;
 
         r_static->obb.transform = &room->static_mesh[i]->transform;
         r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
@@ -1847,7 +1847,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
         util::Mat4_Translate(r_static->transform, r_static->pos);
         util::Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        r_static->obb.rebuild(r_static->vbb_min, r_static->vbb_max);
+        r_static->obb.rebuild(r_static->visibleBoundingBox);
         r_static->obb.doTransform();
 
         r_static->bt_body = nullptr;
@@ -1878,11 +1878,11 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
             switch(r_static->self->collision_shape)
             {
                 case COLLISION_SHAPE_BOX:
-                    cshape = world::core::BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true);
+                    cshape = world::core::BT_CSfromBBox(r_static->collisionBoundingBox, true, true);
                     break;
 
                 case COLLISION_SHAPE_BOX_BASE:
-                    cshape = world::core::BT_CSfromBBox(r_static->mesh->m_bbMin, r_static->mesh->m_bbMax, true, true);
+                    cshape = world::core::BT_CSfromBBox(r_static->mesh->boundingBox, true, true);
                     break;
 
                 case COLLISION_SHAPE_TRIMESH:
@@ -2143,13 +2143,13 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::Wo
     /*
      * room borders calculation
      */
-    room->bb_min[2] = tr_room->y_bottom;
-    room->bb_max[2] = tr_room->y_top;
+    room->boundingBox.min[2] = tr_room->y_bottom;
+    room->boundingBox.max[2] = tr_room->y_top;
 
-    room->bb_min[0] = room->transform.getOrigin()[0] + MeteringSectorSize;
-    room->bb_min[1] = room->transform.getOrigin()[1] + MeteringSectorSize;
-    room->bb_max[0] = room->transform.getOrigin()[0] + MeteringSectorSize * room->sectors_x - MeteringSectorSize;
-    room->bb_max[1] = room->transform.getOrigin()[1] + MeteringSectorSize * room->sectors_y - MeteringSectorSize;
+    room->boundingBox.min[0] = room->transform.getOrigin()[0] + MeteringSectorSize;
+    room->boundingBox.min[1] = room->transform.getOrigin()[1] + MeteringSectorSize;
+    room->boundingBox.max[0] = room->transform.getOrigin()[0] + MeteringSectorSize * room->sectors_x - MeteringSectorSize;
+    room->boundingBox.max[1] = room->transform.getOrigin()[1] + MeteringSectorSize * room->sectors_y - MeteringSectorSize;
 
     /*
      * alternate room pointer calculation if one exists.
@@ -3484,13 +3484,13 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
     {
         unsigned short int *frame = &tr->m_frameData[frame_offset];
 
-        bone_frame->bb_min[0] = (short int)frame[0];   // x_min
-        bone_frame->bb_min[1] = (short int)frame[4];   // y_min
-        bone_frame->bb_min[2] = -(short int)frame[3];  // z_min
+        bone_frame->boundingBox.min[0] = (short int)frame[0];   // x_min
+        bone_frame->boundingBox.min[1] = (short int)frame[4];   // y_min
+        bone_frame->boundingBox.min[2] = -(short int)frame[3];  // z_min
 
-        bone_frame->bb_max[0] = (short int)frame[1];   // x_max
-        bone_frame->bb_max[1] = (short int)frame[5];   // y_max
-        bone_frame->bb_max[2] = -(short int)frame[2];  // z_max
+        bone_frame->boundingBox.max[0] = (short int)frame[1];   // x_max
+        bone_frame->boundingBox.max[1] = (short int)frame[5];   // y_max
+        bone_frame->boundingBox.max[2] = -(short int)frame[2];  // z_max
 
         bone_frame->pos[0] = (short int)frame[6];
         bone_frame->pos[1] = (short int)frame[8];
@@ -3498,20 +3498,20 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
     }
     else
     {
-        bone_frame->bb_min[0] = 0.0;
-        bone_frame->bb_min[1] = 0.0;
-        bone_frame->bb_min[2] = 0.0;
+        bone_frame->boundingBox.min[0] = 0.0;
+        bone_frame->boundingBox.min[1] = 0.0;
+        bone_frame->boundingBox.min[2] = 0.0;
 
-        bone_frame->bb_max[0] = 0.0;
-        bone_frame->bb_max[1] = 0.0;
-        bone_frame->bb_max[2] = 0.0;
+        bone_frame->boundingBox.max[0] = 0.0;
+        bone_frame->boundingBox.max[1] = 0.0;
+        bone_frame->boundingBox.max[2] = 0.0;
 
         bone_frame->pos[0] = 0.0;
         bone_frame->pos[1] = 0.0;
         bone_frame->pos[2] = 0.0;
     }
 
-    bone_frame->centre = (bone_frame->bb_min + bone_frame->bb_max) / 2.0f;
+    bone_frame->centre = (bone_frame->boundingBox.min + bone_frame->boundingBox.max) / 2.0f;
 }
 
 void TR_GenSkeletalModels(world::World *world, const std::unique_ptr<loader::Level>& tr)

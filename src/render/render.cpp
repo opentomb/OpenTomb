@@ -13,7 +13,7 @@
 #include "world/core/frustum.h"
 #include "world/hair.h"
 #include "world/core/mesh.h"
-#include "world/core/obb.h"
+#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/portal.h"
 #include "world/resource.h"
@@ -1072,7 +1072,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum.isAABBVisible(r->bb_min, r->bb_max, *m_cam))
+            if(m_cam->frustum.isAABBVisible(r->boundingBox.min, r->boundingBox.max, *m_cam))
             {
                 addRoom(r.get());
             }
@@ -1241,9 +1241,9 @@ void RenderDebugDrawer::drawPortal(const world::Portal& p)
     addLine(p.vertices.back(), p.vertices.front());
 }
 
-void RenderDebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_max, const btTransform *transform)
+void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, const btTransform *transform)
 {
-    m_obb.rebuild(bb_min, bb_max);
+    m_obb.rebuild(boundingBox);
     m_obb.transform = transform;
     m_obb.doTransform();
     drawOBB(m_obb);
@@ -1345,10 +1345,11 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
 
 void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
 {
-    btVector3 bb_min = { static_cast<btScalar>(rs->pos[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
-    btVector3 bb_max = { static_cast<btScalar>(rs->pos[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
+    world::core::BoundingBox bb;
+    bb.min = { static_cast<btScalar>(rs->pos[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
+    bb.max = { static_cast<btScalar>(rs->pos[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
 
-    drawBBox(bb_min, bb_max, nullptr);
+    drawBBox(bb, nullptr);
 }
 
 void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* render, const world::Camera& cam)
@@ -1356,7 +1357,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
     if(render->m_drawRoomBoxes)
     {
         debugDrawer.setColor(0.0, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room->bb_min, room->bb_max, nullptr);
+        debugDrawer.drawBBox(room->boundingBox, nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);

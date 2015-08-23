@@ -674,7 +674,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
     if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         btVector3 pos = cam->getPosition();
-        pos[2] = cam->m_currentRoom->bb_max[2] + 2.0f * 64.0f;
+        pos[2] = cam->m_currentRoom->boundingBox.max[2] + 2.0f * 64.0f;
         cam->setPosition(pos);
     }
 
@@ -894,7 +894,7 @@ void Game_Prepare()
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.setPosition(engine_world.rooms[0]->bb_max);
+        engine_camera.setPosition(engine_world.rooms[0]->boundingBox.max);
     }
 
     // Set gameflow parameters to default.

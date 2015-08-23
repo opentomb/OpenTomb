@@ -44,7 +44,7 @@ list(APPEND PRJ_SRC
     world/ragdoll.cpp
 
     world/core/mesh.cpp
-    world/core/obb.cpp
+    world/core/orientedboundingbox.cpp
     world/core/polygon.cpp
     world/core/frustum.cpp
 
@@ -97,9 +97,10 @@ list(APPEND PRJ_HDR
     world/ragdoll.h
 
     world/core/mesh.h
-    world/core/obb.h
+    world/core/orientedboundingbox.h
     world/core/polygon.h
     world/core/frustum.h
+    world/core/boundingbox.h
 
     world/animation/animation.h
 

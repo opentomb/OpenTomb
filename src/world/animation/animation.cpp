@@ -10,8 +10,8 @@ namespace animation
 void SSBoneFrame::fromModel(core::SkeletalModel* model)
 {
     hasSkin = false;
-    bb_min.setZero();
-    bb_max.setZero();
+    boundingBox.min.setZero();
+    boundingBox.max.setZero();
     centre.setZero();
     pos.setZero();
     animations = SSAnimation();
@@ -68,8 +68,7 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
     dst->bone_tags.resize(src->bone_tags.size());
     dst->pos = src->pos;
     dst->centre = src->centre;
-    dst->bb_max = src->bb_max;
-    dst->bb_min = src->bb_min;
+    dst->boundingBox = src->boundingBox;
 
     dst->command = src->command;
     dst->move = src->move;

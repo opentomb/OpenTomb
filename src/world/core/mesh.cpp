@@ -7,7 +7,7 @@
 
 #include "engine/engine.h"
 #include "render/gl_util.h"
-#include "obb.h"
+#include "orientedboundingbox.h"
 #include "polygon.h"
 #include "render/render.h"
 #include "world/resource.h"
@@ -54,19 +54,13 @@ void BaseMesh::updateBoundingBox()
 {
     if(!m_vertices.empty())
     {
-        m_bbMin = m_bbMax = m_vertices.front().position;
+        boundingBox.min = boundingBox.max = m_vertices.front().position;
         for(const auto& v : m_vertices)
         {
-            for(int i = 0; i < 3; ++i)
-            {
-                if(m_bbMin[i] > v.position[i])
-                    m_bbMin[i] = v.position[i];
-                if(m_bbMax[i] < v.position[i])
-                    m_bbMax[i] = v.position[i];
-            }
+            boundingBox.adjust(v.position);
         }
 
-        m_center = (m_bbMin + m_bbMax) / 2.0;
+        m_center = boundingBox.getCenter();
     }
 }
 
@@ -179,8 +173,7 @@ void SkeletalModel::interpolateFrames()
             bf->command = 0x00;
             bf->centre = anim->frames[0].centre;
             bf->pos = anim->frames[0].pos;
-            bf->bb_max = anim->frames[0].bb_max;
-            bf->bb_min = anim->frames[0].bb_min;
+            bf->boundingBox = anim->frames[0].boundingBox;
             for(uint16_t k = 0; k < mesh_count; k++)
             {
                 bf->bone_tags[k].offset = anim->frames[0].bone_tags[k].offset;
@@ -200,21 +193,12 @@ void SkeletalModel::interpolateFrames()
 
                     bf->bone_tags.resize(mesh_count);
 
-                    bf->centre[0] = t * anim->frames[j - 1].centre[0] + lerp * anim->frames[j].centre[0];
-                    bf->centre[1] = t * anim->frames[j - 1].centre[1] + lerp * anim->frames[j].centre[1];
-                    bf->centre[2] = t * anim->frames[j - 1].centre[2] + lerp * anim->frames[j].centre[2];
+                    bf->centre = t * anim->frames[j - 1].centre + lerp * anim->frames[j].centre;
 
-                    bf->pos[0] = t * anim->frames[j - 1].pos[0] + lerp * anim->frames[j].pos[0];
-                    bf->pos[1] = t * anim->frames[j - 1].pos[1] + lerp * anim->frames[j].pos[1];
-                    bf->pos[2] = t * anim->frames[j - 1].pos[2] + lerp * anim->frames[j].pos[2];
+                    bf->pos = t * anim->frames[j - 1].pos + lerp * anim->frames[j].pos;
 
-                    bf->bb_max[0] = t * anim->frames[j - 1].bb_max[0] + lerp * anim->frames[j].bb_max[0];
-                    bf->bb_max[1] = t * anim->frames[j - 1].bb_max[1] + lerp * anim->frames[j].bb_max[1];
-                    bf->bb_max[2] = t * anim->frames[j - 1].bb_max[2] + lerp * anim->frames[j].bb_max[2];
-
-                    bf->bb_min[0] = t * anim->frames[j - 1].bb_min[0] + lerp * anim->frames[j].bb_min[0];
-                    bf->bb_min[1] = t * anim->frames[j - 1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
-                    bf->bb_min[2] = t * anim->frames[j - 1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
+                    bf->boundingBox.max = t * anim->frames[j - 1].boundingBox.max + lerp * anim->frames[j].boundingBox.max;
+                    bf->boundingBox.min = t * anim->frames[j - 1].boundingBox.min + lerp * anim->frames[j].boundingBox.min;
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
@@ -585,14 +569,14 @@ btCollisionShape *BT_CSfromSphere(const btScalar& radius)
     return ret;
 }
 
-btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool /*useCompression*/, bool /*buildBvh*/)
+btCollisionShape *BT_CSfromBBox(const BoundingBox &boundingBox, bool /*useCompression*/, bool /*buildBvh*/)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     int cnt = 0;
 
     OrientedBoundingBox obb;
-    obb.rebuild(bb_min, bb_max);
+    obb.rebuild(boundingBox);
     for(const Polygon& p : obb.base_polygons)
     {
         if(p.isBroken())

@@ -7,7 +7,7 @@
 
 #include "world/camera.h"
 #include "engine/engine.h"
-#include "obb.h"
+#include "orientedboundingbox.h"
 #include "polygon.h"
 #include "world/portal.h"
 #include "render/render.h"

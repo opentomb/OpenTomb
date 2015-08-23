@@ -11,6 +11,7 @@
 #include "bordered_texture_atlas.h"
 #include "camera.h"
 #include "object.h"
+#include "world/core/boundingbox.h"
 
 struct Character;
 class btCollisionShape;
@@ -337,8 +338,7 @@ struct Room : public Object
 
     std::vector<std::shared_ptr<engine::EngineContainer>> containers;                                     // engine containers with moveables objects
 
-    btVector3 bb_min;                                      // room's bounding box
-    btVector3 bb_max;                                      // room's bounding box
+    core::BoundingBox boundingBox;
     btTransform transform;                                  // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
@@ -382,9 +382,7 @@ struct Room : public Object
 
     bool isPointIn(const btVector3& dot)
     {
-        return (dot[0] >= bb_min[0]) && (dot[0] < bb_max[0]) &&
-            (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
-            (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
+        return boundingBox.contains(dot);
     }
 
     RoomSector* getSectorRaw(const btVector3 &pos);

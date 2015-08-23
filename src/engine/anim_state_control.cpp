@@ -142,9 +142,9 @@ void ent_to_edge_climb(Character* ent, world::animation::SSAnimation* ss_anim, w
     {
         btScalar *v = ent->m_climb.point;
 
-        ent->m_transform.getOrigin()[0] = v[0] - ent->m_transform.getBasis().getColumn(1)[0] * ent->m_bf.bb_max[1];
-        ent->m_transform.getOrigin()[1] = v[1] - ent->m_transform.getBasis().getColumn(1)[1] * ent->m_bf.bb_max[1];
-        ent->m_transform.getOrigin()[2] = v[2] - ent->m_bf.bb_max[2];
+        ent->m_transform.getOrigin()[0] = v[0] - ent->m_transform.getBasis().getColumn(1)[0] * ent->m_bf.boundingBox.max[1];
+        ent->m_transform.getOrigin()[1] = v[1] - ent->m_transform.getBasis().getColumn(1)[1] * ent->m_bf.boundingBox.max[1];
+        ent->m_transform.getOrigin()[2] = v[2] - ent->m_bf.boundingBox.max[2];
         ent->ghostUpdate();
         ss_anim->onFrame = nullptr;
     }
@@ -155,7 +155,7 @@ void ent_to_monkey_swing(Character* ent, world::animation::SSAnimation* ss_anim,
     if(state == world::animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = world::MoveType::Monkeyswing;
-        ent->m_transform.getOrigin()[2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.bb_max[2];
+        ent->m_transform.getOrigin()[2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.boundingBox.max[2];
         ent->ghostUpdate();
         ss_anim->onFrame = nullptr;
     }
@@ -333,19 +333,19 @@ void Character::state_func()
                 m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_GRAB;
                 if(m_transform.getBasis().getColumn(1).x() > 0.9)
                 {
-                    t = -m_traversedObject->m_bf.bb_min[0] + 72.0f;
+                    t = -m_traversedObject->m_bf.boundingBox.min[0] + 72.0f;
                 }
                 else if(m_transform.getBasis().getColumn(1).x() < -0.9)
                 {
-                    t = m_traversedObject->m_bf.bb_max[0] + 72.0f;
+                    t = m_traversedObject->m_bf.boundingBox.max[0] + 72.0f;
                 }
                 else if(m_transform.getBasis().getColumn(1).y() > 0.9)
                 {
-                    t = -m_traversedObject->m_bf.bb_min[1] + 72.0f;
+                    t = -m_traversedObject->m_bf.boundingBox.min[1] + 72.0f;
                 }
                 else if(m_transform.getBasis().getColumn(1).y() < -0.9)
                 {
-                    t = m_traversedObject->m_bf.bb_max[1] + 72.0f;
+                    t = m_traversedObject->m_bf.boundingBox.max[1] + 72.0f;
                 }
                 else
                 {
@@ -361,7 +361,7 @@ void Character::state_func()
                 {
                     move = m_transform.getBasis().getColumn(1) * engine::PenetrationTestOffset;
                     global_offset = m_transform.getBasis().getColumn(1) * engine::WalkForwardOffset;
-                    global_offset[2] += m_bf.bb_max[2];
+                    global_offset[2] += m_bf.boundingBox.max[2];
                     global_offset += m_transform.getOrigin();
                     Character::getHeightInfo(global_offset, &next_fc);
                     if(((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) &&
@@ -383,7 +383,7 @@ void Character::state_func()
                 {
                     move = m_transform.getBasis().getColumn(1) * engine::PenetrationTestOffset;
                     global_offset = m_transform.getBasis().getColumn(1) * engine::RunForwardOffset;
-                    global_offset[2] += m_bf.bb_max[2];
+                    global_offset[2] += m_bf.boundingBox.max[2];
                     checkNextStep(global_offset, &next_fc);
                     if(((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00)) && !hasStopSlant(next_fc))
                     {
@@ -471,7 +471,7 @@ void Character::state_func()
                     if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
                     {
                         global_offset = m_transform.getBasis().getColumn(1) * -engine::WalkBackOffset;
-                        global_offset[2] += m_bf.bb_max[2];
+                        global_offset[2] += m_bf.boundingBox.max[2];
                         global_offset += m_transform.getOrigin();
                         Character::getHeightInfo(global_offset, &next_fc);
                         if((next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight)))
@@ -506,7 +506,7 @@ void Character::state_func()
                     if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
                     {
                         global_offset = m_transform.getBasis().getColumn(0) * engine::RunForwardOffset;
-                        global_offset[2] += m_bf.bb_max[2];
+                        global_offset[2] += m_bf.boundingBox.max[2];
                         if((m_response.horizontal_collide == 0) && isLittleStep(checkNextStep(global_offset, &next_fc)))
                         {
                             m_command.rot[0] = 0.0;
@@ -528,7 +528,7 @@ void Character::state_func()
                     if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
                     {
                         global_offset = m_transform.getBasis().getColumn(0) * -engine::RunForwardOffset;
-                        global_offset[2] += m_bf.bb_max[2];
+                        global_offset[2] += m_bf.boundingBox.max[2];
                         if((m_response.horizontal_collide == 0) && isLittleStep(checkNextStep(global_offset, &next_fc)))
                         {
                             m_command.rot[0] = 0.0;
@@ -785,7 +785,7 @@ void Character::state_func()
 
         case TR_STATE_LARA_RUN_FORWARD:
             global_offset = m_transform.getBasis().getColumn(1) * engine::RunForwardOffset;
-            global_offset[2] += m_bf.bb_max[2];
+            global_offset[2] += m_bf.boundingBox.max[2];
             nextStep = checkNextStep(global_offset, &next_fc);
             m_dirFlag = ENT_MOVE_FORWARD;
             m_command.crouch |= low_vertical_space;
@@ -902,7 +902,7 @@ void Character::state_func()
         case TR_STATE_LARA_SPRINT:
             global_offset = m_transform.getBasis().getColumn(1) * engine::RunForwardOffset;
             lean(12.0);
-            global_offset[2] += m_bf.bb_max[2];
+            global_offset[2] += m_bf.boundingBox.max[2];
             nextStep = checkNextStep(global_offset, &next_fc);
             m_command.crouch |= low_vertical_space;
 
@@ -993,7 +993,7 @@ void Character::state_func()
             lean(0.0);
 
             global_offset = m_transform.getBasis().getColumn(1) * engine::WalkForwardOffset;
-            global_offset[2] += m_bf.bb_max[2];
+            global_offset[2] += m_bf.boundingBox.max[2];
             nextStep = checkNextStep(global_offset, &next_fc);
             m_dirFlag = ENT_MOVE_FORWARD;
 
@@ -1161,7 +1161,7 @@ void Character::state_func()
             }
 
             global_offset = m_transform.getBasis().getColumn(1) * -engine::WalkBackOffset;
-            global_offset[2] += m_bf.bb_max[2];
+            global_offset[2] += m_bf.boundingBox.max[2];
             nextStep = checkNextStep(global_offset, &next_fc);
             if(m_moveType == world::MoveType::FreeFalling)
             {
@@ -1225,7 +1225,7 @@ void Character::state_func()
             else if(m_command.move[1] == -1 && m_command.shift)
             {
                 global_offset = m_transform.getBasis().getColumn(0) * -engine::RunForwardOffset;  // not an error - RUN_... more correct here
-                global_offset[2] += m_bf.bb_max[2];
+                global_offset[2] += m_bf.boundingBox.max[2];
                 global_offset += m_transform.getOrigin();
                 Character::getHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight))
@@ -1263,7 +1263,7 @@ void Character::state_func()
             {
                 // Not a error - RUN_... constant is more correct here
                 global_offset = m_transform.getBasis().getColumn(0) * engine::RunForwardOffset;
-                global_offset[2] += m_bf.bb_max[2];
+                global_offset[2] += m_bf.boundingBox.max[2];
                 global_offset += m_transform.getOrigin();
                 Character::getHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point[2] > m_transform.getOrigin()[2] - m_maxStepUpHeight) && (next_fc.floor_point[2] <= m_transform.getOrigin()[2] + m_maxStepUpHeight))
@@ -1409,7 +1409,7 @@ void Character::state_func()
 
                 if(m_transform.getBasis().getColumn(1)[0] > 0.9)
                 {
-                    t = m_transform.getOrigin()[0] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[0] - 32.0f);
+                    t = m_transform.getOrigin()[0] + (m_bf.boundingBox.max[1] - m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
                     if(t > m_traversedObject->m_transform.getOrigin()[0])
                     {
                         m_traversedObject->m_transform.getOrigin()[0] = t;
@@ -1418,7 +1418,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
                 {
-                    t = m_transform.getOrigin()[0] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[0] - 32.0f);
+                    t = m_transform.getOrigin()[0] - (m_bf.boundingBox.max[1] + m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
                     if(t < m_traversedObject->m_transform.getOrigin()[0])
                     {
                         m_traversedObject->m_transform.getOrigin()[0] = t;
@@ -1427,7 +1427,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
                 {
-                    t = m_transform.getOrigin()[1] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[1] - 32.0f);
+                    t = m_transform.getOrigin()[1] + (m_bf.boundingBox.max[1] - m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
                     if(t > m_traversedObject->m_transform.getOrigin()[1])
                     {
                         m_traversedObject->m_transform.getOrigin()[1] = t;
@@ -1436,7 +1436,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
                 {
-                    t = m_transform.getOrigin()[1] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[1] - 32.0f);
+                    t = m_transform.getOrigin()[1] - (m_bf.boundingBox.max[1] + m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
                     if(t < m_traversedObject->m_transform.getOrigin()[1])
                     {
                         m_traversedObject->m_transform.getOrigin()[1] = t;
@@ -1496,7 +1496,7 @@ void Character::state_func()
 
                 if(m_transform.getBasis().getColumn(1)[0] > 0.9)
                 {
-                    t = m_transform.getOrigin()[0] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[0] - 32.0f);
+                    t = m_transform.getOrigin()[0] + (m_bf.boundingBox.max[1] - m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
                     if(t < m_traversedObject->m_transform.getOrigin()[0])
                     {
                         m_traversedObject->m_transform.getOrigin()[0] = t;
@@ -1505,7 +1505,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
                 {
-                    t = m_transform.getOrigin()[0] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[0] - 32.0f);
+                    t = m_transform.getOrigin()[0] - (m_bf.boundingBox.max[1] + m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
                     if(t > m_traversedObject->m_transform.getOrigin()[0])
                     {
                         m_traversedObject->m_transform.getOrigin()[0] = t;
@@ -1514,7 +1514,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
                 {
-                    t = m_transform.getOrigin()[1] + (m_bf.bb_max[1] - m_traversedObject->m_bf.bb_min[1] - 32.0f);
+                    t = m_transform.getOrigin()[1] + (m_bf.boundingBox.max[1] - m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
                     if(t < m_traversedObject->m_transform.getOrigin()[1])
                     {
                         m_traversedObject->m_transform.getOrigin()[1] = t;
@@ -1523,7 +1523,7 @@ void Character::state_func()
                 }
                 else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
                 {
-                    t = m_transform.getOrigin()[1] - (m_bf.bb_max[1] + m_traversedObject->m_bf.bb_max[1] - 32.0f);
+                    t = m_transform.getOrigin()[1] - (m_bf.boundingBox.max[1] + m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
                     if(t > m_traversedObject->m_transform.getOrigin()[1])
                     {
                         m_traversedObject->m_transform.getOrigin()[1] = t;
@@ -1598,7 +1598,7 @@ void Character::state_func()
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
                 global_offset = m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += m_bf.bb_max[2] + engine::LaraHangVerticalEpsilon + engine::engine_frame_time * m_speed[2];
+                global_offset[2] += m_bf.boundingBox.max[2] + engine::LaraHangVerticalEpsilon + engine::engine_frame_time * m_speed[2];
                 m_climb = checkClimbability(global_offset, &next_fc, 0.0);
                 if(m_climb.edge_hit)
                 {
@@ -1610,7 +1610,7 @@ void Character::state_func()
 
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
-                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + engine::LaraHangVerticalOffset;
+                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                 }
                 else
                 {
@@ -1655,7 +1655,7 @@ void Character::state_func()
                 updateTransform();
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
-            else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+            else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2] - 64.0))
             {
                 m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 m_bf.animations.onFrame = engine::ent_to_monkey_swing;
@@ -1696,7 +1696,7 @@ void Character::state_func()
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
                 global_offset = m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += m_bf.bb_max[2] + engine::LaraHangVerticalEpsilon + engine::engine_frame_time * m_speed[2];
+                global_offset[2] += m_bf.boundingBox.max[2] + engine::LaraHangVerticalEpsilon + engine::engine_frame_time * m_speed[2];
                 m_climb = checkClimbability(global_offset, &next_fc, 0.0);
                 if(m_climb.edge_hit && m_climb.can_hang)
                 {
@@ -1716,7 +1716,7 @@ void Character::state_func()
                 }
             }
 
-            if(((m_moveType != world::MoveType::OnFloor)) && m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+            if(((m_moveType != world::MoveType::OnFloor)) && m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2] - 64.0))
             {
                 m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 m_bf.animations.onFrame = engine::ent_to_monkey_swing;
@@ -1813,7 +1813,7 @@ void Character::state_func()
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
                 global_offset = m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += m_bf.bb_max[2] + engine::LaraHangVerticalEpsilon;
+                global_offset[2] += m_bf.boundingBox.max[2] + engine::LaraHangVerticalEpsilon;
                 m_climb = checkClimbability(global_offset, &next_fc, 0.0);
                 if(m_climb.can_hang)
                 {
@@ -1849,7 +1849,7 @@ void Character::state_func()
                     {
                         m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                         m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
-                        m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + engine::LaraHangVerticalOffset;
+                        m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                         m_speed.setZero();
                         m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
                     }
@@ -1894,11 +1894,11 @@ void Character::state_func()
                     m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
-                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + engine::LaraHangVerticalOffset;
+                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                     m_speed.setZero();
                 }
             }
-            else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 64.0))
+            else if(m_command.action && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2] - 64.0))
             {
                 m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 m_bf.animations.onFrame = engine::ent_to_monkey_swing;
@@ -1934,14 +1934,14 @@ void Character::state_func()
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
                 global_offset = m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += m_bf.bb_max[2] + engine::LaraHangVerticalEpsilon;
+                global_offset[2] += m_bf.boundingBox.max[2] + engine::LaraHangVerticalEpsilon;
                 m_climb = checkClimbability(global_offset, &next_fc, 0.0);
                 if(m_climb.edge_hit && (m_climb.next_z_space >= 512.0))
                 {
                     m_moveType = world::MoveType::Climbing;
                     m_bf.animations.next_state = TR_STATE_LARA_CLIMBING;
                 }
-                else if((!m_heightInfo.ceiling_hit) || (m_transform.getOrigin()[2] + m_bf.bb_max[2] < m_heightInfo.ceiling_point[2]))
+                else if((!m_heightInfo.ceiling_hit) || (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] < m_heightInfo.ceiling_point[2]))
                 {
                     m_bf.animations.next_state = TR_STATE_LARA_LADDER_UP;
                 }
@@ -1996,21 +1996,21 @@ void Character::state_func()
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
                 global_offset = m_transform.getBasis().getColumn(1) * t;
-                global_offset[2] += m_bf.bb_max[2] + engine::LaraHangVerticalEpsilon;
+                global_offset[2] += m_bf.boundingBox.max[2] + engine::LaraHangVerticalEpsilon;
                 m_climb = checkClimbability(global_offset, &next_fc, 0.0);
                 if(m_climb.edge_hit && (m_climb.next_z_space >= 512.0))
                 {
                     m_moveType = world::MoveType::Climbing;
                     m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
                 }
-                else if((m_command.move[0] <= 0) && (m_heightInfo.ceiling_hit || (m_transform.getOrigin()[2] + m_bf.bb_max[2] >= m_heightInfo.ceiling_point[2])))
+                else if((m_command.move[0] <= 0) && (m_heightInfo.ceiling_hit || (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] >= m_heightInfo.ceiling_point[2])))
                 {
                     m_bf.animations.next_state = TR_STATE_LARA_LADDER_IDLE;
                 }
 
-                if(m_heightInfo.ceiling_hit && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2]))
+                if(m_heightInfo.ceiling_hit && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2]))
                 {
-                    m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+                    m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
                 }
             }
             else
@@ -2070,7 +2070,7 @@ void Character::state_func()
                     m_moveType = world::MoveType::Climbing;                             // hang on
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
-                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + engine::LaraHangVerticalOffset;
+                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                     m_speed.setZero();
                 }
                 else
@@ -2130,7 +2130,7 @@ void Character::state_func()
                     m_moveType = world::MoveType::Climbing;                             // hang on
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
-                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.bb_max[2] + engine::LaraHangVerticalOffset;
+                    m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                     m_speed.setZero();
                 }
                 else
@@ -2647,7 +2647,7 @@ void Character::state_func()
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             move[0] = m_transform.getOrigin()[0];
             move[1] = m_transform.getOrigin()[1];
-            move[2] = m_transform.getOrigin()[2] + 0.5f * (m_bf.bb_max[2] - m_bf.bb_min[2]);
+            move[2] = m_transform.getOrigin()[2] + 0.5f * (m_bf.boundingBox.max[2] - m_bf.boundingBox.min[2]);
             Character::getHeightInfo(move, &next_fc);
 
             lean(0.0);
@@ -2728,7 +2728,7 @@ void Character::state_func()
                 if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
                 {
                     global_offset = m_transform.getBasis().getColumn(1) * engine::CrawlForwardOffset;
-                    global_offset[2] += 0.5f * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+                    global_offset[2] += 0.5f * (m_bf.boundingBox.max[2] + m_bf.boundingBox.min[2]);
                     global_offset += m_transform.getOrigin();
                     Character::getHeightInfo(global_offset, &next_fc);
                     if((next_fc.floor_point[2] < m_transform.getOrigin()[2] + m_minStepUpHeight) &&
@@ -2744,7 +2744,7 @@ void Character::state_func()
                 if((checkNextPenetration(move) == 0) || (m_response.horizontal_collide == 0x00))
                 {
                     global_offset = m_transform.getBasis().getColumn(1) * -engine::CrawlForwardOffset;
-                    global_offset[2] += 0.5f * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+                    global_offset[2] += 0.5f * (m_bf.boundingBox.max[2] + m_bf.boundingBox.min[2]);
                     global_offset += m_transform.getOrigin();
                     Character::getHeightInfo(global_offset, &next_fc);
                     if((next_fc.floor_point[2] < m_transform.getOrigin()[2] + m_minStepUpHeight) &&
@@ -2770,7 +2770,7 @@ void Character::state_func()
                         m_heightInfo.ceiling_normale = next_fc.ceiling_normale;
                         m_heightInfo.ceiling_obj = next_fc.ceiling_obj;
 
-                        m_climb = checkClimbability(global_offset, &next_fc, 1.5f * m_bf.bb_max[2]);
+                        m_climb = checkClimbability(global_offset, &next_fc, 1.5f * m_bf.boundingBox.max[2]);
                         m_transform.getOrigin() = temp;                                       // restore entity position
                         if(m_climb.can_hang)
                         {
@@ -2806,7 +2806,7 @@ void Character::state_func()
                 break;
             }
             global_offset = m_transform.getBasis().getColumn(1) * engine::CrawlForwardOffset;
-            global_offset[2] += 0.5f * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+            global_offset[2] += 0.5f * (m_bf.boundingBox.max[2] + m_bf.boundingBox.min[2]);
             global_offset += m_transform.getOrigin();
             Character::getHeightInfo(global_offset, &next_fc);
 
@@ -2834,7 +2834,7 @@ void Character::state_func()
                 break;
             }
             global_offset = m_transform.getBasis().getColumn(1) * -engine::CrawlForwardOffset;
-            global_offset[2] += 0.5f * (m_bf.bb_max[2] + m_bf.bb_min[2]);
+            global_offset[2] += 0.5f * (m_bf.boundingBox.max[2] + m_bf.boundingBox.min[2]);
             global_offset += m_transform.getOrigin();
             Character::getHeightInfo(global_offset, &next_fc);
             if((m_command.move[0] != -1) || m_response.killed)
@@ -2888,12 +2888,12 @@ void Character::state_func()
             m_command.rot[0] = 0.0;
             m_dirFlag = ENT_STAY;
             ///@FIXME: stick for TR3+ monkey swing fix... something wrong with anim 150
-            if(m_command.action && (m_moveType != world::MoveType::Monkeyswing) && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.bb_max[2] > m_heightInfo.ceiling_point[2] - 96.0))
+            if(m_command.action && (m_moveType != world::MoveType::Monkeyswing) && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2] - 96.0))
             {
                 m_moveType = world::MoveType::Monkeyswing;
                 setAnimation(TR_ANIMATION_LARA_MONKEY_IDLE, 0);
                 m_bf.animations.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
-                m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
+                m_transform.getOrigin()[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
             }
 
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)

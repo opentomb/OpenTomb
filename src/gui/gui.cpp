@@ -581,7 +581,7 @@ void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransf
 
     if(size != 0.0)
     {
-        auto bb = bf->bb_max - bf->bb_min;
+        auto bb = bf->boundingBox.getDiameter();
         if(bb[0] >= bb[1])
         {
             size /= ((bb[0] >= bb[2]) ? (bb[0]) : (bb[2]));
