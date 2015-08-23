@@ -7,11 +7,6 @@
 #include <LinearMath/btScalar.h>
 #include <btBulletCollisionCommon.h>
 
-// Original (canonical) TR frame rate.
-// Needed for animation speed calculations.
-
-#define TR_FRAME_RATE (30.0f)
-
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.

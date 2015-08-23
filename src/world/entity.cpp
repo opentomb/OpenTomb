@@ -697,7 +697,7 @@ void Entity::updateTransform()
 
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
-    btScalar t = m_currentSpeed * m_speedMult;
+    btScalar t = m_currentSpeed * world::animation::BaseFrameRate;
     btScalar vz = (zeroVz) ? (0.0) : (m_speed[2]);
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
@@ -744,7 +744,6 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0f / TR_FRAME_RATE;
     }
 }
 
@@ -970,7 +969,6 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
     frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0 / TR_FRAME_RATE;
 
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;
@@ -981,7 +979,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     //long int t = (bf.animations.frame_time) / bf.animations.period;
     //btScalar dt = bf.animations.frame_time - (btScalar)t * bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
+    m_bf.animations.frame_time = frame / animation::BaseFrameRate; // + dt;
 
     updateCurrentBoneFrame(&m_bf, &m_transform);
     updateRigidBody(false);
@@ -990,15 +988,15 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 int Entity::getAnimDispatchCase(uint32_t id)
 {
     animation::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    animation::StateChange* stc = anim->stateChanges.data();
 
-    for(uint16_t i = 0; i < anim->stateChanges.size(); i++, stc++)
+    for(uint16_t i = 0; i < anim->stateChanges.size(); i++)
     {
+        animation::StateChange* stc = &anim->stateChanges[i];
         if(stc->id == id)
         {
-            animation::AnimDispatch* disp = stc->anim_dispatch.data();
-            for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++, disp++)
+            for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++)
             {
+                animation::AnimDispatch* disp = &stc->anim_dispatch[j];
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
                     //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
                 {
@@ -1018,7 +1016,7 @@ void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::
 {
     animation::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
 
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
+    *frame = (bf->animations.frame_time + time) * animation::BaseFrameRate;
     *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
     *anim = bf->animations.current_animation;
 
@@ -1170,13 +1168,10 @@ animation::AnimUpdate Entity::frame(btScalar time)
     }
 
     // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
-    m_bf.animations.frame_time += time;
 
-    t = (m_bf.animations.frame_time) / m_bf.animations.period;
-    dt = m_bf.animations.frame_time - static_cast<btScalar>(t) * m_bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period + dt;
-    m_bf.animations.lerp = dt / m_bf.animations.period;
-    getNextFrame(&m_bf, m_bf.animations.period, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
+    dt = m_bf.animations.updateFrameTime(time);
+    t = m_bf.animations.frame_time * animation::BaseFrameRate;
+    getNextFrame(&m_bf, 1/animation::BaseFrameRate, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
 
     frameImpl(time, frame, ret);
 

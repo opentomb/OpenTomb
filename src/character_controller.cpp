@@ -875,7 +875,7 @@ btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool comma
         }
     }
 
-    return m_inertiaLinear * m_speedMult;
+    return m_inertiaLinear * world::animation::BaseFrameRate;
 }
 
 /*
@@ -983,7 +983,7 @@ int Character::moveOnFloor()
         if(floorNormal[2] > 0.02 && floorNormal[2] < m_criticalSlantZComponent)
         {
             floorNormal[2] = -floorNormal[2];
-            speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            speed = floorNormal * world::animation::BaseFrameRate * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
@@ -1005,7 +1005,7 @@ int Character::moveOnFloor()
         }
         else    // no slide - free to walk
         {
-            const btScalar fullSpeed = m_currentSpeed * m_speedMult;
+            const btScalar fullSpeed = m_currentSpeed * world::animation::BaseFrameRate;
             m_response.vertical_collide |= 0x01;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
@@ -1233,7 +1233,7 @@ int Character::monkeyClimbing()
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    t = m_currentSpeed * m_speedMult;
+    t = m_currentSpeed * world::animation::BaseFrameRate;
     m_response.vertical_collide |= 0x01;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_MONKEYSWING, 0);
@@ -1336,7 +1336,7 @@ int Character::wallsClimbing()
     {
         spd /= t;
     }
-    m_speed = spd * m_currentSpeed * m_speedMult;
+    m_speed = spd * m_currentSpeed * world::animation::BaseFrameRate;
     move = m_speed * engine::engine_frame_time;
 
     ghostUpdate();
@@ -1368,7 +1368,7 @@ int Character::climbing()
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    t = m_currentSpeed * m_speedMult;
+    t = m_currentSpeed * world::animation::BaseFrameRate;
     m_response.vertical_collide |= 0x01;
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
@@ -2309,7 +2309,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     btVector3 spd(0.0, 0.0, 0.0);
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * m_speedMult;
+    t = v_horizontal * world::animation::BaseFrameRate;
 
     // Calculate the direction of jump by vector multiplication.
     if(m_dirFlag & ENT_MOVE_FORWARD)
@@ -2343,7 +2343,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     m_speed = spd;
 
     // Apply vertical speed.
-    m_speed[2] = v_vertical * m_speedMult;
+    m_speed[2] = v_vertical * world::animation::BaseFrameRate;
     m_moveType = world::MoveType::FreeFalling;
 }
 
@@ -2451,10 +2451,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                     if(ss_anim->current_frame < t - 1)
@@ -2505,10 +2502,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::FireToIdle:
                     // Yes, same animation, reverse frames order;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {
@@ -2524,10 +2518,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                     if(ss_anim->current_frame < t - 1)
@@ -2560,10 +2551,7 @@ void Character::doWeaponFrame(btScalar time)
                     if(m_command.action)
                     {
                         // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
+                        dt = ss_anim->updateFrameTime(time);
                         t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
@@ -2596,10 +2584,7 @@ void Character::doWeaponFrame(btScalar time)
 
                 case WeaponState::IdleToHide:
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     if(ss_anim->current_frame < t - 1)
                     {
                         ss_anim->next_frame = ss_anim->current_frame + 1;
@@ -2632,10 +2617,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                     if(ss_anim->current_frame < t - 1)
@@ -2686,10 +2668,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::FireToIdle:
                     // Yes, same animation, reverse frames order;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {
@@ -2705,10 +2684,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                     if(ss_anim->current_frame < t - 1)
@@ -2741,10 +2717,7 @@ void Character::doWeaponFrame(btScalar time)
                     if(m_command.action)
                     {
                         // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
+                        dt = ss_anim->updateFrameTime(time);
                         t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
@@ -2778,10 +2751,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::IdleToHide:
                     // Yes, same animation, reverse frames order;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
+                    dt = ss_anim->updateFrameTime(time);
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {

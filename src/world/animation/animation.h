@@ -21,6 +21,14 @@ struct BaseMesh;
 namespace animation
 {
 
+namespace
+{
+// Original (canonical) TR frame rate.
+// Needed for animation speed calculations.
+
+constexpr float BaseFrameRate = 30.0f;
+}
+
 enum class AnimUpdate
 {
     None,
@@ -184,14 +192,22 @@ struct SSAnimation
 
     uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period = 1.0f / 30;                                 // one frame change period
     btScalar                    frame_time = 0;                                     // current time
     btScalar                    lerp = 0;
 
     void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
 
     core::SkeletalModel    *model = nullptr;                                          // pointer to the base model
-    SSAnimation      *next = nullptr;
+    SSAnimation            *next = nullptr;
+
+    btScalar updateFrameTime(btScalar time)
+    {
+        frame_time += time;
+        current_frame = frame_time * BaseFrameRate;
+        btScalar dt = frame_time - current_frame / BaseFrameRate;
+        lerp = dt * BaseFrameRate;
+        return dt;
+    }
 };
 
 struct SSBoneTag

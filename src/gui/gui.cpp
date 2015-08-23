@@ -555,13 +555,9 @@ void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
         bf->animations.current_frame = frame;
     }
 
-    bf->animations.frame_time += time;
-
-    t = (bf->animations.frame_time) / bf->animations.period;
-    dt = bf->animations.frame_time - static_cast<btScalar>(t) * bf->animations.period;
-    bf->animations.frame_time = static_cast<btScalar>(frame) * bf->animations.period + dt;
-    bf->animations.lerp = dt / bf->animations.period;
-    world::Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    dt = bf->animations.updateFrameTime(time);
+    t = bf->animations.frame_time * world::animation::BaseFrameRate;
+    world::Entity::getNextFrame(bf, 1/world::animation::BaseFrameRate, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     world::Entity::updateCurrentBoneFrame(bf, nullptr);
 }
 
