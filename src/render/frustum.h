@@ -3,12 +3,22 @@
 #define FRUSTUM_H
 
 #include <stdint.h>
-#include "core/vmath.h"
+#include "../core/vmath.h"
 
 struct room_s;
-struct portal_s;
 struct camera_s;
 struct obb_s;
+
+
+typedef struct portal_s                                                         
+{
+    uint16_t        vertex_count;     
+    float          *vertex;                                                     // Оригинальные вершины портала
+    float           norm[4];                                                    // уравнение плоскости оригинальных вершин (оно же нормаль)
+    float           centre[3];                                                  // центр портала
+    struct room_s  *dest_room;                                                  // куда ведет портал
+    struct room_s  *current_room;                                               // комната, где нааходится портал
+}portal_t, *portal_p;
 
 typedef struct frustum_s
 {
@@ -53,5 +63,13 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
 int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum);
 int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
 int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room);
+
+
+portal_p Portal_Create(unsigned int vcount);
+void Portal_Clear(portal_p p);
+
+void Portal_Move(portal_p p, float mv[3]);
+int  Portal_RayIntersect(portal_p p, float dir[3], float dot[3]);               // проверка на пересечение луча и портала
+void Portal_GenNormale(portal_p p);
 
 #endif

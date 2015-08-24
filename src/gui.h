@@ -4,8 +4,8 @@
 
 #include "core/gl_font.h"
 #include "core/console.h"
+#include "render/render.h"
 #include "entity.h"
-#include "render.h"
 #include "character_controller.h"
 
 

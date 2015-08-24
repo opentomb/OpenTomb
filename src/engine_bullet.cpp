@@ -20,13 +20,13 @@ extern "C" {
 #include "core/gl_font.h"
 #include "core/console.h"
 #include "core/obb.h"
+#include "render/render.h"
 #include "engine.h"
 #include "mesh.h"
 #include "character_controller.h"
 #include "engine_physics.h"
 #include "script.h"
 #include "entity.h"
-#include "render.h"
 #include "resource.h"
 #include "world.h"
 
@@ -1115,7 +1115,10 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
     }
 }
 
-
+/*
+ * DO something with sticky 80% boxes!!!
+ * first of all: convex offsetted boxes to avoid every frame offsets calculation.
+ */
 void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16])
 {
     if(physics->objects_count > 0)
@@ -1344,14 +1347,13 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
 {
     struct collision_node_s *ret = NULL;
 
-    if(physics->ghostObjects != NULL)
+    if(physics->ghostObjects)
     {
         btTransform orig_tr;
         for(uint16_t i=0;i<physics->objects_count;i++)
         {
             btPairCachingGhostObject *ghost = physics->ghostObjects[i];
             btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-            struct engine_container_s *cont = (struct engine_container_s*)ghost->getUserPointer();
             btVector3 aabb_min, aabb_max;
 
             ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
@@ -1389,7 +1391,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                             }
                             btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
                             cn->obj = (engine_container_p)obj->getUserPointer();
-                            if(cont == cn->obj)
+                            if(physics->cont == cn->obj)
                             {
                                 obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
                                 cn->obj = (engine_container_p)obj->getUserPointer();

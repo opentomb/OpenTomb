@@ -19,13 +19,13 @@ extern "C" {
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
+#include "render/camera.h"
+#include "render/render.h"
 #include "audio.h"
 #include "gui.h"
-#include "camera.h"
 #include "engine.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "render.h"
 #include "engine_string.h"
 #include "world.h"
 
@@ -319,7 +319,6 @@ void AudioSource::SetUnderwater()
 
 void AudioSource::LinkEmitter()
 {
-    ALfloat  vec[3];
     entity_p ent;
 
     switch(emitter_type)
@@ -328,6 +327,7 @@ void AudioSource::LinkEmitter()
             ent = World_GetEntityByID(&engine_world, emitter_ID);
             if(ent)
             {
+                ALfloat  vec[3];
                 vec3_copy(vec, ent->transform + 12);
                 SetPosition(vec);
                 vec3_copy(vec, ent->speed);

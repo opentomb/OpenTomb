@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "core/vmath.h"
+#include "../core/vmath.h"
 
 #define R_DRAW_WIRE             0x00000001      // Wireframe rendering
 #define R_DRAW_ROOMBOXES        0x00000002      // Show room bounds

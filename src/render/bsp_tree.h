@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "core/vmath.h"
+#include "../core/vmath.h"
 
 struct polygon_s;
 struct frustum_s;

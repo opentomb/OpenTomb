@@ -7386,7 +7386,7 @@
 
 1433924547 d:\dev\opentomb\src\anim_state_control.h
 
-1439230640 d:\dev\opentomb\src\character_controller.h
+1440332194 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 
 1439111575 d:\dev\opentomb\src\resource.h
@@ -7421,11 +7421,11 @@
 	"engine_string.h"
 	"world.h"
 
-1439745644 d:\dev\opentomb\src\gui.h
+1440439125 d:\dev\opentomb\src\gui.h
 	"core/gl_font.h"
 	"core/console.h"
+	"render/render.h"
 	"entity.h"
-	"render.h"
 	"character_controller.h"
 
 1437244870 d:\dev\opentomb\src\engine_string.h
@@ -9151,7 +9151,7 @@
 	"redblack.h"
 	"system.h"
 
-1437244869 source:d:\dev\opentomb\src\core\system.c
+1440260038 source:d:\dev\opentomb\src\core\system.c
 	<stdio.h>
 	<stdlib.h>
 	<sys/time.h>
@@ -16242,4 +16242,10 @@
 
 1440012767 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
+
+1440439105 d:\dev\opentomb\src\render\render.h
+	<stdint.h>
+	<SDL2/SDL.h>
+	<SDL2/SDL_opengl.h>
+	"../core/vmath.h"
 

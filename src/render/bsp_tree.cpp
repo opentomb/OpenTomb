@@ -4,9 +4,9 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "core/gl_util.h"
-#include "core/vmath.h"
-#include "core/polygon.h"
+#include "../core/gl_util.h"
+#include "../core/vmath.h"
+#include "../core/polygon.h"
 #include "bsp_tree.h"
 #include "frustum.h"
 

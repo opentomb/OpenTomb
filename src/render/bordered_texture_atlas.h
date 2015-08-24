@@ -29,8 +29,8 @@
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include "vt/tr_types.h"
-#include "core/polygon.h"
+#include "../core/polygon.h"
+#include "../vt/tr_types.h"
 
 class bordered_texture_atlas
 {

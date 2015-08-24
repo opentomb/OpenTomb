@@ -17,7 +17,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/vmath.h"
 
-#include "camera.h"
+#include "render/camera.h"
 #include "anim_state_control.h"
 #include "engine.h"
 #include "engine_lua.h"

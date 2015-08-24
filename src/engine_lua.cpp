@@ -13,6 +13,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/polygon.h"
 #include "core/vmath.h"
+#include "render/camera.h"
 #include "engine.h"
 #include "engine_lua.h"
 #include "engine_physics.h"
@@ -22,7 +23,6 @@ extern "C" {
 #include "character_controller.h"
 #include "gui.h"
 #include "audio.h"
-#include "camera.h"
 #include "controls.h"
 #include "world.h"
 

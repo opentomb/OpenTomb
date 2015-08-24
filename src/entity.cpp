@@ -4,11 +4,11 @@
 #include "core/console.h"
 #include "core/vmath.h"
 #include "core/obb.h"
+#include "render/camera.h"
+#include "render/render.h"
 #include "audio.h"
 #include "mesh.h"
 #include "entity.h"
-#include "render.h"
-#include "camera.h"
 #include "world.h"
 #include "engine.h"
 #include "engine_physics.h"
@@ -568,18 +568,6 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         }
     }
 
-    /*if(Physics_IsGhostsInited(ent->physics))
-    {
-        float v[3], tr[16];
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-        {
-            Physics_GetBodyWorldTransform(ent->physics, tr, i);
-            Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
-            vec3_copy(tr+12, v);
-            Physics_SetGhostWorldTransform(ent->physics, tr, i);
-        }
-    }*/
-
     Entity_RebuildBV(ent);
 }
 
@@ -588,28 +576,13 @@ void Entity_GhostUpdate(struct entity_s *ent)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
-        /*if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+        float tr[16], v[3];
+        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
         {
-            float tr[16], pos[3], *v;
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
-                v = ent->bf->animations.model->mesh_tree[i].mesh_base->centre;
-                Mat4_vec3_mul_macro(pos, tr, v);
-                vec3_copy(tr + 12, v);
-                Physics_SetGhostWorldTransform(ent->physics, tr, i);
-            }
-        }
-        else*/
-        {
-            float tr[16], v[3];
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
-            {
-                Physics_GetBodyWorldTransform(ent->physics, tr, i);
-                Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
-                vec3_copy(tr + 12, v);
-                Physics_SetGhostWorldTransform(ent->physics, tr, i);
-            }
+            Physics_GetBodyWorldTransform(ent->physics, tr, i);
+            Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
+            vec3_copy(tr + 12, v);
+            Physics_SetGhostWorldTransform(ent->physics, tr, i);
         }
     }
 }
@@ -643,9 +616,9 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
                 Physics_GetGhostWorldTransform(ent->physics, tr, m);
-                from[0] = tr[12 + 0] + ent->transform[12+0] - orig_pos[0];
-                from[1] = tr[12 + 1] + ent->transform[12+1] - orig_pos[1];
-                from[2] = tr[12 + 2] + ent->transform[12+2] - orig_pos[2];
+                from[0] = tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
+                from[1] = tr[12 + 1] + ent->transform[12 + 1] - orig_pos[1];
+                from[2] = tr[12 + 2] + ent->transform[12 + 2] - orig_pos[2];
             }
             else
             {
@@ -663,7 +636,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 break;
             }
-            int iter = (float)(2.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
+            int iter = (float)(2.0 * move_len / btag->mesh_base->R) + 1;        ///@FIXME (not a critical): magick const 2.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;
@@ -682,7 +655,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
                 vec3_add_to(curr, move);
             }
         }
-        vec3_sub(reaction, ent->transform+12, orig_pos);
+        vec3_sub(reaction, ent->transform + 12, orig_pos);
         vec3_copy(ent->transform + 12, orig_pos);
     }
 
@@ -851,6 +824,8 @@ float Entity_FindDistance(entity_p entity_1, entity_p entity_2)
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
+    // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
+    Entity_GhostUpdate(ent);
     collision_node_p cn = Physics_GetCurrentCollisions(ent->physics);
     for(;cn;cn=cn->next)
     {
@@ -1427,9 +1402,7 @@ int Entity_Frame(entity_p entity, float time)
 
     if((entity->character) && (ss_anim->current_frame != frame))
     {
-
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
-
         if((af->accel_x == 0) || (frame < entity->bf->animations.current_frame))
         {
             entity->current_speed  = af->speed_x;

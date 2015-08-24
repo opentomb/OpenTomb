@@ -793,20 +793,6 @@
 		<Unit filename="src/audio.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/bordered_texture_atlas.cpp" />
-		<Unit filename="src/bordered_texture_atlas.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bsp_tree.cpp" />
-		<Unit filename="src/bsp_tree.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bsp_tree_2d.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/bsp_tree_2d.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp" />
 		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -1617,10 +1603,6 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/bullet/btBulletDynamicsCommon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/camera.cpp" />
-		<Unit filename="src/camera.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/character_controller.cpp" />
@@ -3001,10 +2983,6 @@
 		<Unit filename="src/freetype2/src/winfonts/winfnt.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/frustum.cpp" />
-		<Unit filename="src/frustum.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/game.cpp" />
 		<Unit filename="src/game.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -3238,28 +3216,30 @@
 		<Unit filename="src/ogg/vorbisfile.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/portal.cpp" />
-		<Unit filename="src/portal.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/render/bordered_texture_atlas.cpp" />
+		<Unit filename="src/render/bordered_texture_atlas.h" />
+		<Unit filename="src/render/bsp_tree.cpp" />
+		<Unit filename="src/render/bsp_tree.h" />
+		<Unit filename="src/render/bsp_tree_2d.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/render.cpp" />
-		<Unit filename="src/render.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/render/bsp_tree_2d.h" />
+		<Unit filename="src/render/camera.cpp" />
+		<Unit filename="src/render/camera.h" />
+		<Unit filename="src/render/frustum.cpp" />
+		<Unit filename="src/render/frustum.h" />
+		<Unit filename="src/render/render.cpp" />
+		<Unit filename="src/render/render.h" />
+		<Unit filename="src/render/shader_description.cpp" />
+		<Unit filename="src/render/shader_description.h" />
+		<Unit filename="src/render/shader_manager.cpp" />
+		<Unit filename="src/render/shader_manager.h" />
 		<Unit filename="src/resource.cpp" />
 		<Unit filename="src/resource.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/script.cpp" />
 		<Unit filename="src/script.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/shader_description.cpp" />
-		<Unit filename="src/shader_description.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/shader_manager.cpp" />
-		<Unit filename="src/shader_manager.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/vt/glmath.h">
