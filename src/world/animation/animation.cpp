@@ -94,7 +94,7 @@ int16_t SSAnimation::getCurrentFrame() const
 {
     auto tmp = std::floor( frame_time * BaseFrameRate );
     if(reverse)
-        tmp = tmp - 1 - model->animations[current_animation].frames.size();
+        tmp = model->animations[current_animation].frames.size() - 1 - tmp;
     return tmp;
 }
 
