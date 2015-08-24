@@ -525,38 +525,23 @@ void renderStrings()
 void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
-    long int t;
-    btScalar dt;
-    world::animation::StateChange* stc;
-
-    bf->animations.lerp = 0.0;
-    stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
+    world::animation::StateChange* stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
     world::Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
-        /*frame %= bf->model->animations[anim].frames.size();
-        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames.size() - 1 + frame);
-
-        bf->last_state = bf->model->animations[anim].state_id;
-        bf->next_state = bf->model->animations[anim].state_id;
-        bf->current_animation = anim;
-        bf->current_frame = frame;
-        bf->next_animation = anim;
-        bf->next_frame = frame;*/
         stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
     }
-    else if(bf->animations.current_frame != frame)
+    else if(bf->animations.getCurrentFrame() != frame)
     {
-        if(bf->animations.current_frame == 0)
+        if(bf->animations.getCurrentFrame() == 0)
         {
             bf->animations.last_animation = bf->animations.current_animation;
         }
-        bf->animations.current_frame = frame;
+        bf->animations.setFrame( frame );
     }
 
-    dt = bf->animations.updateFrameTime(time);
-    t = bf->animations.frame_time * world::animation::BaseFrameRate;
+    bf->animations.updateFrameTime(time);
     world::Entity::getNextFrame(bf, 1/world::animation::BaseFrameRate, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     world::Entity::updateCurrentBoneFrame(bf, nullptr);
 }
@@ -2507,12 +2492,10 @@ void ItemNotifier::Draw()
     if(!item)
         return;
 
-    int anim = item->bf->animations.current_animation;
-    int frame = item->bf->animations.current_frame;
-    btScalar time = item->bf->animations.frame_time;
+    const auto oldAnim = item->bf->animations.current_animation;
+    const auto oldTime = item->bf->animations.frame_time;
 
     item->bf->animations.current_animation = 0;
-    item->bf->animations.current_frame = 0;
     item->bf->animations.frame_time = 0.0;
 
     Item_Frame(item->bf.get(), 0.0);
@@ -2523,9 +2506,8 @@ void ItemNotifier::Draw()
     util::Mat4_RotateX(matrix, mCurrRotY + mRotY);
     renderItem(item->bf.get(), mSize, matrix);
 
-    item->bf->animations.current_animation = anim;
-    item->bf->animations.current_frame = frame;
-    item->bf->animations.frame_time = time;
+    item->bf->animations.current_animation = oldAnim;
+    item->bf->animations.frame_time = oldTime;
 }
 
 void ItemNotifier::SetPos(float X, float Y)

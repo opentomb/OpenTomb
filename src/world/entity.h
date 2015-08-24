@@ -80,10 +80,10 @@ struct EntityCollisionNode
 
 struct BtEntityData
 {
-    bool no_fix_all;
-    uint32_t no_fix_body_parts;
+    bool no_fix_all = false;
+    uint32_t no_fix_body_parts = 0;
     std::vector<std::unique_ptr<btPairCachingGhostObject>> ghostObjects;           // like Bullet character controller for penetration resolving.
-    std::unique_ptr<btManifoldArray> manifoldArray;          // keep track of the contact manifolds
+    std::unique_ptr<btManifoldArray> manifoldArray = nullptr;          // keep track of the contact manifolds
 
     std::vector<std::unique_ptr<btCollisionShape>> shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
@@ -139,7 +139,7 @@ public:
     bool m_wasRenderedLines; // same for debug lines
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
-    btVector3                           m_speed;              // speed of the entity XYZ
+    btVector3                           m_speed = {0,0,0};              // speed of the entity XYZ
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
@@ -147,7 +147,7 @@ public:
     animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
-    btTransform m_transform; // GL transformation matrix
+    btTransform m_transform = btTransform::getIdentity(); // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
     core::OrientedBoundingBox m_obb;                // oriented bounding box
@@ -222,7 +222,7 @@ public:
     virtual void transferToRoom(Room *room);
     virtual void frameImpl(btScalar /*time*/, int16_t frame, animation::AnimUpdate /*state*/)
     {
-        m_bf.animations.current_frame = frame;
+        m_bf.animations.setFrame(frame);
     }
 
     virtual void processSectorImpl()

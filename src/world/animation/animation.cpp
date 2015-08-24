@@ -80,5 +80,23 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
     }
 }
 
+bool SSAnimation::isLastFrame() const
+{
+    return getCurrentFrame() >= model->animations[current_animation].frames.size()-1;
+}
+
+bool SSAnimation::finished() const
+{
+    return getCurrentFrame() >= model->animations[current_animation].frames.size();
+}
+
+int16_t SSAnimation::getCurrentFrame() const
+{
+    auto tmp = std::floor( frame_time * BaseFrameRate );
+    if(reverse)
+        tmp = tmp - 1 - model->animations[current_animation].frames.size();
+    return tmp;
+}
+
 } // namespace animation
 } // namespace world

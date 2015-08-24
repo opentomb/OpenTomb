@@ -1493,12 +1493,12 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
         return{};
     }
 
-    return std::tuple<int16_t, int16_t, uint32_t>
-    {
+    return std::make_tuple
+    (
         ent->m_bf.animations.current_animation,
-            ent->m_bf.animations.current_frame,
-            static_cast<uint32_t>(ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size())
-    };
+        ent->m_bf.animations.getCurrentFrame(),
+        static_cast<uint32_t>(ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size())
+    );
 }
 
 bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
@@ -2319,13 +2319,13 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
     }
 }
 
-void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
+void lua_SetCharacterWeaponModel(int id, int weaponmodel, bool armed)
 {
     std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
-        ent->setWeaponModel(weaponmodel, state);
+        ent->setWeaponModel(weaponmodel, armed);
     }
     else
     {
