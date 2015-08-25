@@ -14,11 +14,8 @@
 #include "../world.h"
 
 
-#define PORTAL_NORMAL 0x00
-#define PORTAL_FICTIVE 0x01
-
-#define SPLIT_EMPTY 0x00
-#define SPLIT_SUCCES 0x01
+#define SPLIT_EMPTY         (0x00)
+#define SPLIT_SUCCES        (0x01)
 
 CFrustumManager::CFrustumManager(uint32_t buffer_size)
 {
@@ -126,30 +123,30 @@ int CFrustumManager::SplitByPlane(frustum_p p, float n[4], float *buf)
             {
                 if(dist[0] < -SPLIT_EPSILON)
                 {
-                    vec3_sub(dir, curr_v, prev_v)
-                    vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
-                    v += 3;                                                         // сдвигаем
+                    vec3_sub(dir, curr_v, prev_v);
+                    vec3_ray_plane_intersect(prev_v, dir, n, v, t);
+                    v += 3;
                     added++;
                 }
-                vec3_copy(v, curr_v);                                               // добавляем
-                v += 3;                                                             // инкрементируем указатель на буффер вершин
-                added++;                                                            // инкрементируем результат
+                vec3_copy(v, curr_v);
+                v += 3;
+                added++;
             }
             else if(dist[1] < -SPLIT_EPSILON)
             {
                 if(dist[0] > SPLIT_EPSILON)
                 {
-                    vec3_sub(dir, curr_v, prev_v)
-                    vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
-                    v += 3;                                                         // сдвигаем
+                    vec3_sub(dir, curr_v, prev_v);
+                    vec3_ray_plane_intersect(prev_v, dir, n, v, t);
+                    v += 3;
                     added++;
                 }
             }
             else
             {
-                vec3_copy(v, curr_v);                                               // добавляем
-                v += 3;                                                             // инкрементируем указатель на буффер вершин
-                added++;                                                            // инкрементируем результат
+                vec3_copy(v, curr_v);
+                v += 3;
+                added++;
             }
 
             prev_v = curr_v;
@@ -157,7 +154,7 @@ int CFrustumManager::SplitByPlane(frustum_p p, float n[4], float *buf)
             dist[0] = dist[1];
         }
 
-        if(added <= 2)                                                              // ничего не добавлено или вырождено
+        if(added <= 2)
         {
             p->vertex_count = 0;
             return SPLIT_EMPTY;
@@ -217,8 +214,8 @@ void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
         for(uint16_t i=0;i<p->vertex_count;i++,r+=4)
         {
             float t;
-            vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
-            vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
+            vec3_sub(V1, prev_v, cam->pos);
+            vec3_sub(V2, curr_v, prev_v);
             vec3_norm(V1, t);
             vec3_norm(V2, t);
             vec3_cross(r, V1, V2)
@@ -235,15 +232,11 @@ void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
     }
 }
 
-/*
- * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
- * возвращает указатель на свежесгенеренный фрустум
- */
 frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam)
 {
     if(!m_need_realloc)
     {
-        if(vec3_plane_dist(portal->norm, cam->pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+        if(vec3_plane_dist(portal->norm, cam->pos) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
         {
             return NULL;
         }
@@ -313,7 +306,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
 
         int buf_size = (current_gen->vertex_count + emitter->vertex_count + 4) * 3 * sizeof(float);
         float *tmp = (float*)Sys_GetTempMem(buf_size);
-        if(this->SplitByPlane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
+        if(this->SplitByPlane(current_gen, emitter->norm, tmp))                 // splitting by main frustum clip plane
         {
             n = emitter->planes;
             for(uint16_t i=0;i<emitter->vertex_count;i++,n+=4)
@@ -390,29 +383,22 @@ int Frustum_GetFrustumsCount(struct frustum_s *f)
 }
 
 /**
- * ф-я разрыватель замкнутых реккурсий
- * если в комнате есть фрустум, породивший текущий, то возвращаем 1
- * и тогда порочный цикл рвется
+ * we need that checking to avoid infinite recursions
  */
-int Frustum_HaveParent(frustum_p parent, frustum_p frustum)
+bool Frustum_HaveParent(frustum_p parent, frustum_p frustum)
 {
     while(frustum)
     {
         if(parent == frustum)
         {
-            return 1;
+            return true;
         }
         frustum = frustum->parent;
     }
-    return 0;
+    return false;
 }
 
-
-/**
- * Проверка полигона на видимость через портал.
- * данный метод НЕ для реалтайма, т.к. проверка в общем случае выходит дороже отрисовки...
- */
-int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
+bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
 {
     float t, dir[3], T[3], dist[2];
     float *prev_n, *curr_n, *next_n;
@@ -421,49 +407,49 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
 
     if(vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0)
     {
-        return 0;
+        return false;
     }
 
-    vec3_sub(dir, frustum->vertex, frustum->cam_pos)                            // направление от позици камеры до произвольной вершины фрустума
-    if(Polygon_RayIntersect(p, dir, frustum->cam_pos, &t))                      // полигон вмещает фрустум портала (бреед, но проверить надо)
+    vec3_sub(dir, frustum->vertex, frustum->cam_pos);
+    if(Polygon_RayIntersect(p, dir, frustum->cam_pos, &t))
     {
-        return 1;
+        return true;
     }
 
-    next_n = frustum->planes;                                                   // генерим очередь проверки
-    curr_n = frustum->planes + 4*(frustum->vertex_count-1);                     // 3 соседних плоскости отсечения
-    prev_n = curr_n - 4;                                                        //
-    ins = 1;                                                                    // на случай если нет пересечений
-    for(uint16_t i=0;i<frustum->vertex_count;i++)                               // перебираем все плоскости текущего фрустума
+    next_n = frustum->planes;
+    curr_n = frustum->planes + 4*(frustum->vertex_count-1);
+    prev_n = curr_n - 4;
+    ins = 1;
+    for(uint16_t i=0;i<frustum->vertex_count;i++)
     {
-        curr_v = p->vertices;                                                   // генерим очередь вершин под проверку
-        prev_v = p->vertices + p->vertex_count - 1;                             //
-        dist[0] = vec3_plane_dist(curr_n, prev_v->position);                    // расстояние со знаком от текущей точки до предыдущей плоскости
+        curr_v = p->vertices;
+        prev_v = p->vertices + p->vertex_count - 1;
+        dist[0] = vec3_plane_dist(curr_n, prev_v->position);
         outs = 1;
-        for(uint16_t j=0;j<p->vertex_count;j++)                                 // перебираем все вершины полигона
+        for(uint16_t j=0;j<p->vertex_count;j++)
         {
             dist[1] = vec3_plane_dist(curr_n, curr_v->position);
-            if(ABS(dist[0]) < SPLIT_EPSILON)                                    // точка на плоскости отсечения
+            if(ABS(dist[0]) < SPLIT_EPSILON)
             {
                 if((vec3_plane_dist(prev_n, prev_v->position) > -SPLIT_EPSILON) &&
                    (vec3_plane_dist(next_n, prev_v->position) > -SPLIT_EPSILON) &&
                    (vec3_plane_dist(frustum->norm, prev_v->position) > -SPLIT_EPSILON))
                 {
-                    return 1;                                                   // прошли проверку на пересечение вершины многоугльника и фрустума
+                    return true;
                 }
             }
 
-            if((dist[0] * dist[1] < 0) && ABS(dist[1]) >= SPLIT_EPSILON)        // вершины с разных сторон плоскости (или на ней)
+            if((dist[0] * dist[1] < 0) && ABS(dist[1]) >= SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position)               // вектор, соединяющий вершины
-                vec3_ray_plane_intersect(prev_v->position, dir, curr_n, T, t)   // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position)
+                vec3_ray_plane_intersect(prev_v->position, dir, curr_n, T, t)
                 if((vec3_plane_dist(prev_n, T) > -SPLIT_EPSILON) && (vec3_plane_dist(next_n, T) > -SPLIT_EPSILON))
                 {
-                    return 1;                                                   // прошли проверку на пересечение отрезка многоугльника и фрустума
+                    return 1;
                 }
             }
 
-            if(dist[1] < -SPLIT_EPSILON)                                        // точка снаружи
+            if(dist[1] < -SPLIT_EPSILON)
             {
                 ins = 0;
             }
@@ -472,25 +458,25 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
                 outs = 0;
             }
 
-            prev_v = curr_v;                                                    // сдвинули очередь вершин полигона
-            curr_v ++;                                                          //
-            dist[0] = dist[1];                                                  // сдвинули очередь дистанций
-        }                                                                       // закончили переборку вершин полигона
+            prev_v = curr_v;
+            curr_v ++;
+            dist[0] = dist[1];
+        }
 
         if(outs)
         {
-            return 0;                                                           // все точки снаружи относительно текущей плоскости - однозначно выход
+            return false;
         }
-        prev_n = curr_n;                                                        // сдвинули очередь плоскостей отсечения
+        prev_n = curr_n;
         curr_n = next_n;
         next_n += 4;
-    }                                                                           // закончили перебирать все плоскости текущего фрустума
+    }
     if(ins)
     {
-        return 1;                                                               // все вершины внутренние - тест пройден
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
 /**
@@ -500,15 +486,14 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
  * @param frustum - test frustum
  * @return 1 if aabb is in frustum.
  */
-int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum)
+bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum)
 {
-    char ins;
+    bool inside = true;
     polygon_t poly;
     vertex_t vert[4];
 
     poly.vertices = vert;
     poly.vertex_count = 4;
-    ins = 1;
 
     /* X_AXIS */
 
@@ -536,9 +521,9 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
     else if(frustum->cam_pos[0] > bbmax[0])
     {
@@ -562,9 +547,9 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
 
     /* Y AXIS */
@@ -593,9 +578,9 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
     else if(frustum->cam_pos[1] > bbmax[1])
     {
@@ -619,9 +604,9 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
 
     /* Z AXIS */
@@ -650,9 +635,9 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
     else if(frustum->cam_pos[2] > bbmax[2])
     {
@@ -676,82 +661,49 @@ int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frus
 
         if(Frustum_IsPolyVisible(&poly, frustum))
         {
-            return 1;
+            return true;
         }
-        ins = 0;
+        inside = false;
     }
 
-    return ins;
+    return inside;
 }
 
 
-int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
+bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 {
-    int ins = 1;
+    bool inside = true;
     float t;
-    polygon_p p;
+    polygon_p p = obb->polygons;
 
-    p = obb->polygons;
-    for(int i=0;i<6;i++,p++)
+    for(int i = 0; i < 6; i++, p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
         if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
         {
-            return 1;
+            return true;
         }
-        if(ins && (t > 0))
+        if(inside && (t > 0))
         {
-            ins = 0;
+            inside = false;
         }
     }
 
-    return ins;
+    return inside;
 }
 
-int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
+bool Frustum_IsOBBVisibleInFrustumList(struct obb_s *obb, struct frustum_s *frustum)
 {
-    int                         ins;
-    polygon_p                   p;
-    frustum_p                   frustum;
-    float                    t;
-    extern struct camera_s      engine_camera;
-
-    frustum = room->frustum;
-    if(frustum == NULL)                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры
+    for(; frustum; frustum = frustum->next)
     {
-        ins = 1;                                                                // считаем, что камера внутри OBB
-        p = obb->polygons;
-        for(int i=0;i<6;i++,p++)
+        if(Frustum_IsOBBVisible(obb, frustum))
         {
-            t = vec3_plane_dist(p->plane, engine_camera.pos);
-            if((t > 0.0) && Frustum_IsPolyVisible(p, engine_camera.frustum))
-            {
-                return 1;
-            }
-            if(ins && (t > 0.0))                                                // проверка на принадлежность точки наблюдателя OBB
-            {
-                ins = 0;                                                        // хоть один провал проверки - и камера не может быть внутри
-            }
-        }
-        return ins;                                                             // если камера внутри OBB объекта, то объект виден
-    }
-
-    for(;frustum;frustum=frustum->next)                                         // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
-    {
-        p = obb->polygons;
-        for(int i=0;i<6;i++,p++)
-        {
-            t = vec3_plane_dist(p->plane, frustum->cam_pos);
-            if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
-            {
-                return 1;
-            }
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
-
 
 /*
  * PORTALS
@@ -792,34 +744,33 @@ void Portal_Move(portal_p p, float mv[3])
     p->norm[3] = -vec3_dot(p->norm, p->vertex);
 }
 
-
 /**
  * Барицентрический метод определения пересечения луча и треугольника
  * p - tested portal
  * dir - ray directionа
  * dot - point of ray - plane intersection
  */
-int Portal_RayIntersect(portal_p p, float dir[3], float dot[3])
+bool Portal_RayIntersect(portal_p p, float dir[3], float dot[3])
 {
     float t, u, v, E1[3], E2[3], P[3], Q[3], T[3], *vd;
 
     u = vec3_dot(p->norm, dir);
     if(ABS(u) < SPLIT_EPSILON)
     {
-        return 0;                                                               // плоскость параллельна лучу
+        return false;
     }
     t = - p->norm[3] - vec3_dot(p->norm, dot);
     t /= u;
     if(0.0 > t)
     {
-        return 0;                                                               // плоскость не с той стороны луча
+        return false;
     }
 
-    vd = p->vertex;                                                             // Указатель на текущий треугольник
-    vec3_sub(T, dot, vd)                                                        // Вектор который не меняется для всего полигона
+    vd = p->vertex;
+    vec3_sub(T, dot, vd)
 
     vec3_sub(E2, vd+3, vd)
-    for(uint16_t i=0;i<p->vertex_count-2;i++,vd+=3)                             // Обход полигона веером, один из векторов остается прежним
+    for(uint16_t i=0;i<p->vertex_count-2;i++,vd+=3)
     {
         vec3_copy(E1, E2)                                                       // PREV
         vec3_sub(E2, vd+6, p->vertex)                                           // NEXT
@@ -835,16 +786,13 @@ int Portal_RayIntersect(portal_p p, float dir[3], float dot[3])
         t = 1.0 - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (t <= 1.0) && (t >= 0.0))
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
-/**
- * Просто генерация нормали к порталу
- */
 void Portal_GenNormale(portal_p p)
 {
     float v1[3], v2[3];

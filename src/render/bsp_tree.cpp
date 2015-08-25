@@ -229,7 +229,7 @@ CDynamicBSP::~CDynamicBSP()
 }
 
 
-void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float *transform, struct frustum_s *f)
+void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f)
 {
     for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
     {

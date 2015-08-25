@@ -396,7 +396,6 @@ void bordered_texture_atlas::getWhiteTextureCoordinates(polygon_p poly)
     }
 }
 
-///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
 void bordered_texture_atlas::getCoordinates(unsigned long texture,
                                          bool reverse,
                                          polygon_p poly,

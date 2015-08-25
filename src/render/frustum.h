@@ -42,14 +42,14 @@ public:
    ~CFrustumManager();
     
     void Reset();
-    frustum_p PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam);         // Основная функция для работы с порталами.
+    frustum_p PortalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct camera_s *cam);
 
 private:
     float *Alloc(uint32_t size);
     frustum_p CreateFrustum();
-    void SplitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
-    void GenClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
-    int  SplitByPlane(frustum_p p, float n[4], float *buf);                     // отсечение части портала плоскостью
+    void SplitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);
+    void GenClipPlanes(frustum_p p, struct camera_s *cam);
+    int  SplitByPlane(frustum_p p, float n[4], float *buf);
     
     bool m_need_realloc;
     uint32_t m_buffer_size;
@@ -58,18 +58,18 @@ private:
 };
 
 int Frustum_GetFrustumsCount(struct frustum_s *f);
-int Frustum_HaveParent(frustum_p parent, frustum_p frustum);
-int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
-int Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum);
-int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
-int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room);
+bool Frustum_HaveParent(frustum_p parent, frustum_p frustum);
+bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
+bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum);
+bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
+bool Frustum_IsOBBVisibleInFrustumList(struct obb_s *obb, struct frustum_s *frustum);
 
 
 portal_p Portal_Create(unsigned int vcount);
-void Portal_Clear(portal_p p);
+void     Portal_Clear(portal_p p);
 
 void Portal_Move(portal_p p, float mv[3]);
-int  Portal_RayIntersect(portal_p p, float dir[3], float dot[3]);               // проверка на пересечение луча и портала
+bool Portal_RayIntersect(portal_p p, float dir[3], float dot[3]);
 void Portal_GenNormale(portal_p p);
 
 #endif

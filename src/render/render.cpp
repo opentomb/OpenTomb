@@ -339,7 +339,7 @@ void CRender::DrawList()
         // Add transparency polygons from static meshes (if they exists)
         for(uint16_t j=0;j<r->static_mesh_count;j++)
         {
-            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
+            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInFrustumList(r->static_mesh[j].obb, (r->frustum)?(r->frustum):(m_camera->frustum)))
             {
                 dynamicBSP->AddNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, m_camera->frustum);
             }
@@ -351,7 +351,7 @@ void CRender::DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum)?(r->frustum):(m_camera->frustum)))
                 {
                     float tr[16];
                     for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
@@ -436,7 +436,7 @@ void CRender::DrawListDebugLines()
 
         for(uint32_t i=0; i<r_list_active_count; i++)
         {
-            debugDrawer->DrawRoomDebugLines(r_list[i].room);
+            debugDrawer->DrawRoomDebugLines(r_list[i].room, m_camera);
         }
 
         if(r_flags & R_DRAW_COLL)
@@ -980,7 +980,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         glUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
         for(uint32_t i=0; i<room->static_mesh_count; i++)
         {
-            if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
+            if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInFrustumList(room->static_mesh[i].obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
             {
                 continue;
             }
@@ -1019,7 +1019,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 ent = (entity_p)cont->object;
                 if(ent->was_rendered == 0)
                 {
-                    if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                    if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
                     {
                         this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
                     }
@@ -1672,7 +1672,7 @@ void CRenderDebugDrawer::DrawSectorDebugLines(struct room_sector_s *rs)
     }
 }
 
-void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room)
+void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s *cam)
 {
     frustum_p frus;
     engine_container_p cont;
@@ -1719,7 +1719,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room)
     bool draw_boxes = m_drawFlags & R_DRAW_BOXES;
     for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
-        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
+        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInFrustumList(room->static_mesh[i].obb, (room->frustum)?(room->frustum):(cam->frustum)) ||
           ((room->static_mesh[i].hide == 1) && !(m_drawFlags & R_DRAW_DUMMY_STATICS)))
         {
             continue;
@@ -1749,7 +1749,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room)
             ent = (entity_p)cont->object;
             if(ent->was_rendered_lines == 0)
             {
-                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(cam->frustum)))
                 {
                     this->DrawEntityDebugLines(ent);
                 }

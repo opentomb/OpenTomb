@@ -2,31 +2,15 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-struct room_s;
-struct polygon_s;
-struct frustum_s;
-
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+
+struct room_s;
+struct frustum_s;
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0
 
-/*
-  ======================
-        CAM TARGET
-  ======================
-            ^
-           (N)
-  ----------------------
-  |  ??  |  01  |  ??  |
-  ----------------------
-  |  02  | LARA |  03  |
-  ----------------------
-  |  ??  |  00  |  ??  |
-  ----------------------
-
-*/
 
 #define TR_CAM_TARG_BACK  (0)
 #define TR_CAM_TARG_FRONT (1)
@@ -48,7 +32,7 @@ typedef struct camera_s
     GLfloat                     gl_view_proj_mat[16];
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
-    struct frustum_s            *frustum;               // camera frustum structure
+    struct frustum_s           *frustum;                // camera frustum structure
 
     GLfloat                     dist_near;
     GLfloat                     dist_far;

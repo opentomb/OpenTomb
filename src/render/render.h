@@ -112,7 +112,7 @@ class CRenderDebugDrawer
         void DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, float transform[16]);
         void DrawEntityDebugLines(struct entity_s *entity);
         void DrawSectorDebugLines(struct room_sector_s *rs);
-        void DrawRoomDebugLines(struct room_s *room);
+        void DrawRoomDebugLines(struct room_s *room, struct camera_s *cam);
         
         // physics debug interface
         void   DrawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);

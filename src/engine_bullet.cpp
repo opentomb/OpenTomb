@@ -8,6 +8,8 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+///@TODO: USE FACE CULLING RAY TESTING!!!!!!!!!!!!!! SO... CHECK ALL TWEENS, CEILINGS AND FLOORS GENERATION!!!!
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
@@ -21,10 +23,10 @@ extern "C" {
 #include "core/console.h"
 #include "core/obb.h"
 #include "render/render.h"
+#include "engine_physics.h"
 #include "engine.h"
 #include "mesh.h"
 #include "character_controller.h"
-#include "engine_physics.h"
 #include "script.h"
 #include "entity.h"
 #include "resource.h"
@@ -465,7 +467,7 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
  */
 void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
-    for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
+    /*for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
@@ -479,7 +481,7 @@ void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
                 cont->room = Room_FindPosCogerrence(trans.getOrigin().m_floats, cont->room);
             }
         }
-    }
+    }*/
 }
 
 
