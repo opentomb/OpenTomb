@@ -559,7 +559,7 @@ void showDebugInfo()
                       ent->m_bf.animations.last_state,
                       ent->m_bf.animations.next_state,
                       engine_world.character->m_currentSpeed,
-                      ent->m_bf.animations.current_frame
+                      ent->m_bf.animations.getCurrentFrame()
                       );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);

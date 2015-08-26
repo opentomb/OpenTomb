@@ -1432,7 +1432,7 @@ void lua_SetEntityAnim(int id, int anim, lua::Value frame, lua::Value otherModel
         ent->setAnimation(anim);
 }
 
-void lua_SetEntityAnimFlag(int id, uint16_t anim_flag)
+void lua_SetEntityAnimFlag(int id, bool loopLastFrame, bool lock)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1442,7 +1442,8 @@ void lua_SetEntityAnimFlag(int id, uint16_t anim_flag)
         return;
     }
 
-    ent->m_bf.animations.anim_flags = anim_flag;
+    ent->m_bf.animations.loopLastFrame = loopLastFrame;
+    ent->m_bf.animations.lock = lock;
 }
 
 void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
@@ -1493,12 +1494,12 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
         return{};
     }
 
-    return std::tuple<int16_t, int16_t, uint32_t>
-    {
+    return std::make_tuple
+    (
         ent->m_bf.animations.current_animation,
-            ent->m_bf.animations.current_frame,
-            static_cast<uint32_t>(ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size())
-    };
+        ent->m_bf.animations.getCurrentFrame(),
+        static_cast<uint32_t>(ent->m_bf.animations.getCurrentAnimationFrame().frames.size())
+    );
 }
 
 bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
@@ -2319,13 +2320,13 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
     }
 }
 
-void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
+void lua_SetCharacterWeaponModel(int id, int weaponmodel, bool armed)
 {
     std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
-        ent->setWeaponModel(weaponmodel, state);
+        ent->setWeaponModel(weaponmodel, armed);
     }
     else
     {
@@ -2824,10 +2825,6 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(SECTOR_MATERIAL_CONCRETE);
     EXPOSE_C(SECTOR_MATERIAL_OLDWOOD);
     EXPOSE_C(SECTOR_MATERIAL_OLDMETAL);
-
-    EXPOSE_C(ANIM_NORMAL_CONTROL);
-    EXPOSE_C(ANIM_LOOP_LAST_FRAME);
-    EXPOSE_C(ANIM_LOCK);
 
     using engine::ACT_ACTION;
     EXPOSE_CC(ACT_ACTION);

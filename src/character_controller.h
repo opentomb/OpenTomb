@@ -458,7 +458,7 @@ struct Character : public world::Entity
     int   changeParam(int parameter, float value);
     int   setParamMaximum(int parameter, float max_value);
 
-    int   setWeaponModel(int weapon_model, int armed);
+    int   setWeaponModel(int weapon_model, bool armed);
 };
 
 int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer> &cont);

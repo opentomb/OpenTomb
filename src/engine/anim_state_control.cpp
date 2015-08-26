@@ -57,9 +57,9 @@ void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::animation::SSA
 
 void ent_set_on_floor_after_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate /*state*/)
 {
-    world::animation::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
+    const world::animation::AnimationFrame* af = &ss_anim->getCurrentAnimationFrame();
 
-    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
+    if(ss_anim->isLastFrame())
     {
         auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
         ent->setAnimation(af->next_anim->id, af->next_frame);
@@ -226,11 +226,12 @@ void Character::state_func()
     next_fc.ccb->m_hitCollisionObject = nullptr;
     m_bt.no_fix_body_parts = 0x00000000;
 
-    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+    m_bf.animations.loopLastFrame = false;
+    m_bf.animations.lock = false;
     updateCurrentHeight();
 
     bool low_vertical_space = (m_heightInfo.floor_hit && m_heightInfo.ceiling_hit && (m_heightInfo.ceiling_point[2] - m_heightInfo.floor_point[2] < m_height - engine::LaraHangVerticalEpsilon));
-    const bool last_frame = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()) <= m_bf.animations.current_frame + 1;
+    const bool last_frame = m_bf.animations.isLastFrame();
 
     if(m_response.killed)  // Stop any music, if Lara is dead.
     {
@@ -1184,16 +1185,16 @@ void Character::state_func()
                 {
                     int frames_count = static_cast<int>(m_bf.animations.model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size());
                     int frames_count2 = (frames_count + 1) / 2;
-                    if((m_bf.animations.current_frame >= 0) && (m_bf.animations.current_frame <= frames_count2))
+                    if((m_bf.animations.getCurrentFrame() >= 0) && (m_bf.animations.getCurrentFrame() <= frames_count2))
                     {
-                        setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_bf.animations.current_frame);
+                        setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_bf.animations.getCurrentFrame());
                         m_dirFlag = ENT_MOVE_BACKWARD;
                         m_transform.getOrigin()[2] -= (m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
                         m_bt.no_fix_all = true;
                     }
-                    else if((m_bf.animations.current_frame >= frames_count) && (m_bf.animations.current_frame <= frames_count + frames_count2))
+                    else if((m_bf.animations.getCurrentFrame() >= frames_count) && (m_bf.animations.getCurrentFrame() <= frames_count + frames_count2))
                     {
-                        setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_bf.animations.current_frame - frames_count);
+                        setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_bf.animations.getCurrentFrame() - frames_count);
                         m_dirFlag = ENT_MOVE_BACKWARD;
                         m_transform.getOrigin()[2] -= (m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
                         m_bt.no_fix_all = true;
@@ -1368,25 +1369,27 @@ void Character::state_func()
             {
                 int tf = checkTraverse(*m_traversedObject);
                 m_dirFlag = ENT_STAY;
-                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  //We hold it (loop last frame)
+                m_bf.animations.lock = false;
+                m_bf.animations.loopLastFrame = true;  //We hold it (loop last frame)
 
                 if((m_command.move[0] == 1) && (tf & Character::TraverseForward))  // If player presses up, then push
                 {
                     m_dirFlag = ENT_MOVE_FORWARD;
-                    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+                    m_bf.animations.loopLastFrame = false;
                     m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PUSH;
                 }
                 else if((m_command.move[0] == -1) && (tf & Character::TraverseBackward))  //If player presses down, then pull
                 {
                     m_dirFlag = ENT_MOVE_BACKWARD;
-                    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+                    m_bf.animations.loopLastFrame = false;
                     m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PULL;
                 }
             }
             else  //Lara has let go of the block
             {
                 m_dirFlag = ENT_STAY;
-                m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;  // We're no longer looping last frame
+                m_bf.animations.lock = false;
+                m_bf.animations.loopLastFrame = false;  // We're no longer looping last frame
                 m_bf.animations.next_state = TR_STATE_LARA_STOP;   // Switch to next Lara state
             }
             break;
@@ -1396,14 +1399,14 @@ void Character::state_func()
             m_bf.animations.onFrame = engine::ent_stop_traverse;
             m_command.rot[0] = 0.0;
             m_camFollowCenter = 64;
-            i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
+            i = static_cast<int>(m_bf.animations.getCurrentAnimationFrame().frames.size());
 
             if(!m_command.action || !(Character::TraverseForward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 m_bf.animations.next_state = TR_STATE_LARA_STOP;
             }
 
-            if((m_traversedObject != nullptr) && (m_bf.animations.current_frame > 16) && (m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 16
+            if((m_traversedObject != nullptr) && (m_bf.animations.getCurrentFrame() > 16) && (m_bf.animations.getCurrentFrame() < i - 16)) ///@FIXME: magick 16
             {
                 bool was_traversed = false;
 
@@ -1458,9 +1461,9 @@ void Character::state_func()
                 }
                 else
                 {
-                    if((m_bf.animations.current_frame == 49) ||
-                       (m_bf.animations.current_frame == 110) ||
-                       (m_bf.animations.current_frame == 142))
+                    if((m_bf.animations.getCurrentFrame() == 49) ||
+                       (m_bf.animations.getCurrentFrame() == 110) ||
+                       (m_bf.animations.getCurrentFrame() == 142))
                     {
                         if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
@@ -1483,14 +1486,14 @@ void Character::state_func()
             m_bf.animations.onFrame = engine::ent_stop_traverse;
             m_command.rot[0] = 0.0;
             m_camFollowCenter = 64;
-            i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
+            i = static_cast<int>(m_bf.animations.getCurrentAnimationFrame().frames.size());
 
             if(!m_command.action || !(Character::TraverseBackward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 m_bf.animations.next_state = TR_STATE_LARA_STOP;
             }
 
-            if((m_traversedObject != nullptr) && (m_bf.animations.current_frame > 20) && (m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 20
+            if((m_traversedObject != nullptr) && (m_bf.animations.getCurrentFrame() > 20) && (m_bf.animations.getCurrentFrame() < i - 16)) ///@FIXME: magick 20
             {
                 bool was_traversed = false;
 
@@ -1545,10 +1548,10 @@ void Character::state_func()
                 }
                 else
                 {
-                    if((m_bf.animations.current_frame == 40) ||
-                       (m_bf.animations.current_frame == 92) ||
-                       (m_bf.animations.current_frame == 124) ||
-                       (m_bf.animations.current_frame == 156))
+                    if((m_bf.animations.getCurrentFrame() == 40) ||
+                       (m_bf.animations.getCurrentFrame() == 92) ||
+                       (m_bf.animations.getCurrentFrame() == 124) ||
+                       (m_bf.animations.getCurrentFrame() == 156))
                     {
                         if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
@@ -1798,7 +1801,8 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else
@@ -1851,7 +1855,8 @@ void Character::state_func()
                         m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
                         m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                         m_speed.setZero();
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else if(m_command.move[0] == -1)  // Check walls climbing
@@ -1861,7 +1866,8 @@ void Character::state_func()
                     {
                         m_moveType = world::MoveType::WallsClimb;
                     }
-                    m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                    m_bf.animations.lock = false;
+                    m_bf.animations.loopLastFrame = true;  // Disable shake
                 }
                 else if(m_command.move[1] == -1)
                 {
@@ -1873,7 +1879,8 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else if(m_command.move[1] == 1)
@@ -1886,12 +1893,14 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else
                 {
-                    m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                    m_bf.animations.lock = false;
+                    m_bf.animations.loopLastFrame = true;  // Disable shake
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
                     m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
@@ -2852,7 +2861,7 @@ void Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_LEFT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.getCurrentFrame() > 3) && (m_bf.animations.getCurrentFrame() < 14)) ? (1.0) : (0.0);
 
             if((m_command.move[1] != -1) || m_response.killed)
             {
@@ -2863,7 +2872,7 @@ void Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_RIGHT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.getCurrentFrame() > 3) && (m_bf.animations.getCurrentFrame() < 14)) ? (1.0) : (0.0);
 
             if((m_command.move[1] != 1) || m_response.killed)
             {
@@ -2874,7 +2883,7 @@ void Character::state_func()
         case TR_STATE_LARA_CROUCH_TURN_LEFT:
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23)) ? (0.6) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.getCurrentFrame() > 3) && (m_bf.animations.getCurrentFrame() < 23)) ? (0.6) : (0.0);
 
             if((m_command.move[1] == 0) || m_response.killed)
             {
@@ -3087,10 +3096,10 @@ void Character::state_func()
                 m_transform.getOrigin() += m_transform.getBasis() * btVector3(256.0, 192.0, -640.0);
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
             }
-            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_bf.animations.current_frame >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == -1))
+            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_command.move[1] == -1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame);
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_bf.animations.getCurrentAnimationFrame().frames.size()-m_bf.animations.getCurrentFrame());
             }
             break;
 
@@ -3103,10 +3112,10 @@ void Character::state_func()
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
                 m_transform.getOrigin() += m_transform.getBasis() * btVector3(-256.0, 192.0, -640.0);
             }
-            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_bf.animations.current_frame >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == 1))
+            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_command.move[1] == 1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame);
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_bf.animations.getCurrentAnimationFrame().frames.size()-m_bf.animations.getCurrentFrame());
             }
             break;
 
@@ -3149,7 +3158,7 @@ void Character::state_func()
         case TR_ANIMATION_LARA_AH_FORWARD:
         case TR_ANIMATION_LARA_AH_LEFT:
         case TR_ANIMATION_LARA_AH_RIGHT:
-            if(m_bf.animations.current_frame > 12)
+            if(m_bf.animations.getCurrentFrame() > 12)
                 setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
             break;
     };

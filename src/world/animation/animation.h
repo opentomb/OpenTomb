@@ -7,6 +7,7 @@
 #include <array>
 #include <vector>
 #include <memory>
+#include <cmath>
 
 struct Character;
 
@@ -20,6 +21,14 @@ struct BaseMesh;
 
 namespace animation
 {
+
+namespace
+{
+// Original (canonical) TR frame rate.
+// Needed for animation speed calculations.
+
+constexpr float BaseFrameRate = 30.0f;
+}
 
 enum class AnimUpdate
 {
@@ -157,9 +166,9 @@ struct AnimationFrame
         return nullptr;
     }
 
-    StateChange* findStateChangeByID(uint32_t id)
+    const StateChange* findStateChangeByID(uint32_t id) const
     {
-        for(StateChange& stateChange : stateChanges)
+        for(const StateChange& stateChange : stateChanges)
         {
             if(stateChange.id == id)
             {
@@ -179,19 +188,53 @@ struct SSAnimation
     int16_t                     current_animation = 0;                              //
     int16_t                     next_animation = 0;                                 //
     //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
-    int16_t                     current_frame = 0;                                  //
     int16_t                     next_frame = 0;                                     //
 
-    uint16_t                    anim_flags = 0;                                     // additional animation control param
-
-    btScalar                    period = 1.0f / 30;                                 // one frame change period
     btScalar                    frame_time = 0;                                     // current time
-    btScalar                    lerp = 0;
 
-    void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
+    bool reverse = false;
+    bool loopLastFrame = false;
+    bool lock = false;
+
+    void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state) = nullptr;
 
     core::SkeletalModel    *model = nullptr;                                          // pointer to the base model
-    SSAnimation      *next = nullptr;
+    SSAnimation            *next = nullptr;
+
+    bool isLastFrame() const;
+    bool finished() const;
+
+    size_t getCurrentFrame() const;
+
+    void setFrame(int16_t frame, bool hard = false)
+    {
+        if(!hard)
+            frame_time = getSubframeTime() + frame / BaseFrameRate;
+        else
+            frame_time = frame / BaseFrameRate;
+    }
+
+    btScalar getSubframeTime() const
+    {
+        return frame_time - getCurrentFrame() / BaseFrameRate;
+    }
+
+    btScalar getLerp() const
+    {
+        return getSubframeTime() * BaseFrameRate;
+    }
+
+    void updateFrameTime(btScalar time)
+    {
+        frame_time += time;
+    }
+
+    void restart()
+    {
+        frame_time = getSubframeTime();
+    }
+
+    const AnimationFrame& getCurrentAnimationFrame() const;
 };
 
 struct SSBoneTag
@@ -216,9 +259,9 @@ struct SSBoneTag
 struct SSBoneFrame
 {
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
-    btVector3 pos;                                         // position (base offset)
+    btVector3 pos = {0,0,0};                                         // position (base offset)
     core::BoundingBox boundingBox;
-    btVector3 centre;                                      // bounding box centre
+    btVector3 centre = {0,0,0};                                      // bounding box centre
 
     SSAnimation       animations;                                     // animations list
 
