@@ -525,12 +525,12 @@ void renderStrings()
 void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
-    world::animation::StateChange* stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
-    world::Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    const world::animation::StateChange* stc = bf->animations.getCurrentAnimationFrame().findStateChangeByID(bf->animations.next_state);
+    world::Entity::getNextFrame(bf, time, stc, &frame, &anim, false, false);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
-        stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
+        stc = bf->animations.getCurrentAnimationFrame().findStateChangeByID(bf->animations.next_state);
     }
     else if(bf->animations.getCurrentFrame() != frame)
     {
@@ -542,7 +542,7 @@ void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
     }
 
     bf->animations.updateFrameTime(time);
-    world::Entity::getNextFrame(bf, 1/world::animation::BaseFrameRate, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    world::Entity::getNextFrame(bf, 1/world::animation::BaseFrameRate, stc, &bf->animations.next_frame, &bf->animations.next_animation, false, false);
     world::Entity::updateCurrentBoneFrame(bf, nullptr);
 }
 

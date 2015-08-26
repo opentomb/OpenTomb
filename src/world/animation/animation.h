@@ -166,9 +166,9 @@ struct AnimationFrame
         return nullptr;
     }
 
-    StateChange* findStateChangeByID(uint32_t id)
+    const StateChange* findStateChangeByID(uint32_t id) const
     {
-        for(StateChange& stateChange : stateChanges)
+        for(const StateChange& stateChange : stateChanges)
         {
             if(stateChange.id == id)
             {
@@ -190,11 +190,11 @@ struct SSAnimation
     //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t                     next_frame = 0;                                     //
 
-    uint16_t                    anim_flags = 0;                                     // additional animation control param
-
     btScalar                    frame_time = 0;                                     // current time
 
     bool reverse = false;
+    bool loopLastFrame = false;
+    bool lock = false;
 
     void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state) = nullptr;
 
@@ -204,7 +204,7 @@ struct SSAnimation
     bool isLastFrame() const;
     bool finished() const;
 
-    int16_t getCurrentFrame() const;
+    size_t getCurrentFrame() const;
 
     void setFrame(int16_t frame, bool hard = false)
     {
@@ -224,16 +224,17 @@ struct SSAnimation
         return getSubframeTime() * BaseFrameRate;
     }
 
-    btScalar updateFrameTime(btScalar time)
+    void updateFrameTime(btScalar time)
     {
         frame_time += time;
-        return getSubframeTime();
     }
 
     void restart()
     {
         frame_time = getSubframeTime();
     }
+
+    const AnimationFrame& getCurrentAnimationFrame() const;
 };
 
 struct SSBoneTag

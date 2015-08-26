@@ -57,7 +57,7 @@ void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::animation::SSA
 
 void ent_set_on_floor_after_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate /*state*/)
 {
-    world::animation::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
+    const world::animation::AnimationFrame* af = &ss_anim->getCurrentAnimationFrame();
 
     if(ss_anim->isLastFrame())
     {
@@ -226,7 +226,8 @@ void Character::state_func()
     next_fc.ccb->m_hitCollisionObject = nullptr;
     m_bt.no_fix_body_parts = 0x00000000;
 
-    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+    m_bf.animations.loopLastFrame = false;
+    m_bf.animations.lock = false;
     updateCurrentHeight();
 
     bool low_vertical_space = (m_heightInfo.floor_hit && m_heightInfo.ceiling_hit && (m_heightInfo.ceiling_point[2] - m_heightInfo.floor_point[2] < m_height - engine::LaraHangVerticalEpsilon));
@@ -1368,25 +1369,27 @@ void Character::state_func()
             {
                 int tf = checkTraverse(*m_traversedObject);
                 m_dirFlag = ENT_STAY;
-                m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  //We hold it (loop last frame)
+                m_bf.animations.lock = false;
+                m_bf.animations.loopLastFrame = true;  //We hold it (loop last frame)
 
                 if((m_command.move[0] == 1) && (tf & Character::TraverseForward))  // If player presses up, then push
                 {
                     m_dirFlag = ENT_MOVE_FORWARD;
-                    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+                    m_bf.animations.loopLastFrame = false;
                     m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PUSH;
                 }
                 else if((m_command.move[0] == -1) && (tf & Character::TraverseBackward))  //If player presses down, then pull
                 {
                     m_dirFlag = ENT_MOVE_BACKWARD;
-                    m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
+                    m_bf.animations.loopLastFrame = false;
                     m_bf.animations.next_state = TR_STATE_LARA_PUSHABLE_PULL;
                 }
             }
             else  //Lara has let go of the block
             {
                 m_dirFlag = ENT_STAY;
-                m_bf.animations.anim_flags = ANIM_NORMAL_CONTROL;  // We're no longer looping last frame
+                m_bf.animations.lock = false;
+                m_bf.animations.loopLastFrame = false;  // We're no longer looping last frame
                 m_bf.animations.next_state = TR_STATE_LARA_STOP;   // Switch to next Lara state
             }
             break;
@@ -1396,7 +1399,7 @@ void Character::state_func()
             m_bf.animations.onFrame = engine::ent_stop_traverse;
             m_command.rot[0] = 0.0;
             m_camFollowCenter = 64;
-            i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
+            i = static_cast<int>(m_bf.animations.getCurrentAnimationFrame().frames.size());
 
             if(!m_command.action || !(Character::TraverseForward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
@@ -1483,7 +1486,7 @@ void Character::state_func()
             m_bf.animations.onFrame = engine::ent_stop_traverse;
             m_command.rot[0] = 0.0;
             m_camFollowCenter = 64;
-            i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
+            i = static_cast<int>(m_bf.animations.getCurrentAnimationFrame().frames.size());
 
             if(!m_command.action || !(Character::TraverseBackward & checkTraverse(*m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
@@ -1798,7 +1801,8 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else
@@ -1851,7 +1855,8 @@ void Character::state_func()
                         m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
                         m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
                         m_speed.setZero();
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else if(m_command.move[0] == -1)  // Check walls climbing
@@ -1861,7 +1866,8 @@ void Character::state_func()
                     {
                         m_moveType = world::MoveType::WallsClimb;
                     }
-                    m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                    m_bf.animations.lock = false;
+                    m_bf.animations.loopLastFrame = true;  // Disable shake
                 }
                 else if(m_command.move[1] == -1)
                 {
@@ -1873,7 +1879,8 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else if(m_command.move[1] == 1)
@@ -1886,12 +1893,14 @@ void Character::state_func()
                     }
                     else
                     {
-                        m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                        m_bf.animations.lock = false;
+                        m_bf.animations.loopLastFrame = true;  // Disable shake
                     }
                 }
                 else
                 {
-                    m_bf.animations.anim_flags = ANIM_LOOP_LAST_FRAME;  // Disable shake
+                    m_bf.animations.lock = false;
+                    m_bf.animations.loopLastFrame = true;  // Disable shake
                     m_transform.getOrigin()[0] = m_climb.point[0] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[0];
                     m_transform.getOrigin()[1] = m_climb.point[1] - engine::LaraHangWallDistance * m_transform.getBasis().getColumn(1)[1];
                     m_transform.getOrigin()[2] = m_climb.point[2] - m_bf.boundingBox.max[2] + engine::LaraHangVerticalOffset;
@@ -3087,10 +3096,10 @@ void Character::state_func()
                 m_transform.getOrigin() += m_transform.getBasis() * btVector3(256.0, 192.0, -640.0);
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
             }
-            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == -1))
+            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_command.move[1] == -1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.getCurrentFrame());
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_bf.animations.getCurrentAnimationFrame().frames.size()-m_bf.animations.getCurrentFrame());
             }
             break;
 
@@ -3103,10 +3112,10 @@ void Character::state_func()
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
                 m_transform.getOrigin() += m_transform.getBasis() * btVector3(-256.0, 192.0, -640.0);
             }
-            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == 1))
+            else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_bf.animations.getCurrentFrame() >= m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_command.move[1] == 1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.getCurrentFrame());
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_bf.animations.getCurrentAnimationFrame().frames.size()-m_bf.animations.getCurrentFrame());
             }
             break;
 

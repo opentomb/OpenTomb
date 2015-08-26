@@ -183,7 +183,7 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+    static void getNextFrame(animation::SSBoneFrame *bf, btScalar time, const animation::StateChange *stc, int16_t *frame, int16_t *anim, bool loopLastFrame, bool lock);
     animation::AnimUpdate frame(btScalar time);  // process frame + trying to change state
 
     virtual void updateTransform();

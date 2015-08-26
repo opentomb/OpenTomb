@@ -2241,7 +2241,7 @@ void Character::updateHair()
 void Character::frameImpl(btScalar time, int16_t frame, world::animation::AnimUpdate state)
 {
     // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    auto af = &m_bf.animations.getCurrentAnimationFrame();
 
     m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
 
@@ -2450,7 +2450,7 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->updateFrameTime(time);
                     if(!ss_anim->isLastFrame())
                     {
-                        ss_anim->next_frame = (ss_anim->getCurrentFrame() + 1) % ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                        ss_anim->next_frame = (ss_anim->getCurrentFrame() + 1) % ss_anim->getCurrentAnimationFrame().frames.size();
                         ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else if(!ss_anim->finished())
@@ -2529,7 +2529,7 @@ void Character::doWeaponFrame(btScalar time)
                     else
                     {
                         // ss_anim->frame_time = 0.0;
-                        ss_anim->setFrame( ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1 );
+                        ss_anim->setFrame( ss_anim->getCurrentAnimationFrame().frames.size() - 1 );
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2559,7 +2559,7 @@ void Character::doWeaponFrame(btScalar time)
                     {
                         ss_anim->current_animation = 0;
                         ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->setFrame( ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1, true );
+                        ss_anim->setFrame( ss_anim->getCurrentAnimationFrame().frames.size() - 1, true );
                         ss_anim->next_frame = (ss_anim->getCurrentFrame() > 0) ? (ss_anim->getCurrentFrame() - 1) : (0);
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
@@ -2602,7 +2602,7 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->updateFrameTime(time);
                     if(!ss_anim->isLastFrame())
                     {
-                        ss_anim->next_frame = (ss_anim->getCurrentFrame() + 1) % ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                        ss_anim->next_frame = (ss_anim->getCurrentFrame() + 1) % ss_anim->getCurrentAnimationFrame().frames.size();
                         ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else if(!ss_anim->finished())
@@ -2629,7 +2629,7 @@ void Character::doWeaponFrame(btScalar time)
                     {
                         ss_anim->current_animation = 2;
                         ss_anim->next_animation = 2;
-                        ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->next_frame = ss_anim->getCurrentAnimationFrame().frames.size() - 1;
                         ss_anim->setFrame(ss_anim->next_frame);
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
@@ -2682,7 +2682,7 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        ss_anim->setFrame( ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1, true );
+                        ss_anim->setFrame( ss_anim->getCurrentAnimationFrame().frames.size() - 1, true );
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2712,7 +2712,7 @@ void Character::doWeaponFrame(btScalar time)
                     {
                         ss_anim->current_animation = 0;
                         ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->setFrame( ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1, true );
+                        ss_anim->setFrame( ss_anim->getCurrentAnimationFrame().frames.size() - 1, true );
                         ss_anim->next_frame = (ss_anim->getCurrentFrame() > 0) ? (ss_anim->getCurrentFrame() - 1) : (0);
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }

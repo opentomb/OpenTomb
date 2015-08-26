@@ -749,8 +749,8 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
 {
     assert( bf->animations.next_frame < bf->animations.model->animations[bf->animations.next_animation].frames.size() );
     animation::BoneFrame* next_bf = &bf->animations.model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
-    assert( bf->animations.getCurrentFrame() < bf->animations.model->animations[bf->animations.current_animation].frames.size() );
-    animation::BoneFrame* curr_bf = &bf->animations.model->animations[bf->animations.current_animation].frames[bf->animations.getCurrentFrame()];
+    assert( bf->animations.getCurrentFrame() < bf->animations.getCurrentAnimationFrame().frames.size() );
+    const animation::BoneFrame* curr_bf = &bf->animations.getCurrentAnimationFrame().frames[bf->animations.getCurrentFrame()];
 
     btVector3 tr, cmd_tr;
     if(etr && (curr_bf->command & ANIM_CMD_MOVE))
@@ -776,7 +776,7 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
     {
         animation::SSBoneTag* btag = &bf->bone_tags[k];
         animation::BoneTag* next_btag = &next_bf->bone_tags[k];
-        animation::BoneTag* src_btag = &curr_bf->bone_tags[k];
+        const animation::BoneTag* src_btag = &curr_bf->bone_tags[k];
         btag->offset = src_btag->offset.lerp(next_btag->offset, bf->animations.getLerp());
         btag->transform.getOrigin() = btag->offset;
         btag->transform.getOrigin()[3] = 1.0;
@@ -787,15 +787,15 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
         }
         else
         {
-            animation::BoneTag* ov_src_btag = src_btag;
-            animation::BoneTag* ov_next_btag = next_btag;
+            const animation::BoneTag* ov_src_btag = src_btag;
+            const animation::BoneTag* ov_next_btag = next_btag;
             btScalar ov_lerp = bf->animations.getLerp();
             for(animation::SSAnimation* ov_anim = bf->animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
             {
                 if((ov_anim->model != nullptr) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
-                    animation::BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->getCurrentFrame()];
-                    animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
+                    const animation::BoneFrame* ov_curr_bf = &ov_anim->getCurrentAnimationFrame().frames[ov_anim->getCurrentFrame()];
+                    const animation::BoneFrame* ov_next_bf = &ov_anim->getCurrentAnimationFrame().frames[ov_anim->next_frame];
                     ov_src_btag = &ov_curr_bf->bone_tags[k];
                     ov_next_btag = &ov_next_bf->bone_tags[k];
                     ov_lerp = ov_anim->getLerp();
@@ -980,16 +980,16 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
 int Entity::getAnimDispatchCase(uint32_t id)
 {
-    animation::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    const animation::AnimationFrame* anim = &m_bf.animations.getCurrentAnimationFrame();
 
     for(uint16_t i = 0; i < anim->stateChanges.size(); i++)
     {
-        animation::StateChange* stc = &anim->stateChanges[i];
+        const animation::StateChange* stc = &anim->stateChanges[i];
         if(stc->id == id)
         {
             for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++)
             {
-                animation::AnimDispatch* disp = &stc->anim_dispatch[j];
+                const animation::AnimDispatch* disp = &stc->anim_dispatch[j];
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.getCurrentFrame() >= disp->frame_low) && (m_bf.animations.getCurrentFrame() <= disp->frame_high))// ||
                     //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
                 {
@@ -1005,9 +1005,9 @@ int Entity::getAnimDispatchCase(uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, const animation::StateChange *stc, int16_t *frame, int16_t *anim, bool loopLastFrame, bool lock)
 {
-    animation::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
+    const animation::AnimationFrame* curr_anim = &bf->animations.getCurrentAnimationFrame();
 
     *frame = (bf->animations.frame_time + time) * animation::BaseFrameRate;
     *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
@@ -1016,7 +1016,7 @@ void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::
     /*
      * Flag has a highest priority
      */
-    if(anim_flags == ANIM_LOOP_LAST_FRAME)
+    if(loopLastFrame)
     {
         if(*frame >= static_cast<int>(curr_anim->frames.size() - 1))
         {
@@ -1025,7 +1025,7 @@ void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::
         }
         return;
     }
-    else if(anim_flags == ANIM_LOCK)
+    else if(lock)
     {
         *frame = 0;
         *anim = bf->animations.current_animation;
@@ -1054,7 +1054,7 @@ void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::
      */
     if(stc != nullptr)
     {
-        animation::AnimDispatch* disp = stc->anim_dispatch.data();
+        const animation::AnimDispatch* disp = stc->anim_dispatch.data();
         for(uint16_t i = 0; i < stc->anim_dispatch.size(); i++, disp++)
         {
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
@@ -1072,8 +1072,8 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 {
     if(m_bf.animations.model != nullptr)
     {
-        animation::AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        animation::BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.getCurrentFrame()];
+        const animation::AnimationFrame* curr_af = &m_bf.animations.getCurrentAnimationFrame();
+        const animation::BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.getCurrentFrame()];
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
@@ -1114,9 +1114,6 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 animation::AnimUpdate Entity::frame(btScalar time)
 {
     int16_t frame, anim;
-    long int t;
-    btScalar dt;
-    animation::StateChange* stc;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
@@ -1124,14 +1121,14 @@ animation::AnimUpdate Entity::frame(btScalar time)
         return animation::AnimUpdate::None;
     }
 
-    if(m_bf.animations.anim_flags & ANIM_LOCK)
+    if(m_bf.animations.lock)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
     ghostUpdate();
 
     //m_bf.animations.lerp = 0.0;
-    stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
-    getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.anim_flags);
+    const animation::StateChange* stc = m_bf.animations.getCurrentAnimationFrame().findStateChangeByID(m_bf.animations.next_state);
+    getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.loopLastFrame, m_bf.animations.lock);
 
     animation::AnimUpdate ret = animation::AnimUpdate::None;
     if(m_bf.animations.current_animation != anim)
@@ -1143,7 +1140,7 @@ animation::AnimUpdate Entity::frame(btScalar time)
         doAnimMove(&anim, &frame);
 
         setAnimation(anim, frame);
-        stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
+        stc = m_bf.animations.getCurrentAnimationFrame().findStateChangeByID(m_bf.animations.next_state);
     }
     else if(m_bf.animations.getCurrentFrame() != frame)
     {
@@ -1159,9 +1156,8 @@ animation::AnimUpdate Entity::frame(btScalar time)
 
     // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
 
-    dt = m_bf.animations.updateFrameTime(time);
-    t = m_bf.animations.frame_time * animation::BaseFrameRate;
-    getNextFrame(&m_bf, 1/animation::BaseFrameRate, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, m_bf.animations.anim_flags);
+    m_bf.animations.updateFrameTime(time);
+    getNextFrame(&m_bf, 1/animation::BaseFrameRate, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, m_bf.animations.loopLastFrame, m_bf.animations.lock);
 
     frameImpl(time, frame, ret);
 

@@ -82,20 +82,26 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
 
 bool SSAnimation::isLastFrame() const
 {
-    return getCurrentFrame() >= model->animations[current_animation].frames.size()-1;
+    return getCurrentFrame() >= getCurrentAnimationFrame().frames.size()-1;
 }
 
 bool SSAnimation::finished() const
 {
-    return getCurrentFrame() >= model->animations[current_animation].frames.size();
+    return getCurrentFrame() >= getCurrentAnimationFrame().frames.size();
 }
 
-int16_t SSAnimation::getCurrentFrame() const
+size_t SSAnimation::getCurrentFrame() const
 {
     auto tmp = std::floor( frame_time * BaseFrameRate );
     if(reverse)
         tmp = model->animations[current_animation].frames.size() - 1 - tmp;
     return tmp;
+}
+
+const AnimationFrame &SSAnimation::getCurrentAnimationFrame() const
+{
+    assert( current_animation>=0 && current_animation<model->animations.size() );
+    return model->animations[current_animation];
 }
 
 } // namespace animation
