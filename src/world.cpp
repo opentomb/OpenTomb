@@ -24,6 +24,7 @@
 #include "script.h"
 #include "gui.h"
 #include "resource.h"
+#include "inventory.h"
 
 void Room_Empty(room_p room)
 {

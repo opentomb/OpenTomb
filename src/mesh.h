@@ -16,7 +16,6 @@
 #include "core/vmath.h"
 
 struct polygon_s;
-struct room_s;
 struct engine_container_s;
 struct obb_s;
 struct vertex_s;
@@ -120,32 +119,6 @@ typedef struct light_s
 
     LightType                   light_type;
 }light_t, *light_p;
-
-/*
- * room static mesh.
- */
-typedef struct static_mesh_s
-{
-    uint32_t                    object_id;                                      //
-    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
-    uint8_t                     was_rendered_lines;
-    uint8_t                     hide;                                           // disable static mesh rendering
-    float                       pos[3];                                         // model position
-    float                       rot[3];                                         // model angles
-    GLfloat                     tint[4];                                        // model tint
-
-    float                       vbb_min[3];                                     // visible bounding box
-    float                       vbb_max[3];
-    float                       cbb_min[3];                                     // collision bounding box
-    float                       cbb_max[3];
-
-    float                       transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
-    struct obb_s               *obb;
-    struct engine_container_s  *self;
-
-    struct base_mesh_s         *mesh;                                           // base model
-    struct physics_object_s    *physics_body;
-}static_mesh_t, *static_mesh_p;
 
 /*
  * Animated skeletal model. Taken from openraider.

@@ -25,6 +25,7 @@ extern "C" {
 #include "audio.h"
 #include "controls.h"
 #include "world.h"
+#include "inventory.h"
 
 
 /*
@@ -1054,9 +1055,9 @@ int lua_AddItem(lua_State * lua)
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
 
-    if(ent)
+    if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
+        lua_pushinteger(lua, Character_AddItem(&ent->character->inventory, item_id, count));
         return 1;
     }
 
@@ -1079,9 +1080,9 @@ int lua_RemoveItem(lua_State * lua)
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
 
-    if(ent)
+    if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
+        lua_pushinteger(lua, Character_RemoveItem(&ent->character->inventory, item_id, count));
         return 1;
     }
 
@@ -1101,9 +1102,9 @@ int lua_RemoveAllItems(lua_State * lua)
     int entity_id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
 
-    if(ent)
+    if(ent && ent->character)
     {
-        Character_RemoveAllItems(ent);
+        Character_RemoveAllItems(&ent->character->inventory);
     }
     else
     {
@@ -1126,9 +1127,9 @@ int lua_GetItemsCount(lua_State * lua)
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
 
-    if(ent)
+    if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
+        lua_pushinteger(lua, Character_GetItemsCount(ent->character->inventory, item_id));
         return 1;
     }
     else

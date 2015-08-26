@@ -20,6 +20,7 @@
 #include "engine_lua.h"
 #include "engine_string.h"
 #include "world.h"
+#include "inventory.h"
 
 extern SDL_Window  *sdl_window;
 

@@ -175,25 +175,14 @@ struct room_s;
 struct polygon_s;
 struct camera_s;
 struct portal_s;
-struct render_s;
 struct frustum_s;
+struct base_item_s;
 struct base_mesh_s;
-struct static_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
 struct RedBlackHeader_s;
 struct ss_bone_frame_s;
 
-
-typedef struct base_item_s
-{
-    uint32_t                    id;
-    uint32_t                    world_model_id;
-    uint16_t                    type;
-    uint16_t                    count;
-    char                        name[64];
-    struct ss_bone_frame_s     *bf;
-}base_item_t, *base_item_p;
 
 typedef struct room_box_s
 {
@@ -252,6 +241,30 @@ typedef struct room_sprite_s
     float                       pos[3];
     int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;
+
+
+typedef struct static_mesh_s
+{
+    uint32_t                    object_id;                                      //
+    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
+    uint8_t                     was_rendered_lines;
+    uint8_t                     hide;                                           // disable static mesh rendering
+    float                       pos[3];                                         // model position
+    float                       rot[3];                                         // model angles
+    GLfloat                     tint[4];                                        // model tint
+
+    float                       vbb_min[3];                                     // visible bounding box
+    float                       vbb_max[3];
+    float                       cbb_min[3];                                     // collision bounding box
+    float                       cbb_max[3];
+
+    float                       transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
+    struct obb_s               *obb;
+    struct engine_container_s  *self;
+
+    struct base_mesh_s         *mesh;                                           // base model
+    struct physics_object_s    *physics_body;
+}static_mesh_t, *static_mesh_p;
 
 
 typedef struct room_s

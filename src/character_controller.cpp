@@ -15,6 +15,7 @@
 #include "mesh.h"
 #include "resource.h"
 #include "engine_string.h"
+#include "inventory.h"
 
 void Character_Create(struct entity_s *ent)
 {
@@ -103,14 +104,7 @@ void Character_Clean(struct entity_s *ent)
 
     actor->ent = NULL;
 
-    inventory_node_p in, rn;
-    in = actor->inventory;
-    while(in)
-    {
-        rn = in;
-        in = in->next;
-        free(rn);
-    }
+    Character_RemoveAllItems(&actor->inventory);
 
     if(actor->hairs)
     {
@@ -131,152 +125,6 @@ void Character_Clean(struct entity_s *ent)
 
     free(ent->character);
     ent->character = NULL;
-}
-
-
-int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
-{
-    //Con_Notify(SYSNOTE_GIVING_ITEM, item_id, count, ent);
-    if(ent->character == NULL)
-    {
-        return 0;
-    }
-
-    Gui_NotifierStart(item_id);
-
-    base_item_p item = World_GetBaseItemByID(&engine_world, item_id);
-    if(item == NULL) return 0;
-
-    inventory_node_p last, i  = ent->character->inventory;
-
-    count = (count == -1)?(item->count):(count);
-    last = i;
-    while(i)
-    {
-        if(i->id == item_id)
-        {
-            i->count += count;
-            return i->count;
-        }
-        last = i;
-        i = i->next;
-    }
-
-    i = (inventory_node_p)malloc(sizeof(inventory_node_t));
-    i->id = item_id;
-    i->count = count;
-    i->next = NULL;
-    if(last != NULL)
-    {
-        last->next = i;
-    }
-    else
-    {
-        ent->character->inventory = i;
-    }
-
-    return count;
-}
-
-
-int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
-{
-    if((ent->character == NULL) || (ent->character->inventory == NULL))
-    {
-        return 0;
-    }
-
-    inventory_node_p pi, i;
-    pi = ent->character->inventory;
-    i = pi->next;
-    if(pi->id == item_id)
-    {
-        if(pi->count > count)
-        {
-            pi->count -= count;
-            return pi->count;
-        }
-        else if(pi->count == count)
-        {
-            ent->character->inventory = pi->next;
-            free(pi);
-            return 0;
-        }
-        else // count_to_remove > current_items_count
-        {
-            return (int32_t)pi->count - (int32_t)count;
-        }
-    }
-
-    while(i)
-    {
-        if(i->id == item_id)
-        {
-            if(i->count > count)
-            {
-                i->count -= count;
-                return i->count;
-            }
-            else if(i->count == count)
-            {
-                pi->next = i->next;
-                free(i);
-                return 0;
-            }
-            else // count_to_remove > current_items_count
-            {
-                return (int32_t)i->count - (int32_t)count;
-            }
-        }
-        pi = i;
-        i = i->next;
-    }
-
-    return -count;
-}
-
-
-int32_t Character_RemoveAllItems(struct entity_s *ent)
-{
-    if((ent->character == NULL) || (ent->character->inventory == NULL))
-    {
-        return 0;
-    }
-
-    inventory_node_p curr_i = ent->character->inventory, next_i;
-    int32_t ret = 0;
-
-    while(curr_i != NULL)
-    {
-        next_i = curr_i->next;
-        free(curr_i);
-        curr_i = next_i;
-        ret++;
-    }
-    ent->character->inventory = NULL;
-
-    return ret;
-}
-
-
-int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         // returns items count
-{
-    if(ent->character == NULL)
-    {
-        return 0;
-    }
-
-    inventory_node_p i = ent->character->inventory;
-    while(i)
-    {
-        if(i->id == item_id)
-        {
-            return i->count;
-        }
-        i = i->next;
-    }
-
-    return 0;
 }
 
 /**

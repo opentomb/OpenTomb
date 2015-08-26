@@ -461,10 +461,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_small_medi)
         {
-            if((Character_GetItemsCount(ent, ITEM_SMALL_MEDIPACK) > 0) &&
+            if((Character_GetItemsCount(ent->character->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
             {
-                Character_RemoveItem(ent, ITEM_SMALL_MEDIPACK, 1);
+                Character_RemoveItem(&ent->character->inventory, ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -473,10 +473,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_big_medi)
         {
-            if((Character_GetItemsCount(ent, ITEM_LARGE_MEDIPACK) > 0) &&
+            if((Character_GetItemsCount(ent->character->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
             {
-                Character_RemoveItem(ent, ITEM_LARGE_MEDIPACK, 1);
+                Character_RemoveItem(&ent->character->inventory, ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 

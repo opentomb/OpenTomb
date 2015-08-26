@@ -39,6 +39,7 @@ extern "C" {
 #include "engine.h"
 #include "engine_lua.h"
 #include "engine_physics.h"
+#include "inventory.h"
 
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;

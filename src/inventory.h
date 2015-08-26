@@ -52,4 +52,29 @@
 #define ITEM_SECRET_2 121
 #define ITEM_SECRET_3 122
 
+typedef struct base_item_s
+{
+    uint32_t                    id;
+    uint32_t                    world_model_id;
+    uint16_t                    type;
+    uint16_t                    count;
+    char                        name[64];
+    struct ss_bone_frame_s     *bf;
+}base_item_t, *base_item_p;
+
+
+typedef struct inventory_node_s
+{
+    uint32_t                    id;
+    int32_t                     count;
+    uint32_t                    max_count;
+    struct inventory_node_s    *next;
+}inventory_node_t, *inventory_node_p;
+
+
+int32_t Character_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);       
+int32_t Character_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);
+int32_t Character_RemoveAllItems(struct inventory_node_s **root);
+int32_t Character_GetItemsCount(struct inventory_node_s *root, uint32_t item_id);
+
 #endif

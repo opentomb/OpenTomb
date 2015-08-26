@@ -7,9 +7,6 @@
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "mesh.h"
-#include "world.h"
-#include "engine.h"
-#include "resource.h"
 
 
 vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3]);

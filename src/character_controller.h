@@ -170,6 +170,7 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
+struct inventory_node_s;
 struct engine_container_s;
 struct entity_s;
 
@@ -261,14 +262,6 @@ typedef struct character_stats_s
     uint32_t    saves_used;
 }character_stats_t, *character_stats_p;
 
-typedef struct inventory_node_s
-{
-    uint32_t                    id;
-    int32_t                     count;
-    uint32_t                    max_count;
-    struct inventory_node_s    *next;
-}inventory_node_t, *inventory_node_p;
-
 
 typedef struct character_s
 {
@@ -313,11 +306,6 @@ typedef struct character_s
 
 void Character_Create(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
-
-int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
-int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
-int32_t Character_RemoveAllItems(struct entity_s *ent);
-int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
