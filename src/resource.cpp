@@ -3463,12 +3463,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
 
     tr_moveable = &tr->moveables[model_num];                                    // original tr structure
     model->collision_map = (uint16_t*)malloc(model->mesh_count * sizeof(uint16_t));
-    model->collision_map_size = model->mesh_count;
-    for(uint16_t i=0;i<model->mesh_count;i++)
-    {
-        model->collision_map[i] = i;
-    }
-
     model->mesh_tree = (mesh_tree_tag_p)calloc(model->mesh_count, sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
 
@@ -3476,6 +3470,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
 
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
+        model->collision_map[k] = k;
         tree_tag->mesh_base = world->meshes + (mesh_index[k]);
         tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
@@ -3484,6 +3479,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         tree_tag->offset[0] = 0.0;
         tree_tag->offset[1] = 0.0;
         tree_tag->offset[2] = 0.0;
+        tree_tag->parent = 0;
         if(k == 0)
         {
             tree_tag->flag = 0x02;
@@ -3495,6 +3491,23 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             tree_tag->offset[0] = (float)((int32_t)tr_mesh_tree[1]);
             tree_tag->offset[1] = (float)((int32_t)tr_mesh_tree[3]);
             tree_tag->offset[2] =-(float)((int32_t)tr_mesh_tree[2]);
+        }
+    }
+
+    TreeTag_GenParentsIndexes(model);
+
+    for(uint16_t i = 1; i + 1 < model->mesh_count; i++)
+    {
+        for(uint16_t j = 1; j + i < model->mesh_count; j++)
+        {
+            uint16_t m1 = model->collision_map[j];
+            uint16_t m2 = model->collision_map[j + 1];
+            if(model->mesh_tree[m1].parent > model->mesh_tree[m2].parent)
+            {
+                uint16_t t = model->collision_map[j];
+                model->collision_map[j] = model->collision_map[j + 1];
+                model->collision_map[j + 1] = t;
+            }
         }
     }
 

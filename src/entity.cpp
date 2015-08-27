@@ -598,12 +598,11 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     {
         float tmp[3], orig_pos[3];
         float tr[16];
+        float from[3], to[3], curr[3], move[3], move_len;
 
         vec3_copy(orig_pos, ent->transform + 12);
-        for(uint16_t i=0;i<ent->bf->animations.model->collision_map_size;i++)
+        for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
         {
-            //btTransform tr_current;
-            float from[3], to[3], curr[3], move[3], move_len;
             uint16_t m = ent->bf->animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf->bone_tags + m;
 

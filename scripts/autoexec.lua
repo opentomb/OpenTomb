@@ -214,8 +214,7 @@ elseif (getLevelVersion() <= TR_V) then
     setModelAnimReplaceFlag(7, 13, 0x01);
     setModelMeshReplaceFlag(7, 13, 0x01);
 end
-
-setModelCollisionMapSize(0, 11);            
+          
 setModelCollisionMap(0, 0, 0);              -- butt
 setModelCollisionMap(0, 1, 7);              -- body
 setModelCollisionMap(0, 2, 14);             -- head

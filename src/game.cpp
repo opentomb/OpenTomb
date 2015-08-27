@@ -765,7 +765,6 @@ void Game_UpdateCharacters()
 
     if(ent && ent->character)
     {
-        Character_SetParam(ent, PARAM_HEALTH, -1.0f);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);

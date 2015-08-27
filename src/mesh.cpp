@@ -270,7 +270,6 @@ void SkeletalModel_Clear(skeletal_model_p model)
         {
             free(model->collision_map);
             model->collision_map = NULL;
-            model->collision_map_size = 0;
         }
 
         if(model->animation_count)
@@ -316,6 +315,36 @@ void SkeletalModel_Clear(skeletal_model_p model)
 }
 
 
+void TreeTag_GenParentsIndexes(skeletal_model_p model)
+{
+    int stack = 0;
+    uint16_t parents[model->mesh_count];
+
+    parents[0] = 0;
+    model->mesh_tree[0].parent = 0;                                             // root
+    for(uint16_t i = 1; i < model->mesh_count; i++)
+    {
+        model->mesh_tree[i].parent = i - 1;
+        if(model->mesh_tree[i].flag & 0x01)                                     // POP
+        {
+            if(stack > 0)
+            {
+                model->mesh_tree[i].parent = parents[stack];
+                stack--;
+            }
+        }
+        if(model->mesh_tree[i].flag & 0x02)                                     // PUSH
+        {
+            if(stack + 1 < (int16_t)model->mesh_count)
+            {
+                stack++;
+                parents[stack] = model->mesh_tree[i].parent;
+            }
+        }
+    }
+}
+
+
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 {
     vec3_set_zero(bf->bb_min);
@@ -338,9 +367,6 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
 
-    int stack = 0;
-    ss_bone_tag_p parents[bf->bone_tag_count];
-    parents[0] = NULL;
     bf->bone_tags[0].parent = NULL;                                             // root
     for(uint16_t i=0;i<bf->bone_tag_count;i++)
     {
@@ -357,23 +383,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 
         if(i > 0)
         {
-            bf->bone_tags[i].parent = &bf->bone_tags[i-1];
-            if(model->mesh_tree[i].flag & 0x01)                                 // POP
-            {
-                if(stack > 0)
-                {
-                    bf->bone_tags[i].parent = parents[stack];
-                    stack--;
-                }
-            }
-            if(model->mesh_tree[i].flag & 0x02)                                 // PUSH
-            {
-                if(stack + 1 < (int16_t)model->mesh_count)
-                {
-                    stack++;
-                    parents[stack] = bf->bone_tags[i].parent;
-                }
-            }
+            bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
         }
     }
 }

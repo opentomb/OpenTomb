@@ -222,31 +222,6 @@ int lua_SetRoomEnabled(lua_State * lua)
  * Base engine functions
  */
 
-int lua_SetModelCollisionMapSize(lua_State * lua)
-{
-    if(lua_gettop(lua) < 2)
-    {
-        Con_Warning("wrong arguments number, shoul be (model_id, value)");
-        return 0;
-    }
-
-    skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
-    if(model == NULL)
-    {
-        Con_Warning("wrong model id = %d", lua_tointeger(lua, 1));
-        return 0;
-    }
-
-    int size = lua_tointeger(lua, 2);
-    if(size >= 0 && size < model->mesh_count)
-    {
-        model->collision_map_size = size;
-    }
-
-    return 0;
-}
-
-
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
@@ -3952,7 +3927,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
 
-    lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);

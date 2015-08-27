@@ -203,11 +203,11 @@ void CRender::UpdateAnimTextures()
                             {
                                 seq->current_frame++;
                             }
-                            seq->current_frame %= seq->frames_count;                ///@PARANOID
+                            seq->current_frame %= seq->frames_count;            ///@PARANOID
                         }
                         break;
 
-                    case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                    case TR_ANIMTEXTURE_FORWARD:                                // inversed in polygon anim. texture frames
                     case TR_ANIMTEXTURE_BACKWARD:
                         seq->current_frame++;
                         seq->current_frame %= seq->frames_count;

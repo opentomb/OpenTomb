@@ -107,22 +107,20 @@ int32_t Character_RemoveItem(struct inventory_node_s **root, uint32_t item_id, i
 
 int32_t Character_RemoveAllItems(struct inventory_node_s **root)
 {
-    if(!root || !*root)
-    {
-        return 0;
-    }
-
-    inventory_node_p curr_i = *root;
     int32_t ret = 0;
 
-    while(curr_i)
+    if(!root)
     {
-        inventory_node_p next_i = curr_i->next;
-        free(curr_i);
-        curr_i = next_i;
+        return ret;
+    }
+
+    while(*root)
+    {
+        inventory_node_p next_i = (*root)->next;
+        free(*root);
+        *root = next_i;
         ret++;
     }
-    *root = NULL;
 
     return ret;
 }
