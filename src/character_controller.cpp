@@ -3,18 +3,18 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "engine/anim_state_control.h"
-#include "engine/engine.h"
-#include "world/entity.h"
-#include "gui/gui.h"
-#include "world/hair.h"
-#include "world/core/mesh.h"
-#include "world/core/orientedboundingbox.h"
-#include "world/core/polygon.h"
-#include "world/resource.h"
-#include "script/script.h"
-#include "util/vmath.h"
-#include "world/world.h"
+#include "anim_state_control.h"
+#include "engine.h"
+#include "entity.h"
+#include "gui.h"
+#include "hair.h"
+#include "mesh.h"
+#include "obb.h"
+#include "polygon.h"
+#include "resource.h"
+#include "script.h"
+#include "vmath.h"
+#include "world.h"
 
 Character::Character(uint32_t id)
     : Entity(id)
@@ -24,11 +24,11 @@ Character::Character(uint32_t id)
     m_climbSensor.reset(new btSphereShape(m_climbR));
     m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_rayCb = std::make_shared<engine::BtEngineClosestRayResultCallback>(m_self, true);
+    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.cb = m_rayCb;
 
-    m_convexCb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(m_self, true);
+    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
@@ -37,7 +37,7 @@ Character::Character(uint32_t id)
 
 Character::~Character()
 {
-    if((m_self->room != nullptr) && (this != engine::engine_world.character.get()))
+    if((m_self->room != nullptr) && (this != engine_world.character.get()))
     {
         m_self->room->removeEntity(this);
     }
@@ -45,9 +45,9 @@ Character::~Character()
 
 int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    gui::notifierStart(item_id);
+    Gui_NotifierStart(item_id);
 
-    auto item = engine::engine_world.getBaseItemByID(item_id);
+    auto item = engine_world.getBaseItemByID(item_id);
     if(!item)
         return 0;
 
@@ -216,8 +216,8 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    world::Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
-    world::RoomSector* rs;
+    Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
+    RoomSector* rs;
 
     fc->floor_hit = false;
     fc->ceiling_hit = false;
@@ -306,7 +306,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     to[2] -= 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = nullptr;
-    engine::bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->floor_hit = cb->hasHit();
     if(fc->floor_hit)
     {
@@ -320,7 +320,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = nullptr;
     //cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
-    engine::bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->ceiling_hit = cb->hasHit();
     if(fc->ceiling_hit)
     {
@@ -347,7 +347,7 @@ StepType Character::checkNextStep(const btVector3& offset, struct HeightInfo *nf
     if(m_heightInfo.floor_hit && nfc->floor_hit)
     {
         delta = nfc->floor_point[2] - m_heightInfo.floor_point[2];
-        if(std::abs(delta) < world::core::SplitEpsilon)
+        if(std::abs(delta) < SPLIT_EPSILON)
         {
             from[2] = m_heightInfo.floor_point[2];
             ret = StepType::Horizontal;                                    // horizontal
@@ -421,7 +421,7 @@ StepType Character::checkNextStep(const btVector3& offset, struct HeightInfo *nf
     to[1] = pos[1];
     m_heightInfo.cb->m_closestHitFraction = 1.0;
     m_heightInfo.cb->m_collisionObject = nullptr;
-    engine::bt_engine_dynamicsWorld->rayTest(from, to, *m_heightInfo.cb);
+    bt_engine_dynamicsWorld->rayTest(from, to, *m_heightInfo.cb);
     if(m_heightInfo.cb->hasHit())
     {
         ret = StepType::UpImpossible;
@@ -445,11 +445,6 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
         && (forward[0] * floor[0] + forward[1] * floor[1]) < 0.0;
 }
 
-namespace engine
-{
-extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
-} // namespace engine
-
 /**
  * @FIXME: MAGICK CONST!
  * @param ent - entity
@@ -463,6 +458,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     const auto& pos = m_transform.getOrigin();
     btTransform t1, t2;
     char up_founded;
+    extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
@@ -505,10 +501,10 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     t2.setIdentity();
     up_founded = 0;
     test_height = (test_height >= m_maxStepUpHeight) ? (test_height) : (m_maxStepUpHeight);
-    d = pos[2] + m_bf.boundingBox.max[2] - test_height;
-    std::copy(to + 0, to + 3, engine::cast_ray + 0);
-    std::copy(to + 0, to + 3, engine::cast_ray + 3);
-    engine::cast_ray[5] -= d;
+    d = pos[2] + m_bf.bb_max[2] - test_height;
+    std::copy(to + 0, to + 3, cast_ray + 0);
+    std::copy(to + 0, to + 3, cast_ray + 3);
+    cast_ray[5] -= d;
     btVector3 n0{ 0,0,0 }, n1{ 0,0,0 };
     btScalar n0d{ 0 }, n1d{ 0 };
     do
@@ -517,7 +513,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
         t2.setOrigin(to);
         nfc->ccb->m_closestHitFraction = 1.0;
         nfc->ccb->m_hitCollisionObject = nullptr;
-        engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
             if(nfc->ccb->m_hitNormalWorld[2] >= 0.1)
@@ -546,7 +542,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
             //vec3_copy(cast_ray+3, tmp);
             nfc->ccb->m_closestHitFraction = 1.0;
             nfc->ccb->m_hitCollisionObject = nullptr;
-            engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+            bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
@@ -608,7 +604,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
         n2[0] * (n0[1] * n1d - n0d * n1[1]);
     ret.edge_point[2] /= d;
     ret.point = ret.edge_point;
-    std::copy(ret.point + 0, ret.point + 3, engine::cast_ray + 3);
+    std::copy(ret.point + 0, ret.point + 3, cast_ray + 3);
     /*
      * unclimbable edge slant %)
      */
@@ -639,7 +635,7 @@ ClimbInfo Character::checkClimbability(const btVector3& offset, struct HeightInf
     ret.up[0] = 0.0;
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
-    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * util::DegPerRad;
+    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * DegPerRad;
     ret.edge_tan_xy[0] = -n2[1];
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
@@ -679,9 +675,9 @@ ClimbInfo Character::checkWallsClimbability()
     ret.up = { 0,0,1 };
 
     btVector3& pos = m_transform.getOrigin();
-    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.boundingBox.max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
+    btVector3 from = pos + m_transform.getBasis().getColumn(2) * m_bf.bb_max[2] - m_transform.getBasis().getColumn(1) * m_climbR;
     btVector3 to = from;
-    btScalar t = m_forwardSize + m_bf.boundingBox.max[1];
+    btScalar t = m_forwardSize + m_bf.bb_max[1];
     to += m_transform.getBasis().getColumn(1) * t;
 
     auto ccb = m_convexCb;
@@ -696,7 +692,7 @@ ClimbInfo Character::checkWallsClimbability()
     tr2.setIdentity();
     tr2.setOrigin(to);
 
-    engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+    bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
     if(!ccb->hasHit())
     {
         return ret;
@@ -736,7 +732,7 @@ ClimbInfo Character::checkWallsClimbability()
         t = 0.67f * m_height;
         from -= m_transform.getBasis().getColumn(2) * t;
         to = from;
-        t = m_forwardSize + m_bf.boundingBox.max[1];
+        t = m_forwardSize + m_bf.bb_max[1];
         to += m_transform.getBasis().getColumn(1) * t;
 
         ccb->m_closestHitFraction = 1.0;
@@ -745,7 +741,7 @@ ClimbInfo Character::checkWallsClimbability()
         tr1.setOrigin(from);
         tr2.setIdentity();
         tr2.setOrigin(to);
-        engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+        bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
         if(ccb->hasHit())
         {
             ret.wall_hit = ClimbType::FullBody;
@@ -769,69 +765,69 @@ ClimbInfo Character::checkWallsClimbability()
     return ret;
 }
 
-void Character::lean(btScalar max_lean)
+void Character::lean(CharacterCommand *cmd, btScalar max_lean)
 {
     btScalar neg_lean = 360.0 - max_lean;
     btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
-    if((m_command.move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
+    if((cmd->move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += ((360 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
         }
     }
-    else if(m_command.move[1] == 1) // Right direction
+    else if(cmd->move[1] == 1) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
             if(m_angles[2] < max_lean)   // Approaching from center
             {
-                m_angles[2] += ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine::engine_frame_time);
+                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] = 0.0;
             }
         }
     }
-    else if(m_command.move[1] == -1)     // Left direction
+    else if(cmd->move[1] == -1)     // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine_frame_time;
                 if(m_angles[2] < 0.0) m_angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine_frame_time;
                 if(m_angles[2] > 360.0) m_angles[2] -= 360.0f;
             }
         }
@@ -861,7 +857,7 @@ btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool comma
         {
             if(m_inertiaLinear < max_speed)
             {
-                m_inertiaLinear += max_speed * accel * engine::engine_frame_time;
+                m_inertiaLinear += max_speed * accel * engine_frame_time;
                 if(m_inertiaLinear > max_speed) m_inertiaLinear = max_speed;
             }
         }
@@ -869,7 +865,7 @@ btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool comma
         {
             if(m_inertiaLinear > 0.0)
             {
-                m_inertiaLinear -= max_speed * accel * engine::engine_frame_time;
+                m_inertiaLinear -= max_speed * accel * engine_frame_time;
                 if(m_inertiaLinear < 0.0) m_inertiaLinear = 0.0;
             }
         }
@@ -911,9 +907,8 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
                 }
                 else
                 {
-                    m_inertiaAngular[axis] += max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] > max_angle)
-                        m_inertiaAngular[axis] = max_angle;
+                    m_inertiaAngular[axis] += max_angle * accel * engine_frame_time;
+                    if(m_inertiaAngular[axis] > max_angle) m_inertiaAngular[axis] = max_angle;
                 }
             }
             else
@@ -924,9 +919,8 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
                 }
                 else
                 {
-                    m_inertiaAngular[axis] -= max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] < -max_angle)
-                        m_inertiaAngular[axis] = -max_angle;
+                    m_inertiaAngular[axis] -= max_angle * accel * engine_frame_time;
+                    if(m_inertiaAngular[axis] < -max_angle) m_inertiaAngular[axis] = -max_angle;
                 }
             }
         }
@@ -947,9 +941,9 @@ int Character::moveOnFloor()
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
-    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.boundingBox.min[2]))
+    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.bb_min[2]))
     {
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
+        EngineContainer* cont = static_cast<EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
         if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY))
         {
             Entity* e = static_cast<Entity*>(cont->object);
@@ -970,7 +964,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
         {
-            m_moveType = world::MoveType::FreeFalling;
+            m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
             return -1;                                                          // nothing to do here
         }
@@ -984,7 +978,7 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
+            const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * DegPerRad;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
                 + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
@@ -1039,7 +1033,7 @@ int Character::moveOnFloor()
     {
         m_response.slide = SlideType::None;
         m_response.vertical_collide = 0x00;
-        m_moveType = world::MoveType::FreeFalling;
+        m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
         return -1;                                                              // nothing to do here
     }
@@ -1048,7 +1042,7 @@ int Character::moveOnFloor()
      * now move normally
      */
     m_speed = speed;
-    btVector3 positionDelta = speed * engine::engine_frame_time;
+    btVector3 positionDelta = speed * engine_frame_time;
     const btScalar distance = positionDelta.length();
 
     btVector3 norm_move_xy(positionDelta[0], positionDelta[1], 0.0);
@@ -1069,7 +1063,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight > position[2])
         {
-            btScalar dz_to_land = engine::engine_frame_time * 2400.0f;                   ///@FIXME: magick
+            btScalar dz_to_land = engine_frame_time * 2400.0f;                   ///@FIXME: magick
             if(position[2] > m_heightInfo.floor_point[2] + dz_to_land)
             {
                 position[2] -= dz_to_land;
@@ -1083,7 +1077,7 @@ int Character::moveOnFloor()
         }
         else
         {
-            m_moveType = world::MoveType::FreeFalling;
+            m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
             updateRoomPos();
             return 2;
@@ -1097,7 +1091,7 @@ int Character::moveOnFloor()
     }
     else if(!(m_response.vertical_collide & 0x01))
     {
-        m_moveType = world::MoveType::FreeFalling;
+        m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
         updateRoomPos();
         return 2;
@@ -1126,9 +1120,9 @@ int Character::freeFalling()
 
     updateTransform();  // apply rotations
 
-    btVector3 move = applyGravity(engine::engine_frame_time);
+    btVector3 move = applyGravity(engine_frame_time);
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
-    m_speed = m_speed.rotate({ 0,0,1 }, rot * util::RadPerDeg);
+    m_speed = m_speed.rotate({ 0,0,1 }, rot * RadPerDeg);
 
     updateCurrentHeight();
 
@@ -1141,11 +1135,11 @@ int Character::freeFalling()
             m_speed[1] = 0.0;
         }
 
-        if((engine::engine_world.engineVersion < loader::Engine::TR2))//Lara cannot wade in < TRII so when floor < transition level she has to swim
+        if((engine_world.engineVersion < loader::Engine::TR2))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
             if(!m_heightInfo.water || (m_currentSector->floor <= m_heightInfo.transition_level))
             {
-                m_moveType = world::MoveType::Underwater;
+                m_moveType = MoveType::Underwater;
                 return 2;
             }
         }
@@ -1153,7 +1147,7 @@ int Character::freeFalling()
         {
             if(!m_heightInfo.water || (m_currentSector->floor + m_height <= m_heightInfo.transition_level))
             {
-                m_moveType = world::MoveType::Underwater;
+                m_moveType = MoveType::Underwater;
                 return 2;
             }
         }
@@ -1163,9 +1157,9 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + pos[2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
         {
-            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
@@ -1174,11 +1168,11 @@ int Character::freeFalling()
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.boundingBox.min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.bb_min[2] + move[2])
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = world::MoveType::OnFloor;
+            m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1191,20 +1185,20 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + pos[2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.bb_max[2] + pos[2])
         {
-            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+            pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.boundingBox.min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= pos[2] + m_bf.bb_min[2] + move[2])
         {
             pos[2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
-            m_moveType = world::MoveType::OnFloor;
+            m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
             fixPenetrations(nullptr);
             updateRoomPos();
@@ -1263,7 +1257,7 @@ int Character::monkeyClimbing()
     }
 
     m_speed = spd;
-    move = spd * engine::engine_frame_time;
+    move = spd * engine_frame_time;
     move[2] = 0.0;
 
     ghostUpdate();
@@ -1271,13 +1265,13 @@ int Character::monkeyClimbing()
     pos += move;
     fixPenetrations(&move);                              // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.boundingBox.max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.bb_max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
-        pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+        pos[2] = m_heightInfo.ceiling_point[2] - m_bf.bb_max[2];
     }
     else
     {
-        m_moveType = world::MoveType::FreeFalling;
+        m_moveType = MoveType::FreeFalling;
         updateRoomPos();
         return 2;
     }
@@ -1310,10 +1304,10 @@ int Character::wallsClimbing()
         return 2;
     }
 
-    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * util::DegPerRad;
+    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * DegPerRad;
     updateTransform();
-    pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.boundingBox.max[1];
-    pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.boundingBox.max[1];
+    pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.bb_max[1];
+    pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.bb_max[1];
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
@@ -1337,7 +1331,7 @@ int Character::wallsClimbing()
         spd /= t;
     }
     m_speed = spd * m_currentSpeed * m_speedMult;
-    move = m_speed * engine::engine_frame_time;
+    move = m_speed * engine_frame_time;
 
     ghostUpdate();
     updateCurrentHeight();
@@ -1346,9 +1340,9 @@ int Character::wallsClimbing()
     updateRoomPos();
 
     *climb = checkWallsClimbability();
-    if(pos[2] + m_bf.boundingBox.max[2] > climb->ceiling_limit)
+    if(pos[2] + m_bf.bb_max[2] > climb->ceiling_limit)
     {
-        pos[2] = climb->ceiling_limit - m_bf.boundingBox.max[2];
+        pos[2] = climb->ceiling_limit - m_bf.bb_max[2];
     }
 
     return 1;
@@ -1402,7 +1396,7 @@ int Character::climbing()
     m_response.slide = SlideType::None;
 
     m_speed = spd;
-    move = spd * engine::engine_frame_time;
+    move = spd * engine_frame_time;
 
     ghostUpdate();
     pos += move;
@@ -1428,7 +1422,7 @@ int Character::moveUnderWater()
 
     if(m_self->room && !(m_self->room->flags & TR_ROOM_FLAG_WATER))
     {
-        m_moveType = world::MoveType::FreeFalling;
+        m_moveType = MoveType::FreeFalling;
         return 2;
     }
 
@@ -1463,24 +1457,24 @@ int Character::moveUnderWater()
         m_speed = spd;
     }
 
-    move = spd * engine::engine_frame_time;
+    move = spd * engine_frame_time;
 
     ghostUpdate();
     pos += move;
     fixPenetrations(&move);                              // get horizontal collide
 
     updateRoomPos();
-    if(m_heightInfo.water && (pos[2] + m_bf.boundingBox.max[2] >= m_heightInfo.transition_level))
+    if(m_heightInfo.water && (pos[2] + m_bf.bb_max[2] >= m_heightInfo.transition_level))
     {
         if(/*(spd[2] > 0.0)*/m_transform.getBasis().getColumn(1)[2] > 0.67)             ///@FIXME: magick!
         {
-            m_moveType = world::MoveType::OnWater;
+            m_moveType = MoveType::OnWater;
             //pos[2] = fc.transition_level;
             return 2;
         }
         if(!m_heightInfo.floor_hit || (m_heightInfo.transition_level - m_heightInfo.floor_point[2] >= m_height))
         {
-            pos[2] = m_heightInfo.transition_level - m_bf.boundingBox.max[2];
+            pos[2] = m_heightInfo.transition_level - m_bf.bb_max[2];
         }
     }
 
@@ -1534,7 +1528,7 @@ int Character::moveOnWater()
         }
         else
         {
-            m_moveType = world::MoveType::OnFloor;
+            m_moveType = MoveType::OnFloor;
             return 2;
         }
         return 1;
@@ -1544,7 +1538,7 @@ int Character::moveOnWater()
      * Prepare to moving
      */
     m_speed = spd;
-    move = spd * engine::engine_frame_time;
+    move = spd * engine_frame_time;
     ghostUpdate();
     pos += move;
     fixPenetrations(&move);  // get horizontal collide
@@ -1556,7 +1550,7 @@ int Character::moveOnWater()
     }
     else
     {
-        m_moveType = world::MoveType::OnFloor;
+        m_moveType = MoveType::OnFloor;
         return 2;
     }
 
@@ -1565,7 +1559,7 @@ int Character::moveOnWater()
 
 int Character::findTraverse()
 {
-    world::RoomSector* ch_s, *obj_s = nullptr;
+    RoomSector* ch_s, *obj_s = nullptr;
     ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
 
     if(ch_s == nullptr)
@@ -1578,31 +1572,31 @@ int Character::findTraverse()
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
     if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
-        for(std::shared_ptr<engine::EngineContainer>& cont : obj_s->owner_room->containers)
+        for(std::shared_ptr<EngineContainer>& cont : obj_s->owner_room->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && world::core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     int oz = (m_angles[0] + 45.0f) / 90.0f;
                     m_angles[0] = oz * 90.0f;
@@ -1623,7 +1617,7 @@ int Character::findTraverse()
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer>& container)
+int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& container)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -1632,26 +1626,26 @@ int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::share
         return 0x00;
     }
 
-    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= world::MeteringSectorSize))
+    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
     {
         return 0x01;
     }
 
-    engine::BtEngineClosestRayResultCallback cb(container);
+    BtEngineClosestRayResultCallback cb(container);
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
-    from[2] = floor + world::MeteringSectorSize * 0.5f;
-    to[2] = floor - world::MeteringSectorSize * 0.5f;
-    engine::bt_engine_dynamicsWorld->rayTest(from, to, cb);
+    from[2] = floor + TR_METERING_SECTORSIZE * 0.5f;
+    to[2] = floor - TR_METERING_SECTORSIZE * 0.5f;
+    bt_engine_dynamicsWorld->rayTest(from, to, cb);
     if(cb.hasHit())
     {
         btVector3 v;
         v.setInterpolate3(from, to, cb.m_closestHitFraction);
         if(std::abs(v[2] - floor) < 1.1)
         {
-            engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<world::Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            EngineContainer* cont = static_cast<EngineContainer*>(cb.m_collisionObject->getUserPointer());
+            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -1668,27 +1662,27 @@ int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::share
  */
 int Character::checkTraverse(const Entity& obj)
 {
-    world::RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
-    world::RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
+    RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
+    RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
         if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
         }
         // OY move case
         else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
         }
         ch_s = ch_s->checkPortalPointer();
     }
@@ -1704,16 +1698,16 @@ int Character::checkTraverse(const Entity& obj)
         return TraverseNone;
     }
 
-    engine::BtEngineClosestRayResultCallback cb(obj.m_self);
+    BtEngineClosestRayResultCallback cb(obj.m_self);
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
-    v0[2] = floor + world::MeteringSectorSize * 0.5f;
-    v1[2] = floor + world::MeteringSectorSize * 2.5f;
-    engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
+    v0[2] = floor + TR_METERING_SECTORSIZE * 0.5f;
+    v1[2] = floor + TR_METERING_SECTORSIZE * 2.5f;
+    bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
+        EngineContainer* cont = static_cast<EngineContainer*>(cb.m_collisionObject->getUserPointer());
         if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return TraverseNone;
@@ -1721,7 +1715,7 @@ int Character::checkTraverse(const Entity& obj)
     }
 
     int ret = TraverseNone;
-    world::RoomSector* next_s = nullptr;
+    RoomSector* next_s = nullptr;
 
     /*
      * PUSH MOVE CHECK
@@ -1729,20 +1723,20 @@ int Character::checkTraverse(const Entity& obj)
      // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1752,16 +1746,16 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * world::MeteringSectorSize));
+        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * world::MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * TR_METERING_SECTORSIZE));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::MeteringSectorSize);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
-        engine::BtEngineClosestConvexResultCallback ccb(obj.m_self);
-        engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        BtEngineClosestConvexResultCallback ccb(obj.m_self);
+        bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
         {
@@ -1776,20 +1770,20 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + world::MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + TR_METERING_SECTORSIZE), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + world::MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + TR_METERING_SECTORSIZE), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1799,16 +1793,16 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * world::MeteringSectorSize));
+        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * TR_METERING_SECTORSIZE));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * world::MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * TR_METERING_SECTORSIZE));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * world::MeteringSectorSize);
+        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * TR_METERING_SECTORSIZE);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
-        engine::BtEngineClosestConvexResultCallback ccb(m_self);
-        engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        BtEngineClosestConvexResultCallback ccb(m_self);
+        bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
         {
@@ -1831,40 +1825,43 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    state_func();
+    if(state_func)
+    {
+        state_func(this, &m_bf.animations);
+    }
 
     switch(m_moveType)
     {
-        case world::MoveType::OnFloor:
+        case MoveType::OnFloor:
             moveOnFloor();
             break;
 
-        case world::MoveType::FreeFalling:
+        case MoveType::FreeFalling:
             freeFalling();
             break;
 
-        case world::MoveType::Climbing:
+        case MoveType::Climbing:
             climbing();
             break;
 
-        case world::MoveType::Monkeyswing:
+        case MoveType::Monkeyswing:
             monkeyClimbing();
             break;
 
-        case world::MoveType::WallsClimb:
+        case MoveType::WallsClimb:
             wallsClimbing();
             break;
 
-        case world::MoveType::Underwater:
+        case MoveType::Underwater:
             moveUnderWater();
             break;
 
-        case world::MoveType::OnWater:
+        case MoveType::OnWater:
             moveOnWater();
             break;
 
         default:
-            m_moveType = world::MoveType::OnFloor;
+            m_moveType = MoveType::OnFloor;
             break;
     };
 
@@ -1886,14 +1883,14 @@ void Character::updateParams()
 
     switch(m_moveType)
     {
-        case world::MoveType::OnFloor:
-        case world::MoveType::FreeFalling:
-        case world::MoveType::Climbing:
-        case world::MoveType::Monkeyswing:
-        case world::MoveType::WallsClimb:
+        case MoveType::OnFloor:
+        case MoveType::FreeFalling:
+        case MoveType::Climbing:
+        case MoveType::Monkeyswing:
+        case MoveType::WallsClimb:
 
             if(m_heightInfo.quicksand == QuicksandPosition::Drowning &&
-               m_moveType == world::MoveType::OnFloor)
+               m_moveType == MoveType::OnFloor)
             {
                 if(!changeParam(PARAM_AIR, -3.0))
                     changeParam(PARAM_HEALTH, -3.0);
@@ -1918,11 +1915,11 @@ void Character::updateParams()
             }
             break;
 
-        case world::MoveType::OnWater:
+        case MoveType::OnWater:
             changeParam(PARAM_AIR, 3.0);;
             break;
 
-        case world::MoveType::Underwater:
+        case MoveType::Underwater:
             if(!changeParam(PARAM_AIR, -1.0))
             {
                 if(!changeParam(PARAM_HEALTH, -3.0))
@@ -1935,6 +1932,11 @@ void Character::updateParams()
         default:
             break;  // Add quicksand later...
     }
+}
+
+bool IsCharacter(std::shared_ptr<Entity> ent)
+{
+    return std::dynamic_pointer_cast<Character>(ent) != nullptr;
 }
 
 int Character::setParamMaximum(int parameter, float max_value)
@@ -2010,11 +2012,11 @@ int Character::changeParam(int parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character::setWeaponModel(int weapon_model, int armed)
 {
-    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(weapon_model);
+    SkeletalModel* sm = engine_world.getModelByID(weapon_model);
 
     if((sm != nullptr) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {
-        world::core::SkeletalModel* bm = m_bf.animations.model;
+        SkeletalModel* bm = m_bf.animations.model;
         if(m_bf.animations.next == nullptr)
         {
             addOverrideAnim(weapon_model);
@@ -2065,7 +2067,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
     else
     {
         // do unarmed default model
-        world::core::SkeletalModel* bm = m_bf.animations.model;
+        SkeletalModel* bm = m_bf.animations.model;
         for(int i = 0; i < bm->mesh_count; i++)
         {
             m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
@@ -2187,7 +2189,7 @@ void Character::updateHair()
     if(m_hairs.empty())
         return;
 
-    for(std::shared_ptr<world::Hair> hair : m_hairs)
+    for(std::shared_ptr<Hair> hair : m_hairs)
     {
         if(!hair || hair->m_elements.empty())
             continue;
@@ -2238,7 +2240,7 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, world::animation::AnimUpdate state)
+void Character::frameImpl(btScalar time, int16_t frame, int state)
 {
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
@@ -2258,9 +2260,9 @@ void Character::frameImpl(btScalar time, int16_t frame, world::animation::AnimUp
 void Character::processSectorImpl()
 {
     assert(m_currentSector != nullptr);
-    world::RoomSector* highest_sector = m_currentSector->getHighestSector();
+    RoomSector* highest_sector = m_currentSector->getHighestSector();
     assert(highest_sector != nullptr);
-    world::RoomSector* lowest_sector = m_currentSector->getLowestSector();
+    RoomSector* lowest_sector = m_currentSector->getLowestSector();
     assert(lowest_sector != nullptr);
 
     m_heightInfo.walls_climb_dir = 0;
@@ -2279,13 +2281,13 @@ void Character::processSectorImpl()
 
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
-        if((m_moveType == world::MoveType::OnFloor) ||
-           (m_moveType == world::MoveType::Wade)    ||
-           (m_moveType == world::MoveType::Quicksand))
+        if((m_moveType == MoveType::OnFloor) ||
+           (m_moveType == MoveType::Wade)    ||
+           (m_moveType == MoveType::Quicksand))
         {
             if(m_heightInfo.floor_hit)
             {
-                engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
+                EngineContainer* cont = static_cast<EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
 
                 if((cont != nullptr) && (cont->object_type == OBJECT_ROOM_BASE))
                 {
@@ -2294,8 +2296,8 @@ void Character::processSectorImpl()
                 }
             }
         }
-        else if((m_moveType == world::MoveType::Underwater) ||
-                (m_moveType == world::MoveType::OnWater))
+        else if((m_moveType == MoveType::Underwater) ||
+                (m_moveType == MoveType::OnWater))
         {
             setParam(PARAM_HEALTH, 0.0);
             m_response.killed = true;
@@ -2344,40 +2346,40 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
 
     // Apply vertical speed.
     m_speed[2] = v_vertical * m_speedMult;
-    m_moveType = world::MoveType::FreeFalling;
+    m_moveType = MoveType::FreeFalling;
 }
 
-world::Substance Character::getSubstanceState() const
+Substance Character::getSubstanceState() const
 {
     if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_height)
         {
-            return world::Substance::QuicksandConsumed;
+            return Substance::QuicksandConsumed;
         }
         else
         {
-            return world::Substance::QuicksandShallow;
+            return Substance::QuicksandShallow;
         }
     }
     else if(!m_heightInfo.water)
     {
-        return world::Substance::None;
+        return Substance::None;
     }
     else if(m_heightInfo.water &&
             (m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
             (m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_wadeDepth))
     {
-        return world::Substance::WaterShallow;
+        return Substance::WaterShallow;
     }
     else if(m_heightInfo.water &&
             (m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_wadeDepth))
     {
-        return world::Substance::WaterWade;
+        return Substance::WaterWade;
     }
     else
     {
-        return world::Substance::WaterSwim;
+        return Substance::WaterSwim;
     }
 }
 
@@ -2432,7 +2434,7 @@ void Character::doWeaponFrame(btScalar time)
     btScalar dt;
     int t;
 
-    for(world::animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
+    for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
@@ -2799,6 +2801,6 @@ void Character::doWeaponFrame(btScalar time)
             };
         }
 
-        doAnimCommands(ss_anim, world::animation::AnimUpdate::None);
+        doAnimCommands(ss_anim, 0);
     }
 }

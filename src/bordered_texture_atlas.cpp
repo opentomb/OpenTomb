@@ -18,7 +18,7 @@
 #include "loader/level.h"
 
 #include "bsp_tree_2d.h"
-#include "world/core/polygon.h"
+#include "polygon.h"
 
 #ifndef __APPLE__
 /*!
@@ -328,9 +328,9 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                           bool reverse,
-                                          world::core::Polygon *poly,
-                                          int shift,
-                                          bool split)  const
+struct Polygon *poly,
+    int shift,
+    bool split)  const
 {
     assert(poly->vertices.size() <= 4);
 
