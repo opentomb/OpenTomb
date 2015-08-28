@@ -3,52 +3,48 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <AL/al.h>
-#include <AL/alc.h>
-
-#include "LuaState.h"
-
-#include "console.h"
 #include "engine.h"
 #include "gui.h"
 #include "script.h"
 #include "world.h"
 
-gameflow_manager_s gameflow_manager;
+Gameflow Gameflow_Manager;
 
-void Gameflow_Init()
+void Gameflow::Init()
 {
-    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < GF_MAX_ACTIONS; i++)
     {
-        gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
+        Actions[i].opcode = GF_NOENTRY;
     }
 }
 
-void Gameflow_Do()
+void Gameflow::Do()
 {
-    if(!gameflow_manager.NextAction)
+    if(!m_nextAction)
+    {
         return;
+    }
 
     bool completed = true;
 
-    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < GF_MAX_ACTIONS; i++)
     {
-        if(gameflow_manager.Actions[i].opcode == TR_GAMEFLOW_NOENTRY) continue;
+        if(Actions[i].opcode == GF_NOENTRY) continue;
         completed = false;
 
-        switch(gameflow_manager.Actions[i].opcode)
+        switch(Actions[i].opcode)
         {
-            case TR_GAMEFLOW_OP_LEVELCOMPLETE:
+            case GF_OP_LEVELCOMPLETE:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
                 if((Gui_FadeCheck(FaderType::LoadScreen) == FaderStatus::Complete) && (!Audio_IsTrackPlaying()))
                 {
                     const char* levelName;
                     const char* levelPath;
-                    lua::tie(levelPath, levelName, gameflow_manager.CurrentLevelID) = engine_lua["getNextLevel"](int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), int(gameflow_manager.Actions[i].operand));
-                    gameflow_manager.CurrentLevelName = levelName;
-                    gameflow_manager.CurrentLevelPath = levelPath;
-                    Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                    gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
+                    lua::tie(levelPath, levelName, m_currentLevelID) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(Actions[i].operand));
+                    m_currentLevelName = levelName;
+                    m_currentLevelPath = levelPath;
+                    Engine_LoadMap(m_currentLevelPath);
+                    Actions[i].opcode = GF_NOENTRY;
                 }
                 else
                 {
@@ -59,27 +55,28 @@ void Gameflow_Do()
                 break;
 
             default:
-                gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
-                break;  ///@FIXME: Implement all other gameflow opcodes here!
+                Actions[i].opcode = GF_NOENTRY;
+                break;
         }   // end switch(gameflow_manager.Operand)
     }
 
-    if(completed) gameflow_manager.NextAction = false;    // Reset action marker!
+    if(completed) m_nextAction = false;    // Reset action marker!
 }
 
-bool Gameflow_Send(int opcode, int operand)
+bool Gameflow::Send(int opcode, int operand)
 {
-    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < GF_MAX_ACTIONS; i++)
     {
-        if(gameflow_manager.Actions[i].opcode == opcode) return false;
+        if(Actions[i].opcode == opcode) return false;
 
-        if(gameflow_manager.Actions[i].opcode == TR_GAMEFLOW_NOENTRY)
+        if(Actions[i].opcode == GF_NOENTRY)
         {
-            gameflow_manager.Actions[i].opcode = opcode;
-            gameflow_manager.Actions[i].operand = operand;
-            gameflow_manager.NextAction = true;
+            Actions[i].opcode = opcode;
+            Actions[i].operand = operand;
+            m_nextAction = true;
             return true;
         }
     }
     return false;
 }
+

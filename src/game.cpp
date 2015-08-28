@@ -323,7 +323,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath.c_str(), gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_Manager.getLevelPath().c_str(), Gameflow_Manager.getGameID(), Gameflow_Manager.getLevelID());
 
     // Save flipmap and flipped room states.
 
@@ -895,7 +895,7 @@ void Game_Prepare()
     // Set gameflow parameters to default.
     // Reset secret trigger map.
 
-    memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
+    memset(Gameflow_Manager.SecretsTriggerMap, 0, sizeof(Gameflow_Manager.SecretsTriggerMap));
 }
 
 void Game_LevelTransition(uint16_t level_index)

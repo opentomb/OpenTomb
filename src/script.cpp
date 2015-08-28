@@ -522,18 +522,18 @@ void lua_RemoveEntityRagdoll(int ent_id)
 
 bool lua_GetSecretStatus(int secret_number)
 {
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
+    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0))
         return false;   // No such secret - return
 
-    return gameflow_manager.SecretsTriggerMap[secret_number];
+    return Gameflow_Manager.SecretsTriggerMap[secret_number];
 }
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0))
+    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0))
 		return;   // No such secret - return
 
-    gameflow_manager.SecretsTriggerMap[secret_number] = status;
+    Gameflow_Manager.SecretsTriggerMap[secret_number] = status;
 }
 
 bool lua_GetActionState(int act)
@@ -2505,7 +2505,7 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 
 int lua_GetLevel()
 {
-    return gameflow_manager.CurrentLevelID;
+    return Gameflow_Manager.getLevelID();
 }
 
 void lua_SetLevel(int id)
@@ -2513,40 +2513,40 @@ void lua_SetLevel(int id)
     ConsoleInfo::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     Game_LevelTransition(id);
-    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
+    Gameflow_Manager.Send(GF_OP_LEVELCOMPLETE, id);    // Next level
 }
 
 void lua_SetGame(int gameId, lua::Value levelId)
 {
-    gameflow_manager.CurrentGameID = gameId;
+    Gameflow_Manager.setGameID(gameId);
     if(!levelId.is<lua::Nil>() && levelId >= 0)
-        gameflow_manager.CurrentLevelID = levelId;
+        Gameflow_Manager.setLevelID(levelId);
 
-    const char* str = engine_lua["getTitleScreen"](int(gameflow_manager.CurrentGameID));
+    const char* str = engine_lua["getTitleScreen"](int(Gameflow_Manager.getGameID()));
     Gui_FadeAssignPic(FaderType::LoadScreen, str);
     Gui_FadeStart(FaderType::LoadScreen, FaderDir::Out);
 
-    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
-    Game_LevelTransition(gameflow_manager.CurrentLevelID);
-    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
+    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, Gameflow_Manager.getGameID());
+    Game_LevelTransition(Gameflow_Manager.getLevelID());
+    Gameflow_Manager.Send(GF_OP_LEVELCOMPLETE, Gameflow_Manager.getLevelID());
 }
 
 void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
     ConsoleInfo::instance().notify(SYSNOTE_LOADING_MAP, mapName);
 
-    if(mapName && mapName != gameflow_manager.CurrentLevelPath)
+    if(mapName && mapName != Gameflow_Manager.getLevelPath())
     {
         if(gameId.is<lua::Integer>() && gameId >= 0)
         {
-            gameflow_manager.CurrentGameID = static_cast<int>(gameId);
+            Gameflow_Manager.setGameID(static_cast<int>(gameId));
         }
         if(mapId.is<lua::Integer>() && mapId >= 0)
         {
-            gameflow_manager.CurrentLevelID = mapId;
+            Gameflow_Manager.setLevelID(mapId);
         }
         char file_path[MAX_ENGINE_PATH];
-        engine_lua.getLoadingScreen(gameflow_manager.CurrentLevelID, file_path);
+        engine_lua.getLoadingScreen(Gameflow_Manager.getLevelID(), file_path);
         Gui_FadeAssignPic(FaderType::LoadScreen, file_path);
         Gui_FadeStart(FaderType::LoadScreen, FaderDir::In);
         Engine_LoadMap(mapName);
@@ -3582,7 +3582,7 @@ bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_soun
 
 bool script::MainEngine::getOverridedSample(int sound_id, int *first_sample_number, int *samples_count)
 {
-    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", static_cast<int>(engine_world.engineVersion), int(gameflow_manager.CurrentLevelID), sound_id);
+    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", static_cast<int>(engine_world.engineVersion), int(Gameflow_Manager.getLevelID()), sound_id);
     return *first_sample_number != -1 && *samples_count != -1;
 }
 
@@ -3614,7 +3614,7 @@ bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char
 
 bool script::MainEngine::getLoadingScreen(int level_index, char *pic_path)
 {
-    const char* realPath = call("getLoadingScreen", int(gameflow_manager.CurrentGameID), int(gameflow_manager.CurrentLevelID), level_index);
+    const char* realPath = call("getLoadingScreen", int(Gameflow_Manager.getGameID()), int(Gameflow_Manager.getLevelID()), level_index);
     strncpy(pic_path, realPath, MAX_ENGINE_PATH);
     return true;
 }

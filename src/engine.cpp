@@ -521,7 +521,7 @@ void Engine_Frame(btScalar time)
     fpsCycle(time);
 
     Game_Frame(time);
-    Gameflow_Do();
+    Gameflow_Manager.Do();
 }
 
 void Engine_ShowDebugInfo()
@@ -672,7 +672,7 @@ void Engine_Init_Pre()
 
     engine_lua["loadscript_pre"]();
 
-    Gameflow_Init();
+    Gameflow_Manager.Init();
 
     frame_vertex_buffer.resize(INIT_FRAME_VERTEX_BUFFER_SIZE);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
@@ -878,7 +878,7 @@ std::string Engine_GetLevelName(const std::string& path)
 
 std::string Engine_GetAutoexecName(loader::Game game_version, const std::string& postfix)
 {
-    std::string level_name = Engine_GetLevelName(gameflow_manager.CurrentLevelPath);
+    std::string level_name = Engine_GetLevelName(Gameflow_Manager.getLevelPath());
 
     std::string name = "scripts/autoexec/";
 
@@ -948,7 +948,7 @@ int Engine_LoadMap(const std::string& name)
     renderer.hideSkyBox();
     renderer.resetWorld();
 
-    gameflow_manager.CurrentLevelPath = name;          // it is needed for "not in the game" levels or correct saves loading.
+    Gameflow_Manager.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
 
     Gui_DrawLoadScreen(50);
 

@@ -3613,7 +3613,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
             switch(loader::gameToEngine(tr->m_gameVersion))
             {
                 case loader::Engine::TR1:
-                    if(gameflow_manager.CurrentLevelID == 0)
+                    if(Gameflow_Manager.getLevelID() == 0)
                     {
                         LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
