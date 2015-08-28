@@ -1331,8 +1331,6 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
 
             if(character->m_moveType == MoveType::FreeFalling)
             {
-                character->m_speed[0] *= 0.2f;
-                character->m_speed[1] *= 0.2f;
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(resp->slide == SlideType::None)
@@ -2694,8 +2692,6 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
             character->lean(cmd, 0.0);
             if(character->m_moveType == MoveType::FreeFalling)
             {
-                character->m_speed[0] *= 0.5;
-                character->m_speed[1] *= 0.5;
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
 
