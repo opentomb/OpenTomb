@@ -70,8 +70,7 @@ engine_container_p      last_cont = NULL;
  * 1) console
  *      - add notify functions
  * 2) LUA enngine global script:
- *      - add base functions for entity manipulation, I.E.: health, collision callbacks,
- *        spawn, new, delete, inventory manipulation.
+ *      - reorganize script system... too heavy!!!
  * 3) Skeletal models functionality:
  *      - add multianimation system: weapon animations (not a car / byke case: it ia two entities
  *        with the same coordinates / orientation);
@@ -83,19 +82,21 @@ engine_container_p      last_cont = NULL;
  *      - map loading list
  *      - saves loading list
  * 10) OpenGL
- *      - shaders
+ *      - shaders - refactoring shader manager
+ *      - add shared universal VAO + VBO by gl_util
  *      - reflections
  *      - shadows
  *      - particles
  *      - GL and renderer optimisations
  * 40) Physics / gameplay
- *      - optimize and fix character controller, bug fixes: permanent task
+ *      - add ray backface filtering
+ *      - update character controller physics interface
  *      - weapons
  * 41) scripts module
  *      - cutscenes playing
  *      - enemies AI
- *      - end level -> next level
  * 42) sound
+ *      - AL thread bug fix!
  *      - click removal;
  *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */
@@ -137,7 +138,7 @@ void Engine_InitGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;                    // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;   // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -310,7 +311,7 @@ void Engine_InitAL()
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
         ALC_FREQUENCY,       44100, 0};
 
-    //const char *drv = SDL_GetCurrentAudioDriver();
+    Con_Printf("Audio driver: %s", SDL_GetCurrentAudioDriver());
 
     al_device = alcOpenDevice(NULL);
     if (!al_device)

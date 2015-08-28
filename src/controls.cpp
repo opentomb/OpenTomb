@@ -471,6 +471,8 @@ void Controls_PollSDLInput()
 {
     SDL_Event event;
     static int mouse_setup = 0;
+    //const float color[3] = {1.0f, 0.0f, 0.0f};
+    float from[3], to[3];
 
     while(SDL_PollEvent(&event))
     {
@@ -478,8 +480,8 @@ void Controls_PollSDLInput()
         {
             case SDL_MOUSEMOTION:
                 if(!Con_IsShown() && control_states.mouse_look != 0 &&
-                    ((event.motion.x != (screen_info.w/2)) ||
-                     (event.motion.y != (screen_info.h/2))))
+                    ((event.motion.x != (screen_info.w / 2)) ||
+                     (event.motion.y != (screen_info.h / 2))))
                 {
                     if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
@@ -487,10 +489,10 @@ void Controls_PollSDLInput()
                         control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
                     }
 
-                    if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
-                       (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
-                       (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
-                       (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
+                    if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
+                       (event.motion.x > ((screen_info.w / 2) + (screen_info.w / 4))) ||
+                       (event.motion.y < ((screen_info.h / 2)-(screen_info.h / 4))) ||
+                       (event.motion.y > ((screen_info.h / 2)+(screen_info.h / 4))))
                     {
                         SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
                     }
@@ -501,7 +503,7 @@ void Controls_PollSDLInput()
             case SDL_MOUSEBUTTONDOWN:
                 if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
                 {
-                    Controls_PrimaryMouseDown();
+                    Controls_PrimaryMouseDown(from, to);
                 }
                 else if(event.button.button == 3)
                 {
@@ -603,6 +605,7 @@ void Controls_PollSDLInput()
             break;
         }
     }
+    //renderer.debugDrawer->DrawLine(from, to, color, color);
 }
 
 ///@FIXME: Move to debug.lua script!!!
@@ -655,35 +658,17 @@ void Controls_DebugKeys(int button, int state)
     }
 }
 
-void Controls_PrimaryMouseDown()
+void Controls_PrimaryMouseDown(float from[3], float to[3])
 {
-    /*engine_container_p cont = Container_Create();
-    float dbgR = 128.0;
-    float *v = engine_camera.pos;
-    float *dir = engine_camera.view_dir;
-    float new_pos[3];
-    btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-    btCollisionShape *cshape;
-    btRigidBody *body;
+    /*float test_to[3];
+    collision_result_t cb;
 
-    cshape = new btSphereShape(dbgR);
-    //cshape = new btCapsuleShapeZ(50.0, 100.0);
-    startTransform.setIdentity();
-    new_pos[0] = v[0];
-    new_pos[1] = v[1];
-    new_pos[2] = v[2];
-    startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
-    cshape->calculateLocalInertia(12.0, localInertia);
-    btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-    body = new btRigidBody(12.0, motionState, cshape, localInertia);
-    bt_engine_dynamicsWorld->addRigidBody(body);
-    body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
-    cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
-    body->setUserPointer(cont);
-    body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
-    body->setCcdSweptSphereRadius(dbgR);*/
+    vec3_add_mul(test_to, engine_camera.pos, engine_camera.view_dir, 32768.0f);
+    if(Physics_RayTest(&cb, engine_camera.pos, test_to, NULL))
+    {
+        vec3_copy(from, cb.point);
+        vec3_add_mul(to, cb.point, cb.normale, 256.0);
+    }*/
 }
 
 
@@ -703,12 +688,6 @@ void Controls_SecondaryMouseDown()
 
     if(Physics_RayTest(&cb, from, to, &cam_cont))
     {
-        /*extern GLfloat cast_ray[6];
-        vec3_copy(cast_ray, cb.point);
-        cast_ray[3] = cast_ray[0] + 100.0 * cb.normale[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cb.normale[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cb.normale[2];*/
-
         if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {
             last_cont = cb.obj;

@@ -33,8 +33,6 @@ extern "C" {
 #include "gui.h"
 #include "inventory.h"
 
-float cam_angles[3] = {0.0, 0.0, 0.0};
-
 extern float time_scale;
 extern lua_State *engine_lua;
 
@@ -363,9 +361,9 @@ void Game_ApplyControls(struct entity_s *ent)
 
     // APPLY CONTROLS
 
-    cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
-    cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
-    cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
+    control_states.cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
+    control_states.cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
+    control_states.cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
 
     if(engine_world.rooms == NULL)
     {
@@ -373,24 +371,24 @@ void Game_ApplyControls(struct entity_s *ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                cam_angles[0] -=0.015 * engine_frame_time * control_mapper.joy_look_x;
+                control_states.cam_angles[0] -=0.015 * engine_frame_time * control_mapper.joy_look_x;
 
             }
             if(control_mapper.joy_look_y != 0)
             {
-                cam_angles[1] -=0.015 * engine_frame_time * control_mapper.joy_look_y;
+                control_states.cam_angles[1] -=0.015 * engine_frame_time * control_mapper.joy_look_y;
             }
         }
 
         if(control_states.mouse_look != 0)
         {
-            cam_angles[0] -= 0.015 * control_states.look_axis_x;
-            cam_angles[1] -= 0.015 * control_states.look_axis_y;
+            control_states.cam_angles[0] -= 0.015 * control_states.look_axis_x;
+            control_states.cam_angles[1] -= 0.015 * control_states.look_axis_y;
             control_states.look_axis_x = 0.0;
             control_states.look_axis_y = 0.0;
         }
 
-        Cam_SetRotation(&engine_camera, cam_angles);
+        Cam_SetRotation(&engine_camera, control_states.cam_angles);
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
@@ -403,18 +401,18 @@ void Game_ApplyControls(struct entity_s *ent)
     {
         if(control_mapper.joy_look_x != 0)
         {
-            cam_angles[0] -=engine_frame_time * control_mapper.joy_look_x;
+            control_states.cam_angles[0] -=engine_frame_time * control_mapper.joy_look_x;
         }
         if(control_mapper.joy_look_y != 0)
         {
-            cam_angles[1] -=engine_frame_time * control_mapper.joy_look_y;
+            control_states.cam_angles[1] -=engine_frame_time * control_mapper.joy_look_y;
         }
     }
 
     if(control_states.mouse_look != 0)
     {
-        cam_angles[0] -= 0.015 * control_states.look_axis_x;
-        cam_angles[1] -= 0.015 * control_states.look_axis_y;
+        control_states.cam_angles[0] -= 0.015 * control_states.look_axis_x;
+        control_states.cam_angles[1] -= 0.015 * control_states.look_axis_y;
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
@@ -422,7 +420,7 @@ void Game_ApplyControls(struct entity_s *ent)
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(&engine_camera, cam_angles);
+        Cam_SetRotation(&engine_camera, control_states.cam_angles);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
@@ -432,13 +430,13 @@ void Game_ApplyControls(struct entity_s *ent)
     {
         float pos[3];
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(&engine_camera, cam_angles);
+        Cam_SetRotation(&engine_camera, control_states.cam_angles);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
         engine_camera.current_room = Room_FindPosCogerrence(engine_camera.pos, engine_camera.current_room);
 
-        ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
+        ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
         pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
         pos[1] = engine_camera.pos[1] + engine_camera.view_dir[1] * control_states.cam_distance;
         pos[2] = engine_camera.pos[2] + engine_camera.view_dir[2] * control_states.cam_distance - 512.0;
@@ -461,10 +459,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_small_medi)
         {
-            if((Character_GetItemsCount(ent->character->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
+            if((Inventory_GetItemsCount(ent->character->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
             {
-                Character_RemoveItem(&ent->character->inventory, ITEM_SMALL_MEDIPACK, 1);
+                Inventory_RemoveItem(&ent->character->inventory, ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -473,10 +471,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_big_medi)
         {
-            if((Character_GetItemsCount(ent->character->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
+            if((Inventory_GetItemsCount(ent->character->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
             {
-                Character_RemoveItem(&ent->character->inventory, ITEM_LARGE_MEDIPACK, 1);
+                Inventory_RemoveItem(&ent->character->inventory, ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -515,7 +513,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
     {
-        float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
+        float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0);     //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
 
@@ -584,7 +582,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                 break;
             }
 
-            float d_angle = cam_angles[0] - targetAngle;
+            float d_angle = control_states.cam_angles[0] - targetAngle;
             if(d_angle > M_PI / 2.0)
             {
                 d_angle -= M_PI/180.0;
@@ -593,7 +591,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
             {
                 d_angle += M_PI/180.0;
             }
-            cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
+            control_states.cam_angles[0] = fmodf(control_states.cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
         }
     }
 
@@ -640,8 +638,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         }
 
         vec3_copy(cameraFrom, cam_pos);
-        cam_pos[0] += sinf(cam_angles[0]) * control_states.cam_distance;
-        cam_pos[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
+        cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
+        cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
         vec3_copy(cameraTo, cam_pos);
 
         if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
@@ -662,7 +660,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
 
-    Cam_SetRotation(cam, cam_angles);
+    Cam_SetRotation(cam, control_states.cam_angles);
     cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
 }
 

@@ -1213,8 +1213,7 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
             anim_dispatch_p disp = stc->anim_dispatch;
             for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (entity->bf->animations.current_frame >= disp->frame_low) && (entity->bf->animations.current_frame <= disp->frame_high))// ||
-                   //(disp->frame_high <  disp->frame_low) && ((entity->bf->current_frame >= disp->frame_low) || (entity->bf->current_frame <= disp->frame_high)))
+                if((disp->frame_high >= disp->frame_low) && (entity->bf->animations.current_frame >= disp->frame_low) && (entity->bf->animations.current_frame <= disp->frame_high))
                 {
                     return (int)j;
                 }
@@ -1256,6 +1255,23 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_ch
     }
 
     /*
+     * State change check
+     */
+    if(stc != NULL)
+    {
+        anim_dispatch_p disp = stc->anim_dispatch;
+        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
+        {
+            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
+            {
+                *anim  = disp->next_anim;
+                *frame = disp->next_frame;
+                return;                                                         // anim was changed
+            }
+        }
+    }
+
+    /*
      * Check next anim if frame >= frames_count
      */
     if(*frame >= curr_anim->frames_count)
@@ -1270,24 +1286,6 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_ch
         *frame %= curr_anim->frames_count;
         *anim   = bf->animations.current_animation;                             // paranoid dublicate
         return;
-    }
-
-    /*
-     * State change check
-     */
-    if(stc != NULL)
-    {
-        anim_dispatch_p disp = stc->anim_dispatch;
-        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
-        {
-            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
-            {
-                *anim  = disp->next_anim;
-                *frame = disp->next_frame;
-                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames_count;
-                return;                                                         // anim was changed
-            }
-        }
     }
 }
 

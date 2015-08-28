@@ -104,7 +104,7 @@ void Character_Clean(struct entity_s *ent)
 
     actor->ent = NULL;
 
-    Character_RemoveAllItems(&actor->inventory);
+    Inventory_RemoveAllItems(&actor->inventory);
 
     if(actor->hairs)
     {

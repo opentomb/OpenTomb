@@ -72,9 +72,9 @@ typedef struct inventory_node_s
 }inventory_node_t, *inventory_node_p;
 
 
-int32_t Character_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);       
-int32_t Character_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);
-int32_t Character_RemoveAllItems(struct inventory_node_s **root);
-int32_t Character_GetItemsCount(struct inventory_node_s *root, uint32_t item_id);
+int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);       
+int32_t Inventory_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);
+int32_t Inventory_RemoveAllItems(struct inventory_node_s **root);
+int32_t Inventory_GetItemsCount(struct inventory_node_s *root, uint32_t item_id);
 
 #endif

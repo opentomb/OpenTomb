@@ -79,7 +79,6 @@ struct sector_tween_s;
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
 // should NOT use such prefix!
 
-void Res_GenRBTrees(struct world_s *world);
 void Res_GenSpritesBuffer(struct world_s *world);
 void Res_GenRoomSpritesBuffer(struct room_s *room);
 void Res_GenRoomCollision(struct world_s *world);
@@ -107,6 +106,7 @@ void Res_EntityToItem(RedBlackNode_p n);
 
 // Functions setting parameters from configuration scripts.
 
+void Res_GenEntityFunctions(struct RedBlackNode_s *x);
 void Res_SetEntityModelProperties(struct entity_s *ent);
 void Res_SetStaticMeshProperties(struct static_mesh_s *r_static);
 
@@ -124,7 +124,6 @@ void Res_AutoexecOpen(int engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
-void TR_GenWorld(struct world_s *world, class VT_Level *tr);
 void TR_GenMeshes(struct world_s *world, class VT_Level *tr);
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);

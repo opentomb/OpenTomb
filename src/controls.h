@@ -120,7 +120,7 @@ extern struct control_settings_s                control_mapper;
 
 void Controls_PollSDLInput();
 void Controls_DebugKeys(int button, int state);
-void Controls_PrimaryMouseDown();
+void Controls_PrimaryMouseDown(float from[3], float to[3]);
 void Controls_SecondaryMouseDown();
 
 void Controls_Key(int32_t button, int state);

@@ -20,7 +20,6 @@ struct engine_container_s;
 struct obb_s;
 struct vertex_s;
 struct entity_s;
-struct physics_object_s;
 
 /*
  * base mesh, uses everywhere

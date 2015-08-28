@@ -61,6 +61,7 @@ typedef struct engine_control_state_s
 {
     float       free_look_speed;
     float       cam_distance;
+    float       cam_angles[3];
     float       look_axis_x;                       // Unified look axis data.
     float       look_axis_y;
     

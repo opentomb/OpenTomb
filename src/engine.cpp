@@ -393,7 +393,7 @@ bool Engine_LoadPCLevel(const char *name)
     tr_level->prepare_level();
     //tr_level->dump_textures();
 
-    TR_GenWorld(&engine_world, tr_level);
+    World_Open(&engine_world, tr_level);
 
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     Engine_GetLevelName(buf, name);

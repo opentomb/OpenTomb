@@ -29,8 +29,6 @@ struct RedBlackNode_s;
 
 class bt_engine_ClosestConvexResultCallback;
 
-extern float cam_angles[3];
-
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);
 int  Game_Load(const char* name);

@@ -5,7 +5,7 @@
 #include "engine.h"
 #include "world.h"
 
-int32_t Character_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)// returns items count after in the function's end
+int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
     if(!root)
     {
@@ -50,7 +50,7 @@ int32_t Character_AddItem(struct inventory_node_s **root, uint32_t item_id, int3
 }
 
 // returns items count after in the function's end
-int32_t Character_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)
+int32_t Inventory_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)
 {
     if(!root || !*root)
     {
@@ -105,7 +105,7 @@ int32_t Character_RemoveItem(struct inventory_node_s **root, uint32_t item_id, i
 }
 
 
-int32_t Character_RemoveAllItems(struct inventory_node_s **root)
+int32_t Inventory_RemoveAllItems(struct inventory_node_s **root)
 {
     int32_t ret = 0;
 
@@ -126,7 +126,7 @@ int32_t Character_RemoveAllItems(struct inventory_node_s **root)
 }
 
 
-int32_t Character_GetItemsCount(struct inventory_node_s *root, uint32_t item_id)
+int32_t Inventory_GetItemsCount(struct inventory_node_s *root, uint32_t item_id)
 {
     for(inventory_node_p i = root; i; i = i->next)
     {

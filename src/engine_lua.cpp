@@ -1032,7 +1032,7 @@ int lua_AddItem(lua_State * lua)
 
     if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_AddItem(&ent->character->inventory, item_id, count));
+        lua_pushinteger(lua, Inventory_AddItem(&ent->character->inventory, item_id, count));
         return 1;
     }
 
@@ -1057,7 +1057,7 @@ int lua_RemoveItem(lua_State * lua)
 
     if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_RemoveItem(&ent->character->inventory, item_id, count));
+        lua_pushinteger(lua, Inventory_RemoveItem(&ent->character->inventory, item_id, count));
         return 1;
     }
 
@@ -1079,7 +1079,7 @@ int lua_RemoveAllItems(lua_State * lua)
 
     if(ent && ent->character)
     {
-        Character_RemoveAllItems(&ent->character->inventory);
+        Inventory_RemoveAllItems(&ent->character->inventory);
     }
     else
     {
@@ -1104,7 +1104,7 @@ int lua_GetItemsCount(lua_State * lua)
 
     if(ent && ent->character)
     {
-        lua_pushinteger(lua, Character_GetItemsCount(ent->character->inventory, item_id));
+        lua_pushinteger(lua, Inventory_GetItemsCount(ent->character->inventory, item_id));
         return 1;
     }
     else

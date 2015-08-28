@@ -3,7 +3,6 @@
 #define PARSE_H
 
 struct screen_info_s;
-struct console_info_s;
 struct entity_s;
 struct lua_State;
 

@@ -388,11 +388,8 @@ typedef struct world_s
 }world_t, *world_p;
 
 void World_Prepare(world_p world);
+void World_Open(struct world_s *world, class VT_Level *tr);
 void World_Empty(world_p world);
-int compEntityEQ(void *x, void *y);
-int compEntityLT(void *x, void *y);
-void RBEntityFree(void *x);
-void RBItemFree(void *x);
 uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);

@@ -26,6 +26,14 @@
 #include "resource.h"
 #include "inventory.h"
 
+
+void World_GenRBTrees(struct world_s *world);
+int  compEntityEQ(void *x, void *y);
+int  compEntityLT(void *x, void *y);
+void RBEntityFree(void *x);
+void RBItemFree(void *x);
+
+
 void Room_Empty(room_p room)
 {
     portal_p p;
@@ -487,6 +495,119 @@ void World_Prepare(world_p world)
     world->sky_box = NULL;
     world->anim_commands = NULL;
     world->anim_commands_count = 0;
+}
+
+
+void World_Open(struct world_s *world, class VT_Level *tr)
+{
+    world->version = tr->game_version;
+
+    Res_ScriptsOpen(world->version);    // Open configuration scripts.
+    Gui_DrawLoadScreen(150);
+
+    World_GenRBTrees(world);            // Generate red-black trees
+    Gui_DrawLoadScreen(200);
+
+    TR_GenTextures(world, tr);          // Generate OGL textures
+    Gui_DrawLoadScreen(300);
+
+    TR_GenAnimCommands(world, tr);      // Copy anim commands
+    Gui_DrawLoadScreen(310);
+
+    TR_GenAnimTextures(world, tr);      // Generate animated textures
+    Gui_DrawLoadScreen(320);
+
+    TR_GenMeshes(world, tr);            // Generate all meshes
+    Gui_DrawLoadScreen(400);
+
+    TR_GenSprites(world, tr);           // Generate all sprites
+    Gui_DrawLoadScreen(420);
+
+    TR_GenBoxes(world, tr);             // Generate boxes.
+    Gui_DrawLoadScreen(440);
+
+    TR_GenCameras(world, tr);           // Generate cameras & sinks.
+    Gui_DrawLoadScreen(460);
+
+    TR_GenRooms(world, tr);             // Build all rooms
+    Gui_DrawLoadScreen(500);
+
+    Res_GenRoomFlipMap(world);          // Generate room flipmaps
+    Gui_DrawLoadScreen(520);
+
+    // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
+
+    TR_GenSkeletalModels(world, tr);
+    Gui_DrawLoadScreen(600);
+
+    TR_GenEntities(world, tr);          // Build all moveables (entities)
+    Gui_DrawLoadScreen(650);
+
+    Res_GenBaseItems(world);             // Generate inventory item entries.
+    Gui_DrawLoadScreen(680);
+
+    // Generate sprite buffers. Only now because entity generation adds new sprites
+
+    Res_GenSpritesBuffer(world);
+    Gui_DrawLoadScreen(700);
+
+    TR_GenRoomProperties(world, tr);
+    Gui_DrawLoadScreen(750);
+
+    Res_GenRoomCollision(world);
+    Gui_DrawLoadScreen(800);
+
+    // Initialize audio.
+
+    TR_GenSamples(world, tr);
+    Gui_DrawLoadScreen(850);
+
+    // Find and set skybox.
+
+    world->sky_box = Res_GetSkybox(world, world->version);
+    Gui_DrawLoadScreen(860);
+
+    // Generate entity functions.
+
+    if(world->entity_tree->root)
+    {
+        Res_GenEntityFunctions(world->entity_tree->root);
+    }
+    Gui_DrawLoadScreen(910);
+
+    // Load entity collision flags and ID overrides from script.
+
+    Res_ScriptsClose();
+    Gui_DrawLoadScreen(940);
+
+    // Generate VBOs for meshes.
+
+    Res_GenVBOs(world);
+    Gui_DrawLoadScreen(950);
+
+    // Process level autoexec loading.
+
+    Res_AutoexecOpen(world->version);
+    Gui_DrawLoadScreen(960);
+
+    // Fix initial room states
+
+    Res_FixRooms(world);
+    Gui_DrawLoadScreen(970);
+}
+
+
+void World_GenRBTrees(struct world_s *world)
+{
+    world->entity_tree = RB_Init();
+    world->entity_tree->rb_compEQ = compEntityEQ;
+    world->entity_tree->rb_compLT = compEntityLT;
+    world->entity_tree->rb_free_data = RBEntityFree;
+
+    world->items_tree = RB_Init();
+    world->items_tree->rb_compEQ = compEntityEQ;
+    world->items_tree->rb_compLT = compEntityLT;
+    world->items_tree->rb_free_data = RBItemFree;
 }
 
 
