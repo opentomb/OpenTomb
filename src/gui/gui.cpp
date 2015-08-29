@@ -430,7 +430,7 @@ void renderStringLine(TextLine *l)
             real_x = static_cast<float>(engine::screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
         case HorizontalAnchor::Center:
-            real_x = (static_cast<float>(engine::screen_info.w) / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            real_x = (engine::screen_info.w / 2.0f) - ((l->rect[2] - l->rect[0]) / 2.0f) + l->absXoffset;  // Absolute center.
             break;
     }
 
@@ -443,7 +443,7 @@ void renderStringLine(TextLine *l)
             real_y = static_cast<float>(engine::screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case VerticalAnchor::Center:
-            real_y = (static_cast<float>(engine::screen_info.h) / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = (engine::screen_info.h / 2.0f) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 

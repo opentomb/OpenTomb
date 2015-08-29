@@ -156,7 +156,7 @@ public:
     void setVisibleLines(size_t val)
     {
         m_visibleLines = val;
-        setCursorY(m_visibleLines * m_lineHeight);
+        setCursorY(static_cast<int16_t>(m_visibleLines * m_lineHeight));
     }
 
     size_t visibleLines() const

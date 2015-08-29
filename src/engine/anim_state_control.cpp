@@ -450,7 +450,7 @@ void world::Character::state_func()
                         if(m_transform.getOrigin()[2] + 1920.0 >= next_fc.floor_point[2])
                         {
                             // MAGIC: Vertical speed override is based on ledge height - thanks to T4Larson!
-                            m_bf.animations.model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames[m_bf.animations.model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames.size()-1].v_Vertical = -3 - (int)sqrt(-9600 - 12 * -(next_fc.floor_point[2]-m_transform.getOrigin()[2]));
+                            m_bf.animations.model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames[m_bf.animations.model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames.size()-1].v_Vertical = static_cast<btScalar>( -3 - (int)sqrt(-9600 - 12 * -(next_fc.floor_point[2]-m_transform.getOrigin()[2])) );
                             m_bf.animations.next_state = TR_STATE_LARA_JUMP_UP;
                             break;
                         }
@@ -2853,7 +2853,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_LEFT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((m_command.move[1] != -1) || m_response.killed)
             {
@@ -2864,7 +2864,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_RIGHT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((m_command.move[1] != 1) || m_response.killed)
             {
@@ -2875,7 +2875,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CROUCH_TURN_LEFT:
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23)) ? (0.6) : (0.0);
+            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23)) ? (0.6f) : (0.0f);
 
             if((m_command.move[1] == 0) || m_response.killed)
             {
@@ -3091,7 +3091,7 @@ void world::Character::state_func()
             else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_bf.animations.current_frame >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == -1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame);
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, static_cast<int>( m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame ));
             }
             break;
 
@@ -3107,7 +3107,7 @@ void world::Character::state_func()
             else if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_bf.animations.current_frame >= m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size() / 2) && (m_command.move[1] == 1))
             {
                 // MAGIC: mirroring animation offset.
-                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame);
+                setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, static_cast<int>( m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size()-m_bf.animations.current_frame ));
             }
             break;
 

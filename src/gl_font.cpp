@@ -383,8 +383,8 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
             yy1 = yy0 - g->height;
             bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
 
-            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
-            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
+            x += (kern.x + g->advance_x) / 64.0f;
+            y += (kern.y + g->advance_y) / 64.0f;
         }
     }
 }
@@ -468,8 +468,8 @@ void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
                 vec4_copy(p, glf->gl_font_color);   p += 4;
                 elements_count++;
             }
-            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
-            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
+            x += (kern.x + g->advance_x) / 64.0f;
+            y += (kern.y + g->advance_y) / 64.0f;
         }
         FontBuffer_Unmap();
         ///RENDER
@@ -540,8 +540,8 @@ void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
 
                 glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
-            x += static_cast<GLfloat>(kern.x + g->advance_x) / 64.0;
-            y += static_cast<GLfloat>(kern.y + g->advance_y) / 64.0;
+            x += (kern.x + g->advance_x) / 64.0f;
+            y += (kern.y + g->advance_y) / 64.0f;
         }
     }
 }

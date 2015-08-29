@@ -1074,7 +1074,7 @@ int execCmd(const char *ch)
                 Console::instance().notify(SYSNOTE_CONSOLE_SPACING, Console::instance().spacing());
                 return 1;
             }
-            Console::instance().setLineInterval(atof(token.data()));
+            Console::instance().setLineInterval(std::stof(token.data()));
             return 1;
         }
         else if(!strcmp(token.data(), "showing_lines"))

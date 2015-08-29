@@ -590,13 +590,13 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
                     targetAngle = (ent->m_angles[0]) * util::RadPerDeg;
                     break;
                 case world::CameraTarget::Front:
-                    targetAngle = (ent->m_angles[0] - 180.0) * util::RadPerDeg;
+                    targetAngle = (ent->m_angles[0] - 180.0f) * util::RadPerDeg;
                     break;
                 case world::CameraTarget::Left:
-                    targetAngle = (ent->m_angles[0] - 75.0) * util::RadPerDeg;
+                    targetAngle = (ent->m_angles[0] - 75.0f) * util::RadPerDeg;
                     break;
                 case world::CameraTarget::Right:
-                    targetAngle = (ent->m_angles[0] + 75.0) * util::RadPerDeg;
+                    targetAngle = (ent->m_angles[0] + 75.0f) * util::RadPerDeg;
                     break;
                 default:
                     targetAngle = (ent->m_angles[0]) * util::RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
@@ -621,9 +621,9 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
     //Code to manage screen shaking effects
     if((render::renderer.camera()->m_shakeTime > 0.0) && (render::renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
-        cam_pos[1] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
-        cam_pos[2] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;;
+        cam_pos[0] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
+        cam_pos[1] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
+        cam_pos[2] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
         render::renderer.camera()->m_shakeTime  = (render::renderer.camera()->m_shakeTime < 0.0)?(0.0f):(render::renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 

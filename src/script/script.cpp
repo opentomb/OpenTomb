@@ -264,7 +264,7 @@ std::tuple<float, float, float> lua_GetGravity()
 
 void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
-    btVector3 g(x, y.is<lua::Number>() ? y : 0, z.is<lua::Number>() ? z : 0);
+    btVector3 g(x, y.is<lua::Number>() ? y.toFloat() : 0, z.is<lua::Number>() ? z.toFloat() : 0);
     engine::bt_engine_dynamicsWorld->setGravity(g);
     Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
@@ -354,7 +354,7 @@ void lua_SetEntityActivationOffset(int id, float x, float y, float z, lua::Value
         ent->m_activationRadius = r;
 }
 
-int lua_GetCharacterParam(int id, int parameter)
+float lua_GetCharacterParam(int id, int parameter)
 {
     std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
@@ -426,7 +426,7 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     if(ent && (value.is<lua::Number>() || value.is<lua::Integer>()))
     {
         if(value.is<lua::Number>())
-            ent->changeParam(parameter, value.to<lua::Number>());
+            ent->changeParam(parameter, value.toFloat());
     }
     else
     {
@@ -581,7 +581,7 @@ void lua_AddFont(int index, const char* path, uint32_t size)
 {
     if(!gui::fontManager->AddFont(static_cast<gui::FontType>(index), size, path))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::fontManager->GetFontCount(), gui::MaxFonts);
+        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::fontManager->getFontCount(), gui::MaxFonts);
     }
 }
 
@@ -597,7 +597,7 @@ void lua_AddFontStyle(int style_index,
                                        rect, rect_border, rect_R, rect_G, rect_B, rect_A,
                                        hide))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::fontManager->GetFontStyleCount(), gui::FontStyle::Sentinel);
+        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::fontManager->getFontStyleCount(), gui::FontStyle::Sentinel);
     }
 }
 
@@ -1185,7 +1185,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
     btScalar dist = btDistance(ent_pos, sink_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
 
-    btVector3 speed = ((sink_pos - ent_pos) / dist) * (static_cast<btScalar>(sink->room_or_strength) * 1.5);
+    btVector3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
 
     ent->m_transform.getOrigin()[0] += speed[0];
     ent->m_transform.getOrigin()[1] += speed[1];
@@ -1260,8 +1260,8 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
         btVector3 ent2_pos = ent2->m_transform.getOrigin();
         btVector3 facing   = (ent1_pos - ent2_pos);
 
-        btScalar *targ_angle;
-        btScalar  theta;
+        btScalar *targ_angle = nullptr;
+        btScalar  theta = 0;
 
         switch(axis)
         {
@@ -1298,17 +1298,17 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
                     {
                         if(*targ_angle > theta)
                         {
-                            delta = -((360.0 - *targ_angle) + theta);
+                            delta = -((360.0f - *targ_angle) + theta);
                         }
                         else
                         {
-                            delta = (360.0 - theta) + *targ_angle;
+                            delta = (360.0f - theta) + *targ_angle;
                         }
                     }
 
                     if(delta > 180.0)
                     {
-                        *targ_angle = theta + 180.0;
+                        *targ_angle = theta + 180.0f;
                     }
                     else if((delta >= 0.0) && (delta < 180.0))
                     {
@@ -1321,11 +1321,11 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
                 }
 
                 if(fabs(delta) + speed >= 180.0)
-                    *targ_angle = floor(theta) + 180.0;
+                    *targ_angle = floor(theta) + 180.0f;
             }
             else
             {
-                *targ_angle = theta + 180.0;
+                *targ_angle = theta + 180.0f;
             }
         }
 
@@ -1653,7 +1653,7 @@ bool lua_GetEntityLock(int id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6;      // lock
+        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6) != 0;      // lock
     }
     return false;
 }
@@ -1674,7 +1674,7 @@ bool lua_GetEntityEvent(int id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5;    // event
+        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5) != 0;    // event
     }
     return false;
 }
@@ -1706,7 +1706,7 @@ bool lua_GetEntitySectorStatus(int id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7) != 0;
     }
     return true;
 }
@@ -2084,7 +2084,7 @@ uint32_t lua_GetEntityMeshCount(int id)
         return 0;
     }
 
-    return ent->m_bf.bone_tags.size();
+    return static_cast<uint32_t>( ent->m_bf.bone_tags.size() );
 }
 
 void lua_SetEntityMeshswap(int id_dest, int id_src)
@@ -2095,9 +2095,9 @@ void lua_SetEntityMeshswap(int id_dest, int id_src)
     ent_dest = engine::engine_world.getEntityByID(id_dest);
     model_src = engine::engine_world.getModelByID(id_src);
 
-    int meshes_to_copy = (ent_dest->m_bf.bone_tags.size() > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->m_bf.bone_tags.size());
+    size_t meshes_to_copy = (ent_dest->m_bf.bone_tags.size() > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->m_bf.bone_tags.size());
 
-    for(int i = 0; i < meshes_to_copy; i++)
+    for(size_t i = 0; i < meshes_to_copy; i++)
     {
         ent_dest->m_bf.bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
         ent_dest->m_bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
@@ -2215,10 +2215,10 @@ int lua_SetEntityBodyMass(lua_State *lua)
         return 0;
     }
 
-    const auto id = lua_tounsigned(lua, 1);
-    std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
+    const lua_Unsigned id = lua_tounsigned(lua, 1);
+    std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(static_cast<uint32_t>(id));
 
-    int body_number = lua_tounsigned(lua, 2);
+    lua_Unsigned body_number = lua_tounsigned(lua, 2);
     body_number = (body_number < 1) ? (1) : (body_number);
 
     uint16_t argn = 3;
@@ -2231,7 +2231,8 @@ int lua_SetEntityBodyMass(lua_State *lua)
             btVector3 inertia(0.0, 0.0, 0.0);
 
             btScalar mass = 0;
-            if(top >= argn) mass = lua_tonumber(lua, argn);
+            if(top >= argn)
+                mass = static_cast<btScalar>( lua_tonumber(lua, argn) );
             argn++;
 
             if(ent->m_bt.bt_body[i])
@@ -2303,7 +2304,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
         if(vfactor.is<lua::Number>())
         {
             ang3 = std::abs(vfactor.to<float>());
-            ang3 = (ang3 > 1.0) ? (1.0) : (ang3);
+            ang3 = (ang3 > 1.0f) ? (1.0f) : (ang3);
         }
 
         ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(std::abs(ang1), std::abs(ang2), ang3));
@@ -2368,7 +2369,7 @@ void lua_CamShake(float power, float time, lua::Value id)
         btVector3 cam_pos = render::renderer.camera()->getPosition();
 
         btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
-        dist = (dist > world::MaxShakeDistance) ? (0) : (1.0 - (dist / world::MaxShakeDistance));
+        dist = (dist > world::MaxShakeDistance) ? (0) : (1.0f - (dist / world::MaxShakeDistance));
 
         power *= dist;
     }
@@ -2686,7 +2687,7 @@ void lua_genUVRotateAnimation(int id)
         }
     }
 
-    seq->uvrotate_max = 0.5 * (v_max - v_min);
+    seq->uvrotate_max = 0.5f * (v_max - v_min);
     seq->uvrotate_speed = seq->uvrotate_max / static_cast<btScalar>(seq->frames.size());
 
     for(uint16_t j = 0; j < seq->frames.size(); j++)
@@ -2702,10 +2703,10 @@ void lua_genUVRotateAnimation(int id)
 
     for(world::core::Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons)
     {
-        p.anim_id = engine::engine_world.anim_sequences.size();
+        p.anim_id = static_cast<uint16_t>( engine::engine_world.anim_sequences.size() );
         for(world::core::Vertex& v : p.vertices)
         {
-            v.tex_coord[1] = v_min + 0.5 * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
+            v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
         }
     }
 
@@ -3550,9 +3551,9 @@ float script::MainEngine::parseFloat(const char **ch)
     (*ch) = parse_token(*ch, token);
     if(token[0])
     {
-        return atof(token);
+        return std::stof(token);
     }
-    return 0.0;
+    return 0.0f;
 }
 
 int script::MainEngine::parseInt(char **ch)

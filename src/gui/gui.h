@@ -230,13 +230,13 @@ public:
     bool             RemoveFontStyle(const FontStyle index);
     FontStyleData*  GetFontStyle(const FontStyle index);
 
-    uint32_t         GetFontCount()
+    uint32_t getFontCount()
     {
-        return fonts.size();
+        return static_cast<uint32_t>(fonts.size());
     }
-    uint32_t         GetFontStyleCount()
+    uint32_t getFontStyleCount()
     {
-        return styles.size();
+        return static_cast<uint32_t>(styles.size());
     }
 
     void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...

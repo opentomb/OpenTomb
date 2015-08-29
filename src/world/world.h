@@ -389,7 +389,7 @@ struct Room : public Object
     RoomSector* getSectorRaw(const btVector3 &pos);
     RoomSector* getSectorXYZ(const btVector3 &pos);
 
-    void genMesh(World *world, size_t room_index, const std::unique_ptr<loader::Level>& tr);
+    void genMesh(World *world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr);
 };
 
 struct World

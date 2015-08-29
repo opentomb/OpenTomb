@@ -51,7 +51,7 @@ struct FontTexture
     {
         if(!gl_tex_indexes.empty())
         {
-            glDeleteTextures(gl_tex_indexes.size(), gl_tex_indexes.data());
+            glDeleteTextures(static_cast<GLsizei>(gl_tex_indexes.size()), gl_tex_indexes.data());
         }
     }
 };

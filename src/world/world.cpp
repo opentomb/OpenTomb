@@ -184,8 +184,8 @@ RoomSector* RoomSector::checkPortalPointerRaw()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
+        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -208,8 +208,8 @@ RoomSector* RoomSector::checkPortalPointer()
         {
             r = r->base_room;
         }
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
+        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -224,8 +224,8 @@ RoomSector* RoomSector::checkBaseRoom()
     if(owner_room->base_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->base_room;
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
+        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -240,8 +240,8 @@ RoomSector* RoomSector::checkAlternateRoom()
     if(owner_room->alternate_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->alternate_room;
-        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize;
-        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize;
+        int ind_x = static_cast<int>( (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize );
+        int ind_y = static_cast<int>( (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize );
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -466,7 +466,7 @@ void World::empty()
     skeletal_models.clear();
     meshes.clear();
 
-    glDeleteTextures(textures.size(), textures.data());
+    glDeleteTextures(static_cast<GLsizei>(textures.size()), textures.data());
     textures.clear();
 
     tex_atlas.reset();
@@ -1107,7 +1107,7 @@ void World::updateAnimTextures()                                                
         seq.frame_time += engine::engine_frame_time;
         if(seq.frame_time >= seq.frame_rate)
         {
-            int j = (seq.frame_time / seq.frame_rate);
+            int j = static_cast<int>(seq.frame_time / seq.frame_rate);
             seq.frame_time -= static_cast<btScalar>(j) * seq.frame_rate;
 
             switch(seq.anim_type)
@@ -1231,7 +1231,7 @@ RoomSector* RoomSector::getHighestSector()
     return highest_sector;
 }
 
-void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader::Level>& tr)
+void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr)
 {
     const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
@@ -1267,7 +1267,7 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
     for(uint32_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
-        p->double_side = tr_room->triangles[i].texture & 0x8000;
+        p->double_side = (tr_room->triangles[i].texture & 0x8000) != 0;
     }
 
     /*
@@ -1276,7 +1276,7 @@ void Room::genMesh(World* world, size_t room_index, const std::unique_ptr<loader
     for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
-        p->double_side = tr_room->rectangles[i].texture & 0x8000;
+        p->double_side = (tr_room->rectangles[i].texture & 0x8000) != 0;
     }
 
     /*

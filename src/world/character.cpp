@@ -768,8 +768,8 @@ ClimbInfo Character::checkWallsClimbability()
 
 void Character::lean(btScalar max_lean)
 {
-    btScalar neg_lean = 360.0 - max_lean;
-    btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
+    btScalar neg_lean = 360.0f - max_lean;
+    btScalar lean_coeff = (max_lean == 0.0) ? (48.0f) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
@@ -1601,7 +1601,7 @@ int Character::findTraverse()
                 Entity* e = static_cast<Entity*>(cont->object);
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1))
                 {
-                    int oz = (m_angles[0] + 45.0f) / 90.0f;
+                    int oz = static_cast<int>( (m_angles[0] + 45.0f) / 90.0f );
                     m_angles[0] = oz * 90.0f;
                     m_traversedObject = e;
                     updateTransform();
@@ -1706,11 +1706,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5 * MeteringSectorSize));
+        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5f * MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5 * MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * MeteringSectorSize));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
@@ -2197,7 +2197,7 @@ void Character::frameImpl(btScalar time, int16_t frame, animation::AnimUpdate st
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+    m_currentSpeed = static_cast<btScalar>( (af->speed_x + frame * af->accel_x) / (1<<16) ); //Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 

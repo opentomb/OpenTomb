@@ -84,7 +84,8 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<world::Entity> > 
 
 void Res_SetStaticMeshProperties(std::shared_ptr<world::core::StaticMesh> r_static)
 {
-    lua::Integer _collision_type, _collision_shape, _hide;
+    lua::Integer _collision_type, _collision_shape;
+    lua::Boolean _hide;
     lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->object_id);
 
     if(_collision_type > 0)
@@ -1761,7 +1762,7 @@ void TR_GenRooms(world::World *world, const std::unique_ptr<loader::Level>& tr)
     }
 }
 
-void TR_GenRoom(size_t room_index, std::shared_ptr<world::Room>& room, world::World *world, const std::unique_ptr<loader::Level>& tr)
+void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::World *world, const std::unique_ptr<loader::Level>& tr)
 {
     loader::Room *tr_room = &tr->m_rooms[room_index];
     loader::StaticMesh *tr_static;
@@ -2660,7 +2661,7 @@ void TR_GenMesh(world::World *world, size_t mesh_index, std::shared_ptr<world::c
         auto face3 = &tr_mesh->textured_triangles[i];
         auto tex = &tr->m_objectTextures[face3->texture & tex_mask];
 
-        p.double_side = static_cast<bool>(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p.double_side = (face3->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(&p, face3->texture & tex_mask, world);
 
@@ -2708,7 +2709,7 @@ void TR_GenMesh(world::World *world, size_t mesh_index, std::shared_ptr<world::c
         auto face4 = &tr_mesh->textured_rectangles[i];
         auto tex = &tr->m_objectTextures[face4->texture & tex_mask];
 
-        p.double_side = static_cast<bool>(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p.double_side = (face4->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(&p, face4->texture & tex_mask, world);
 
@@ -3693,7 +3694,7 @@ void TR_GenSamples(world::World *world, const std::unique_ptr<loader::Level>& tr
 {
     // Generate new buffer array.
     world->audio_buffers.resize(tr->m_samplesCount, 0);
-    alGenBuffers(world->audio_buffers.size(), world->audio_buffers.data());
+    alGenBuffers(static_cast<ALsizei>(world->audio_buffers.size()), world->audio_buffers.data());
 
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
@@ -3814,25 +3815,25 @@ void TR_GenSamples(world::World *world, const std::unique_ptr<loader::Level>& tr
     {
         if(tr->m_gameVersion < loader::Game::TR3)
         {
-            world->audio_effects[i].gain = static_cast<float>(tr->m_soundDetails[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
+            world->audio_effects[i].gain = tr->m_soundDetails[i].volume / 32767.0f; // Max. volume in TR1/TR2 is 32767.
             world->audio_effects[i].chance = tr->m_soundDetails[i].chance;
         }
         else if(tr->m_gameVersion > loader::Game::TR3)
         {
-            world->audio_effects[i].gain = static_cast<float>(tr->m_soundDetails[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain = tr->m_soundDetails[i].volume / 255.0f; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->m_soundDetails[i].chance * 255;
         }
         else
         {
-            world->audio_effects[i].gain = static_cast<float>(tr->m_soundDetails[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].gain = tr->m_soundDetails[i].volume / 255.0f; // Max. volume in TR3 is 255.
             world->audio_effects[i].chance = tr->m_soundDetails[i].chance * 127;
         }
 
         world->audio_effects[i].rand_gain_var = 50;
         world->audio_effects[i].rand_pitch_var = 50;
 
-        world->audio_effects[i].pitch = static_cast<float>(tr->m_soundDetails[i].pitch) / 127.0 + 1.0;
-        world->audio_effects[i].range = static_cast<float>(tr->m_soundDetails[i].sound_range) * 1024.0;
+        world->audio_effects[i].pitch = tr->m_soundDetails[i].pitch / 127.0f + 1.0f;
+        world->audio_effects[i].range = tr->m_soundDetails[i].sound_range * 1024.0f;
 
         world->audio_effects[i].rand_pitch = tr->m_soundDetails[i].useRandomPitch();
         world->audio_effects[i].rand_gain = tr->m_soundDetails[i].useRandomVolume();
@@ -3877,11 +3878,9 @@ void TR_GenSamples(world::World *world, const std::unique_ptr<loader::Level>& tr
 
     for(size_t i = 0; i < world->audio_emitters.size(); i++)
     {
-        world->audio_emitters[i].emitter_index = i;
+        world->audio_emitters[i].emitter_index = static_cast<ALuint>(i);
         world->audio_emitters[i].sound_index = tr->m_soundSources[i].sound_id;
-        world->audio_emitters[i].position[0] = tr->m_soundSources[i].x;
-        world->audio_emitters[i].position[1] = tr->m_soundSources[i].z;
-        world->audio_emitters[i].position[2] = -tr->m_soundSources[i].y;
+        world->audio_emitters[i].position = btVector3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
         world->audio_emitters[i].flags = tr->m_soundSources[i].flags;
     }
 }

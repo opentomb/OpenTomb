@@ -53,7 +53,8 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // last element of the hair, as it indicates absence of "child" constraint.
 
     m_rootIndex = 0;
-    m_tailIndex = m_elements.size() - 1;
+    assert( m_elements.size() <= 256 );
+    m_tailIndex = static_cast<uint8_t>( m_elements.size() - 1 );
 
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
@@ -276,7 +277,7 @@ void Hair::createHairMesh(const core::SkeletalModel *model)
 			std::copy_n(&original->m_elements[originalElementsStart], original->m_elementsPerTexture[page], &m_mesh->m_elements[elementsStartPerTexture[page]]);
 
 			for (size_t j = 0; j < original->m_elementsPerTexture[page]; j++) {
-                m_mesh->m_elements[elementsStartPerTexture[page]] = verticesStart + original->m_elements[originalElementsStart];
+                m_mesh->m_elements[elementsStartPerTexture[page]] = static_cast<GLuint>( verticesStart + original->m_elements[originalElementsStart] );
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;
             }
