@@ -349,7 +349,7 @@ void Source::Update()
     {
         LinkEmitter();
 
-        if((audio_settings.use_effects) && (is_water != fxManager.water_state))
+        if(audio_settings.use_effects && is_water != fxManager.water_state)
         {
             SetUnderwater();
         }
@@ -867,7 +867,7 @@ bool StreamTrack::Update()
     if(change_gain) // If any condition which modify track gain was met, call AL gain change.
     {
         alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
-                  (1.0 - damped_volume)       *  // Damp volume.
+                  (1.0f - damped_volume)       *  // Damp volume.
                   audio_settings.music_volume);  // Global music volume setting.
     }
 
@@ -973,7 +973,7 @@ bool StreamTrack::Stream(ALuint buffer)
     if(size == 0)
         return false;
 
-    alBufferData(buffer, format, pcm.data(), size * sizeof(pcm[0]), rate);
+    alBufferData(buffer, format, pcm.data(), static_cast<ALsizei>(size * sizeof(pcm[0])), rate);
     return true;
 }
 
@@ -1770,7 +1770,7 @@ float getByteDepth(SF_INFO sfInfo)
     }
 }
 
-int loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
+int loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t sample_size, size_t uncomp_sample_size)
 {
     MemBufferFileIo wavMem(sample_pointer, sample_size);
     SF_INFO sfInfo;
@@ -1801,16 +1801,12 @@ int loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sam
 
     // We need to change buffer size, as we're using floats here.
 
-#ifdef AUDIO_OPENAL_FLOAT
-    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(ALfloat);
-#else
-    uncomp_sample_size = (uncomp_sample_size / sizeof(uint16_t)) * sizeof(ALshort);
-#endif
+    const auto frameCount = uncomp_sample_size / sizeof(uint16_t);
 
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = fillALBuffer(buf_number, sample, uncomp_sample_size, &sfInfo);
+    bool result = fillALBuffer(buf_number, sample, static_cast<Uint32>(frameCount), &sfInfo);
 
     sf_close(sample);
 
@@ -1828,18 +1824,14 @@ int loadALbufferFromFile(ALuint buf_number, const char *fname)
         return -1;
     }
 
-#ifdef AUDIO_OPENAL_FLOAT
-    bool result = fillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALfloat), &sfInfo);
-#else
-    bool result = Audio_FillALBuffer(buf_number, file, sfInfo.frames * sizeof(ALshort), &sfInfo);
-#endif
+    bool result = fillALBuffer(buf_number, file, static_cast<Uint32>(sfInfo.frames), &sfInfo);
 
     sf_close(file);
 
     return (result) ? (0) : (-3);   // Zero means success.
 }
 
-bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo)
+bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 frameCount, SF_INFO *sfInfo)
 {
     if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
@@ -1848,15 +1840,15 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_IN
     }
 
 #ifdef AUDIO_OPENAL_FLOAT
-    std::vector<ALfloat> frames(buffer_size / sizeof(ALfloat));
+    std::vector<ALfloat> frames(frameCount);
     /*const sf_count_t samplesRead =*/ sf_readf_float(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), buffer_size, sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), frameCount * sizeof(frames[0]), sfInfo->samplerate);
 #else
-    std::vector<ALshort> frames(buffer_size / sizeof(ALshort));
+    std::vector<ALshort> frames(frameCount);
     /*const sf_count_t samplesRead =*/ sf_readf_short(wavFile, frames.data(), frames.size());
 
-    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), buffer_size, sfInfo->samplerate);
+    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), frameCount * sizeof(frames[0]), sfInfo->samplerate);
 #endif
     logALError(0);
     return true;
@@ -1893,9 +1885,9 @@ void updateListenerByCamera(world::Camera *cam)
             fxManager.current_room_type = cam->m_currentRoom->reverb_info;
         }
 
-        if(fxManager.water_state != static_cast<int8_t>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != static_cast<bool>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
         {
-            fxManager.water_state = cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER;
+            fxManager.water_state = (cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER) != 0;
 
             if(fxManager.water_state)
             {

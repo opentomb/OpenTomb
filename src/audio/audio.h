@@ -266,7 +266,7 @@ struct FxManager
     ALuint      current_slot;
     ALuint      current_room_type;
     ALuint      last_room_type;
-    int8_t      water_state;    // If listener is underwater, all samples will damp.
+    bool        water_state;    // If listener is underwater, all samples will damp.
 };
 
 // Effect structure.
@@ -446,7 +446,7 @@ void updateListenerByCamera(world::Camera *cam);
 void updateListenerByEntity(std::shared_ptr<world::Entity> ent);
 
 bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
-int  loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
+int  loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t sample_size, size_t uncomp_sample_size = 0);
 int  loadALbufferFromFile(ALuint buf_number, const char *fname);
 void loadOverridedSamples(world::World *world);
 

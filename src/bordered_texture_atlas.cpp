@@ -125,7 +125,7 @@ void BorderedTextureAtlas::layOutTextures()
             {
                 canonical.new_page = page;
 
-                size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
+                uint32_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
                 if(highest_y + 1 > m_resultPageHeights[page])
                     m_resultPageHeights[page] = highest_y;
 
@@ -383,7 +383,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, GLfloat *coordinates) const
 {
     assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
@@ -440,10 +440,10 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             // Add top border
             for(int border = 0; border < m_borderWidth; border++)
             {
-                unsigned x = canonical.new_x_with_border;
-                unsigned y = canonical.new_y_with_border + border;
-                unsigned old_x = canonical.original_x;
-                unsigned old_y = canonical.original_y;
+                auto x = canonical.new_x_with_border;
+                auto y = canonical.new_y_with_border + border;
+                auto old_x = canonical.original_x;
+                auto old_y = canonical.original_y;
 
                 // expand top-left pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x) * 4],
@@ -522,10 +522,12 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             {
                 for(int j = 0; j < w; j++)
                 {
-                    mip_data[i * w * 4 + j * 4 + 0] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 0]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 0]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 0]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 0]));
-                    mip_data[i * w * 4 + j * 4 + 1] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 1]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 1]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 1]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 1]));
-                    mip_data[i * w * 4 + j * 4 + 2] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 2]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 2]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 2]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 2]));
-                    mip_data[i * w * 4 + j * 4 + 3] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 3]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 3]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 3]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 3]));
+                    const GLubyte* const ptr1 = &data[i * w * 16 + j * 8];
+                    const GLubyte* const ptr2 = ptr1 + w * 8;
+                    for(int k = 0; k < 3; ++k)
+                    {
+                        mip_data[i * w * 4 + j * 4 + k] = (static_cast<int>(ptr1[k]) + static_cast<int>(ptr1[4 + k]) + static_cast<int>(ptr2[k]) + static_cast<int>(ptr2[4 + k])) / 4;
+                    }
                 }
             }
 
@@ -544,10 +546,12 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
                 {
                     for(int j = 0; j < w; j++)
                     {
-                        mip_data[i * w * 4 + j * 4 + 0] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 0]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 0]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 0]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]));
-                        mip_data[i * w * 4 + j * 4 + 1] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 1]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 1]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 1]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]));
-                        mip_data[i * w * 4 + j * 4 + 2] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 2]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 2]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 2]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 2]));
-                        mip_data[i * w * 4 + j * 4 + 3] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 3]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 3]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 3]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 3]));
+                        const GLubyte* const ptr1 = &data[i * w * 16 + j * 8];
+                        const GLubyte* const ptr2 = ptr1 + w * 8;
+                        for(int k = 0; k < 3; ++k)
+                        {
+                            mip_data[i * w * 4 + j * 4 + k] = (static_cast<int>(ptr1[k]) + static_cast<int>(ptr1[4 + k]) + static_cast<int>(ptr2[k]) + static_cast<int>(ptr2[4 + k])) / 4;
+                        }
                     }
                 }
                 //sprintf(tgan, "mip_%0.2d.tga", mip_level);

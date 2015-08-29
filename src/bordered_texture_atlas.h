@@ -71,8 +71,8 @@ class BorderedTextureAtlas
 
         // New origin
         size_t new_page;
-        size_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
-        size_t new_y_with_border; // See above.
+        uint32_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
+        uint32_t new_y_with_border; // See above.
     };
 
     // How much border to add.
@@ -144,7 +144,7 @@ public:
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
     void getSpriteCoordinates(size_t sprite_texture,
-                              uint32_t &outPage,
+                              size_t &outPage,
                               GLfloat *coordinates) const;
 
     /*!

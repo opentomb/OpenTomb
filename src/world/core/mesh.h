@@ -123,7 +123,7 @@ struct BaseMesh
 struct Sprite
 {
     uint32_t            id;                                                     // object's ID
-    uint32_t            texture;                                                // texture number
+    size_t              texture;                                                // texture number
     GLfloat             tex_coord[8];                                           // texture coordinates
     uint32_t            flag;
     btScalar            left;                                                   // world sprite's gabarites

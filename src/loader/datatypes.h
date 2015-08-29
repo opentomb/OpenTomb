@@ -2124,12 +2124,12 @@ struct SoundDetails
 
     bool useRandomPitch() const
     {
-        return flags_2 & 0x20;
+        return (flags_2 & 0x20) != 0;
     }
 
     bool useRandomVolume() const
     {
-        return flags_2 & 0x40;
+        return (flags_2 & 0x40) != 0;
     }
 
     // Default range and pitch values are required for compatibility with

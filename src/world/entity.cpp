@@ -698,7 +698,7 @@ void Entity::updateTransform()
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
     btScalar t = m_currentSpeed * m_speedMult;
-    btScalar vz = (zeroVz) ? (0.0) : (m_speed[2]);
+    btScalar vz = (zeroVz) ? (0.0f) : (m_speed[2]);
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
@@ -970,7 +970,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
     frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0 / TR_FRAME_RATE;
+    m_bf.animations.period = 1.0f / TR_FRAME_RATE;
 
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;
@@ -1019,7 +1019,7 @@ void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::
     animation::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
 
     *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
+    *frame = (*frame >= 0.0f) ? (*frame) : (0.0f);                                    // paranoid checking
     *anim = bf->animations.current_animation;
 
     /*

@@ -2813,7 +2813,7 @@ void tr_setupRoomVertices(world::World *world, const std::unique_ptr<loader::Lev
 void Res_GenRoomSpritesBuffer(std::shared_ptr<world::Room> room)
 {
     // Find the number of different texture pages used and the number of non-null sprites
-    uint32_t highestTexturePageFound = 0;
+    size_t highestTexturePageFound = 0;
     int actualSpritesFound = 0;
     for(world::RoomSprite& sp : room->sprites)
     {
