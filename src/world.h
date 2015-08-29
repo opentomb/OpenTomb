@@ -13,8 +13,6 @@ extern "C" {
 #include "al/AL/efx-presets.h"
 }
 
-#include "core/vmath.h"
-
 // Native TR floor data functions
 
 #define TR_FD_FUNC_PORTALSECTOR                 0x01

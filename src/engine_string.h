@@ -1,8 +1,6 @@
 #ifndef ENGINE_STRINGS_H
 #define ENGINE_STRINGS_H
 
-#include <stdint.h>
-
 // Generic strings enumeration
 
 #define STR_GEN_NEWGAME             0

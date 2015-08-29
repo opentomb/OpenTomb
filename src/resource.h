@@ -2,8 +2,6 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#include "core/redblack.h"
-
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
 // (derived from actual room mesh).
@@ -69,6 +67,7 @@
 #define LOG_ANIM_DISPATCHES 0
 
 class  VT_Level;
+struct RedBlackNode_s;
 struct base_mesh_s;
 struct world_s;
 struct room_s;
@@ -102,7 +101,7 @@ struct   skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_
 
 // Assign pickup functions to previously created base items.
 
-void Res_EntityToItem(RedBlackNode_p n);
+void Res_EntityToItem(struct RedBlackNode_s *n);
 
 // Functions setting parameters from configuration scripts.
 

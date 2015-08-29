@@ -1,6 +1,12 @@
 #include <stdlib.h>
 #include <math.h>
 
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
 #include "core/console.h"
 #include "core/vmath.h"
 #include "core/obb.h"

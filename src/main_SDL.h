@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 
+void Engine_SetDone();
+
 void Engine_Display();
 void Engine_Frame(float time);
 
@@ -34,6 +36,5 @@ void Engine_SecondaryMouseDown();
 // Debug draw routines.
 
 void ShowDebugInfo();
-void SkeletalModelTestDraw();
 
 #endif

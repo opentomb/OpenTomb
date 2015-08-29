@@ -9,7 +9,6 @@ struct lua_State;
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
 
-#include "core/vmath.h"
 
 extern lua_State *engine_lua;
 

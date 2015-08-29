@@ -5,8 +5,6 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
-#include "core/vmath.h"
-
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
 

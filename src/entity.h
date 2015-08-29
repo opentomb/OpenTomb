@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 
-struct room_s;
 struct room_sector_s;
 struct obb_s;
 struct character_s;

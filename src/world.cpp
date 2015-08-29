@@ -13,7 +13,7 @@
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
-#include "render/bsp_tree.h"
+#include "vt/vt_level.h"
 #include "audio.h"
 #include "world.h"
 #include "mesh.h"

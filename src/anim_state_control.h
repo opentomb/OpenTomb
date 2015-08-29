@@ -2,16 +2,8 @@
 #ifndef ANIM_STATE_CONTROL_H
 #define ANIM_STATE_CONTROL_H
 
-class VT_Level;
-struct polygon_s;
-struct base_mesh_s;
-struct room_s;
-struct world_s;
-struct camera_s;
 struct ss_animation_s;
 struct entity_s;
-struct room_sector_s;
-struct character_command_s;
 
 /*
  * Animation control flags

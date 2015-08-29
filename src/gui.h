@@ -2,13 +2,6 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#include "core/gl_font.h"
-#include "core/console.h"
-#include "render/render.h"
-#include "entity.h"
-#include "character_controller.h"
-
-
 #define GUI_MAX_TEMP_LINES   (256)
 
 // Screen metering resolution specifies user-friendly relative dimensions of screen,

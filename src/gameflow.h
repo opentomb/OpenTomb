@@ -1,5 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
+
+#ifndef GAMEFLOW_H
+#define GAMEFLOW_H
+
 #include <stdint.h>
 #include "engine.h"
 
@@ -61,3 +63,5 @@ extern gameflow_manager_s gameflow_manager;
 void Gameflow_Init();
 void Gameflow_Do();
 bool Gameflow_Send(int opcode, int operand = -1);
+
+#endif //GAMEFLOW_H

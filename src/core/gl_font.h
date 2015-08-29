@@ -113,7 +113,7 @@ uint32_t utf8_strlen(const char *str);
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
 
 
-// Font manager is a singleton structure which is used to manage all fonts
+// Font manager is a structure which is used to manage all fonts
 // and font styles. Every time you want to change font or style, font manager
 // functions should be used.
 

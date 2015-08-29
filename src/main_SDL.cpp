@@ -60,7 +60,7 @@ SDL_GLContext           sdl_gl_context = 0;
 ALCdevice              *al_device      = NULL;
 ALCcontext             *al_context     = NULL;
 
-int done = 0;
+static int done = 0;
 float time_scale = 1.0;
 
 engine_container_p      last_cont = NULL;
@@ -105,6 +105,11 @@ engine_container_p      last_cont = NULL;
 // MAIN
 // =======================================================================
 
+
+void Engine_SetDone()
+{
+    done = 1;
+}
 
 void Engine_InitGL()
 {

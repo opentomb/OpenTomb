@@ -21,11 +21,11 @@ extern "C" {
 #include "core/obb.h"
 #include "render/camera.h"
 #include "render/render.h"
-#include "render/bsp_tree.h"
 #include "render/frustum.h"
 #include "render/bordered_texture_atlas.h"
 #include "render/shader_description.h"
 #include "vt/vt_level.h"
+
 #include "audio.h"
 #include "world.h"
 #include "mesh.h"
@@ -36,6 +36,7 @@ extern "C" {
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
+#include "script.h"
 #include "engine.h"
 #include "engine_lua.h"
 #include "engine_physics.h"
@@ -700,8 +701,8 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 }
             }
             room_tween++;
-        }    ///END for
-    }    ///END for
+        }    ///END for(uint16_t w = 0; w < room->sectors_x-1; w++)
+    }    ///END for(uint16_t h = 0; h < room->sectors_y-1; h++)
 }
 
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
@@ -1035,7 +1036,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityEnability(%d)) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
                                             break;
                                     }
 
@@ -4335,7 +4336,7 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_EntityToItem(RedBlackNode_p n)
+void Res_EntityToItem(struct RedBlackNode_s *n)
 {
     base_item_p item = (base_item_p)n->data;
 

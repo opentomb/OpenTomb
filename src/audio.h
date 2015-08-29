@@ -18,10 +18,6 @@ extern "C" {
 #include "ogg/vorbisfile.h"
 }
 
-#include "core/system.h"
-#include "vt/vt_level.h"
-#include "game.h"
-#include "script.h"
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid
@@ -233,7 +229,6 @@ enum TR_AUDIO_STREAM_TYPE
 #define TR_AUDIO_STREAMPLAY_NOFREESTREAM (-1)
 #define TR_AUDIO_STREAMPLAY_IGNORED        0
 #define TR_AUDIO_STREAMPLAY_PROCESSED      1
-
 
 
 struct camera_s;

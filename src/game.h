@@ -3,13 +3,6 @@
 #define GAME_H
 
 #include <stdint.h>
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
-#include "core/vmath.h"
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
@@ -17,17 +10,10 @@ extern "C" {
 
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
-class VT_Level;
-struct polygon_s;
-struct base_mesh_s;
-struct room_s;
-struct world_s;
+struct lua_State;
 struct camera_s;
 struct entity_s;
-struct room_sector_s;
 struct RedBlackNode_s;
-
-class bt_engine_ClosestConvexResultCallback;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);

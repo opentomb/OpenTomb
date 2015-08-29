@@ -28,14 +28,13 @@ extern "C" {
 #include "main_SDL.h"
 #include "script.h"
 
-extern int done;
 
 extern SDL_Joystick         *sdl_joystick;
 extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
-extern engine_container_p last_cont;
+extern engine_container_p    last_cont;
 
 
 void Controls_Key(int32_t button, int state)
@@ -558,7 +557,7 @@ void Controls_PollSDLInput()
                     (event.key.state == SDL_PRESSED)  &&
                     (event.key.keysym.mod & KMOD_ALT) )
                 {
-                    done = 1;
+                    Engine_SetDone();
                     break;
                 }
 
@@ -591,7 +590,7 @@ void Controls_PollSDLInput()
                 break;
 
             case SDL_QUIT:
-                done = 1;
+                Engine_SetDone();
                 break;
 
             case SDL_WINDOWEVENT:
