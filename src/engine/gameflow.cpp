@@ -13,15 +13,13 @@ namespace engine
 
 Gameflow Gameflow_Manager;
 
-void Gameflow::Init()
+void Gameflow::init()
 {
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
-    {
-        Actions[i].opcode = GF_NOENTRY;
-    }
+    for(GameflowAction& action : m_actions)
+        action.opcode = Opcode::Sentinel;
 }
 
-void Gameflow::Do()
+void Gameflow::execute()
 {
     if(!m_nextAction)
     {
@@ -30,24 +28,25 @@ void Gameflow::Do()
 
     bool completed = true;
 
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
+    for(GameflowAction& action : m_actions)
     {
-        if(Actions[i].opcode == GF_NOENTRY) continue;
+        if(action.opcode == Opcode::Sentinel)
+            continue;
         completed = false;
 
-        switch(Actions[i].opcode)
+        switch(action.opcode)
         {
-            case GF_OP_LEVELCOMPLETE:
+            case Opcode::LevelComplete:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
-                if((gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete) && (!audio::isTrackPlaying()))
+                if(gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !audio::isTrackPlaying())
                 {
                     const char* levelName;
                     const char* levelPath;
-                    lua::tie(levelPath, levelName, m_currentLevelID) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(Actions[i].operand));
+                    lua::tie(levelPath, levelName, m_currentLevelID) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(action.operand));
                     m_currentLevelName = levelName;
                     m_currentLevelPath = levelPath;
                     engine::loadMap(m_currentLevelPath);
-                    Actions[i].opcode = GF_NOENTRY;
+                    action.opcode = Opcode::Sentinel;
                 }
                 else
                 {
@@ -58,24 +57,26 @@ void Gameflow::Do()
                 break;
 
             default:
-                Actions[i].opcode = GF_NOENTRY;
+                action.opcode = Opcode::Sentinel;
                 break;
         }   // end switch(gameflow_manager.Operand)
     }
 
-    if(completed) m_nextAction = false;    // Reset action marker!
+    if(completed)
+        m_nextAction = false;    // Reset action marker!
 }
 
-bool Gameflow::Send(int opcode, int operand)
+bool Gameflow::send(Opcode opcode, int operand)
 {
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
+    for(GameflowAction& action : m_actions)
     {
-        if(Actions[i].opcode == opcode) return false;
+        if(action.opcode == opcode)
+            return false;
 
-        if(Actions[i].opcode == GF_NOENTRY)
+        if(action.opcode == Opcode::Sentinel)
         {
-            Actions[i].opcode = opcode;
-            Actions[i].operand = operand;
+            action.opcode = opcode;
+            action.operand = operand;
             m_nextAction = true;
             return true;
         }

@@ -900,7 +900,7 @@ void Game_Prepare()
     // Set gameflow parameters to default.
     // Reset secret trigger map.
 
-    memset(Gameflow_Manager.SecretsTriggerMap, 0, sizeof(Gameflow_Manager.SecretsTriggerMap));
+    Gameflow_Manager.resetSecretStatus();
 }
 
 void Game_LevelTransition(uint16_t level_index)

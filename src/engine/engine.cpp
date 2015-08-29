@@ -531,7 +531,7 @@ void frame(btScalar time)
     fpsCycle(time);
 
     Game_Frame(time);
-    Gameflow_Manager.Do();
+    Gameflow_Manager.execute();
 }
 
 void showDebugInfo()
@@ -682,7 +682,7 @@ void initPre()
 
     engine_lua["loadscript_pre"]();
 
-    Gameflow_Manager.Init();
+    Gameflow_Manager.init();
 
     frame_vertex_buffer.resize(render::InitFrameVertexBufferSize);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();

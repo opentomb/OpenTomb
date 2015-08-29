@@ -526,18 +526,12 @@ void lua_RemoveEntityRagdoll(int ent_id)
 
 bool lua_GetSecretStatus(int secret_number)
 {
-    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0))
-        return false;   // No such secret - return
-
-    return engine::Gameflow_Manager.SecretsTriggerMap[secret_number];
+    return engine::Gameflow_Manager.getSecretStatus(secret_number);
 }
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0))
-		return;   // No such secret - return
-
-    engine::Gameflow_Manager.SecretsTriggerMap[secret_number] = status;
+    engine::Gameflow_Manager.setSecretStatus(secret_number, status);
 }
 
 bool lua_GetActionState(int act)
@@ -2517,7 +2511,7 @@ void lua_SetLevel(int id)
     Console::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     engine::Game_LevelTransition(id);
-    engine::Gameflow_Manager.Send(engine::GF_OP_LEVELCOMPLETE, id);    // Next level
+    engine::Gameflow_Manager.send(engine::Opcode::LevelComplete, id);    // Next level
 }
 
 void lua_SetGame(int gameId, lua::Value levelId)
@@ -2532,7 +2526,7 @@ void lua_SetGame(int gameId, lua::Value levelId)
 
     Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow_Manager.getGameID());
     engine::Game_LevelTransition(engine::Gameflow_Manager.getLevelID());
-    engine::Gameflow_Manager.Send(engine::GF_OP_LEVELCOMPLETE, engine::Gameflow_Manager.getLevelID());
+    engine::Gameflow_Manager.send(engine::Opcode::LevelComplete, engine::Gameflow_Manager.getLevelID());
 }
 
 void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
