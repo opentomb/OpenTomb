@@ -42,6 +42,7 @@ list(APPEND PRJ_SRC
     world/hair.cpp
     world/resource.cpp
     world/ragdoll.cpp
+    world/character.cpp
 
     world/core/mesh.cpp
     world/core/orientedboundingbox.cpp
@@ -95,6 +96,7 @@ list(APPEND PRJ_HDR
     world/hair.h
     world/resource.h
     world/ragdoll.h
+    world/character.h
 
     world/core/mesh.h
     world/core/orientedboundingbox.h

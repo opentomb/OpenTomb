@@ -27,6 +27,7 @@
 #include "gameflow.h"
 #include "gui/gui.h"
 #include "inventory.h"
+#include "world/character.h"
 
 extern btScalar time_scale;
 extern script::MainEngine engine_lua;
@@ -279,15 +280,15 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
         fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id(), ent->m_moveType, ent->m_dirFlag);
     }
 
-    if(auto ch = std::dynamic_pointer_cast<Character>(ent))
+    if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
         fprintf(*f, "\nremoveAllItems(%d);", ent->id());
-        for(const InventoryNode& i : ch->m_inventory)
+        for(const gui::InventoryNode& i : ch->m_inventory)
         {
             fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
         }
 
-        for(int i = 0; i < PARAM_SENTINEL; i++)
+        for(int i = 0; i < world::PARAM_SENTINEL; i++)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
         }
@@ -422,7 +423,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if(control_states.free_look || !std::dynamic_pointer_cast<Character>(ent))
+    if(control_states.free_look || !std::dynamic_pointer_cast<world::Character>(ent))
     {
         btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
         render::renderer.camera()->setRotation(cam_angles);
@@ -449,7 +450,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     }
     else
     {
-        std::shared_ptr<Character> ch = std::dynamic_pointer_cast<Character>(ent);
+        std::shared_ptr<world::Character> ch = std::dynamic_pointer_cast<world::Character>(ent);
         // Apply controls to Lara
         ch->m_command.action = control_states.state_action;
         ch->m_command.ready_weapon = control_states.do_draw_weapon;
@@ -464,9 +465,9 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         if(control_states.use_small_medi)
         {
-            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(PARAM_HEALTH, 250))
+            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(world::PARAM_HEALTH, 250))
             {
-                ch->setParam(PARAM_POISON, 0);
+                ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
                 audio::send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -477,9 +478,9 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         if(control_states.use_big_medi)
         {
             if(ch->getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
-               ch->changeParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
+               ch->changeParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
             {
-                ch->setParam(PARAM_POISON, 0);
+                ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
                 audio::send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -726,7 +727,7 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<world::E
 {
     for(const auto& entPair : entities)
     {
-        std::shared_ptr<Character> ent = std::dynamic_pointer_cast<Character>(entPair.second);
+        std::shared_ptr<world::Character> ent = std::dynamic_pointer_cast<world::Character>(entPair.second);
         if(!ent)
             continue;
 
@@ -734,7 +735,7 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<world::E
         {
             ent->checkActivators();
         }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
+        if(ent->getParam(world::PARAM_HEALTH) <= 0.0)
         {
             ent->m_response.killed = true;                                      // Kill, if no HP.
         }
@@ -745,7 +746,7 @@ void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<world::E
 
 void Game_UpdateCharacters()
 {
-    std::shared_ptr<Character> ent = engine_world.character;
+    std::shared_ptr<world::Character> ent = engine_world.character;
 
     if(ent)
     {
@@ -753,7 +754,7 @@ void Game_UpdateCharacters()
         {
             ent->checkActivators();
         }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
+        if(ent->getParam(world::PARAM_HEALTH) <= 0.0)
         {
             ent->m_response.killed = true;   // Kill, if no HP.
         }
@@ -867,16 +868,16 @@ void Game_Prepare()
     {
         // Set character values to default.
 
-        engine_world.character->setParamMaximum(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        engine_world.character->setParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        engine_world.character->setParamMaximum(PARAM_AIR, LARA_PARAM_AIR_MAX);
-        engine_world.character->setParam(PARAM_AIR, LARA_PARAM_AIR_MAX);
-        engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParam(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParamMaximum(PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        engine_world.character->setParam(PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        engine_world.character->setParamMaximum(PARAM_POISON, LARA_PARAM_POISON_MAX);
-        engine_world.character->setParam(PARAM_POISON, 0);
+        engine_world.character->setParamMaximum(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine_world.character->setParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine_world.character->setParamMaximum(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        engine_world.character->setParam(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        engine_world.character->setParamMaximum(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParam(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParamMaximum(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine_world.character->setParam(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine_world.character->setParamMaximum(world::PARAM_POISON, LARA_PARAM_POISON_MAX);
+        engine_world.character->setParam(world::PARAM_POISON, 0);
 
         // Set character statistics to default.
 

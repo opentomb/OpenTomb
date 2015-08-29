@@ -64,4 +64,4 @@ void Game_UpdateCharacters();
 void Cam_FollowEntity(world::Camera *cam, world::Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
 
-}
+} // namespace engine

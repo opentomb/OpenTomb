@@ -26,6 +26,7 @@
 #include "engine/system.h"
 #include "util/vmath.h"
 #include "world/world.h"
+#include "world/character.h"
 
 // Debug functions
 
@@ -355,11 +356,11 @@ void lua_SetEntityActivationOffset(int id, float x, float y, float z, lua::Value
 
 int lua_GetCharacterParam(int id, int parameter)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
-    if(parameter >= PARAM_SENTINEL)
+    if(parameter >= world::PARAM_SENTINEL)
     {
-        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, world::PARAM_SENTINEL);
         return -1;
     }
 
@@ -376,11 +377,11 @@ int lua_GetCharacterParam(int id, int parameter)
 
 void lua_SetCharacterParam(int id, int parameter, float value, lua::Value max_value)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
-    if(parameter >= PARAM_SENTINEL)
+    if(parameter >= world::PARAM_SENTINEL)
     {
-        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, world::PARAM_SENTINEL);
         return;
     }
 
@@ -402,7 +403,7 @@ void lua_SetCharacterParam(int id, int parameter, float value, lua::Value max_va
 
 int lua_GetCharacterCombatMode(int id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -414,11 +415,11 @@ int lua_GetCharacterCombatMode(int id)
 
 void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
-    if(parameter >= PARAM_SENTINEL)
+    if(parameter >= world::PARAM_SENTINEL)
     {
-        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, world::PARAM_SENTINEL);
         return;
     }
 
@@ -435,7 +436,7 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
 
 void lua_AddCharacterHair(int ent_id, int setup_index)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(ent_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(ent_id);
 
     if(ent)
     {
@@ -458,7 +459,7 @@ void lua_AddCharacterHair(int ent_id, int setup_index)
 
 void lua_ResetCharacterHair(int ent_id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(ent_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(ent_id);
 
     if(ent)
     {
@@ -618,7 +619,7 @@ void lua_DeleteFontStyle(int styleindex)
 
 int lua_AddItem(int entity_id, int item_id, lua::Value count)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -633,7 +634,7 @@ int lua_AddItem(int entity_id, int item_id, lua::Value count)
 
 int lua_RemoveItem(int entity_id, int item_id, int count)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -648,7 +649,7 @@ int lua_RemoveItem(int entity_id, int item_id, int count)
 
 void lua_RemoveAllItems(int entity_id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -662,7 +663,7 @@ void lua_RemoveAllItems(int entity_id)
 
 int lua_GetItemsCount(int entity_id, int item_id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -687,14 +688,14 @@ void lua_DeleteBaseItem(int id)
 
 void lua_PrintItems(int entity_id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(entity_id);
     if(ent == nullptr)
     {
         Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return;
     }
 
-    for(const InventoryNode& i : ent->m_inventory)
+    for(const gui::InventoryNode& i : ent->m_inventory)
     {
         Console::instance().printf("item[id = %d]: count = %d", i.id, i.count);
     }
@@ -1497,7 +1498,7 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
 
 bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
 {
-    std::shared_ptr<Character> e1 = engine::engine_world.getCharacterByID(id1);
+    std::shared_ptr<world::Character> e1 = engine::engine_world.getCharacterByID(id1);
     if(!e1 || !e1->m_command.action)
     {
         return false;
@@ -1947,7 +1948,7 @@ void lua_SetEntityMoveType(int id, uint16_t type)
 
 int lua_GetEntityResponse(int id, int response)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -1970,7 +1971,7 @@ int lua_GetEntityResponse(int id, int response)
 
 void lua_SetEntityResponse(int id, int response, int value)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -1986,10 +1987,10 @@ void lua_SetEntityResponse(int id, int response, int value)
                 ent->m_response.horizontal_collide = value;
                 break;
             case 3:
-                ent->m_response.slide = static_cast<SlideType>(value);
+                ent->m_response.slide = static_cast<world::SlideType>(value);
                 break;
             case 4:
-                ent->m_response.lean = static_cast<LeanType>(value);
+                ent->m_response.lean = static_cast<world::LeanType>(value);
                 break;
             default:
                 break;
@@ -2315,7 +2316,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
 void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -2329,7 +2330,7 @@ void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
 
 int lua_GetCharacterCurrentWeapon(int id)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -2344,7 +2345,7 @@ int lua_GetCharacterCurrentWeapon(int id)
 
 void lua_SetCharacterCurrentWeapon(int id, int weapon)
 {
-    std::shared_ptr<Character> ent = engine::engine_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -2732,6 +2733,8 @@ void ScriptEngine::exposeConstants()
 #define EXPOSE_C(name) m_state.set(#name, name)
     // exposes a casted constant
 #define EXPOSE_CC(name) m_state.set(#name, static_cast<int>(name))
+#define EXPOSE_CCNS(ns, name) m_state.set(#name, static_cast<int>(ns::name))
+
 
     m_state.set("Game", lua::Table());
     m_state["Game"].set("I", static_cast<int>(loader::Game::TR1));
@@ -3122,15 +3125,15 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(COLLISION_SHAPE_TRIMESH);
     EXPOSE_C(COLLISION_SHAPE_TRIMESH_CONVEX);
 
-    EXPOSE_CC(PARAM_HEALTH);
-    EXPOSE_CC(PARAM_AIR);
-    EXPOSE_CC(PARAM_STAMINA);
-    EXPOSE_CC(PARAM_WARMTH);
-    EXPOSE_CC(PARAM_POISON);
-    EXPOSE_CC(PARAM_EXTRA1);
-    EXPOSE_CC(PARAM_EXTRA2);
-    EXPOSE_CC(PARAM_EXTRA3);
-    EXPOSE_CC(PARAM_EXTRA4);
+    EXPOSE_CCNS(world, PARAM_HEALTH);
+    EXPOSE_CCNS(world, PARAM_AIR);
+    EXPOSE_CCNS(world, PARAM_STAMINA);
+    EXPOSE_CCNS(world, PARAM_WARMTH);
+    EXPOSE_CCNS(world, PARAM_POISON);
+    EXPOSE_CCNS(world, PARAM_EXTRA1);
+    EXPOSE_CCNS(world, PARAM_EXTRA2);
+    EXPOSE_CCNS(world, PARAM_EXTRA3);
+    EXPOSE_CCNS(world, PARAM_EXTRA4);
 
     EXPOSE_C(PARAM_ABSOLUTE_MAX);
 

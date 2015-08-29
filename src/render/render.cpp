@@ -22,6 +22,7 @@
 #include "util/vmath.h"
 #include "world/world.h"
 #include "world/animation/animation.h"
+#include "world/character.h"
 
 namespace render
 {
@@ -560,9 +561,10 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Enti
 }
 
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
-void Render::renderHair(std::shared_ptr<Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &projection)
+void Render::renderHair(std::shared_ptr<world::Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &projection)
 {
-    if(!entity || entity->m_hairs.empty()) return;
+    if(!entity || entity->m_hairs.empty())
+        return;
 
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity.get(), modelViewMatrix, true);

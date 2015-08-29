@@ -1,7 +1,5 @@
 #pragma once
 
-struct CharacterCommand;
-
 namespace world
 {
 struct Room;
@@ -9,14 +7,14 @@ struct RoomSector;
 struct World;
 class Camera;
 struct Entity;
+struct Character;
+struct CharacterCommand;
 
 namespace core
 {
 struct Polygon;
 } // namespace core
 } // namespace world
-
-struct Character;
 
 namespace engine
 {

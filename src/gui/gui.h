@@ -7,7 +7,10 @@
 
 #include <list>
 
+namespace world
+{
 struct InventoryNode;
+}
 
 namespace gui
 {
@@ -564,6 +567,15 @@ void renderStrings();
  */
 void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time);
 void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
+
+
+struct InventoryNode
+{
+    uint32_t                    id;
+    int32_t                     count;
+    uint32_t                    max_count;
+};
+
 /*
  * Other inventory renderer class
  */

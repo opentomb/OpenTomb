@@ -38,6 +38,7 @@
 #include "engine/system.h"
 #include "util/vmath.h"
 #include "world/world.h"
+#include "world/character.h"
 
 using gui::Console;
 

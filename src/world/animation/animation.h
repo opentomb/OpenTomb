@@ -8,10 +8,11 @@
 #include <vector>
 #include <memory>
 
-struct Character;
 
 namespace world
 {
+struct Character;
+
 namespace core
 {
 struct SkeletalModel;

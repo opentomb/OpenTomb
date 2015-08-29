@@ -16,7 +16,6 @@
 
 class btCollisionShape;
 class btRigidBody;
-struct Character;
 
 namespace engine
 {
@@ -29,6 +28,7 @@ namespace world
 struct Room;
 struct RoomSector;
 struct RDSetup;
+struct Character;
 
 namespace core
 {

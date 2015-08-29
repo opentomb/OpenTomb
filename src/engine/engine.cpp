@@ -49,6 +49,7 @@
 #include "character_controller.h"
 #include "gameflow.h"
 #include "strings.h"
+#include "world/character.h"
 
 using gui::Console;
 
@@ -547,7 +548,7 @@ void showDebugInfo()
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    if(std::shared_ptr<Character> ent = engine_world.character)
+    if(std::shared_ptr<world::Character> ent = engine_world.character)
     {
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);

@@ -13,7 +13,6 @@
 #include "object.h"
 #include "world/core/boundingbox.h"
 
-struct Character;
 class btCollisionShape;
 class btRigidBody;
 
@@ -29,6 +28,8 @@ struct EngineContainer;
 
 namespace world
 {
+struct Character;
+
 namespace core
 {
 struct SpriteBuffer;

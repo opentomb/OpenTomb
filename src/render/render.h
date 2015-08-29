@@ -24,6 +24,7 @@ struct Room;
 struct RoomSector;
 class Camera;
 struct Entity;
+struct Character;
 
 namespace core
 {
@@ -38,8 +39,6 @@ namespace animation
 struct SSBoneFrame;
 } // namespace animation
 } // namespace world
-
-struct Character;
 
 namespace render
 {
@@ -276,7 +275,7 @@ public:
     void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
     void renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
     void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
-    void renderHair(std::shared_ptr<Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
+    void renderHair(std::shared_ptr<world::Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
     void renderSkyBox(const util::matrix4& matrix);
     void renderMesh(const std::shared_ptr<world::core::BaseMesh> &mesh);
     void renderPolygonTransparency(loader::BlendingMode& currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);

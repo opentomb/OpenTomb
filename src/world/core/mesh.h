@@ -16,7 +16,6 @@
 #include "loader/datatypes.h"
 #include "orientedboundingbox.h"
 
-struct Character;
 class btCollisionShape;
 class btRigidBody;
 class btCollisionShape;
@@ -38,6 +37,7 @@ struct RoomSector;
 struct SectorTween;
 struct Room;
 struct Entity;
+struct Character;
 
 namespace animation
 {

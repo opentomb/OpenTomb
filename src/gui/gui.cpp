@@ -24,6 +24,7 @@
 #include "render/vertex_array.h"
 #include "util/vmath.h"
 #include "world/animation/animation.h"
+#include "world/character.h"
 
 namespace engine
 {
@@ -1155,16 +1156,16 @@ void drawBars()
 {
     if(engine::engine_world.character)
     {
-        if(engine::engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
+        if(engine::engine_world.character->m_weaponCurrentState > world::WeaponState::HideToReady)
             Bar[BarType::Health].Forced = true;
 
-        if(engine::engine_world.character->getParam(PARAM_POISON) > 0.0)
+        if(engine::engine_world.character->getParam(world::PARAM_POISON) > 0.0)
             Bar[BarType::Health].Alternate = true;
 
-        Bar[BarType::Air].Show(engine::engine_world.character->getParam(PARAM_AIR));
-        Bar[BarType::Stamina].Show(engine::engine_world.character->getParam(PARAM_STAMINA));
-        Bar[BarType::Health].Show(engine::engine_world.character->getParam(PARAM_HEALTH));
-        Bar[BarType::Warmth].Show(engine::engine_world.character->getParam(PARAM_WARMTH));
+        Bar[BarType::Air].Show(engine::engine_world.character->getParam(world::PARAM_AIR));
+        Bar[BarType::Stamina].Show(engine::engine_world.character->getParam(world::PARAM_STAMINA));
+        Bar[BarType::Health].Show(engine::engine_world.character->getParam(world::PARAM_HEALTH));
+        Bar[BarType::Warmth].Show(engine::engine_world.character->getParam(world::PARAM_WARMTH));
     }
 }
 

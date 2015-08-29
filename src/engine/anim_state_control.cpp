@@ -11,6 +11,7 @@
 #include "world/resource.h"
 #include "engine/system.h"
 #include "world/world.h"
+#include "world/character.h"
 
 namespace engine
 {
@@ -20,7 +21,7 @@ namespace engine
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_stop_traverse(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -35,7 +36,7 @@ void ent_stop_traverse(Character* ent, world::animation::SSAnimation* ss_anim, w
     }
 }
 
-void ent_set_on_floor(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_set_on_floor(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -55,7 +56,7 @@ void ent_set_turn_fast(std::shared_ptr<world::Entity> ent, world::animation::SSA
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate /*state*/)
+void ent_set_on_floor_after_climb(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate /*state*/)
 {
     world::animation::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
 
@@ -75,7 +76,7 @@ void ent_set_on_floor_after_climb(Character* ent, world::animation::SSAnimation*
     }
 }
 
-void ent_set_underwater(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_set_underwater(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -84,7 +85,7 @@ void ent_set_underwater(Character* ent, world::animation::SSAnimation* ss_anim, 
     }
 }
 
-void ent_set_free_falling(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_set_free_falling(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -93,16 +94,16 @@ void ent_set_free_falling(Character* ent, world::animation::SSAnimation* ss_anim
     }
 }
 
-void ent_set_cmd_slide(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_set_cmd_slide(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
-        ent->m_response.slide = SlideType::Back;
+        ent->m_response.slide = world::SlideType::Back;
         ss_anim->onFrame = nullptr;
     }
 }
 
-void ent_correct_diving_angle(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_correct_diving_angle(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -112,7 +113,7 @@ void ent_correct_diving_angle(Character* ent, world::animation::SSAnimation* ss_
     }
 }
 
-void ent_to_on_water(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_to_on_water(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -123,7 +124,7 @@ void ent_to_on_water(Character* ent, world::animation::SSAnimation* ss_anim, wor
     }
 }
 
-void ent_climb_out_of_water(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_climb_out_of_water(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -136,7 +137,7 @@ void ent_climb_out_of_water(Character* ent, world::animation::SSAnimation* ss_an
     }
 }
 
-void ent_to_edge_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_to_edge_climb(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -150,7 +151,7 @@ void ent_to_edge_climb(Character* ent, world::animation::SSAnimation* ss_anim, w
     }
 }
 
-void ent_to_monkey_swing(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_to_monkey_swing(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -161,7 +162,7 @@ void ent_to_monkey_swing(Character* ent, world::animation::SSAnimation* ss_anim,
     }
 }
 
-void ent_to_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_to_tightrope(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -171,7 +172,7 @@ void ent_to_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, wo
     }
 }
 
-void ent_from_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_from_tightrope(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
@@ -181,11 +182,11 @@ void ent_from_tightrope(Character* ent, world::animation::SSAnimation* ss_anim, 
     }
 }
 
-void ent_crawl_to_climb(Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
+void ent_crawl_to_climb(world::Character* ent, world::animation::SSAnimation* ss_anim, world::animation::AnimUpdate state)
 {
     if(state == world::animation::AnimUpdate::NewAnim)
     {
-        CharacterCommand* cmd = &ent->m_command;
+        world::CharacterCommand* cmd = &ent->m_command;
 
         if(!cmd->action)
         {
@@ -210,7 +211,7 @@ void ent_crawl_to_climb(Character* ent, world::animation::SSAnimation* ss_anim, 
 // State control is based on original TR system, where several animations may
 // belong to the same state.
 
-void Character::state_func()
+void world::Character::state_func()
 {
     int i;
     btScalar t;
