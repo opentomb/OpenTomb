@@ -28,7 +28,7 @@
 #include <cstdint>
 
 #include "loader/datatypes.h"
-#include "polygon.h"
+#include "world/core/polygon.h"
 
 class BorderedTextureAtlas
 {
@@ -136,9 +136,9 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-    struct Polygon* poly,
-        int shift = 0,
-        bool split = false) const;
+                        world::core::Polygon* poly,
+                        int shift = 0,
+                        bool split = false) const;
 
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.

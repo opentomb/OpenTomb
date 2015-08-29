@@ -16,6 +16,46 @@ list(APPEND PRJ_SRC
     loader/tr3level.cpp
     loader/tr4level.cpp
     loader/tr5level.cpp
+
+    gui/gui.cpp
+    gui/console.cpp
+
+    script/script.cpp
+
+    util/helpers.cpp
+    util/vmath.cpp
+    util/matrix4.cpp
+
+    audio/audio.cpp
+
+    render/gl_util.cpp
+    render/render.cpp
+    render/shader_description.cpp
+    render/shader_manager.cpp
+    render/vertex_array.cpp
+    render/bsp_tree.cpp
+
+    world/entity.cpp
+    world/portal.cpp
+    world/world.cpp
+    world/camera.cpp
+    world/hair.cpp
+    world/resource.cpp
+    world/ragdoll.cpp
+
+    world/core/mesh.cpp
+    world/core/orientedboundingbox.cpp
+    world/core/polygon.cpp
+    world/core/frustum.cpp
+
+    world/animation/animation.cpp
+
+    engine/game.cpp
+    engine/system.cpp
+    engine/engine.cpp
+    engine/controls.cpp
+    engine/gameflow.cpp
+    engine/anim_state_control.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -28,6 +68,48 @@ list(APPEND PRJ_HDR
     loader/tr4level.h
     loader/tr5level.h
     loader/game.h
+
+    gui/gui.h
+    gui/console.h
+
+    script/script.h
+
+    util/helpers.h
+    util/vmath.h
+    util/matrix4.h
+
+    audio/audio.h
+
+    render/gl_util.h
+    render/render.h
+    render/shader_description.h
+    render/shader_manager.h
+    render/vertex_array.h
+    render/bsp_tree.h
+
+    world/entity.h
+    world/object.h
+    world/portal.h
+    world/world.h
+    world/camera.h
+    world/hair.h
+    world/resource.h
+    world/ragdoll.h
+
+    world/core/mesh.h
+    world/core/orientedboundingbox.h
+    world/core/polygon.h
+    world/core/frustum.h
+    world/core/boundingbox.h
+
+    world/animation/animation.h
+
+    engine/game.h
+    engine/system.h
+    engine/engine.h
+    engine/controls.h
+    engine/gameflow.h
+    engine/anim_state_control.h
 )
 
 if(MINGW)
@@ -69,6 +151,8 @@ elseif(APPLE)
 else()
     add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC})
 endif()
+
+target_include_directories(${PROJECT_NAME} PRIVATE .)
 
 target_link_libraries(
     ${PROJECT_NAME}
