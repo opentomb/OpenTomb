@@ -16,7 +16,7 @@
 #include "engine_physics.h"
 #include "entity.h"
 #include "gui.h"
-#include "mesh.h"
+#include "skeletal_model.h"
 #include "resource.h"
 #include "engine_string.h"
 #include "inventory.h"

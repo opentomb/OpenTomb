@@ -26,6 +26,7 @@ extern "C" {
 #include "engine_physics.h"
 #include "engine.h"
 #include "mesh.h"
+#include "skeletal_model.h"
 #include "character_controller.h"
 #include "script.h"
 #include "entity.h"

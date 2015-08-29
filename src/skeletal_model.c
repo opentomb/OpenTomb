@@ -7,252 +7,7 @@
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "mesh.h"
-
-
-vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3]);
-
-void BaseMesh_Clear(base_mesh_p mesh)
-{
-    if(mesh->vbo_vertex_array)
-    {
-        glDeleteBuffersARB(1, &mesh->vbo_vertex_array);
-        mesh->vbo_vertex_array = 0;
-    }
-
-    if(mesh->vbo_index_array)
-    {
-        glDeleteBuffersARB(1, &mesh->vbo_index_array);
-        mesh->vbo_index_array = 0;
-    }
-
-    if(mesh->polygons != NULL)
-    {
-        for(uint32_t i=0;i<mesh->polygons_count;i++)
-        {
-            Polygon_Clear(mesh->polygons+i);
-        }
-        free(mesh->polygons);
-        mesh->polygons = NULL;
-        mesh->polygons_count = 0;
-    }
-
-    if(mesh->transparency_polygons != NULL)
-    {
-        polygon_p p = mesh->transparency_polygons;
-        for(polygon_p next=p->next;p!=NULL;)
-        {
-            Polygon_Clear(p);
-            free(p);
-            p = next;
-            if(p != NULL)
-            {
-                next = p->next;
-            }
-        }
-        mesh->transparency_polygons = NULL;
-    }
-
-    if(mesh->animated_polygons != NULL)
-    {
-        polygon_p p = mesh->animated_polygons;
-        for(polygon_p next=p->next;p!=NULL;)
-        {
-            Polygon_Clear(p);
-            free(p);
-            p = next;
-            if(p != NULL)
-            {
-                next = p->next;
-            }
-        }
-        mesh->animated_polygons = NULL;
-    }
-
-    if(mesh->vertex_count)
-    {
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-        mesh->vertex_count = 0;
-    }
-
-    if(mesh->skin_map)
-    {
-        free(mesh->skin_map);
-        mesh->skin_map = NULL;
-    }
-
-    if(mesh->element_count_per_texture)
-    {
-        free(mesh->element_count_per_texture);
-        mesh->element_count_per_texture = NULL;
-    }
-
-    if (mesh->elements)
-    {
-        free(mesh->elements);
-        mesh->elements = NULL;
-    }
-
-    mesh->vertex_count = 0;
-}
-
-
-/**
- * Bounding box calculation
- */
-void BaseMesh_FindBB(base_mesh_p mesh)
-{
-    if(mesh->vertex_count > 0)
-    {
-        vertex_p v = mesh->vertices;
-        vec3_copy(mesh->bb_min, v->position);
-        vec3_copy(mesh->bb_max, v->position);
-        v ++;
-        for(uint32_t i=1;i<mesh->vertex_count;i++,v++)
-        {
-            // X
-            if(mesh->bb_min[0] > v->position[0])
-            {
-                mesh->bb_min[0] = v->position[0];
-            }
-            if(mesh->bb_max[0] < v->position[0])
-            {
-                mesh->bb_max[0] = v->position[0];
-            }
-            // Y
-            if(mesh->bb_min[1] > v->position[1])
-            {
-                mesh->bb_min[1] = v->position[1];
-            }
-            if(mesh->bb_max[1] < v->position[1])
-            {
-                mesh->bb_max[1] = v->position[1];
-            }
-            // Z
-            if(mesh->bb_min[2] > v->position[2])
-            {
-                mesh->bb_min[2] = v->position[2];
-            }
-            if(mesh->bb_max[2] < v->position[2])
-            {
-                mesh->bb_max[2] = v->position[2];
-            }
-        }
-
-        mesh->centre[0] = (mesh->bb_min[0] + mesh->bb_max[0]) / 2.0;
-        mesh->centre[1] = (mesh->bb_min[1] + mesh->bb_max[1]) / 2.0;
-        mesh->centre[2] = (mesh->bb_min[2] + mesh->bb_max[2]) / 2.0;
-    }
-}
-
-
-void Mesh_GenVBO(struct base_mesh_s *mesh)
-{
-    mesh->vbo_vertex_array = 0;
-    mesh->vbo_index_array = 0;
-    if(glGenBuffersARB == NULL)                                                 // if not supported, pointer is NULL
-    {
-        abort();
-    }
-
-    /// now, begin VBO filling!
-    glGenBuffersARB(1, &mesh->vbo_vertex_array);
-    if(mesh->vbo_vertex_array == 0)
-    {
-        abort();
-    }
-
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
-
-    // Fill indexes vbo
-    glGenBuffersARB(1, &mesh->vbo_index_array);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
-
-    GLsizeiptr elementsSize = 0;
-    for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
-    {
-        elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
-    }
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
-
-    // Now for animated polygons, if any
-    mesh->num_animated_elements = 0;
-    mesh->animated_index_array_length = 0;
-    if (mesh->animated_polygons != 0)
-    {
-        for (polygon_s *p = mesh->animated_polygons; p != 0; p = p->next)
-        {
-            mesh->num_animated_elements += p->vertex_count;
-            mesh->animated_index_array_length += 3*(p->vertex_count - 2);
-            if (p->double_side)
-            {
-                mesh->animated_index_array_length += 3*(p->vertex_count - 2);
-            }
-        }
-
-        // Prepare buffer data
-        size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
-        uint8_t *vertexData = new uint8_t[mesh->num_animated_elements * stride];
-        uint32_t *elementData = new uint32_t[mesh->animated_index_array_length];
-
-        // Fill it.
-        size_t offset = 0;
-        size_t elementOffset = 0;
-        for (polygon_s *p = mesh->animated_polygons; p != 0; p = p->next)
-        {
-            size_t begin = offset;
-            for (int i = 0; i < p->vertex_count; i++)
-            {
-                memcpy(&vertexData[offset*stride + 0], p->vertices[i].position, sizeof(GLfloat [3]));
-                memcpy(&vertexData[offset*stride + 12], p->vertices[i].color, sizeof(GLfloat [4]));
-                memcpy(&vertexData[offset*stride + 28], p->vertices[i].normal, sizeof(GLfloat [3]));
-
-                if (i >= 2)
-                {
-                    elementData[elementOffset+0] = begin;
-                    elementData[elementOffset+1] = offset-1;
-                    elementData[elementOffset+2] = offset;
-                    elementOffset += 3;
-
-                    if (p->double_side)
-                    {
-                        elementData[elementOffset+0] = offset;
-                        elementData[elementOffset+1] = offset-1;
-                        elementData[elementOffset+2] = begin;
-                        elementOffset += 3;
-                    }
-                }
-                offset++;
-            }
-        }
-
-        // And upload.
-        glGenBuffersARB(1, &mesh->animated_vertex_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
-        delete [] vertexData;
-
-        glGenBuffersARB(1, &mesh->animated_index_array);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
-        delete [] elementData;
-
-        // Prepare empty buffer for tex coords
-        glGenBuffersARB(1, &mesh->animated_texcoord_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
-    }
-    else
-    {
-        // No animated data
-        mesh->animated_vertex_array = 0;
-        mesh->animated_texcoord_array = 0;
-    }
-
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-}
+#include "skeletal_model.h"
 
 
 void SkeletalModel_Clear(skeletal_model_p model)
@@ -617,106 +372,230 @@ void FillSkinnedMeshMap(skeletal_model_p model)
     }
 }
 
-/*
- * FACES FUNCTIONS
- */
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
-{
-    vertex_p v = mesh->vertices;
-    uint32_t ind = 0;
 
-    for(ind=0;ind<mesh->vertex_count;ind++,v++)
+void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
+{
+    float cmd_tr[3], tr[3], t;
+    ss_bone_tag_p btag = bf->bone_tags;
+    bone_tag_p src_btag, next_btag;
+    skeletal_model_p model = bf->animations.model;
+    bone_frame_p curr_bf, next_bf;
+
+    next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
+    curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
+
+    t = 1.0 - bf->animations.lerp;
+    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
     {
-        if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
-           v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
-            ///@QUESTION: color check?
-        {
-            return ind;
-        }
+        Mat4_vec3_rot_macro(tr, etr, curr_bf->move);
+        vec3_mul_scalar(cmd_tr, tr, bf->animations.lerp);
+    }
+    else
+    {
+        vec3_set_zero(tr);
+        vec3_set_zero(cmd_tr);
     }
 
-    ind = mesh->vertex_count;                                                   // paranoid
-    mesh->vertex_count++;
-    mesh->vertices = (vertex_p)realloc(mesh->vertices, mesh->vertex_count * sizeof(vertex_t));
+    vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
+    vec3_add(bf->bb_max, bf->bb_max, cmd_tr);
+    vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
+    vec3_add(bf->bb_min, bf->bb_min, cmd_tr);
+    vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
+    vec3_add(bf->centre, bf->centre, cmd_tr);
 
-    v = mesh->vertices + ind;
-    vec3_copy(v->position, vertex->position);
-    vec3_copy(v->normal, vertex->normal);
-    vec4_copy(v->color, vertex->color);
-    v->tex_coord[0] = vertex->tex_coord[0];
-    v->tex_coord[1] = vertex->tex_coord[1];
+    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
+    vec3_add(bf->pos, bf->pos, cmd_tr);
+    next_btag = next_bf->bone_tags;
+    src_btag = curr_bf->bone_tags;
+    for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
+    {
+        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
+        vec3_copy(btag->transform+12, btag->offset);
+        btag->transform[15] = 1.0;
+        if(k == 0)
+        {
+            vec3_add(btag->transform+12, btag->transform+12, bf->pos);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
+        }
+        else
+        {
+            bone_tag_p ov_src_btag = src_btag;
+            bone_tag_p ov_next_btag = next_btag;
+            float ov_lerp = bf->animations.lerp;
+            for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
+            {
+                if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
+                {
+                    bone_frame_p ov_curr_bf = ov_anim->model->animations[ov_anim->current_animation].frames + ov_anim->current_frame;
+                    bone_frame_p ov_next_bf = ov_anim->model->animations[ov_anim->next_animation].frames + ov_anim->next_frame;
+                    ov_src_btag = ov_curr_bf->bone_tags + k;
+                    ov_next_btag = ov_next_bf->bone_tags + k;
+                    ov_lerp = ov_anim->lerp;
+                    break;
+                }
+            }
+            vec4_slerp(btag->qrotate, ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
+        }
+        Mat4_set_qrotation(btag->transform, btag->qrotate);
+    }
 
-    return ind;
+    /*
+     * build absolute coordinate matrix system
+     */
+    btag = bf->bone_tags;
+    Mat4_Copy(btag->full_transform, btag->transform);
+    btag++;
+    for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
+    {
+        Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+    }
 }
 
 
-void Mesh_GenFaces(base_mesh_p mesh)
+void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 {
-    // Note: This code relies on NULL being an all-zero value, which is true on
-    // any reasonable system these days.
-    if(mesh->element_count_per_texture == NULL)
-    {
-        mesh->element_count_per_texture = (uint32_t *)calloc(sizeof(uint32_t), mesh->num_texture_pages);
-    }
-    // First collect indices on a per-texture basis
-    uint32_t **elements_for_texture = (uint32_t **)calloc(sizeof(uint32_t*), mesh->num_texture_pages);
+    animation_frame_p anim = &bf->animations.model->animations[animation];
+    bf->animations.lerp = 0.0;
+    frame %= anim->frames_count;
+    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
+    bf->animations.period = 1.0 / 30.0;
 
-    polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    bf->animations.last_state = anim->state_id;
+    bf->animations.next_state = anim->state_id;
+    
+    bf->animations.current_animation = animation;
+    bf->animations.current_frame = frame;
+    bf->animations.next_animation = animation;
+    bf->animations.next_frame = frame;
+
+    bf->animations.frame_time = (float)frame * bf->animations.period;
+    //long int t = (bf->animations.frame_time) / bf->animations.period;
+    //float dt = bf->animations.frame_time - (float)t * bf->animations.period;
+    bf->animations.frame_time = (float)frame * bf->animations.period;// + dt;
+}
+
+
+struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
+{
+    if(state_change_anim >= 0)
     {
-        if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
+        state_change_p ret = anim->state_change;
+        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
         {
-            uint32_t texture = p->tex_index;
-            uint32_t oldStart = mesh->element_count_per_texture[texture];
-            uint32_t elementCount = (p->vertex_count - 2) * 3;
-            uint32_t backwardsStart = oldStart + elementCount;
-            if (p->double_side)
+            for(uint16_t j=0;j<ret->anim_dispatch_count;j++)
             {
-                elementCount *= 2;
-            }
-
-            mesh->element_count_per_texture[texture] += elementCount;
-            elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
-
-            // Render the polygon as a triangle fan. That is obviously correct for
-            // a triangle and also correct for any quad.
-            uint32_t startElement = Mesh_AddVertex(mesh, p->vertices);
-            uint32_t previousElement = Mesh_AddVertex(mesh, p->vertices + 1);
-
-            for(uint16_t j = 2; j < p->vertex_count; j++)
-            {
-                uint32_t thisElement = Mesh_AddVertex(mesh, p->vertices + j);
-
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
-
-                if (p->double_side)
+                if(ret->anim_dispatch[j].next_anim == state_change_anim)
                 {
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 1] = thisElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 2] = previousElement;
+                    return ret;
                 }
-
-                previousElement = thisElement;
             }
         }
     }
 
-    // Now flatten all these indices to a single array
-    mesh->elements = NULL;
-    uint32_t elementsSoFar = 0;
-    for(uint32_t i = 0; i < mesh->num_texture_pages; i++)
-    {
-        if(elements_for_texture[i] == NULL)
-        {
-            continue;
-        }
-        mesh->elements = (uint32_t*)realloc(mesh->elements, (elementsSoFar + mesh->element_count_per_texture[i])*sizeof(elements_for_texture[i][0]));
-        memcpy(mesh->elements + elementsSoFar, elements_for_texture[i], mesh->element_count_per_texture[i]*sizeof(elements_for_texture[i][0]));
+    return NULL;
+}
 
-        elementsSoFar += mesh->element_count_per_texture[i];
-        free(elements_for_texture[i]);
+
+struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
+{
+    state_change_p ret = anim->state_change;
+    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+    {
+        if(ret->id == id)
+        {
+            return ret;
+        }
     }
-    free(elements_for_texture);
+
+    return NULL;
+}
+
+
+int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
+{
+    animation_frame_p anim = bf->animations.model->animations + bf->animations.current_animation;
+    state_change_p stc = anim->state_change;
+
+    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
+    {
+        if(stc->id == id)
+        {
+            anim_dispatch_p disp = stc->anim_dispatch;
+            for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
+            {
+                if((disp->frame_high >= disp->frame_low) && (bf->animations.current_frame >= disp->frame_low) && (bf->animations.current_frame <= disp->frame_high))
+                {
+                    return (int)j;
+                }
+            }
+        }
+    }
+
+    return -1;
+}
+
+
+/*
+ * Next frame and next anim calculation function.
+ */
+void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+{
+    animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
+
+    *frame = (bf->animations.frame_time + time) / bf->animations.period;
+    *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
+    *anim  = bf->animations.current_animation;
+
+    /*
+     * Flag has a highest priority
+     */
+    if(anim_flags == ANIM_LOOP_LAST_FRAME)
+    {
+        if(*frame >= curr_anim->frames_count - 1)
+        {
+            *frame = curr_anim->frames_count - 1;
+            *anim  = bf->animations.current_animation;                          // paranoid dublicate
+        }
+        return;
+    }
+    else if(anim_flags == ANIM_LOCK)
+    {
+        *frame = 0;
+        *anim  = bf->animations.current_animation;
+        return;
+    }
+
+    /*
+     * State change check
+     */
+    if(stc != NULL)
+    {
+        anim_dispatch_p disp = stc->anim_dispatch;
+        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
+        {
+            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
+            {
+                *anim  = disp->next_anim;
+                *frame = disp->next_frame;
+                return;                                                         // anim was changed
+            }
+        }
+    }
+
+    /*
+     * Check next anim if frame >= frames_count
+     */
+    if(*frame >= curr_anim->frames_count)
+    {
+        if(curr_anim->next_anim)
+        {
+            *frame = curr_anim->next_frame;
+            *anim  = curr_anim->next_anim->id;
+            return;
+        }
+
+        *frame %= curr_anim->frames_count;
+        *anim   = bf->animations.current_animation;                             // paranoid dublicate
+        return;
+    }
 }

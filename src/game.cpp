@@ -24,7 +24,7 @@ extern "C" {
 #include "world.h"
 #include "game.h"
 #include "audio.h"
-#include "mesh.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "script.h"
 #include "anim_state_control.h"

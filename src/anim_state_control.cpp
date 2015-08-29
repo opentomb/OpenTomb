@@ -15,7 +15,7 @@
 #include "engine_physics.h"
 #include "world.h"
 #include "game.h"
-#include "mesh.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "script.h"
 #include "anim_state_control.h"
@@ -96,7 +96,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         vec3_sub(move, move, p);
         vec3_add(ent->transform+12, ent->transform+12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
-        Entity_UpdateCurrentBoneFrame(ent->bf, ent->transform);
+        Anim_UpdateCurrentBoneFrame(ent->bf, ent->transform);
         Entity_UpdateRigidBody(ent, 0);
         Entity_GhostUpdate(ent);
         ent->move_type = MOVE_ON_FLOOR;
@@ -823,7 +823,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if((cmd->move[0] == 1) && (cmd->crouch == 0) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {
                 ent->dir_flag = ENT_STAY;
-                i = Entity_GetAnimDispatchCase(ent, 2);                         // MOST CORRECT STATECHANGE!!!
+                i = Anim_GetAnimDispatchCase(ent->bf, 2);                     // MOST CORRECT STATECHANGE!!!
                 if(i == 0)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
@@ -851,7 +851,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
                     if(cmd->move[0] == 1)
                     {
-                        i = Entity_GetAnimDispatchCase(ent, 2);
+                        i = Anim_GetAnimDispatchCase(ent->bf, 2);
                         if(i == 1)
                         {
                             Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
@@ -943,7 +943,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 Controls_JoyRumble(200.0, 200);
 
-                i = Entity_GetAnimDispatchCase(ent, 2);                         // tested!
+                i = Anim_GetAnimDispatchCase(ent->bf, 2);
                 if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
@@ -1015,7 +1015,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                  * climb up
                  */
                 ent->dir_flag = ENT_STAY;
-                i = Entity_GetAnimDispatchCase(ent, 2);
+                i = Anim_GetAnimDispatchCase(ent->bf, 2);
                 if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_UP_STEP_RIGHT, 0);
@@ -1037,7 +1037,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                  * climb down
                  */
                 ent->dir_flag = ENT_STAY;
-                i = Entity_GetAnimDispatchCase(ent, 2);
+                i = Anim_GetAnimDispatchCase(ent->bf, 2);
                 if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_RIGHT, 0);

@@ -107,10 +107,6 @@ void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
 void Entity_UpdateRoomPos(entity_p ent);
 
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
-int  Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id);
-void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
 int  Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
 
 void Entity_RebuildBV(entity_p ent);
@@ -121,7 +117,6 @@ void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetSubstanceState(entity_p entity);
 
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
 void Entity_UpdateRigidBody(struct entity_s *ent, int force);
 void Entity_GhostUpdate(struct entity_s *ent);
 

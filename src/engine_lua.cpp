@@ -23,6 +23,7 @@ extern "C" {
 #include "engine_physics.h"
 #include "gameflow.h"
 #include "mesh.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "gui.h"

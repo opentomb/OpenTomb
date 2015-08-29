@@ -6,12 +6,6 @@ struct ss_animation_s;
 struct entity_s;
 
 /*
- * Animation control flags
- */
-#define ANIM_NORMAL_CONTROL             (0)
-#define ANIM_LOOP_LAST_FRAME            (1)
-#define ANIM_LOCK                       (2)
-/*
  * SURFACE MOVEMENT DIRECTIONS
  */
 

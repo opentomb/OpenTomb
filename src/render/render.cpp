@@ -20,6 +20,7 @@
 #include "../world.h"
 #include "../script.h"
 #include "../mesh.h"
+#include "../skeletal_model.h"
 #include "../entity.h"
 #include "../character_controller.h"
 #include "../engine.h"

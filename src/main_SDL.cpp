@@ -41,7 +41,7 @@ extern "C" {
 #include "controls.h"
 #include "world.h"
 #include "gui.h"
-#include "mesh.h"
+#include "skeletal_model.h"
 #include "game.h"
 #include "resource.h"
 #include "entity.h"

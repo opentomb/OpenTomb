@@ -2995,6 +2995,7 @@
 		<Unit filename="src/gui.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/inventory.cpp" />
 		<Unit filename="src/inventory.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -3002,7 +3003,9 @@
 		<Unit filename="src/main_SDL.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/mesh.cpp" />
+		<Unit filename="src/mesh.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/mesh.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -3242,6 +3245,10 @@
 		<Unit filename="src/script.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/skeletal_model.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/skeletal_model.h" />
 		<Unit filename="src/vt/glmath.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

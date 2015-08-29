@@ -12,8 +12,10 @@ extern "C" {
 #include "core/obb.h"
 #include "render/camera.h"
 #include "render/render.h"
+#include "vt/tr_versions.h"
 #include "audio.h"
 #include "mesh.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "world.h"
 #include "engine.h"
@@ -393,85 +395,6 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
         ss_anim->period = 1.0 / 30.0;;
-    }
-}
-
-
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
-{
-    float cmd_tr[3], tr[3], t;
-    ss_bone_tag_p btag = bf->bone_tags;
-    bone_tag_p src_btag, next_btag;
-    skeletal_model_p model = bf->animations.model;
-    bone_frame_p curr_bf, next_bf;
-
-    next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
-    curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
-
-    t = 1.0 - bf->animations.lerp;
-    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
-    {
-        Mat4_vec3_rot_macro(tr, etr, curr_bf->move);
-        vec3_mul_scalar(cmd_tr, tr, bf->animations.lerp);
-    }
-    else
-    {
-        vec3_set_zero(tr);
-        vec3_set_zero(cmd_tr);
-    }
-
-    vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
-    vec3_add(bf->bb_max, bf->bb_max, cmd_tr);
-    vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
-    vec3_add(bf->bb_min, bf->bb_min, cmd_tr);
-    vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
-    vec3_add(bf->centre, bf->centre, cmd_tr);
-
-    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
-    vec3_add(bf->pos, bf->pos, cmd_tr);
-    next_btag = next_bf->bone_tags;
-    src_btag = curr_bf->bone_tags;
-    for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
-    {
-        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
-        vec3_copy(btag->transform+12, btag->offset);
-        btag->transform[15] = 1.0;
-        if(k == 0)
-        {
-            vec3_add(btag->transform+12, btag->transform+12, bf->pos);
-            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
-        }
-        else
-        {
-            bone_tag_p ov_src_btag = src_btag;
-            bone_tag_p ov_next_btag = next_btag;
-            float ov_lerp = bf->animations.lerp;
-            for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
-            {
-                if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
-                {
-                    bone_frame_p ov_curr_bf = ov_anim->model->animations[ov_anim->current_animation].frames + ov_anim->current_frame;
-                    bone_frame_p ov_next_bf = ov_anim->model->animations[ov_anim->next_animation].frames + ov_anim->next_frame;
-                    ov_src_btag = ov_curr_bf->bone_tags + k;
-                    ov_next_btag = ov_next_bf->bone_tags + k;
-                    ov_lerp = ov_anim->lerp;
-                    break;
-                }
-            }
-            vec4_slerp(btag->qrotate, ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
-        }
-        Mat4_set_qrotation(btag->transform, btag->qrotate);
-    }
-
-    /*
-     * build absolute coordinate matrix system
-     */
-    btag = bf->bone_tags;
-    Mat4_Copy(btag->full_transform, btag->transform);
-    btag++;
-    for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
-    {
-        Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
     }
 }
 
@@ -1146,153 +1069,10 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
         entity->bf->animations.model = model;
     }
 
-    animation_frame_p anim = &entity->bf->animations.model->animations[animation];
-
-    entity->bf->animations.lerp = 0.0;
-    frame %= anim->frames_count;
-    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    entity->bf->animations.period = 1.0 / 30.0;
-
-    entity->bf->animations.last_state = anim->state_id;
-    entity->bf->animations.next_state = anim->state_id;
-    entity->current_speed = anim->speed_x;
-    entity->bf->animations.current_animation = animation;
-    entity->bf->animations.current_frame = frame;
-    entity->bf->animations.next_animation = animation;
-    entity->bf->animations.next_frame = frame;
-
-    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period;
-    //long int t = (entity->bf->animations.frame_time) / entity->bf->animations.period;
-    //float dt = entity->bf->animations.frame_time - (float)t * entity->bf->animations.period;
-    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period;// + dt;
-
-    Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+    entity->current_speed = entity->bf->animations.model->animations[animation].speed_x;
+    Anim_SetAnimation(entity->bf, animation, frame);
+    Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
-}
-
-
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
-{
-    if(state_change_anim >= 0)
-    {
-        state_change_p ret = anim->state_change;
-        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
-        {
-            for(uint16_t j=0;j<ret->anim_dispatch_count;j++)
-            {
-                if(ret->anim_dispatch[j].next_anim == state_change_anim)
-                {
-                    return ret;
-                }
-            }
-        }
-    }
-
-    return NULL;
-}
-
-
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
-{
-    state_change_p ret = anim->state_change;
-    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
-    {
-        if(ret->id == id)
-        {
-            return ret;
-        }
-    }
-
-    return NULL;
-}
-
-
-int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
-{
-    animation_frame_p anim = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
-    state_change_p stc = anim->state_change;
-
-    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
-    {
-        if(stc->id == id)
-        {
-            anim_dispatch_p disp = stc->anim_dispatch;
-            for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
-            {
-                if((disp->frame_high >= disp->frame_low) && (entity->bf->animations.current_frame >= disp->frame_low) && (entity->bf->animations.current_frame <= disp->frame_high))
-                {
-                    return (int)j;
-                }
-            }
-        }
-    }
-
-    return -1;
-}
-
-/*
- * Next frame and next anim calculation function.
- */
-void Entity_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
-{
-    animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
-
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
-    *anim  = bf->animations.current_animation;
-
-    /*
-     * Flag has a highest priority
-     */
-    if(anim_flags == ANIM_LOOP_LAST_FRAME)
-    {
-        if(*frame >= curr_anim->frames_count - 1)
-        {
-            *frame = curr_anim->frames_count - 1;
-            *anim  = bf->animations.current_animation;                          // paranoid dublicate
-        }
-        return;
-    }
-    else if(anim_flags == ANIM_LOCK)
-    {
-        *frame = 0;
-        *anim  = bf->animations.current_animation;
-        return;
-    }
-
-    /*
-     * State change check
-     */
-    if(stc != NULL)
-    {
-        anim_dispatch_p disp = stc->anim_dispatch;
-        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
-        {
-            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
-            {
-                *anim  = disp->next_anim;
-                *frame = disp->next_frame;
-                return;                                                         // anim was changed
-            }
-        }
-    }
-
-    /*
-     * Check next anim if frame >= frames_count
-     */
-    if(*frame >= curr_anim->frames_count)
-    {
-        if(curr_anim->next_anim)
-        {
-            *frame = curr_anim->next_frame;
-            *anim  = curr_anim->next_anim->id;
-            return;
-        }
-
-        *frame %= curr_anim->frames_count;
-        *anim   = bf->animations.current_animation;                             // paranoid dublicate
-        return;
-    }
 }
 
 
@@ -1358,7 +1138,7 @@ int Entity_Frame(entity_p entity, float time)
         return 0;
     }
 
-    if(entity->bf->animations.anim_flags & ANIM_LOCK) return 1;                  // penetration fix will be applyed in Character_Move... functions
+    if(entity->bf->animations.anim_flags & ANIM_LOCK) return 1;                 // penetration fix will be applyed in Character_Move... functions
 
     ss_anim = &entity->bf->animations;
 
@@ -1366,7 +1146,7 @@ int Entity_Frame(entity_p entity, float time)
 
     entity->bf->animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-    Entity_GetNextFrame(entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
+    Anim_GetNextFrame(entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
     if(ss_anim->current_animation != anim)
     {
         ss_anim->last_animation = ss_anim->current_animation;
@@ -1397,7 +1177,7 @@ int Entity_Frame(entity_p entity, float time)
     dt = entity->bf->animations.frame_time - (float)t * entity->bf->animations.period;
     entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period + dt;
     entity->bf->animations.lerp = dt / entity->bf->animations.period;
-    Entity_GetNextFrame(entity->bf, entity->bf->animations.period, stc, &entity->bf->animations.next_frame, &entity->bf->animations.next_animation, ss_anim->anim_flags);
+    Anim_GetNextFrame(entity->bf, entity->bf->animations.period, stc, &entity->bf->animations.next_frame, &entity->bf->animations.next_animation, ss_anim->anim_flags);
 
     // Update acceleration.
     // With variable framerate, we don't know when we'll reach final
@@ -1426,7 +1206,7 @@ int Entity_Frame(entity_p entity, float time)
         entity->bf->animations.onFrame(entity, &entity->bf->animations, ret);
     }
 
-    Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+    Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
     if(entity->character != NULL)
     {
         Entity_FixPenetrations(entity, NULL);

@@ -14,6 +14,7 @@
 #include "render/shader_manager.h"
 #include "gui.h"
 #include "mesh.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "engine.h"
@@ -509,7 +510,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
 
     bf->animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
-    Entity_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    Anim_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
@@ -539,8 +540,8 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     dt = bf->animations.frame_time - (float)t * bf->animations.period;
     bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity_UpdateCurrentBoneFrame(bf, NULL);
+    Anim_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    Anim_UpdateCurrentBoneFrame(bf, NULL);
 }
 
 
