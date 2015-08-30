@@ -21,6 +21,7 @@
 #include "script/script.h"
 #include "util/vmath.h"
 #include "world/character.h"
+#include "inventory.h"
 
 namespace engine
 {
@@ -359,7 +360,7 @@ btVector3 RoomSector::getCeilingPoint()
 
 bool Room::isOverlapped(Room* r1)
 {
-	assert( r1 != nullptr );
+        assert( r1 != nullptr );
     if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
     {
         return false;
@@ -407,10 +408,10 @@ void World::empty()
 
     audio::deInit(); // De-initialize and destroy all audio objects.
 
-    if(gui::main_inventory_manager != nullptr)
+    if(main_inventory_manager != nullptr)
     {
-        gui::main_inventory_manager->setInventory(nullptr);
-        gui::main_inventory_manager->setItemsType(gui::MenuItemType::Supply);  // see base items
+        main_inventory_manager->setInventory(nullptr);
+        main_inventory_manager->setItemsType(MenuItemType::Supply);  // see base items
     }
 
     if(character)
@@ -954,7 +955,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         next_entity_id = entity->id() + 1;
 }
 
-bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, gui::MenuItemType type, uint16_t count, const std::string& name)
+bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
     core::SkeletalModel* model = getModelByID(model_id);
     if(!model)

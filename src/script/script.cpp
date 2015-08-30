@@ -27,6 +27,7 @@
 #include "util/vmath.h"
 #include "world/world.h"
 #include "world/character.h"
+#include "inventory.h"
 
 // Debug functions
 
@@ -110,7 +111,7 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
-		return;
+            return;
     }
 
     if((arg >= 0) && (static_cast<size_t>(arg) < model->collision_map.size()) &&
@@ -678,7 +679,7 @@ int lua_GetItemsCount(int entity_id, int item_id)
 
 void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
-    engine::engine_world.createItem(item_id, model_id, world_model_id, static_cast<gui::MenuItemType>(type), count, name ? name : std::string());
+    engine::engine_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
 }
 
 void lua_DeleteBaseItem(int id)
@@ -695,7 +696,7 @@ void lua_PrintItems(int entity_id)
         return;
     }
 
-    for(const gui::InventoryNode& i : ent->m_inventory)
+    for(const InventoryNode& i : ent->m_inventory)
     {
         Console::instance().printf("item[id = %d]: count = %d", i.id, i.count);
     }

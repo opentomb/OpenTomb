@@ -1,5 +1,9 @@
 #pragma once
 
+#include <list>
+
+#include "gui/gui.h"
+
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)
 #define ITEM_LARAHOME 3
@@ -49,3 +53,119 @@
 #define ITEM_SECRET_1 120
 #define ITEM_SECRET_2 121
 #define ITEM_SECRET_3 122
+
+struct InventoryNode
+{
+    uint32_t id;
+    int32_t count;
+    uint32_t max_count;
+};
+
+enum class MenuItemType
+{
+    System,
+    Supply,
+    Quest,
+    Invalid
+};
+
+inline MenuItemType nextItemType(MenuItemType t)
+{
+    switch(t)
+    {
+        case MenuItemType::System: return MenuItemType::Supply;
+        case MenuItemType::Supply: return MenuItemType::Quest;
+        default: return MenuItemType::Invalid;
+    }
+}
+
+inline MenuItemType previousItemType(MenuItemType t)
+{
+    switch(t)
+    {
+        case MenuItemType::Supply: return MenuItemType::System;
+        case MenuItemType::Quest: return MenuItemType::Supply;
+        default: return MenuItemType::Invalid;
+    }
+}
+
+/*
+ * Other inventory renderer class
+ */
+class InventoryManager
+{
+public:
+    enum class InventoryState
+    {
+        Disabled = 0,
+        Idle,
+        Open,
+        Closed,
+        RLeft,
+        RRight,
+        Up,
+        Down,
+        Activate
+    };
+
+private:
+    std::list<InventoryNode>*   m_inventory;
+    InventoryState              m_currentState;
+    InventoryState              m_nextState;
+    int                         m_nextItemsCount;
+
+    MenuItemType                m_currentItemsType;
+    int                         m_currentItemsCount;
+    int                         m_itemsOffset;
+
+    float                       m_ringRotatePeriod;
+    float                       m_ringTime;
+    float                       m_ringAngle;
+    float                       m_ringVerticalAngle;
+    float                       m_ringAngleStep;
+    float                       m_baseRingRadius;
+    float                       m_ringRadius;
+    float                       m_verticalOffset;
+
+    float                       m_itemRotatePeriod;
+    float                       m_itemTime;
+    float                       m_itemAngle;
+
+    int getItemsTypeCount(MenuItemType type);
+    void restoreItemAngle(float time);
+
+public:
+    gui::TextLine             mLabel_Title;
+    gui::TextLine             mLabel_ItemName;
+
+    InventoryManager();
+    ~InventoryManager();
+
+    InventoryState getCurrentState()
+    {
+        return m_currentState;
+    }
+
+    InventoryState getNextState()
+    {
+        return m_nextState;
+    }
+
+    void send(InventoryState state)
+    {
+        m_nextState = state;
+    }
+
+    MenuItemType getItemsType()
+    {
+        return m_currentItemsType;
+    }
+
+    MenuItemType setItemsType(MenuItemType type);
+    void setInventory(std::list<InventoryNode> *i);
+    void setTitle(MenuItemType items_type);
+    void frame(float time);
+    void render();
+};
+
+extern InventoryManager  *main_inventory_manager;

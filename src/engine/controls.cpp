@@ -13,6 +13,7 @@
 #include "engine/game.h"
 #include "script/script.h"
 #include "engine/system.h"
+#include "inventory.h"
 
 extern bool done;
 
@@ -587,37 +588,37 @@ void Controls_DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_RETURN:
-                if(gui::main_inventory_manager)
+                if(main_inventory_manager)
                 {
-                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Activate);
+                    main_inventory_manager->send(InventoryManager::InventoryState::Activate);
                 }
                 break;
 
             case SDLK_UP:
-                if(gui::main_inventory_manager)
+                if(main_inventory_manager)
                 {
-                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Up);
+                    main_inventory_manager->send(InventoryManager::InventoryState::Up);
                 }
                 break;
 
             case SDLK_DOWN:
-                if(gui::main_inventory_manager)
+                if(main_inventory_manager)
                 {
-                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Down);
+                    main_inventory_manager->send(InventoryManager::InventoryState::Down);
                 }
                 break;
 
             case SDLK_LEFT:
-                if(gui::main_inventory_manager)
+                if(main_inventory_manager)
                 {
-                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::RLeft);
+                    main_inventory_manager->send(InventoryManager::InventoryState::RLeft);
                 }
                 break;
 
             case SDLK_RIGHT:
-                if(gui::main_inventory_manager)
+                if(main_inventory_manager)
                 {
-                    gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::RRight);
+                    main_inventory_manager->send(InventoryManager::InventoryState::RRight);
                 }
                 break;
 

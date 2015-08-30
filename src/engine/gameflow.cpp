@@ -30,8 +30,6 @@ void Gameflow::execute()
 
     for(GameflowAction& action : m_actions)
     {
-        if(action.opcode == Opcode::Sentinel)
-            continue;
         completed = false;
 
         switch(action.opcode)
@@ -40,16 +38,13 @@ void Gameflow::execute()
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
                 if(gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !audio::isTrackPlaying())
                 {
-                    const char* levelName;
-                    const char* levelPath;
-                    lua::tie(levelPath, levelName, m_currentLevelID) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(action.operand));
-                    m_currentLevelName = levelName;
-                    m_currentLevelPath = levelPath;
+                    lua::tie(m_currentLevelPath, m_currentLevelName, m_currentLevelID) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(action.operand));
                     engine::loadMap(m_currentLevelPath);
                     action.opcode = Opcode::Sentinel;
                 }
                 else
                 {
+                    ///@FIXME Gameflow has NOTHING to do with faders! this should all be done elsewhere!
                     // If fadeout is in the process, we block level loading until it is complete.
                     // It is achieved by not resetting action marker and exiting the function instead.
                     continue;
@@ -66,18 +61,21 @@ void Gameflow::execute()
         m_nextAction = false;    // Reset action marker!
 }
 
+/*
+    Send opcode and operand to gameflow manager.
+    Note: It will be added at the end of actions list.
+*/
+
+///@CRITICAL - The order MUST BE MAINTAINED.
 bool Gameflow::send(Opcode opcode, int operand)
 {
-    for(GameflowAction& action : m_actions)
+    for(GameflowAction& action : m_actions)///@FIXME But what if [ -1, 2, 3 -1]? We're essentially favouring the first -1 which is WRONG.
     {
-        if(action.opcode == opcode)
-            return false;
-
         if(action.opcode == Opcode::Sentinel)
         {
             action.opcode = opcode;
             action.operand = operand;
-            m_nextAction = true;
+            m_nextAction = true;///@FIXME No, we shouldn't need to modify this here.
             return true;
         }
     }

@@ -50,6 +50,7 @@
 #include "gameflow.h"
 #include "strings.h"
 #include "world/character.h"
+#include "inventory.h"
 
 using gui::Console;
 
@@ -464,7 +465,7 @@ void display()
     gui::switchGLMode(true);
     {
         gui::drawNotifier();
-        if(engine_world.character && gui::main_inventory_manager)
+        if(engine_world.character && main_inventory_manager)
         {
             gui::drawInventory();
         }
