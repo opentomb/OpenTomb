@@ -461,7 +461,7 @@ void InventoryManager::render()
                 util::Mat4_RotateZ(matrix, 90.0f - ang);
                 gui::Item_Frame(bi->bf.get(), 0.0f);
             }
-            util::Mat4_Translate(matrix, -0.5f * bi->bf->centre[0], -0.5f * bi->bf->centre[1], -0.5f * bi->bf->centre[2]);
+            util::Mat4_Translate(matrix, -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2]);
             util::Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);
             gui::renderItem(bi->bf.get(), 0.0f, matrix);
 

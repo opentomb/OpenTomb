@@ -775,7 +775,7 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
 
     bf->boundingBox.max = curr_bf->boundingBox.max.lerp(next_bf->boundingBox.max, bf->animations.lerp) + cmd_tr;
     bf->boundingBox.min = curr_bf->boundingBox.min.lerp(next_bf->boundingBox.min, bf->animations.lerp) + cmd_tr;
-    bf->centre = curr_bf->centre.lerp(next_bf->centre, bf->animations.lerp) + cmd_tr;
+    bf->center = curr_bf->center.lerp(next_bf->center, bf->animations.lerp) + cmd_tr;
     bf->position = curr_bf->position.lerp(next_bf->position, bf->animations.lerp) + cmd_tr;
 
     next_btag = next_bf->bone_tags.data();
@@ -1294,7 +1294,7 @@ Entity::Entity(uint32_t id)
     m_bf.bone_tags.clear();
     m_bf.boundingBox.max.setZero();
     m_bf.boundingBox.min.setZero();
-    m_bf.centre.setZero();
+    m_bf.center.setZero();
     m_bf.position.setZero();
     m_speed.setZero();
 }

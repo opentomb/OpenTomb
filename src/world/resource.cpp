@@ -3507,7 +3507,7 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
         bone_frame->position[2] = 0.0;
     }
 
-    bone_frame->centre = (bone_frame->boundingBox.min + bone_frame->boundingBox.max) / 2.0f;
+    bone_frame->center = (bone_frame->boundingBox.min + bone_frame->boundingBox.max) / 2.0f;
 }
 
 void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr)

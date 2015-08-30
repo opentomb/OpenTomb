@@ -30,7 +30,7 @@ struct OrientedBoundingBox
     btScalar radius;
 
     btVector3 base_centre;
-    btVector3 centre;
+    btVector3 center;
     btVector3 extent;
 
     void doTransform();

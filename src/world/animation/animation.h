@@ -103,19 +103,23 @@ struct BoneTag
     btQuaternion qrotate;                                           // rotation quaternion
 };
 
+#define ANIM_CMD_MOVE               0x01
+#define ANIM_CMD_CHANGE_DIRECTION   0x02
+#define ANIM_CMD_JUMP               0x04
+
 /*
  * base frame of animated skeletal model
  */
 struct BoneFrame
 {
-    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
-    std::vector<BoneTag> bone_tags;                                              // bones data
-    btVector3 position;                                                 // position (base offset)
+    uint16_t            command;
+    std::vector<BoneTag> bone_tags;
+    btVector3 position;
     core::BoundingBox boundingBox;
-    btVector3 centre;                                              // bounding box centre
+    btVector3 center;
     btVector3 move;                                                // move command data
-    btScalar            v_Vertical;                                             // jump command data
-    btScalar            v_Horizontal;                                           // jump command data
+    btScalar v_Vertical;                                             // jump command data
+    btScalar v_Horizontal;                                           // jump command data
 };
 
 /*
@@ -219,7 +223,7 @@ struct SSBoneFrame
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
     btVector3 position;                                         // position (base offset)
     core::BoundingBox boundingBox;
-    btVector3 centre;                                      // bounding box centre
+    btVector3 center;                                      // bounding box center
 
     SSAnimation       animations;                                     // animations list
 

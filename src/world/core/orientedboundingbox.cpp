@@ -144,7 +144,7 @@ void OrientedBoundingBox::doTransform()
         {
             polygons[i].copyTransformed(base_polygons[i], *transform);
         }
-        centre = *transform * base_centre;
+        center = *transform * base_centre;
     }
     else
     {
@@ -152,7 +152,7 @@ void OrientedBoundingBox::doTransform()
         {
             polygons[i] = base_polygons[i];
         }
-        centre = base_centre;
+        center = base_centre;
     }
 }
 
@@ -162,7 +162,7 @@ void OrientedBoundingBox::doTransform()
 bool testOverlap(const Entity& e1, const Entity& e2, btScalar overlap)
 {
     //translation, in parent frame
-    auto v = e2.m_obb.centre - e1.m_obb.centre;
+    auto v = e2.m_obb.center - e1.m_obb.center;
     //translation, in A's frame
     btVector3 T = e1.m_transform.getBasis() * v;
 

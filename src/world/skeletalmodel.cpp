@@ -30,7 +30,7 @@ void SkeletalModel::interpolateFrames()
             bf->position.setZero();
             bf->move.setZero();
             bf->command = 0x00;
-            bf->centre = anim->frames[0].centre;
+            bf->center = anim->frames[0].center;
             bf->position = anim->frames[0].position;
             bf->boundingBox = anim->frames[0].boundingBox;
             for(uint16_t k = 0; k < mesh_count; k++)
@@ -52,7 +52,7 @@ void SkeletalModel::interpolateFrames()
 
                     bf->bone_tags.resize(mesh_count);
 
-                    bf->centre = t * anim->frames[j - 1].centre + lerp * anim->frames[j].centre;
+                    bf->center = t * anim->frames[j - 1].center + lerp * anim->frames[j].center;
 
                     bf->position = t * anim->frames[j - 1].position + lerp * anim->frames[j].position;
 

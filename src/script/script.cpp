@@ -285,7 +285,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
 
     engine::BtEngineClosestRayResultCallback cb(ent->m_self);
     btVector3 from, to;
-    from = ent->m_transform * ent->m_bf.centre;
+    from = ent->m_transform * ent->m_bf.center;
     from[2] = ent->m_transform.getOrigin()[2];
     to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);

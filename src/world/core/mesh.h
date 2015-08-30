@@ -27,10 +27,6 @@ struct SectorTween;
 namespace core
 {
 
-#define ANIM_CMD_MOVE               0x01
-#define ANIM_CMD_CHANGE_DIRECTION   0x02
-#define ANIM_CMD_JUMP               0x04
-
 struct Vertex;
 
 /*
