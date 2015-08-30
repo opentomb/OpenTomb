@@ -23,6 +23,8 @@
 #include "util/vmath.h"
 #include "world.h"
 
+#include "core/basemesh.h"
+
 namespace world
 {
 

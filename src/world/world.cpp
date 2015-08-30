@@ -9,19 +9,20 @@
 
 #include "audio/audio.h"
 #include "camera.h"
-#include "gui/console.h"
 #include "engine/engine.h"
 #include "entity.h"
-#include "world/core/mesh.h"
-#include "world/core/orientedboundingbox.h"
-#include "world/core/polygon.h"
-#include "world/portal.h"
+#include "gui/console.h"
+#include "inventory.h"
 #include "render/render.h"
 #include "resource.h"
 #include "script/script.h"
 #include "util/vmath.h"
 #include "world/character.h"
-#include "inventory.h"
+#include "world/core/basemesh.h"
+#include "world/core/mesh.h"
+#include "world/core/orientedboundingbox.h"
+#include "world/core/polygon.h"
+#include "world/portal.h"
 
 namespace engine
 {

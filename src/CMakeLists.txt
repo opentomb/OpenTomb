@@ -48,6 +48,7 @@ list(APPEND PRJ_SRC
     world/core/orientedboundingbox.cpp
     world/core/polygon.cpp
     world/core/frustum.cpp
+    world/core/basemesh.cpp
 
     world/animation/animation.cpp
 
@@ -103,6 +104,7 @@ list(APPEND PRJ_HDR
     world/core/polygon.h
     world/core/frustum.h
     world/core/boundingbox.h
+    world/core/basemesh.h
 
     world/animation/animation.h
 

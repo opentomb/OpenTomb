@@ -5,6 +5,7 @@
 #include "engine/anim_state_control.h"
 #include "script/script.h"
 #include "inventory.h"
+#include "world/core/basemesh.h"
 
 namespace engine
 {
