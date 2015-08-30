@@ -10,18 +10,19 @@
 
 #include "LuaState.h"
 
-#include "engine/anim_state_control.h"
 #include "character_controller.h"
-#include "gui/console.h"
+#include "engine/anim_state_control.h"
 #include "engine/engine.h"
-#include "util/helpers.h"
-#include "world/core/mesh.h"
-#include "world/core/orientedboundingbox.h"
+#include "engine/system.h"
+#include "gui/console.h"
 #include "ragdoll.h"
 #include "script/script.h"
-#include "engine/system.h"
+#include "util/helpers.h"
 #include "util/vmath.h"
 #include "world.h"
+#include "world/core/mesh.h"
+#include "world/core/orientedboundingbox.h"
+#include "world/skeletalmodel.h"
 
 #include "core/basemesh.h"
 
@@ -728,7 +729,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    core::SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
+    SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 
     if((sm != nullptr) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
@@ -754,7 +755,7 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
 {
     animation::SSBoneTag* btag = bf->bone_tags.data();
     animation::BoneTag* src_btag, *next_btag;
-    core::SkeletalModel* model = bf->animations.model;
+    SkeletalModel* model = bf->animations.model;
     animation::BoneFrame* curr_bf, *next_bf;
 
     next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
@@ -961,7 +962,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        core::SkeletalModel* model = engine::engine_world.getModelByID(another_model);
+        SkeletalModel* model = engine::engine_world.getModelByID(another_model);
         if(!model || animation >= static_cast<int>(model->animations.size()))
             return;
         m_bf.animations.model = model;

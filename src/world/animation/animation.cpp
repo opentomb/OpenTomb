@@ -1,13 +1,14 @@
 #include "animation.h"
 
 #include "world/core/mesh.h"
+#include "world/skeletalmodel.h"
 
 namespace world
 {
 namespace animation
 {
 
-void SSBoneFrame::fromModel(core::SkeletalModel* model)
+void SSBoneFrame::fromModel(SkeletalModel* model)
 {
     hasSkin = false;
     boundingBox.min.setZero();

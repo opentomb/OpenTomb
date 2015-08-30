@@ -153,5 +153,295 @@ void BaseMesh::genVBO(const render::Render* /*renderer*/)
     }
 }
 
+Vertex* BaseMesh::findVertex(const btVector3& v)
+{
+    for(Vertex& mv : m_vertices)
+    {
+        if((v - mv.position).length2() < 4.0)
+        {
+            return &mv;
+        }
+    }
+
+    return nullptr;
+}
+
+/*
+* FACES FUNCTIONS
+*/
+size_t BaseMesh::addVertex(const Vertex& vertex)
+{
+    Vertex* v = m_vertices.data();
+
+    for(size_t ind = 0; ind < m_vertices.size(); ind++, v++)
+    {
+        if(v->position[0] == vertex.position[0] && v->position[1] == vertex.position[1] && v->position[2] == vertex.position[2] &&
+           v->tex_coord[0] == vertex.tex_coord[0] && v->tex_coord[1] == vertex.tex_coord[1])
+            ///@QUESTION: color check?
+        {
+            return ind;
+        }
+    }
+
+    m_vertices.emplace_back();
+
+    v = &m_vertices.back();
+    v->position = vertex.position;
+    v->normal = vertex.normal;
+    v->color = vertex.color;
+    v->tex_coord[0] = vertex.tex_coord[0];
+    v->tex_coord[1] = vertex.tex_coord[1];
+
+    return m_vertices.size() - 1;
+}
+
+size_t BaseMesh::addAnimatedVertex(const Vertex& vertex)
+{
+    // Skip search for equal vertex; tex coords may differ but aren't stored in
+    // animated_vertex_s
+
+    m_animatedVertices.emplace_back();
+
+    animation::AnimatedVertex& v = m_animatedVertices.back();
+    v.position = vertex.position;
+    v.color = vertex.color;
+    v.normal = vertex.normal;
+
+    return m_animatedVertices.size() - 1;
+}
+
+void BaseMesh::genFaces()
+{
+    m_elementsPerTexture.resize(m_texturePageCount);
+
+    /*
+    * Layout of the buffers:
+    *
+    * Normal vertex buffer:
+    * - vertices of polygons in order, skipping only animated.
+    * Animated vertex buffer:
+    * - vertices (without tex coords) of polygons in order, skipping only
+    *   non-animated.
+    * Animated texture buffer:
+    * - tex coords of polygons in order, skipping only non-animated.
+    *   stream, initially empty.
+    *
+    * Normal elements:
+    * - elements for texture[0]
+    * ...
+    * - elements for texture[n]
+    * - elements for alpha
+    * Animated elements:
+    * - animated elements (opaque)
+    * - animated elements (blended)
+    */
+
+    // Do a first pass to find the numbers of everything
+    m_alphaElements = 0;
+    size_t numNormalElements = 0;
+    m_animatedVertices.clear();
+    m_animatedElementCount = 0;
+    m_alphaAnimatedElementCount = 0;
+
+    size_t transparent = 0;
+    for(const Polygon& p : m_polygons)
+    {
+        if(p.isBroken())
+            continue;
+
+        size_t elementCount = (p.vertices.size() - 2) * 3;
+        if(p.double_side)
+            elementCount *= 2;
+
+        if(p.anim_id == 0)
+        {
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
+            {
+                m_elementsPerTexture[p.tex_index] += elementCount;
+                numNormalElements += elementCount;
+            }
+            else
+            {
+                m_alphaElements += elementCount;
+                ++transparent;
+            }
+        }
+        else
+        {
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
+                m_animatedElementCount += elementCount;
+            else
+            {
+                m_alphaAnimatedElementCount += elementCount;
+                ++transparent;
+            }
+        }
+    }
+
+    m_elements.resize(numNormalElements + m_alphaElements);
+    size_t elementOffset = 0;
+    std::vector<size_t> startPerTexture(m_texturePageCount, 0);
+    for(uint32_t i = 0; i < m_texturePageCount; i++)
+    {
+        startPerTexture[i] = elementOffset;
+        elementOffset += m_elementsPerTexture[i];
+    }
+    size_t startTransparent = elementOffset;
+
+    m_allAnimatedElements.resize(m_animatedElementCount + m_alphaAnimatedElementCount);
+    size_t animatedStart = 0;
+    size_t animatedStartTransparent = m_animatedElementCount;
+
+    m_transparentPolygons.resize(transparent);
+    uint32_t transparentPolygonStart = 0;
+
+    for(const struct Polygon& p : m_polygons)
+    {
+        if(p.isBroken())
+            continue;
+
+        size_t elementCount = (p.vertices.size() - 2) * 3;
+        size_t backwardsStartOffset = elementCount;
+        if(p.double_side)
+        {
+            elementCount *= 2;
+        }
+
+        if(p.anim_id == 0)
+        {
+            // Not animated
+            uint32_t texture = p.tex_index;
+
+            size_t oldStart;
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
+            {
+                oldStart = startPerTexture[texture];
+                startPerTexture[texture] += elementCount;
+            }
+            else
+            {
+                oldStart = startTransparent;
+                startTransparent += elementCount;
+                m_transparentPolygons[transparentPolygonStart].firstIndex = oldStart;
+                m_transparentPolygons[transparentPolygonStart].count = elementCount;
+                m_transparentPolygons[transparentPolygonStart].polygon = &p;
+                m_transparentPolygons[transparentPolygonStart].isAnimated = false;
+                transparentPolygonStart += 1;
+            }
+            size_t backwardsStart = oldStart + backwardsStartOffset;
+
+            // Render the polygon as a triangle fan. That is obviously correct for
+            // a triangle and also correct for any quad.
+            size_t startElement = addVertex(p.vertices[0]);
+            size_t previousElement = addVertex(p.vertices[1]);
+
+            for(size_t j = 2; j < p.vertices.size(); j++)
+            {
+                size_t thisElement = addVertex(p.vertices[j]);
+
+                m_elements[oldStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
+                m_elements[oldStart + (j - 2) * 3 + 1] = static_cast<GLuint>(previousElement);
+                m_elements[oldStart + (j - 2) * 3 + 2] = static_cast<GLuint>(thisElement);
+
+                if(p.double_side)
+                {
+                    m_elements[backwardsStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
+                    m_elements[backwardsStart + (j - 2) * 3 + 1] = static_cast<GLuint>(thisElement);
+                    m_elements[backwardsStart + (j - 2) * 3 + 2] = static_cast<GLuint>(previousElement);
+                }
+
+                previousElement = thisElement;
+            }
+        }
+        else
+        {
+            // Animated
+            size_t oldStart;
+            if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
+            {
+                oldStart = animatedStart;
+                animatedStart += elementCount;
+            }
+            else
+            {
+                oldStart = animatedStartTransparent;
+                animatedStartTransparent += elementCount;
+                m_transparentPolygons[transparentPolygonStart].firstIndex = oldStart;
+                m_transparentPolygons[transparentPolygonStart].count = elementCount;
+                m_transparentPolygons[transparentPolygonStart].polygon = &p;
+                m_transparentPolygons[transparentPolygonStart].isAnimated = true;
+                transparentPolygonStart += 1;
+            }
+            size_t backwardsStart = oldStart + backwardsStartOffset;
+
+            // Render the polygon as a triangle fan. That is obviously correct for
+            // a triangle and also correct for any quad.
+            size_t startElement = addAnimatedVertex(p.vertices[0]);
+            size_t previousElement = addAnimatedVertex(p.vertices[1]);
+
+            for(size_t j = 2; j < p.vertices.size(); j++)
+            {
+                size_t thisElement = addAnimatedVertex(p.vertices[j]);
+
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = static_cast<GLuint>(previousElement);
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 2] = static_cast<GLuint>(thisElement);
+
+                if(p.double_side)
+                {
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 1] = static_cast<GLuint>(thisElement);
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 2] = static_cast<GLuint>(previousElement);
+                }
+
+                previousElement = thisElement;
+            }
+        }
+    }
+}
+
+btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useCompression, bool buildBvh, bool is_static)
+{
+    uint32_t cnt = 0;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btCollisionShape* ret;
+
+    for(const struct Polygon &p : mesh->m_polygons)
+    {
+        if(p.isBroken())
+        {
+            continue;
+        }
+
+        for(size_t j = 1; j + 1 < p.vertices.size(); j++)
+        {
+            const auto& v0 = p.vertices[j + 1].position;
+            const auto& v1 = p.vertices[j].position;
+            const auto& v2 = p.vertices[0].position;
+            trimesh->addTriangle(v0, v1, v2, true);
+        }
+        cnt++;
+    }
+
+    if(cnt == 0)
+    {
+        delete trimesh;
+        return nullptr;
+    }
+
+    if(is_static)
+    {
+        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    }
+    else
+    {
+        ret = new btConvexTriangleMeshShape(trimesh, true);
+    }
+
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
+
+    return ret;
+}
+
 } // namespace core
 } // namespace world

@@ -12,10 +12,10 @@
 namespace world
 {
 struct Character;
+struct SkeletalModel;
 
 namespace core
 {
-struct SkeletalModel;
 struct BaseMesh;
 } // namespace core
 
@@ -191,7 +191,7 @@ struct SSAnimation
 
     void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
 
-    core::SkeletalModel    *model = nullptr;                                          // pointer to the base model
+    SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
 };
 
@@ -225,7 +225,7 @@ struct SSBoneFrame
 
     bool hasSkin;                                       // whether any skinned meshes need rendering
 
-    void fromModel(core::SkeletalModel* model);
+    void fromModel(SkeletalModel* model);
 };
 
 void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);

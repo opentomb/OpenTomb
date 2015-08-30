@@ -12,6 +12,7 @@
 #include "camera.h"
 #include "object.h"
 #include "world/core/boundingbox.h"
+#include "world/skeletalmodel.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -200,11 +201,11 @@ class Camera;
 struct Portal;
 class Render;
 struct Entity;
+struct SkeletalModel;
 
 namespace core
 {
 struct BaseMesh;
-struct SkeletalModel;
 struct Frustum;
 struct Polygon;
 } // namespace core
@@ -415,10 +416,10 @@ struct World
 
     std::vector<core::Sprite> sprites;                // Base sprites data
 
-    std::vector<core::SkeletalModel> skeletal_models;        // base skeletal models data
+    std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
 
     std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
-    core::SkeletalModel* sky_box = nullptr;                // global skybox
+    SkeletalModel* sky_box = nullptr;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity>   > entity_tree;            // tree of world active objects
     uint32_t                                       next_entity_id = 0;
@@ -446,7 +447,7 @@ struct World
     bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
     core::Sprite* getSpriteByID(unsigned int ID);
-    core::SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
+    SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
 
     void prepare();
     void empty();

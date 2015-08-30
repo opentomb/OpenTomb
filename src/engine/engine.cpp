@@ -50,6 +50,7 @@
 #include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/resource.h"
+#include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
 

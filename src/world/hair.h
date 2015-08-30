@@ -61,7 +61,7 @@ struct Hair : public Object
     bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
 
 private:
-    void createHairMesh(const core::SkeletalModel *model);
+    void createHairMesh(const SkeletalModel *model);
 };
 
 struct HairSetup

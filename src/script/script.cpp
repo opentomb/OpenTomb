@@ -28,6 +28,7 @@
 #include "world/entity.h"
 #include "world/hair.h"
 #include "world/ragdoll.h"
+#include "world/skeletalmodel.h"
 #include "world/world.h"
 
 // Debug functions
@@ -43,7 +44,7 @@ void script::ScriptEngine::checkStack()
 
 void lua_DumpModel(int id)
 {
-    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm == nullptr)
     {
         Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
@@ -92,7 +93,7 @@ void lua_SetRoomEnabled(int id, bool value)
 
 void lua_SetModelCollisionMapSize(int id, int size)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
@@ -108,7 +109,7 @@ void lua_SetModelCollisionMapSize(int id, int size)
 void lua_SetModelCollisionMap(int id, int arg, int val)
 {
     /// engine_world.skeletal_models[id] != engine::engine_world.getModelByID(lua_tointeger(lua, 1));
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
@@ -705,7 +706,7 @@ void lua_PrintItems(int entity_id)
 
 void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int frame_low, int frame_high, lua::Value next_anim, lua::Value next_frame)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
 
     if(model == nullptr)
     {
@@ -745,7 +746,7 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
 
 std::tuple<int, float, float, float> lua_GetAnimCommandTransform(int id, int anim, int frame)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
@@ -780,7 +781,7 @@ std::tuple<int, float, float, float> lua_GetAnimCommandTransform(int id, int ani
 
 void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Value dx, lua::Value dy, lua::Value dz)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
@@ -812,7 +813,7 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
 
 void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
@@ -1463,7 +1464,7 @@ void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
 
 void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
 
     if(model == nullptr)
     {
@@ -2092,7 +2093,7 @@ uint32_t lua_GetEntityMeshCount(int id)
 void lua_SetEntityMeshswap(int id_dest, int id_src)
 {
     std::shared_ptr<world::Entity> ent_dest;
-    world::core::SkeletalModel* model_src;
+    world::SkeletalModel* model_src;
 
     ent_dest = engine::engine_world.getEntityByID(id_dest);
     model_src = engine::engine_world.getModelByID(id_src);
@@ -2108,7 +2109,7 @@ void lua_SetEntityMeshswap(int id_dest, int id_src)
 
 void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
 {
-    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
         if((bone >= 0) && (bone < sm->mesh_count))
@@ -2128,7 +2129,7 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
 
 void lua_SetModelAnimReplaceFlag(int id, int bone, int flag)
 {
-    world::core::SkeletalModel* sm = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
         if((bone >= 0) && (bone < sm->mesh_count))
@@ -2148,14 +2149,14 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, int flag)
 
 void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
 {
-    world::core::SkeletalModel* sm1 = engine::engine_world.getModelByID(id1);
+    world::SkeletalModel* sm1 = engine::engine_world.getModelByID(id1);
     if(sm1 == nullptr)
     {
         Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
-    world::core::SkeletalModel* sm2 = engine::engine_world.getModelByID(id2);
+    world::SkeletalModel* sm2 = engine::engine_world.getModelByID(id2);
     if(sm2 == nullptr)
     {
         Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
@@ -2647,7 +2648,7 @@ int lua_GetFlipState(uint32_t group)
 
 void lua_genUVRotateAnimation(int id)
 {
-    world::core::SkeletalModel* model = engine::engine_world.getModelByID(id);
+    world::SkeletalModel* model = engine::engine_world.getModelByID(id);
 
     if(!model)
         return;

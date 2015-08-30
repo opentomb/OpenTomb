@@ -76,5 +76,7 @@ struct BaseMesh
     Vertex* findVertex(const btVector3& v);
 };
 
+btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
+
 } // namespace core
 } // namespace world 

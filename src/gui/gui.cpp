@@ -9,23 +9,24 @@
 #include <SDL2/SDL_image.h>
 #endif
 
-#include "world/camera.h"
 #include "character_controller.h"
 #include "console.h"
 #include "engine/engine.h"
+#include "engine/system.h"
 #include "gl_font.h"
+#include "inventory.h"
 #include "render/gl_util.h"
 #include "render/render.h"
-#include "script/script.h"
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
-#include "strings.h"
-#include "engine/system.h"
 #include "render/vertex_array.h"
+#include "script/script.h"
+#include "strings.h"
 #include "util/vmath.h"
 #include "world/animation/animation.h"
+#include "world/camera.h"
 #include "world/character.h"
-#include "inventory.h"
+#include "world/skeletalmodel.h"
 
 namespace engine
 {

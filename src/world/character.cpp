@@ -6,6 +6,7 @@
 #include "script/script.h"
 #include "inventory.h"
 #include "world/core/basemesh.h"
+#include "world/skeletalmodel.h"
 
 namespace engine
 {
@@ -1966,11 +1967,11 @@ int Character::changeParam(int parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character::setWeaponModel(int weapon_model, int armed)
 {
-    core::SkeletalModel* sm = engine::engine_world.getModelByID(weapon_model);
+    SkeletalModel* sm = engine::engine_world.getModelByID(weapon_model);
 
     if((sm != nullptr) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {
-        core::SkeletalModel* bm = m_bf.animations.model;
+        SkeletalModel* bm = m_bf.animations.model;
         if(m_bf.animations.next == nullptr)
         {
             addOverrideAnim(weapon_model);
@@ -2021,7 +2022,7 @@ int Character::setWeaponModel(int weapon_model, int armed)
     else
     {
         // do unarmed default model
-        core::SkeletalModel* bm = m_bf.animations.model;
+        SkeletalModel* bm = m_bf.animations.model;
         for(int i = 0; i < bm->mesh_count; i++)
         {
             m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;

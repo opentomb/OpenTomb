@@ -99,55 +99,8 @@ struct Light
     loader::LightType           light_type;
 };
 
-/*
- * mesh tree base element structure
- */
-struct MeshTreeTag
-{
-    std::shared_ptr<BaseMesh> mesh_base;                                      // base mesh - pointer to the first mesh in array
-    std::shared_ptr<BaseMesh> mesh_skin;                                      // base skinned mesh for ТR4+
-    btVector3 offset;                                      // model position offset
-    uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
-    uint32_t                    body_part;
-    uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
-    uint8_t                     replace_anim;
-};
-
- /*
- * skeletal model with animations data.
- * Animated skeletal model. Taken from openraider.
- * model -> animation -> frame -> bone
- * thanks to Terry 'Mongoose' Hendrix II
- */
-struct SkeletalModel
-{
-    uint32_t                    id;
-    bool                        has_transparency;
-
-    BoundingBox boundingBox;
-    btVector3                   centre;
-
-    std::vector<animation::AnimationFrame> animations;
-
-    uint16_t                    mesh_count;
-    std::vector<MeshTreeTag>    mesh_tree;                                      // base mesh tree.
-
-    std::vector<uint16_t>       collision_map;
-
-    void clear();
-    void updateTransparencyFlag();
-    void interpolateFrames();
-    void fillSkinnedMeshMap();
-};
-
-
-MeshTreeTag* SkeletonClone(MeshTreeTag* src, int tags_count);
-void SkeletonCopyMeshes(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
-void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
-
 btCollisionShape *BT_CSfromSphere(const btScalar& radius);
 btCollisionShape* BT_CSfromBBox(const BoundingBox &boundingBox, bool useCompression, bool buildBvh);
-btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 
 } // namespace core

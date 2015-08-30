@@ -11,6 +11,7 @@
 #include "script/script.h"
 #include "world/core/basemesh.h"
 #include "world/core/mesh.h"
+#include "world/skeletalmodel.h"
 
 namespace world
 {
@@ -23,7 +24,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
        (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
        (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))) return false;
 
-    core::SkeletalModel* model = engine::engine_world.getModelByID(setup->m_model);
+    SkeletalModel* model = engine::engine_world.getModelByID(setup->m_model);
 
     // No model to link to - bypass function.
 
@@ -225,7 +226,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 // Internal utility function:
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
-void Hair::createHairMesh(const core::SkeletalModel *model)
+void Hair::createHairMesh(const SkeletalModel *model)
 {
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_elementsPerTexture.resize(engine::engine_world.textures.size(), 0);

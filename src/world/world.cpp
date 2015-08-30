@@ -494,7 +494,7 @@ bool World::deleteEntity(uint32_t id)
 
 uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
-    if(core::SkeletalModel* model = getModelByID(model_id))
+    if(SkeletalModel* model = getModelByID(model_id))
     {
         if(std::shared_ptr<Entity> ent = getEntityByID(id))
         {
@@ -959,7 +959,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
 
 bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
-    core::SkeletalModel* model = getModelByID(model_id);
+    SkeletalModel* model = getModelByID(model_id);
     if(!model)
     {
         return false;
@@ -988,7 +988,7 @@ int World::deleteItem(uint32_t item_id)
     return 1;
 }
 
-core::SkeletalModel* World::getModelByID(uint32_t id)
+SkeletalModel* World::getModelByID(uint32_t id)
 {
     if(skeletal_models.front().id == id)
     {
