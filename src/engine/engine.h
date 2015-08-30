@@ -84,7 +84,6 @@ struct EngineContainer
     world::Room* room = nullptr;
 };
 
-//! @todo Use bools where appropriate.
 struct EngineControlState
 {
     bool     free_look = false;
@@ -265,7 +264,6 @@ void initBullet();
 // Config parser
 
 void initConfig(const char *filename);
-void saveConfig();
 
 // Core system routines - display and tick.
 
@@ -281,8 +279,6 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
 // Debug functions.
 
-void primaryMouseDown();
-void secondaryMouseDown();
 void showDebugInfo();
 void dumpRoom(world::Room* r);
 
@@ -299,7 +295,7 @@ int  loadMap(const std::string &name);
 // String getters.
 
 std::string getLevelName(const std::string &path);
-std::string getAutoexecName(loader::Game game_version, const std::string &postfix = nullptr);
+std::string getAutoexecName(loader::Game game_version, const std::string &postfix = std::string());
 
 // Console command parser.
 
