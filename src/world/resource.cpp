@@ -39,6 +39,7 @@
 #include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/portal.h"
+#include "world/staticmesh.h"
 #include "world/world.h"
 
 using gui::Console;
@@ -83,7 +84,7 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<world::Entity> > 
         Res_SetEntityFunction(pair.second);
 }
 
-void Res_SetStaticMeshProperties(std::shared_ptr<world::core::StaticMesh> r_static)
+void Res_SetStaticMeshProperties(std::shared_ptr<world::StaticMesh> r_static)
 {
     lua::Integer _collision_type, _collision_shape;
     lua::Boolean _hide;
@@ -1810,8 +1811,8 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::
         {
             continue;
         }
-        room->static_mesh.emplace_back(std::make_shared<world::core::StaticMesh>());
-        std::shared_ptr<world::core::StaticMesh> r_static = room->static_mesh.back();
+        room->static_mesh.emplace_back(std::make_shared<world::StaticMesh>());
+        std::shared_ptr<world::StaticMesh> r_static = room->static_mesh.back();
         r_static->self = std::make_shared<engine::EngineContainer>();
         r_static->self->room = room.get();
         r_static->self->object = room->static_mesh[i].get();

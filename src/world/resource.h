@@ -109,7 +109,7 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<world::BaseItem> > &map
 // Functions setting parameters from configuration scripts.
 
 void Res_SetEntityProperties(std::shared_ptr<world::Entity> ent);
-void Res_SetStaticMeshProperties(std::shared_ptr<world::core::StaticMesh> r_static);
+void Res_SetStaticMeshProperties(std::shared_ptr<world::StaticMesh> r_static);
 
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.

@@ -25,6 +25,7 @@ struct EngineContainer;
 namespace world
 {
 struct Character;
+struct StaticMesh;
 
 namespace core
 {
@@ -204,7 +205,6 @@ namespace core
 {
 struct BaseMesh;
 struct SkeletalModel;
-struct StaticMesh;
 struct Frustum;
 struct Polygon;
 } // namespace core
@@ -330,7 +330,7 @@ struct Room : public Object
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
     core::SpriteBuffer *sprite_buffer;               // Render data for sprites
 
-    std::vector<std::shared_ptr<core::StaticMesh>> static_mesh;
+    std::vector<std::shared_ptr<StaticMesh>> static_mesh;
     std::vector<RoomSprite> sprites;
 
     std::vector<std::shared_ptr<engine::EngineContainer>> containers;                                     // engine containers with moveables objects

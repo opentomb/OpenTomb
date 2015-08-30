@@ -99,27 +99,6 @@ struct Light
     loader::LightType           light_type;
 };
 
-struct StaticMesh : public Object
-{
-    uint32_t                    object_id;
-    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
-    uint8_t                     was_rendered_lines;
-    bool hide;
-    btVector3 position;
-    btVector3 rotation;
-    std::array<float, 4> tint;
-
-    BoundingBox visibleBoundingBox;
-    BoundingBox collisionBoundingBox;
-
-    btTransform transform;
-    OrientedBoundingBox obb;
-    std::shared_ptr<engine::EngineContainer> self;
-
-    std::shared_ptr<BaseMesh> mesh;
-    btRigidBody                *bt_body;
-};
-
 /*
  * mesh tree base element structure
  */

@@ -98,6 +98,7 @@ list(APPEND PRJ_HDR
     world/resource.h
     world/ragdoll.h
     world/character.h
+    world/staticmesh.h
 
     world/core/mesh.h
     world/core/orientedboundingbox.h

@@ -23,6 +23,7 @@
 #include "world/hair.h"
 #include "world/portal.h"
 #include "world/resource.h"
+#include "world/staticmesh.h"
 #include "world/world.h"
 
 namespace render

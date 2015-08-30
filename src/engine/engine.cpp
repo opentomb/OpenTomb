@@ -29,28 +29,29 @@
 #include "LuaState.h"
 #include "loader/level.h"
 
-#include "render/gl_util.h"
-#include "world/core/polygon.h"
-#include "util/vmath.h"
-#include "controls.h"
-#include "gui/console.h"
-#include "engine/system.h"
-#include "common.h"
-#include "script/script.h"
-#include "render/render.h"
-#include "engine/game.h"
-#include "world/world.h"
-#include "world/camera.h"
-#include "world/core/mesh.h"
-#include "world/entity.h"
-#include "world/resource.h"
-#include "gui/gui.h"
 #include "audio/audio.h"
 #include "character_controller.h"
+#include "common.h"
+#include "controls.h"
+#include "engine/game.h"
+#include "engine/system.h"
 #include "gameflow.h"
-#include "strings.h"
-#include "world/character.h"
+#include "gui/console.h"
+#include "gui/gui.h"
 #include "inventory.h"
+#include "render/gl_util.h"
+#include "render/render.h"
+#include "script/script.h"
+#include "strings.h"
+#include "util/vmath.h"
+#include "world/camera.h"
+#include "world/character.h"
+#include "world/core/mesh.h"
+#include "world/core/polygon.h"
+#include "world/entity.h"
+#include "world/resource.h"
+#include "world/staticmesh.h"
+#include "world/world.h"
 
 using gui::Console;
 
@@ -576,7 +577,7 @@ void showDebugInfo()
                 break;
 
             case OBJECT_STATIC_MESH:
-                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::core::StaticMesh*>(last_cont->object)->object_id);
+                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::StaticMesh*>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:

@@ -23,6 +23,7 @@
 #include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/portal.h"
+#include "world/staticmesh.h"
 
 namespace engine
 {
