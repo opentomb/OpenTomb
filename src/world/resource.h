@@ -87,7 +87,7 @@ void Res_GenVBOs(world::World *world);
 uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(world::SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(world::SectorTween *tween);
-int      Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns);
+bool     Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns);
 void     Res_Sector_FixHeights(world::RoomSector* sector);
 
 bool     Res_Poly_SetAnimTexture(world::core::Polygon *polygon, uint32_t tex_index, world::World *world);
@@ -147,8 +147,8 @@ void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
 // Functions for getting various parameters from legacy TR structs.
 
 void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, world::animation::BoneFrame* bone_frame);
-int      TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
-int      TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
+size_t   TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
+size_t   TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::Level>& tr);
 
 // Main functions which are used to translate legacy TR floor data

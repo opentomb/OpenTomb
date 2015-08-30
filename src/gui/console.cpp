@@ -69,9 +69,9 @@ void Console::setLineInterval(float interval)
     inited = false;
     m_spacing = interval;
     // font->font_size has absolute size (after scaling)
-    m_lineHeight = (1 + m_spacing) * m_font->font_size;
+    m_lineHeight = static_cast<int16_t>( (1 + m_spacing) * m_font->font_size );
     m_cursorX = 8 + 1;
-    m_cursorY = engine::screen_info.h - m_lineHeight * m_visibleLines;
+    m_cursorY = static_cast<int16_t>( engine::screen_info.h - m_lineHeight * m_visibleLines );
     if(m_cursorY < 8)
     {
         m_cursorY = 8;
@@ -273,7 +273,7 @@ void Console::edit(int key, int mod)
                     // if we have only one term found, use it!
                     m_editingLine.erase(0, found[0].length());
                     m_editingLine.insert(0, found[0]);
-                    m_cursorPos = found[0].length();
+                    m_cursorPos = static_cast<int16_t>( found[0].length() );
                 }
                 else
                 {
@@ -307,7 +307,7 @@ void Console::edit(int key, int mod)
                     else
                     {
                         m_editingLine.insert(m_cursorPos, common);
-                        m_cursorPos += common.length();
+                        m_cursorPos += static_cast<int16_t>(common.length());
                     }
                 }
             }
@@ -342,7 +342,7 @@ void Console::calcCursorPosition()
 {
     if(m_font)
     {
-        m_cursorX = 8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos);
+        m_cursorX = static_cast<int16_t>( 8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos) );
     }
 }
 

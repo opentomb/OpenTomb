@@ -917,7 +917,7 @@ void InventoryManager::frame(float time)
                 restoreItemAngle(time);
                 mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
                 mVerticalOffset = -mBaseRingRadius * mRingTime / mRingRotatePeriod;
-                mRingAngle += 180.0 * time / mRingRotatePeriod;
+                mRingAngle += 180.0f * time / mRingRotatePeriod;
             }
             else if(mRingTime < 2.0 * mRingRotatePeriod)
             {
@@ -1526,13 +1526,13 @@ void Fader::SetBlendingMode(loader::BlendingMode mode)
 
 void Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
 {
-    mSpeed = 1000.0 / static_cast<float>(fade_speed);
-    mSpeedSecondary = 1000.0 / static_cast<float>(fade_speed_secondary);
+    mSpeed = 1000.0f / fade_speed;
+    mSpeedSecondary = 1000.0f / fade_speed_secondary;
 }
 
 void Fader::SetDelay(uint32_t delay_msec)
 {
-    mMaxTime = static_cast<float>(delay_msec) / 1000.0;
+    mMaxTime = delay_msec / 1000.0f;
 }
 
 void Fader::SetAspect()
@@ -2154,7 +2154,7 @@ void ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
-    mExtrudeDepth[3] = static_cast<float>(depth) / 255.0;        // We need only alpha transparency.
+    mExtrudeDepth[3] = static_cast<float>(depth) / 255.0f;        // We need only alpha transparency.
     mExtrudeDepth[4] = mExtrudeDepth[3];
 }
 
@@ -2457,14 +2457,14 @@ void ItemNotifier::Animate()
             mCurrRotX += (engine::engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
 
-            mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0) : (mCurrRotX);
+            mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0f) : (mCurrRotX);
             //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
         }
 
         if(mCurrTime == 0)
         {
-            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0);
-            step = (step <= 0.5) ? (0.5) : (step);
+            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+            step = std::max(0.5f, step);
 
             mCurrPosX -= step;
             mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
@@ -2478,8 +2478,8 @@ void ItemNotifier::Animate()
         }
         else
         {
-            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0);
-            step = (step <= 0.5) ? (0.5) : (step);
+            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+            step = std::max(0.5f, step);
 
             mCurrPosX += step;
             mCurrPosX = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);

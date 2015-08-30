@@ -378,11 +378,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                cam_angles[0] -= 0.015 * engine_frame_time * control_mapper.joy_look_x;
+                cam_angles[0] -= 0.015f * engine_frame_time * control_mapper.joy_look_x;
             }
             if(control_mapper.joy_look_y != 0)
             {
-                cam_angles[1] -= 0.015 * engine_frame_time * control_mapper.joy_look_y;
+                cam_angles[1] -= 0.015f * engine_frame_time * control_mapper.joy_look_y;
             }
         }
 
@@ -395,7 +395,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
 
         render::renderer.camera()->setRotation(cam_angles);
-        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
         render::renderer.camera()->moveVertical(dist * move_logic[2]);
@@ -425,7 +425,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     if(control_states.free_look || !std::dynamic_pointer_cast<world::Character>(ent))
     {
-        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         render::renderer.camera()->setRotation(cam_angles);
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -435,7 +435,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     else if(control_states.noclip)
     {
         btVector3 pos;
-        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3) : (control_states.free_look_speed * engine_frame_time);
+        btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         render::renderer.camera()->setRotation(cam_angles);
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);

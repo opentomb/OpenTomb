@@ -935,15 +935,15 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-		try
-		{
-			if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-				engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
-		}
-		catch (lua::RuntimeError& error)
-		{
+                try
+                {
+                        if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+                                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+                }
+                catch (lua::RuntimeError& error)
+                {
             engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-		}
+                }
     }
 }
 
@@ -969,7 +969,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     m_bf.animations.lerp = 0.0;
     frame %= anim->frames.size();
-    frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
+    frame = (frame >= 0) ? (frame) : static_cast<int>(anim->frames.size() - 1 + frame);
     m_bf.animations.period = 1.0f / TR_FRAME_RATE;
 
     m_bf.animations.last_state = anim->state_id;
@@ -1203,19 +1203,19 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-	if (m_self->room == nullptr)
-		return;
+    if (m_self->room == nullptr)
+            return;
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
-	auto containers = m_self->room->containers;
+        auto containers = m_self->room->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
-		if (cont->object_type != OBJECT_ENTITY || !cont->object)
-			continue;
+        if (cont->object_type != OBJECT_ENTITY || !cont->object)
+                continue;
 
         Entity* e = static_cast<Entity*>(cont->object);
-		if (!e->m_enabled)
-			continue;
+        if (!e->m_enabled)
+                continue;
 
         if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
@@ -1227,11 +1227,11 @@ void Entity::checkActivators()
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
         {
-			btScalar r = e->m_activationRadius;
-			r *= r;
-			const btVector3& v = e->m_transform.getOrigin();
+            btScalar r = e->m_activationRadius;
+            r *= r;
+            const btVector3& v = e->m_transform.getOrigin();
             if(    (e != this)
-				&& ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
+                && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
                 && (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.boundingBox.min[2])
                 && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.boundingBox.max[2]))
             {

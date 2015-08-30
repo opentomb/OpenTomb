@@ -66,7 +66,7 @@ FontTexture *glf_create_font_mem(FT_Library ft_library, void *face_data, size_t 
         FontTexture* glf = new FontTexture();
 
         FT_Face face;
-        if(FT_New_Memory_Face(ft_library, static_cast<const FT_Byte*>(face_data), face_data_size, 0, &face))
+        if(FT_New_Memory_Face(ft_library, static_cast<const FT_Byte*>(face_data), static_cast<FT_Long>(face_data_size), 0, &face))
         {
             delete glf;
             return nullptr;
@@ -160,7 +160,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         // clear old atlas, if exists
         if(!glf->gl_tex_indexes.empty())
         {
-            glDeleteTextures(glf->gl_tex_indexes.size(), glf->gl_tex_indexes.data());
+            glDeleteTextures(static_cast<GLsizei>(glf->gl_tex_indexes.size()), glf->gl_tex_indexes.data());
         }
         glf->gl_tex_indexes.clear();
         glf->gl_real_tex_indexes_count = 0;
@@ -170,7 +170,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         FT_Set_Char_Size(glf->ft_face.get(), font_size << 6, font_size << 6, 0, 0);
 
         // calculate texture atlas size
-        chars_in_row = 1 + sqrt(glf->glyphs.size());
+        chars_in_row = 1 + std::sqrt(glf->glyphs.size());
         glf->gl_tex_width = (font_size + padding) * chars_in_row;
         glf->gl_tex_width = NextPowerOf2(glf->gl_tex_width);
         if(glf->gl_tex_width > glf->gl_max_tex_width)
@@ -182,7 +182,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         chars_in_row = glf->gl_tex_width / (font_size + padding);
         chars_in_column = glf->glyphs.size() / chars_in_row + 1;
         glf->gl_tex_indexes.resize((chars_in_column * (font_size + padding)) / glf->gl_tex_width + 1);
-        glGenTextures(glf->gl_tex_indexes.size(), glf->gl_tex_indexes.data());
+        glGenTextures(static_cast<GLsizei>(glf->gl_tex_indexes.size()), glf->gl_tex_indexes.data());
 
         buffer_size = glf->gl_tex_width * glf->gl_tex_width * sizeof(GLubyte);
         std::vector<GLubyte> buffer(buffer_size, 0);
@@ -336,7 +336,7 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
 
             FT_Get_Kerning(glf->ft_face.get(), curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-            x += static_cast<GLfloat>(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0;
+            x += (kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0f;
         }
     }
 

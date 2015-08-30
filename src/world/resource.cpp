@@ -172,11 +172,11 @@ void Res_Sector_SetTweenCeilingConfig(world::SectorTween *tween)
     }
 }
 
-int Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns)
+bool Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns)
 {
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == PenetrationConfig::Wall))
     {
-        return 1;
+        return true;
     }
 
     if((ns->portal_to_room < 0) && (ns->floor_penetration_config != PenetrationConfig::Wall) && (ws->portal_to_room >= 0))
@@ -184,11 +184,11 @@ int Res_Sector_IsWall(world::RoomSector* ws, world::RoomSector* ns)
         ws = ws->checkPortalPointer();
         if((ws->floor_penetration_config == PenetrationConfig::Wall) || !ns->is2SidePortals(ws))
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 ///@TODO: resolve floor >> ceiling case
@@ -2446,7 +2446,7 @@ void TR_GenAnimTextures(world::World *world, const std::unique_ptr<loader::Level
                 seq->anim_type = world::animation::AnimTextureType::Backward;
             }
 
-            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
+            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, true);
             for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
                 engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, static_cast<GLfloat>(j) * seq->uvrotate_speed, true);
@@ -2631,7 +2631,7 @@ void TR_GenMesh(world::World *world, size_t mesh_index, std::shared_ptr<world::c
      */
 
     loader::Mesh* tr_mesh = &tr->m_meshes[mesh_index];
-    mesh->m_id = mesh_index;
+    mesh->m_id = static_cast<uint32_t>(mesh_index);
     mesh->m_center[0] = tr_mesh->centre.x;
     mesh->m_center[1] = -tr_mesh->centre.z;
     mesh->m_center[2] = tr_mesh->centre.y;
@@ -2878,9 +2878,9 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<world::Room> room)
             writeIndex += 1;
 
             // Assign indices
-            uint32_t texture = room_sprite.sprite->texture;
-            uint32_t start = room->sprite_buffer->element_count_per_texture[texture];
-            uint32_t newElementCount = start + 6;
+            size_t texture = room_sprite.sprite->texture;
+            size_t start = room->sprite_buffer->element_count_per_texture[texture];
+            size_t newElementCount = start + 6;
             room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
             elements_for_texture[texture].resize(newElementCount);
 
@@ -3384,7 +3384,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
                         sch_p->anim_dispatch.emplace_back();
 
                         world::animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
-                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
+                        size_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
                         uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
 
                         uint16_t low = tr_adisp->low - tr_animation->frame_start;
@@ -3408,12 +3408,9 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
     GenerateAnimCommandsTransform(model);
 }
 
-int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind)
+size_t TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind)
 {
-    int ret;
-    loader::Moveable *curr_moveable, *next_moveable;
-
-    curr_moveable = &tr->m_moveables[moveable_ind];
+    loader::Moveable* curr_moveable = &tr->m_moveables[moveable_ind];
 
     if(curr_moveable->animation_index == 0xFFFF)
     {
@@ -3422,7 +3419,7 @@ int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, siz
 
     if(moveable_ind == tr->m_moveables.size() - 1)
     {
-        ret = static_cast<int32_t>(tr->m_animations.size()) - static_cast<int32_t>(curr_moveable->animation_index);
+        size_t ret = tr->m_animations.size() - curr_moveable->animation_index;
         if(ret < 0)
         {
             return 1;
@@ -3433,7 +3430,7 @@ int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, siz
         }
     }
 
-    next_moveable = &tr->m_moveables[moveable_ind + 1];
+    loader::Moveable* next_moveable = &tr->m_moveables[moveable_ind + 1];
     if(next_moveable->animation_index == 0xFFFF)
     {
         if(moveable_ind + 2 < tr->m_moveables.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
@@ -3446,21 +3443,15 @@ int TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, siz
         }
     }
 
-    ret = (next_moveable->animation_index <= tr->m_animations.size()) ? (next_moveable->animation_index) : (tr->m_animations.size());
-    ret -= static_cast<int32_t>(curr_moveable->animation_index);
-
-    return ret;
+    return std::min(static_cast<size_t>(next_moveable->animation_index), tr->m_animations.size()) - curr_moveable->animation_index;
 }
 
 
 // Returns real animation frame count
 
-int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind)
+size_t TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind)
 {
-    loader::Animation *curr_anim, *next_anim;
-    int ret;
-
-    curr_anim = &tr->m_animations[animation_ind];
+    loader::Animation* curr_anim = &tr->m_animations[animation_ind];
     if(curr_anim->frame_size <= 0)
     {
         return 1;                                                               // impossible!
@@ -3468,13 +3459,13 @@ int TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t
 
     if(animation_ind == tr->m_animations.size() - 1)
     {
-        ret = 2 * tr->m_frameData.size() - curr_anim->frame_offset;
+        size_t ret = 2 * tr->m_frameData.size() - curr_anim->frame_offset;
         ret /= curr_anim->frame_size * 2;                                       /// it is fully correct!
         return ret;
     }
 
-    next_anim = &tr->m_animations[animation_ind + 1];
-    ret = next_anim->frame_offset - curr_anim->frame_offset;
+    loader::Animation* next_anim = &tr->m_animations[animation_ind + 1];
+    size_t ret = next_anim->frame_offset - curr_anim->frame_offset;
     ret /= curr_anim->frame_size * 2;
 
     return ret;

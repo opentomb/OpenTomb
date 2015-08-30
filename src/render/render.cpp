@@ -143,7 +143,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
 
             //! @bug textures[0] only works if all animated textures are on the first page
             glBindTexture(GL_TEXTURE_2D, m_world->textures[0]);
-            glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, nullptr);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->m_animatedElementCount), GL_UNSIGNED_INT, nullptr);
         }
     }
 
@@ -162,7 +162,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, mesh->m_elementsPerTexture[texture], GL_UNSIGNED_INT, elementsbase + offset);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->m_elementsPerTexture[texture]), GL_UNSIGNED_INT, elementsbase + offset);
             offset += mesh->m_elementsPerTexture[texture];
         }
     }
@@ -216,7 +216,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
     ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
 
-    glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * ref->firstIndex));
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ref->count), GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * ref->firstIndex));
 }
 
 void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
@@ -612,7 +612,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const util::ma
             std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i + 1][0]);
         }
 
-        glUniformMatrix4fv(shader->model_view, entity->m_hairs[h]->m_elements.size() + 1, GL_FALSE, &hairModelToGlobalMatrices[0][0]);
+        glUniformMatrix4fv(shader->model_view, static_cast<GLsizei>(entity->m_hairs[h]->m_elements.size() + 1), GL_FALSE, &hairModelToGlobalMatrices[0][0]);
 
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projection.c_ptr());
 
@@ -675,7 +675,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
 
                 glUnmapBuffer(GL_ARRAY_BUFFER);
 
-                glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertices.size());
+                glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(f->vertices.size()));
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
             glDeleteBuffers(1, &stencilVBO);
@@ -771,7 +771,7 @@ void Render::renderRoomSprites(const world::Room* room, const util::matrix4 &mod
 
         room->sprite_buffer->data->bind();
 
-        unsigned long offset = 0;
+        size_t offset = 0;
         for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
         {
             if(room->sprite_buffer->element_count_per_texture[texture] == 0)
@@ -780,7 +780,7 @@ void Render::renderRoomSprites(const world::Room* room, const util::matrix4 &mod
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room->sprite_buffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
     }
@@ -1087,7 +1087,7 @@ void Render::genWorldList()
 void Render::setWorld(world::World *world)
 {
     resetWorld();
-    uint32_t list_size = world->rooms.size() + 128;  // magic 128 was added for debug and testing
+    size_t list_size = world->rooms.size() + 128;  // magic 128 was added for debug and testing
 
     if(m_renderList.size() < list_size)  // if old list is less than new one requiring
     {
@@ -1190,7 +1190,7 @@ void RenderDebugDrawer::render()
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
         m_vertexArray->bind();
-        glDrawArrays(GL_LINES, 0, m_buffer.size() / 2);
+        glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_buffer.size() / 2));
     }
 
     m_color.fill(0);

@@ -68,9 +68,9 @@ struct BaseMesh
     std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
-    std::vector<uint32_t> m_elementsPerTexture;                            //
+    std::vector<size_t> m_elementsPerTexture;                            //
     std::vector<GLuint> m_elements;                                             //
-    uint32_t m_alphaElements;
+    size_t m_alphaElements;
 
     std::vector<Vertex> m_vertices;
 
@@ -111,8 +111,8 @@ struct BaseMesh
     void updateBoundingBox();
     void genVBO(const render::Render *renderer);
     void genFaces();
-    uint32_t addVertex(const Vertex& v);
-    uint32_t addAnimatedVertex(const Vertex& v);
+    size_t addVertex(const Vertex& v);
+    size_t addAnimatedVertex(const Vertex& v);
     void polySortInMesh();
     Vertex* findVertex(const btVector3& v);
 };
@@ -141,9 +141,9 @@ struct SpriteBuffer
     std::unique_ptr< ::render::VertexArray > data{};
 
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
-    uint32_t              num_texture_pages = 0;
+    size_t num_texture_pages = 0;
     // The element count for each sub-range.
-    std::vector<uint32_t> element_count_per_texture{};
+    std::vector<size_t> element_count_per_texture{};
 };
 
 struct Light
