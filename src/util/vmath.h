@@ -36,9 +36,9 @@ struct Plane
     // @param pos The point
     // @return The distance in multiples of the normal (if >0, @a pos is in the direction of the normal)
 
-    btScalar distance(const btVector3& pos) const
+    btScalar distance(const btVector3& position) const
     {
-        return normal.dot(pos) - dot;
+        return normal.dot(position) - dot;
     }
 
     btVector3 rayIntersect(const btVector3& rayStart, const btVector3& rayDir, btScalar& lambda) const
@@ -54,18 +54,18 @@ struct Plane
         return rayIntersect(rayStart, rayDir, t);
     }
 
-    void assign(const btVector3& v1, const btVector3& v2, const btVector3& pos)
+    void assign(const btVector3& v1, const btVector3& v2, const btVector3& position)
     {
         normal = v1.cross(v2);
         // assert(!normal.fuzzyZero());
         normal.safeNormalize();
-        dot = normal.dot(pos);
+        dot = normal.dot(position);
     }
 
-    void assign(const btVector3& n, const btVector3& pos)
+    void assign(const btVector3& n, const btVector3& position)
     {
         normal = n.normalized();
-        dot = normal.dot(pos);
+        dot = normal.dot(position);
     }
 
     void mirrorNormal()
@@ -81,7 +81,7 @@ struct Plane
     }
 };
 
-void vec4_SetTRRotations(btQuaternion &v, const btVector3 &rot);
+void vec4_SetTRRotations(btQuaternion &v, const btVector3 &rotation);
 
 // Matrix transformation functions and macro
 

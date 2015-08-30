@@ -137,19 +137,19 @@ struct Sprite
  */
 struct SpriteBuffer
 {
-    // Vertex data for the sprites
+    //! Vertex data for the sprites
     std::unique_ptr< ::render::VertexArray > data{};
 
-    // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
+    //! How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     size_t num_texture_pages = 0;
-    // The element count for each sub-range.
+    //! The element count for each sub-range.
     std::vector<size_t> element_count_per_texture{};
 };
 
 struct Light
 {
-    btVector3 pos;                                         // world position
-    float                       colour[4];                                      // RGBA value
+    btVector3 position;
+    float                       colour[4];
 
     float                       inner;
     float                       outer;
@@ -166,12 +166,12 @@ struct Light
  */
 struct StaticMesh : public Object
 {
-    uint32_t                    object_id;                                      //
+    uint32_t                    object_id;
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
-    bool hide;                                           // disable static mesh rendering
-    btVector3 pos;                                         // model position
-    btVector3 rot;                                         // model angles
+    bool hide;
+    btVector3 position;
+    btVector3 rotation;
     std::array<float, 4> tint;                                        // model tint
 
     BoundingBox visibleBoundingBox;
@@ -186,20 +186,12 @@ struct StaticMesh : public Object
 };
 
 /*
- * Animated skeletal model. Taken from openraider.
- * model -> animation -> frame -> bone
- * thanks to Terry 'Mongoose' Hendrix II
- */
-
-struct SkeletalModel;
-
-/*
  * mesh tree base element structure
  */
 struct MeshTreeTag
 {
     std::shared_ptr<BaseMesh> mesh_base;                                      // base mesh - pointer to the first mesh in array
-    std::shared_ptr<BaseMesh> mesh_skin;                                      // base skinned mesh for ТР4+
+    std::shared_ptr<BaseMesh> mesh_skin;                                      // base skinned mesh for ТR4+
     btVector3 offset;                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint32_t                    body_part;
@@ -207,21 +199,23 @@ struct MeshTreeTag
     uint8_t                     replace_anim;
 };
 
-/*
+ /*
  * skeletal model with animations data.
+ * Animated skeletal model. Taken from openraider.
+ * model -> animation -> frame -> bone
+ * thanks to Terry 'Mongoose' Hendrix II
  */
-
 struct SkeletalModel
 {
     uint32_t                    id;
     bool                        has_transparency;
 
     BoundingBox boundingBox;
-    btVector3                   centre;                                      // the centre of model
+    btVector3                   centre;
 
     std::vector<animation::AnimationFrame> animations;
 
-    uint16_t                    mesh_count;                                     // number of model meshes
+    uint16_t                    mesh_count;
     std::vector<MeshTreeTag>    mesh_tree;                                      // base mesh tree.
 
     std::vector<uint16_t>       collision_map;

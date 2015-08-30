@@ -369,15 +369,15 @@ void Console::addLine(const std::string &text, FontStyle style)
 
 void Console::addText(const std::string &text, FontStyle style)
 {
-    size_t pos = 0;
-    while(pos != std::string::npos)
+    size_t position = 0;
+    while(position != std::string::npos)
     {
-        size_t end = text.find_first_of("\r\n", pos);
-        if(end != pos + 1)
-            addLine(text.substr(pos, end - pos - 1), style);
+        size_t end = text.find_first_of("\r\n", position);
+        if(end != position + 1)
+            addLine(text.substr(position, end - position - 1), style);
         if(end == std::string::npos)
             break;
-        pos = end + 1;
+        position = end + 1;
     }
 }
 

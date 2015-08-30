@@ -185,8 +185,8 @@ RoomSector* RoomSector::checkPortalPointerRaw()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -209,8 +209,8 @@ RoomSector* RoomSector::checkPortalPointer()
         {
             r = r->base_room;
         }
-        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -225,8 +225,8 @@ RoomSector* RoomSector::checkBaseRoom()
     if(owner_room->base_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->base_room;
-        int ind_x = static_cast<int>((pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -241,8 +241,8 @@ RoomSector* RoomSector::checkAlternateRoom()
     if(owner_room->alternate_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->alternate_room;
-        int ind_x = static_cast<int>( (pos[0] - r->transform.getOrigin()[0]) / MeteringSectorSize );
-        int ind_y = static_cast<int>( (pos[1] - r->transform.getOrigin()[1]) / MeteringSectorSize );
+        int ind_x = static_cast<int>( (position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize );
+        int ind_y = static_cast<int>( (position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize );
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -262,8 +262,8 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
         return false;
     }
 
-    RoomSector* s1p = s2->owner_room->getSectorRaw(pos);
-    RoomSector* s2p = s1->owner_room->getSectorRaw(s2->pos);
+    RoomSector* s1p = s2->owner_room->getSectorRaw(position);
+    RoomSector* s2p = s1->owner_room->getSectorRaw(s2->position);
 
     // 2 next conditions are the stick for TR5 door-roll-wall
     if(s1p->portal_to_room < 0)

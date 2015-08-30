@@ -457,7 +457,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
     {
         world::core::Light *current_light = &room->lights[i];
 
-        btVector3 xyz = entity->m_transform.getOrigin() - current_light->pos;
+        btVector3 xyz = entity->m_transform.getOrigin() - current_light->position;
         btScalar distance = xyz.length();
 
         // Find color
@@ -472,7 +472,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
         }
 
         // Find position
-        util::float4 tmpPos = modelViewMatrix * current_light->pos;
+        util::float4 tmpPos = modelViewMatrix * current_light->position;
         positions[current_light_number * 3 + 0] = tmpPos[0];
         positions[current_light_number * 3 + 1] = tmpPos[1];
         positions[current_light_number * 3 + 2] = tmpPos[2];
@@ -1348,8 +1348,8 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
 void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
 {
     world::core::BoundingBox bb;
-    bb.min = { static_cast<btScalar>(rs->pos[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
-    bb.max = { static_cast<btScalar>(rs->pos[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->pos[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
+    bb.min = { static_cast<btScalar>(rs->position[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->position[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
+    bb.max = { static_cast<btScalar>(rs->position[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->position[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
 
     drawBBox(bb, nullptr);
 }

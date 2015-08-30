@@ -258,7 +258,7 @@ void world::Character::state_func()
             if(m_moveType == world::MoveType::OnFloor)
                 m_bt.no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
 
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             m_command.crouch |= low_vertical_space;
             lean(0.0);
 
@@ -510,7 +510,7 @@ void world::Character::state_func()
                         global_offset[2] += m_bf.boundingBox.max[2];
                         if((m_response.horizontal_collide == 0) && isLittleStep(checkNextStep(global_offset, &next_fc)))
                         {
-                            m_command.rot[0] = 0.0;
+                            m_command.rotation[0] = 0.0;
                             m_dirFlag = ENT_MOVE_RIGHT;
                             m_bf.animations.next_state = TR_STATE_LARA_WALK_RIGHT;
                         }
@@ -532,7 +532,7 @@ void world::Character::state_func()
                         global_offset[2] += m_bf.boundingBox.max[2];
                         if((m_response.horizontal_collide == 0) && isLittleStep(checkNextStep(global_offset, &next_fc)))
                         {
-                            m_command.rot[0] = 0.0;
+                            m_command.rotation[0] = 0.0;
                             m_dirFlag = ENT_MOVE_LEFT;
                             m_bf.animations.next_state = TR_STATE_LARA_WALK_LEFT;
                         }
@@ -548,7 +548,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_JUMP_PREPARE:
 
             m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             lean(0.0);
 
             if(m_response.slide == SlideType::Back)      // Slide checking is only for jumps direction correction!
@@ -606,7 +606,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_JUMP_BACK:
 
             m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_response.vertical_collide & 0x01 || m_moveType == world::MoveType::OnFloor)
             {
@@ -639,7 +639,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_JUMP_LEFT:
 
             m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_response.vertical_collide & 0x01 || m_moveType == world::MoveType::OnFloor)
             {
@@ -668,7 +668,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_JUMP_RIGHT:
 
             m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_response.vertical_collide & 0x01 || m_moveType == world::MoveType::OnFloor)
             {
@@ -710,7 +710,7 @@ void world::Character::state_func()
 
         case TR_STATE_LARA_TURN_LEFT_SLOW:
         case TR_STATE_LARA_TURN_RIGHT_SLOW:
-            m_command.rot[0] *= 0.7f;
+            m_command.rotation[0] *= 0.7f;
             m_dirFlag = ENT_STAY;
             lean(0.0);
             m_bt.no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
@@ -990,7 +990,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_WALK_FORWARD:
-            m_command.rot[0] *= 0.4f;
+            m_command.rotation[0] *= 0.4f;
             lean(0.0);
 
             global_offset = m_transform.getBasis().getColumn(1) * engine::WalkForwardOffset;
@@ -1077,7 +1077,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_WADE_FORWARD:
-            m_command.rot[0] *= 0.4f;
+            m_command.rotation[0] *= 0.4f;
             m_dirFlag = ENT_MOVE_FORWARD;
 
             if(m_heightInfo.quicksand != QuicksandPosition::None)
@@ -1153,7 +1153,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_WALK_BACK:
-            m_command.rot[0] *= 0.4f;
+            m_command.rotation[0] *= 0.4f;
             m_dirFlag = ENT_MOVE_BACKWARD;
 
             if(m_heightInfo.quicksand != QuicksandPosition::None)
@@ -1217,7 +1217,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_WALK_LEFT:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             m_dirFlag = ENT_MOVE_LEFT;
             if(m_moveType == world::MoveType::FreeFalling)
             {
@@ -1254,7 +1254,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_WALK_RIGHT:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             m_dirFlag = ENT_MOVE_RIGHT;
             if(m_moveType == world::MoveType::FreeFalling)
             {
@@ -1294,7 +1294,7 @@ void world::Character::state_func()
             // Slide animations
 
         case TR_STATE_LARA_SLIDE_BACK:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             lean(0.0);
             m_dirFlag = ENT_MOVE_BACKWARD;
 
@@ -1325,7 +1325,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_SLIDE_FORWARD:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             lean(0.0);
             m_dirFlag = ENT_MOVE_FORWARD;
 
@@ -1363,7 +1363,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_PUSHABLE_GRAB:
             m_moveType = world::MoveType::OnFloor;
             m_bt.no_fix_all = true;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_command.action)  //If Lara is grabbing the block
             {
@@ -1395,7 +1395,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_PUSHABLE_PUSH:
             m_bt.no_fix_all = true;
             m_bf.animations.onFrame = engine::ent_stop_traverse;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_camFollowCenter = 64;
             i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
 
@@ -1482,7 +1482,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_PUSHABLE_PULL:
             m_bt.no_fix_all = true;
             m_bf.animations.onFrame = engine::ent_stop_traverse;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_camFollowCenter = 64;
             i = static_cast<int>(m_bf.animations.model->animations[m_bf.animations.current_animation].frames.size());
 
@@ -1594,7 +1594,7 @@ void world::Character::state_func()
             //Climbing animations
 
         case TR_STATE_LARA_JUMP_UP:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             if(m_command.action && (m_moveType != world::MoveType::WallsClimb) && (m_moveType != world::MoveType::Climbing))
             {
                 t = engine::LaraTryHangWallOffset + engine::LaraHangWallDistance;
@@ -1652,7 +1652,7 @@ void world::Character::state_func()
             if(m_moveType == world::MoveType::Underwater)
             {
                 m_angles[1] = -45.0;
-                m_command.rot[1] = 0.0;
+                m_command.rotation[1] = 0.0;
                 updateTransform();
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
@@ -1683,11 +1683,11 @@ void world::Character::state_func()
 
         case TR_STATE_LARA_REACH:
             m_bt.no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS_1 | BODY_PART_HANDS_2;
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             if(m_moveType == world::MoveType::Underwater)
             {
                 m_angles[1] = -45.0;
-                m_command.rot[1] = 0.0;
+                m_command.rotation[1] = 0.0;
                 updateTransform();
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 break;
@@ -1758,13 +1758,13 @@ void world::Character::state_func()
         case TR_STATE_LARA_HANDSTAND:
         case TR_STATE_LARA_CLIMBING:
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             m_bt.no_fix_all = true;
             //ss_anim->onFrame = ent_set_on_floor_after_climb; // @FIXME: BUGGY
             break;
 
         case TR_STATE_LARA_HANG:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_moveType == world::MoveType::WallsClimb)
             {
@@ -1912,7 +1912,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_LADDER_IDLE:
-            m_command.rot[0] = 0;
+            m_command.rotation[0] = 0;
             m_moveType = world::MoveType::WallsClimb;
             m_dirFlag = ENT_STAY;
             m_camFollowCenter = 64;
@@ -2039,7 +2039,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_SHIMMY_LEFT:
             m_bt.no_fix_body_parts = BODY_PART_LEGS;
 
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_MOVE_LEFT;
             if(!m_command.action)
             {
@@ -2099,7 +2099,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_SHIMMY_RIGHT:
             m_bt.no_fix_body_parts = BODY_PART_LEGS;
 
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_MOVE_RIGHT;
             if(!m_command.action)
             {
@@ -2157,7 +2157,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_ONWATER_EXIT:
-            m_command.rot[0] *= 0.0;
+            m_command.rotation[0] *= 0.0;
             m_bt.no_fix_all = true;
             m_bf.animations.onFrame = engine::ent_set_on_floor_after_climb;
             break;
@@ -2186,7 +2186,7 @@ void world::Character::state_func()
             else if(m_moveType == world::MoveType::Underwater)
             {
                 m_angles[1] = -45.0;
-                m_command.rot[1] = 0.0;
+                m_command.rotation[1] = 0.0;
                 updateTransform();
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
@@ -2222,7 +2222,7 @@ void world::Character::state_func()
 
         case TR_STATE_LARA_UNDERWATER_DIVING:
             m_angles[1] = -45.0;
-            m_command.rot[1] = 0.0;
+            m_command.rotation[1] = 0.0;
             updateTransform();
             m_bf.animations.onFrame = engine::ent_correct_diving_angle;
             break;
@@ -2247,7 +2247,7 @@ void world::Character::state_func()
             if(m_moveType == world::MoveType::Underwater)
             {
                 m_angles[1] = -45.0;
-                m_command.rot[1] = 0.0;
+                m_command.rotation[1] = 0.0;
                 updateTransform();                                     // needed here to fix underwater in wall collision bug
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());       // Stop scream
@@ -2301,7 +2301,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_SWANDIVE_BEGIN:
-            m_command.rot[0] *= 0.4f;
+            m_command.rotation[0] *= 0.4f;
             if(m_response.vertical_collide & 0x01 || m_moveType == world::MoveType::OnFloor)
             {
                 m_bf.animations.next_state = TR_STATE_LARA_STOP;                        // landing - roll
@@ -2317,7 +2317,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_SWANDIVE_END:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             //Reset these to zero so Lara is only falling downwards
             m_speed[0] = 0.0;
@@ -2458,7 +2458,7 @@ void world::Character::state_func()
                 if(m_command.shift)
                 {
                     m_dirFlag = ENT_MOVE_LEFT;
-                    m_command.rot[0] = 0.0;
+                    m_command.rotation[0] = 0.0;
                     m_bf.animations.next_state = TR_STATE_LARA_ONWATER_LEFT;
                 }
                 else
@@ -2471,7 +2471,7 @@ void world::Character::state_func()
                 if(m_command.shift)
                 {
                     m_dirFlag = ENT_MOVE_RIGHT;
-                    m_command.rot[0] = 0.0;
+                    m_command.rotation[0] = 0.0;
                     m_bf.animations.next_state = TR_STATE_LARA_ONWATER_RIGHT;
                 }
                 else
@@ -2536,7 +2536,7 @@ void world::Character::state_func()
                     if(m_moveType == world::MoveType::Climbing)
                     {
                         m_speed.setZero();
-                        m_command.rot[0] = 0.0;
+                        m_command.rotation[0] = 0.0;
                         m_bt.no_fix_all = true;
                         if(low_vertical_space)
                         {
@@ -2584,7 +2584,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_ONWATER_LEFT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             if(!m_command.jump)
             {
                 if(m_command.move[1] == -1 && m_command.shift)
@@ -2613,7 +2613,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_ONWATER_RIGHT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             if(!m_command.jump)
             {
                 if(m_command.move[1] == 1 && m_command.shift)
@@ -2682,14 +2682,14 @@ void world::Character::state_func()
                 }
                 else
                 {
-                    m_command.rot[0] = 0.0;
+                    m_command.rotation[0] = 0.0;
                 }
             }
             break;
 
         case TR_STATE_LARA_CROUCH_ROLL:
         case TR_STATE_LARA_SPRINT_ROLL:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             lean(0.0);
             if(m_moveType == world::MoveType::FreeFalling)
             {
@@ -2798,7 +2798,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_FORWARD:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] = m_command.rot[0] * 0.5f;
+            m_command.rotation[0] = m_command.rotation[0] * 0.5f;
             move = m_transform.getBasis().getColumn(1) * engine::PenetrationTestOffset;
             if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))
             {
@@ -2826,7 +2826,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_BACK:
             m_dirFlag = ENT_MOVE_FORWARD;   // Absurd? No, Core Design.
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] = m_command.rot[0] * 0.5f;
+            m_command.rotation[0] = m_command.rotation[0] * 0.5f;
             move = m_transform.getBasis().getColumn(1) * -engine::PenetrationTestOffset;
             if((checkNextPenetration(move) > 0) && (m_response.horizontal_collide != 0x00))
             {
@@ -2853,7 +2853,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_LEFT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
+            m_command.rotation[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((m_command.move[1] != -1) || m_response.killed)
             {
@@ -2864,7 +2864,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CRAWL_TURN_RIGHT:
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
+            m_command.rotation[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((m_command.move[1] != 1) || m_response.killed)
             {
@@ -2875,7 +2875,7 @@ void world::Character::state_func()
         case TR_STATE_LARA_CROUCH_TURN_LEFT:
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
             m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            m_command.rot[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23)) ? (0.6f) : (0.0f);
+            m_command.rotation[0] *= ((m_bf.animations.current_frame > 3) && (m_bf.animations.current_frame < 23)) ? (0.6f) : (0.0f);
 
             if((m_command.move[1] == 0) || m_response.killed)
             {
@@ -2886,7 +2886,7 @@ void world::Character::state_func()
             // Monkeyswing
 
         case TR_STATE_LARA_MONKEYSWING_IDLE:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_STAY;
             ///@FIXME: stick for TR3+ monkey swing fix... something wrong with anim 150
             if(m_command.action && (m_moveType != world::MoveType::Monkeyswing) && m_heightInfo.ceiling_climb && (m_heightInfo.ceiling_hit) && (m_transform.getOrigin()[2] + m_bf.boundingBox.max[2] > m_heightInfo.ceiling_point[2] - 96.0))
@@ -2927,7 +2927,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_MONKEYSWING_TURN_LEFT:
-            m_command.rot[0] *= 0.5;
+            m_command.rotation[0] *= 0.5;
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)
             {
                 setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
@@ -2941,7 +2941,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_MONKEYSWING_TURN_RIGHT:
-            m_command.rot[0] *= 0.5;
+            m_command.rotation[0] *= 0.5;
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)
             {
                 setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
@@ -2955,7 +2955,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_MONKEYSWING_FORWARD:
-            m_command.rot[0] *= 0.45f;
+            m_command.rotation[0] *= 0.45f;
             m_dirFlag = ENT_MOVE_FORWARD;
 
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)
@@ -2970,7 +2970,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_MONKEYSWING_LEFT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_MOVE_LEFT;
 
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)
@@ -2985,7 +2985,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_MONKEYSWING_RIGHT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_MOVE_RIGHT;
 
             if((m_moveType != world::MoveType::Monkeyswing) || !m_command.action)
@@ -3002,7 +3002,7 @@ void world::Character::state_func()
             // Tightrope
 
         case TR_STATE_LARA_TIGHTROPE_ENTER:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_bt.no_fix_all = true;
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bf.animations.onFrame = engine::ent_to_tightrope;
@@ -3010,7 +3010,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_TIGHTROPE_EXIT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_bt.no_fix_all = true;
             m_dirFlag = ENT_MOVE_FORWARD;
             m_bf.animations.onFrame = engine::ent_from_tightrope;
@@ -3018,7 +3018,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_TIGHTROPE_IDLE:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if(m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_STAND)
             {
@@ -3057,7 +3057,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_TIGHTROPE_FORWARD:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             m_dirFlag = ENT_MOVE_FORWARD;
 
             if(m_command.move[0] != 1)
@@ -3080,7 +3080,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_RIGHT) && (last_frame))
             {
@@ -3096,7 +3096,7 @@ void world::Character::state_func()
             break;
 
         case TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
 
             if((m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_LEFT) && (last_frame))
             {
@@ -3115,7 +3115,7 @@ void world::Character::state_func()
             // Intermediate animations are processed automatically.
 
         default:
-            m_command.rot[0] = 0.0;
+            m_command.rotation[0] = 0.0;
             if((m_moveType == world::MoveType::Monkeyswing) || (m_moveType == world::MoveType::WallsClimb))
             {
                 if(!m_command.action)

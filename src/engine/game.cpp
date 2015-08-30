@@ -434,7 +434,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     }
     else if(control_states.noclip)
     {
-        btVector3 pos;
+        btVector3 position;
         btScalar dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         render::renderer.camera()->setRotation(cam_angles);
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
@@ -443,9 +443,9 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = cam_angles[0] * util::DegPerRad;
-        pos = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
-        pos[2] -= 512.0;
-        ent->m_transform.getOrigin() = pos;
+        position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
+        position[2] -= 512.0;
+        ent->m_transform.getOrigin() = position;
         ent->updateTransform();
     }
     else
@@ -490,20 +490,20 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
         {
-            ch->m_command.rot[0] = -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_x;
+            ch->m_command.rotation[0] = -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ch->m_command.rot[0] = -2 * util::DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
+            ch->m_command.rotation[0] = -2 * util::DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
         }
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0))
         {
-            ch->m_command.rot[1] = -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_y;
+            ch->m_command.rotation[1] = -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ch->m_command.rot[1] = 2 * util::DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
+            ch->m_command.rotation[1] = 2 * util::DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
         }
 
         ch->m_command.move = move_logic;
@@ -674,9 +674,9 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
     cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition() - btVector3(0, 0, 128), cam->m_currentRoom);
     if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        btVector3 pos = cam->getPosition();
-        pos[2] = cam->m_currentRoom->boundingBox.max[2] + 2.0f * 64.0f;
-        cam->setPosition(pos);
+        btVector3 position = cam->getPosition();
+        position[2] = cam->m_currentRoom->boundingBox.max[2] + 2.0f * 64.0f;
+        cam->setPosition(position);
     }
 
     cam->setRotation(cam_angles);

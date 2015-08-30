@@ -18,7 +18,7 @@ namespace world
 
 struct CharacterCommand
 {
-    btVector3 rot = {0,0,0};
+    btVector3 rotation = {0,0,0};
     std::array<int8_t, 3> move{ {0,0,0} };
 
     bool        roll = false;

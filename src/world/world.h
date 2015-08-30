@@ -256,7 +256,7 @@ struct RoomSector
 
     int16_t                     index_x;
     int16_t                     index_y;
-    btVector3 pos;
+    btVector3 position;
 
     btVector3                   ceiling_corners[4];
     DiagonalType                ceiling_diagonal_type;

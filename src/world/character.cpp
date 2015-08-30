@@ -884,11 +884,11 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
     if(axis > 1) return 0.0;
 
     uint8_t curr_rot_dir = 0;
-    if(m_command.rot[axis] < 0.0)
+    if(m_command.rotation[axis] < 0.0)
     {
         curr_rot_dir = 1;
     }
-    else if(m_command.rot[axis] > 0.0)
+    else if(m_command.rotation[axis] > 0.0)
     {
         curr_rot_dir = 2;
     }
@@ -930,7 +930,7 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
         }
     }
 
-    return std::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
+    return std::abs(m_inertiaAngular[axis]) * m_command.rotation[axis];
 }
 
 /*
@@ -1368,7 +1368,7 @@ int Character::climbing()
 
     t = m_currentSpeed * m_speedMult;
     m_response.vertical_collide |= 0x01;
-    m_angles[0] += m_command.rot[0];
+    m_angles[0] += m_command.rotation[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
@@ -1576,20 +1576,20 @@ int Character::findTraverse()
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0 });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0 });
     }
 
     if(obj_s != nullptr)
@@ -1630,20 +1630,20 @@ int Character::checkTraverse(const Entity& obj)
     {
         if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0 });
         }
         else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0 });
         }
         // OY move case
         else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0 });
         }
         else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0 });
         }
         ch_s = ch_s->checkPortalPointer();
     }
@@ -1661,8 +1661,8 @@ int Character::checkTraverse(const Entity& obj)
 
     engine::BtEngineClosestRayResultCallback cb(obj.m_self);
     btVector3 v0, v1;
-    v1[0] = v0[0] = obj_s->pos[0];
-    v1[1] = v0[1] = obj_s->pos[1];
+    v1[0] = v0[0] = obj_s->position[0];
+    v1[1] = v0[1] = obj_s->position[1];
     v0[2] = floor + MeteringSectorSize * 0.5f;
     v1[2] = floor + MeteringSectorSize * 2.5f;
     engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
@@ -1684,20 +1684,20 @@ int Character::checkTraverse(const Entity& obj)
      // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] + MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0] - MeteringSectorSize), static_cast<btScalar>(obj_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0 });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->pos[0]), static_cast<btScalar>(obj_s->pos[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0 });
     }
 
     if(next_s)
@@ -1707,11 +1707,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->pos[0], obj_s->pos[1], floor + 0.5f * MeteringSectorSize));
+        from.setOrigin(btVector3(obj_s->position[0], obj_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
@@ -1731,20 +1731,20 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] - MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0] + MeteringSectorSize), static_cast<btScalar>(ch_s->pos[1]), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0 });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0 });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->pos[0]), static_cast<btScalar>(ch_s->pos[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0 });
     }
 
     if(next_s)
@@ -1754,11 +1754,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(ch_s->pos[0], ch_s->pos[1], floor + 0.5f * MeteringSectorSize));
+        from.setOrigin(btVector3(ch_s->position[0], ch_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->pos[0], next_s->pos[1], floor + 0.5f * MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
@@ -2198,7 +2198,7 @@ void Character::frameImpl(btScalar time, int16_t frame, animation::AnimUpdate st
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 
-    m_currentSpeed = static_cast<btScalar>( (af->speed_x + frame * af->accel_x) / (1<<16) ); //Decompiled from TOMB5.EXE
+    m_currentSpeed = static_cast<btScalar>( (af->speed_x + frame * af->accel_x) ) / (1<<16); //Decompiled from TOMB5.EXE
 
     m_bf.animations.current_frame = frame;
 
@@ -2408,7 +2408,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::HideToReady:
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2462,7 +2462,7 @@ void Character::doWeaponFrame(btScalar time)
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
@@ -2481,7 +2481,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::IdleToFire:
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2517,7 +2517,7 @@ void Character::doWeaponFrame(btScalar time)
                         // inc time, loop;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                        dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2553,7 +2553,7 @@ void Character::doWeaponFrame(btScalar time)
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     if(ss_anim->current_frame < t - 1)
                     {
@@ -2589,7 +2589,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::HideToReady:
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2643,7 +2643,7 @@ void Character::doWeaponFrame(btScalar time)
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
@@ -2662,7 +2662,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::IdleToFire:
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2698,7 +2698,7 @@ void Character::doWeaponFrame(btScalar time)
                         // inc time, loop;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                        dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
@@ -2735,7 +2735,7 @@ void Character::doWeaponFrame(btScalar time)
                     t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                     ss_anim->frame_time += time;
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
+                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)

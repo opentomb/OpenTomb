@@ -96,9 +96,9 @@ namespace io
             SDL_RWseek(m_rwOps, delta, RW_SEEK_CUR);
         }
 
-        void seek(Sint64 pos)
+        void seek(Sint64 position)
         {
-            SDL_RWseek(m_rwOps, pos, RW_SEEK_SET);
+            SDL_RWseek(m_rwOps, position, RW_SEEK_SET);
         }
 
         template<typename T>

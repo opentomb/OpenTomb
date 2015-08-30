@@ -307,7 +307,7 @@ enum class LightType : uint8_t
 
 struct Light
 {
-    Vertex pos;           // world coords
+    Vertex position;           // world coords
     ByteColor color;         // three bytes rgb values
     float intensity;            // Calculated intensity
     uint16_t intensity1;        // Light intensity
@@ -349,7 +349,7 @@ struct Light
     static Light readTr1(io::SDLReader& reader)
     {
         Light light;
-        light.pos = Vertex::read32(reader);
+        light.position = Vertex::read32(reader);
         // read and make consistent
         light.intensity1 = (8191 - reader.readU16()) << 2;
         light.fade1 = reader.readU32();
@@ -379,7 +379,7 @@ struct Light
     static Light readTr2(io::SDLReader& reader)
     {
         Light light;
-        light.pos = Vertex::read32(reader);
+        light.position = Vertex::read32(reader);
         light.intensity1 = reader.readU16();
         light.intensity2 = reader.readU16();
         light.fade1 = reader.readU32();
@@ -406,7 +406,7 @@ struct Light
     static Light readTr3(io::SDLReader& reader)
     {
         Light light;
-        light.pos = Vertex::read32(reader);
+        light.position = Vertex::read32(reader);
         light.color.r = reader.readU8();
         light.color.g = reader.readU8();
         light.color.b = reader.readU8();
@@ -426,7 +426,7 @@ struct Light
     static Light readTr4(io::SDLReader& reader)
     {
         Light light;
-        light.pos = Vertex::read32(reader);
+        light.position = Vertex::read32(reader);
         light.color = ByteColor::readTr1(reader);
         light.light_type = reader.readU8();
         light.unknown = reader.readU8();
@@ -444,7 +444,7 @@ struct Light
     static Light readTr5(io::SDLReader& reader)
     {
         Light light;
-        light.pos = Vertex::readF(reader);
+        light.position = Vertex::readF(reader);
         //read_tr_colour(src, light.color);
         light.color.r = static_cast<uint8_t>(reader.readF() * 255);    // r
         light.color.g = static_cast<uint8_t>(reader.readF() * 255);    // g
@@ -669,7 +669,7 @@ struct RoomVertex
 
 struct RoomStaticMesh
 {
-    Vertex pos;       // world coords
+    Vertex position;       // world coords
     float rotation;         // high two bits (0xC000) indicate steps of
     // 90 degrees (e.g. (Rotation >> 14) * 90)
     int16_t intensity1;     // Constant lighting; -1 means use mesh lighting
@@ -686,7 +686,7 @@ struct RoomStaticMesh
     static RoomStaticMesh readTr1(io::SDLReader& reader)
     {
         RoomStaticMesh room_static_mesh;
-        room_static_mesh.pos = Vertex::read32(reader);
+        room_static_mesh.position = Vertex::read32(reader);
         room_static_mesh.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         room_static_mesh.intensity1 = reader.readI16();
         room_static_mesh.object_id = reader.readU16();
@@ -704,7 +704,7 @@ struct RoomStaticMesh
     static RoomStaticMesh readTr2(io::SDLReader& reader)
     {
         RoomStaticMesh room_static_mesh;
-        room_static_mesh.pos = Vertex::read32(reader);
+        room_static_mesh.position = Vertex::read32(reader);
         room_static_mesh.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         room_static_mesh.intensity1 = reader.readI16();
         room_static_mesh.intensity2 = reader.readI16();
@@ -723,7 +723,7 @@ struct RoomStaticMesh
     static RoomStaticMesh readTr3(io::SDLReader& reader)
     {
         RoomStaticMesh room_static_mesh;
-        room_static_mesh.pos = Vertex::read32(reader);
+        room_static_mesh.position = Vertex::read32(reader);
         room_static_mesh.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         room_static_mesh.intensity1 = reader.readI16();
         room_static_mesh.intensity2 = reader.readI16();
@@ -741,7 +741,7 @@ struct RoomStaticMesh
     static RoomStaticMesh readTr4(io::SDLReader& reader)
     {
         RoomStaticMesh room_static_mesh;
-        room_static_mesh.pos = Vertex::read32(reader);
+        room_static_mesh.position = Vertex::read32(reader);
         room_static_mesh.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         room_static_mesh.intensity1 = reader.readI16();
         room_static_mesh.intensity2 = reader.readI16();
@@ -837,7 +837,7 @@ struct Room
 
         auto num_data_words = reader.readU32();
 
-        auto pos = reader.tell();
+        auto position = reader.tell();
 
         room.vertices.resize(reader.readU16());
         for(size_t i = 0; i < room.vertices.size(); i++)
@@ -856,7 +856,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(pos + (num_data_words * 2));
+        reader.seek(position + (num_data_words * 2));
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -908,7 +908,7 @@ struct Room
 
         auto num_data_words = reader.readU32();
 
-        auto pos = reader.tell();
+        auto position = reader.tell();
 
         room.vertices.resize(reader.readU16());
         for(size_t i = 0; i < room.vertices.size(); i++)
@@ -927,7 +927,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(pos + (num_data_words * 2));
+        reader.seek(position + (num_data_words * 2));
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -986,7 +986,7 @@ struct Room
 
         auto num_data_words = reader.readU32();
 
-        auto pos = reader.tell();
+        auto position = reader.tell();
 
         room.vertices.resize(reader.readU16());
         for(size_t i = 0; i < room.vertices.size(); i++)
@@ -1005,7 +1005,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(pos + (num_data_words * 2));
+        reader.seek(position + (num_data_words * 2));
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -1068,7 +1068,7 @@ struct Room
 
         auto num_data_words = reader.readU32();
 
-        auto pos = reader.tell();
+        auto position = reader.tell();
 
         room.vertices.resize(reader.readU16());
         for(size_t i = 0; i < room.vertices.size(); i++)
@@ -1087,7 +1087,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(pos + (num_data_words * 2));
+        reader.seek(position + (num_data_words * 2));
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -1138,8 +1138,8 @@ struct Room
             std::cerr << "read_tr5_room: 'XELA' not found\n";
 
         const auto room_data_size = reader.readU32();
-        const auto pos = reader.tell();
-        const auto endPos = pos + room_data_size;
+        const auto position = reader.tell();
+        const auto endPos = position + room_data_size;
 
         Room room;
         room.intensity1 = 32767;
@@ -1338,7 +1338,7 @@ struct Room
         for(size_t i = 0; i < room.lights.size(); i++)
             room.lights[i] = Light::readTr5(reader);
 
-        reader.seek(pos + 208 + sector_data_offset);
+        reader.seek(position + 208 + sector_data_offset);
 
         room.sector_list.resize(room.num_zsectors * room.num_xsectors);
         for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
@@ -1348,17 +1348,17 @@ struct Room
         for(size_t i = 0; i < room.portals.size(); i++)
             room.portals[i] = Portal::read(reader);
 
-        reader.seek(pos + 208 + static_meshes_offset);
+        reader.seek(position + 208 + static_meshes_offset);
 
         for(size_t i = 0; i < room.static_meshes.size(); i++)
             room.static_meshes[i] = RoomStaticMesh::readTr4(reader);
 
-        reader.seek(pos + 208 + layer_offset);
+        reader.seek(position + 208 + layer_offset);
 
         for(size_t i = 0; i < room.layers.size(); i++)
             room.layers[i] = Layer::read(reader);
 
-        reader.seek(pos + 208 + poly_offset);
+        reader.seek(position + 208 + poly_offset);
 
         {
             uint32_t vertex_index = 0;
@@ -1390,7 +1390,7 @@ struct Room
             }
         }
 
-        reader.seek(pos + 208 + vertices_offset);
+        reader.seek(position + 208 + vertices_offset);
 
         {
             uint32_t vertex_index = 0;
@@ -1641,7 +1641,7 @@ struct Item
 {
     int16_t object_id;     // Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)
     int16_t room;          // which room contains this item
-    Vertex pos;      // world coords
+    Vertex position;      // world coords
     float rotation;        // ((0xc000 >> 14) * 90) degrees
     int16_t intensity1;    // (constant lighting; -1 means use mesh lighting)
     int16_t intensity2;    // Like Intensity1, and almost always with the same value. [absent from TR1 data files]
@@ -1666,7 +1666,7 @@ struct Item
         Item item;
         item.object_id = reader.readI16();
         item.room = reader.readI16();
-        item.pos = Vertex::read32(reader);
+        item.position = Vertex::read32(reader);
         item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         item.intensity1 = reader.readU16();
         if(item.intensity1 >= 0)
@@ -1682,7 +1682,7 @@ struct Item
         Item item;
         item.object_id = reader.readI16();
         item.room = reader.readI16();
-        item.pos = Vertex::read32(reader);
+        item.position = Vertex::read32(reader);
         item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         item.intensity1 = reader.readU16();
         if(item.intensity1 >= 0)
@@ -1700,7 +1700,7 @@ struct Item
         Item item;
         item.object_id = reader.readI16();
         item.room = reader.readI16();
-        item.pos = Vertex::read32(reader);
+        item.position = Vertex::read32(reader);
         item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         item.intensity1 = reader.readU16();
         item.intensity2 = reader.readU16();
@@ -1714,7 +1714,7 @@ struct Item
         Item item;
         item.object_id = reader.readI16();
         item.room = reader.readI16();
-        item.pos = Vertex::read32(reader);
+        item.position = Vertex::read32(reader);
         item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
         item.intensity1 = reader.readU16();
         item.intensity2 = item.intensity1;

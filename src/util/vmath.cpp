@@ -5,16 +5,16 @@
 namespace util
 {
 
-void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
+void vec4_SetTRRotations(btQuaternion& v, const btVector3& rotation)
 {
     btQuaternion qZ;
-    qZ.setRotation({ 0,0,1 }, rot[2] * RadPerDeg);
+    qZ.setRotation({ 0,0,1 }, rotation[2] * RadPerDeg);
 
     btQuaternion qX;
-    qX.setRotation({ 1,0,0 }, rot[0] * RadPerDeg);
+    qX.setRotation({ 1,0,0 }, rotation[0] * RadPerDeg);
 
     btQuaternion qY;
-    qY.setRotation({ 0,1,0 }, rot[1] * RadPerDeg);
+    qY.setRotation({ 0,1,0 }, rotation[1] * RadPerDeg);
 
     v = qZ * qX * qY;
 }

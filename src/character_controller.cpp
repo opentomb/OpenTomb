@@ -38,8 +38,8 @@ int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::share
 
     engine::BtEngineClosestRayResultCallback cb(container);
     btVector3 from, to;
-    to[0] = from[0] = rs->pos[0];
-    to[1] = from[1] = rs->pos[1];
+    to[0] = from[0] = rs->position[0];
+    to[1] = from[1] = rs->position[1];
     from[2] = floor + world::MeteringSectorSize * 0.5f;
     to[2] = floor - world::MeteringSectorSize * 0.5f;
     engine::bt_engine_dynamicsWorld->rayTest(from, to, cb);

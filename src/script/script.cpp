@@ -840,9 +840,9 @@ void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
 
 uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
-    btVector3 pos{ x,y,z }, ang{ ax,ay,az };
+    btVector3 position{ x,y,z }, ang{ ax,ay,az };
 
-    uint32_t id = engine::engine_world.spawnEntity(model_id, room_id, &pos, &ang, ov_id.is<lua::Integer>() ? ov_id : -1);
+    uint32_t id = engine::engine_world.spawnEntity(model_id, room_id, &position, &ang, ov_id.is<lua::Integer>() ? ov_id : -1);
     if(id == 0xFFFFFFFF)
     {
         return -1;
@@ -1046,12 +1046,12 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
         return 0;
     }
 
-    auto pos = ent->m_transform.getOrigin();
+    auto position = ent->m_transform.getOrigin();
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        pos += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
+        position += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
 
-    world::RoomSector* curr_sector = ent->m_self->room->getSectorRaw(pos);
+    world::RoomSector* curr_sector = ent->m_self->room->getSectorRaw(position);
     curr_sector = curr_sector->checkPortalPointer();
     btVector3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
         ? curr_sector->getCeilingPoint()
@@ -1524,9 +1524,9 @@ bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua:
     else
         offset = e2->m_activationOffset;
 
-    auto pos = e2->m_transform * offset;
+    auto position = e2->m_transform * offset;
     if((e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1)) > 0.75) &&
-       ((e1->m_transform.getOrigin() - pos).length2() < r))
+       ((e1->m_transform.getOrigin() - position).length2() < r))
     {
         return true;
     }

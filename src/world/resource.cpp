@@ -299,7 +299,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
+                            world::RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -316,7 +316,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
+                            world::RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -348,7 +348,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
+                            world::RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -365,7 +365,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
+                            world::RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -486,7 +486,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
+                            world::RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -503,7 +503,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
+                            world::RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -535,7 +535,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
+                            world::RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -552,7 +552,7 @@ std::vector<world::SectorTween> Res_Sector_GenTweens(std::shared_ptr<world::Room
                         }
                         if(valid == 0)
                         {
-                            world::RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
+                            world::RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
                             if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -1418,7 +1418,7 @@ void GenerateAnimCommandsTransform(world::core::SkeletalModel* model)
 
 bool TR_IsSectorsIn2SideOfPortal(world::RoomSector* s1, world::RoomSector* s2, const world::Portal& p)
 {
-    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (std::abs(p.normal.normal[1]) > 0.99))
+    if((s1->position[0] == s2->position[0]) && (s1->position[1] != s2->position[1]) && (std::abs(p.normal.normal[1]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_x = min_x = p.vertices.front().x();
@@ -1433,23 +1433,23 @@ bool TR_IsSectorsIn2SideOfPortal(world::RoomSector* s1, world::RoomSector* s2, c
                 min_x = v.x();
             }
         }
-        if(s1->pos[1] > s2->pos[1])
+        if(s1->position[1] > s2->position[1])
         {
-            min_y = s2->pos[1];
-            max_y = s1->pos[1];
+            min_y = s2->position[1];
+            max_y = s1->position[1];
         }
         else
         {
-            min_y = s1->pos[1];
-            max_y = s2->pos[1];
+            min_y = s1->position[1];
+            max_y = s2->position[1];
         }
 
-        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p.centre[1] < max_y) && (p.centre[1] > min_y))
+        if((s1->position[0] < max_x) && (s1->position[0] > min_x) && (p.centre[1] < max_y) && (p.centre[1] > min_y))
         {
             return true;
         }
     }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (std::abs(p.normal.normal[0]) > 0.99))
+    else if((s1->position[0] != s2->position[0]) && (s1->position[1] == s2->position[1]) && (std::abs(p.normal.normal[0]) > 0.99))
     {
         btScalar min_x, max_x, min_y, max_y;
         max_y = min_y = p.vertices.front().y();
@@ -1464,18 +1464,18 @@ bool TR_IsSectorsIn2SideOfPortal(world::RoomSector* s1, world::RoomSector* s2, c
                 min_y = v.y();
             }
         }
-        if(s1->pos[0] > s2->pos[0])
+        if(s1->position[0] > s2->position[0])
         {
-            min_x = s2->pos[0];
-            max_x = s1->pos[0];
+            min_x = s2->position[0];
+            max_x = s1->position[0];
         }
         else
         {
-            min_x = s1->pos[0];
-            max_x = s2->pos[0];
+            min_x = s1->position[0];
+            max_x = s2->position[0];
         }
 
-        if((p.centre[0] < max_x) && (p.centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
+        if((p.centre[0] < max_x) && (p.centre[0] > min_x) && (s1->position[1] < max_y) && (s1->position[1] > min_y))
         {
             return true;
         }
@@ -1504,13 +1504,13 @@ void TR_Sector_Calculate(world::World *world, const std::unique_ptr<loader::Leve
         sector->sector_below = nullptr;
         if(rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_below = world->rooms[rp]->getSectorRaw(sector->pos);
+            sector->sector_below = world->rooms[rp]->getSectorRaw(sector->position);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = nullptr;
         if(rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_above = world->rooms[rp]->getSectorRaw(sector->pos);
+            sector->sector_above = world->rooms[rp]->getSectorRaw(sector->position);
         }
 
         world::RoomSector* near_sector = nullptr;
@@ -1540,8 +1540,8 @@ void TR_Sector_Calculate(world::World *world, const std::unique_ptr<loader::Leve
             {
                 if((p.normal.normal[2] < 0.01) && ((p.normal.normal[2] > -0.01)))
                 {
-                    world::RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
-                    world::RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
+                    world::RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->position) : nullptr;
+                    world::RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->position);
 
                     if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
@@ -1817,12 +1817,12 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
-        r_static->pos[0] = tr_room->static_meshes[i].pos.x;
-        r_static->pos[1] = -tr_room->static_meshes[i].pos.z;
-        r_static->pos[2] = tr_room->static_meshes[i].pos.y;
-        r_static->rot[0] = tr_room->static_meshes[i].rotation;
-        r_static->rot[1] = 0.0;
-        r_static->rot[2] = 0.0;
+        r_static->position[0] = tr_room->static_meshes[i].position.x;
+        r_static->position[1] = -tr_room->static_meshes[i].position.z;
+        r_static->position[2] = tr_room->static_meshes[i].position.y;
+        r_static->rotation[0] = tr_room->static_meshes[i].rotation;
+        r_static->rotation[1] = 0.0;
+        r_static->rotation[2] = 0.0;
         r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
@@ -1846,8 +1846,8 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::
         r_static->obb.transform = &room->static_mesh[i]->transform;
         r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
         r_static->transform.setIdentity();
-        util::Mat4_Translate(r_static->transform, r_static->pos);
-        util::Mat4_RotateZ(r_static->transform, r_static->rot[0]);
+        util::Mat4_Translate(r_static->transform, r_static->position);
+        util::Mat4_RotateZ(r_static->transform, r_static->rotation[0]);
         r_static->was_rendered = 0;
         r_static->obb.rebuild(r_static->visibleBoundingBox);
         r_static->obb.doTransform();
@@ -1951,9 +1951,9 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
-        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
-        sector->pos[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
+        sector->position[0] = room->transform.getOrigin()[0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
+        sector->position[1] = room->transform.getOrigin()[1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
+        sector->position[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
 
@@ -2069,10 +2069,10 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<world::Room>& room, world::
     {
         room->lights[i].light_type = tr_room->lights[i].getLightType();
 
-        room->lights[i].pos[0] = tr_room->lights[i].pos.x;
-        room->lights[i].pos[1] = -tr_room->lights[i].pos.z;
-        room->lights[i].pos[2] = tr_room->lights[i].pos.y;
-        room->lights[i].pos[3] = 1.0f;
+        room->lights[i].position[0] = tr_room->lights[i].position.x;
+        room->lights[i].position[1] = -tr_room->lights[i].position.z;
+        room->lights[i].position[2] = tr_room->lights[i].position.y;
+        room->lights[i].position[3] = 1.0f;
 
         if(room->lights[i].light_type == loader::LightType::Shadow)
         {
@@ -3100,7 +3100,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
 
         bone_frame->bone_tags.resize(model->mesh_count);
 
-        bone_frame->pos.setZero();
+        bone_frame->position.setZero();
         bone_frame->move.setZero();
         bone_frame->v_Horizontal = 0.0;
         bone_frame->v_Vertical = 0.0;
@@ -3221,7 +3221,7 @@ void TR_GenSkeletalModel(world::World *world, size_t model_num, world::core::Ske
         for(uint16_t j = 0; j < anim->frames.size(); j++, bone_frame++, frame_offset += frame_step)
         {
             bone_frame->bone_tags.resize(model->mesh_count);
-            bone_frame->pos.setZero();
+            bone_frame->position.setZero();
             bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
@@ -3485,9 +3485,9 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
         bone_frame->boundingBox.max[1] = (short int)frame[5];   // y_max
         bone_frame->boundingBox.max[2] = -(short int)frame[2];  // z_max
 
-        bone_frame->pos[0] = (short int)frame[6];
-        bone_frame->pos[1] = (short int)frame[8];
-        bone_frame->pos[2] = -(short int)frame[7];
+        bone_frame->position[0] = (short int)frame[6];
+        bone_frame->position[1] = (short int)frame[8];
+        bone_frame->position[2] = -(short int)frame[7];
     }
     else
     {
@@ -3499,9 +3499,9 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
         bone_frame->boundingBox.max[1] = 0.0;
         bone_frame->boundingBox.max[2] = 0.0;
 
-        bone_frame->pos[0] = 0.0;
-        bone_frame->pos[1] = 0.0;
-        bone_frame->pos[2] = 0.0;
+        bone_frame->position[0] = 0.0;
+        bone_frame->position[1] = 0.0;
+        bone_frame->position[2] = 0.0;
     }
 
     bone_frame->centre = (bone_frame->boundingBox.min + bone_frame->boundingBox.max) / 2.0f;
@@ -3528,9 +3528,9 @@ void TR_GenEntities(world::World *world, const std::unique_ptr<loader::Level>& t
     {
         loader::Item *tr_item = &tr->m_items[i];
         std::shared_ptr<world::Entity> entity = (tr_item->object_id == 0) ? std::make_shared<Character>(i) : std::make_shared<world::Entity>(i);
-        entity->m_transform.getOrigin()[0] = tr_item->pos.x;
-        entity->m_transform.getOrigin()[1] = -tr_item->pos.z;
-        entity->m_transform.getOrigin()[2] = tr_item->pos.y;
+        entity->m_transform.getOrigin()[0] = tr_item->position.x;
+        entity->m_transform.getOrigin()[1] = -tr_item->position.z;
+        entity->m_transform.getOrigin()[2] = tr_item->position.y;
         entity->m_angles[0] = tr_item->rotation;
         entity->m_angles[1] = 0;
         entity->m_angles[2] = 0;

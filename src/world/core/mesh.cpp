@@ -168,11 +168,11 @@ void SkeletalModel::interpolateFrames()
              */
             animation::BoneFrame* bf = new_bone_frames.data();
             bf->bone_tags.resize(mesh_count);
-            bf->pos.setZero();
+            bf->position.setZero();
             bf->move.setZero();
             bf->command = 0x00;
             bf->centre = anim->frames[0].centre;
-            bf->pos = anim->frames[0].pos;
+            bf->position = anim->frames[0].position;
             bf->boundingBox = anim->frames[0].boundingBox;
             for(uint16_t k = 0; k < mesh_count; k++)
             {
@@ -185,7 +185,7 @@ void SkeletalModel::interpolateFrames()
             {
                 for(uint16_t l = 1; l <= anim->original_frame_rate; l++)
                 {
-                    bf->pos.setZero();
+                    bf->position.setZero();
                     bf->move.setZero();
                     bf->command = 0x00;
                     btScalar lerp = static_cast<btScalar>(l) / anim->original_frame_rate;
@@ -195,7 +195,7 @@ void SkeletalModel::interpolateFrames()
 
                     bf->centre = t * anim->frames[j - 1].centre + lerp * anim->frames[j].centre;
 
-                    bf->pos = t * anim->frames[j - 1].pos + lerp * anim->frames[j].pos;
+                    bf->position = t * anim->frames[j - 1].position + lerp * anim->frames[j].position;
 
                     bf->boundingBox.max = t * anim->frames[j - 1].boundingBox.max + lerp * anim->frames[j].boundingBox.max;
                     bf->boundingBox.min = t * anim->frames[j - 1].boundingBox.min + lerp * anim->frames[j].boundingBox.min;

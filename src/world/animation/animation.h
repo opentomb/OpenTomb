@@ -110,7 +110,7 @@ struct BoneFrame
 {
     uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
     std::vector<BoneTag> bone_tags;                                              // bones data
-    btVector3 pos;                                                 // position (base offset)
+    btVector3 position;                                                 // position (base offset)
     core::BoundingBox boundingBox;
     btVector3 centre;                                              // bounding box centre
     btVector3 move;                                                // move command data
@@ -217,7 +217,7 @@ struct SSBoneTag
 struct SSBoneFrame
 {
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
-    btVector3 pos;                                         // position (base offset)
+    btVector3 position;                                         // position (base offset)
     core::BoundingBox boundingBox;
     btVector3 centre;                                      // bounding box centre
 
