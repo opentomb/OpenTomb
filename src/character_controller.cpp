@@ -14,6 +14,7 @@
 #include "world/resource.h"
 #include "script/script.h"
 #include "util/vmath.h"
+#include "world/room.h"
 #include "world/world.h"
 
 /**

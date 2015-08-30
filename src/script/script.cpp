@@ -28,6 +28,7 @@
 #include "world/entity.h"
 #include "world/hair.h"
 #include "world/ragdoll.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/world.h"
 

@@ -5,17 +5,18 @@
 
 #include <SDL2/SDL.h>
 
-#include "gui/console.h"
-#include "world/camera.h"
 #include "engine/engine.h"
-#include "world/entity.h"
-#include "util/helpers.h"
+#include "engine/system.h"
+#include "gui/console.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
-#include "engine/system.h"
+#include "util/helpers.h"
 #include "util/vmath.h"
+#include "world/camera.h"
 #include "world/character.h"
+#include "world/entity.h"
+#include "world/room.h"
 
 using gui::Console;
 

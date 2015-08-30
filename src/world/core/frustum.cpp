@@ -5,13 +5,14 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "world/camera.h"
 #include "engine/engine.h"
 #include "orientedboundingbox.h"
 #include "polygon.h"
-#include "world/portal.h"
 #include "render/render.h"
 #include "util/vmath.h"
+#include "world/camera.h"
+#include "world/portal.h"
+#include "world/room.h"
 #include "world/world.h"
 
 namespace world

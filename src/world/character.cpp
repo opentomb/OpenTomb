@@ -6,6 +6,7 @@
 #include "script/script.h"
 #include "inventory.h"
 #include "world/core/basemesh.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 
 namespace engine

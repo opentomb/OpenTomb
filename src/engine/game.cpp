@@ -6,28 +6,27 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include <lua.hpp>
-
 #include "LuaState.h"
 
-#include "util/vmath.h"
-#include "world/core/polygon.h"
-#include "engine.h"
-#include "controls.h"
-#include "world/world.h"
-#include "world/core/mesh.h"
-#include "world/entity.h"
-#include "world/camera.h"
-#include "render/render.h"
-#include "system.h"
-#include "script/script.h"
-#include "gui/console.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
+#include "controls.h"
+#include "engine.h"
 #include "gameflow.h"
+#include "gui/console.h"
 #include "gui/gui.h"
 #include "inventory.h"
+#include "render/render.h"
+#include "script/script.h"
+#include "system.h"
+#include "util/vmath.h"
+#include "world/camera.h"
 #include "world/character.h"
+#include "world/core/mesh.h"
+#include "world/core/polygon.h"
+#include "world/entity.h"
+#include "world/room.h"
+#include "world/world.h"
 
 extern btScalar time_scale;
 extern script::MainEngine engine_lua;

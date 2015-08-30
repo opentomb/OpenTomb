@@ -22,6 +22,7 @@
 #include "world.h"
 #include "world/core/mesh.h"
 #include "world/core/orientedboundingbox.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 
 #include "core/basemesh.h"

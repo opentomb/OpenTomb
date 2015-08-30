@@ -11,6 +11,7 @@
 #include "world/character.h"
 #include "world/entity.h"
 #include "world/resource.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/world.h"
 

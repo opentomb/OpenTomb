@@ -4,11 +4,12 @@
 
 #include <LinearMath/btScalar.h>
 
-#include "world/entity.h"
-#include "world/core/polygon.h"
-#include "util/vmath.h"
 #include "engine/engine.h"
 #include "frustum.h"
+#include "util/vmath.h"
+#include "world/core/polygon.h"
+#include "world/entity.h"
+#include "world/room.h"
 
 namespace world
 {

@@ -44,6 +44,7 @@ list(APPEND PRJ_SRC
     world/ragdoll.cpp
     world/character.cpp
     world/skeletalmodel.cpp
+    world/room.cpp
 
     world/core/mesh.cpp
     world/core/orientedboundingbox.cpp
@@ -101,6 +102,7 @@ list(APPEND PRJ_HDR
     world/character.h
     world/staticmesh.h
     world/skeletalmodel.h
+    world/room.h
 
     world/core/mesh.h
     world/core/orientedboundingbox.h

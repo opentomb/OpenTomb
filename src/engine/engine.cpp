@@ -50,6 +50,7 @@
 #include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/resource.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
@@ -1311,6 +1312,69 @@ int engine_lua_printf(const char *fmt, ...)
     Console::instance().addText(buf, gui::FontStyle::ConsoleNotify);
 
     return ret;
+}
+
+btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+{
+    const EngineContainer* c1 = (const EngineContainer*)rayResult.m_collisionObject->getUserPointer();
+
+    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+    {
+        return 1.0;
+    }
+
+    const world::Room* r0 = m_container ? m_container->room : nullptr;
+    const world::Room* r1 = c1 ? c1->room : nullptr;
+
+    if(!r0 || !r1)
+    {
+        return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+    }
+
+    if(r0 && r1)
+    {
+        if(r0->isInNearRoomsList(*r1))
+        {
+            return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+        }
+        else
+        {
+            return 1.0;
+        }
+    }
+
+    return 1.0;
+}
+
+btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
+{
+    const world::Room* r0 = m_container ? m_container->room : nullptr;
+    const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
+    const world::Room* r1 = c1 ? c1->room : nullptr;
+
+    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+    {
+        return 1.0;
+    }
+
+    if(!r0 || !r1)
+    {
+        return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
+    }
+
+    if(r0 && r1)
+    {
+        if(r0->isInNearRoomsList(*r1))
+        {
+            return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
+        }
+        else
+        {
+            return 1.0;
+        }
+    }
+
+    return 1.0;
 }
 
 } // namespace engine

@@ -23,6 +23,7 @@
 #include "world/hair.h"
 #include "world/portal.h"
 #include "world/resource.h"
+#include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
