@@ -4,6 +4,7 @@
 #include "resource.h"
 #include "engine/anim_state_control.h"
 #include "script/script.h"
+#include "inventory.h"
 
 namespace engine
 {
@@ -55,7 +56,7 @@ int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items coun
 
     count = (count < 0) ? item->count : count;
 
-    for(gui::InventoryNode& i : m_inventory)
+    for(InventoryNode& i : m_inventory)
     {
         if(i.id == item_id)
         {
@@ -64,7 +65,7 @@ int32_t Character::addItem(uint32_t item_id, int32_t count)// returns items coun
         }
     }
 
-    gui::InventoryNode i;
+    InventoryNode i;
     i.id = item_id;
     i.count = count;
     m_inventory.push_back(i);

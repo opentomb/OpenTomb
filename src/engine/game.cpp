@@ -283,7 +283,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
         fprintf(*f, "\nremoveAllItems(%d);", ent->id());
-        for(const gui::InventoryNode& i : ch->m_inventory)
+        for(const InventoryNode& i : ch->m_inventory)
         {
             fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
         }
@@ -786,22 +786,22 @@ void Game_Frame(btScalar time)
 
     ///@FIXME: I have no idea what's happening here! - Lwmte
 
-    if(!Console::instance().isVisible() && control_states.gui_inventory && gui::main_inventory_manager)
+    if(!Console::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
     {
         if((is_character) &&
-           (gui::main_inventory_manager->getCurrentState() == gui::InventoryManager::InventoryState::Disabled))
+           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
         {
-            gui::main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Open);
+            main_inventory_manager->setInventory(&engine_world.character->m_inventory);
+            main_inventory_manager->send(InventoryManager::InventoryState::Open);
         }
-        if(gui::main_inventory_manager->getCurrentState() == gui::InventoryManager::InventoryState::Idle)
+        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            gui::main_inventory_manager->send(gui::InventoryManager::InventoryState::Closed);
+            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
         }
     }
 
     // If console or inventory is active, only thing to update is audio.
-    if(gui::Console::instance().isVisible() || gui::main_inventory_manager->getCurrentState() != gui::InventoryManager::InventoryState::Disabled)
+    if(gui::Console::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {

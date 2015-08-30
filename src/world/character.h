@@ -11,10 +11,7 @@ class BtEngineClosestRayResultCallback;
 class BtEngineClosestConvexResultCallback;
 }
 
-namespace gui
-{
 struct InventoryNode;
-}
 
 namespace world
 {
@@ -201,7 +198,7 @@ struct Character : public Entity
     CharacterCommand   m_command;                    // character control commands
     CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
 
-    std::list<gui::InventoryNode> m_inventory;
+    std::list<InventoryNode> m_inventory;
     CharacterParam     m_parameters{};
     CharacterStats     m_statistics;
 
