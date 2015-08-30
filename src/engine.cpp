@@ -754,6 +754,10 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
     {
         engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
         engine_world.character->m_lerp_valid = true;
+        engine_world.character->m_bf.animations.lerp = 1.0;
+        engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf, 0);
+        engine_world.character->updateRigidBody(false);
+        engine_world.character->ghostUpdate();
     }
     for(auto entityPair : engine_world.entity_tree)
     {
@@ -762,6 +766,10 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
         {
             entity->m_lerp_curr_transform = entity->m_transform;
             entity->m_lerp_valid = true;
+            entity->m_bf.animations.lerp = 1.0;
+            entity->updateCurrentBoneFrame(&entity->m_bf, 0);
+            entity->updateRigidBody(false);
+            entity->ghostUpdate();
         }
     }
 

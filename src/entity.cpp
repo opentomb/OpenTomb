@@ -812,91 +812,106 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(struct SSAnimation *ss_anim, int /*changing*/)
+
+
+void Entity::doAnimCommand(const AnimCommand& command)
 {
-    if(engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
+//    printf("*** CMD: %d\n",command.cmdId);
+    switch(command.cmdId)
     {
-        return;  // If no anim commands
-    }
-
-    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
-    if(af->num_anim_commands > 0 && af->num_anim_commands <= 255)
-    {
-        assert(af->anim_command < engine_world.anim_commands.size());
-        int16_t *pointer = &engine_world.anim_commands[af->anim_command];
-
-        for(uint32_t i = 0; i < af->num_anim_commands; i++)
-        {
-            assert(pointer < &engine_world.anim_commands.back());
-            const auto command = *pointer;
-            ++pointer;
-            switch(command)
+        case TR_ANIMCOMMAND_SETPOSITION:    // (float tr_x, float tr_y, float tr_z)
             {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 3; // Parse through 3 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 2; // Parse through 2 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    ///@FIXME: Behaviour is yet to be discovered.
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == static_cast<int>(af->frames.size()) - 1)
-                    {
-                        kill();
-                    }
-
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    if(ss_anim->current_frame == pointer[0])
-                    {
-                        int16_t sound_index = pointer[1] & 0x3FFF;
-
-                        // Quick workaround for TR3 quicksand.
-                        if((getSubstanceState() == Substance::QuicksandConsumed) ||
-                           (getSubstanceState() == Substance::QuicksandShallow))
-                        {
-                            sound_index = 18;
-                        }
-
-                        if(pointer[1] & TR_ANIMCOMMAND_CONDITION_WATER)
-                        {
-                            if(getSubstanceState() == Substance::WaterShallow)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                        else if(pointer[1] & TR_ANIMCOMMAND_CONDITION_LAND)
-                        {
-                            if(getSubstanceState() != Substance::WaterShallow)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                        else
-                        {
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                    }
-                    pointer += 2;
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    if(ss_anim->current_frame == pointer[0])
-                    {
-                        uint16_t effect_id = pointer[1] & 0x3FFF;
-                        if(effect_id > 0)
-                            engine_lua.execEffect(effect_id, m_id);
-                    }
-                    pointer += 2;
-                    break;
+                // x=x, y=z, z=-y
+                const btScalar x = btScalar(command.param[0]);
+                const btScalar y = btScalar(command.param[2]);
+                const btScalar z = -btScalar(command.param[1]);
+                m_transform.getOrigin() += btVector3(x, y, z);
             }
-        }
+            break;
+
+        case TR_ANIMCOMMAND_SETVELOCITY:    // (float vertical, float horizontal)
+            {
+                const btScalar vert  = -btScalar(command.param[0]);
+                const btScalar horiz = btScalar(command.param[1]);
+                jump(vert, horiz);
+            }
+            break;
+
+        case TR_ANIMCOMMAND_EMPTYHANDS:     // ()
+            // This command is used only for Lara.
+            // TODO: reset interaction-blocking:
+            // In Tr4, this resets an internal flag which is used to disable
+            // interactions (pushing buttons, turning valves etc.) while Lara is busy with
+            // i.e. holding a torch, or during the throw-flare-away animation
+            break;
+
+        case TR_ANIMCOMMAND_KILL:           // ()
+            // This command is used only for non-Lara items.
+            kill();
+            break;
+
+        case TR_ANIMCOMMAND_PLAYSOUND:      // (int sndParam)
+            {
+                int16_t sound_index = command.param[0] & 0x3FFF;
+
+                // Quick workaround for TR3 quicksand.
+                if((getSubstanceState() == Substance::QuicksandConsumed) ||
+                   (getSubstanceState() == Substance::QuicksandShallow))
+                {
+                    sound_index = 18;
+                }
+
+                if(command.param[0] & TR_ANIMCOMMAND_CONDITION_WATER)
+                {
+                    if(getSubstanceState() == Substance::WaterShallow)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                }
+                else if(command.param[0] & TR_ANIMCOMMAND_CONDITION_LAND)
+                {
+                    if(getSubstanceState() != Substance::WaterShallow)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                }
+                else
+                {
+                    Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
+                }
+            }
+            break;
+
+        case TR_ANIMCOMMAND_PLAYEFFECT:     // (int flipeffectParam)
+            {
+                uint16_t effect_id = command.param[0] & 0x3FFF;
+                if(effect_id == 0)  // rollflip
+                {
+                    // FIXME: wrapping angles are bad for quat lerp:
+                    m_angles[0] += 180.0;
+
+                    if(m_moveType == MoveType::Underwater)
+                    {
+                        m_angles[1] = -m_angles[1];                         // for underwater case
+                    }
+                    if(m_dirFlag == ENT_MOVE_BACKWARD)
+                    {
+                        m_dirFlag = ENT_MOVE_FORWARD;
+                    }
+                    else if(m_dirFlag == ENT_MOVE_FORWARD)
+                    {
+                        m_dirFlag = ENT_MOVE_BACKWARD;
+                    }
+                    updateTransform();
+                }
+                else
+                {
+                    engine_lua.execEffect(effect_id, m_id);
+                }
+            }
+            break;
+
+        default:
+            // Unknown command
+            break;
     }
+    return;
 }
 
 void Entity::processSector()
@@ -970,7 +985,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
 
     updateCurrentBoneFrame(&m_bf, &m_transform);
-    updateRigidBody(false);
+//    updateRigidBody(false);
 }
 
 struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim)
@@ -1097,28 +1112,6 @@ void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *st
     }
 }
 
-void Entity::doAnimMove(int16_t *anim, int16_t *frame)
-{
-    if(m_bf.animations.model != nullptr)
-    {
-        AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.current_frame];
-//        AnimationFrame* curr_af = &m_bf.animations.model->animations[*anim];
-//        BoneFrame* curr_bf = &curr_af->frames[*frame];
-
-        if(curr_bf->command & ANIM_CMD_JUMP)
-        {
-//            printf("*** CMD JUMP [%d, %d]:   v: %f, h: %f\n",*anim,*frame,-curr_bf->v_Vertical, curr_bf->v_Horizontal);
-            jump(-curr_bf->v_Vertical, curr_bf->v_Horizontal);
-        }
-        if(curr_bf->command & ANIM_CMD_MOVE)
-        {
-//            printf("*** CMD MOVE [%d, %d]:  x: %f, y: %f, z: %f\n",*anim,*frame,curr_bf->move.x(),curr_bf->move.y(),curr_bf->move.z());
-            btVector3 tr = m_transform.getBasis() * curr_bf->move;
-            m_transform.getOrigin() += tr;
-        }
-    }
-}
 
 // ----------------------------------------
 void Entity::slerpBones(btScalar lerp)
@@ -1132,42 +1125,15 @@ void Entity::lerpTransform(btScalar lerp)
 {
     if(m_lerp_valid)
     {
-        btQuaternion q,ql,qc;
-        ql = m_lerp_last_transform.getRotation();
-        qc = m_lerp_curr_transform.getRotation();
-        q = Quat_Slerp(ql, qc, lerp);
+        btQuaternion q,quatLast,quatCurr;
+        quatLast = m_lerp_last_transform.getRotation();
+        quatCurr = m_lerp_curr_transform.getRotation();
+        q = Quat_Slerp(quatLast, quatCurr, lerp);
         m_transform.setRotation(q);
         m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
     }
 }
 
-/** Find a possible state change to \c stateid
- * \param[in]     stclist  statechange list
- * \param[in]     stateid  the desired target state
- * \param[out]    animid   reference to anim id, receives found anim
- * \param[in,out] frameid  reference to frame id, receives found frame
- * \return true if state is found, false otherwise
- */
-bool findStateChange(const std::vector<StateChange> &stclist, uint32_t stateid, int16_t &animid_out, int16_t &frameid_inout)
-{
-    for(const StateChange& stc : stclist)
-    {
-        if(stc.id == stateid)
-        {
-            for(const AnimDispatch& dispatch : stc.anim_dispatch)
-            {
-                if(   frameid_inout >= dispatch.frame_low
-                   && frameid_inout <= dispatch.frame_high)
-                {
-                    animid_out  = dispatch.next_anim;
-                    frameid_inout = dispatch.next_frame;
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
@@ -1188,141 +1154,23 @@ int Entity::frame(btScalar time)
 
     if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
 
-//    ss_anim = &m_bf.animations;
 
-    // ----------------
-    /*
-     * -> nextState is set by action code to control state/animation flow
-     * -> currState is usually only set by statechange handler or end-of-anim (nextanim.state)
-     *              (exceptions exist)
-     *
-     * per Gamestep:
-     * - increase current anim frame
-     * - check state change:
-     *      if  currState != nextState
-     *          and nextState is in statechange-list,
-     *          and currFrame is in the from-to range of this state
-     *          (compared in statechange-list order, first range-match wins)
-     *      then
-     *          currAnim  = statechanges[nextState].anim
-     *          currFrame = statechanges[nextState].frame
-     *          currState = nextState
-     *
-     * - check Anim endframe:
-     *      if  currFrame > anim.lastFrame (anim.frame_end)
-     *      then
-     *          do AnimCmds 1,2,3 (still with unchanged curranim/frame/state)
-     *
-     *          currAnim  = anim.nextAnim
-     *          currFrame = anim.nextFrame
-     *          currState = anims[anim.nextAnim].state
-     *
-     * - do per-frame anim commands: 5,6
-     */
-
-    // increase current frame:
     SSAnimation& anim = m_bf.animations;
     const std::vector<AnimationFrame>& animlist = m_bf.animations.model->animations;
 
-    anim_id  = anim.current_animation;
-    frame_id = anim.current_frame;
+    // advance current frame:
+    anim.stepFrame(time, this);
 
-    anim.lerp_last_animation = anim_id;
-    anim.lerp_last_frame = frame_id;
+    setAnimation(anim.current_animation, anim.current_frame);
 
-//    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
-
-    anim.frame_time += time;
-    if( (anim.frame_time + (1.0/120.0)) < ((frame_id+1) * anim.period))
-//    if( (anim.frame_time) < ((frame_id+1) * anim.period))
-    {
-        return ENTITY_ANIM_NONE;
-    }
-    frame_id++;
-    anim.frame_time = frame_id * anim.period;
-
-    anim.lerp = 0.0;
-    anim.myLerp = 0.0;
-
-    if(anim.next_state != anim.last_state)
-    {
-        if( findStateChange(animlist[anim_id].state_change, anim.next_state, anim_id, frame_id) )
-        {
-//            if(anim.current_animation != 0)
-//                printf("**** STC [%d -> %d]: Anim: %d, Frame: %d -> Anim: %d, Frame: %d\n",anim.last_state, anim.next_state, anim.current_animation, anim.current_frame, anim_id, frame_id);
-            anim.current_animation = anim_id;
-            anim.current_frame = frame_id;
-            anim.last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
-            anim.next_state = anim.last_state;  // t4: different for non-lara
-            // obsolete: ... ?
-            anim.last_animation = anim_id;
-            anim.next_animation = anim_id;
-            anim.next_frame = frame_id;
-        }
-    }
-
-    if(frame_id >= animlist[anim_id].frames.size())
-    {
-        // doAnimCmds 1,2,3/4:
-        doAnimMove(&anim_id, &frame_id);
-
-        frame_id = animlist[anim_id].next_frame;
-        anim_id = animlist[anim_id].next_anim->id;
-
-//        if(anim.current_animation != 0)
-//            printf("**** EOA: Anim: %d, Frame: %d -> Anim: %d, Frame: %d\n",anim.current_animation, anim.current_frame, anim_id, frame_id);
-
-        anim.current_animation = anim_id;
-        anim.current_frame = frame_id;
-        anim.last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
-        anim.next_state = anim.last_state;  // t4: different for non-lara
-        // obsolete: ... ?
-        anim.last_animation = anim_id;
-        anim.next_animation = anim_id;
-        anim.next_frame = frame_id;
-    }
-
-    // setAnimation and doAnimMove (which calls setanimation)
-    // set nextstate=laststate,
-    // which is bad for interp...
-
-    // doAnimCmds 5,6:
-    setAnimation(anim_id, frame_id);
-
-    doAnimCommands(&m_bf.animations, ret);
-
-    // -- AC FLIP --
-    if(animlist[anim_id].frames[frame_id].command & ANIM_CMD_CHANGE_DIRECTION)
-    {
-//            printf("*** CMD FLIP [%d, %d]\n",anim_id,frame_id);
-
-//            printf("***          [%d, %d]\n",m_bf.animations.current_animation,m_bf.animations.current_frame);
-            // bad for quat lerp:
-//            m_angles[0] += 180.0;
-        m_angles[0] += 180.0;
-
-        if(m_moveType == MoveType::Underwater)
-        {
-            m_angles[1] = -m_angles[1];                         // for underwater case
-        }
-        if(m_dirFlag == ENT_MOVE_BACKWARD)
-        {
-            m_dirFlag = ENT_MOVE_FORWARD;
-        }
-        else if(m_dirFlag == ENT_MOVE_FORWARD)
-        {
-            m_dirFlag = ENT_MOVE_BACKWARD;
-        }
-        updateTransform();
-//        updateCurrentBoneFrame(&m_bf, &m_transform);
-    }
     // -------------
 
-    frameImpl(time, frame_id, ret);
 
     updateCurrentBoneFrame(&m_bf, &m_transform);
     fixPenetrations(nullptr);
 
+
+    frameImpl(time, anim.current_frame, ret);
     return ret;
 
     // ? do basic movement

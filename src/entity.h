@@ -200,7 +200,7 @@ public:
     }
 
     static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(SSAnimation *ss_anim, int changing);
+    void doAnimCommand(const AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -257,7 +257,7 @@ public:
     btVector3 applyGravity(btScalar time);
 
 private:
-    void doAnimMove(int16_t *anim, int16_t *frame);
+//    void doAnimMove(int16_t *anim, int16_t *frame);
 
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {

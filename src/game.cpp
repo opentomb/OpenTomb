@@ -484,20 +484,20 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
         {
-            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
+            ch->m_command.rot[0] += -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
+            ch->m_command.rot[0] += -2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
         }
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0))
         {
-            ch->m_command.rot[1] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
+            ch->m_command.rot[1] += -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ch->m_command.rot[1] = 2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
+            ch->m_command.rot[1] += 2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
         }
 
         ch->m_command.move = move_logic;
@@ -844,9 +844,6 @@ void Game_Frame(btScalar time)
         engine_world.character->slerpBones(lerp);
         engine_world.character->lerpTransform(lerp);
 
-        engine_world.character->updateRigidBody(false);
-        engine_world.character->ghostUpdate();
-
         if(!control_states.noclip && !control_states.free_look)
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
     }
@@ -855,9 +852,6 @@ void Game_Frame(btScalar time)
         std::shared_ptr<Entity> entity = entityPair.second;
         entity->slerpBones(lerp);
         entity->lerpTransform(lerp);
-
-        entity->updateRigidBody(false);
-        entity->ghostUpdate();
     }
 
 

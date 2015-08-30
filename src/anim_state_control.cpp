@@ -55,19 +55,19 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
 
 void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
 {
-    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
+//    ss_anim->onFrame = nullptr;
+//    return;
+//    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
 
-    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
+//    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
+    if(ss_anim->current_animation != ss_anim->lerp_last_animation)
     {
-//        auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-//        ent->setAnimation(af->next_anim->id, af->next_frame);
-//        auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-//        move -= p;
-//        ent->m_transform.getOrigin() += move;
-//        ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
-//        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
-//        ent->updateRigidBody(false);
-//        ent->ghostUpdate();
+        ent->m_transform.getOrigin() = ent->m_climb.point;
+
+        // FIXME: position adjust after climb
+        btVector3 climbfix(0, ent->m_climbR, 0);
+        ent->m_transform.getOrigin() = ent->m_climb.point + ent->m_transform.getBasis() * climbfix;
+
         ent->m_moveType = MoveType::OnFloor;
         ss_anim->onFrame = nullptr;
     }

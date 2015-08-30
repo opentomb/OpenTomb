@@ -16,9 +16,9 @@
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
-#define ANIM_CMD_MOVE               0x01
-#define ANIM_CMD_CHANGE_DIRECTION   0x02
-#define ANIM_CMD_JUMP               0x04
+//#define ANIM_CMD_MOVE               0x01
+//#define ANIM_CMD_CHANGE_DIRECTION   0x02
+//#define ANIM_CMD_JUMP               0x04
 #include "loader/datatypes.h"
 #include "obb.h"
 
@@ -196,6 +196,14 @@ struct AnimSeq
     std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
 };
 
+
+struct AnimCommand
+{
+    int cmdId;
+    int param[3];
+};
+
+
 /*
  * room static mesh.
  */
@@ -250,6 +258,7 @@ struct SSBoneTag
 
 struct SkeletalModel;
 struct Character;
+struct StateChange;
 
 struct SSAnimation
 {
@@ -277,6 +286,9 @@ struct SSAnimation
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
+
+    bool findStateChange(const std::vector<StateChange>& stclist, uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
+    bool stepFrame(btScalar time, Entity *cmdEntity = nullptr);
 };
 
 /*
@@ -311,15 +323,19 @@ struct BoneTag
  */
 struct BoneFrame
 {
-    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
-    std::vector<BoneTag> bone_tags;                                              // bones data
-    btVector3 pos;                                                 // position (base offset)
-    btVector3 bb_min;                                              // bounding box min coordinates
-    btVector3 bb_max;                                              // bounding box max coordinates
-    btVector3 centre;                                              // bounding box centre
-    btVector3 move;                                                // move command data
-    btScalar            v_Vertical;                                             // jump command data
-    btScalar            v_Horizontal;                                           // jump command data
+    uint16_t             command;                   // & 0x01 - move need, &0x02 - 180 rotate need
+    std::vector<BoneTag> bone_tags;                 // bones data
+    btVector3            pos;                       // position (base offset)
+    btVector3            bb_min;                    // bounding box min coordinates
+    btVector3            bb_max;                    // bounding box max coordinates
+    btVector3            centre;                    // bounding box centre
+
+
+    btVector3            move;                      // move command data
+    btScalar             v_Vertical;                // jump command data
+    btScalar             v_Horizontal;              // jump command data
+
+    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
 /*
@@ -358,21 +374,23 @@ struct StateChange
  */
 struct AnimationFrame
 {
-    uint32_t                    id;
-    uint8_t                     original_frame_rate;
-    int32_t                     speed_x;                // Forward-backward speed
-    int32_t                     accel_x;                // Forward-backward accel
-    int32_t                     speed_y;                // Left-right speed
-    int32_t                     accel_y;                // Left-right accel
-    uint32_t                    anim_command;
-    uint32_t                    num_anim_commands;
-    uint16_t                    state_id;
-    std::vector<BoneFrame> frames;                 // Frame data
+    uint32_t                 id;
+    uint8_t                  original_frame_rate;
+    int32_t                  speed_x;               // Forward-backward speed
+    int32_t                  accel_x;               // Forward-backward accel
+    int32_t                  speed_y;               // Left-right speed
+    int32_t                  accel_y;               // Left-right accel
+    uint32_t                 anim_command;
+    uint32_t                 num_anim_commands;
+    uint16_t                 state_id;
+    std::vector<BoneFrame>   frames;                // Frame data
 
-    std::vector<StateChange> state_change;           // Animation statechanges data
+    std::vector<StateChange> state_change;          // Animation statechanges data
 
-    AnimationFrame   *next_anim;              // Next default animation
-    int                         next_frame;             // Next default frame
+    AnimationFrame           *next_anim;            // Next default animation
+    int                      next_frame;            // Next default frame
+
+    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
 /*

@@ -208,6 +208,123 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     }
 }
 
+/** Find a possible state change to \c stateid
+ * \param[in]     stclist  statechange list
+ * \param[in]     stateid  the desired target state
+ * \param[out]    animid   reference to anim id, receives found anim
+ * \param[in,out] frameid  reference to frame id, receives found frame
+ * \return  true if state is found, false otherwise
+ */
+bool SSAnimation::findStateChange(const std::vector<StateChange>& stclist, uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout)
+{
+    for(const StateChange& stc : stclist)
+    {
+        if(stc.id == stateid)
+        {
+            for(const AnimDispatch& dispatch : stc.anim_dispatch)
+            {
+                if(   frameid_inout >= dispatch.frame_low
+                   && frameid_inout <= dispatch.frame_high)
+                {
+                    animid_out  = dispatch.next_anim;
+                    frameid_inout = dispatch.next_frame;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Advance animation frame
+ * @param time          time step for animation
+ * @param cmdEntity     optional entity for which doAnimCommand is called
+ * @return  true if animation has changed FIXME: do we need this??
+ */
+// TODO: time = animrate default
+bool SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
+{
+    int16_t frame_id, anim_id, ret = ENTITY_ANIM_NONE;
+    const std::vector<AnimationFrame>& animlist = model->animations;
+
+
+    anim_id  = current_animation;
+    frame_id = current_frame;
+
+    lerp_last_animation = anim_id;
+    lerp_last_frame = frame_id;
+
+    frame_time += time;
+    if( (frame_time + (1.0/120.0)) < ((frame_id+1) * period))
+    {
+        return ENTITY_ANIM_NONE;
+    }
+
+    frame_id++;
+    frame_time = frame_id * period;
+
+    lerp = 0.0;
+    myLerp = 0.0;
+
+    if(next_state != last_state)
+    {
+        if( findStateChange(animlist[anim_id].state_change, next_state, anim_id, frame_id) )
+        {
+            current_animation = anim_id;
+            current_frame = frame_id;
+            last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
+            next_state = last_state;  // t4: different for non-lara
+            // obsolete: ... ?
+            last_animation = anim_id;
+            next_animation = anim_id;
+            next_frame = frame_id;
+        }
+    }
+
+    // reached end of animation:
+    if( frame_id >= static_cast<int>(animlist[anim_id].frames.size()) )
+    {
+        // do end-of-anim commands:
+        if(cmdEntity)
+        {
+            for(AnimCommand acmd : animlist[anim_id].animCommands)
+            {
+                cmdEntity->doAnimCommand(acmd);
+            }
+        }
+
+        frame_id = animlist[anim_id].next_frame;
+        anim_id = animlist[anim_id].next_anim->id;
+
+        current_animation = anim_id;
+        current_frame = frame_id;
+        last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
+        next_state = last_state;  // t4: different for non-lara
+        // obsolete: ... ?
+        last_animation = anim_id;
+        next_animation = anim_id;
+        next_frame = frame_id;
+    }
+
+    current_animation = anim_id;
+    current_frame = frame_id;
+
+    // do per frame commands:
+    if(cmdEntity)
+    {
+        for(AnimCommand acmd : animlist[anim_id].frames[frame_id].animCommands)
+        {
+            cmdEntity->doAnimCommand(acmd);
+        }
+    }
+    return false;
+}
+
+
+
+
+
 void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
 {
     dst->bone_tags.resize(src->bone_tags.size());
@@ -226,22 +343,20 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
     }
 }
 
+/**
+ * Expand compressed frames
+ * For animations with rate>1, interpolate frames over
+ * the real frame range.
+ */
 void SkeletalModel::interpolateFrames()
 {
     AnimationFrame* anim = animations.data();
 
     for(uint16_t i = 0; i < animations.size(); i++, anim++)
     {
-        // effective anim length may be shorter than rate*frame_data_count,
-        // at most, last_real_frame = last_data_frame (no extrapolation!)
-        // (see frame.resize() in TR_GenSkeletalModel())
-
-        // frames are reserved, but filled only partially,
-        // - need to expand to fill the frame range:
-        // ! Watch copy order: always fill from last to first frame !
         int length = anim->frames.size();
         int rate = anim->original_frame_rate;
-        if(length > 1 && rate > 1)                      // we can't interpolate one frame or rate < 2!
+        if(length > 1 && rate > 1)
         {
             int destIdx = int((length-1) / rate) * rate;
             int srcIdx = 0;

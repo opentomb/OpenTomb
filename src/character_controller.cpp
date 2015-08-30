@@ -1865,6 +1865,8 @@ void Character::applyCommands()
             break;
     };
 
+    m_command.rot.setZero();
+
     updateRigidBody(true);
     updatePlatformPostStep();
 }
@@ -2801,6 +2803,6 @@ void Character::doWeaponFrame(btScalar time)
             };
         }
 
-        doAnimCommands(ss_anim, 0);
+//        doAnimCommands(ss_anim, 0);
     }
 }
