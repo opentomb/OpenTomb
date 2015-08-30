@@ -2121,7 +2121,7 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         TR_vertex_to_arr(p->vertices[3], tr_portal->vertices[0]);
         p->vertices[3] += room->transform.getOrigin();
         p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3(0, 0, 0)) / p->vertices.size();
-        p->genNormale();
+        p->updateNormal();
 
         /*
          * Portal position fix...

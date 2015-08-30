@@ -1,17 +1,13 @@
 #pragma once
 
-#define PORTAL_NORMAL 0x00
-#define PORTAL_FICTIVE 0x01
+#include "util/vmath.h"
 
 #include <memory>
 #include <vector>
 
-#include "util/vmath.h"
-
 namespace world
 {
 struct Room;
-struct RoomSector;
 
 /*
  * пока геометрия текущего портала и портала назначения совпадают.
@@ -35,7 +31,7 @@ struct Portal
     void move(const btVector3 &mv);
     bool rayIntersect(const btVector3 &dir, const btVector3 &point);              // check the intersection of the beam and portal
 
-    void genNormale();
+    void updateNormal();
 };
 
 } // namespace world
