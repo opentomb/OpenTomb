@@ -103,34 +103,6 @@ enum class FaderCorner
     BottomRight
 };
 
-enum class MenuItemType
-{
-    System,
-    Supply,
-    Quest,
-    Invalid
-};
-
-inline MenuItemType nextItemType(MenuItemType t)
-{
-    switch(t)
-    {
-        case MenuItemType::System: return MenuItemType::Supply;
-        case MenuItemType::Supply: return MenuItemType::Quest;
-        default: return MenuItemType::Invalid;
-    }
-}
-
-inline MenuItemType previousItemType(MenuItemType t)
-{
-    switch(t)
-    {
-        case MenuItemType::Supply: return MenuItemType::System;
-        case MenuItemType::Quest: return MenuItemType::Supply;
-        default: return MenuItemType::Invalid;
-    }
-}
-
 
 // OpenTomb has three types of fonts - primary, secondary and console
 // font. This should be enough for most of the cases. However, user
@@ -166,8 +138,6 @@ enum class FontStyle
     Generic,
     Sentinel
 };
-
-struct InventoryNode;
 
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
@@ -552,91 +522,6 @@ void Gui_MoveLine(TextLine* line);
 void Gui_RenderStringLine(TextLine* l);
 void Gui_RenderStrings();
 
-/**
- * Inventory rendering / manipulation functions
- */
-void Item_Frame(struct SSBoneFrame *bf, btScalar time);
-void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
-/*
- * Other inventory renderer class
- */
-class InventoryManager
-{
-public:
-    enum class InventoryState
-    {
-        Disabled = 0,
-        Idle,
-        Open,
-        Closed,
-        RLeft,
-        RRight,
-        Up,
-        Down,
-        Activate
-    };
-
-private:
-    std::list<InventoryNode>* mInventory;
-    InventoryState              mCurrentState;
-    InventoryState              mNextState;
-    int                         mNextItemsCount;
-
-    MenuItemType                mCurrentItemsType;
-    int                         mCurrentItemsCount;
-    int                         mItemsOffset;
-
-    float                       mRingRotatePeriod;
-    float                       mRingTime;
-    float                       mRingAngle;
-    float                       mRingVerticalAngle;
-    float                       mRingAngleStep;
-    float                       mBaseRingRadius;
-    float                       mRingRadius;
-    float                       mVerticalOffset;
-
-    float                       mItemRotatePeriod;
-    float                       mItemTime;
-    float                       mItemAngle;
-
-    int getItemsTypeCount(MenuItemType type);
-    void restoreItemAngle(float time);
-
-public:
-    TextLine             mLabel_Title;
-    TextLine             mLabel_ItemName;
-
-    InventoryManager();
-    ~InventoryManager();
-
-    InventoryState getCurrentState()
-    {
-        return mCurrentState;
-    }
-
-    InventoryState getNextState()
-    {
-        return mNextState;
-    }
-
-    void send(InventoryState state)
-    {
-        mNextState = state;
-    }
-
-    MenuItemType getItemsType()
-    {
-        return mCurrentItemsType;
-    }
-
-    MenuItemType setItemsType(MenuItemType type);
-    void setInventory(std::list<InventoryNode> *i);
-    void setTitle(MenuItemType items_type);
-    void frame(float time);
-    void render();
-};
-
-extern InventoryManager  *main_inventory_manager;
 //extern gui_InventoryMenu     *main_inventory_menu;
 extern FontManager       *fontManager;
 
@@ -721,3 +606,9 @@ void Gui_DrawNotifier();
  */
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
+
+/**
+ * Inventory rendering / manipulation functions
+ */
+void Item_Frame(struct SSBoneFrame *bf, btScalar time);
+void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);

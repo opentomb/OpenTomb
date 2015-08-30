@@ -45,6 +45,7 @@
 #include "entity.h"
 #include "resource.h"
 #include "gui.h"
+#include "inventory.h"
 #include "audio.h"
 #include "character_controller.h"
 #include "gameflow.h"

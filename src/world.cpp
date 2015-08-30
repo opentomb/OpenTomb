@@ -20,6 +20,7 @@
 #include "resource.h"
 #include "script.h"
 #include "vmath.h"
+#include "inventory.h"
 
 void Room::empty()
 {

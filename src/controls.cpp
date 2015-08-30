@@ -11,6 +11,7 @@
 #include "console.h"
 #include "engine.h"
 #include "game.h"
+#include "inventory.h"
 #include "script.h"
 #include "system.h"
 
