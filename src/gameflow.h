@@ -22,7 +22,7 @@ public:
     void Do();
     bool Send(int opcode, int operand = -1);
 
-    bool SecretsTriggerMap[GF_MAX_SECRETS+1];                     //Info for what secrets have been triggered in a level
+    bool SecretsTriggerMap[GF_MAX_SECRETS+1]; ///@TODO make vector pull secret counts from script
 
     std::string getLevelPath()
     {
@@ -57,11 +57,11 @@ public:
 private:
     std::string       m_currentLevelPath;       //Level path from script example: DATA/TR1/DATA/LEVEL1.PHD
     std::string       m_currentLevelName;       //Level name from script example: Caves
-    uint8_t           m_currentGameID;          //
+    uint8_t           m_currentGameID;
     uint32_t          m_currentLevelID;         //Level ID from script example: 1 = Caves.
 
     bool              m_nextAction;             //Should gameflow do next action?
-    Gameflow_Action   Actions[GF_MAX_ACTIONS+1];
+    Gameflow_Action   m_actions[GF_MAX_ACTIONS+1];///@TODO Vector
 };
 
 enum
