@@ -55,21 +55,18 @@ namespace core
 struct Polygon;
 struct Vertex;
 
-/*
- * base mesh, uses everywhere
- */
 struct BaseMesh
 {
-    uint32_t m_id;                                                   // mesh's ID
-    bool m_usesVertexColors;                                   // does this mesh have prebaked vertex lighting
+    uint32_t m_id;
+    bool m_usesVertexColors; //!< does this mesh have prebaked vertex lighting
 
-    std::vector<Polygon> m_polygons;                                             // polygons data
+    std::vector<Polygon> m_polygons;
 
-    std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
+    std::vector<Polygon> m_transparencyPolygons;
 
-    uint32_t              m_texturePageCount;                                    // face without structure wrapping
-    std::vector<size_t> m_elementsPerTexture;                            //
-    std::vector<GLuint> m_elements;                                             //
+    uint32_t              m_texturePageCount;
+    std::vector<size_t> m_elementsPerTexture;
+    std::vector<GLuint> m_elements;
     size_t m_alphaElements;
 
     std::vector<Vertex> m_vertices;
@@ -81,16 +78,16 @@ struct BaseMesh
 
     std::vector<render::TransparentPolygonReference> m_transparentPolygons;
 
-    btVector3 m_center;                                            // geometry centre of mesh
+    btVector3 m_center; //!< geometry center of mesh
     BoundingBox boundingBox; //!< AABB bounding volume
-    btScalar m_radius;                                            // radius of the bounding sphere
+    btScalar m_radius; //!< radius of the bounding sphere
 #pragma pack(push,1)
     struct MatrixIndex
     {
         int8_t i = 0, j = 0;
     };
 #pragma pack(pop)
-    std::vector<MatrixIndex> m_matrixIndices;                                       // vertices map for skin mesh
+    std::vector<MatrixIndex> m_matrixIndices; //!< vertices map for skin mesh
 
     GLuint                m_vboVertexArray = 0;
     GLuint                m_vboIndexArray = 0;
@@ -123,8 +120,8 @@ struct BaseMesh
 struct Sprite
 {
     uint32_t            id;                                                     // object's ID
-    size_t              texture;                                                // texture number
-    GLfloat             tex_coord[8];                                           // texture coordinates
+    size_t              texture;
+    GLfloat             tex_coord[8];
     uint32_t            flag;
     btScalar            left;                                                   // world sprite's gabarites
     btScalar            right;
@@ -161,9 +158,6 @@ struct Light
     loader::LightType           light_type;
 };
 
-/*
- * room static mesh.
- */
 struct StaticMesh : public Object
 {
     uint32_t                    object_id;
@@ -172,16 +166,16 @@ struct StaticMesh : public Object
     bool hide;
     btVector3 position;
     btVector3 rotation;
-    std::array<float, 4> tint;                                        // model tint
+    std::array<float, 4> tint;
 
     BoundingBox visibleBoundingBox;
     BoundingBox collisionBoundingBox;
 
-    btTransform transform;                                  // gl transformation matrix
+    btTransform transform;
     OrientedBoundingBox obb;
     std::shared_ptr<engine::EngineContainer> self;
 
-    std::shared_ptr<BaseMesh> mesh;                                           // base model
+    std::shared_ptr<BaseMesh> mesh;
     btRigidBody                *bt_body;
 };
 
@@ -231,7 +225,6 @@ MeshTreeTag* SkeletonClone(MeshTreeTag* src, int tags_count);
 void SkeletonCopyMeshes(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 
-/* bullet collision model calculation */
 btCollisionShape *BT_CSfromSphere(const btScalar& radius);
 btCollisionShape* BT_CSfromBBox(const BoundingBox &boundingBox, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
