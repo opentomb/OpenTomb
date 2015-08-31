@@ -3064,7 +3064,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     {
         tree_tag->mesh_base = world->meshes[mesh_index[k]];
         tree_tag->mesh_skin = nullptr;  ///@PARANOID: I use calloc for tree_tag's
-        tree_tag->replace_anim = 0x00;
+        tree_tag->replace_anim = false;
         tree_tag->replace_mesh = 0x00;
         tree_tag->body_part = 0x00;
         tree_tag->offset[0] = 0.0;

@@ -30,7 +30,7 @@ struct SkeletalModel
         uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
         uint32_t                    body_part;
         uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
-        uint8_t                     replace_anim;
+        bool                        replace_anim;
     };
 
     uint32_t                    id;

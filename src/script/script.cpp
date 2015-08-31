@@ -2128,7 +2128,7 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
     }
 }
 
-void lua_SetModelAnimReplaceFlag(int id, int bone, int flag)
+void lua_SetModelAnimReplaceFlag(int id, int bone, bool flag)
 {
     world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)

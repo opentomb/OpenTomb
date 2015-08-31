@@ -798,7 +798,7 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
             btScalar ov_lerp = bf->animations.lerp;
             for(animation::SSAnimation* ov_anim = bf->animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
             {
-                if((ov_anim->model != nullptr) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
+                if((ov_anim->model != nullptr) && ov_anim->model->mesh_tree[k].replace_anim)
                 {
                     animation::BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
                     animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
