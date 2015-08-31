@@ -208,15 +208,17 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     }
 }
 
-/** Find a possible state change to \c stateid
- * \param[in]     stclist  statechange list
- * \param[in]     stateid  the desired target state
- * \param[out]    animid   reference to anim id, receives found anim
- * \param[in,out] frameid  reference to frame id, receives found frame
+/**
+ * Find a possible state change to \c stateid
+ * \param[in]      stateid  the desired target state
+ * \param[in,out]  animid   reference to anim id, receives found anim
+ * \param[in,out]  frameid  reference to frame id, receives found frame
  * \return  true if state is found, false otherwise
  */
-bool SSAnimation::findStateChange(const std::vector<StateChange>& stclist, uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout)
+bool SSAnimation::findStateChange(uint32_t stateid, int16_t& animid_inout, int16_t& frameid_inout)
 {
+    const std::vector<StateChange>& stclist = model->animations[animid_inout].state_change;
+
     for(const StateChange& stc : stclist)
     {
         if(stc.id == stateid)
@@ -226,7 +228,7 @@ bool SSAnimation::findStateChange(const std::vector<StateChange>& stclist, uint3
                 if(   frameid_inout >= dispatch.frame_low
                    && frameid_inout <= dispatch.frame_high)
                 {
-                    animid_out  = dispatch.next_anim;
+                    animid_inout  = dispatch.next_anim;
                     frameid_inout = dispatch.next_frame;
                     return true;
                 }
@@ -240,89 +242,87 @@ bool SSAnimation::findStateChange(const std::vector<StateChange>& stclist, uint3
  * Advance animation frame
  * @param time          time step for animation
  * @param cmdEntity     optional entity for which doAnimCommand is called
- * @return  true if animation has changed FIXME: do we need this??
+ * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
  */
-// TODO: time = animrate default
-bool SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
+int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
 {
-    int16_t frame_id, anim_id, ret = ENTITY_ANIM_NONE;
+    int16_t frame_id, anim_id;
     const std::vector<AnimationFrame>& animlist = model->animations;
-
+    int retval = ENTITY_ANIM_NEWFRAME;
 
     anim_id  = current_animation;
     frame_id = current_frame;
 
-    lerp_last_animation = anim_id;
-    lerp_last_frame = frame_id;
-
     frame_time += time;
-    if( (frame_time + (1.0/120.0)) < ((frame_id+1) * period))
+    if( (frame_time + GAME_LOGIC_REFRESH_INTERVAL/2.0f) < period)
     {
+        lerp = frame_time / period;
         return ENTITY_ANIM_NONE;
     }
 
-    frame_id++;
-    frame_time = frame_id * period;
-
+    lerp_last_animation = anim_id;
+    lerp_last_frame = frame_id;
+    frame_time = 0.0;
     lerp = 0.0;
-    myLerp = 0.0;
 
+    frame_id++;
+
+    // check anim flags:
+    if(anim_flags == ANIM_LOOP_LAST_FRAME)
+    {
+        if(frame_id >= static_cast<int>(animlist[anim_id].frames.size()))
+        {
+            current_frame = animlist[anim_id].frames.size()-1;
+            return ENTITY_ANIM_NEWFRAME;    // period time has passed so it's a new frame, or should this be none?
+        }
+    }
+    else if(anim_flags == ANIM_LOCK)
+    {
+        current_frame = 0;
+        return ENTITY_ANIM_NEWFRAME;
+    }
+
+    // check state change:
     if(next_state != last_state)
     {
-        if( findStateChange(animlist[anim_id].state_change, next_state, anim_id, frame_id) )
+        if( findStateChange(next_state, anim_id, frame_id) )
         {
-            current_animation = anim_id;
-            current_frame = frame_id;
-            last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
-            next_state = last_state;  // t4: different for non-lara
-            // obsolete: ... ?
-            last_animation = anim_id;
-            next_animation = anim_id;
-            next_frame = frame_id;
+            last_state = animlist[anim_id].state_id;
+            next_state = last_state;
+            retval = ENTITY_ANIM_NEWANIM;
         }
     }
 
-    // reached end of animation:
+    // check end of animation:
     if( frame_id >= static_cast<int>(animlist[anim_id].frames.size()) )
     {
-        // do end-of-anim commands:
         if(cmdEntity)
         {
-            for(AnimCommand acmd : animlist[anim_id].animCommands)
+            for(AnimCommand acmd : animlist[anim_id].animCommands)  // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
-
         frame_id = animlist[anim_id].next_frame;
         anim_id = animlist[anim_id].next_anim->id;
 
-        current_animation = anim_id;
-        current_frame = frame_id;
-        last_state = animlist[anim_id].state_id;  // doAnimMove/setAnimation overwrite this...
-        next_state = last_state;  // t4: different for non-lara
-        // obsolete: ... ?
-        last_animation = anim_id;
-        next_animation = anim_id;
-        next_frame = frame_id;
+        last_state = animlist[anim_id].state_id;
+        next_state = last_state;
+        retval = ENTITY_ANIM_NEWANIM;
     }
 
     current_animation = anim_id;
     current_frame = frame_id;
 
-    // do per frame commands:
     if(cmdEntity)
     {
-        for(AnimCommand acmd : animlist[anim_id].frames[frame_id].animCommands)
+        for(AnimCommand acmd : animlist[anim_id].frames[frame_id].animCommands)  // frame cmdlist
         {
             cmdEntity->doAnimCommand(acmd);
         }
     }
-    return false;
+    return retval;
 }
-
-
-
 
 
 void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)

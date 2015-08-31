@@ -540,10 +540,8 @@ void Engine_ShowDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
-                      ent->m_bf.animations.last_animation,
+        Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.current_animation,
-                      ent->m_bf.animations.next_animation,
                       ent->m_bf.animations.last_state,
                       ent->m_bf.animations.next_state,
                       engine_world.character->m_currentSpeed,
@@ -560,7 +558,7 @@ void Engine_ShowDebugInfo()
                 ent->m_lerp_curr_transform.getOrigin().z()
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
+        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2], ent->m_angles[0]);
     }
 
     if(last_cont != nullptr)
@@ -712,12 +710,12 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
         engine_world.character->updateParams();
         engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
 
-        // --- FIXME: Same as below:
         if(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
-            engine_world.character->updateRigidBody(false);
+//            printf("*** DYN RAG\n");
+//            engine_world.character->updateRigidBody(false);
         }
-        if(!control_states.noclip && !control_states.free_look)
+        else if(!control_states.noclip && !control_states.free_look)
         {
             engine_world.character->frame(engine_frame_time);
             engine_world.character->applyCommands();
@@ -752,24 +750,38 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
     // set interp transform:
     if(engine_world.character)
     {
-        engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
-        engine_world.character->m_lerp_valid = true;
-        engine_world.character->m_bf.animations.lerp = 1.0;
-        engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf, 0);
-        engine_world.character->updateRigidBody(false);
-        engine_world.character->ghostUpdate();
+        if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+        {
+            engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
+            engine_world.character->m_lerp_valid = true;
+
+            btScalar tmp = engine_world.character->m_bf.animations.lerp;
+            engine_world.character->m_bf.animations.lerp = 1.0;
+            engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf, 0);
+            engine_world.character->updateRigidBody(false);
+            engine_world.character->ghostUpdate();
+
+            engine_world.character->m_bf.animations.lerp = tmp;
+        }
     }
     for(auto entityPair : engine_world.entity_tree)
     {
         std::shared_ptr<Entity> entity = entityPair.second;
         if(entity->m_enabled)
         {
-            entity->m_lerp_curr_transform = entity->m_transform;
-            entity->m_lerp_valid = true;
-            entity->m_bf.animations.lerp = 1.0;
-            entity->updateCurrentBoneFrame(&entity->m_bf, 0);
-            entity->updateRigidBody(false);
-            entity->ghostUpdate();
+            if(!(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+            {
+                entity->m_lerp_curr_transform = entity->m_transform;
+                entity->m_lerp_valid = true;
+
+                btScalar tmp = entity->m_bf.animations.lerp;
+                entity->m_bf.animations.lerp = 1.0;
+                entity->updateCurrentBoneFrame(&entity->m_bf, 0);
+                entity->updateRigidBody(false);
+                entity->ghostUpdate();
+
+                entity->m_bf.animations.lerp = tmp;
+            }
         }
     }
 

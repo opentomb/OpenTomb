@@ -2446,9 +2446,7 @@ void Character::doWeaponFrame(btScalar time)
                     if(m_command.ready_weapon)   // ready weapon
                     {
                         ss_anim->current_animation = 1;
-                        ss_anim->next_animation = 1;
                         ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
@@ -2463,20 +2461,17 @@ void Character::doWeaponFrame(btScalar time)
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        // FIXME: doWeapon nextFrame
+                        //ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
+//                        ss_anim->next_frame = 0;
                     }
                     else
                     {
                         ss_anim->current_frame = 0;
                         ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::Idle;
                     }
@@ -2485,14 +2480,11 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Idle:
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
                         ss_anim->current_animation = 3;
-                        ss_anim->next_animation = 3;
-                        ss_anim->current_frame = ss_anim->next_frame = 0;
+                        ss_anim->current_frame = 0;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
@@ -2516,13 +2508,11 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame - 1;
                     }
                     else
                     {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->current_frame = 0;
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
@@ -2536,20 +2526,19 @@ void Character::doWeaponFrame(btScalar time)
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame + 1;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 2;
+                        //ss_anim->next_frame = 0;
+                        // FIXME: next_anim w/o curr_anim
+                        //ss_anim->next_animation = 2;
                     }
                     else if(m_command.action)
                     {
                         ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
+                        //ss_anim->next_frame = 1;
                         ss_anim->current_animation = 2;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Fire;
                     }
                     else
@@ -2572,28 +2561,25 @@ void Character::doWeaponFrame(btScalar time)
 
                         if(ss_anim->current_frame < t - 1)
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
+                            //ss_anim->next_frame = ss_anim->current_frame + 1;
                         }
                         else if(ss_anim->current_frame < t)
                         {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
+                            //ss_anim->next_frame = 0;
                         }
                         else
                         {
                             ss_anim->frame_time = dt;
                             ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            //ss_anim->next_frame = 1;
                         }
                     }
                     else
                     {
                         ss_anim->frame_time = 0.0;
                         ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        //ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2606,13 +2592,11 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->lerp = dt / ss_anim->period;
                     if(ss_anim->current_frame < t - 1)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame + 1;
                     }
                     else
                     {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame = 0;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }
@@ -2627,9 +2611,7 @@ void Character::doWeaponFrame(btScalar time)
                     if(m_command.ready_weapon)   // ready weapon
                     {
                         ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
                         ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
@@ -2644,20 +2626,18 @@ void Character::doWeaponFrame(btScalar time)
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
+                        //ss_anim->next_frame = 0;
+                        // FIXME: next_anim w/o curr_anim
+                        //ss_anim->next_animation = 0;
                     }
                     else
                     {
                         ss_anim->current_frame = 0;
                         ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::Idle;
                     }
@@ -2666,14 +2646,11 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Idle:
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
                         ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                         ss_anim->frame_time = 0.0;
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
@@ -2697,13 +2674,11 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame - 1;
                     }
                     else
                     {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame = 0;
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
@@ -2717,20 +2692,19 @@ void Character::doWeaponFrame(btScalar time)
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame + 1;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 3;
+                        //ss_anim->next_frame = 0;
+                        // FIXME: next_anim w/o curr_anim
+                        //ss_anim->next_animation = 3;
                     }
                     else if(m_command.action)
                     {
                         ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
+                        //ss_anim->next_frame = 1;
                         ss_anim->current_animation = 3;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Fire;
                     }
                     else
@@ -2753,28 +2727,25 @@ void Character::doWeaponFrame(btScalar time)
 
                         if(ss_anim->current_frame < t - 1)
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
+                            //ss_anim->next_frame = ss_anim->current_frame + 1;
                         }
                         else if(ss_anim->current_frame < t)
                         {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
+                            //ss_anim->next_frame = 0;
                         }
                         else
                         {
                             ss_anim->frame_time = dt;
                             ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            //ss_anim->next_frame = 1;
                         }
                     }
                     else
                     {
                         ss_anim->frame_time = 0.0;
                         ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        //ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2789,13 +2760,11 @@ void Character::doWeaponFrame(btScalar time)
                     ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                     if(ss_anim->current_frame > 0)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame - 1;
                     }
                     else
                     {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        //ss_anim->next_frame = ss_anim->current_frame = 0;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }

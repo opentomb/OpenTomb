@@ -31,12 +31,6 @@ namespace
 }
 
 
-// Animation control flags
-
-#define ANIM_NORMAL_CONTROL  (0)
-#define ANIM_LOOP_LAST_FRAME (1)
-#define ANIM_LOCK            (2) // Animation will be locked once and for all.
-
 // Surface movement directions
 
 #define ENT_STAY 0x00000000

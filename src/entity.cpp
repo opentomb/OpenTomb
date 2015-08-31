@@ -740,8 +740,6 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->lerp = 0.0;
         ss_anim->current_animation = 0;
         ss_anim->current_frame = 0;
-        ss_anim->next_animation = 0;
-        ss_anim->next_frame = 0;
         ss_anim->period = 1.0f / TR_FRAME_RATE;
     }
 }
@@ -813,19 +811,22 @@ btScalar Entity::findDistance(const Entity& other)
 }
 
 
-
+/**
+ * Callback to handle anim commands
+ * @param command
+ */
 void Entity::doAnimCommand(const AnimCommand& command)
 {
-//    printf("*** CMD: %d\n",command.cmdId);
     switch(command.cmdId)
     {
-        case TR_ANIMCOMMAND_SETPOSITION:    // (float tr_x, float tr_y, float tr_z)
+        case TR_ANIMCOMMAND_SETPOSITION:    // (tr_x, tr_y, tr_z)
             {
                 // x=x, y=z, z=-y
                 const btScalar x = btScalar(command.param[0]);
                 const btScalar y = btScalar(command.param[2]);
                 const btScalar z = -btScalar(command.param[1]);
-                m_transform.getOrigin() += btVector3(x, y, z);
+                btVector3 ofs(x, y, z);
+                m_transform.getOrigin() += m_transform.getBasis() * ofs;
             }
             break;
 
@@ -839,18 +840,17 @@ void Entity::doAnimCommand(const AnimCommand& command)
 
         case TR_ANIMCOMMAND_EMPTYHANDS:     // ()
             // This command is used only for Lara.
-            // TODO: reset interaction-blocking:
-            // In Tr4, this resets an internal flag which is used to disable
-            // interactions (pushing buttons, turning valves etc.) while Lara is busy with
-            // i.e. holding a torch, or during the throw-flare-away animation
+            // Reset interaction-blocking
             break;
 
         case TR_ANIMCOMMAND_KILL:           // ()
-            // This command is used only for non-Lara items.
+            // This command is usually used only for non-Lara items,
+            // although there seem to be Lara-anims with this cmd id (tr4 anim 415)
+            // TODO: for switches, this command indicates the trigger-frame
             kill();
             break;
 
-        case TR_ANIMCOMMAND_PLAYSOUND:      // (int sndParam)
+        case TR_ANIMCOMMAND_PLAYSOUND:      // (sndParam)
             {
                 int16_t sound_index = command.param[0] & 0x3FFF;
 
@@ -878,9 +878,9 @@ void Entity::doAnimCommand(const AnimCommand& command)
             }
             break;
 
-        case TR_ANIMCOMMAND_PLAYEFFECT:     // (int flipeffectParam)
+        case TR_ANIMCOMMAND_PLAYEFFECT:     // (flipeffectParam)
             {
-                uint16_t effect_id = command.param[0] & 0x3FFF;
+                const uint16_t effect_id = command.param[0] & 0x3FFF;
                 if(effect_id == 0)  // rollflip
                 {
                     // FIXME: wrapping angles are bad for quat lerp:
@@ -968,22 +968,30 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     AnimationFrame* anim = &m_bf.animations.model->animations[animation];
 
-    m_bf.animations.lerp = 0.0;
-    frame %= anim->frames.size();
-    frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0 / TR_FRAME_RATE;
+    // FIXME: neg. frame modulo - is this as expected?
+    // C++ modulo is tricky for negative numbers, in this case
+    // frame -1 will not be the last (size-1), but the second to last (size-2) frame:
+//    frame %= anim->frames.size();
+//    frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
+    if(frame < 0)
+    {
+        frame = anim->frames.size() - 1 - ((-frame-1) % anim->frames.size());
+    }
+    else
+    {
+        frame %= anim->frames.size();
+    }
 
+    m_bf.animations.period = 1.0f / TR_FRAME_RATE;
     m_bf.animations.last_state = anim->state_id;
     m_bf.animations.next_state = anim->state_id;
     m_bf.animations.current_animation = animation;
     m_bf.animations.current_frame = frame;
-    m_bf.animations.next_animation = animation;
-    m_bf.animations.next_frame = frame;
 
-    //long int t = (bf.animations.frame_time) / bf.animations.period;
-    //btScalar dt = bf.animations.frame_time - (btScalar)t * bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
+//    m_bf.animations.lerp = 0.0f;
+//    m_bf.animations.frame_time = 0.0f;
 
+    // jeep needs this here?
     updateCurrentBoneFrame(&m_bf, &m_transform);
 //    updateRigidBody(false);
 }
@@ -1046,72 +1054,6 @@ int Entity::getAnimDispatchCase(uint32_t id)
     return -1;
 }
 
-/*
- * Next frame and next anim calculation function.
- */
-void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
-{
-    AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
-
-
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *anim = bf->animations.current_animation;
-
-    /*
-     * Flag has a highest priority
-     */
-    if(anim_flags == ANIM_LOOP_LAST_FRAME)
-    {
-        if(*frame >= static_cast<int>(curr_anim->frames.size() - 1))
-        {
-            *frame = curr_anim->frames.size() - 1;
-            *anim = bf->animations.current_animation;                          // paranoid dublicate
-        }
-        return;
-    }
-    else if(anim_flags == ANIM_LOCK)
-    {
-        *frame = 0;
-        *anim = bf->animations.current_animation;
-        return;
-    }
-
-    /*
-     * Check next anim if frame >= frames.size()
-     */
-    if(*frame >= static_cast<int>(curr_anim->frames.size()))
-    {
-        if(curr_anim->next_anim)
-        {
-            *frame = curr_anim->next_frame;
-            *anim = curr_anim->next_anim->id;
-            return;
-        }
-
-        *frame %= curr_anim->frames.size();
-        *anim = bf->animations.current_animation;                             // paranoid dublicate
-        return;
-    }
-
-    /*
-     * State change check
-     */
-    if(stc != nullptr)
-    {
-        AnimDispatch* disp = stc->anim_dispatch.data();
-        for(uint16_t i = 0; i < stc->anim_dispatch.size(); i++, disp++)
-        {
-            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
-            {
-                *anim = disp->next_anim;
-                *frame = disp->next_frame;
-                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames.size();
-                return;                                                         // anim was changed
-            }
-        }
-    }
-}
-
 
 // ----------------------------------------
 void Entity::slerpBones(btScalar lerp)
@@ -1140,11 +1082,7 @@ void Entity::lerpTransform(btScalar lerp)
  */
 int Entity::frame(btScalar time)
 {
-    int16_t frame_id, anim_id, ret = ENTITY_ANIM_NONE;
-    long int t;
-    btScalar dt;
-    StateChange* stc;
-//    SSAnimation* ss_anim;
+    int retval = ENTITY_ANIM_NONE;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
@@ -1159,7 +1097,7 @@ int Entity::frame(btScalar time)
     const std::vector<AnimationFrame>& animlist = m_bf.animations.model->animations;
 
     // advance current frame:
-    anim.stepFrame(time, this);
+    retval = anim.stepFrame(time, this);
 
     setAnimation(anim.current_animation, anim.current_frame);
 
@@ -1170,8 +1108,9 @@ int Entity::frame(btScalar time)
     fixPenetrations(nullptr);
 
 
-    frameImpl(time, anim.current_frame, ret);
-    return ret;
+    // TODO: "retval" is used as "state" in anim state handler...
+    frameImpl(time, anim.current_frame, retval);
+    return retval;
 
     // ? do basic movement
 
@@ -1281,8 +1220,6 @@ Entity::Entity(uint32_t id)
     m_bf.animations.lerp = 0.0;
     m_bf.animations.current_animation = 0;
     m_bf.animations.current_frame = 0;
-    m_bf.animations.next_animation = 0;
-    m_bf.animations.next_frame = 0;
     m_bf.animations.next = nullptr;
     m_bf.bone_tags.clear();
     m_bf.bb_max.setZero();

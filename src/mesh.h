@@ -260,25 +260,27 @@ struct SkeletalModel;
 struct Character;
 struct StateChange;
 
+
+// Animation control flags
+#define ANIM_NORMAL_CONTROL  (0)
+#define ANIM_LOOP_LAST_FRAME (1)
+#define ANIM_LOCK            (2) // Animation will be locked once and for all.
+
 struct SSAnimation
 {
     int16_t                     last_state = 0;
     int16_t                     next_state = 0;
-    int16_t                     last_animation = 0;
     int16_t                     current_animation = 0;                              //
-    int16_t                     next_animation = 0;                                 //
     //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t                     current_frame = 0;                                  //
-    int16_t                     next_frame = 0;                                     //
 
     uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period = 1.0f / 30;                                 // one frame change period
-    btScalar                    frame_time = 0;                                     // current time
-    btScalar                    lerp = 0;
+    btScalar                    period = 1.0f / 30.0f;                              // one frame change period
+    btScalar                    frame_time = 0;                                     // time into this animation
 
     // lerp:
-    btScalar                    myLerp = 0.0f;
+    btScalar                    lerp = 0;
     int16_t                     lerp_last_animation = 0;
     int16_t                     lerp_last_frame = 0;
 
@@ -287,8 +289,8 @@ struct SSAnimation
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
 
-    bool findStateChange(const std::vector<StateChange>& stclist, uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
-    bool stepFrame(btScalar time, Entity *cmdEntity = nullptr);
+    bool findStateChange(uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
+    int  stepFrame(btScalar time, Entity *cmdEntity = nullptr);
 };
 
 /*

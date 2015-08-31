@@ -55,11 +55,7 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
 
 void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
 {
-//    ss_anim->onFrame = nullptr;
-//    return;
-//    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
-
-//    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
+    // FIXME: this is more like an end-of-anim operation
     if(ss_anim->current_animation != ss_anim->lerp_last_animation)
     {
         ent->m_transform.getOrigin() = ent->m_climb.point;
@@ -880,7 +876,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_LARA_WALK_FORWARD;
                 }
-                else if(cmd->jump && (ss_anim->last_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
+                else if(cmd->jump)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;
                 }

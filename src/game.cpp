@@ -841,17 +841,38 @@ void Game_Frame(btScalar time)
     }
 
     if(engine_world.character) {
-        engine_world.character->slerpBones(lerp);
-        engine_world.character->lerpTransform(lerp);
+        if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+        {
+            lerp = engine_world.character->m_bf.animations.lerp;
 
+            engine_world.character->slerpBones(lerp);
+            engine_world.character->lerpTransform(lerp);
+
+            lerp += engine_frame_time * 30.0;
+            if( lerp > 1.0 ) {
+                lerp = 1.0;
+            }
+            engine_world.character->m_bf.animations.lerp = lerp;
+        }
         if(!control_states.noclip && !control_states.free_look)
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
     }
     for(auto entityPair : engine_world.entity_tree)
     {
         std::shared_ptr<Entity> entity = entityPair.second;
-        entity->slerpBones(lerp);
-        entity->lerpTransform(lerp);
+        if(!(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+        {
+            lerp = entity->m_bf.animations.lerp;
+
+            entity->slerpBones(lerp);
+            entity->lerpTransform(lerp);
+
+            lerp += engine_frame_time * 30.0;
+            if( lerp > 1.0 ) {
+                lerp = 1.0;
+            }
+            entity->m_bf.animations.lerp = lerp;
+        }
     }
 
 
