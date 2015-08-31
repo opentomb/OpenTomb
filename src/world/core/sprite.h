@@ -1,17 +1,11 @@
 #pragma once
 
-#include <array>
 #include <memory>
 #include <vector>
 
 #include <LinearMath/btVector3.h>
 
 #include <GL/glew.h>
-
-#include "loader/datatypes.h"
-#include "world/animation/animation.h"
-
-class btCollisionShape;
 
 namespace render
 {
@@ -20,13 +14,8 @@ class VertexArray;
 
 namespace world
 {
-struct RoomSector;
-struct SectorTween;
-
 namespace core
 {
-
-struct Vertex;
 
 /*
  * base sprite structure
@@ -56,25 +45,6 @@ struct SpriteBuffer
     //! The element count for each sub-range.
     std::vector<size_t> element_count_per_texture{};
 };
-
-struct Light
-{
-    btVector3 position;
-    float                       colour[4];
-
-    float                       inner;
-    float                       outer;
-    float                       length;
-    float                       cutoff;
-
-    float                       falloff;
-
-    loader::LightType           light_type;
-};
-
-btCollisionShape *BT_CSfromSphere(const btScalar& radius);
-btCollisionShape* BT_CSfromBBox(const BoundingBox &boundingBox, bool useCompression, bool buildBvh);
-btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 
 } // namespace core
 } // namespace world

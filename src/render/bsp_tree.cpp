@@ -8,7 +8,6 @@
 #include "render.h"
 #include "util/vmath.h"
 #include "world/core/frustum.h"
-#include "world/core/mesh.h"
 #include "world/core/polygon.h"
 
 namespace render

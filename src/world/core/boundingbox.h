@@ -2,6 +2,8 @@
 
 #include <LinearMath/btVector3.h>
 
+class btCollisionShape;
+
 namespace world
 {
 namespace core
@@ -58,6 +60,8 @@ struct BoundingBox
         return btMin(d[0], btMin(d[1], d[2]));
     }
 };
+
+btCollisionShape* BT_CSfromBBox(const BoundingBox &boundingBox, bool useCompression, bool buildBvh);
 
 } // namespace core
 } // namespace world

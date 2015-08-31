@@ -22,7 +22,6 @@
 #include "util/vmath.h"
 #include "world/camera.h"
 #include "world/character.h"
-#include "world/core/mesh.h"
 #include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/room.h"

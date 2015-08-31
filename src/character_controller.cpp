@@ -8,7 +8,6 @@
 #include "world/entity.h"
 #include "gui/gui.h"
 #include "world/hair.h"
-#include "world/core/mesh.h"
 #include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/resource.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/boundingbox.h"
-#include "core/mesh.h"
+#include "world/core/light.h"
 #include "object.h"
 #include "portal.h"
 
@@ -23,6 +23,7 @@ class Level;
 
 namespace world
 {
+struct SectorTween;
 
 namespace core
 {
@@ -155,5 +156,7 @@ struct Room : public Object
 
     void genMesh(World *world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr);
 };
+
+btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 
 } // namespace world

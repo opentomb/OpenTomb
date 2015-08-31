@@ -8,7 +8,6 @@
 #include "character_controller.h"
 #include "engine/engine.h"
 #include "world/entity.h"
-#include "world/core/mesh.h"
 #include "world/world.h"
 
 namespace world

@@ -10,7 +10,7 @@
 #include <LinearMath/btVector3.h>
 
 #include "engine/game.h"
-#include "world/core/mesh.h"
+#include "world/animation/animation.h"
 #include "world/object.h"
 #include "world/core/orientedboundingbox.h"
 

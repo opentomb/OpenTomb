@@ -34,9 +34,10 @@
 #include "util/vmath.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
-#include "world/core/mesh.h"
+#include "world/core/light.h"
 #include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
+#include "world/core/sprite.h"
 #include "world/entity.h"
 #include "world/portal.h"
 #include "world/room.h"
@@ -2187,7 +2188,7 @@ void Res_GenRoomCollision(World *world)
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
 
-        btCollisionShape *cshape = core::BT_CSfromHeightmap(room->sectors, room_tween, true, true);
+        btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room_tween, true, true);
 
         if(cshape)
         {

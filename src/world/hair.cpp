@@ -10,7 +10,6 @@
 #include "render/render.h"
 #include "script/script.h"
 #include "world/core/basemesh.h"
-#include "world/core/mesh.h"
 #include "world/skeletalmodel.h"
 
 namespace world
