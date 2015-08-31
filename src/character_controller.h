@@ -4,11 +4,10 @@
 #include <list>
 #include <vector>
 
-#include <LinearMath/btScalar.h>
-#include <LinearMath/btVector3.h>
-#include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btSphereShape.h>
+#include <LinearMath/btVector3.h>
 
 #include "engine/engine.h"
 #include "world/entity.h"

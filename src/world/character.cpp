@@ -1,10 +1,10 @@
 #include "character.h"
 
-#include "gui/gui.h"
-#include "resource.h"
 #include "engine/anim_state_control.h"
-#include "script/script.h"
+#include "gui/gui.h"
 #include "inventory.h"
+#include "resource.h"
+#include "script/script.h"
 #include "world/core/basemesh.h"
 #include "world/room.h"
 #include "world/skeletalmodel.h"

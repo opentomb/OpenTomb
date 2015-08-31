@@ -1,10 +1,10 @@
 #include "camera.h"
 
-#include <cmath>
-#include <cassert>
-
-#include "world/core/frustum.h"
 #include "util/vmath.h"
+#include "world/core/frustum.h"
+
+#include <cassert>
+#include <cmath>
 
 namespace world
 {

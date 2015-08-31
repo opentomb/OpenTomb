@@ -7,9 +7,9 @@
  * Created on January 21, 2013, 7:11 PM
  */
 
-#include <LinearMath/btScalar.h>
-
 #include "polygon.h"
+
+#include <LinearMath/btScalar.h>
 
 namespace world
 {

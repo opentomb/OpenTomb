@@ -3170,7 +3170,7 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(HAIR_TR5_KID_2);
     EXPOSE_C(HAIR_TR5_OLD);
 
-    EXPOSE_C(M_PI);
+    m_state.set("M_PI", SIMD_PI);
 
     using gui::FontStyle;
     m_state.set( "FONTSTYLE_CONSOLE_INFO", static_cast<int>(FontStyle::ConsoleInfo) );

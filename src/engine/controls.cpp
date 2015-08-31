@@ -8,12 +8,12 @@
 #include <SDL2/SDL_haptic.h>
 
 #include "common.h"
-#include "gui/console.h"
 #include "engine/engine.h"
 #include "engine/game.h"
-#include "script/script.h"
 #include "engine/system.h"
+#include "gui/console.h"
 #include "inventory.h"
+#include "script/script.h"
 
 extern bool done;
 

@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 
-#include "io/sdlreader.h"
 #include "game.h"
+#include "io/sdlreader.h"
 
 namespace loader
 {

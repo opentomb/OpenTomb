@@ -1,8 +1,8 @@
 #include "inventory.h"
 
 #include "script/script.h"
-#include "util/vmath.h"
 #include "strings.h"
+#include "util/vmath.h"
 
 InventoryManager  *main_inventory_manager = nullptr;
 

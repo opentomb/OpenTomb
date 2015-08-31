@@ -9,8 +9,8 @@
 
 #include <sndfile.h>
 
-#include "loader/level.h"
 #include "engine/game.h"
+#include "loader/level.h"
 
 namespace world
 {

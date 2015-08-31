@@ -4,7 +4,6 @@
 
 #include <LinearMath/btScalar.h>
 
-#include <lua.hpp>
 #include "LuaState.h"
 
 #define CVAR_NAME_SIZE 32

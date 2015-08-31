@@ -2,9 +2,8 @@
 
 #include <cstdint>
 
-#include <LinearMath/btScalar.h>
-#include <LinearMath/btVector3.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btVector3.h>
 
 #include "character_controller.h"
 #include "engine/engine.h"

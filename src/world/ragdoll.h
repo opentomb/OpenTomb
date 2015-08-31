@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
 namespace world

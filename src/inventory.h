@@ -1,8 +1,8 @@
 #pragma once
 
-#include <list>
-
 #include "gui/gui.h"
+
+#include <list>
 
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LinearMath/btScalar.h>
+
 #include <cstdint>
 
 namespace util

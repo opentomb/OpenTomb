@@ -5,10 +5,11 @@
 #include <vector>
 
 #include <LinearMath/btScalar.h>
+
 #include <GL/glew.h>
 
-#include "util/vmath.h"
 #include "loader/datatypes.h"
+#include "util/vmath.h"
 
 namespace world
 {

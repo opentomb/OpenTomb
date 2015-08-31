@@ -7,11 +7,11 @@
 #include <SDL2/SDL_keycode.h>
 
 #include "engine/engine.h"
+#include "engine/system.h"
 #include "gl_font.h"
 #include "gui.h"
-#include "script/script.h"
 #include "render/shader_manager.h"
-#include "engine/system.h"
+#include "script/script.h"
 
 using namespace gui;
 

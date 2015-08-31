@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
 #include "audio/audio.h"

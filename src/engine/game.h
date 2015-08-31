@@ -4,8 +4,8 @@
 #include <map>
 #include <memory>
 
-#include <LinearMath/btScalar.h>
 #include <btBulletCollisionCommon.h>
+#include <LinearMath/btScalar.h>
 
 // Original (canonical) TR frame rate.
 // Needed for animation speed calculations.

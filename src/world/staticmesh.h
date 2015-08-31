@@ -1,8 +1,8 @@
 #pragma once
 
-#include "object.h"
-#include "core/orientedboundingbox.h"
 #include "core/basemesh.h"
+#include "core/orientedboundingbox.h"
+#include "object.h"
 
 namespace engine
 {

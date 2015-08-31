@@ -1,9 +1,9 @@
 #pragma once
 
 #include "character_controller.h"
-#include "world/entity.h"
 #include "gl_font.h"
 #include "render/render.h"
+#include "world/entity.h"
 
 #include <list>
 

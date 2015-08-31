@@ -8,8 +8,8 @@
  */
 
 #include <cstdint>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

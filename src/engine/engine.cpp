@@ -27,7 +27,6 @@
 #endif
 
 #include "LuaState.h"
-#include "loader/level.h"
 
 #include "audio/audio.h"
 #include "character_controller.h"
@@ -39,6 +38,7 @@
 #include "gui/console.h"
 #include "gui/gui.h"
 #include "inventory.h"
+#include "loader/level.h"
 #include "render/gl_util.h"
 #include "render/render.h"
 #include "script/script.h"

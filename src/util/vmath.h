@@ -2,10 +2,9 @@
 
 #include <cmath>
 
-#include <LinearMath/btScalar.h>
-#include <LinearMath/btVector3.h>
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
+#include <LinearMath/btVector3.h>
 
 #define PLANE_X        1
 #define PLANE_Y        2
@@ -16,11 +15,11 @@ namespace util
 
 namespace
 {
-    constexpr const float DegPerRad = static_cast<float>(180 / M_PI);
-    constexpr const float RadPerDeg = static_cast<float>(M_PI / 180);
-    constexpr const float Rad90 = static_cast<float>(0.5*M_PI);
-    constexpr const float Rad180 = static_cast<float>(M_PI);
-    constexpr const float Rad360 = static_cast<float>(2 * M_PI);
+    constexpr const float DegPerRad = static_cast<float>(180 / SIMD_PI);
+    constexpr const float RadPerDeg = static_cast<float>(SIMD_PI / 180);
+    constexpr const float Rad90 = static_cast<float>(0.5*SIMD_PI);
+    constexpr const float Rad180 = static_cast<float>(SIMD_PI);
+    constexpr const float Rad360 = static_cast<float>(2 * SIMD_PI);
 }
 
 

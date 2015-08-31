@@ -311,13 +311,13 @@ union float4
 #else
         *this = *this - other;
 #endif
-	}
+        }
 
-	float max() const { return std::max(std::max(x, y), std::max(z, w)); }
-	float min() const { return std::min(std::min(x, y), std::min(z, w)); }
+        float max() const { return std::max(std::max(x, y), std::max(z, w)); }
+        float min() const { return std::min(std::min(x, y), std::min(z, w)); }
 
-	float4 min(const float4 &other) const
-	{
+        float4 min(const float4 &other) const
+        {
 #ifdef __SSE__
         return _mm_min_ps(v, other.v);
 #else

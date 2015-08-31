@@ -1,8 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
-#include <array>
 
 namespace engine
 {

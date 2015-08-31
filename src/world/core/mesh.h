@@ -4,13 +4,12 @@
 #include <memory>
 #include <vector>
 
-#include <LinearMath/btScalar.h>
 #include <LinearMath/btVector3.h>
 
 #include <GL/glew.h>
 
-#include "world/animation/animation.h"
 #include "loader/datatypes.h"
+#include "world/animation/animation.h"
 
 class btCollisionShape;
 

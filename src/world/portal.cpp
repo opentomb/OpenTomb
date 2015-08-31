@@ -5,10 +5,10 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <LinearMath/btScalar.h>
+#include <LinearMath/btVector3.h>
 
-#include "world/core/polygon.h"
 #include "util/vmath.h"
+#include "world/core/polygon.h"
 
 /*
  * CLIP PLANES

@@ -5,8 +5,8 @@
 #include <btBulletCollisionCommon.h>
 
 #include <array>
-#include <vector>
 #include <memory>
+#include <vector>
 
 
 namespace world

@@ -5,11 +5,11 @@
 
 #include <LinearMath/btScalar.h>
 
+#include "render.h"
+#include "util/vmath.h"
 #include "world/core/frustum.h"
 #include "world/core/mesh.h"
 #include "world/core/polygon.h"
-#include "util/vmath.h"
-#include "render.h"
 
 namespace render
 {

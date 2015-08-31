@@ -183,8 +183,6 @@ target_link_libraries(
 
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
-elseif(MSVC)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -D_USE_MATH_DEFINES)
 endif()
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )

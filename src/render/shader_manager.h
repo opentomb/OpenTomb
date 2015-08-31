@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cassert>
-
 #include "shader_description.h"
+
+#include <cassert>
 
 namespace render
 {

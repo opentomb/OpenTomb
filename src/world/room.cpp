@@ -1,12 +1,12 @@
 #include "room.h"
 
-#include "staticmesh.h"
 #include "engine/engine.h"
 #include "entity.h"
-#include "world.h"
 #include "resource.h"
+#include "staticmesh.h"
+#include "world.h"
 
-#include <BulletDynamics/btBulletDynamicsCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 namespace world
 {
