@@ -28,11 +28,6 @@ void BaseMesh::polySortInMesh()
 
 BaseMesh::~BaseMesh()
 {
-    clear();
-}
-
-void BaseMesh::clear()
-{
     if(m_vboVertexArray)
     {
         glDeleteBuffers(1, &m_vboVertexArray);
@@ -44,13 +39,6 @@ void BaseMesh::clear()
         glDeleteBuffers(1, &m_vboIndexArray);
         m_vboIndexArray = 0;
     }
-
-    m_polygons.clear();
-    m_transparencyPolygons.clear();
-    m_vertices.clear();
-    m_matrixIndices.clear();
-    m_elementsPerTexture.clear();
-    m_elements.clear();
 }
 
 /**
@@ -402,11 +390,10 @@ void BaseMesh::genFaces()
 
 btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useCompression, bool buildBvh, bool is_static)
 {
-    uint32_t cnt = 0;
     btTriangleMesh *trimesh = new btTriangleMesh;
-    btCollisionShape* ret;
 
-    for(const struct Polygon &p : mesh->m_polygons)
+    uint32_t cnt = 0;
+    for(const Polygon &p : mesh->m_polygons)
     {
         if(p.isBroken())
         {
@@ -429,6 +416,7 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
         return nullptr;
     }
 
+    btCollisionShape* ret;
     if(is_static)
     {
         ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);

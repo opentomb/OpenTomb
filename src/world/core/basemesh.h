@@ -66,7 +66,6 @@ struct BaseMesh
 
     ~BaseMesh();
 
-    void clear();
     void updateBoundingBox();
     void genVBO(const render::Render *renderer);
     void genFaces();
