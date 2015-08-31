@@ -8,6 +8,7 @@
 #include "character_controller.h"
 #include "engine/engine.h"
 #include "engine/system.h"
+#include "render/vertex_array.h"
 #include "world/character.h"
 #include "world/entity.h"
 #include "world/resource.h"

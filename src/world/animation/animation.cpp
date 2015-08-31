@@ -1,5 +1,6 @@
 #include "animation.h"
 
+#include "render/vertex_array.h"
 #include "world/core/mesh.h"
 #include "world/skeletalmodel.h"
 
