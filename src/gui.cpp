@@ -540,7 +540,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 {
     bf->animations.stepFrame(time);
 
-    Entity::updateCurrentBoneFrame(bf, nullptr);
+    Entity::updateCurrentBoneFrame(bf);
 }
 
 /**

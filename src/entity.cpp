@@ -744,7 +744,7 @@ void Entity::addOverrideAnim(int model_id)
     }
 }
 
-void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
+void Entity::updateCurrentBoneFrame(SSBoneFrame *bf)
 {
     SSBoneTag* btag = bf->bone_tags.data();
     BoneTag* src_btag, *next_btag;
@@ -950,50 +950,14 @@ void Entity::processSector()
 
 void Entity::setAnimation(int animation, int frame, int another_model)
 {
-    if(!m_bf.animations.model || animation >= static_cast<int>(m_bf.animations.model->animations.size()))
-    {
-        return;
-    }
+    m_bf.animations.setAnimation(animation, frame, another_model);
 
-    animation = (animation < 0) ? (0) : (animation);
     m_bt.no_fix_all = false;
 
-    if(another_model >= 0)
-    {
-        SkeletalModel* model = engine_world.getModelByID(another_model);
-        if(!model || animation >= static_cast<int>(model->animations.size()))
-            return;
-        m_bf.animations.model = model;
-    }
-
-    AnimationFrame* anim = &m_bf.animations.model->animations[animation];
-
-    // FIXME: neg. frame modulo - is this as expected?
-    // C++ modulo is tricky for negative numbers, in this case
-    // frame -1 will not be the last (size-1), but the second to last (size-2) frame:
-//    frame %= anim->frames.size();
-//    frame = (frame >= 0) ? (frame) : (anim->frames.size() - 1 + frame);
-    if(frame < 0)
-    {
-        frame = anim->frames.size() - 1 - ((-frame-1) % anim->frames.size());
-    }
-    else
-    {
-        frame %= anim->frames.size();
-    }
-
-    m_bf.animations.period = 1.0f / TR_FRAME_RATE;
-    m_bf.animations.last_state = anim->state_id;
-    m_bf.animations.next_state = anim->state_id;
-    m_bf.animations.current_animation = animation;
-    m_bf.animations.current_frame = frame;
-
-//    m_bf.animations.lerp = 0.0f;
-//    m_bf.animations.frame_time = 0.0f;
-
-    // jeep needs this here?
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    // some items (jeep) need this here...
+    updateCurrentBoneFrame(&m_bf);
 //    updateRigidBody(false);
+    return;
 }
 
 struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim)
@@ -1059,7 +1023,7 @@ int Entity::getAnimDispatchCase(uint32_t id)
 void Entity::slerpBones(btScalar lerp)
 {
     m_bf.animations.lerp = lerp;
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame(&m_bf);
     return;
 }
 
@@ -1074,46 +1038,64 @@ void Entity::lerpTransform(btScalar lerp)
         m_transform.setRotation(q);
         m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
     }
+    return;
 }
 
-
-/**
- * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
- */
-int Entity::frame(btScalar time)
+int Entity::stepAnimation(btScalar time)
 {
-    int retval = ENTITY_ANIM_NONE;
+    int stepResult = ENTITY_ANIM_NONE;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
         return ENTITY_ANIM_NONE;
     }
-
     if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
 
+    stepResult = m_bf.animations.stepFrame(time, this);
 
-    SSAnimation& anim = m_bf.animations;
-    const std::vector<AnimationFrame>& animlist = m_bf.animations.model->animations;
+    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
-    // advance current frame:
-    retval = anim.stepFrame(time, this);
-
-    setAnimation(anim.current_animation, anim.current_frame);
-
-    // -------------
-
-
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame(&m_bf);
     fixPenetrations(nullptr);
 
 
-    // TODO: "retval" is used as "state" in anim state handler...
-    frameImpl(time, anim.current_frame, retval);
-    return retval;
+    return stepResult;
+}
 
-    // ? do basic movement
+/**
+ * Entity framestep actions
+ * @param time      frame time
+ */
+void Entity::frame(btScalar time)
+{
+    if(!m_enabled )
+    {
+        return;
+    }
+    if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    {
+        // Ragdoll
+        updateRigidBody(false); // bbox update, room update, m_transform from btBody...
+        return;
+    }
 
+    fixPenetrations(nullptr);
+    processSector();    // triggers
+    engine_lua.loopEntity(id());
+
+    if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
+        checkCollisionCallbacks();
+
+    stepAnimation(time);
+
+    // TODO: check rigidbody update requirements.
+    //       If m_transform changes, rigid body must be updated regardless of anim frame change...?
+    //if(animStepResult != ENTITY_ANIM_NONE)
+    //{ }
+    updateCurrentBoneFrame(&m_bf);
+    updateRigidBody(false);
+    return;
 }
 
 
@@ -1304,7 +1286,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup bodies.
     m_bt.bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity::updateCurrentBoneFrame(&m_bf, &m_transform);
+    Entity::updateCurrentBoneFrame(&m_bf);
     m_bt.no_fix_all = false;
     m_bt.no_fix_body_parts = 0x00000000;
 #if 0

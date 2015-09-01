@@ -183,8 +183,9 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-    int  frame(btScalar time);  // process frame + trying to change state
+
+    int stepAnimation(btScalar time);
+    virtual void frame(btScalar time);  // entity frame step
 
     void slerpBones(btScalar lerp);
     void lerpTransform(btScalar lerp);
@@ -199,7 +200,7 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
+    static void updateCurrentBoneFrame(SSBoneFrame *bf);
     void doAnimCommand(const AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
@@ -224,10 +225,6 @@ public:
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t frame, int /*state*/)
-    {
-        m_bf.animations.current_frame = frame;
-    }
 
     virtual void processSectorImpl()
     {

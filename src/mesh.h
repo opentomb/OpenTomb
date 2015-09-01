@@ -277,7 +277,7 @@ struct SSAnimation
     uint16_t                    anim_flags = 0;                                     // additional animation control param
 
     btScalar                    period = 1.0f / 30.0f;                              // one frame change period
-    btScalar                    frame_time = 0;                                     // time into this animation
+    btScalar                    frame_time = 0;                                     // time in current frame
 
     // lerp:
     btScalar                    lerp = 0;
@@ -289,6 +289,7 @@ struct SSAnimation
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
 
+    void setAnimation(int animation, int frame, int another_model);
     bool findStateChange(uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
     int  stepFrame(btScalar time, Entity *cmdEntity = nullptr);
 };

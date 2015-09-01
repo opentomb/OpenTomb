@@ -208,6 +208,46 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     }
 }
 
+void SSAnimation::setAnimation(int animation, int frame, int another_model)
+{
+    if(!model || animation >= static_cast<int>(model->animations.size()))
+    {
+        return;
+    }
+    // FIXME: is anim < 0 actually happening?
+    animation = (animation < 0) ? (0) : (animation);
+
+    if(another_model >= 0)
+    {
+        SkeletalModel* new_model = engine_world.getModelByID(another_model);
+        if(!new_model || animation >= static_cast<int>(new_model->animations.size()))
+            return;
+        model = new_model;
+    }
+
+    AnimationFrame* anim = &model->animations[animation];
+
+    if(frame < 0)
+        frame = anim->frames.size() - 1 - ((-frame-1) % anim->frames.size());
+    else
+        frame %= anim->frames.size();
+
+    current_animation   = animation;
+    current_frame       = frame;
+    last_state          = anim->state_id;
+    next_state          = anim->state_id;
+
+    period              = 1.0f / TR_FRAME_RATE;
+//    m_bf.animations.lerp = 0.0f;
+//    m_bf.animations.frame_time = 0.0f;
+    return;
+}
+
+
+
+
+
+
 /**
  * Find a possible state change to \c stateid
  * \param[in]      stateid  the desired target state
@@ -248,7 +288,7 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
 {
     int16_t frame_id, anim_id;
     const std::vector<AnimationFrame>& animlist = model->animations;
-    int retval = ENTITY_ANIM_NEWFRAME;
+    int stepResult = ENTITY_ANIM_NEWFRAME;
 
     anim_id  = current_animation;
     frame_id = current_frame;
@@ -289,7 +329,7 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
         {
             last_state = animlist[anim_id].state_id;
             next_state = last_state;
-            retval = ENTITY_ANIM_NEWANIM;
+            stepResult = ENTITY_ANIM_NEWANIM;
         }
     }
 
@@ -308,7 +348,7 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
 
         last_state = animlist[anim_id].state_id;
         next_state = last_state;
-        retval = ENTITY_ANIM_NEWANIM;
+        stepResult = ENTITY_ANIM_NEWANIM;
     }
 
     current_animation = anim_id;
@@ -321,7 +361,7 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
             cmdEntity->doAnimCommand(acmd);
         }
     }
-    return retval;
+    return stepResult;
 }
 
 

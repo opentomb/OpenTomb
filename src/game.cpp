@@ -677,85 +677,12 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition(), cam->m_currentRoom);
 }
 
-void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
-{
-    for(auto entityPair : entities)
-    {
-        std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->m_enabled)
-        {
-            entity->processSector();
-            engine_lua.loopEntity(entity->id());
-
-            if(entity->m_typeFlags & ENTITY_TYPE_COLLCHECK)
-                entity->checkCollisionCallbacks();
-        }
-    }
-}
-
-void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
-{
-    for(auto entityPair : entities)
-    {
-        std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
-        {
-            entity->updateRigidBody(false);
-        }
-        else if(entity->frame(engine_frame_time))
-        {
-            entity->updateRigidBody(false);
-        }
-    }
-}
-
 void Game_UpdateAI()
 {
     //for(ALL CHARACTERS, EXCEPT PLAYER)
     {
         // UPDATE AI commands
     }
-}
-
-void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> >& entities)
-{
-    for(const auto& entPair : entities)
-    {
-        std::shared_ptr<Character> ent = std::dynamic_pointer_cast<Character>(entPair.second);
-        if(!ent)
-            continue;
-
-        if(ent->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            ent->checkActivators();
-        }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
-        {
-            ent->m_response.killed = true;                                      // Kill, if no HP.
-        }
-        ent->applyCommands();
-        ent->updateHair();
-    }
-}
-
-void Game_UpdateCharacters()
-{
-    std::shared_ptr<Character> ent = engine_world.character;
-
-    if(ent)
-    {
-        if(ent->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            ent->checkActivators();
-        }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
-        {
-            ent->m_response.killed = true;   // Kill, if no HP.
-        }
-        ent->updateHair();
-    }
-
-    Game_UpdateCharactersTree(engine_world.entity_tree);
 }
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
@@ -788,7 +715,6 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
 #define PHYSICS_RATE_FACTOR (2)
 #define PHYSICS_RATE (TR_FRAME_RATE * PHYSICS_RATE_FACTOR)
 #define MAX_SIM_SUBSTEPS (6)
-extern btScalar gLerp;
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
@@ -819,26 +745,16 @@ void Game_Frame(btScalar time)
         return;
     }
 
-
-    // We're going to update main logic with a fixed step.
-    // This allows to conserve CPU resources and keep everything in sync!
-
-
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     Game_ApplyControls(engine_world.character);
 
-    // FIXME: globlal lerp...
-    gLerp += engine_frame_time * 30.0;
 
 //    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
     bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1.0/30.0);
 
 
-    btScalar lerp = gLerp;
-    if( lerp > 1.0 ) {
-        lerp = 1.0;
-    }
+    btScalar lerp = 0;
 
     if(engine_world.character) {
         if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))

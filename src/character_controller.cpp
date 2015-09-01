@@ -2242,21 +2242,76 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, int state)
+/**
+ * Character framestep actions
+ * @param time      frame time
+ */
+void Character::frame(btScalar time)
 {
-    // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    int animStepResult = ENTITY_ANIM_NONE;
 
-    m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+    if(!m_enabled && !isPlayer())
+    {
+        return;
+    }
+    if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    {
+        // Ragdoll
+        updateRigidBody(false); // bbox update, room update, m_transform from btBody...
+        return;
+    }
+    if(control_states.noclip && control_states.free_look)
+    {
+        // todo
+    }
 
-    m_bf.animations.current_frame = frame;
+    fixPenetrations(nullptr);
+    processSector();
+
+    if(isPlayer())  // Player:
+    {
+        updateParams();
+        checkCollisionCallbacks();  // physics collision checks, lua callbacks
+    }
+    else            // Other Character entities:
+    {
+        engine_lua.loopEntity(id());
+        if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
+            checkCollisionCallbacks();
+    }
+
+    animStepResult = stepAnimation(time);
+    if(m_bf.animations.onFrame != nullptr)
+    {
+        m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);
+    }
+
+    applyCommands();    // state_func()
+
+    if(m_command.action && (m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    {
+        checkActivators();          // bbox check f. interact/pickup, lua callbacks
+    }
+    if(getParam(PARAM_HEALTH) <= 0.0)
+    {
+        m_response.killed = true;   // Kill, if no HP.
+    }
+    updateHair();
 
     doWeaponFrame(time);
 
-    if(m_bf.animations.onFrame != nullptr)
-    {
-        m_bf.animations.onFrame(this, &m_bf.animations, state);
-    }
+    // Update acceleration/speed, it is calculated per anim frame index
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+
+
+    // TODO: check rigidbody update requirements.
+    //       If m_transform changes, rigid body must be updated regardless of anim frame change...?
+    //if(animStepResult != ENTITY_ANIM_NONE)
+    //{ }
+    updateCurrentBoneFrame(&m_bf);
+    updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+    return;
 }
 
 void Character::processSectorImpl()

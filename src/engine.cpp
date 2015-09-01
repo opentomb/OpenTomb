@@ -544,12 +544,14 @@ void Engine_ShowDebugInfo()
                       ent->m_bf.animations.current_animation,
                       ent->m_bf.animations.last_state,
                       ent->m_bf.animations.next_state,
-                      engine_world.character->m_currentSpeed,
+                      ent->m_currentSpeed,
                       ent->m_bf.animations.current_frame
                       );
-        Gui_OutTextXY(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
+        Gui_OutTextXY(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
                 ent->m_bf.animations.lerp_last_animation,
                 ent->m_bf.animations.lerp_last_frame,
+                ent->m_bf.animations.frame_time,
+                ent->m_bf.animations.lerp,
                 ent->m_lerp_last_transform.getOrigin().x(),
                 ent->m_lerp_last_transform.getOrigin().y(),
                 ent->m_lerp_last_transform.getOrigin().z(),
@@ -646,36 +648,12 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 
 // -------------------------------
 
-void Engine_InternalPreTickCallback(btDynamicsWorld *world, btScalar timeStep)
+
+// FIXME: restore/update interp transform
+// This is a kludge to interpolate Entity->m_transform (for rendering/bone updates),
+// but also keep it in sync for the entity's frame actions:
+void restoreEntityLerpTransforms()
 {
-    btScalar engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = timeStep;
-
-
-
-
-
-
-    engine_frame_time = engine_frame_time_backup;
-    return;
-}
-
-
-
-/**
- * update current room of bullet object
- */
-btScalar gLerp = 0.0f;
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
-{
-    gLerp = 0.0f;
-
-    // FIXME: do this in pre-step!
-
-    btScalar engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = timeStep;
-
-    // FIXME: restore interp transform:
     if(engine_world.character)
     {
         if(engine_world.character->m_lerp_valid)
@@ -698,56 +676,10 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 //            entity->m_lerp_curr_transform = entity->m_transform;
         }
     }
-
-
-    engine_lua.doTasks(GAME_LOGIC_REFRESH_INTERVAL);
-    Game_UpdateAI();
-    Audio_Update();
-
-    if(engine_world.character)
-    {
-        engine_world.character->processSector();
-        engine_world.character->updateParams();
-        engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
-
-        if(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
-        {
-//            printf("*** DYN RAG\n");
-//            engine_world.character->updateRigidBody(false);
-        }
-        else if(!control_states.noclip && !control_states.free_look)
-        {
-            engine_world.character->frame(engine_frame_time);
-            engine_world.character->applyCommands();
-        }
-    }
-    Game_LoopEntities(engine_world.entity_tree);
-
-    Game_UpdateCharacters();
-
-    Game_UpdateAllEntities(engine_world.entity_tree);
-
-
-    // ----------------------------------------------------------
-
-    for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
-    {
-        assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if(body && !body->isStaticObject() && body->getMotionState())
-        {
-            btTransform trans;
-            body->getMotionState()->getWorldTransform(trans);
-            EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
-            if(cont && (cont->object_type == OBJECT_BULLET_MISC))
-            {
-                cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
-            }
-        }
-    }
-
-    // set interp transform:
+    return;
+}
+void updateEntityLerpTransforms()
+{
     if(engine_world.character)
     {
         if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
@@ -757,7 +689,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 
             btScalar tmp = engine_world.character->m_bf.animations.lerp;
             engine_world.character->m_bf.animations.lerp = 1.0;
-            engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf, 0);
+            engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf);
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
 
@@ -776,7 +708,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 
                 btScalar tmp = entity->m_bf.animations.lerp;
                 entity->m_bf.animations.lerp = 1.0;
-                entity->updateCurrentBoneFrame(&entity->m_bf, 0);
+                entity->updateCurrentBoneFrame(&entity->m_bf);
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
 
@@ -784,7 +716,68 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             }
         }
     }
+    return;
+}
 
+
+/**
+ * Pre-physics step callback
+ */
+void Engine_InternalPreTickCallback(btDynamicsWorld *world, btScalar timeStep)
+{
+    btScalar engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = timeStep;
+
+    // Pre-step actions
+
+    engine_frame_time = engine_frame_time_backup;
+    return;
+}
+
+/**
+ * Post-physics step callback
+ */
+void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
+{
+    btScalar engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = timeStep;
+
+    // TODO: move to Pre-Step to keep actor attachments (hair) in sync:
+    restoreEntityLerpTransforms();
+
+    engine_lua.doTasks(GAME_LOGIC_REFRESH_INTERVAL);
+    Game_UpdateAI();
+    Audio_Update();
+
+    if(engine_world.character)
+    {
+        engine_world.character->frame(timeStep);
+    }
+    for(const auto& entPair : engine_world.entity_tree)
+    {
+        entPair.second->frame(timeStep);
+    }
+
+    // Post-Step:
+    // Update phys object's transform/room:
+    for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
+    {
+        assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
+        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+        btRigidBody* body = btRigidBody::upcast(obj);
+        if(body && !body->isStaticObject() && body->getMotionState())
+        {
+            btTransform trans;
+            body->getMotionState()->getWorldTransform(trans);
+            EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
+            if(cont && (cont->object_type == OBJECT_BULLET_MISC))
+            {
+                cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
+            }
+        }
+    }
+
+    updateEntityLerpTransforms();
     engine_frame_time = engine_frame_time_backup;
     return;
 }

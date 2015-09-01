@@ -49,10 +49,7 @@ void Game_LevelTransition(uint16_t level_index);
 
 void Game_ApplyControls(std::shared_ptr<Entity> ent);
 
-void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
-void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
 void Game_UpdateAI();
-void Game_UpdateCharacters();
 
 void Cam_FollowEntity(Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
