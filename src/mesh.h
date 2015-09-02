@@ -289,7 +289,7 @@ struct SSAnimation
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
 
-    void setAnimation(int animation, int frame, int another_model);
+    void setAnimation(int animation, int frame = 0, int another_model = -1);
     bool findStateChange(uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
     int  stepFrame(btScalar time, Entity *cmdEntity = nullptr);
 };

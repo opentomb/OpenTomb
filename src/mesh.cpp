@@ -245,9 +245,6 @@ void SSAnimation::setAnimation(int animation, int frame, int another_model)
 
 
 
-
-
-
 /**
  * Find a possible state change to \c stateid
  * \param[in]      stateid  the desired target state
@@ -293,8 +290,36 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
     anim_id  = current_animation;
     frame_id = current_frame;
 
+    // --------
+    // FIXME: hack for reverse framesteps (weaponanims):
+    if(time < 0.0f) {
+        frame_time -= time;
+        if(frame_time + GAME_LOGIC_REFRESH_INTERVAL/2.0f < period)
+        {
+            lerp = frame_time / period;
+            stepResult = ENTITY_ANIM_NONE;
+        }
+        else
+        {
+            lerp_last_animation = anim_id;
+            lerp_last_frame = frame_id;
+            frame_time = 0.0f;
+            lerp = 0.0f;
+            frame_id--;
+            if(frame_id < 0) {
+                frame_id = animlist[anim_id].frames.size()-1;
+                stepResult = ENTITY_ANIM_NEWANIM;
+            } else {
+                stepResult = ENTITY_ANIM_NEWFRAME;
+            }
+            current_frame = frame_id;
+        }
+        return stepResult;
+    }
+    // --------
+
     frame_time += time;
-    if( (frame_time + GAME_LOGIC_REFRESH_INTERVAL/2.0f) < period)
+    if(frame_time + GAME_LOGIC_REFRESH_INTERVAL/2.0f < period)
     {
         lerp = frame_time / period;
         return ENTITY_ANIM_NONE;
@@ -302,8 +327,8 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
 
     lerp_last_animation = anim_id;
     lerp_last_frame = frame_id;
-    frame_time = 0.0;
-    lerp = 0.0;
+    frame_time = 0.0f;
+    lerp = 0.0f;
 
     frame_id++;
 

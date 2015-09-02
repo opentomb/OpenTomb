@@ -1022,6 +1022,10 @@ int Entity::getAnimDispatchCase(uint32_t id)
 // ----------------------------------------
 void Entity::slerpBones(btScalar lerp)
 {
+    for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
+    {
+        ss_anim->lerp = lerp;
+    }
     m_bf.animations.lerp = lerp;
     updateCurrentBoneFrame(&m_bf);
     return;
@@ -1054,11 +1058,10 @@ int Entity::stepAnimation(btScalar time)
 
     stepResult = m_bf.animations.stepFrame(time, this);
 
-    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
+//    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
     updateCurrentBoneFrame(&m_bf);
     fixPenetrations(nullptr);
-
 
     return stepResult;
 }
