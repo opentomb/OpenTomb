@@ -1,24 +1,7 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: t; c-basic-offset: 3 -*- */
-/*================================================================
- *
- * Project : OpenRaider
- * Author  : Terry 'Mongoose' Hendrix II
- * Website : http://www.westga.edu/~stu7440/
- * Email   : stu7440@westga.edu
- * Object  : gl_util
- * License : No use w/o permission (C) 2001 Mongoose
- * Comments:
- *
- *
- *           This file was generated using Mongoose's C++
- *           template generator script.  <stu7440@westga.edu>
- *
- *-- History -------------------------------------------------
- *
- * 2001.12.31:
- * Mongoose - Created
- * TeslaRus - modyfied
- =================================================================*/
+
+/*****************************************************************
+ ************** OLD GOOD QUAKE ENGINE OPENGL STYLE ***************
+ *****************************************************************/
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
@@ -33,108 +16,122 @@
 #define GL_LOG_FILENAME "gl_log.txt"
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
-#ifndef GL_GLEXT_PROTOTYPES
-PFNGLDELETEOBJECTARBPROC                glDeleteObjectARB =                     NULL;
-PFNGLGETHANDLEARBPROC                   glGetHandleARB =                        NULL;
-PFNGLDETACHOBJECTARBPROC                glDetachObjectARB =                     NULL;
-PFNGLCREATESHADEROBJECTARBPROC          glCreateShaderObjectARB =               NULL;
-PFNGLSHADERSOURCEARBPROC                glShaderSourceARB =                     NULL;
-PFNGLCOMPILESHADERARBPROC               glCompileShaderARB =                    NULL;
-PFNGLCREATEPROGRAMOBJECTARBPROC         glCreateProgramObjectARB =              NULL;
-PFNGLATTACHOBJECTARBPROC                glAttachObjectARB =                     NULL;
-PFNGLLINKPROGRAMARBPROC                 glLinkProgramARB =                      NULL;
-PFNGLUSEPROGRAMOBJECTARBPROC            glUseProgramObjectARB =                 NULL;
-PFNGLVALIDATEPROGRAMARBPROC             glValidateProgramARB =                  NULL;
-PFNGLUNIFORM1FARBPROC                   glUniform1fARB =                        NULL;
-PFNGLUNIFORM2FARBPROC                   glUniform2fARB =                        NULL;
-PFNGLUNIFORM3FARBPROC                   glUniform3fARB =                        NULL;
-PFNGLUNIFORM4FARBPROC                   glUniform4fARB =                        NULL;
-PFNGLUNIFORM1IARBPROC                   glUniform1iARB =                        NULL;
-PFNGLUNIFORM2IARBPROC                   glUniform2iARB =                        NULL;
-PFNGLUNIFORM3IARBPROC                   glUniform3iARB =                        NULL;
-PFNGLUNIFORM4IARBPROC                   glUniform4iARB =                        NULL;
-PFNGLUNIFORM1FVARBPROC                  glUniform1fvARB =                       NULL;
-PFNGLUNIFORM2FVARBPROC                  glUniform2fvARB =                       NULL;
-PFNGLUNIFORM3FVARBPROC                  glUniform3fvARB =                       NULL;
-PFNGLUNIFORM4FVARBPROC                  glUniform4fvARB =                       NULL;
-PFNGLUNIFORM1IVARBPROC                  glUniform1ivARB =                       NULL;
-PFNGLUNIFORM2IVARBPROC                  glUniform2ivARB =                       NULL;
-PFNGLUNIFORM3IVARBPROC                  glUniform3ivARB =                       NULL;
-PFNGLUNIFORM4IVARBPROC                  glUniform4ivARB =                       NULL;
-PFNGLUNIFORMMATRIX2FVARBPROC            glUniformMatrix2fvARB =                 NULL;
-PFNGLUNIFORMMATRIX3FVARBPROC            glUniformMatrix3fvARB =                 NULL;
-PFNGLUNIFORMMATRIX4FVARBPROC            glUniformMatrix4fvARB =                 NULL;
-PFNGLGETOBJECTPARAMETERFVARBPROC        glGetObjectParameterfvARB =             NULL;
-PFNGLGETOBJECTPARAMETERIVARBPROC        glGetObjectParameterivARB =             NULL;
-PFNGLGETINFOLOGARBPROC                  glGetInfoLogARB =                       NULL;
-PFNGLGETATTACHEDOBJECTSARBPROC          glGetAttachedObjectsARB =               NULL;
-PFNGLGETUNIFORMLOCATIONARBPROC          glGetUniformLocationARB =               NULL;
-PFNGLGETACTIVEUNIFORMARBPROC            glGetActiveUniformARB =                 NULL;
-PFNGLGETUNIFORMFVARBPROC                glGetUniformfvARB =                     NULL;
-PFNGLGETUNIFORMIVARBPROC                glGetUniformivARB =                     NULL;
-PFNGLGETSHADERSOURCEARBPROC             glGetShaderSourceARB =                  NULL;
 
-PFNGLBINDATTRIBLOCATIONARBPROC          glBindAttribLocationARB =               NULL;
-PFNGLGETACTIVEATTRIBARBPROC             glGetActiveAttribARB =                  NULL;
-PFNGLGETATTRIBLOCATIONARBPROC           glGetAttribLocationARB =                NULL;
-PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glEnableVertexAttribArrayARB =          NULL;
-PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glDisableVertexAttribArrayARB =         NULL;
-PFNGLVERTEXATTRIBPOINTERARBPROC         glVertexAttribPointerARB =              NULL;
+PFNGLGETERRORPROC                      qglGetError =                            NULL;
+PFNGLGETSTRINGPROC                     qglGetString =                           NULL;
+PFNGLGETBOOLEANVPROC                   qglGetBooleanv =                         NULL;
+PFNGLGETDOUBLEVPROC                    qglGetDoublev =                          NULL;
+PFNGLGETFLOATVPROC                     qglGetFloatv =                           NULL;
+PFNGLGETIINTEGERVPROC                  qglGetIntegerv =                         NULL;
 
-PFNGLACTIVETEXTUREARBPROC               glActiveTextureARB =                    NULL;
-PFNGLCLIENTACTIVETEXTUREARBPROC         glClientActiveTextureARB =              NULL;
-PFNGLMULTITEXCOORD1DARBPROC             glMultiTexCoord1dARB =                  NULL;
-PFNGLMULTITEXCOORD1DVARBPROC            glMultiTexCoord1dvARB =                 NULL;
-PFNGLMULTITEXCOORD1FARBPROC             glMultiTexCoord1fARB =                  NULL;
-PFNGLMULTITEXCOORD1FVARBPROC            glMultiTexCoord1fvARB =                 NULL;
-PFNGLMULTITEXCOORD1IARBPROC             glMultiTexCoord1iARB =                  NULL;
-PFNGLMULTITEXCOORD1IVARBPROC            glMultiTexCoord1ivARB =                 NULL;
-PFNGLMULTITEXCOORD1SARBPROC             glMultiTexCoord1sARB =                  NULL;
-PFNGLMULTITEXCOORD1SVARBPROC            glMultiTexCoord1svARB =                 NULL;
-PFNGLMULTITEXCOORD2DARBPROC             glMultiTexCoord2dARB =                  NULL;
-PFNGLMULTITEXCOORD2DVARBPROC            glMultiTexCoord2dvARB =                 NULL;
-PFNGLMULTITEXCOORD2FARBPROC             glMultiTexCoord2fARB =                  NULL;
-PFNGLMULTITEXCOORD2FVARBPROC            glMultiTexCoord2fvARB =                 NULL;
-PFNGLMULTITEXCOORD2IARBPROC             glMultiTexCoord2iARB =                  NULL;
-PFNGLMULTITEXCOORD2IVARBPROC            glMultiTexCoord2ivARB =                 NULL;
-PFNGLMULTITEXCOORD2SARBPROC             glMultiTexCoord2sARB =                  NULL;
-PFNGLMULTITEXCOORD2SVARBPROC            glMultiTexCoord2svARB =                 NULL;
-PFNGLMULTITEXCOORD3DARBPROC             glMultiTexCoord3dARB =                  NULL;
-PFNGLMULTITEXCOORD3DVARBPROC            glMultiTexCoord3dvARB =                 NULL;
-PFNGLMULTITEXCOORD3FARBPROC             glMultiTexCoord3fARB =                  NULL;
-PFNGLMULTITEXCOORD3FVARBPROC            glMultiTexCoord3fvARB =                 NULL;
-PFNGLMULTITEXCOORD3IARBPROC             glMultiTexCoord3iARB =                  NULL;
-PFNGLMULTITEXCOORD3IVARBPROC            glMultiTexCoord3ivARB =                 NULL;
-PFNGLMULTITEXCOORD3SARBPROC             glMultiTexCoord3sARB =                  NULL;
-PFNGLMULTITEXCOORD3SVARBPROC            glMultiTexCoord3svARB =                 NULL;
-PFNGLMULTITEXCOORD4DARBPROC             glMultiTexCoord4dARB =                  NULL;
-PFNGLMULTITEXCOORD4DVARBPROC            glMultiTexCoord4dvARB =                 NULL;
-PFNGLMULTITEXCOORD4FARBPROC             glMultiTexCoord4fARB =                  NULL;
-PFNGLMULTITEXCOORD4FVARBPROC            glMultiTexCoord4fvARB =                 NULL;
-PFNGLMULTITEXCOORD4IARBPROC             glMultiTexCoord4iARB =                  NULL;
-PFNGLMULTITEXCOORD4IVARBPROC            glMultiTexCoord4ivARB =                 NULL;
-PFNGLMULTITEXCOORD4SARBPROC             glMultiTexCoord4sARB =                  NULL;
-PFNGLMULTITEXCOORD4SVARBPROC            glMultiTexCoord4svARB =                 NULL;
+PFNGLGENTEXTURESPROC                   qglGenTextures =                         NULL;
+PFNGLDELETETEXTURESPROC                qglDeleteTextures =                      NULL;
+PFNGLBINDTEXTURESPROC                  qglBindTexture =                         NULL;
+PFNGLTEXPATAMETERIPROC                 qglTexParameteri =                       NULL;
+PFNGLTEXPATAMETERFPROC                 qglTexParameterf =                       NULL;
+PFNGLTEXIMAGE2DPROC                    qglTexImage2D =                          NULL;
 
-PFNGLBINDBUFFERARBPROC                  glBindBufferARB =                       NULL;
-PFNGLDELETEBUFFERSARBPROC               glDeleteBuffersARB =                    NULL;
-PFNGLGENBUFFERSARBPROC                  glGenBuffersARB =                       NULL;
-PFNGLISBUFFERARBPROC                    glIsBufferARB =                         NULL;
-PFNGLBUFFERDATAARBPROC                  glBufferDataARB =                       NULL;
-PFNGLBUFFERSUBDATAARBPROC               glBufferSubDataARB =                    NULL;
-PFNGLGETBUFFERSUBDATAARBPROC            glGetBufferSubDataARB =                 NULL;
-PFNGLMAPBUFFERARBPROC                   glMapBufferARB =                        NULL;
-PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      NULL;
-PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
-PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
 
-PFNGLBINDVERTEXARRAYPROC                glBindVertexArray =                     NULL;
-PFNGLDELETEVERTEXARRAYSPROC             glDeleteVertexArrays =                  NULL;
-PFNGLGENVERTEXARRAYSPROC                glGenVertexArrays =                     NULL;
-PFNGLISVERTEXARRAYPROC                  glIsVertexArray =                       NULL;
+PFNGLDELETEOBJECTARBPROC               qglDeleteObjectARB =                     NULL;
+PFNGLGETHANDLEARBPROC                  qglGetHandleARB =                        NULL;
+PFNGLDETACHOBJECTARBPROC               qglDetachObjectARB =                     NULL;
+PFNGLCREATESHADEROBJECTARBPROC         qglCreateShaderObjectARB =               NULL;
+PFNGLSHADERSOURCEARBPROC               qglShaderSourceARB =                     NULL;
+PFNGLCOMPILESHADERARBPROC              qglCompileShaderARB =                    NULL;
+PFNGLCREATEPROGRAMOBJECTARBPROC        qglCreateProgramObjectARB =              NULL;
+PFNGLATTACHOBJECTARBPROC               qglAttachObjectARB =                     NULL;
+PFNGLLINKPROGRAMARBPROC                qglLinkProgramARB =                      NULL;
+PFNGLUSEPROGRAMOBJECTARBPROC           qglUseProgramObjectARB =                 NULL;
+PFNGLVALIDATEPROGRAMARBPROC            qglValidateProgramARB =                  NULL;
+PFNGLUNIFORM1FARBPROC                  qglUniform1fARB =                        NULL;
+PFNGLUNIFORM2FARBPROC                  qglUniform2fARB =                        NULL;
+PFNGLUNIFORM3FARBPROC                  qglUniform3fARB =                        NULL;
+PFNGLUNIFORM4FARBPROC                  qglUniform4fARB =                        NULL;
+PFNGLUNIFORM1IARBPROC                  qglUniform1iARB =                        NULL;
+PFNGLUNIFORM2IARBPROC                  qglUniform2iARB =                        NULL;
+PFNGLUNIFORM3IARBPROC                  qglUniform3iARB =                        NULL;
+PFNGLUNIFORM4IARBPROC                  qglUniform4iARB =                        NULL;
+PFNGLUNIFORM1FVARBPROC                 qglUniform1fvARB =                       NULL;
+PFNGLUNIFORM2FVARBPROC                 qglUniform2fvARB =                       NULL;
+PFNGLUNIFORM3FVARBPROC                 qglUniform3fvARB =                       NULL;
+PFNGLUNIFORM4FVARBPROC                 qglUniform4fvARB =                       NULL;
+PFNGLUNIFORM1IVARBPROC                 qglUniform1ivARB =                       NULL;
+PFNGLUNIFORM2IVARBPROC                 qglUniform2ivARB =                       NULL;
+PFNGLUNIFORM3IVARBPROC                 qglUniform3ivARB =                       NULL;
+PFNGLUNIFORM4IVARBPROC                 qglUniform4ivARB =                       NULL;
+PFNGLUNIFORMMATRIX2FVARBPROC           qglUniformMatrix2fvARB =                 NULL;
+PFNGLUNIFORMMATRIX3FVARBPROC           qglUniformMatrix3fvARB =                 NULL;
+PFNGLUNIFORMMATRIX4FVARBPROC           qglUniformMatrix4fvARB =                 NULL;
+PFNGLGETOBJECTPARAMETERFVARBPROC       qglGetObjectParameterfvARB =             NULL;
+PFNGLGETOBJECTPARAMETERIVARBPROC       qglGetObjectParameterivARB =             NULL;
+PFNGLGETINFOLOGARBPROC                 qglGetInfoLogARB =                       NULL;
+PFNGLGETATTACHEDOBJECTSARBPROC         qglGetAttachedObjectsARB =               NULL;
+PFNGLGETUNIFORMLOCATIONARBPROC         qglGetUniformLocationARB =               NULL;
+PFNGLGETACTIVEUNIFORMARBPROC           qglGetActiveUniformARB =                 NULL;
+PFNGLGETUNIFORMFVARBPROC               qglGetUniformfvARB =                     NULL;
+PFNGLGETUNIFORMIVARBPROC               qglGetUniformivARB =                     NULL;
+PFNGLGETSHADERSOURCEARBPROC            qglGetShaderSourceARB =                  NULL;
 
-PFNGLGENERATEMIPMAPEXTPROC              glGenerateMipmap =                      NULL;
-#endif
+PFNGLBINDATTRIBLOCATIONARBPROC         qglBindAttribLocationARB =               NULL;
+PFNGLGETACTIVEATTRIBARBPROC            qglGetActiveAttribARB =                  NULL;
+PFNGLGETATTRIBLOCATIONARBPROC          qglGetAttribLocationARB =                NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC    qglEnableVertexAttribArrayARB =          NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC    qglDisableVertexAttribArrayARB =         NULL;
+PFNGLVERTEXATTRIBPOINTERARBPROC        qglVertexAttribPointerARB =              NULL;
+
+PFNGLACTIVETEXTUREARBPROC              qglActiveTextureARB =                    NULL;
+PFNGLCLIENTACTIVETEXTUREARBPROC        qglClientActiveTextureARB =              NULL;
+PFNGLMULTITEXCOORD1DARBPROC            qglMultiTexCoord1dARB =                  NULL;
+PFNGLMULTITEXCOORD1DVARBPROC           qglMultiTexCoord1dvARB =                 NULL;
+PFNGLMULTITEXCOORD1FARBPROC            qglMultiTexCoord1fARB =                  NULL;
+PFNGLMULTITEXCOORD1FVARBPROC           qglMultiTexCoord1fvARB =                 NULL;
+PFNGLMULTITEXCOORD1IARBPROC            qglMultiTexCoord1iARB =                  NULL;
+PFNGLMULTITEXCOORD1IVARBPROC           qglMultiTexCoord1ivARB =                 NULL;
+PFNGLMULTITEXCOORD1SARBPROC            qglMultiTexCoord1sARB =                  NULL;
+PFNGLMULTITEXCOORD1SVARBPROC           qglMultiTexCoord1svARB =                 NULL;
+PFNGLMULTITEXCOORD2DARBPROC            qglMultiTexCoord2dARB =                  NULL;
+PFNGLMULTITEXCOORD2DVARBPROC           qglMultiTexCoord2dvARB =                 NULL;
+PFNGLMULTITEXCOORD2FARBPROC            qglMultiTexCoord2fARB =                  NULL;
+PFNGLMULTITEXCOORD2FVARBPROC           qglMultiTexCoord2fvARB =                 NULL;
+PFNGLMULTITEXCOORD2IARBPROC            qglMultiTexCoord2iARB =                  NULL;
+PFNGLMULTITEXCOORD2IVARBPROC           qglMultiTexCoord2ivARB =                 NULL;
+PFNGLMULTITEXCOORD2SARBPROC            qglMultiTexCoord2sARB =                  NULL;
+PFNGLMULTITEXCOORD2SVARBPROC           qglMultiTexCoord2svARB =                 NULL;
+PFNGLMULTITEXCOORD3DARBPROC            qglMultiTexCoord3dARB =                  NULL;
+PFNGLMULTITEXCOORD3DVARBPROC           qglMultiTexCoord3dvARB =                 NULL;
+PFNGLMULTITEXCOORD3FARBPROC            qglMultiTexCoord3fARB =                  NULL;
+PFNGLMULTITEXCOORD3FVARBPROC           qglMultiTexCoord3fvARB =                 NULL;
+PFNGLMULTITEXCOORD3IARBPROC            qglMultiTexCoord3iARB =                  NULL;
+PFNGLMULTITEXCOORD3IVARBPROC           qglMultiTexCoord3ivARB =                 NULL;
+PFNGLMULTITEXCOORD3SARBPROC            qglMultiTexCoord3sARB =                  NULL;
+PFNGLMULTITEXCOORD3SVARBPROC           qglMultiTexCoord3svARB =                 NULL;
+PFNGLMULTITEXCOORD4DARBPROC            qglMultiTexCoord4dARB =                  NULL;
+PFNGLMULTITEXCOORD4DVARBPROC           qglMultiTexCoord4dvARB =                 NULL;
+PFNGLMULTITEXCOORD4FARBPROC            qglMultiTexCoord4fARB =                  NULL;
+PFNGLMULTITEXCOORD4FVARBPROC           qglMultiTexCoord4fvARB =                 NULL;
+PFNGLMULTITEXCOORD4IARBPROC            qglMultiTexCoord4iARB =                  NULL;
+PFNGLMULTITEXCOORD4IVARBPROC           qglMultiTexCoord4ivARB =                 NULL;
+PFNGLMULTITEXCOORD4SARBPROC            qglMultiTexCoord4sARB =                  NULL;
+PFNGLMULTITEXCOORD4SVARBPROC           qglMultiTexCoord4svARB =                 NULL;
+
+PFNGLBINDBUFFERARBPROC                 qglBindBufferARB =                       NULL;
+PFNGLDELETEBUFFERSARBPROC              qglDeleteBuffersARB =                    NULL;
+PFNGLGENBUFFERSARBPROC                 qglGenBuffersARB =                       NULL;
+PFNGLISBUFFERARBPROC                   qglIsBufferARB =                         NULL;
+PFNGLBUFFERDATAARBPROC                 qglBufferDataARB =                       NULL;
+PFNGLBUFFERSUBDATAARBPROC              qglBufferSubDataARB =                    NULL;
+PFNGLGETBUFFERSUBDATAARBPROC           qglGetBufferSubDataARB =                 NULL;
+PFNGLMAPBUFFERARBPROC                  qglMapBufferARB =                        NULL;
+PFNGLUNMAPBUFFERARBPROC                qglUnmapBufferARB =                      NULL;
+PFNGLGETBUFFERPARAMETERIVARBPROC       qglGetBufferParameterivARB =             NULL;
+PFNGLGETBUFFERPOINTERVARBPROC          qglGetBufferPointervARB =                NULL;
+
+PFNGLBINDVERTEXARRAYPROC               qglBindVertexArray =                     NULL;
+PFNGLDELETEVERTEXARRAYSPROC            qglDeleteVertexArrays =                  NULL;
+PFNGLGENVERTEXARRAYSPROC               qglGenVertexArrays =                     NULL;
+PFNGLISVERTEXARRAYPROC                 qglIsVertexArray =                       NULL;
+
+PFNGLGENERATEMIPMAPEXTPROC             qglGenerateMipmap =                      NULL;
 
 static char *engine_gl_ext_str = NULL;
 static GLuint whiteTexture = 0;
@@ -144,85 +141,120 @@ static GLuint whiteTexture = 0;
  */
 void InitGLExtFuncs()
 {
-    ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
-    const char* buf = (const char*)glGetString(GL_EXTENSIONS);                  
-    engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
     // white texture data for coloured polygons and debug lines.
-    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    const GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+     
+    SAFE_GET_PROC(qglGetError, PFNGLGETERRORPROC, "glGetError");
+    SAFE_GET_PROC(qglGetString, PFNGLGETSTRINGPROC, "glGetString");
+    SAFE_GET_PROC(qglGetBooleanv, PFNGLGETBOOLEANVPROC, "glGetBooleanv");
+    SAFE_GET_PROC(qglGetDoublev, PFNGLGETDOUBLEVPROC, "glGetDoublev");
+    SAFE_GET_PROC(qglGetFloatv, PFNGLGETFLOATVPROC, "glGetFloatv");
+    SAFE_GET_PROC(qglGetIntegerv, PFNGLGETIINTEGERVPROC, "glGetIntegerv");
     
-    glGenTextures(1, &whiteTexture);
-    glBindTexture(GL_TEXTURE_2D, whiteTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    SAFE_GET_PROC(qglGenTextures, PFNGLGENTEXTURESPROC, "glGenTextures");
+    SAFE_GET_PROC(qglDeleteTextures, PFNGLDELETETEXTURESPROC, "glDeleteTextures");
+    SAFE_GET_PROC(qglBindTexture, PFNGLBINDTEXTURESPROC, "glBindTexture");
+    SAFE_GET_PROC(qglTexParameteri, PFNGLTEXPATAMETERIPROC, "glTexParameteri");
+    SAFE_GET_PROC(qglTexParameterf, PFNGLTEXPATAMETERFPROC, "glTexParameterf");
+    SAFE_GET_PROC(qglTexImage2D, PFNGLTEXIMAGE2DPROC, "glTexImage2D");
+    
+    
+    /*SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");
+    SAFE_GET_PROC(func, TYPE, "func");*/
+    
+    ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
+    const char* buf = (const char*)qglGetString(GL_EXTENSIONS);                  
+    engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
+    qglGenTextures(1, &whiteTexture);
+    qglBindTexture(GL_TEXTURE_2D, whiteTexture);
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    qglTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    qglTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    qglBindTexture(GL_TEXTURE_2D, 0);
     
     strcpy(engine_gl_ext_str, buf);
-#ifndef GL_GLEXT_PROTOTYPES
+    
     /// VBO funcs
     if(IsGLExtensionSupported("GL_ARB_vertex_buffer_object"))
     {
-        SAFE_GET_PROC(glBindBufferARB, PFNGLBINDBUFFERARBPROC, "glBindBufferARB");
-        SAFE_GET_PROC(glDeleteBuffersARB, PFNGLDELETEBUFFERSARBPROC, "glDeleteBuffersARB");
-        SAFE_GET_PROC(glGenBuffersARB, PFNGLGENBUFFERSARBPROC, "glGenBuffersARB");
-        SAFE_GET_PROC(glIsBufferARB, PFNGLISBUFFERARBPROC, "glIsBufferARB");
-        SAFE_GET_PROC(glBufferDataARB, PFNGLBUFFERDATAARBPROC, "glBufferDataARB");
-        SAFE_GET_PROC(glBufferSubDataARB, PFNGLBUFFERSUBDATAARBPROC, "glBufferSubDataARB");
-        SAFE_GET_PROC(glGetBufferSubDataARB, PFNGLGETBUFFERSUBDATAARBPROC, "glGetBufferSubDataARB");
-        SAFE_GET_PROC(glMapBufferARB, PFNGLMAPBUFFERARBPROC, "glMapBufferARB");
-        SAFE_GET_PROC(glUnmapBufferARB, PFNGLUNMAPBUFFERARBPROC, "glUnmapBufferARB");
-        SAFE_GET_PROC(glGetBufferParameterivARB, PFNGLGETBUFFERPARAMETERIVARBPROC, "glGetBufferParameterivARB");
-        SAFE_GET_PROC(glGetBufferPointervARB, PFNGLGETBUFFERPOINTERVARBPROC, "glGetBufferPointervARB");
+        SAFE_GET_PROC(qglBindBufferARB, PFNGLBINDBUFFERARBPROC, "glBindBufferARB");
+        SAFE_GET_PROC(qglDeleteBuffersARB, PFNGLDELETEBUFFERSARBPROC, "glDeleteBuffersARB");
+        SAFE_GET_PROC(qglGenBuffersARB, PFNGLGENBUFFERSARBPROC, "glGenBuffersARB");
+        SAFE_GET_PROC(qglIsBufferARB, PFNGLISBUFFERARBPROC, "glIsBufferARB");
+        SAFE_GET_PROC(qglBufferDataARB, PFNGLBUFFERDATAARBPROC, "glBufferDataARB");
+        SAFE_GET_PROC(qglBufferSubDataARB, PFNGLBUFFERSUBDATAARBPROC, "glBufferSubDataARB");
+        SAFE_GET_PROC(qglGetBufferSubDataARB, PFNGLGETBUFFERSUBDATAARBPROC, "glGetBufferSubDataARB");
+        SAFE_GET_PROC(qglMapBufferARB, PFNGLMAPBUFFERARBPROC, "glMapBufferARB");
+        SAFE_GET_PROC(qglUnmapBufferARB, PFNGLUNMAPBUFFERARBPROC, "glUnmapBufferARB");
+        SAFE_GET_PROC(qglGetBufferParameterivARB, PFNGLGETBUFFERPARAMETERIVARBPROC, "glGetBufferParameterivARB");
+        SAFE_GET_PROC(qglGetBufferPointervARB, PFNGLGETBUFFERPOINTERVARBPROC, "glGetBufferPointervARB");
 
-        SAFE_GET_PROC(glActiveTextureARB, PFNGLACTIVETEXTUREARBPROC, "glActiveTextureARB");
-        SAFE_GET_PROC(glClientActiveTextureARB, PFNGLCLIENTACTIVETEXTUREARBPROC, "glClientActiveTextureARB");
+        SAFE_GET_PROC(qglActiveTextureARB, PFNGLACTIVETEXTUREARBPROC, "glActiveTextureARB");
+        SAFE_GET_PROC(qglClientActiveTextureARB, PFNGLCLIENTACTIVETEXTUREARBPROC, "glClientActiveTextureARB");
 
-        SAFE_GET_PROC(glMultiTexCoord1dARB, PFNGLMULTITEXCOORD1DARBPROC, "glMultiTexCoord1dARB");
-        SAFE_GET_PROC(glMultiTexCoord1dvARB, PFNGLMULTITEXCOORD1DVARBPROC, "glMultiTexCoord1dvARB");
-        SAFE_GET_PROC(glMultiTexCoord1fARB, PFNGLMULTITEXCOORD1FARBPROC, "glMultiTexCoord1fARB");
-        SAFE_GET_PROC(glMultiTexCoord1fvARB, PFNGLMULTITEXCOORD1FVARBPROC, "glMultiTexCoord1fvARB");
-        SAFE_GET_PROC(glMultiTexCoord1iARB, PFNGLMULTITEXCOORD1IARBPROC, "glMultiTexCoord1iARB");
-        SAFE_GET_PROC(glMultiTexCoord1ivARB, PFNGLMULTITEXCOORD1IVARBPROC, "glMultiTexCoord1ivARB");
-        SAFE_GET_PROC(glMultiTexCoord1sARB, PFNGLMULTITEXCOORD1SARBPROC, "glMultiTexCoord1sARB");
-        SAFE_GET_PROC(glMultiTexCoord1svARB, PFNGLMULTITEXCOORD1SVARBPROC, "glMultiTexCoord1svARB");
+        SAFE_GET_PROC(qglMultiTexCoord1dARB, PFNGLMULTITEXCOORD1DARBPROC, "glMultiTexCoord1dARB");
+        SAFE_GET_PROC(qglMultiTexCoord1dvARB, PFNGLMULTITEXCOORD1DVARBPROC, "glMultiTexCoord1dvARB");
+        SAFE_GET_PROC(qglMultiTexCoord1fARB, PFNGLMULTITEXCOORD1FARBPROC, "glMultiTexCoord1fARB");
+        SAFE_GET_PROC(qglMultiTexCoord1fvARB, PFNGLMULTITEXCOORD1FVARBPROC, "glMultiTexCoord1fvARB");
+        SAFE_GET_PROC(qglMultiTexCoord1iARB, PFNGLMULTITEXCOORD1IARBPROC, "glMultiTexCoord1iARB");
+        SAFE_GET_PROC(qglMultiTexCoord1ivARB, PFNGLMULTITEXCOORD1IVARBPROC, "glMultiTexCoord1ivARB");
+        SAFE_GET_PROC(qglMultiTexCoord1sARB, PFNGLMULTITEXCOORD1SARBPROC, "glMultiTexCoord1sARB");
+        SAFE_GET_PROC(qglMultiTexCoord1svARB, PFNGLMULTITEXCOORD1SVARBPROC, "glMultiTexCoord1svARB");
 
-        SAFE_GET_PROC(glMultiTexCoord2dARB, PFNGLMULTITEXCOORD2DARBPROC, "glMultiTexCoord2dARB");
-        SAFE_GET_PROC(glMultiTexCoord2dvARB, PFNGLMULTITEXCOORD2DVARBPROC, "glMultiTexCoord2dvARB");
-        SAFE_GET_PROC(glMultiTexCoord2fARB, PFNGLMULTITEXCOORD2FARBPROC, "glMultiTexCoord2fARB");
-        SAFE_GET_PROC(glMultiTexCoord2fvARB, PFNGLMULTITEXCOORD2FVARBPROC, "glMultiTexCoord2fvARB");
-        SAFE_GET_PROC(glMultiTexCoord2iARB, PFNGLMULTITEXCOORD2IARBPROC, "glMultiTexCoord2iARB");
-        SAFE_GET_PROC(glMultiTexCoord2ivARB, PFNGLMULTITEXCOORD2IVARBPROC, "glMultiTexCoord2ivARB");
-        SAFE_GET_PROC(glMultiTexCoord2sARB, PFNGLMULTITEXCOORD2SARBPROC, "glMultiTexCoord2sARB");
-        SAFE_GET_PROC(glMultiTexCoord2svARB, PFNGLMULTITEXCOORD2SVARBPROC, "glMultiTexCoord2svARB");
+        SAFE_GET_PROC(qglMultiTexCoord2dARB, PFNGLMULTITEXCOORD2DARBPROC, "glMultiTexCoord2dARB");
+        SAFE_GET_PROC(qglMultiTexCoord2dvARB, PFNGLMULTITEXCOORD2DVARBPROC, "glMultiTexCoord2dvARB");
+        SAFE_GET_PROC(qglMultiTexCoord2fARB, PFNGLMULTITEXCOORD2FARBPROC, "glMultiTexCoord2fARB");
+        SAFE_GET_PROC(qglMultiTexCoord2fvARB, PFNGLMULTITEXCOORD2FVARBPROC, "glMultiTexCoord2fvARB");
+        SAFE_GET_PROC(qglMultiTexCoord2iARB, PFNGLMULTITEXCOORD2IARBPROC, "glMultiTexCoord2iARB");
+        SAFE_GET_PROC(qglMultiTexCoord2ivARB, PFNGLMULTITEXCOORD2IVARBPROC, "glMultiTexCoord2ivARB");
+        SAFE_GET_PROC(qglMultiTexCoord2sARB, PFNGLMULTITEXCOORD2SARBPROC, "glMultiTexCoord2sARB");
+        SAFE_GET_PROC(qglMultiTexCoord2svARB, PFNGLMULTITEXCOORD2SVARBPROC, "glMultiTexCoord2svARB");
 
-        SAFE_GET_PROC(glMultiTexCoord3dARB, PFNGLMULTITEXCOORD3DARBPROC, "glMultiTexCoord3dARB");
-        SAFE_GET_PROC(glMultiTexCoord3dvARB, PFNGLMULTITEXCOORD3DVARBPROC, "glMultiTexCoord3dvARB");
-        SAFE_GET_PROC(glMultiTexCoord3fARB, PFNGLMULTITEXCOORD3FARBPROC, "glMultiTexCoord3fARB");
-        SAFE_GET_PROC(glMultiTexCoord3fvARB, PFNGLMULTITEXCOORD3FVARBPROC, "glMultiTexCoord3fvARB");
-        SAFE_GET_PROC(glMultiTexCoord3iARB, PFNGLMULTITEXCOORD3IARBPROC, "glMultiTexCoord3iARB");
-        SAFE_GET_PROC(glMultiTexCoord3ivARB, PFNGLMULTITEXCOORD3IVARBPROC, "glMultiTexCoord3ivARB");
-        SAFE_GET_PROC(glMultiTexCoord3sARB, PFNGLMULTITEXCOORD3SARBPROC, "glMultiTexCoord3sARB");
-        SAFE_GET_PROC(glMultiTexCoord3svARB, PFNGLMULTITEXCOORD3SVARBPROC, "glMultiTexCoord3svARB");
+        SAFE_GET_PROC(qglMultiTexCoord3dARB, PFNGLMULTITEXCOORD3DARBPROC, "glMultiTexCoord3dARB");
+        SAFE_GET_PROC(qglMultiTexCoord3dvARB, PFNGLMULTITEXCOORD3DVARBPROC, "glMultiTexCoord3dvARB");
+        SAFE_GET_PROC(qglMultiTexCoord3fARB, PFNGLMULTITEXCOORD3FARBPROC, "glMultiTexCoord3fARB");
+        SAFE_GET_PROC(qglMultiTexCoord3fvARB, PFNGLMULTITEXCOORD3FVARBPROC, "glMultiTexCoord3fvARB");
+        SAFE_GET_PROC(qglMultiTexCoord3iARB, PFNGLMULTITEXCOORD3IARBPROC, "glMultiTexCoord3iARB");
+        SAFE_GET_PROC(qglMultiTexCoord3ivARB, PFNGLMULTITEXCOORD3IVARBPROC, "glMultiTexCoord3ivARB");
+        SAFE_GET_PROC(qglMultiTexCoord3sARB, PFNGLMULTITEXCOORD3SARBPROC, "glMultiTexCoord3sARB");
+        SAFE_GET_PROC(qglMultiTexCoord3svARB, PFNGLMULTITEXCOORD3SVARBPROC, "glMultiTexCoord3svARB");
 
-        SAFE_GET_PROC(glMultiTexCoord4dARB, PFNGLMULTITEXCOORD4DARBPROC, "glMultiTexCoord4dARB");
-        SAFE_GET_PROC(glMultiTexCoord4dvARB, PFNGLMULTITEXCOORD4DVARBPROC, "glMultiTexCoord4dvARB");
-        SAFE_GET_PROC(glMultiTexCoord4fARB, PFNGLMULTITEXCOORD4FARBPROC, "glMultiTexCoord4fARB");
-        SAFE_GET_PROC(glMultiTexCoord4fvARB, PFNGLMULTITEXCOORD4FVARBPROC, "glMultiTexCoord4fvARB");
-        SAFE_GET_PROC(glMultiTexCoord4iARB, PFNGLMULTITEXCOORD4IARBPROC, "glMultiTexCoord4iARB");
-        SAFE_GET_PROC(glMultiTexCoord4ivARB, PFNGLMULTITEXCOORD4IVARBPROC, "glMultiTexCoord4ivARB");
-        SAFE_GET_PROC(glMultiTexCoord4sARB, PFNGLMULTITEXCOORD4SARBPROC, "glMultiTexCoord4sARB");
-        SAFE_GET_PROC(glMultiTexCoord4svARB, PFNGLMULTITEXCOORD4SVARBPROC, "glMultiTexCoord4svARB");
+        SAFE_GET_PROC(qglMultiTexCoord4dARB, PFNGLMULTITEXCOORD4DARBPROC, "glMultiTexCoord4dARB");
+        SAFE_GET_PROC(qglMultiTexCoord4dvARB, PFNGLMULTITEXCOORD4DVARBPROC, "glMultiTexCoord4dvARB");
+        SAFE_GET_PROC(qglMultiTexCoord4fARB, PFNGLMULTITEXCOORD4FARBPROC, "glMultiTexCoord4fARB");
+        SAFE_GET_PROC(qglMultiTexCoord4fvARB, PFNGLMULTITEXCOORD4FVARBPROC, "glMultiTexCoord4fvARB");
+        SAFE_GET_PROC(qglMultiTexCoord4iARB, PFNGLMULTITEXCOORD4IARBPROC, "glMultiTexCoord4iARB");
+        SAFE_GET_PROC(qglMultiTexCoord4ivARB, PFNGLMULTITEXCOORD4IVARBPROC, "glMultiTexCoord4ivARB");
+        SAFE_GET_PROC(qglMultiTexCoord4sARB, PFNGLMULTITEXCOORD4SARBPROC, "glMultiTexCoord4sARB");
+        SAFE_GET_PROC(qglMultiTexCoord4svARB, PFNGLMULTITEXCOORD4SVARBPROC, "glMultiTexCoord4svARB");
 
-        SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
-        SAFE_GET_PROC(glDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArrays");
-        SAFE_GET_PROC(glGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArrays");
-        SAFE_GET_PROC(glIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
+        SAFE_GET_PROC(qglBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
+        SAFE_GET_PROC(qglDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArrays");
+        SAFE_GET_PROC(qglGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArrays");
+        SAFE_GET_PROC(qglIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
 
-        SAFE_GET_PROC(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
+        SAFE_GET_PROC(qglGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
     }
     else
     {
@@ -231,59 +263,58 @@ void InitGLExtFuncs()
     }
     if(IsGLExtensionSupported("GL_ARB_shading_language_100"))
     {
-        SAFE_GET_PROC(glDeleteObjectARB, PFNGLDELETEOBJECTARBPROC, "glDeleteObjectARB");
-        SAFE_GET_PROC(glGetHandleARB, PFNGLGETHANDLEARBPROC, "glGetHandleARB");
-        SAFE_GET_PROC(glDetachObjectARB, PFNGLDETACHOBJECTARBPROC, "glDetachObjectARB");
-        SAFE_GET_PROC(glCreateShaderObjectARB, PFNGLCREATESHADEROBJECTARBPROC, "glCreateShaderObjectARB");
-        SAFE_GET_PROC(glShaderSourceARB, PFNGLSHADERSOURCEARBPROC, "glShaderSourceARB");
-        SAFE_GET_PROC(glCompileShaderARB, PFNGLCOMPILESHADERARBPROC, "glCompileShaderARB");
-        SAFE_GET_PROC(glCreateProgramObjectARB, PFNGLCREATEPROGRAMOBJECTARBPROC, "glCreateProgramObjectARB");
-        SAFE_GET_PROC(glAttachObjectARB, PFNGLATTACHOBJECTARBPROC, "glAttachObjectARB");
-        SAFE_GET_PROC(glLinkProgramARB, PFNGLLINKPROGRAMARBPROC, "glLinkProgramARB");
-        SAFE_GET_PROC(glUseProgramObjectARB, PFNGLUSEPROGRAMOBJECTARBPROC, "glUseProgramObjectARB");
-        SAFE_GET_PROC(glValidateProgramARB, PFNGLVALIDATEPROGRAMARBPROC, "glValidateProgramARB");
-        SAFE_GET_PROC(glUniform1fARB, PFNGLUNIFORM1FARBPROC, "glUniform1fARB");
-        SAFE_GET_PROC(glUniform2fARB, PFNGLUNIFORM2FARBPROC, "glUniform2fARB");
-        SAFE_GET_PROC(glUniform3fARB, PFNGLUNIFORM3FARBPROC, "glUniform3fARB");
-        SAFE_GET_PROC(glUniform4fARB, PFNGLUNIFORM4FARBPROC, "glUniform4fARB");
-        SAFE_GET_PROC(glUniform1iARB, PFNGLUNIFORM1IARBPROC, "glUniform1iARB");
-        SAFE_GET_PROC(glUniform2iARB, PFNGLUNIFORM2IARBPROC, "glUniform2iARB");
-        SAFE_GET_PROC(glUniform3iARB, PFNGLUNIFORM3IARBPROC, "glUniform3iARB");
-        SAFE_GET_PROC(glUniform4iARB, PFNGLUNIFORM4IARBPROC, "glUniform4iARB");
-        SAFE_GET_PROC(glUniform1fvARB, PFNGLUNIFORM1FVARBPROC, "glUniform1fvARB");
-        SAFE_GET_PROC(glUniform2fvARB, PFNGLUNIFORM2FVARBPROC, "glUniform2fvARB");
-        SAFE_GET_PROC(glUniform3fvARB, PFNGLUNIFORM3FVARBPROC, "glUniform3fvARB");
-        SAFE_GET_PROC(glUniform4fvARB, PFNGLUNIFORM4FVARBPROC, "glUniform4fvARB");
-        SAFE_GET_PROC(glUniform1ivARB, PFNGLUNIFORM1IVARBPROC, "glUniform1ivARB");
-        SAFE_GET_PROC(glUniform2ivARB, PFNGLUNIFORM2IVARBPROC, "glUniform2ivARB");
-        SAFE_GET_PROC(glUniform3ivARB, PFNGLUNIFORM3IVARBPROC, "glUniform3ivARB");
-        SAFE_GET_PROC(glUniform4ivARB, PFNGLUNIFORM4IVARBPROC, "glUniform4ivARB");
-        SAFE_GET_PROC(glUniformMatrix2fvARB, PFNGLUNIFORMMATRIX2FVARBPROC, "glUniformMatrix2fvARB");
-        SAFE_GET_PROC(glUniformMatrix3fvARB, PFNGLUNIFORMMATRIX3FVARBPROC, "glUniformMatrix3fvARB");
-        SAFE_GET_PROC(glUniformMatrix4fvARB, PFNGLUNIFORMMATRIX4FVARBPROC, "glUniformMatrix4fvARB");
-        SAFE_GET_PROC(glGetObjectParameterfvARB, PFNGLGETOBJECTPARAMETERFVARBPROC, "glGetObjectParameterfvARB");
-        SAFE_GET_PROC(glGetObjectParameterivARB, PFNGLGETOBJECTPARAMETERIVARBPROC, "glGetObjectParameterivARB");
-        SAFE_GET_PROC(glGetInfoLogARB, PFNGLGETINFOLOGARBPROC, "glGetInfoLogARB");
-        SAFE_GET_PROC(glGetAttachedObjectsARB, PFNGLGETATTACHEDOBJECTSARBPROC, "glGetAttachedObjectsARB");
-        SAFE_GET_PROC(glGetUniformLocationARB, PFNGLGETUNIFORMLOCATIONARBPROC, "glGetUniformLocationARB");
-        SAFE_GET_PROC(glGetActiveUniformARB, PFNGLGETACTIVEUNIFORMARBPROC, "glGetActiveUniformARB");
-        SAFE_GET_PROC(glGetUniformfvARB, PFNGLGETUNIFORMFVARBPROC, "glGetUniformfvARB");
-        SAFE_GET_PROC(glGetUniformivARB, PFNGLGETUNIFORMIVARBPROC, "glGetUniformivARB");
-        SAFE_GET_PROC(glGetShaderSourceARB, PFNGLGETSHADERSOURCEARBPROC, "glGetShaderSourceARB");
+        SAFE_GET_PROC(qglDeleteObjectARB, PFNGLDELETEOBJECTARBPROC, "glDeleteObjectARB");
+        SAFE_GET_PROC(qglGetHandleARB, PFNGLGETHANDLEARBPROC, "glGetHandleARB");
+        SAFE_GET_PROC(qglDetachObjectARB, PFNGLDETACHOBJECTARBPROC, "glDetachObjectARB");
+        SAFE_GET_PROC(qglCreateShaderObjectARB, PFNGLCREATESHADEROBJECTARBPROC, "glCreateShaderObjectARB");
+        SAFE_GET_PROC(qglShaderSourceARB, PFNGLSHADERSOURCEARBPROC, "glShaderSourceARB");
+        SAFE_GET_PROC(qglCompileShaderARB, PFNGLCOMPILESHADERARBPROC, "glCompileShaderARB");
+        SAFE_GET_PROC(qglCreateProgramObjectARB, PFNGLCREATEPROGRAMOBJECTARBPROC, "glCreateProgramObjectARB");
+        SAFE_GET_PROC(qglAttachObjectARB, PFNGLATTACHOBJECTARBPROC, "glAttachObjectARB");
+        SAFE_GET_PROC(qglLinkProgramARB, PFNGLLINKPROGRAMARBPROC, "glLinkProgramARB");
+        SAFE_GET_PROC(qglUseProgramObjectARB, PFNGLUSEPROGRAMOBJECTARBPROC, "glUseProgramObjectARB");
+        SAFE_GET_PROC(qglValidateProgramARB, PFNGLVALIDATEPROGRAMARBPROC, "glValidateProgramARB");
+        SAFE_GET_PROC(qglUniform1fARB, PFNGLUNIFORM1FARBPROC, "glUniform1fARB");
+        SAFE_GET_PROC(qglUniform2fARB, PFNGLUNIFORM2FARBPROC, "glUniform2fARB");
+        SAFE_GET_PROC(qglUniform3fARB, PFNGLUNIFORM3FARBPROC, "glUniform3fARB");
+        SAFE_GET_PROC(qglUniform4fARB, PFNGLUNIFORM4FARBPROC, "glUniform4fARB");
+        SAFE_GET_PROC(qglUniform1iARB, PFNGLUNIFORM1IARBPROC, "glUniform1iARB");
+        SAFE_GET_PROC(qglUniform2iARB, PFNGLUNIFORM2IARBPROC, "glUniform2iARB");
+        SAFE_GET_PROC(qglUniform3iARB, PFNGLUNIFORM3IARBPROC, "glUniform3iARB");
+        SAFE_GET_PROC(qglUniform4iARB, PFNGLUNIFORM4IARBPROC, "glUniform4iARB");
+        SAFE_GET_PROC(qglUniform1fvARB, PFNGLUNIFORM1FVARBPROC, "glUniform1fvARB");
+        SAFE_GET_PROC(qglUniform2fvARB, PFNGLUNIFORM2FVARBPROC, "glUniform2fvARB");
+        SAFE_GET_PROC(qglUniform3fvARB, PFNGLUNIFORM3FVARBPROC, "glUniform3fvARB");
+        SAFE_GET_PROC(qglUniform4fvARB, PFNGLUNIFORM4FVARBPROC, "glUniform4fvARB");
+        SAFE_GET_PROC(qglUniform1ivARB, PFNGLUNIFORM1IVARBPROC, "glUniform1ivARB");
+        SAFE_GET_PROC(qglUniform2ivARB, PFNGLUNIFORM2IVARBPROC, "glUniform2ivARB");
+        SAFE_GET_PROC(qglUniform3ivARB, PFNGLUNIFORM3IVARBPROC, "glUniform3ivARB");
+        SAFE_GET_PROC(qglUniform4ivARB, PFNGLUNIFORM4IVARBPROC, "glUniform4ivARB");
+        SAFE_GET_PROC(qglUniformMatrix2fvARB, PFNGLUNIFORMMATRIX2FVARBPROC, "glUniformMatrix2fvARB");
+        SAFE_GET_PROC(qglUniformMatrix3fvARB, PFNGLUNIFORMMATRIX3FVARBPROC, "glUniformMatrix3fvARB");
+        SAFE_GET_PROC(qglUniformMatrix4fvARB, PFNGLUNIFORMMATRIX4FVARBPROC, "glUniformMatrix4fvARB");
+        SAFE_GET_PROC(qglGetObjectParameterfvARB, PFNGLGETOBJECTPARAMETERFVARBPROC, "glGetObjectParameterfvARB");
+        SAFE_GET_PROC(qglGetObjectParameterivARB, PFNGLGETOBJECTPARAMETERIVARBPROC, "glGetObjectParameterivARB");
+        SAFE_GET_PROC(qglGetInfoLogARB, PFNGLGETINFOLOGARBPROC, "glGetInfoLogARB");
+        SAFE_GET_PROC(qglGetAttachedObjectsARB, PFNGLGETATTACHEDOBJECTSARBPROC, "glGetAttachedObjectsARB");
+        SAFE_GET_PROC(qglGetUniformLocationARB, PFNGLGETUNIFORMLOCATIONARBPROC, "glGetUniformLocationARB");
+        SAFE_GET_PROC(qglGetActiveUniformARB, PFNGLGETACTIVEUNIFORMARBPROC, "glGetActiveUniformARB");
+        SAFE_GET_PROC(qglGetUniformfvARB, PFNGLGETUNIFORMFVARBPROC, "glGetUniformfvARB");
+        SAFE_GET_PROC(qglGetUniformivARB, PFNGLGETUNIFORMIVARBPROC, "glGetUniformivARB");
+        SAFE_GET_PROC(qglGetShaderSourceARB, PFNGLGETSHADERSOURCEARBPROC, "glGetShaderSourceARB");
 
-        SAFE_GET_PROC(glBindAttribLocationARB, PFNGLBINDATTRIBLOCATIONARBPROC, "glBindAttribLocationARB");
-        SAFE_GET_PROC(glGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
-        SAFE_GET_PROC(glGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
-        SAFE_GET_PROC(glEnableVertexAttribArrayARB, PFNGLENABLEVERTEXATTRIBARRAYARBPROC, "glEnableVertexAttribArrayARB");
-        SAFE_GET_PROC(glDisableVertexAttribArrayARB, PFNGLDISABLEVERTEXATTRIBARRAYARBPROC, "glDisableVertexAttribArrayARB");
+        SAFE_GET_PROC(qglBindAttribLocationARB, PFNGLBINDATTRIBLOCATIONARBPROC, "glBindAttribLocationARB");
+        SAFE_GET_PROC(qglGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
+        SAFE_GET_PROC(qglGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
+        SAFE_GET_PROC(qglEnableVertexAttribArrayARB, PFNGLENABLEVERTEXATTRIBARRAYARBPROC, "glEnableVertexAttribArrayARB");
+        SAFE_GET_PROC(qglDisableVertexAttribArrayARB, PFNGLDISABLEVERTEXATTRIBARRAYARBPROC, "glDisableVertexAttribArrayARB");
 
-        SAFE_GET_PROC(glVertexAttribPointerARB, PFNGLVERTEXATTRIBPOINTERARBPROC, "glVertexAttribPointerARB");
+        SAFE_GET_PROC(qglVertexAttribPointerARB, PFNGLVERTEXATTRIBPOINTERARBPROC, "glVertexAttribPointerARB");
     }
     else
     {
         Sys_Error("Shaders not supported");
     }
-#endif
 }
 
 /**
@@ -318,7 +349,7 @@ int checkOpenGLError()
 {
     for( ; ; )
     {
-        GLenum  glErr = glGetError();
+        GLenum  glErr = qglGetError();
         if(glErr == GL_NO_ERROR)
         {
             return 0;
@@ -373,48 +404,59 @@ void printInfoLog (GLhandleARB object)
     GLcharARB * infoLog;
 
     checkOpenGLError();                         // check for OpenGL errors
-    glGetObjectParameterivARB(object, GL_OBJECT_INFO_LOG_LENGTH_ARB, &logLength);
+    qglGetObjectParameterivARB(object, GL_OBJECT_INFO_LOG_LENGTH_ARB, &logLength);
 
     if (logLength > 0)
     {
         infoLog = (GLcharARB*)malloc(logLength);
-        glGetInfoLogARB(object, logLength, &charsWritten, infoLog);
+        qglGetInfoLogARB(object, logLength, &charsWritten, infoLog);
         Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
         Sys_DebugLog(GL_LOG_FILENAME, "%s", (const char*)infoLog);
         free(infoLog);
     }
 }
 
-int loadShaderFromBuff(GLhandleARB ShaderObj, char * source)
+int loadShaderFromBuff(GLhandleARB ShaderObj, const char *source, const char *additionalDefines)
 {
-    int size;
     GLint compileStatus = 0;
-    size = strlen(source);
-    glShaderSourceARB(ShaderObj, 1, (const char **) &source, &size);
-    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
-    glCompileShaderARB(ShaderObj);
-    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
-    if(checkOpenGLError())                          // check for OpenGL errors
+    if(source)
     {
-        return 0;
+        GLint source_size = strlen(source);
+        if (additionalDefines)
+        {
+            const char *bufs[2] = { additionalDefines, source };
+            const GLint lengths[2] = { (GLint) strlen(additionalDefines), source_size };
+            qglShaderSourceARB(ShaderObj, 2, bufs, lengths);
+        }
+        else
+        {
+            qglShaderSourceARB(ShaderObj, 1, (const char **)&source, &source_size);
+        }
+        Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
+        qglCompileShaderARB(ShaderObj);
+        Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+        if(checkOpenGLError())
+        {
+            return 0;
+        }
+        qglGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
+        printInfoLog(ShaderObj);
     }
-    glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
-    printInfoLog(ShaderObj);
-
     return compileStatus != 0;
 }
 
-int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines)
+int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *additionalDefines)
 {
-    GLint   compileStatus;
-    int size;
-    FILE * file;
+    FILE *file;
+    GLint size = 0;
+    int ret = 0;
+    
     Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
     file = fopen (fileName, "rb");
     if (file == NULL)
     {
         Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
-        return 0;
+        return ret;
     }
 
     fseek(file, 0, SEEK_END);
@@ -424,40 +466,22 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char 
     {
         fclose(file);
         Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s: size < 1", fileName);
-        return 0;
+        return ret;
     }
 
-    char *buf = (char*)malloc(size);
+    char *buf = (char*)malloc(size + 1);
     fseek(file, 0, SEEK_SET);
     fread(buf, 1, size, file);
+    buf[size] = 0;
     fclose(file);
 
     //printf ( "source = %s\n", buf );
-    if (additionalDefines)
-    {
-        const char *bufs[2] = { additionalDefines, buf };
-        const GLint lengths[2] = { (GLint) strlen(additionalDefines), size };
-        glShaderSourceARB(ShaderObj, 2, bufs, lengths);
-    }
-    else
-    {
-        glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
-    }
-    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
-    free(buf);                                   // compile the particle vertex shader, and print out
-    glCompileShaderARB(ShaderObj);
-    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
-    if(checkOpenGLError())                       // check for OpenGL errors
-    {
-        return 0;
-    }
-    glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
-    printInfoLog(ShaderObj);
-
-    return compileStatus != 0;
+    ret = loadShaderFromBuff(ShaderObj, buf, additionalDefines);
+    free(buf);
+    return ret;
 }
 
 void BindWhiteTexture()
 {
-    glBindTexture(GL_TEXTURE_2D, whiteTexture);
+    qglBindTexture(GL_TEXTURE_2D, whiteTexture);
 }

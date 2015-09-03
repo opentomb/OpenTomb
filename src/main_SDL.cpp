@@ -219,6 +219,7 @@ void Engine_InitSDLControls()
 void Engine_InitSDLVideo()
 {
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
+    PFNGLGETSTRINGPROC lglGetString = NULL;
 
     if(screen_info.FS_flag)
     {
@@ -238,13 +239,15 @@ void Engine_InitSDLVideo()
     // Check for correct number of antialias samples.
     if(renderer.settings.antialias)
     {
+        PFNGLGETIINTEGERVPROC lglGetIntegerv = NULL;
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
         SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
+        lglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
         GLint maxSamples = 0;
-        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        lglGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
 
         if(renderer.settings.antialias_samples > maxSamples)
@@ -289,10 +292,11 @@ void Engine_InitSDLVideo()
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
-    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
-    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
-    Con_Printf("OpenGL version %s", glGetString(GL_VERSION));
-    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
+    lglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
+    Con_AddLine((const char*)lglGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
+    Con_AddLine((const char*)lglGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
+    Con_Printf("OpenGL version %s", lglGetString(GL_VERSION));
+    Con_AddLine((const char*)lglGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 
 #if !defined(__MACOSX__)

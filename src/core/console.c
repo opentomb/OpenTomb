@@ -132,8 +132,8 @@ void Con_Init()
 
 void Con_InitFont()
 {
-    glGenBuffersARB(1, &backgroundBuffer);
-    glGenBuffersARB(1, &cursorBuffer);
+    qglGenBuffersARB(1, &backgroundBuffer);
+    qglGenBuffersARB(1, &cursorBuffer);
     if(con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL)
     {
         glf_manager_add_font(con_font_manager, 0, 12, "resource/fonts/DroidSansMono.ttf");
@@ -193,8 +193,8 @@ void Con_Destroy()
         con_font_manager = NULL;
     }
     
-    glDeleteBuffersARB(1, &backgroundBuffer);
-    glDeleteBuffersARB(1, &cursorBuffer);
+    qglDeleteBuffersARB(1, &backgroundBuffer);
+    qglDeleteBuffersARB(1, &cursorBuffer);
     backgroundBuffer = 0;
     cursorBuffer = 0;
 }
@@ -441,8 +441,8 @@ void Con_CalcCursorPosition()
         v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
         v[0] = 0.0; v[1] = 0.0;
         
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER, 16 * sizeof(GLfloat), cursor_array, GL_STATIC_DRAW);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
+        qglBufferDataARB(GL_ARRAY_BUFFER, 16 * sizeof(GLfloat), cursor_array, GL_STATIC_DRAW);
     }
 }
 
@@ -680,7 +680,7 @@ void Con_Draw(float time)
         int y = con_base.cursor_y;
         
         con_base.cursor_time += time;
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         BindWhiteTexture();
         Con_DrawBackground();
         Con_DrawCursor();
@@ -725,8 +725,8 @@ void Con_FillBackgroundBuffer()
         vec4_copy(v, con_base.background_color);
         v += 4;
        *v++ = 0.0f; *v++ = 1.0f;
-        glBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
-        glBufferDataARB(GL_ARRAY_BUFFER, 32 * sizeof(GLfloat), backgroundArray, GL_STATIC_DRAW);
+        qglBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
+        qglBufferDataARB(GL_ARRAY_BUFFER, 32 * sizeof(GLfloat), backgroundArray, GL_STATIC_DRAW);
     }
 }
 
@@ -734,7 +734,7 @@ void Con_DrawBackground()
 {
     if(backgroundBuffer)
     {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
         glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
         glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
         glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
@@ -755,7 +755,7 @@ void Con_DrawCursor()
 
     if(con_base.show_cursor && cursorBuffer)
     {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
         glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
         glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
         glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));

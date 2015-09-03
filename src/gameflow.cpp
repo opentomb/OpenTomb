@@ -24,7 +24,7 @@ extern "C" {
 #include "anim_state_control.h"
 #include "world.h"
 
-gameflow_manager_s gameflow_manager;
+struct gameflow_manager_s gameflow_manager;
 
 void Gameflow_Init()
 {
@@ -83,13 +83,7 @@ void Gameflow_Do()
                     lua_settop(engine_lua, top);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 }
-                /*else
-                {
-                    // If fadeout is in the process, we block level loading until it is complete.
-                    // It is achieved by not resetting action marker and exiting the function instead.
-                    continue;
-                }   // end if(Gui_FadeCheck(FADER_LOADSCREEN))
-                */break;
+                break;
 
             default:
                 gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;

@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 
+#include "core/gl_util.h"
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/vmath.h"
@@ -13,6 +12,7 @@
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
+#include "render/bordered_texture_atlas.h"
 #include "vt/vt_level.h"
 #include "audio.h"
 #include "world.h"
@@ -501,6 +501,8 @@ void World_Prepare(world_p world)
 
 void World_Open(struct world_s *world, class VT_Level *tr)
 {
+    World_Empty(world);
+
     world->version = tr->game_version;
 
     Res_ScriptsOpen(world->version);    // Open configuration scripts.
@@ -713,7 +715,7 @@ void World_Empty(world_p world)
 
     if(world->tex_count)
     {
-        glDeleteTextures(world->tex_count ,world->textures);
+        qglDeleteTextures(world->tex_count, world->textures);
         world->tex_count = 0;
         free(world->textures);
         world->textures = NULL;

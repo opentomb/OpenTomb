@@ -337,7 +337,7 @@ void Entity_UpdateTransform(entity_p entity)
     right_dir[3] = 0.0;
     up_dir[3] = 0.0;
 
-    if(entity->character != NULL)
+    if(entity->character)
     {
         Entity_FixPenetrations(entity, NULL);
     }
@@ -741,14 +741,6 @@ int  Entity_GetSubstanceState(entity_p entity)
     }
 }
 
-float Entity_FindDistance(entity_p entity_1, entity_p entity_2)
-{
-    float *v1 = entity_1->transform + 12;
-    float *v2 = entity_2->transform + 12;
-
-    return vec3_dist(v1, v2);
-}
-
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
@@ -864,7 +856,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                             case TR_EFFECT_SHAKESCREEN:
                                 if(engine_world.Character)
                                 {
-                                    float dist = Entity_FindDistance(engine_world.Character, entity);
+                                    float dist = vec3_dist(engine_world.Character->transform + 12, entity->transform + 12);
                                     dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                                     if(dist > 0)
                                         Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);

@@ -52,9 +52,9 @@ void Gui_Init()
     Gui_InitNotifier();
     Gui_InitTempLines();
 
-    glGenBuffersARB(1, &crosshairBuffer);
-    glGenBuffersARB(1, &backgroundBuffer);
-    glGenTextures(1, &load_screen_tex);
+    qglGenBuffersARB(1, &crosshairBuffer);
+    qglGenBuffersARB(1, &backgroundBuffer);
+    qglGenTextures(1, &load_screen_tex);
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
 
@@ -220,9 +220,9 @@ void Gui_Destroy()
         main_inventory_manager = NULL;
     }
 
-    glDeleteTextures(1, &load_screen_tex);
-    glDeleteBuffersARB(1, &crosshairBuffer);
-    glDeleteBuffersARB(1, &backgroundBuffer);
+    qglDeleteTextures(1, &load_screen_tex);
+    qglDeleteBuffersARB(1, &crosshairBuffer);
+    qglDeleteBuffersARB(1, &backgroundBuffer);
 }
 
 void Gui_AddLine(gui_text_line_p line)
@@ -342,9 +342,9 @@ void Gui_Render()
     const text_shader_description *shader = renderer.shaderManager->getTextShader();
     screenSize[0] = screen_info.w;
     screenSize[1] = screen_info.h;
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
-    glUniform2fvARB(shader->screenSize, 1, screenSize);
+    qglUseProgramObjectARB(shader->program);
+    qglUniform1iARB(shader->sampler, 0);
+    qglUniform2fvARB(shader->screenSize, 1, screenSize);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -360,7 +360,7 @@ void Gui_Render()
     {
         Gui_DrawInventory();
     }
-    glUseProgramObjectARB(shader->program);
+    qglUseProgramObjectARB(shader->program);
 
     glDepthMask(GL_FALSE);
 
@@ -474,7 +474,7 @@ void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     while(l)
@@ -555,9 +555,9 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
 void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatrix)
 {
     const lit_shader_description *shader = renderer.shaderManager->getEntityShader(0);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->number_of_lights, 0);
-    glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+    qglUseProgramObjectARB(shader->program);
+    qglUniform1iARB(shader->number_of_lights, 0);
+    qglUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
 
     if(size != 0.0)
     {
@@ -1119,8 +1119,8 @@ void Gui_FillCrosshairBuffer()
     v += 4;
    *v++ = 0.0; *v++ = 0.0;
 
-    glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
+    qglBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
 }
 
 void Gui_FillBackgroundBuffer()
@@ -1153,14 +1153,14 @@ void Gui_FillBackgroundBuffer()
     v += 4;
    *v++ = 0.0f; *v++ = 1.0f;
 
-    glBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
+    qglBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
 }
 
 void Gui_DrawCrosshair()
 {
     BindWhiteTexture();
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
+    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
     glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
     glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
     glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
@@ -1192,7 +1192,7 @@ void Gui_DrawInventory()
     glDepthMask(GL_FALSE);
     {
         BindWhiteTexture();
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
         glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
         glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
         glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
@@ -1247,7 +1247,7 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    //glBindTexture(GL_TEXTURE_2D, 0);
+    //qglBindTexture(GL_TEXTURE_2D, 0);
     GLfloat color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color, color, color, color, BM_SCREEN, load_screen_tex);
 
@@ -1345,16 +1345,16 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         }
 
         // Bind the texture object
-        glBindTexture(GL_TEXTURE_2D, load_screen_tex);
+        qglBindTexture(GL_TEXTURE_2D, load_screen_tex);
 
         // Set the texture's stretching properties
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Edit the texture object's image data using the information SDL_Surface gives us
-        glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
+        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
                      texture_format, GL_UNSIGNED_BYTE, surface->pixels);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        qglBindTexture(GL_TEXTURE_2D, 0);
         return true;
     }
 
@@ -1392,21 +1392,21 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     //glDisable(GL_DEPTH_TEST);
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
     const gui_shader_description *shader = renderer.shaderManager->getGuiShader(texture != 0);
-    glUseProgramObjectARB(shader->program);
-    glUniform1iARB(shader->sampler, 0);
+    qglUseProgramObjectARB(shader->program);
+    qglUniform1iARB(shader->sampler, 0);
     if (texture)
     {
-        glActiveTextureARB(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        qglActiveTextureARB(GL_TEXTURE0);
+        qglBindTexture(GL_TEXTURE_2D, texture);
     }
-    glUniform2fvARB(shader->offset, 1, offset);
-    glUniform2fvARB(shader->factor, 1, factor);
+    qglUniform2fvARB(shader->offset, 1, offset);
+    qglUniform2fvARB(shader->factor, 1, factor);
 
     GLfloat rectCoords[8] = { 0, 0,
         1, 0,

@@ -183,7 +183,7 @@ number_canonical_object_textures(0),
 canonical_object_textures(NULL)
 {
     GLint max_texture_edge_length = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
+    qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     result_page_width = max_texture_edge_length;
@@ -219,6 +219,7 @@ bordered_texture_atlas::~bordered_texture_atlas()
     delete [] file_object_textures;
     delete [] canonical_textures_for_sprite_textures;
     delete [] canonical_object_textures;
+    original_pages = NULL;
     free(result_page_height);
 }
 
@@ -495,7 +496,7 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames) const
 {
     GLubyte *data = (GLubyte *) malloc(4 * result_page_width * result_page_width);
 
-    glGenTextures((GLsizei) number_result_pages, textureNames);
+    qglGenTextures((GLsizei) number_result_pages, textureNames);
 
     for (unsigned long page = 0; page < number_result_pages; page++)
     {
@@ -630,11 +631,11 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames) const
             }
         }
 
-        glBindTexture(GL_TEXTURE_2D, textureNames[page]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)result_page_width, (GLsizei) result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        if(glGenerateMipmap != NULL)
+        qglBindTexture(GL_TEXTURE_2D, textureNames[page]);
+        qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)result_page_width, (GLsizei) result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        if(qglGenerateMipmap != NULL)
         {
-            glGenerateMipmap(GL_TEXTURE_2D);
+            qglGenerateMipmap(GL_TEXTURE_2D);
         }
         else
         {
@@ -659,7 +660,7 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames) const
             //WriteTGAfile("mip_00.tga", data, result_page_width, result_page_height[page], 0);
             //sprintf(tgan, "mip_%0.2d.tga", mip_level);
             //WriteTGAfile(tgan, mip_data, w, h, 0);
-            glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
+            qglTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
 
             while((w > 1) && (h > 1) /*&& (mip_level < 4)*/)
             {
@@ -678,12 +679,12 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames) const
                 }
                 //sprintf(tgan, "mip_%0.2d.tga", mip_level);
                 //WriteTGAfile(tgan, mip_data, w, h, 0);
-                glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
+                qglTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
             }
             free(mip_data);
         }
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
     free(data);

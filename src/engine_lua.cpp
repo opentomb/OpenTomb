@@ -1427,7 +1427,7 @@ int lua_GetEntityDistance(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, Entity_FindDistance(e1, e2));
+    lua_pushnumber(lua, vec3_dist(e1->transform + 12, e2->transform + 12));
     return 1;
 }
 

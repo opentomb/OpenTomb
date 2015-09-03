@@ -175,7 +175,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 
     for(uint16_t i=0;i<model->animation_count;i++,anim++)
     {
-        if(anim->frames_count > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
+        if(anim->frames_count > 1 && anim->original_frame_rate > 1)             // we can't interpolate one frame or rate < 2!
         {
             new_frames_count = (uint16_t)anim->original_frame_rate * (anim->frames_count - 1) + 1;
             bf = new_bone_frames = (bone_frame_p)malloc(new_frames_count * sizeof(bone_frame_t));
@@ -573,7 +573,7 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
+            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) /*|| (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)*/))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;

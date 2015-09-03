@@ -427,13 +427,7 @@ int Engine_LoadMap(const char *name)
 
     Gui_DrawLoadScreen(50);
 
-    World_Empty(&engine_world);
-    World_Prepare(&engine_world);
-
     lua_Clean(engine_lua);
-
-    Audio_Init();
-
     Gui_DrawLoadScreen(100);
 
 
@@ -457,6 +451,8 @@ int Engine_LoadMap(const char *name)
         default:
             break;
     }
+
+    Audio_Init();
 
     engine_world.id   = 0;
     engine_world.name = 0;

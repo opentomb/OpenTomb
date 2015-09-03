@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
@@ -226,7 +227,7 @@ void Sys_TakeScreenShot()
     SDL_Surface *surface;
     uint32_t str_size;
 
-    glGetIntegerv(GL_VIEWPORT, ViewPort);
+    qglGetIntegerv(GL_VIEWPORT, ViewPort);
     snprintf(fname, 128, "screen_%0.5d.png", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);

@@ -58,7 +58,7 @@ enum TR_GAMEFLOW_OP
     TR_GAMEFLOW_OP_LASTINDEX
 };
 
-extern gameflow_manager_s gameflow_manager;
+extern struct gameflow_manager_s gameflow_manager;
 
 void Gameflow_Init();
 void Gameflow_Do();

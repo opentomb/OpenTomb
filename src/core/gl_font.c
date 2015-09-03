@@ -36,7 +36,7 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         glf->glyphs_count = glf->ft_face->num_glyphs;
         glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
 
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
+        qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
         glf->gl_tex_indexes = NULL;
         glf->gl_tex_indexes_count = 0;
@@ -80,7 +80,7 @@ gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t
         glf->glyphs_count = glf->ft_face->num_glyphs;
         glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
 
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
+        qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
         glf->gl_tex_indexes = NULL;
         glf->gl_tex_indexes_count = 0;
@@ -117,7 +117,7 @@ void glf_free_font(gl_tex_font_p glf)
         {
             if(glf->gl_tex_indexes_count > 0)
             {
-                glDeleteTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
+                qglDeleteTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
             }
             free(glf->gl_tex_indexes);
         }
@@ -206,7 +206,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         {
             if(glf->gl_tex_indexes_count > 0)
             {
-                glDeleteTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
+                qglDeleteTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
             }
             free(glf->gl_tex_indexes);
         }
@@ -231,7 +231,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         chars_in_column = glf->glyphs_count / chars_in_row + 1;
         glf->gl_tex_indexes_count = (chars_in_column * (font_size + padding)) / glf->gl_tex_width + 1;
         glf->gl_tex_indexes = (GLuint*)malloc(glf->gl_tex_indexes_count * sizeof(GLuint));
-        glGenTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
+        qglGenTextures(glf->gl_tex_indexes_count, glf->gl_tex_indexes);
 
         buffer_size = glf->gl_tex_width * glf->gl_tex_width * sizeof(GLubyte);
         buffer = (GLubyte*)malloc(buffer_size);
@@ -273,12 +273,12 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 if(y + glf->font_size > glf->gl_tex_width)
                 {
                     int ii;
-                    glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
-                    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, glf->gl_tex_width, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+                    qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
+                    qglTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+                    qglTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+                    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    qglTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, glf->gl_tex_width, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
                     for(ii=i0;ii<i;ii++)
                     {
                         glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
@@ -310,13 +310,13 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             x += (g->bitmap.width + padding);
         }
 
-        glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
+        qglTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        qglTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         chars_in_column = NextPowerOf2(y + font_size + padding);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, chars_in_column, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+        qglTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, chars_in_column, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
         for(ii=i0;ii<glf->glyphs_count;ii++)
         {
             glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
@@ -461,7 +461,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         for(p=buffer;*ch;)
         {
             char_info_p g;
@@ -523,17 +523,17 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
         }
-        glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+        qglUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
         ///RENDER
         if(elements_count != 0)
         {
-            glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
+            qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
             glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
             glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
             glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
             glDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
         }
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
     else
     {
@@ -542,7 +542,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         for(;*ch;)
         {
             char_info_p g;
@@ -560,7 +560,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             {
                 if(active_texture != g->tex_index)
                 {
-                    glBindTexture(GL_TEXTURE_2D, g->tex_index);
+                    qglBindTexture(GL_TEXTURE_2D, g->tex_index);
                     active_texture = g->tex_index;
                 }
                 ///RENDER

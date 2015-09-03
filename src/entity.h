@@ -132,8 +132,4 @@ void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);
 void Entity_MoveVertical(entity_p ent, float dist);
 
-// Helper functions
-
-float Entity_FindDistance(entity_p entity_1, entity_p entity_2);
-
 #endif

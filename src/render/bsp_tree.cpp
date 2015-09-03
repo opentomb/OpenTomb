@@ -198,7 +198,7 @@ CDynamicBSP::~CDynamicBSP()
 {
     if(m_vbo != 0)
     {
-        glDeleteBuffersARB(1, &m_vbo);
+        qglDeleteBuffersARB(1, &m_vbo);
         m_vbo = 0;
     }
 
@@ -303,7 +303,7 @@ void CDynamicBSP::Reset(struct anim_seq_s *seq)
 {
     if(m_vbo == 0)
     {
-        glGenBuffersARB(1, &m_vbo);
+        qglGenBuffersARB(1, &m_vbo);
     }
 
     switch(m_realloc_state)

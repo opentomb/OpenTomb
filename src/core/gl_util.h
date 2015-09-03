@@ -1,25 +1,7 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: t; c-basic-offset: 3 -*- */
-/*================================================================
- * 
- * Project : OpenRaider
- * Author  : Terry 'Mongoose' Hendrix II
- * Website : http://www.westga.edu/~stu7440/
- * Email   : stu7440@westga.edu
- * Object  : gl_util
- * License : No use w/o permission (C) 2001 Mongoose
- * Comments: 
- *
- *
- *           This file was generated using Mongoose's C++ 
- *           template generator script.  <stu7440@westga.edu>
- * 
- *-- History ------------------------------------------------ 
- *
- * 2001.12.31:
- * Mongoose - Created
- * TeslaRus - modyfied
- ================================================================*/
 
+/*****************************************************************
+ ************** OLD GOOD QUAKE ENGINE OPENGL STYLE ***************
+ *****************************************************************/
 
 #ifndef GL_UTIL_H
 #define GL_UTIL_H
@@ -30,122 +12,148 @@ extern "C" {
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
+    
+typedef GLenum (APIENTRYP PFNGLGETERRORPROC) (void);
+typedef const GLubyte* (APIENTRYP PFNGLGETSTRINGPROC) (GLenum name);
+typedef void (APIENTRYP PFNGLGETBOOLEANVPROC) (GLenum pname, GLboolean *params);
+typedef void (APIENTRYP PFNGLGETDOUBLEVPROC) (GLenum pname, GLdouble *params);
+typedef void (APIENTRYP PFNGLGETFLOATVPROC) (GLenum pname, GLfloat *params);
+typedef void (APIENTRYP PFNGLGETIINTEGERVPROC) (GLenum pname, GLint *params);
 
-//extern char *engine_gl_ext_str;
-#ifndef GL_GLEXT_PROTOTYPES
+typedef void (APIENTRYP PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
+typedef void (APIENTRYP PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint *textures);
+typedef void (APIENTRYP PFNGLBINDTEXTURESPROC) (GLenum target, GLuint texture);
+typedef void (APIENTRYP PFNGLTEXPATAMETERIPROC) (GLenum target, GLenum pname, GLint param);
+typedef void (APIENTRYP PFNGLTEXPATAMETERFPROC) (GLenum target, GLenum pname, GLfloat param);
+typedef void (APIENTRYP PFNGLTEXIMAGE2DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+    
+extern PFNGLGETERRORPROC qglGetError;
+extern PFNGLGETSTRINGPROC qglGetString;
+extern PFNGLGETBOOLEANVPROC qglGetBooleanv;
+extern PFNGLGETDOUBLEVPROC qglGetDoublev;
+extern PFNGLGETFLOATVPROC qglGetFloatv;
+extern PFNGLGETIINTEGERVPROC qglGetIntegerv;
+
+extern PFNGLGENTEXTURESPROC qglGenTextures;
+extern PFNGLDELETETEXTURESPROC qglDeleteTextures;
+extern PFNGLBINDTEXTURESPROC qglBindTexture;
+extern PFNGLTEXPATAMETERIPROC qglTexParameteri;
+extern PFNGLTEXPATAMETERFPROC qglTexParameterf;
+extern PFNGLTEXIMAGE2DPROC qglTexImage2D;
+
+
 /*GLSL functions EXT*/
-extern PFNGLDELETEOBJECTARBPROC glDeleteObjectARB;
-extern PFNGLGETHANDLEARBPROC glGetHandleARB;
-extern PFNGLDETACHOBJECTARBPROC glDetachObjectARB;
-extern PFNGLCREATESHADEROBJECTARBPROC glCreateShaderObjectARB;
-extern PFNGLSHADERSOURCEARBPROC glShaderSourceARB;
-extern PFNGLCOMPILESHADERARBPROC glCompileShaderARB;
-extern PFNGLCREATEPROGRAMOBJECTARBPROC glCreateProgramObjectARB;
-extern PFNGLATTACHOBJECTARBPROC glAttachObjectARB;
-extern PFNGLLINKPROGRAMARBPROC glLinkProgramARB;
-extern PFNGLUSEPROGRAMOBJECTARBPROC glUseProgramObjectARB;
-extern PFNGLVALIDATEPROGRAMARBPROC glValidateProgramARB;
-extern PFNGLUNIFORM1FARBPROC glUniform1fARB;
-extern PFNGLUNIFORM2FARBPROC glUniform2fARB;
-extern PFNGLUNIFORM3FARBPROC glUniform3fARB;
-extern PFNGLUNIFORM4FARBPROC glUniform4fARB;
-extern PFNGLUNIFORM1IARBPROC glUniform1iARB;
-extern PFNGLUNIFORM2IARBPROC glUniform2iARB;
-extern PFNGLUNIFORM3IARBPROC glUniform3iARB;
-extern PFNGLUNIFORM4IARBPROC glUniform4iARB;
-extern PFNGLUNIFORM1FVARBPROC glUniform1fvARB;
-extern PFNGLUNIFORM2FVARBPROC glUniform2fvARB;
-extern PFNGLUNIFORM3FVARBPROC glUniform3fvARB;
-extern PFNGLUNIFORM4FVARBPROC glUniform4fvARB;
-extern PFNGLUNIFORM1IVARBPROC glUniform1ivARB;
-extern PFNGLUNIFORM2IVARBPROC glUniform2ivARB;
-extern PFNGLUNIFORM3IVARBPROC glUniform3ivARB;
-extern PFNGLUNIFORM4IVARBPROC glUniform4ivARB;
-extern PFNGLUNIFORMMATRIX2FVARBPROC glUniformMatrix2fvARB;
-extern PFNGLUNIFORMMATRIX3FVARBPROC glUniformMatrix3fvARB;
-extern PFNGLUNIFORMMATRIX4FVARBPROC glUniformMatrix4fvARB;
-extern PFNGLGETOBJECTPARAMETERFVARBPROC glGetObjectParameterfvARB;
-extern PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameterivARB;
-extern PFNGLGETINFOLOGARBPROC glGetInfoLogARB;
-extern PFNGLGETATTACHEDOBJECTSARBPROC glGetAttachedObjectsARB;
-extern PFNGLGETUNIFORMLOCATIONARBPROC glGetUniformLocationARB;
-extern PFNGLGETACTIVEUNIFORMARBPROC glGetActiveUniformARB;
-extern PFNGLGETUNIFORMFVARBPROC glGetUniformfvARB;
-extern PFNGLGETUNIFORMIVARBPROC glGetUniformivARB;
-extern PFNGLGETSHADERSOURCEARBPROC glGetShaderSourceARB;
+extern PFNGLDELETEOBJECTARBPROC qglDeleteObjectARB;
+extern PFNGLGETHANDLEARBPROC qglGetHandleARB;
+extern PFNGLDETACHOBJECTARBPROC qglDetachObjectARB;
+extern PFNGLCREATESHADEROBJECTARBPROC qglCreateShaderObjectARB;
+extern PFNGLSHADERSOURCEARBPROC qglShaderSourceARB;
+extern PFNGLCOMPILESHADERARBPROC qglCompileShaderARB;
+extern PFNGLCREATEPROGRAMOBJECTARBPROC qglCreateProgramObjectARB;
+extern PFNGLATTACHOBJECTARBPROC qglAttachObjectARB;
+extern PFNGLLINKPROGRAMARBPROC qglLinkProgramARB;
+extern PFNGLUSEPROGRAMOBJECTARBPROC qglUseProgramObjectARB;
+extern PFNGLVALIDATEPROGRAMARBPROC qglValidateProgramARB;
+extern PFNGLUNIFORM1FARBPROC qglUniform1fARB;
+extern PFNGLUNIFORM2FARBPROC qglUniform2fARB;
+extern PFNGLUNIFORM3FARBPROC qglUniform3fARB;
+extern PFNGLUNIFORM4FARBPROC qglUniform4fARB;
+extern PFNGLUNIFORM1IARBPROC qglUniform1iARB;
+extern PFNGLUNIFORM2IARBPROC qglUniform2iARB;
+extern PFNGLUNIFORM3IARBPROC qglUniform3iARB;
+extern PFNGLUNIFORM4IARBPROC qglUniform4iARB;
+extern PFNGLUNIFORM1FVARBPROC qglUniform1fvARB;
+extern PFNGLUNIFORM2FVARBPROC qglUniform2fvARB;
+extern PFNGLUNIFORM3FVARBPROC qglUniform3fvARB;
+extern PFNGLUNIFORM4FVARBPROC qglUniform4fvARB;
+extern PFNGLUNIFORM1IVARBPROC qglUniform1ivARB;
+extern PFNGLUNIFORM2IVARBPROC qglUniform2ivARB;
+extern PFNGLUNIFORM3IVARBPROC qglUniform3ivARB;
+extern PFNGLUNIFORM4IVARBPROC qglUniform4ivARB;
+extern PFNGLUNIFORMMATRIX2FVARBPROC qglUniformMatrix2fvARB;
+extern PFNGLUNIFORMMATRIX3FVARBPROC qglUniformMatrix3fvARB;
+extern PFNGLUNIFORMMATRIX4FVARBPROC qglUniformMatrix4fvARB;
+extern PFNGLGETOBJECTPARAMETERFVARBPROC qglGetObjectParameterfvARB;
+extern PFNGLGETOBJECTPARAMETERIVARBPROC qglGetObjectParameterivARB;
+extern PFNGLGETINFOLOGARBPROC qglGetInfoLogARB;
+extern PFNGLGETATTACHEDOBJECTSARBPROC qglGetAttachedObjectsARB;
+extern PFNGLGETUNIFORMLOCATIONARBPROC qglGetUniformLocationARB;
+extern PFNGLGETACTIVEUNIFORMARBPROC qglGetActiveUniformARB;
+extern PFNGLGETUNIFORMFVARBPROC qglGetUniformfvARB;
+extern PFNGLGETUNIFORMIVARBPROC qglGetUniformivARB;
+extern PFNGLGETSHADERSOURCEARBPROC qglGetShaderSourceARB;
 
-extern PFNGLBINDATTRIBLOCATIONARBPROC glBindAttribLocationARB;
-extern PFNGLGETACTIVEATTRIBARBPROC glGetActiveAttribARB;
-extern PFNGLGETATTRIBLOCATIONARBPROC glGetAttribLocationARB;
-extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC glEnableVertexAttribArrayARB;
-extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC glDisableVertexAttribArrayARB;
-extern PFNGLVERTEXATTRIBPOINTERARBPROC glVertexAttribPointerARB;
+extern PFNGLBINDATTRIBLOCATIONARBPROC qglBindAttribLocationARB;
+extern PFNGLGETACTIVEATTRIBARBPROC qglGetActiveAttribARB;
+extern PFNGLGETATTRIBLOCATIONARBPROC qglGetAttribLocationARB;
+extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC qglEnableVertexAttribArrayARB;
+extern PFNGLENABLEVERTEXATTRIBARRAYARBPROC qglDisableVertexAttribArrayARB;
+extern PFNGLVERTEXATTRIBPOINTERARBPROC qglVertexAttribPointerARB;
 
 
 /*multitexture EXT*/
-extern PFNGLACTIVETEXTUREARBPROC glActiveTextureARB;
-extern PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB;
-extern PFNGLMULTITEXCOORD1DARBPROC glMultiTexCoord1dARB;
-extern PFNGLMULTITEXCOORD1DVARBPROC glMultiTexCoord1dvARB;
-extern PFNGLMULTITEXCOORD1FARBPROC glMultiTexCoord1fARB;
-extern PFNGLMULTITEXCOORD1FVARBPROC glMultiTexCoord1fvARB;
-extern PFNGLMULTITEXCOORD1IARBPROC glMultiTexCoord1iARB;
-extern PFNGLMULTITEXCOORD1IVARBPROC glMultiTexCoord1ivARB;
-extern PFNGLMULTITEXCOORD1SARBPROC glMultiTexCoord1sARB;
-extern PFNGLMULTITEXCOORD1SVARBPROC glMultiTexCoord1svARB;
-extern PFNGLMULTITEXCOORD2DARBPROC glMultiTexCoord2dARB;
-extern PFNGLMULTITEXCOORD2DVARBPROC glMultiTexCoord2dvARB;
-extern PFNGLMULTITEXCOORD2FARBPROC glMultiTexCoord2fARB;
-extern PFNGLMULTITEXCOORD2FVARBPROC glMultiTexCoord2fvARB;
-extern PFNGLMULTITEXCOORD2IARBPROC glMultiTexCoord2iARB;
-extern PFNGLMULTITEXCOORD2IVARBPROC glMultiTexCoord2ivARB;
-extern PFNGLMULTITEXCOORD2SARBPROC glMultiTexCoord2sARB;
-extern PFNGLMULTITEXCOORD2SVARBPROC glMultiTexCoord2svARB;
-extern PFNGLMULTITEXCOORD3DARBPROC glMultiTexCoord3dARB;
-extern PFNGLMULTITEXCOORD3DVARBPROC glMultiTexCoord3dvARB;
-extern PFNGLMULTITEXCOORD3FARBPROC glMultiTexCoord3fARB;
-extern PFNGLMULTITEXCOORD3FVARBPROC glMultiTexCoord3fvARB;
-extern PFNGLMULTITEXCOORD3IARBPROC glMultiTexCoord3iARB;
-extern PFNGLMULTITEXCOORD3IVARBPROC glMultiTexCoord3ivARB;
-extern PFNGLMULTITEXCOORD3SARBPROC glMultiTexCoord3sARB;
-extern PFNGLMULTITEXCOORD3SVARBPROC glMultiTexCoord3svARB;
-extern PFNGLMULTITEXCOORD4DARBPROC glMultiTexCoord4dARB;
-extern PFNGLMULTITEXCOORD4DVARBPROC glMultiTexCoord4dvARB;
-extern PFNGLMULTITEXCOORD4FARBPROC glMultiTexCoord4fARB;
-extern PFNGLMULTITEXCOORD4FVARBPROC glMultiTexCoord4fvARB;
-extern PFNGLMULTITEXCOORD4IARBPROC glMultiTexCoord4iARB;
-extern PFNGLMULTITEXCOORD4IVARBPROC glMultiTexCoord4ivARB;
-extern PFNGLMULTITEXCOORD4SARBPROC glMultiTexCoord4sARB;
-extern PFNGLMULTITEXCOORD4SVARBPROC glMultiTexCoord4svARB;
+extern PFNGLACTIVETEXTUREARBPROC qglActiveTextureARB;
+extern PFNGLCLIENTACTIVETEXTUREARBPROC qglClientActiveTextureARB;
+extern PFNGLMULTITEXCOORD1DARBPROC qglMultiTexCoord1dARB;
+extern PFNGLMULTITEXCOORD1DVARBPROC qglMultiTexCoord1dvARB;
+extern PFNGLMULTITEXCOORD1FARBPROC qglMultiTexCoord1fARB;
+extern PFNGLMULTITEXCOORD1FVARBPROC qglMultiTexCoord1fvARB;
+extern PFNGLMULTITEXCOORD1IARBPROC qglMultiTexCoord1iARB;
+extern PFNGLMULTITEXCOORD1IVARBPROC qglMultiTexCoord1ivARB;
+extern PFNGLMULTITEXCOORD1SARBPROC qglMultiTexCoord1sARB;
+extern PFNGLMULTITEXCOORD1SVARBPROC qglMultiTexCoord1svARB;
+extern PFNGLMULTITEXCOORD2DARBPROC qglMultiTexCoord2dARB;
+extern PFNGLMULTITEXCOORD2DVARBPROC qglMultiTexCoord2dvARB;
+extern PFNGLMULTITEXCOORD2FARBPROC qglMultiTexCoord2fARB;
+extern PFNGLMULTITEXCOORD2FVARBPROC qglMultiTexCoord2fvARB;
+extern PFNGLMULTITEXCOORD2IARBPROC qglMultiTexCoord2iARB;
+extern PFNGLMULTITEXCOORD2IVARBPROC qglMultiTexCoord2ivARB;
+extern PFNGLMULTITEXCOORD2SARBPROC qglMultiTexCoord2sARB;
+extern PFNGLMULTITEXCOORD2SVARBPROC qglMultiTexCoord2svARB;
+extern PFNGLMULTITEXCOORD3DARBPROC qglMultiTexCoord3dARB;
+extern PFNGLMULTITEXCOORD3DVARBPROC qglMultiTexCoord3dvARB;
+extern PFNGLMULTITEXCOORD3FARBPROC qglMultiTexCoord3fARB;
+extern PFNGLMULTITEXCOORD3FVARBPROC qglMultiTexCoord3fvARB;
+extern PFNGLMULTITEXCOORD3IARBPROC qglMultiTexCoord3iARB;
+extern PFNGLMULTITEXCOORD3IVARBPROC qglMultiTexCoord3ivARB;
+extern PFNGLMULTITEXCOORD3SARBPROC qglMultiTexCoord3sARB;
+extern PFNGLMULTITEXCOORD3SVARBPROC qglMultiTexCoord3svARB;
+extern PFNGLMULTITEXCOORD4DARBPROC qglMultiTexCoord4dARB;
+extern PFNGLMULTITEXCOORD4DVARBPROC qglMultiTexCoord4dvARB;
+extern PFNGLMULTITEXCOORD4FARBPROC qglMultiTexCoord4fARB;
+extern PFNGLMULTITEXCOORD4FVARBPROC qglMultiTexCoord4fvARB;
+extern PFNGLMULTITEXCOORD4IARBPROC qglMultiTexCoord4iARB;
+extern PFNGLMULTITEXCOORD4IVARBPROC qglMultiTexCoord4ivARB;
+extern PFNGLMULTITEXCOORD4SARBPROC qglMultiTexCoord4sARB;
+extern PFNGLMULTITEXCOORD4SVARBPROC qglMultiTexCoord4svARB;
 
 /* VBO EXT */
-extern PFNGLBINDBUFFERARBPROC glBindBufferARB;
-extern PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB;
-extern PFNGLGENBUFFERSARBPROC glGenBuffersARB;
-extern PFNGLISBUFFERARBPROC glIsBufferARB;
-extern PFNGLBUFFERDATAARBPROC glBufferDataARB;
-extern PFNGLBUFFERSUBDATAARBPROC glBufferSubDataARB;
-extern PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubDataARB;
-extern PFNGLMAPBUFFERARBPROC glMapBufferARB;
-extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
-extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
-extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
+extern PFNGLBINDBUFFERARBPROC qglBindBufferARB;
+extern PFNGLDELETEBUFFERSARBPROC qglDeleteBuffersARB;
+extern PFNGLGENBUFFERSARBPROC qglGenBuffersARB;
+extern PFNGLISBUFFERARBPROC qglIsBufferARB;
+extern PFNGLBUFFERDATAARBPROC qglBufferDataARB;
+extern PFNGLBUFFERSUBDATAARBPROC qglBufferSubDataARB;
+extern PFNGLGETBUFFERSUBDATAARBPROC qglGetBufferSubDataARB;
+extern PFNGLMAPBUFFERARBPROC qglMapBufferARB;
+extern PFNGLUNMAPBUFFERARBPROC qglUnmapBufferARB;
+extern PFNGLGETBUFFERPARAMETERIVARBPROC qglGetBufferParameterivARB;
+extern PFNGLGETBUFFERPOINTERVARBPROC qglGetBufferPointervARB;
 
-extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
-extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
-extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
-extern PFNGLISVERTEXARRAYPROC glIsVertexArray;
+extern PFNGLBINDVERTEXARRAYPROC qglBindVertexArray;
+extern PFNGLDELETEVERTEXARRAYSPROC qglDeleteVertexArrays;
+extern PFNGLGENVERTEXARRAYSPROC qglGenVertexArrays;
+extern PFNGLISVERTEXARRAYPROC qglIsVertexArray;
 
-extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
-#endif
+extern PFNGLGENERATEMIPMAPPROC qglGenerateMipmap;
 
 void InitGLExtFuncs();
 int IsGLExtensionSupported(const char *ext);
 
 int checkOpenGLError();
 void printInfoLog (GLhandleARB object);
-int loadShaderFromBuff(GLhandleARB ShaderObj, char * source);
-int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines);
+int loadShaderFromBuff(GLhandleARB ShaderObj, const char *source, const char *additionalDefines);
+int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *additionalDefines);
 
 void BindWhiteTexture();
 

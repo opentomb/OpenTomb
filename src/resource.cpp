@@ -34,7 +34,6 @@ extern "C" {
 #include "gameflow.h"
 #include "resource.h"
 #include "game.h"
-#include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "script.h"
@@ -78,12 +77,12 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf->animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->bf->animations.model->id);     // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
                 ent->self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
-                ent->bf->animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
+                ent->bf->animations.model->hide = lua_tointeger(objects_flags_conf, -2);// get info about model visibility
                 ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
             }
         }
@@ -98,7 +97,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf->animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->bf->animations.model->id);       // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
@@ -111,7 +110,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
                 }
                 if(!lua_isnil(level_script, -2))
                 {
-                    ent->bf->animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                    ent->bf->animations.model->hide = lua_tointeger(level_script, -2);  // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -1))
                 {
@@ -2542,37 +2541,37 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glPixelZoom(1, 1);
     world->tex_atlas->createTextures(world->textures);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
     // Select mipmap mode
     switch(renderer.settings.mipmap_mode)
     {
         case 0:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+            qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
             break;
 
         case 1:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
             break;
 
         case 2:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+            qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
             break;
 
         case 3:
         default:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             break;
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
+    qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
 }
 
 void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)
@@ -3222,14 +3221,14 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
     free(elements_for_texture);
 
     // Now load into OpenGL
-    glGenBuffersARB(1, &room->sprite_buffer->array_buffer);
-    glBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
-    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
+    qglGenBuffersARB(1, &room->sprite_buffer->array_buffer);
+    qglBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    glGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
+    qglGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
+    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
+    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 }
 

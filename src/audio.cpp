@@ -153,7 +153,7 @@ void AudioSource::Update()
     }
 
     // Stop source, if it is disabled, but still playing.
-    if((!active) && (state == AL_PLAYING))
+    if(!active && (state == AL_PLAYING))
     {
         Stop();
         return;
@@ -296,7 +296,6 @@ void AudioSource::SetFX()
 void AudioSource::UnsetFX()
 {
     // Remove any audio sends and direct filters from channel.
-
     alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
     alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
@@ -1565,7 +1564,6 @@ int Audio_DeInit()
                 alAuxiliaryEffectSloti(fxManager.al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
                 alDeleteAuxiliaryEffectSlots(1, &fxManager.al_slot[i]);
             }
-
         }
 
         alDeleteFilters(1, &fxManager.al_filter);

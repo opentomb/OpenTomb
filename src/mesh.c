@@ -14,13 +14,13 @@ void BaseMesh_Clear(base_mesh_p mesh)
 {
     if(mesh->vbo_vertex_array)
     {
-        glDeleteBuffersARB(1, &mesh->vbo_vertex_array);
+        qglDeleteBuffersARB(1, &mesh->vbo_vertex_array);
         mesh->vbo_vertex_array = 0;
     }
 
     if(mesh->vbo_index_array)
     {
-        glDeleteBuffersARB(1, &mesh->vbo_index_array);
+        qglDeleteBuffersARB(1, &mesh->vbo_index_array);
         mesh->vbo_index_array = 0;
     }
 
@@ -149,31 +149,31 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
 {
     mesh->vbo_vertex_array = 0;
     mesh->vbo_index_array = 0;
-    if(glGenBuffersARB == NULL)                                                 // if not supported, pointer is NULL
+    if(qglGenBuffersARB == NULL)                                                // if not supported, pointer is NULL
     {
         abort();
     }
 
     /// now, begin VBO filling!
-    glGenBuffersARB(1, &mesh->vbo_vertex_array);
+    qglGenBuffersARB(1, &mesh->vbo_vertex_array);
     if(mesh->vbo_vertex_array == 0)
     {
         abort();
     }
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
+    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
+    qglBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
 
     // Fill indexes vbo
-    glGenBuffersARB(1, &mesh->vbo_index_array);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
+    qglGenBuffersARB(1, &mesh->vbo_index_array);
+    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
 
     GLsizeiptr elementsSize = 0;
     for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
     {
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
-    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
+    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
 
     // Now for animated polygons, if any
     mesh->num_animated_elements = 0;
@@ -227,20 +227,20 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         }
 
         // And upload.
-        glGenBuffersARB(1, &mesh->animated_vertex_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
+        qglGenBuffersARB(1, &mesh->animated_vertex_array);
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+        qglBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
         free(vertexData);
 
-        glGenBuffersARB(1, &mesh->animated_index_array);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
+        qglGenBuffersARB(1, &mesh->animated_index_array);
+        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
+        qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
         free(elementData);
 
         // Prepare empty buffer for tex coords
-        glGenBuffersARB(1, &mesh->animated_texcoord_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
+        qglGenBuffersARB(1, &mesh->animated_texcoord_array);
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
     }
     else
     {
@@ -249,8 +249,8 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         mesh->animated_texcoord_array = 0;
     }
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 
 
