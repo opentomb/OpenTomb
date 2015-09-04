@@ -114,30 +114,30 @@ void Engine_SetDone()
 void Engine_InitGL()
 {
     InitGLExtFuncs();
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    qglClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
+    qglEnable(GL_DEPTH_TEST);
+    qglDepthFunc(GL_LEQUAL);
 
     if(renderer.settings.antialias)
     {
-        glEnable(GL_MULTISAMPLE);
+         qglEnable(GL_MULTISAMPLE);
     }
     else
     {
-        glDisable(GL_MULTISAMPLE);
+        qglDisable(GL_MULTISAMPLE);
     }
 
     // Default state: Vertex array and color array are enabled, all others disabled.. Drawable
     // items can rely on Vertex array to be enabled (but pointer can be
     // anything). They have to enable other arrays based on their need and then
     // return to default state
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
+    qglEnableClientState(GL_VERTEX_ARRAY);
+    qglEnableClientState(GL_COLOR_ARRAY);
 
     // function use anyway.
-    glAlphaFunc(GL_GEQUAL, 0.5);
+    qglAlphaFunc(GL_GEQUAL, 0.5);
 }
 
 void Engine_InitSDLControls()
@@ -417,7 +417,7 @@ void Engine_Display()
 {
     if(!done)
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
+        qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
         Cam_Apply(&engine_camera);
         Cam_RecalcClipPlanes(&engine_camera);
@@ -427,20 +427,20 @@ void Engine_Display()
             ShowDebugInfo();
         }
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        qglEnableClientState(GL_NORMAL_ARRAY);
+        qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        glFrontFace(GL_CW);
+        qglFrontFace(GL_CW);
 
         renderer.GenWorldList(&engine_camera);
         renderer.DrawList();
 
         Gui_SwitchGLMode(1);
-        glEnable(GL_ALPHA_TEST);
+        qglEnable(GL_ALPHA_TEST);
 
         Gui_DrawNotifier();
-        glPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        qglPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         Gui_Render();
         Gui_SwitchGLMode(0);
 
@@ -464,7 +464,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
 
-    glViewport(0, 0, pixelsW, pixelsH);
+    qglViewport(0, 0, pixelsW, pixelsH);
 }
 
 void Engine_Frame(float time)

@@ -17,121 +17,260 @@
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 
-PFNGLGETERRORPROC                      qglGetError =                            NULL;
-PFNGLGETSTRINGPROC                     qglGetString =                           NULL;
-PFNGLGETBOOLEANVPROC                   qglGetBooleanv =                         NULL;
-PFNGLGETDOUBLEVPROC                    qglGetDoublev =                          NULL;
-PFNGLGETFLOATVPROC                     qglGetFloatv =                           NULL;
-PFNGLGETIINTEGERVPROC                  qglGetIntegerv =                         NULL;
+/* Miscellaneous */
+PFNGLCLEARINDEXPROC                     qglClearIndex = NULL;
+PFNGLCLEARCOLORPROC                     qglClearColor = NULL;
+PFNGLCLEARPROC                          qglClear = NULL;
+PFNGLINDEXMASKPROC                      qglIndexMask = NULL;
+PFNGLCOLORMASKPROC                      qglColorMask = NULL;
+PFNGLALPHAFUNCPROC                      qglAlphaFunc = NULL;
+PFNGLBLENDFUNCPROC                      qglBlendFunc = NULL;
+PFNGLLOGICOPPROC                        qglLogicOp = NULL;
+PFNGLCULLFACEPROC                       qglCullFace = NULL;
+PFNGLFRONTFACEPROC                      qglFrontFace = NULL;
+PFNGLPOINTSIZEPROC                      qglPointSize = NULL;
+PFNGLLINEWIDTHPROC                      qglLineWidth = NULL;
+PFNGLLINESTIPPLEPROC                    qglLineStipple = NULL;
+PFNGLPOLYGONMODEPROC                    qglPolygonMode = NULL;
+PFNGLPOLYGONOFFSETPROC                  qglPolygonOffset = NULL;
+PFNGLPOLYGONSTIPPLEPROC                 qglPolygonStipple = NULL;
+PFNGLGETPOLYGONSTIPPLEPROC              qglGetPolygonStipple = NULL;
+PFNGLEDGEFLAGPROC                       qglEdgeFlag = NULL;
+PFNGLEDGEFLAGVPROC                      qglEdgeFlagv = NULL;
+PFNGLSCISSORPROC                        qglScissor = NULL;
+PFNGLCLIPPLANEPROC                      qglClipPlane = NULL;
+PFNGLGETCLIPPLANEPROC                   qglGetClipPlane = NULL;
+PFNGLDRAWBUFFERPROC                     qglDrawBuffer = NULL;
+PFNGLREADBUFFERPROC                     qglReadBuffer = NULL;
+PFNGLENABLEPROC                         qglEnable = NULL;
+PFNGLDISABLEPROC                        qglDisable = NULL;
+PFNGLISENABLEDPROC                      qglIsEnabled = NULL;
+PFNGLENABLECLIENTSTATEPROC              qglEnableClientState = NULL;
+PFNGLDISABLECLIENTSTATEPROC             qglDisableClientState = NULL;
+PFNGLGETERRORPROC                       qglGetError = NULL;
+PFNGLGETSTRINGPROC                      qglGetString = NULL;
+PFNGLGETBOOLEANVPROC                    qglGetBooleanv = NULL;
+PFNGLGETDOUBLEVPROC                     qglGetDoublev = NULL;
+PFNGLGETFLOATVPROC                      qglGetFloatv = NULL;
+PFNGLGETIINTEGERVPROC                   qglGetIntegerv = NULL;
+PFNGLPUSHATTRIBPROC                     qglPushAttrib = NULL;
+PFNGLPOPATTRIBPROC                      qglPopAttrib = NULL;
+PFNGLPUSHCLIENTATTRIBPROC               qglPushClientAttrib = NULL;
+PFNGLPOPCLIENTATTRIBPROC                qglPopClientAttrib = NULL;
+PFNGLRENDERMODEPROC                     qglRenderMode = NULL;
+PFNGLFINISHPROC                         qglFinish = NULL;
+PFNGLFLUSHPROC                          qglFlush = NULL;
+PFNGLHINTPROC                           qglHint = NULL;
 
-PFNGLGENTEXTURESPROC                   qglGenTextures =                         NULL;
-PFNGLDELETETEXTURESPROC                qglDeleteTextures =                      NULL;
-PFNGLBINDTEXTURESPROC                  qglBindTexture =                         NULL;
-PFNGLTEXPATAMETERIPROC                 qglTexParameteri =                       NULL;
-PFNGLTEXPATAMETERFPROC                 qglTexParameterf =                       NULL;
-PFNGLTEXIMAGE2DPROC                    qglTexImage2D =                          NULL;
+/* Depth Buffer */
+PFNGLCLEARDEPTHPROC                     qglClearDepth = NULL;
+PFNGLDEPTHFUNCPROC                      qglDepthFunc = NULL;
+PFNGLDEPTHMASKPROC                      qglDepthMask = NULL;
+PFNGLDEPTHRANGEPROC                     qglDepthRange = NULL;
 
+/* Accumulation Buffer */
+PFNGLCLEARACCUMPROC                     qglClearAccum = NULL;               
+PFNGLACCUMPROC                          qglAccum = NULL;
 
-PFNGLDELETEOBJECTARBPROC               qglDeleteObjectARB =                     NULL;
-PFNGLGETHANDLEARBPROC                  qglGetHandleARB =                        NULL;
-PFNGLDETACHOBJECTARBPROC               qglDetachObjectARB =                     NULL;
-PFNGLCREATESHADEROBJECTARBPROC         qglCreateShaderObjectARB =               NULL;
-PFNGLSHADERSOURCEARBPROC               qglShaderSourceARB =                     NULL;
-PFNGLCOMPILESHADERARBPROC              qglCompileShaderARB =                    NULL;
-PFNGLCREATEPROGRAMOBJECTARBPROC        qglCreateProgramObjectARB =              NULL;
-PFNGLATTACHOBJECTARBPROC               qglAttachObjectARB =                     NULL;
-PFNGLLINKPROGRAMARBPROC                qglLinkProgramARB =                      NULL;
-PFNGLUSEPROGRAMOBJECTARBPROC           qglUseProgramObjectARB =                 NULL;
-PFNGLVALIDATEPROGRAMARBPROC            qglValidateProgramARB =                  NULL;
-PFNGLUNIFORM1FARBPROC                  qglUniform1fARB =                        NULL;
-PFNGLUNIFORM2FARBPROC                  qglUniform2fARB =                        NULL;
-PFNGLUNIFORM3FARBPROC                  qglUniform3fARB =                        NULL;
-PFNGLUNIFORM4FARBPROC                  qglUniform4fARB =                        NULL;
-PFNGLUNIFORM1IARBPROC                  qglUniform1iARB =                        NULL;
-PFNGLUNIFORM2IARBPROC                  qglUniform2iARB =                        NULL;
-PFNGLUNIFORM3IARBPROC                  qglUniform3iARB =                        NULL;
-PFNGLUNIFORM4IARBPROC                  qglUniform4iARB =                        NULL;
-PFNGLUNIFORM1FVARBPROC                 qglUniform1fvARB =                       NULL;
-PFNGLUNIFORM2FVARBPROC                 qglUniform2fvARB =                       NULL;
-PFNGLUNIFORM3FVARBPROC                 qglUniform3fvARB =                       NULL;
-PFNGLUNIFORM4FVARBPROC                 qglUniform4fvARB =                       NULL;
-PFNGLUNIFORM1IVARBPROC                 qglUniform1ivARB =                       NULL;
-PFNGLUNIFORM2IVARBPROC                 qglUniform2ivARB =                       NULL;
-PFNGLUNIFORM3IVARBPROC                 qglUniform3ivARB =                       NULL;
-PFNGLUNIFORM4IVARBPROC                 qglUniform4ivARB =                       NULL;
-PFNGLUNIFORMMATRIX2FVARBPROC           qglUniformMatrix2fvARB =                 NULL;
-PFNGLUNIFORMMATRIX3FVARBPROC           qglUniformMatrix3fvARB =                 NULL;
-PFNGLUNIFORMMATRIX4FVARBPROC           qglUniformMatrix4fvARB =                 NULL;
-PFNGLGETOBJECTPARAMETERFVARBPROC       qglGetObjectParameterfvARB =             NULL;
-PFNGLGETOBJECTPARAMETERIVARBPROC       qglGetObjectParameterivARB =             NULL;
-PFNGLGETINFOLOGARBPROC                 qglGetInfoLogARB =                       NULL;
-PFNGLGETATTACHEDOBJECTSARBPROC         qglGetAttachedObjectsARB =               NULL;
-PFNGLGETUNIFORMLOCATIONARBPROC         qglGetUniformLocationARB =               NULL;
-PFNGLGETACTIVEUNIFORMARBPROC           qglGetActiveUniformARB =                 NULL;
-PFNGLGETUNIFORMFVARBPROC               qglGetUniformfvARB =                     NULL;
-PFNGLGETUNIFORMIVARBPROC               qglGetUniformivARB =                     NULL;
-PFNGLGETSHADERSOURCEARBPROC            qglGetShaderSourceARB =                  NULL;
+/* Transformation */
+PFNGLMATRIXMODEPROC                     qglMatrixMode = NULL;
+PFNGLORTHOPROC                          qglOrtho = NULL;
+PFNGLFRUSTUMPROC                        qglFrustum = NULL;
+PFNGLVIEWPORTPROC                       qglViewport = NULL;
+PFNGLPUSHMATRIXPROC                     qglPushMatrix = NULL;
+PFNGLPOPMATRIXPROC                      qglPopMatrix = NULL;
+PFNGLLOADIDENTITYPROC                   qglLoadIdentity = NULL;
+PFNGLLOADMATRIXDPROC                    qglLoadMatrixd = NULL;
+PFNGLLOADMATRIXFPROC                    qglLoadMatrixf = NULL;
+PFNGLMULTMATRIXDPROC                    qglMultMatrixd = NULL;
+PFNGLMULTMATRIXFPROC                    qglMultMatrixf = NULL;
+PFNGLROTATEDPROC                        qglRotated = NULL;
+PFNGLROTATEFPROC                        qglRotatef = NULL;
+PFNGLSCALEDPROC                         qglScaled = NULL;
+PFNGLSCALEFPROC                         qglScalef = NULL;
+PFNGLTRANSLATEDPROC                     qglTranslated = NULL;
+PFNGLTRANSLATEFPROC                     qglTranslatef = NULL;
 
-PFNGLBINDATTRIBLOCATIONARBPROC         qglBindAttribLocationARB =               NULL;
-PFNGLGETACTIVEATTRIBARBPROC            qglGetActiveAttribARB =                  NULL;
-PFNGLGETATTRIBLOCATIONARBPROC          qglGetAttribLocationARB =                NULL;
-PFNGLENABLEVERTEXATTRIBARRAYARBPROC    qglEnableVertexAttribArrayARB =          NULL;
-PFNGLENABLEVERTEXATTRIBARRAYARBPROC    qglDisableVertexAttribArrayARB =         NULL;
-PFNGLVERTEXATTRIBPOINTERARBPROC        qglVertexAttribPointerARB =              NULL;
+/* Raster functions */
+PFNGLPIXELZOOMPROC                      qglPixelZoom = NULL;
+PFNGLPIXELSTOREFPROC                    qglPixelStoref = NULL;
+PFNGLPIXELSTOREIPROC                    qglPixelStorei = NULL;
+PFNGLPIXELTRANSFERFPROC                 qglPixelTransferf = NULL;
+PFNGLPIXELTRANSFERIPROC                 qglPixelTransferi = NULL;
+PFNGLPIXELMAPFVPROC                     qglPixelMapfv = NULL;
+PFNGLPIXELMAPUIVPROC                    qglPixelMapuiv = NULL;
+PFNGLPIXELMAPUSVPROC                    qglPixelMapusv = NULL;
+PFNGLGETPIXELMAPFVPROC                  qglGetPixelMapfv = NULL;
+PFNGLGETPIXELMAPUIVPROC                 qglGetPixelMapuiv = NULL;
+PFNGLGETPIXELMAPUSVPROC                 qglGetPixelMapusv = NULL;
+PFNGLBITMAPPROC                         qglBitmap = NULL;
+PFNGLREADPIXELSPROC                     qglReadPixels = NULL;
+PFNGLDRAWPIXELSPROC                     qglDrawPixels = NULL;
+PFNGLCOPYPIXELSPROC                     qglCopyPixels = NULL;
 
-PFNGLACTIVETEXTUREARBPROC              qglActiveTextureARB =                    NULL;
-PFNGLCLIENTACTIVETEXTUREARBPROC        qglClientActiveTextureARB =              NULL;
-PFNGLMULTITEXCOORD1DARBPROC            qglMultiTexCoord1dARB =                  NULL;
-PFNGLMULTITEXCOORD1DVARBPROC           qglMultiTexCoord1dvARB =                 NULL;
-PFNGLMULTITEXCOORD1FARBPROC            qglMultiTexCoord1fARB =                  NULL;
-PFNGLMULTITEXCOORD1FVARBPROC           qglMultiTexCoord1fvARB =                 NULL;
-PFNGLMULTITEXCOORD1IARBPROC            qglMultiTexCoord1iARB =                  NULL;
-PFNGLMULTITEXCOORD1IVARBPROC           qglMultiTexCoord1ivARB =                 NULL;
-PFNGLMULTITEXCOORD1SARBPROC            qglMultiTexCoord1sARB =                  NULL;
-PFNGLMULTITEXCOORD1SVARBPROC           qglMultiTexCoord1svARB =                 NULL;
-PFNGLMULTITEXCOORD2DARBPROC            qglMultiTexCoord2dARB =                  NULL;
-PFNGLMULTITEXCOORD2DVARBPROC           qglMultiTexCoord2dvARB =                 NULL;
-PFNGLMULTITEXCOORD2FARBPROC            qglMultiTexCoord2fARB =                  NULL;
-PFNGLMULTITEXCOORD2FVARBPROC           qglMultiTexCoord2fvARB =                 NULL;
-PFNGLMULTITEXCOORD2IARBPROC            qglMultiTexCoord2iARB =                  NULL;
-PFNGLMULTITEXCOORD2IVARBPROC           qglMultiTexCoord2ivARB =                 NULL;
-PFNGLMULTITEXCOORD2SARBPROC            qglMultiTexCoord2sARB =                  NULL;
-PFNGLMULTITEXCOORD2SVARBPROC           qglMultiTexCoord2svARB =                 NULL;
-PFNGLMULTITEXCOORD3DARBPROC            qglMultiTexCoord3dARB =                  NULL;
-PFNGLMULTITEXCOORD3DVARBPROC           qglMultiTexCoord3dvARB =                 NULL;
-PFNGLMULTITEXCOORD3FARBPROC            qglMultiTexCoord3fARB =                  NULL;
-PFNGLMULTITEXCOORD3FVARBPROC           qglMultiTexCoord3fvARB =                 NULL;
-PFNGLMULTITEXCOORD3IARBPROC            qglMultiTexCoord3iARB =                  NULL;
-PFNGLMULTITEXCOORD3IVARBPROC           qglMultiTexCoord3ivARB =                 NULL;
-PFNGLMULTITEXCOORD3SARBPROC            qglMultiTexCoord3sARB =                  NULL;
-PFNGLMULTITEXCOORD3SVARBPROC           qglMultiTexCoord3svARB =                 NULL;
-PFNGLMULTITEXCOORD4DARBPROC            qglMultiTexCoord4dARB =                  NULL;
-PFNGLMULTITEXCOORD4DVARBPROC           qglMultiTexCoord4dvARB =                 NULL;
-PFNGLMULTITEXCOORD4FARBPROC            qglMultiTexCoord4fARB =                  NULL;
-PFNGLMULTITEXCOORD4FVARBPROC           qglMultiTexCoord4fvARB =                 NULL;
-PFNGLMULTITEXCOORD4IARBPROC            qglMultiTexCoord4iARB =                  NULL;
-PFNGLMULTITEXCOORD4IVARBPROC           qglMultiTexCoord4ivARB =                 NULL;
-PFNGLMULTITEXCOORD4SARBPROC            qglMultiTexCoord4sARB =                  NULL;
-PFNGLMULTITEXCOORD4SVARBPROC           qglMultiTexCoord4svARB =                 NULL;
+/* Stenciling */
+PFNGLSTENCILFUNCPROC                    qglStencilFunc = NULL;
+PFNGLSTENCILMASKPROC                    qglStencilMask = NULL;
+PFNGLSTENCILOPPROC                      qglStencilOp = NULL;
+PFNGLCLEARSTENCILPROC                   qglClearStencil = NULL;
 
-PFNGLBINDBUFFERARBPROC                 qglBindBufferARB =                       NULL;
-PFNGLDELETEBUFFERSARBPROC              qglDeleteBuffersARB =                    NULL;
-PFNGLGENBUFFERSARBPROC                 qglGenBuffersARB =                       NULL;
-PFNGLISBUFFERARBPROC                   qglIsBufferARB =                         NULL;
-PFNGLBUFFERDATAARBPROC                 qglBufferDataARB =                       NULL;
-PFNGLBUFFERSUBDATAARBPROC              qglBufferSubDataARB =                    NULL;
-PFNGLGETBUFFERSUBDATAARBPROC           qglGetBufferSubDataARB =                 NULL;
-PFNGLMAPBUFFERARBPROC                  qglMapBufferARB =                        NULL;
-PFNGLUNMAPBUFFERARBPROC                qglUnmapBufferARB =                      NULL;
-PFNGLGETBUFFERPARAMETERIVARBPROC       qglGetBufferParameterivARB =             NULL;
-PFNGLGETBUFFERPOINTERVARBPROC          qglGetBufferPointervARB =                NULL;
+/* Texture mapping */
+PFNGLTEXGENDPROC                        qglTexGend = NULL;
+PFNGLTEXGENFPROC                        qglTexGenf = NULL;
+PFNGLTEXGENIPROC                        qglTexGeni = NULL;
+PFNGLTEXGENDVPROC                       qglTexGendv = NULL;
+PFNGLTEXGENFVPROC                       qglTexGenfv = NULL;
+PFNGLTEXGENIVPROC                       qglTexGeniv = NULL;
+PFNGLGETTEXGENDVPROC                    qglGetTexGendv = NULL;
+PFNGLGETTEXGENFVPROC                    qglGetTexGenfv = NULL;
+PFNGLGETTEXGENIVPROC                    qglGetTexGeniv = NULL;
+PFNGLTEXENVFPROC                        qglTexEnvf = NULL;
+PFNGLTEXENVIPROC                        qglTexEnvi = NULL;
+PFNGLTEXENVFVPROC                       qglTexEnvfv = NULL;
+PFNGLTEXENVIVPROC                       qglTexEnviv = NULL;
+PFNGLGETTEXENVFVPROC                    qglGetTexEnvfv = NULL;
+PFNGLGETTEXENVIVPROC                    qglGetTexEnviv = NULL;
+PFNGLTEXPARAMETERFPROC                  qglTexParameterf = NULL;
+PFNGLTEXPARAMETERIPROC                  qglTexParameteri = NULL;
+PFNGLTEXPARAMETERFVPROC                 qglTexParameterfv = NULL;
+PFNGLTEXPARAMETERIVPROC                 qglTexParameteriv = NULL;
+PFNGLGETTEXPARAMETERFVPROC              qglGetTexParameterfv = NULL;
+PFNGLGETTEXPARAMETERIVPROC              qglGetTexParameteriv = NULL;
+PFNGLGETTEXLEVELPARAMETERFVPROC         qglGetTexLevelParameterfv = NULL;
+PFNGLGETTEXLEVELPARAMETERIVPROC         qglGetTexLevelParameteriv = NULL;
+PFNGLTEXIMAGE1DPROC                     qglTexImage1D = NULL;
+PFNGLTEXIMAGE2DPROC                     qglTexImage2D = NULL;
+PFNGLGETTEXIMAGEPROC                    qglGetTexImage = NULL;
 
-PFNGLBINDVERTEXARRAYPROC               qglBindVertexArray =                     NULL;
-PFNGLDELETEVERTEXARRAYSPROC            qglDeleteVertexArrays =                  NULL;
-PFNGLGENVERTEXARRAYSPROC               qglGenVertexArrays =                     NULL;
-PFNGLISVERTEXARRAYPROC                 qglIsVertexArray =                       NULL;
+/* 1.1 functions */
+/* texture objects */
+PFNGLGENTEXTURESPROC                    qglGenTextures = NULL;
+PFNGLDELETETEXTURESPROC                 qglDeleteTextures = NULL;
+PFNGLBINDTEXTUREPROC                    qglBindTexture = NULL;
+PFNGLPRIORITIZETEXTURESPROC             qglPrioritizeTextures = NULL;
+PFNGLARETEXTURESRESIDENTPROC            qglAreTexturesResident = NULL;
+PFNGLISTEXTUREPROC                      qglIsTexture = NULL;
+/* texture mapping */
+PFNGLTEXSUBIMAGE1DPROC                  qglTexSubImage1D = NULL;
+PFNGLTEXSUBIMAGE2DPROC                  qglTexSubImage2D = NULL;
+PFNGLCOPYTEXIMAGE1DPROC                 qglCopyTexImage1D = NULL;
+PFNGLCOPYTEXIMAGE2DPROC                 qglCopyTexImage2D = NULL;
+PFNGLCOPYTEXSUBIMAGE1DPROC              qglCopyTexSubImage1D = NULL;
+PFNGLCOPYTEXSUBIMAGE2DPROC              qglCopyTexSubImage2D = NULL;
+/* vertex arrays */
+PFNGLVERTEXPOINTERPROC                  qglVertexPointer = NULL;
+PFNGLNORMALPOINTERPROC                  qglNormalPointer = NULL;
+PFNGLCOLORPOINTERPROC                   qglColorPointer = NULL;
+PFNGLINDEXPOINTERPROC                   qglIndexPointer = NULL;
+PFNGLTEXCOORDPOINTERPROC                qglTexCoordPointer = NULL;
+PFNGLEDGEFLAGPOINTERPROC                qglEdgeFlagPointer = NULL;
+PFNGLGETPOINTERVPROC                    qglGetPointerv = NULL;
+PFNGLARRAYELEMENTPROC                   qglArrayElement = NULL;
+PFNGLDRAWARRAYSPROC                     qglDrawArrays = NULL;
+PFNGLDRAWELEMENTSPROC                   qglDrawElements = NULL;
+PFNGLINTERLEAVEDARRAYSPROC              qglInterleavedArrays = NULL;
 
-PFNGLGENERATEMIPMAPEXTPROC             qglGenerateMipmap =                      NULL;
+/*ARB*/
+PFNGLDELETEOBJECTARBPROC                qglDeleteObjectARB = NULL;
+PFNGLGETHANDLEARBPROC                   qglGetHandleARB = NULL;
+PFNGLDETACHOBJECTARBPROC                qglDetachObjectARB = NULL;
+PFNGLCREATESHADEROBJECTARBPROC          qglCreateShaderObjectARB = NULL;
+PFNGLSHADERSOURCEARBPROC                qglShaderSourceARB = NULL;
+PFNGLCOMPILESHADERARBPROC               qglCompileShaderARB = NULL;
+PFNGLCREATEPROGRAMOBJECTARBPROC         qglCreateProgramObjectARB = NULL;
+PFNGLATTACHOBJECTARBPROC                qglAttachObjectARB = NULL;
+PFNGLLINKPROGRAMARBPROC                 qglLinkProgramARB = NULL;
+PFNGLUSEPROGRAMOBJECTARBPROC            qglUseProgramObjectARB = NULL;
+PFNGLVALIDATEPROGRAMARBPROC             qglValidateProgramARB = NULL;
+PFNGLUNIFORM1FARBPROC                   qglUniform1fARB = NULL;
+PFNGLUNIFORM2FARBPROC                   qglUniform2fARB = NULL;
+PFNGLUNIFORM3FARBPROC                   qglUniform3fARB = NULL;
+PFNGLUNIFORM4FARBPROC                   qglUniform4fARB = NULL;
+PFNGLUNIFORM1IARBPROC                   qglUniform1iARB = NULL;
+PFNGLUNIFORM2IARBPROC                   qglUniform2iARB = NULL;
+PFNGLUNIFORM3IARBPROC                   qglUniform3iARB = NULL;
+PFNGLUNIFORM4IARBPROC                   qglUniform4iARB = NULL;
+PFNGLUNIFORM1FVARBPROC                  qglUniform1fvARB = NULL;
+PFNGLUNIFORM2FVARBPROC                  qglUniform2fvARB = NULL;
+PFNGLUNIFORM3FVARBPROC                  qglUniform3fvARB = NULL;
+PFNGLUNIFORM4FVARBPROC                  qglUniform4fvARB = NULL;
+PFNGLUNIFORM1IVARBPROC                  qglUniform1ivARB = NULL;
+PFNGLUNIFORM2IVARBPROC                  qglUniform2ivARB = NULL;
+PFNGLUNIFORM3IVARBPROC                  qglUniform3ivARB = NULL;
+PFNGLUNIFORM4IVARBPROC                  qglUniform4ivARB = NULL;
+PFNGLUNIFORMMATRIX2FVARBPROC            qglUniformMatrix2fvARB = NULL;
+PFNGLUNIFORMMATRIX3FVARBPROC            qglUniformMatrix3fvARB = NULL;
+PFNGLUNIFORMMATRIX4FVARBPROC            qglUniformMatrix4fvARB = NULL;
+PFNGLGETOBJECTPARAMETERFVARBPROC        qglGetObjectParameterfvARB = NULL;
+PFNGLGETOBJECTPARAMETERIVARBPROC        qglGetObjectParameterivARB = NULL;
+PFNGLGETINFOLOGARBPROC                  qglGetInfoLogARB = NULL;
+PFNGLGETATTACHEDOBJECTSARBPROC          qglGetAttachedObjectsARB = NULL;
+PFNGLGETUNIFORMLOCATIONARBPROC          qglGetUniformLocationARB = NULL;
+PFNGLGETACTIVEUNIFORMARBPROC            qglGetActiveUniformARB = NULL;
+PFNGLGETUNIFORMFVARBPROC                qglGetUniformfvARB = NULL;
+PFNGLGETUNIFORMIVARBPROC                qglGetUniformivARB = NULL;
+PFNGLGETSHADERSOURCEARBPROC             qglGetShaderSourceARB = NULL;
+
+PFNGLBINDATTRIBLOCATIONARBPROC          qglBindAttribLocationARB = NULL;
+PFNGLGETACTIVEATTRIBARBPROC             qglGetActiveAttribARB = NULL;
+PFNGLGETATTRIBLOCATIONARBPROC           qglGetAttribLocationARB = NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC     qglEnableVertexAttribArrayARB = NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC     qglDisableVertexAttribArrayARB = NULL;
+PFNGLVERTEXATTRIBPOINTERARBPROC         qglVertexAttribPointerARB = NULL;
+
+PFNGLACTIVETEXTUREARBPROC               qglActiveTextureARB = NULL;
+PFNGLCLIENTACTIVETEXTUREARBPROC         qglClientActiveTextureARB = NULL;
+PFNGLMULTITEXCOORD1DARBPROC             qglMultiTexCoord1dARB = NULL;
+PFNGLMULTITEXCOORD1DVARBPROC            qglMultiTexCoord1dvARB = NULL;
+PFNGLMULTITEXCOORD1FARBPROC             qglMultiTexCoord1fARB = NULL;
+PFNGLMULTITEXCOORD1FVARBPROC            qglMultiTexCoord1fvARB = NULL;
+PFNGLMULTITEXCOORD1IARBPROC             qglMultiTexCoord1iARB = NULL;
+PFNGLMULTITEXCOORD1IVARBPROC            qglMultiTexCoord1ivARB = NULL;
+PFNGLMULTITEXCOORD1SARBPROC             qglMultiTexCoord1sARB = NULL;
+PFNGLMULTITEXCOORD1SVARBPROC            qglMultiTexCoord1svARB = NULL;
+PFNGLMULTITEXCOORD2DARBPROC             qglMultiTexCoord2dARB = NULL;
+PFNGLMULTITEXCOORD2DVARBPROC            qglMultiTexCoord2dvARB = NULL;
+PFNGLMULTITEXCOORD2FARBPROC             qglMultiTexCoord2fARB = NULL;
+PFNGLMULTITEXCOORD2FVARBPROC            qglMultiTexCoord2fvARB = NULL;
+PFNGLMULTITEXCOORD2IARBPROC             qglMultiTexCoord2iARB = NULL;
+PFNGLMULTITEXCOORD2IVARBPROC            qglMultiTexCoord2ivARB = NULL;
+PFNGLMULTITEXCOORD2SARBPROC             qglMultiTexCoord2sARB = NULL;
+PFNGLMULTITEXCOORD2SVARBPROC            qglMultiTexCoord2svARB = NULL;
+PFNGLMULTITEXCOORD3DARBPROC             qglMultiTexCoord3dARB = NULL;
+PFNGLMULTITEXCOORD3DVARBPROC            qglMultiTexCoord3dvARB = NULL;
+PFNGLMULTITEXCOORD3FARBPROC             qglMultiTexCoord3fARB = NULL;
+PFNGLMULTITEXCOORD3FVARBPROC            qglMultiTexCoord3fvARB = NULL;
+PFNGLMULTITEXCOORD3IARBPROC             qglMultiTexCoord3iARB = NULL;
+PFNGLMULTITEXCOORD3IVARBPROC            qglMultiTexCoord3ivARB = NULL;
+PFNGLMULTITEXCOORD3SARBPROC             qglMultiTexCoord3sARB = NULL;
+PFNGLMULTITEXCOORD3SVARBPROC            qglMultiTexCoord3svARB = NULL;
+PFNGLMULTITEXCOORD4DARBPROC             qglMultiTexCoord4dARB = NULL;
+PFNGLMULTITEXCOORD4DVARBPROC            qglMultiTexCoord4dvARB = NULL;
+PFNGLMULTITEXCOORD4FARBPROC             qglMultiTexCoord4fARB = NULL;
+PFNGLMULTITEXCOORD4FVARBPROC            qglMultiTexCoord4fvARB = NULL;
+PFNGLMULTITEXCOORD4IARBPROC             qglMultiTexCoord4iARB = NULL;
+PFNGLMULTITEXCOORD4IVARBPROC            qglMultiTexCoord4ivARB = NULL;
+PFNGLMULTITEXCOORD4SARBPROC             qglMultiTexCoord4sARB = NULL;
+PFNGLMULTITEXCOORD4SVARBPROC            qglMultiTexCoord4svARB = NULL;
+
+PFNGLBINDBUFFERARBPROC                  qglBindBufferARB = NULL;
+PFNGLDELETEBUFFERSARBPROC               qglDeleteBuffersARB = NULL;
+PFNGLGENBUFFERSARBPROC                  qglGenBuffersARB = NULL;
+PFNGLISBUFFERARBPROC                    qglIsBufferARB = NULL;
+PFNGLBUFFERDATAARBPROC                  qglBufferDataARB = NULL;
+PFNGLBUFFERSUBDATAARBPROC               qglBufferSubDataARB = NULL;
+PFNGLGETBUFFERSUBDATAARBPROC            qglGetBufferSubDataARB = NULL;
+PFNGLMAPBUFFERARBPROC                   qglMapBufferARB = NULL;
+PFNGLUNMAPBUFFERARBPROC                 qglUnmapBufferARB = NULL;
+PFNGLGETBUFFERPARAMETERIVARBPROC        qglGetBufferParameterivARB = NULL;
+PFNGLGETBUFFERPOINTERVARBPROC           qglGetBufferPointervARB = NULL;
+
+PFNGLBINDVERTEXARRAYPROC                qglBindVertexArray = NULL;
+PFNGLDELETEVERTEXARRAYSPROC             qglDeleteVertexArrays = NULL;
+PFNGLGENVERTEXARRAYSPROC                qglGenVertexArrays = NULL;
+PFNGLISVERTEXARRAYPROC                  qglIsVertexArray = NULL;
+
+PFNGLGENERATEMIPMAPEXTPROC              qglGenerateMipmap = NULL;
 
 static char *engine_gl_ext_str = NULL;
 static GLuint whiteTexture = 0;
@@ -146,45 +285,165 @@ void InitGLExtFuncs()
                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-     
+
+    /* Miscellaneous */
+    SAFE_GET_PROC(qglClearIndex, PFNGLCLEARINDEXPROC, "glClearIndex");
+    SAFE_GET_PROC(qglClearColor, PFNGLCLEARCOLORPROC, "glClearColor");
+    SAFE_GET_PROC(qglClear, PFNGLCLEARPROC, "glClear");
+    SAFE_GET_PROC(qglIndexMask, PFNGLINDEXMASKPROC, "glIndexMask");
+    SAFE_GET_PROC(qglColorMask, PFNGLCOLORMASKPROC, "glColorMask");
+    SAFE_GET_PROC(qglAlphaFunc, PFNGLALPHAFUNCPROC, "glAlphaFunc");
+    SAFE_GET_PROC(qglBlendFunc, PFNGLBLENDFUNCPROC, "glBlendFunc");
+    SAFE_GET_PROC(qglLogicOp, PFNGLLOGICOPPROC, "glLogicOp");
+    SAFE_GET_PROC(qglCullFace, PFNGLCULLFACEPROC, "glCullFace");
+    SAFE_GET_PROC(qglFrontFace, PFNGLFRONTFACEPROC, "glFrontFace");
+    SAFE_GET_PROC(qglPushAttrib, PFNGLPUSHATTRIBPROC, "glPushAttrib");
+    SAFE_GET_PROC(qglPointSize, PFNGLPOINTSIZEPROC, "glPointSize");
+    SAFE_GET_PROC(qglLineWidth, PFNGLLINEWIDTHPROC, "glLineWidth");
+    SAFE_GET_PROC(qglLineStipple, PFNGLLINESTIPPLEPROC, "glLineStipple");
+    SAFE_GET_PROC(qglPolygonMode, PFNGLPOLYGONMODEPROC, "glPolygonMode");
+    SAFE_GET_PROC(qglPolygonOffset, PFNGLPOLYGONOFFSETPROC, "glPolygonOffset");
+    SAFE_GET_PROC(qglPolygonStipple, PFNGLPOLYGONSTIPPLEPROC, "glPolygonStipple");
+    SAFE_GET_PROC(qglGetPolygonStipple, PFNGLGETPOLYGONSTIPPLEPROC, "glGetPolygonStipple");
+    SAFE_GET_PROC(qglEdgeFlag, PFNGLEDGEFLAGPROC, "glEdgeFlag");
+    SAFE_GET_PROC(qglEdgeFlagv, PFNGLEDGEFLAGVPROC, "glEdgeFlagv");
+    SAFE_GET_PROC(qglScissor, PFNGLSCISSORPROC, "glScissor");
+    SAFE_GET_PROC(qglClipPlane, PFNGLCLIPPLANEPROC, "glClipPlane");
+    SAFE_GET_PROC(qglGetClipPlane, PFNGLGETCLIPPLANEPROC, "glGetClipPlane");
+    SAFE_GET_PROC(qglDrawBuffer, PFNGLDRAWBUFFERPROC, "glDrawBuffer");
+    SAFE_GET_PROC(qglReadBuffer, PFNGLREADBUFFERPROC, "glReadBuffer");
+    SAFE_GET_PROC(qglEnable, PFNGLENABLEPROC, "glEnable");
+    SAFE_GET_PROC(qglDisable, PFNGLDISABLEPROC, "glDisable");
+    SAFE_GET_PROC(qglIsEnabled, PFNGLISENABLEDPROC, "glIsEnabled");
+    SAFE_GET_PROC(qglEnableClientState, PFNGLENABLECLIENTSTATEPROC, "glEnableClientState");
+    SAFE_GET_PROC(qglDisableClientState, PFNGLDISABLECLIENTSTATEPROC, "glDisableClientState");
     SAFE_GET_PROC(qglGetError, PFNGLGETERRORPROC, "glGetError");
     SAFE_GET_PROC(qglGetString, PFNGLGETSTRINGPROC, "glGetString");
     SAFE_GET_PROC(qglGetBooleanv, PFNGLGETBOOLEANVPROC, "glGetBooleanv");
     SAFE_GET_PROC(qglGetDoublev, PFNGLGETDOUBLEVPROC, "glGetDoublev");
     SAFE_GET_PROC(qglGetFloatv, PFNGLGETFLOATVPROC, "glGetFloatv");
     SAFE_GET_PROC(qglGetIntegerv, PFNGLGETIINTEGERVPROC, "glGetIntegerv");
+    SAFE_GET_PROC(qglPushAttrib, PFNGLPUSHATTRIBPROC, "glPushAttrib");
+    SAFE_GET_PROC(qglPopAttrib, PFNGLPOPATTRIBPROC, "glPopAttrib");
+    SAFE_GET_PROC(qglPushClientAttrib, PFNGLPUSHCLIENTATTRIBPROC, "glPushClientAttrib");  /* 1.1 */
+    SAFE_GET_PROC(qglPopClientAttrib, PFNGLPOPCLIENTATTRIBPROC, "glPopClientAttrib");  /* 1.1 */
+    SAFE_GET_PROC(qglRenderMode, PFNGLRENDERMODEPROC, "glRenderMode");
+    SAFE_GET_PROC(qglFinish, PFNGLFINISHPROC, "glFinish");
+    SAFE_GET_PROC(qglFlush, PFNGLFLUSHPROC, "glFlush");
+    SAFE_GET_PROC(qglHint, PFNGLHINTPROC, "glHint");
+
+    /* Depth Buffer */
+    SAFE_GET_PROC(qglClearDepth, PFNGLCLEARDEPTHPROC, "glClearDepth");
+    SAFE_GET_PROC(qglDepthFunc, PFNGLDEPTHFUNCPROC, "glDepthFunc");
+    SAFE_GET_PROC(qglDepthMask, PFNGLDEPTHMASKPROC, "glDepthMask");
+    SAFE_GET_PROC(qglDepthRange, PFNGLDEPTHRANGEPROC, "glDepthRange");
+
+    /* Accumulation Buffer */
+    SAFE_GET_PROC(qglClearAccum, PFNGLCLEARACCUMPROC, "glClearAccum");               
+    SAFE_GET_PROC(qglAccum, PFNGLACCUMPROC, "glAccum");
+
+    /* Transformation */
+    SAFE_GET_PROC(qglMatrixMode, PFNGLMATRIXMODEPROC, "glMatrixMode");
+    SAFE_GET_PROC(qglOrtho, PFNGLORTHOPROC, "glOrtho");
+    SAFE_GET_PROC(qglFrustum, PFNGLFRUSTUMPROC, "glFrustum");
+    SAFE_GET_PROC(qglViewport, PFNGLVIEWPORTPROC, "glViewport");
+    SAFE_GET_PROC(qglPushMatrix, PFNGLPUSHMATRIXPROC, "glPushMatrix");
+    SAFE_GET_PROC(qglPopMatrix, PFNGLPOPMATRIXPROC, "glPopMatrix");
+    SAFE_GET_PROC(qglLoadIdentity, PFNGLLOADIDENTITYPROC, "glLoadIdentity");
+    SAFE_GET_PROC(qglLoadMatrixd, PFNGLLOADMATRIXDPROC, "glLoadMatrixd");
+    SAFE_GET_PROC(qglLoadMatrixf, PFNGLLOADMATRIXFPROC, "glLoadMatrixf");
+    SAFE_GET_PROC(qglMultMatrixd, PFNGLMULTMATRIXDPROC, "glMultMatrixd");
+    SAFE_GET_PROC(qglMultMatrixf, PFNGLMULTMATRIXFPROC, "glMultMatrixf");
+    SAFE_GET_PROC(qglRotated, PFNGLROTATEDPROC, "glRotated");
+    SAFE_GET_PROC(qglRotatef, PFNGLROTATEFPROC, "glRotatef");
+    SAFE_GET_PROC(qglScaled, PFNGLSCALEDPROC, "glScaled");
+    SAFE_GET_PROC(qglScalef, PFNGLSCALEFPROC, "glScalef");
+    SAFE_GET_PROC(qglTranslated, PFNGLTRANSLATEDPROC, "glTranslated");
+    SAFE_GET_PROC(qglTranslatef, PFNGLTRANSLATEFPROC, "glTranslatef");
     
+    /* Raster functions */
+    SAFE_GET_PROC(qglPixelZoom, PFNGLPIXELZOOMPROC, "glPixelZoom");
+    SAFE_GET_PROC(qglPixelStoref, PFNGLPIXELSTOREFPROC, "glPixelStoref");
+    SAFE_GET_PROC(qglPixelStorei, PFNGLPIXELSTOREIPROC, "glPixelStorei");
+    SAFE_GET_PROC(qglPixelTransferf, PFNGLPIXELTRANSFERFPROC, "glPixelTransferf");
+    SAFE_GET_PROC(qglPixelTransferi, PFNGLPIXELTRANSFERIPROC, "glPixelTransferi");
+    SAFE_GET_PROC(qglPixelMapfv, PFNGLPIXELMAPFVPROC, "glPixelMapfv");
+    SAFE_GET_PROC(qglPixelMapuiv, PFNGLPIXELMAPUIVPROC, "glPixelMapuiv");
+    SAFE_GET_PROC(qglPixelMapusv, PFNGLPIXELMAPUSVPROC, "glPixelMapusv");
+    SAFE_GET_PROC(qglGetPixelMapfv, PFNGLGETPIXELMAPFVPROC, "glGetPixelMapfv");
+    SAFE_GET_PROC(qglGetPixelMapuiv, PFNGLGETPIXELMAPUIVPROC, "glGetPixelMapuiv");
+    SAFE_GET_PROC(qglGetPixelMapusv, PFNGLGETPIXELMAPUSVPROC, "glGetPixelMapusv");
+    SAFE_GET_PROC(qglBitmap, PFNGLBITMAPPROC, "glBitmap");
+    SAFE_GET_PROC(qglReadPixels, PFNGLREADPIXELSPROC, "glReadPixels");
+    SAFE_GET_PROC(qglDrawPixels, PFNGLDRAWPIXELSPROC, "glDrawPixels");
+    SAFE_GET_PROC(qglCopyPixels, PFNGLCOPYPIXELSPROC, "glCopyPixels");
+
+    /* Stenciling */
+    SAFE_GET_PROC(qglStencilFunc, PFNGLSTENCILFUNCPROC, "glStencilFunc");
+    SAFE_GET_PROC(qglStencilMask, PFNGLSTENCILMASKPROC, "glStencilMask");
+    SAFE_GET_PROC(qglStencilOp, PFNGLSTENCILOPPROC, "glStencilOp");
+    SAFE_GET_PROC(qglClearStencil, PFNGLCLEARSTENCILPROC, "glClearStencil");
+
+    /* Texture mapping */
+    SAFE_GET_PROC(qglTexGend, PFNGLTEXGENDPROC, "glTexGend");
+    SAFE_GET_PROC(qglTexGenf, PFNGLTEXGENFPROC, "glTexGenf");
+    SAFE_GET_PROC(qglTexGeni, PFNGLTEXGENIPROC, "glTexGeni");
+    SAFE_GET_PROC(qglTexGendv, PFNGLTEXGENDVPROC, "glTexGendv");
+    SAFE_GET_PROC(qglTexGenfv, PFNGLTEXGENFVPROC, "glTexGenfv");
+    SAFE_GET_PROC(qglTexGeniv, PFNGLTEXGENIVPROC, "glTexGeniv");
+    SAFE_GET_PROC(qglGetTexGendv, PFNGLGETTEXGENDVPROC, "glGetTexGendv");
+    SAFE_GET_PROC(qglGetTexGenfv, PFNGLGETTEXGENFVPROC, "glGetTexGenfv");
+    SAFE_GET_PROC(qglGetTexGeniv, PFNGLGETTEXGENIVPROC, "glGetTexGeniv");
+    SAFE_GET_PROC(qglTexEnvf, PFNGLTEXENVFPROC, "glTexEnvf");
+    SAFE_GET_PROC(qglTexEnvi, PFNGLTEXENVIPROC, "glTexEnvi");
+    SAFE_GET_PROC(qglTexEnvfv, PFNGLTEXENVFVPROC, "glTexEnvfv");
+    SAFE_GET_PROC(qglTexEnviv, PFNGLTEXENVIVPROC, "glTexEnviv");
+    SAFE_GET_PROC(qglGetTexEnvfv, PFNGLGETTEXENVFVPROC, "glGetTexEnvfv");
+    SAFE_GET_PROC(qglGetTexEnviv, PFNGLGETTEXENVIVPROC, "glGetTexEnviv");
+    SAFE_GET_PROC(qglTexParameterf, PFNGLTEXPARAMETERFPROC, "glTexParameterf");
+    SAFE_GET_PROC(qglTexParameteri, PFNGLTEXPARAMETERIPROC, "glTexParameteri");
+    SAFE_GET_PROC(qglTexParameterfv, PFNGLTEXPARAMETERFVPROC, "glTexParameterfv");
+    SAFE_GET_PROC(qglTexParameteriv, PFNGLTEXPARAMETERIVPROC, "glTexParameteriv");
+    SAFE_GET_PROC(qglGetTexParameterfv, PFNGLGETTEXPARAMETERFVPROC, "glGetTexParameterfv");
+    SAFE_GET_PROC(qglGetTexParameteriv, PFNGLGETTEXPARAMETERIVPROC, "glGetTexParameteriv");
+    SAFE_GET_PROC(qglGetTexLevelParameterfv, PFNGLGETTEXLEVELPARAMETERFVPROC, "glGetTexLevelParameterfv");
+    SAFE_GET_PROC(qglGetTexLevelParameteriv, PFNGLGETTEXLEVELPARAMETERIVPROC, "glGetTexLevelParameteriv");
+    SAFE_GET_PROC(qglTexImage1D, PFNGLTEXIMAGE1DPROC, "glTexImage1D");
+    SAFE_GET_PROC(qglTexImage2D, PFNGLTEXIMAGE2DPROC, "glTexImage2D");
+    SAFE_GET_PROC(qglGetTexImage, PFNGLGETTEXIMAGEPROC, "glGetTexImage");
+    
+    /* 1.1 functions */
+    /* texture objects */
     SAFE_GET_PROC(qglGenTextures, PFNGLGENTEXTURESPROC, "glGenTextures");
     SAFE_GET_PROC(qglDeleteTextures, PFNGLDELETETEXTURESPROC, "glDeleteTextures");
-    SAFE_GET_PROC(qglBindTexture, PFNGLBINDTEXTURESPROC, "glBindTexture");
-    SAFE_GET_PROC(qglTexParameteri, PFNGLTEXPATAMETERIPROC, "glTexParameteri");
-    SAFE_GET_PROC(qglTexParameterf, PFNGLTEXPATAMETERFPROC, "glTexParameterf");
-    SAFE_GET_PROC(qglTexImage2D, PFNGLTEXIMAGE2DPROC, "glTexImage2D");
+    SAFE_GET_PROC(qglBindTexture, PFNGLBINDTEXTUREPROC, "glBindTexture");
+    SAFE_GET_PROC(qglPrioritizeTextures, PFNGLPRIORITIZETEXTURESPROC, "glPrioritizeTextures");
+    SAFE_GET_PROC(qglAreTexturesResident, PFNGLARETEXTURESRESIDENTPROC, "glAreTexturesResident");
+    SAFE_GET_PROC(qglIsTexture, PFNGLISTEXTUREPROC, "glIsTexture");
+    /* texture mapping */
+    SAFE_GET_PROC(qglTexSubImage1D, PFNGLTEXSUBIMAGE1DPROC, "glTexSubImage1D");
+    SAFE_GET_PROC(qglTexSubImage2D, PFNGLTEXSUBIMAGE2DPROC, "glTexSubImage2D");
+    SAFE_GET_PROC(qglCopyTexImage1D, PFNGLCOPYTEXIMAGE1DPROC, "glCopyTexImage1D");
+    SAFE_GET_PROC(qglCopyTexImage2D, PFNGLCOPYTEXIMAGE2DPROC, "glCopyTexImage2D");
+    SAFE_GET_PROC(qglCopyTexSubImage1D, PFNGLCOPYTEXSUBIMAGE1DPROC, "glCopyTexSubImage1D");
+    SAFE_GET_PROC(qglCopyTexSubImage2D, PFNGLCOPYTEXSUBIMAGE2DPROC, "glCopyTexSubImage2D");
+    /* vertex arrays */
+    SAFE_GET_PROC(qglVertexPointer, PFNGLVERTEXPOINTERPROC, "glVertexPointer");
+    SAFE_GET_PROC(qglNormalPointer, PFNGLNORMALPOINTERPROC, "glNormalPointer");
+    SAFE_GET_PROC(qglColorPointer, PFNGLCOLORPOINTERPROC, "glColorPointer");
+    SAFE_GET_PROC(qglIndexPointer, PFNGLINDEXPOINTERPROC, "glIndexPointer");
+    SAFE_GET_PROC(qglTexCoordPointer, PFNGLTEXCOORDPOINTERPROC, "glTexCoordPointer");
+    SAFE_GET_PROC(qglEdgeFlagPointer, PFNGLEDGEFLAGPOINTERPROC, "glEdgeFlagPointer");
+    SAFE_GET_PROC(qglGetPointerv, PFNGLGETPOINTERVPROC, "glGetPointerv");
+    SAFE_GET_PROC(qglArrayElement, PFNGLARRAYELEMENTPROC, "glArrayElement");
+    SAFE_GET_PROC(qglDrawArrays, PFNGLDRAWARRAYSPROC, "glDrawArrays");
+    SAFE_GET_PROC(qglDrawElements, PFNGLDRAWELEMENTSPROC, "glDrawElements");
+    SAFE_GET_PROC(qglInterleavedArrays, PFNGLINTERLEAVEDARRAYSPROC, "glInterleavedArrays");
     
-    
-    /*SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");
-    SAFE_GET_PROC(func, TYPE, "func");*/
-    
-    ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
-    const char* buf = (const char*)qglGetString(GL_EXTENSIONS);                  
+    const char* buf = (const char*)qglGetString(GL_EXTENSIONS);
     engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
+    strcpy(engine_gl_ext_str, buf);
+    
     qglGenTextures(1, &whiteTexture);
     qglBindTexture(GL_TEXTURE_2D, whiteTexture);
     qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -192,9 +451,7 @@ void InitGLExtFuncs()
     qglTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
     qglTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
     qglBindTexture(GL_TEXTURE_2D, 0);
-    
-    strcpy(engine_gl_ext_str, buf);
-    
+
     /// VBO funcs
     if(IsGLExtensionSupported("GL_ARB_vertex_buffer_object"))
     {
@@ -450,7 +707,7 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *
     FILE *file;
     GLint size = 0;
     int ret = 0;
-    
+
     Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
     file = fopen (fileName, "rb");
     if (file == NULL)

@@ -2537,8 +2537,8 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages();
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelZoom(1, 1);
+    qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    qglPixelZoom(1, 1);
     world->tex_atlas->createTextures(world->textures);
 
     qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.

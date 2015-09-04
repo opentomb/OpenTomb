@@ -231,7 +231,7 @@ void Sys_TakeScreenShot()
     snprintf(fname, 128, "screen_%0.5d.png", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
-    glReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     GLubyte buf[str_size];
     for(h=0;h<ViewPort[3]/2;h++)

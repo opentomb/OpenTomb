@@ -280,22 +280,22 @@ void CRender::DrawList()
 
     if(r_flags & R_DRAW_WIRE)
     {
-        glPolygonMode(GL_FRONT, GL_LINE);
+        qglPolygonMode(GL_FRONT, GL_LINE);
     }
     else if(r_flags & R_DRAW_POINTS)
     {
-        glEnable(GL_POINT_SMOOTH);
-        glPointSize(4);
-        glPolygonMode(GL_FRONT, GL_POINT);
+        qglEnable(GL_POINT_SMOOTH);
+        qglPointSize(4);
+        qglPolygonMode(GL_FRONT, GL_POINT);
     }
     else
     {
-        glPolygonMode(GL_FRONT, GL_FILL);
+        qglPolygonMode(GL_FRONT, GL_FILL);
     }
 
-    glEnable(GL_CULL_FACE);
-    glDisable(GL_BLEND);
-    glEnable(GL_ALPHA_TEST);
+    qglEnable(GL_CULL_FACE);
+    qglDisable(GL_BLEND);
+    qglEnable(GL_ALPHA_TEST);
 
     m_active_texture = 0;
     this->DrawSkyBox(m_camera->gl_view_proj_mat);
@@ -313,13 +313,13 @@ void CRender::DrawList()
         this->DrawRoom(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
     }
 
-    glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
+    qglDisable(GL_CULL_FACE);
+    qglDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<r_list_active_count; i++)
     {
         this->DrawRoomSprites(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_proj_mat);
     }
-    glEnableClientState(GL_NORMAL_ARRAY);
+    qglEnableClientState(GL_NORMAL_ARRAY);
 
     /*
      * NOW render transparency polygons
@@ -388,24 +388,24 @@ void CRender::DrawList()
         qglUseProgramObjectARB(shader->program);
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_ALPHA_TEST);
-        glEnable(GL_BLEND);
+        qglDepthMask(GL_FALSE);
+        qglDisable(GL_ALPHA_TEST);
+        qglEnable(GL_BLEND);
         m_active_transparency = 0;
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->m_vbo);
         qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         qglBufferDataARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->GetActiveVertexCount() * sizeof(vertex_t), dynamicBSP->GetVertexArray(), GL_DYNAMIC_DRAW);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
+        qglVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+        qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
+        qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
         this->DrawBSPBackToFront(dynamicBSP->m_root);
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
+        qglDepthMask(GL_TRUE);
+        qglDisable(GL_BLEND);
     }
     //Reset polygon draw mode
-    glPolygonMode(GL_FRONT, GL_FILL);
+    qglPolygonMode(GL_FRONT, GL_FILL);
     m_active_texture = 0;
 }
 
@@ -449,7 +449,7 @@ void CRender::DrawListDebugLines()
     if(!debugDrawer->IsEmpty())
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        qglDisableClientState(GL_TEXTURE_COORD_ARRAY);
         qglUseProgramObjectARB(shader->program);
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
@@ -457,8 +457,8 @@ void CRender::DrawListDebugLines()
         m_active_texture = 0;
         BindWhiteTexture();
         qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-        glPointSize( 6.0f );
-        glLineWidth( 3.0f );
+        qglPointSize( 6.0f );
+        qglLineWidth( 3.0f );
         debugDrawer->Render();
     }
     debugDrawer->Reset();
@@ -503,23 +503,23 @@ void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
         switch(m_active_transparency)
         {
             case BM_MULTIPLY:                                    // Classic PC alpha
-                glBlendFunc(GL_ONE, GL_ONE);
+                qglBlendFunc(GL_ONE, GL_ONE);
                 break;
 
             case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                qglBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
             case BM_INVERT_DEST:                                 // Inversion by dest
-                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+                qglBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
             case BM_SCREEN:                                      // Screen (smoke, etc.)
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                qglBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                 break;
 
             case BM_ANIMATED_TEX:
-                glBlendFunc(GL_ONE, GL_ZERO);
+                qglBlendFunc(GL_ONE, GL_ZERO);
                 break;
 
             default:                                             // opaque animated textures case
@@ -532,7 +532,7 @@ void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
         m_active_texture = m_world->textures[p->tex_index];
         qglBindTexture(GL_TEXTURE_2D, m_active_texture);
     }
-    glDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
+    qglDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
 }
 
 void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
@@ -655,12 +655,12 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         qglUnmapBufferARB(GL_ARRAY_BUFFER);
 
         // Setup altered buffer
-        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
+        qglTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
         // Setup static data
         qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
-        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
-        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
+        qglVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
+        qglColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
+        qglNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
 
         qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
         if(m_active_texture != m_world->textures[0])                              ///@FIXME: UGLY HACK!
@@ -668,7 +668,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
             m_active_texture = m_world->textures[0];
             qglBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
-        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
+        qglDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
     }
 
     if(mesh->vertex_count == 0)
@@ -679,10 +679,10 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
     if(mesh->vbo_vertex_array)
     {
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
+        qglVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+        qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
+        qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
     }
 
     // Bind overriden vertices if they exist
@@ -691,8 +691,8 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         // Standard normals are always float. Overridden normals (from skinning)
         // are float.
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
-        glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
+        qglVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
+        qglNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
     }
 
     const uint32_t *elementsbase = mesh->elements;
@@ -712,7 +712,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
             m_active_texture = m_world->textures[texture];
             qglBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
-        glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
+        qglDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
     }
 }
@@ -786,7 +786,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
 
     if((r_flags & R_DRAW_SKYBOX) && (m_world != NULL) && (m_world->sky_box != NULL))
     {
-        glDepthMask(GL_FALSE);
+        qglDepthMask(GL_FALSE);
         tr[15] = 1.0;
         p = m_world->sky_box->animations->frames->bone_tags->offset;
         vec3_add(tr+12, m_camera->pos, p);
@@ -803,7 +803,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
         qglUniform4fvARB(shader->tint_mult, 1, tint);
 
         this->DrawMesh(m_world->sky_box->mesh_tree->mesh_base, NULL, NULL);
-        glDepthMask(GL_TRUE);
+        qglDepthMask(GL_TRUE);
     }
 }
 
@@ -921,10 +921,10 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             qglUseProgramObjectARB(shader->program);
             qglUniform1iARB(shader->sampler, 0);
             qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
-            glEnable(GL_STENCIL_TEST);
-            glClear(GL_STENCIL_BUFFER_BIT);
-            glStencilFunc(GL_NEVER, 1, 0x00);
-            glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+            qglEnable(GL_STENCIL_TEST);
+            qglClear(GL_STENCIL_BUFFER_BIT);
+            qglStencilFunc(GL_NEVER, 1, 0x00);
+            qglStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
             for(frustum_p f=room->frustum;f!=NULL;f=f->next)
             {
                 buf_size = f->vertex_count * elem_size;
@@ -941,15 +941,15 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 m_active_texture = 0;
                 BindWhiteTexture();
                 qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-                glVertexPointer(3, GL_FLOAT, elem_size, buf+0);
-                glNormalPointer(GL_FLOAT, elem_size, buf+3);
-                glColorPointer(4, GL_FLOAT, elem_size, buf+3+3);
-                glTexCoordPointer(2, GL_FLOAT, elem_size, buf+3+3+4);
-                glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
+                qglVertexPointer(3, GL_FLOAT, elem_size, buf+0);
+                qglNormalPointer(GL_FLOAT, elem_size, buf+3);
+                qglColorPointer(4, GL_FLOAT, elem_size, buf+3+3);
+                qglTexCoordPointer(2, GL_FLOAT, elem_size, buf+3+3+4);
+                qglDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
 
                 Sys_ReturnTempMem(buf_size);
             }
-            glStencilFunc(GL_EQUAL, 1, 0xFF);
+            qglStencilFunc(GL_EQUAL, 1, 0xFF);
         }
     }
 #endif
@@ -1033,7 +1033,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
 #if STENCIL_FRUSTUM
     if(need_stencil)
     {
-        glDisable(GL_STENCIL_TEST);
+        qglDisable(GL_STENCIL_TEST);
     }
 #endif
 }
@@ -1048,11 +1048,11 @@ void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[1
         qglUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
         qglUniform1iARB(shader->sampler, 0);
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        qglDisableClientState(GL_VERTEX_ARRAY);
+        qglDisableClientState(GL_NORMAL_ARRAY);
+        qglDisableClientState(GL_COLOR_ARRAY);
+        qglDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, room->sprite_buffer->array_buffer);
 
@@ -1080,14 +1080,14 @@ void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[1
                 m_active_texture = m_world->textures[texture];
                 qglBindTexture(GL_TEXTURE_2D, m_active_texture);
             }
-            glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
+            qglDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
 
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        glPopClientAttrib();
+        qglPopClientAttrib();
     }
 }
 
@@ -1330,9 +1330,9 @@ void CRenderDebugDrawer::Render()
     {
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_gl_vbo);
         qglBufferDataARB(GL_ARRAY_BUFFER_ARB, m_lines * 12 * sizeof(GLfloat), m_buffer, GL_STREAM_DRAW);
-        glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), (void*)0);
-        glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat),  (void*)(3 * sizeof(GLfloat)));
-        glDrawArrays(GL_LINES, 0, 2 * m_lines);
+        qglVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), (void*)0);
+        qglColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat),  (void*)(3 * sizeof(GLfloat)));
+        qglDrawArrays(GL_LINES, 0, 2 * m_lines);
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
 

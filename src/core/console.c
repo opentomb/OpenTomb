@@ -735,10 +735,10 @@ void Con_DrawBackground()
     if(backgroundBuffer)
     {
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
-        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
-        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
-        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
+        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 }
 
@@ -756,10 +756,10 @@ void Con_DrawCursor()
     if(con_base.show_cursor && cursorBuffer)
     {
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
-        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
-        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
-        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
-        glDrawArrays(GL_LINES, 0, 2);
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(2 * sizeof(GLfloat)));
+        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+        qglDrawArrays(GL_LINES, 0, 2);
     }
 }
 

@@ -528,10 +528,10 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         if(elements_count != 0)
         {
             qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
-            glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
-            glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
-            glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
-            glDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
+            qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
+            qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
+            qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
+            qglDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
         }
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
@@ -594,10 +594,10 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 *p = g->tex_y1;     p++;
                 vec4_copy(p, glf->gl_font_color);
 
-                glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
-                glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
-                glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
-                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
+                qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
+                qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
+                qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;

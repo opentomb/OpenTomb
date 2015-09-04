@@ -346,15 +346,15 @@ void Gui_Render()
     qglUniform1iARB(shader->sampler, 0);
     qglUniform2fvARB(shader->screenSize, 1, screenSize);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
+    qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
 
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glPolygonMode(GL_FRONT, GL_FILL);
-    glFrontFace(GL_CCW);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
+    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    qglPolygonMode(GL_FRONT, GL_FILL);
+    qglFrontFace(GL_CCW);
+    qglEnable(GL_BLEND);
+    qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    qglDisable(GL_ALPHA_TEST);
 
     if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
     {
@@ -362,10 +362,10 @@ void Gui_Render()
     }
     qglUseProgramObjectARB(shader->program);
 
-    glDepthMask(GL_FALSE);
+    qglDepthMask(GL_FALSE);
 
-    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     Gui_DrawCrosshair();
     Gui_DrawBars();
@@ -373,9 +373,9 @@ void Gui_Render()
     Gui_RenderStrings();
     Con_Draw(engine_frame_time);
 
-    glDepthMask(GL_TRUE);
-    glPopClientAttrib();
-    glPopAttrib();
+    qglDepthMask(GL_TRUE);
+    qglPopClientAttrib();
+    qglPopAttrib();
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -448,10 +448,10 @@ void Gui_RenderStringLine(gui_text_line_p l)
         v += 4;
        *v++ = 0.0; *v++ = 0.0;
 
-        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
-        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
-        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
+        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
+        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 
     if(style->shadowed)
@@ -475,7 +475,7 @@ void Gui_RenderStrings()
     gui_text_line_p l = gui_base_lines;
 
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     while(l)
     {
@@ -1161,10 +1161,10 @@ void Gui_DrawCrosshair()
 {
     BindWhiteTexture();
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
-    glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
-    glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
-    glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
-    glDrawArrays(GL_LINES, 0, 4);
+    qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+    qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
+    qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
+    qglDrawArrays(GL_LINES, 0, 4);
 }
 
 void Gui_DrawBars()
@@ -1189,29 +1189,29 @@ void Gui_DrawInventory()
         return;
     }
 
-    glDepthMask(GL_FALSE);
+    qglDepthMask(GL_FALSE);
     {
         BindWhiteTexture();
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
-        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
-        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
-        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
+        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
+        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
-    glDepthMask(GL_TRUE);
-    glClear(GL_DEPTH_BUFFER_BIT);
+    qglDepthMask(GL_TRUE);
+    qglClear(GL_DEPTH_BUFFER_BIT);
 
-    glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_ALPHA_TEST);
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    qglPushAttrib(GL_ENABLE_BIT);
+    qglEnable(GL_ALPHA_TEST);
+    qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    qglEnableClientState(GL_NORMAL_ARRAY);
+    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     Gui_SwitchGLMode(0);
     main_inventory_manager->render();
     Gui_SwitchGLMode(1);
-    glPopClientAttrib();
-    glPopAttrib();
+    qglPopClientAttrib();
+    qglPopAttrib();
 }
 
 void Gui_NotifierStart(int item)
@@ -1232,20 +1232,20 @@ void Gui_DrawNotifier()
 
 void Gui_DrawLoadScreen(int value)
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Gui_SwitchGLMode(1);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+    qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_ALPHA_TEST);
-    glDepthMask(GL_FALSE);
+    qglEnable(GL_BLEND);
+    qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    qglDisable(GL_ALPHA_TEST);
+    qglDepthMask(GL_FALSE);
 
-    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     //qglBindTexture(GL_TEXTURE_2D, 0);
     GLfloat color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -1254,9 +1254,9 @@ void Gui_DrawLoadScreen(int value)
     //Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
-    glDepthMask(GL_TRUE);
-    glPopClientAttrib();
-    glPopAttrib();
+    qglDepthMask(GL_TRUE);
+    qglPopClientAttrib();
+    qglPopAttrib();
 
     Gui_SwitchGLMode(0);
 
@@ -1376,17 +1376,17 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         case BM_HIDE:
             return;
         case BM_MULTIPLY:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            qglBlendFunc(GL_SRC_ALPHA, GL_ONE);
             break;
         case BM_SIMPLE_SHADE:
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+            qglBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BM_SCREEN:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
         case BM_OPAQUE:
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
     };
 
@@ -1412,16 +1412,16 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         1, 0,
         1, 1,
         0, 1 };
-    glVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
+    qglVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
 
     GLfloat rectColors[16];
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
+    qglColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
 
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 // ===================================================================================
