@@ -832,8 +832,17 @@ void Entity::doAnimCommand(const AnimCommand& command)
 
         case TR_ANIMCOMMAND_SETVELOCITY:    // (float vertical, float horizontal)
             {
-                const btScalar vert  = -btScalar(command.param[0]);
+                btScalar vert;
                 const btScalar horiz = btScalar(command.param[1]);
+                if(btFuzzyZero(m_vspeed_override))
+                {
+                    vert  = -btScalar(command.param[0]);
+                }
+                else
+                {
+                    vert  = m_vspeed_override;
+                    m_vspeed_override = 0.0f;
+                }
                 jump(vert, horiz);
             }
             break;
