@@ -2492,6 +2492,8 @@ void Character::doWeaponFrame(btScalar time)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
@@ -2506,7 +2508,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::HideToReady:
-                    if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM)
+                    if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
@@ -2525,7 +2527,7 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        // stay
+                        // stay at frame 0
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
@@ -2533,7 +2535,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::FireToIdle:
                     // reverse stepping:
                     // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
-                    if(ss_anim->stepFrame(-time, this) == ENTITY_ANIM_NEWANIM)
+                    if(ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
@@ -2542,7 +2544,7 @@ void Character::doWeaponFrame(btScalar time)
 
                 case WeaponState::IdleToFire:
                     if(m_command.action) {
-                        if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM )
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
                             ss_anim->setAnimation(2);  // shooting cycle
                             m_weaponCurrentState = WeaponState::Fire;
@@ -2555,7 +2557,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM )
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
                             ss_anim->setAnimation(2);  // shooting cycle
                             // bang
@@ -2569,7 +2571,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::IdleToHide:
-                    if( ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM)
+                    if( ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
@@ -2579,6 +2581,8 @@ void Character::doWeaponFrame(btScalar time)
         }
         else if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() == 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->anim_flags = ANIM_WEAPON_COMPAT;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
@@ -2593,7 +2597,7 @@ void Character::doWeaponFrame(btScalar time)
                     break;
 
                 case WeaponState::HideToReady:
-                    if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM)
+                    if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
@@ -2613,14 +2617,13 @@ void Character::doWeaponFrame(btScalar time)
                     else
                     {
                         // stay
-                        printf("*** STAY UZI\n");
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
 
                 case WeaponState::FireToIdle:
                     // reverse stepping:
-                    if(ss_anim->stepFrame(-time, this) == ENTITY_ANIM_NEWANIM)
+                    if(ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
@@ -2629,7 +2632,7 @@ void Character::doWeaponFrame(btScalar time)
 
                 case WeaponState::IdleToFire:
                     if(m_command.action) {
-                        if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM )
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
                             ss_anim->setAnimation(3);  // shooting cycle
                             m_weaponCurrentState = WeaponState::Fire;
@@ -2642,7 +2645,7 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        if(ss_anim->stepFrame(time, this) == ENTITY_ANIM_NEWANIM )
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
                             ss_anim->setAnimation(3);  // shooting cycle
                             // bang
@@ -2657,7 +2660,7 @@ void Character::doWeaponFrame(btScalar time)
 
                 case WeaponState::IdleToHide:
                     // reverse stepping:
-                    if( ss_anim->stepFrame(-time, this) == ENTITY_ANIM_NEWANIM)
+                    if( ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);

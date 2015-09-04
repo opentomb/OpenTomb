@@ -538,7 +538,7 @@ void Gui_RenderStrings()
  */
 void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 {
-    bf->animations.stepFrame(time);
+    bf->animations.stepAnimation(time);
 
     Entity::updateCurrentBoneFrame(bf);
 }

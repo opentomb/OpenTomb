@@ -9,6 +9,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
+#include "engine.h"
 #include "game.h"
 #include "mesh.h"
 #include "object.h"
@@ -186,6 +187,12 @@ public:
 
     int stepAnimation(btScalar time);
     virtual void frame(btScalar time);  // entity frame step
+
+    bool isPlayer()
+    {
+        // FIXME: isPlayer()
+        return (Entity*)engine_world.character.get() == this;
+    }
 
     void slerpBones(btScalar lerp);
     void lerpTransform(btScalar lerp);

@@ -742,42 +742,47 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
     }
 }
 
-std::tuple<int, float, float, float> lua_GetAnimCommandTransform(int id, int anim, int frame)
+void lua_SetAnimEndCommands(int id, int anim, lua::Value table)
 {
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
-        return{};
+        return;
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
-        return{};
+        return;
     }
 
-    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    if(!table.is<lua::Table>())
     {
-        frame = static_cast<int>(model->animations[anim].frames.size()) + frame;
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
+        return;
     }
 
-    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
-    {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
-        return{};
-    }
+    model->animations[anim].animCommands.clear();
 
-    return std::tuple<int, float, float, float>
+    for(int i=1; table[i].is<lua::Table>(); i++)
     {
-        model->animations[anim].frames[frame].command,
-            model->animations[anim].frames[frame].move[0],
-            model->animations[anim].frames[frame].move[1],
-            model->animations[anim].frames[frame].move[2]
-    };
+        if(table[i][1].is<lua::Number>()
+           && table[i][2].is<lua::Number>()
+           && table[i][3].is<lua::Number>()
+           && table[i][4].is<lua::Number>())
+        {
+            model->animations[anim].animCommands.push_back({table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt()});
+        }
+        else
+        {
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
+            break;
+        }
+    }
 }
 
-void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Value dx, lua::Value dy, lua::Value dz)
+void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
 {
     SkeletalModel* model = engine_world.getModelByID(id);
     if(model == nullptr)
@@ -803,39 +808,29 @@ void lua_SetAnimCommandTransform(int id, int anim, int frame, int flag, lua::Val
         return;
     }
 
-    model->animations[anim].frames[frame].command = flag;
-
-    if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        model->animations[anim].frames[frame].move = { dx,dy,dz };
-}
-
-void lua_SetAnimVerticalSpeed(int id, int anim, int frame, float speed)
-{
-    SkeletalModel* model = engine_world.getModelByID(id);
-    if(model == nullptr)
+    if(!table.is<lua::Table>())
     {
-        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, frame, {{cmd,p1,p2,p3},{...}}");
         return;
     }
 
-    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
-    {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
-        return;
-    }
+    model->animations[anim].frames[frame].animCommands.clear();
 
-    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    for(int i=1; table[i].is<lua::Table>(); i++)
     {
-        frame = static_cast<int>(model->animations[anim].frames.size()) + frame;
+        if(table[i][1].is<lua::Number>()
+           && table[i][2].is<lua::Number>()
+           && table[i][3].is<lua::Number>()
+           && table[i][4].is<lua::Number>())
+        {
+            model->animations[anim].frames[frame].animCommands.push_back({table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt()});
+        }
+        else
+        {
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, frame, {{cmd,p1,p2,p3},{...}}");
+            break;
+        }
     }
-
-    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
-    {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
-        return;
-    }
-
-    model->animations[anim].frames[frame].v_Vertical = static_cast<btScalar>(speed);
 }
 
 uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
@@ -3311,10 +3306,9 @@ void MainEngine::registerMainFunctions()
 
     registerC("setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     registerC("setModelCollisionMap", lua_SetModelCollisionMap);
-    registerC("getAnimCommandTransform", lua_GetAnimCommandTransform);
-    registerC("setAnimCommandTransform", lua_SetAnimCommandTransform);
+    registerC("setAnimEndCommands", lua_SetAnimEndCommands);
+    registerC("setAnimFrameCommands", lua_SetAnimFrameCommands);
     registerC("setStateChangeRange", lua_SetStateChangeRange);
-    registerC("setAnimVerticalSpeed", lua_SetAnimVerticalSpeed);
 
     registerC("addItem", lua_AddItem);
     registerC("removeItem", lua_RemoveItem);

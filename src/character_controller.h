@@ -390,12 +390,6 @@ struct Character : public Entity
     void updateHair() override;
     void frame(btScalar time) override;
 
-    bool isPlayer()
-    {
-        // FIXME: isPlayer()
-        return engine_world.character.get() == this;
-    }
-
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override

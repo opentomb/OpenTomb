@@ -845,9 +845,12 @@ void Entity::doAnimCommand(const AnimCommand& command)
 
         case TR_ANIMCOMMAND_KILL:           // ()
             // This command is usually used only for non-Lara items,
-            // although there seem to be Lara-anims with this cmd id (tr4 anim 415)
+            // although there seem to be Lara-anims with this cmd id (tr4 anim 415, shotgun overlay)
             // TODO: for switches, this command indicates the trigger-frame
-            kill();
+            if(!isPlayer())
+            {
+                kill();
+            }
             break;
 
         case TR_ANIMCOMMAND_PLAYSOUND:      // (sndParam)
@@ -1056,7 +1059,7 @@ int Entity::stepAnimation(btScalar time)
     }
     if(m_bf.animations.anim_flags & ANIM_LOCK) return ENTITY_ANIM_NEWFRAME;  // penetration fix will be applyed in Character_Move... functions
 
-    stepResult = m_bf.animations.stepFrame(time, this);
+    stepResult = m_bf.animations.stepAnimation(time, this);
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 

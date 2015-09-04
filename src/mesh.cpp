@@ -252,7 +252,7 @@ void SSAnimation::setAnimation(int animation, int frame, int another_model)
  * \param[in,out]  frameid  reference to frame id, receives found frame
  * \return  true if state is found, false otherwise
  */
-bool SSAnimation::findStateChange(uint32_t stateid, int16_t& animid_inout, int16_t& frameid_inout)
+bool SSAnimation::findStateChange(uint32_t stateid, uint16_t& animid_inout, uint16_t& frameid_inout)
 {
     const std::vector<StateChange>& stclist = model->animations[animid_inout].state_change;
 
@@ -281,9 +281,9 @@ bool SSAnimation::findStateChange(uint32_t stateid, int16_t& animid_inout, int16
  * @param cmdEntity     optional entity for which doAnimCommand is called
  * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
  */
-int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
+int SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
 {
-    int16_t frame_id, anim_id;
+    uint16_t frame_id, anim_id;
     const std::vector<AnimationFrame>& animlist = model->animations;
     int stepResult = ENTITY_ANIM_NEWFRAME;
 
@@ -305,12 +305,12 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
             lerp_last_frame = frame_id;
             frame_time = 0.0f;
             lerp = 0.0f;
-            frame_id--;
-            if(frame_id < 0) {
+            if(frame_id > 0) {
+                frame_id--;
+                stepResult = ENTITY_ANIM_NEWFRAME;
+            } else {
                 frame_id = animlist[anim_id].frames.size()-1;
                 stepResult = ENTITY_ANIM_NEWANIM;
-            } else {
-                stepResult = ENTITY_ANIM_NEWFRAME;
             }
             current_frame = frame_id;
         }
@@ -346,11 +346,24 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
         current_frame = 0;
         return ENTITY_ANIM_NEWFRAME;
     }
+    else if(anim_flags == ANIM_WEAPON_COMPAT)
+    {
+        if(frame_id >= animlist[anim_id].frames.size())
+        {
+            frame_id = 0;
+            return ENTITY_ANIM_NEWANIM;
+        }
+        else
+        {
+            current_frame = frame_id;
+            return ENTITY_ANIM_NEWFRAME;
+        }
+    }
 
     // check state change:
     if(next_state != last_state)
     {
-        if( findStateChange(next_state, anim_id, frame_id) )
+        if(findStateChange(next_state, anim_id, frame_id))
         {
             last_state = animlist[anim_id].state_id;
             next_state = last_state;
@@ -359,7 +372,7 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
     }
 
     // check end of animation:
-    if( frame_id >= static_cast<int>(animlist[anim_id].frames.size()) )
+    if(frame_id >= animlist[anim_id].frames.size())
     {
         if(cmdEntity)
         {
@@ -368,11 +381,26 @@ int SSAnimation::stepFrame(btScalar time, Entity* cmdEntity)
                 cmdEntity->doAnimCommand(acmd);
             }
         }
-        frame_id = animlist[anim_id].next_frame;
-        anim_id = animlist[anim_id].next_anim->id;
+        if(animlist[anim_id].next_anim)
+        {
+            frame_id = animlist[anim_id].next_frame;
+            anim_id = animlist[anim_id].next_anim->id;
 
-        last_state = animlist[anim_id].state_id;
-        next_state = last_state;
+            // some overlay anims may have invalid nextAnim/nextFrame values:
+            if( anim_id < animlist.size() && frame_id < animlist[anim_id].frames.size())
+            {
+                last_state = animlist[anim_id].state_id;
+                next_state = last_state;
+            } else {
+                // invalid values:
+                anim_id = current_animation;
+                frame_id = 0;
+            }
+        }
+        else
+        {
+            frame_id = 0;
+        }
         stepResult = ENTITY_ANIM_NEWANIM;
     }
 
@@ -398,8 +426,7 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
     dst->bb_max = src->bb_max;
     dst->bb_min = src->bb_min;
 
-    dst->command = src->command;
-    dst->move = src->move;
+    dst->animCommands = src->animCommands;
 
     for(uint16_t i = 0; i < dst->bone_tags.size(); i++)
     {
@@ -434,14 +461,10 @@ void SkeletalModel::interpolateFrames()
 
                     btScalar lerp = static_cast<btScalar>(j) / static_cast<btScalar>(rate);
 
-                    anim->frames[destIdx + j].move.setZero();
-                    anim->frames[destIdx + j].command = 0;
-
                     anim->frames[destIdx + j].centre = anim->frames[srcIdx].centre.lerp(anim->frames[srcIdx+1].centre, lerp);
                     anim->frames[destIdx + j].pos    = anim->frames[srcIdx].pos.lerp(   anim->frames[srcIdx+1].pos,    lerp);
                     anim->frames[destIdx + j].bb_max = anim->frames[srcIdx].bb_max.lerp(anim->frames[srcIdx+1].bb_max, lerp);
                     anim->frames[destIdx + j].bb_min = anim->frames[srcIdx].bb_min.lerp(anim->frames[srcIdx+1].bb_min, lerp);
-
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {

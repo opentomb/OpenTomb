@@ -3100,10 +3100,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         bone_frame->bone_tags.resize(model->mesh_count);
 
         bone_frame->pos.setZero();
-        bone_frame->move.setZero();
-        bone_frame->v_Horizontal = 0.0;
-        bone_frame->v_Vertical = 0.0;
-        bone_frame->command = 0x00;
         for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
         {
             tree_tag = &model->mesh_tree[k];
@@ -3239,7 +3235,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             if(j >= numFrameData) continue; // only create bone_tags for rate>1 fill-frames
 
             bone_frame->pos.setZero();
-            bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->m_frameData.size())

@@ -265,6 +265,8 @@ struct StateChange;
 #define ANIM_NORMAL_CONTROL  (0)
 #define ANIM_LOOP_LAST_FRAME (1)
 #define ANIM_LOCK            (2) // Animation will be locked once and for all.
+#define ANIM_WEAPON_COMPAT   (3) // Animation compatibility flag for old weapon overlay anims with
+                                 //   possible invalid state/animcmd/nextAnim values.
 
 struct SSAnimation
 {
@@ -290,8 +292,8 @@ struct SSAnimation
     SSAnimation      *next = nullptr;
 
     void setAnimation(int animation, int frame = 0, int another_model = -1);
-    bool findStateChange(uint32_t stateid, int16_t& animid_out, int16_t& frameid_inout);
-    int  stepFrame(btScalar time, Entity *cmdEntity = nullptr);
+    bool findStateChange(uint32_t stateid, uint16_t& animid_out, uint16_t& frameid_inout);
+    int  stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
 };
 
 /*
@@ -326,17 +328,11 @@ struct BoneTag
  */
 struct BoneFrame
 {
-    uint16_t             command;                   // & 0x01 - move need, &0x02 - 180 rotate need
     std::vector<BoneTag> bone_tags;                 // bones data
     btVector3            pos;                       // position (base offset)
     btVector3            bb_min;                    // bounding box min coordinates
     btVector3            bb_max;                    // bounding box max coordinates
     btVector3            centre;                    // bounding box centre
-
-
-    btVector3            move;                      // move command data
-    btScalar             v_Vertical;                // jump command data
-    btScalar             v_Horizontal;              // jump command data
 
     std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
