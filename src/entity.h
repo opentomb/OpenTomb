@@ -150,7 +150,9 @@ public:
 
     btTransform m_lerp_last_transform; // interp
     btTransform m_lerp_curr_transform; // interp
-    bool    m_lerp_valid;
+    bool        m_lerp_valid;
+    bool        m_lerp_skip;
+    btScalar    m_lerp;
 
     OBB m_obb;                // oriented bounding box
 
@@ -195,8 +197,7 @@ public:
         return (Entity*)engine_world.character.get() == this;
     }
 
-    void slerpBones(btScalar lerp);
-    void lerpTransform(btScalar lerp);
+    void updateInterpolation(btScalar time);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -263,6 +264,8 @@ public:
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);
+    void slerpBones(btScalar lerp);
+    void lerpTransform(btScalar lerp);
 
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {

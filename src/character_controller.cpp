@@ -2260,9 +2260,11 @@ void Character::frame(btScalar time)
         updateRigidBody(false); // bbox update, room update, m_transform from btBody...
         return;
     }
-    if(control_states.noclip && control_states.free_look)
+    if(isPlayer() && (control_states.noclip || control_states.free_look))
     {
-        // todo
+        updateCurrentBoneFrame(&m_bf);
+        updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+        return;
     }
 
     fixPenetrations(nullptr);
@@ -2306,7 +2308,6 @@ void Character::frame(btScalar time)
 
 
     // TODO: check rigidbody update requirements.
-    //       If m_transform changes, rigid body must be updated regardless of anim frame change...?
     //if(animStepResult != ENTITY_ANIM_NONE)
     //{ }
     updateCurrentBoneFrame(&m_bf);

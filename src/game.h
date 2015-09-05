@@ -9,14 +9,17 @@
 
 // Original (canonical) TR frame rate.
 // Needed for animation speed calculations.
-
 #define TR_FRAME_RATE (30.0f)
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
-
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0f / 60.0f)
+
+// Max. number of game steps that are caught-up between
+// rendering: This limits escalation if the system is too
+// slow to keep up the logic interval.
+#define MAX_SIM_SUBSTEPS (6)
 
 namespace script
 {

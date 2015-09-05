@@ -560,7 +560,7 @@ void Engine_ShowDebugInfo()
                 ent->m_lerp_curr_transform.getOrigin().z()
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2], ent->m_angles[0]);
+        Gui_OutTextXY(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f, entlerp = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2], ent->m_angles[0], ent->m_lerp);
     }
 
     if(last_cont != nullptr)
@@ -637,18 +637,6 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 }
 
 
-
-//void doEntityActions(btDynamicsWorld *world, btScalar timeStep)
-//{
-//
-//
-//    return;
-//}
-
-
-// -------------------------------
-
-
 // FIXME: restore/update interp transform
 // This is a kludge to interpolate Entity->m_transform (for rendering/bone updates),
 // but also keep it in sync for the entity's frame actions:
@@ -661,7 +649,6 @@ void restoreEntityLerpTransforms()
             engine_world.character->m_transform = engine_world.character->m_lerp_curr_transform;
         }
         engine_world.character->m_lerp_last_transform = engine_world.character->m_transform;
-//        engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
     }
     for(auto entityPair : engine_world.entity_tree)
     {
@@ -673,12 +660,11 @@ void restoreEntityLerpTransforms()
                 entity->m_transform = entity->m_lerp_curr_transform;
             }
             entity->m_lerp_last_transform = entity->m_transform;
-//            entity->m_lerp_curr_transform = entity->m_transform;
         }
     }
     return;
 }
-void updateEntityLerpTransforms()
+void storeEntityLerpTransforms()
 {
     if(engine_world.character)
     {
@@ -686,14 +672,24 @@ void updateEntityLerpTransforms()
         {
             engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
             engine_world.character->m_lerp_valid = true;
+            engine_world.character->m_lerp = 0.0f;
 
+            if(engine_world.character->m_lerp_skip)
+            {
+                engine_world.character->m_bf.animations.lerp_last_animation = engine_world.character->m_bf.animations.current_animation;
+                engine_world.character->m_bf.animations.lerp_last_frame = engine_world.character->m_bf.animations.current_frame;
+                engine_world.character->m_lerp_last_transform = engine_world.character->m_lerp_curr_transform;
+                engine_world.character->m_lerp_skip = false;
+            }
+
+            // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
             btScalar tmp = engine_world.character->m_bf.animations.lerp;
-            engine_world.character->m_bf.animations.lerp = 1.0;
+            engine_world.character->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
             engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf);
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
-
             engine_world.character->m_bf.animations.lerp = tmp;
+
         }
     }
     for(auto entityPair : engine_world.entity_tree)
@@ -705,13 +701,21 @@ void updateEntityLerpTransforms()
             {
                 entity->m_lerp_curr_transform = entity->m_transform;
                 entity->m_lerp_valid = true;
+                entity->m_lerp = 0.0f;
+
+                if(entity->m_lerp_skip)
+                {
+                    entity->m_bf.animations.lerp_last_animation = entity->m_bf.animations.current_animation;
+                    entity->m_bf.animations.lerp_last_frame = entity->m_bf.animations.current_frame;
+                    entity->m_lerp_last_transform = entity->m_lerp_curr_transform;
+                    entity->m_lerp_skip = false;
+                }
 
                 btScalar tmp = entity->m_bf.animations.lerp;
-                entity->m_bf.animations.lerp = 1.0;
+                entity->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
                 entity->updateCurrentBoneFrame(&entity->m_bf);
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
-
                 entity->m_bf.animations.lerp = tmp;
             }
         }
@@ -723,29 +727,13 @@ void updateEntityLerpTransforms()
 /**
  * Pre-physics step callback
  */
-void Engine_InternalPreTickCallback(btDynamicsWorld *world, btScalar timeStep)
+void Engine_InternalPreTickCallback(btDynamicsWorld* /* world */, btScalar timeStep)
 {
     btScalar engine_frame_time_backup = engine_frame_time;
     engine_frame_time = timeStep;
-
-    // Pre-step actions
-
-    engine_frame_time = engine_frame_time_backup;
-    return;
-}
-
-/**
- * Post-physics step callback
- */
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
-{
-    btScalar engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = timeStep;
-
-    // TODO: move to Pre-Step to keep actor attachments (hair) in sync:
     restoreEntityLerpTransforms();
 
-    engine_lua.doTasks(GAME_LOGIC_REFRESH_INTERVAL);
+    engine_lua.doTasks(timeStep);
     Game_UpdateAI();
     Audio_Update();
 
@@ -758,8 +746,17 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
         entPair.second->frame(timeStep);
     }
 
-    // Post-Step:
-    // Update phys object's transform/room:
+    storeEntityLerpTransforms();
+    engine_frame_time = engine_frame_time_backup;
+    return;
+}
+
+/**
+ * Post-physics step callback
+ */
+void Engine_InternalTickCallback(btDynamicsWorld* world, btScalar /* timeStep */)
+{
+    // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
         assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
@@ -776,9 +773,6 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             }
         }
     }
-
-    updateEntityLerpTransforms();
-    engine_frame_time = engine_frame_time_backup;
     return;
 }
 

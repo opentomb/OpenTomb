@@ -827,6 +827,9 @@ void Entity::doAnimCommand(const AnimCommand& command)
                 const btScalar z = -btScalar(command.param[1]);
                 btVector3 ofs(x, y, z);
                 m_transform.getOrigin() += m_transform.getBasis() * ofs;
+//                m_lerp_last_transform = m_transform;
+//                m_bf.animations.lerp = 1.0f;
+                m_lerp_skip = true;
             }
             break;
 
@@ -1057,6 +1060,32 @@ void Entity::lerpTransform(btScalar lerp)
     return;
 }
 
+void Entity::updateInterpolation(btScalar time)
+{
+    if(!(m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    {
+        // Bone animation interp:
+        btScalar lerp;
+        lerp = m_bf.animations.lerp;
+        slerpBones(lerp);
+        lerp += time / m_bf.animations.period;
+        if( lerp > 1.0 )
+        {
+            lerp = 1.0;
+        }
+        m_bf.animations.lerp = lerp;
+
+        // Entity transform interp:
+        lerpTransform(m_lerp);
+        m_lerp += time / GAME_LOGIC_REFRESH_INTERVAL;
+        if( m_lerp > 1.0 )
+        {
+            m_lerp = 1.0;
+        }
+    }
+    return;
+}
+
 int Entity::stepAnimation(btScalar time)
 {
     int stepResult = ENTITY_ANIM_NONE;
@@ -1105,7 +1134,7 @@ void Entity::frame(btScalar time)
     stepAnimation(time);
 
     // TODO: check rigidbody update requirements.
-    //       If m_transform changes, rigid body must be updated regardless of anim frame change...?
+    //       If m_transform changes, rigid body must be updated regardless of anim frame change...
     //if(animStepResult != ENTITY_ANIM_NONE)
     //{ }
     updateCurrentBoneFrame(&m_bf);
@@ -1194,6 +1223,8 @@ Entity::Entity(uint32_t id)
 
     m_lerp_last_transform = m_lerp_curr_transform = m_transform;
     m_lerp_valid = false;
+    m_lerp_skip = false;
+    m_lerp = 0.0f;
 
     m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;

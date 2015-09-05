@@ -321,7 +321,7 @@ int SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
     frame_time += time;
     if(frame_time + GAME_LOGIC_REFRESH_INTERVAL/2.0f < period)
     {
-        lerp = frame_time / period;
+        lerp = frame_time / period; // re-sync
         return ENTITY_ANIM_NONE;
     }
 

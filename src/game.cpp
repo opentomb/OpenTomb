@@ -441,6 +441,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         pos[2] -= 512.0;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
+        ent->m_lerp_curr_transform = ent->m_transform;
     }
     else
     {
@@ -694,27 +695,6 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
 }
 
 
-/* FIXME: Framestep issues:
- * - Low fps can cause entity.frame() to skip over animframes
- *   where animcommands are ignored (try timescale(2) and keep jumping forward)
- * - Animation transform updates and game logic effects should be separated,
- *   to allow interpolation without unneeded logic and physics updates,
- *   and better maintainability
- * - reduce usage of global engine_frame_time in functions and methods
- *   that must be called in multiple substeps (low fps issue)
- * - move game logic actions to internaltick
- *   or use updateAction from btActionInterface: This removes the need
- *   for an extra catch-up loop for the gameticks on low fps because bullet
- *   does this already in the substeps.
- * - interp animations every frame, i.e. only update interpolated
- *   bodies for the renderer, but don't do physics - this needs
- *   some disentangling in the code...
- */
-
-
-#define PHYSICS_RATE_FACTOR (2)
-#define PHYSICS_RATE (TR_FRAME_RATE * PHYSICS_RATE_FACTOR)
-#define MAX_SIM_SUBSTEPS (6)
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
@@ -731,10 +711,9 @@ void Game_Frame(btScalar time)
 
 
     // GUI and controls should be updated at all times!
-
     Controls_PollSDLInput();
 
-    // FIXME: implement pause mechanism
+    // TODO: implement pause mechanism
     if(Gui_Update())
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
@@ -745,56 +724,25 @@ void Game_Frame(btScalar time)
         return;
     }
 
-    // This must be called EVERY frame to max out smoothness.
-    // Includes animations, camera movement, and so on.
+    // Translate input to character commands, move camera:
+    // TODO: decouple cam movement
     Game_ApplyControls(engine_world.character);
 
-
-//    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
-    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1.0/30.0);
-
-
-    btScalar lerp = 0;
+    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
 
     if(engine_world.character) {
-        if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
-        {
-            lerp = engine_world.character->m_bf.animations.lerp;
+        engine_world.character->updateInterpolation(time);
 
-            engine_world.character->slerpBones(lerp);
-            engine_world.character->lerpTransform(lerp);
-
-            lerp += engine_frame_time * 30.0;
-            if( lerp > 1.0 ) {
-                lerp = 1.0;
-            }
-            engine_world.character->m_bf.animations.lerp = lerp;
-        }
         if(!control_states.noclip && !control_states.free_look)
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
     }
     for(auto entityPair : engine_world.entity_tree)
     {
-        std::shared_ptr<Entity> entity = entityPair.second;
-        if(!(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC))
-        {
-            lerp = entity->m_bf.animations.lerp;
-
-            entity->slerpBones(lerp);
-            entity->lerpTransform(lerp);
-
-            lerp += engine_frame_time * 30.0;
-            if( lerp > 1.0 ) {
-                lerp = 1.0;
-            }
-            entity->m_bf.animations.lerp = lerp;
-        }
+        entityPair.second->updateInterpolation(time);
     }
-
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();
-
 }
 
 void Game_Prepare()
