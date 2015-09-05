@@ -11,9 +11,10 @@
 // Needed for animation speed calculations.
 #define TR_FRAME_RATE (30.0f)
 
-// This is the global game logic refresh interval.
+// This is the global game logic refresh interval (physics timestep)
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
+// This should be a multiple of TR_FRAME_RATE (1/30,60,90,120,...)
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0f / 60.0f)
 
 // Max. number of game steps that are caught-up between

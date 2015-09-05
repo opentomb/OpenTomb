@@ -340,23 +340,21 @@ bool Gui_Update()
         fontManager->Update();
     }
 
-
     if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
     {
         if(engine_world.character &&
-           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
+           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
         {
             main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
+            main_inventory_manager->send(InventoryManager::InventoryState::Open);
         }
-        if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
+            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
         }
     }
 
-    // If console or inventory is active, only thing to update is audio.
-    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         return true;
     }
