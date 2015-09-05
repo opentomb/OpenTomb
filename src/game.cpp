@@ -699,8 +699,6 @@ void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
 
-    const bool is_character = (engine_world.character != nullptr);
-
     // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
     if(time > GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS))
     {

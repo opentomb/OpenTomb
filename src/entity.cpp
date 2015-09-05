@@ -1038,7 +1038,9 @@ void Entity::slerpBones(btScalar lerp)
 {
     for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
+        // TODO: should we have independent timing for overlay animations?
         ss_anim->lerp = lerp;
+        ss_anim->frame_time = m_bf.animations.frame_time;
     }
     m_bf.animations.lerp = lerp;
     updateCurrentBoneFrame(&m_bf);
@@ -1254,6 +1256,13 @@ Entity::Entity(uint32_t id)
     m_bf.centre.setZero();
     m_bf.pos.setZero();
     m_speed.setZero();
+    m_currentSpeed = 0.0f;
+    m_vspeed_override = 0.0f;
+
+    m_wasRendered = false;
+    m_wasRenderedLines = false;
+    m_inertiaLinear = 0.0f;
+    m_lastSector = nullptr;
 }
 
 Entity::~Entity()
