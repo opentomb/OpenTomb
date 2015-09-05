@@ -827,8 +827,6 @@ void Entity::doAnimCommand(const AnimCommand& command)
                 const btScalar z = -btScalar(command.param[1]);
                 btVector3 ofs(x, y, z);
                 m_transform.getOrigin() += m_transform.getBasis() * ofs;
-//                m_lerp_last_transform = m_transform;
-//                m_bf.animations.lerp = 1.0f;
                 m_lerp_skip = true;
             }
             break;
@@ -914,6 +912,7 @@ void Entity::doAnimCommand(const AnimCommand& command)
                         m_dirFlag = ENT_MOVE_BACKWARD;
                     }
                     updateTransform();
+                    m_lerp_skip = true;
                 }
                 else
                 {
