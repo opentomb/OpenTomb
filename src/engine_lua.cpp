@@ -178,11 +178,11 @@ int lua_DumpRoom(lua_State * lua)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
         }
-        for(static_mesh_p sm=r->static_mesh;sm<r->static_mesh+r->static_mesh_count;sm++)
+        for(static_mesh_p sm = r->content->static_mesh; sm < r->content->static_mesh + r->content->static_mesh_count;sm++)
         {
             Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
         }
-        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        for(engine_container_p cont = r->content->containers; cont!=NULL; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -3664,7 +3664,7 @@ int lua_SetFlipState(lua_State *lua)
         {
             for(uint32_t i=0;i<engine_world.room_count;i++, current_room++)
             {
-                if(current_room->alternate_group == group)    // Check if group is valid.
+                if(current_room->content->alternate_group == group)             // Check if group is valid.
                 {
                     if(state)
                     {

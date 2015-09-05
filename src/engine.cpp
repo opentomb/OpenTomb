@@ -633,11 +633,11 @@ int Engine_ExecCmd(char *ch)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    for(uint32_t i=0;i<sect->owner_room->static_mesh_count;i++)
+                    for(uint32_t i=0;i<sect->owner_room->content->static_mesh_count;i++)
                     {
-                        Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);
+                        Con_Printf("static[%d].object_id = %d", i, sect->owner_room->content->static_mesh[i].object_id);
                     }
-                    for(engine_container_p cont=sect->owner_room->containers;cont;cont=cont->next)
+                    for(engine_container_p cont=sect->owner_room->content->containers;cont;cont=cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {

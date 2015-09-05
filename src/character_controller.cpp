@@ -221,7 +221,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
  */
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset)
 {
-    float from[3], to[3], base_pos[3];
+    float from[3], to[3];
     room_p r = (fc->self)?(fc->self->room):(NULL);
     collision_result_t cb;
     room_sector_p rs;
@@ -301,7 +301,6 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     /*
      * GET HEIGHTS
      */
-    vec3_copy(base_pos, pos);
     vec3_copy(from, pos);
     to[0] = from[0];
     to[1] = from[1];
@@ -454,9 +453,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     collision_result_t cb;
     const float color[3] = {1.0, 0.0, 0.0};
 
-    pos[2] + offset[2];
     vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
-
     nfc->floor_hit = 0x00;
     nfc->ceiling_hit = 0x00;
 
@@ -1671,7 +1668,7 @@ int Character_FindTraverse(struct entity_s *ch)
     if(obj_s != NULL)
     {
         obj_s = Sector_CheckPortalPointer(obj_s);
-        for(engine_container_p cont = obj_s->owner_room->containers;cont!=NULL;cont=cont->next)
+        for(engine_container_p cont = obj_s->owner_room->content->containers;cont!=NULL;cont=cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {

@@ -140,6 +140,6 @@ void Hair_Update(struct hair_s *hair, struct physics_data_s *physics);
 
 int Hair_GetElementsCount(struct hair_s *hair);
 
-int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16]);
+void Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16]);
 
 #endif	/* ENGINE_PHYSICS_H */

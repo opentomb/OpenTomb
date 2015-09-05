@@ -6,7 +6,6 @@
 static void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
 static void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x);
 static void rotateRight(RedBlackHeader_p header, RedBlackNode_p x);
-static RedBlackNode_p TreeSuccessor(RedBlackNode_p n);
 
 // This method search the tree for a node with key 'key', and
 // return the node on success otherwise treeNULL.

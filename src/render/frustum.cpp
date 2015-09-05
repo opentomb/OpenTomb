@@ -345,11 +345,6 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
 
             current_gen->parent = emitter;                                      // add parent pointer
             current_gen->parents_count = emitter->parents_count + 1;
-            portal->dest_room->active_frustums++;
-            if(portal->dest_room->max_path < current_gen->parents_count)
-            {
-                portal->dest_room->max_path = current_gen->parents_count;       // maximum path to the room
-            }
             Sys_ReturnTempMem(buf_size);
             return current_gen;
         }

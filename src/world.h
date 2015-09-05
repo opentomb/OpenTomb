@@ -265,56 +265,55 @@ typedef struct static_mesh_s
 }static_mesh_t, *static_mesh_p;
 
 
-typedef struct room_s
+typedef struct room_content_s
 {
-    uint32_t                    id;                                             // room's ID
-    uint32_t                    flags;                                          // room's type + water, wind info
-    int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-    uint8_t                     reverb_info;                                    // room reverb type
-    uint8_t                     water_scheme;
-    uint8_t                     alternate_group;
-
-    int8_t                      active;                                         // flag: is active
-    int8_t                      is_in_r_list;                                   // is room in render list
-    int8_t                      hide;                                           // do not render
-    struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct sprite_buffer_s     *sprite_buffer;                                  // Render data for sprites
-
+    struct engine_container_s  *containers;                                     // engine containers with moveables objects
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;
     uint32_t                    sprites_count;
     struct room_sprite_s       *sprites;
-
-    struct engine_container_s  *containers;                                     // engine containers with moveables objects
-
-    float                       bb_min[3];                                      // room's bounding box
-    float                       bb_max[3];                                      // room's bounding box
-    float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
-    float                       ambient_lighting[3];
-
     uint32_t                    light_count;
     struct light_s             *lights;
+    
+    int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
+    uint8_t                     reverb_info;                                    // room reverb type
+    uint8_t                     water_scheme;
+    uint8_t                     alternate_group;
+    
+    float                       ambient_lighting[3];
+    struct base_mesh_s         *mesh;                                           // room's base mesh
+    struct sprite_buffer_s     *sprite_buffer;                                  // Render data for sprites
+    struct physics_object_s    *physics_body;
+}room_content_t, *room_content_p;
 
-    uint16_t                    portal_count;                                   // number of room portals
+
+typedef struct room_s
+{
+    uint32_t                    id;                                             // room's ID
+    uint32_t                    flags;                                          // room's type + water, wind info
+    
+    int8_t                      is_in_r_list;                                   // is room in render list
+    int8_t                      active;
+    uint16_t                    portals_count;                                  // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_s              *alternate_room;                                 // alternative room pointer
     struct room_s              *base_room;                                      // base room == room->alternate_room->base_room
-
+    struct frustum_s           *frustum;
+    
+    float                       bb_min[3];                                      // room's bounding box
+    float                       bb_max[3];                                      // room's bounding box
+    float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
     struct room_sector_s       *sectors;
 
-    uint16_t                    active_frustums;                                // current number of this room active frustums
-    struct frustum_s           *frustum;
-    uint16_t                    max_path;                                       // maximum number of portals from camera to this room
-
     uint16_t                    near_room_list_size;
     struct room_s              *near_room_list[32];
     uint16_t                    overlapped_room_list_size;
     struct room_s              *overlapped_room_list[32];
-    struct physics_object_s    *physics_body;
-
+    struct room_content_s      *content;
+    
     struct engine_container_s  *self;
 }room_t, *room_p;
 

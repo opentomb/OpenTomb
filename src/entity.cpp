@@ -1232,7 +1232,7 @@ void Entity_CheckActivators(struct entity_s *ent)
         ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf->bb_max[1];
         ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf->bb_max[1];
         ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf->bb_max[1];
-        engine_container_p cont = ent->self->room->containers;
+        engine_container_p cont = ent->self->room->content->containers;
         for(;cont;cont=cont->next)
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))

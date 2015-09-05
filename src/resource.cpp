@@ -1644,7 +1644,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
             portal_p p = room->portals;
-            for(uint16_t j=0;j<room->portal_count;j++,p++)
+            for(uint16_t j = 0; j < room->portals_count; j++, p++)
             {
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {
@@ -1947,21 +1947,15 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room_sector_p sector;
 
     room->id = room_index;
-    room->active = 1;
-    room->frustum = NULL;
     room->flags = tr->rooms[room_index].flags;
-    room->light_mode = tr->rooms[room_index].light_mode;
-    room->reverb_info = tr->rooms[room_index].reverb_info;
-    room->water_scheme = tr->rooms[room_index].water_scheme;
-    room->alternate_group = tr->rooms[room_index].alternate_group;
+    room->frustum = NULL;
+    room->active = 1;
 
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
     room->transform[14] = tr->rooms[room_index].offset.y;                       // z = y;
-    room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
-    room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
-    room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
+
     room->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
     room->self->room = room;
     room->self->object = room;
@@ -1969,31 +1963,43 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->near_room_list_size = 0;
     room->overlapped_room_list_size = 0;
 
-    TR_GenRoomMesh(world, room_index, room, tr);
+    room->content = (room_content_p)malloc(sizeof(room_content_t));
+    room->content->containers = NULL;
+    room->content->physics_body = NULL;
+    room->content->static_mesh = NULL;
+    room->content->sprites = NULL;
+    room->content->lights = NULL;
+    room->content->light_mode = tr->rooms[room_index].light_mode;
+    room->content->reverb_info = tr->rooms[room_index].reverb_info;
+    room->content->water_scheme = tr->rooms[room_index].water_scheme;
+    room->content->alternate_group = tr->rooms[room_index].alternate_group;
+    room->content->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
+    room->content->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
+    room->content->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
 
-    room->physics_body = NULL;
+    TR_GenRoomMesh(world, room_index, room, tr);
     /*
      *  let us load static room meshes
      */
-    room->static_mesh_count = tr_room->num_static_meshes;
-    room->static_mesh = NULL;
-    if(room->static_mesh_count)
+    room->content->static_mesh_count = tr_room->num_static_meshes;
+    if(room->content->static_mesh_count)
     {
-        room->static_mesh = (static_mesh_p)calloc(room->static_mesh_count, sizeof(static_mesh_t));
+        room->content->static_mesh = (static_mesh_p)calloc(room->content->static_mesh_count, sizeof(static_mesh_t));
     }
 
-    r_static = room->static_mesh;
-    for(uint16_t i=0;i<tr_room->num_static_meshes;i++)
+    r_static = room->content->static_mesh;
+    for(uint16_t i = 0; i < tr_room->num_static_meshes; i++, r_static++)
     {
         tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
         if(tr_static == NULL)
         {
-            room->static_mesh_count--;
+            room->content->static_mesh_count--;
+            r_static--;
             continue;
         }
         r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
         r_static->self->room = room;
-        r_static->self->object = room->static_mesh + i;
+        r_static->self->object = room->content->static_mesh + i;
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes + tr->mesh_indices[tr_static->mesh];
@@ -2023,8 +2029,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->obb->transform = room->static_mesh[i].transform;
-        r_static->obb->r = room->static_mesh[i].mesh->R;
+        r_static->obb->transform = r_static->transform;
+        r_static->obb->r = r_static->mesh->R;
         Mat4_E(r_static->transform);
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
@@ -2055,23 +2061,22 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         // Set static mesh collision.
         Physics_GenStaticMeshRigidBody(r_static);
-        r_static++;
     }
 
     /*
      * sprites loading section
      */
-    room->sprites_count = tr_room->num_sprites;
-    if(room->sprites_count != 0)
+    room->content->sprites_count = tr_room->num_sprites;
+    if(room->content->sprites_count != 0)
     {
-        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_sprite_t));
-        for(uint32_t i=0;i<room->sprites_count;i++)
+        room->content->sprites = (room_sprite_p)calloc(room->content->sprites_count, sizeof(room_sprite_t));
+        for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
             if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
             {
-                room->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(room->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                vec3_add(room->sprites[i].pos, room->sprites[i].pos, room->transform+12);
+                room->content->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
+                TR_vertex_to_arr(room->content->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                vec3_add(room->content->sprites[i].pos, room->content->sprites[i].pos, room->transform + 12);
             }
         }
     }
@@ -2215,70 +2220,70 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     /*
      *  load lights
      */
-    room->light_count = tr_room->num_lights;
-    room->lights = NULL;
-    if(room->light_count)
+    room->content->light_count = tr_room->num_lights;
+    if(room->content->light_count)
     {
-        room->lights = (light_p)malloc(room->light_count * sizeof(light_t));
+        room->content->lights = (light_p)malloc(room->content->light_count * sizeof(light_t));
     }
 
-    for(uint16_t i=0;i<tr_room->num_lights;i++)
+    for(uint16_t i = 0; i < tr_room->num_lights; i++)
     {
+        struct light_s *light = room->content->lights + i;
         switch(tr_room->lights[i].light_type)
         {
         case 0:
-            room->lights[i].light_type = LT_SUN;
+            light->light_type = LT_SUN;
             break;
         case 1:
-            room->lights[i].light_type = LT_POINT;
+            light->light_type = LT_POINT;
             break;
         case 2:
-            room->lights[i].light_type = LT_SPOTLIGHT;
+            light->light_type = LT_SPOTLIGHT;
             break;
         case 3:
-            room->lights[i].light_type = LT_SHADOW;
+            light->light_type = LT_SHADOW;
             break;
         default:
-            room->lights[i].light_type = LT_NULL;
+            light->light_type = LT_NULL;
             break;
         }
 
-        room->lights[i].pos[0] = tr_room->lights[i].pos.x;
-        room->lights[i].pos[1] = -tr_room->lights[i].pos.z;
-        room->lights[i].pos[2] = tr_room->lights[i].pos.y;
-        room->lights[i].pos[3] = 1.0f;
+        light->pos[0] = tr_room->lights[i].pos.x;
+        light->pos[1] = -tr_room->lights[i].pos.z;
+        light->pos[2] = tr_room->lights[i].pos.y;
+        light->pos[3] = 1.0f;
 
-        if(room->lights[i].light_type == LT_SHADOW)
+        if(light->light_type == LT_SHADOW)
         {
-            room->lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[3] = 1.0f;
+            light->colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[3] = 1.0f;
         }
         else
         {
-            room->lights[i].colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-            room->lights[i].colour[3] = 1.0f;
+            light->colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+            light->colour[3] = 1.0f;
         }
 
-        room->lights[i].inner = tr_room->lights[i].r_inner;
-        room->lights[i].outer = tr_room->lights[i].r_outer;
-        room->lights[i].length = tr_room->lights[i].length;
-        room->lights[i].cutoff = tr_room->lights[i].cutoff;
+        light->inner = tr_room->lights[i].r_inner;
+        light->outer = tr_room->lights[i].r_outer;
+        light->length = tr_room->lights[i].length;
+        light->cutoff = tr_room->lights[i].cutoff;
 
-        room->lights[i].falloff = 0.001f / room->lights[i].outer;
+        light->falloff = 0.001f / light->outer;
     }
 
 
     /*
      * portals loading / calculation!!!
      */
-    room->portal_count = tr_room->num_portals;
-    p = room->portals = (portal_p)calloc(room->portal_count, sizeof(portal_t));
+    room->portals_count = tr_room->num_portals;
+    p = room->portals = (portal_p)calloc(room->portals_count, sizeof(portal_t));
     tr_portal = tr_room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++,tr_portal++)
+    for(uint16_t i = 0; i < room->portals_count; i++, p++, tr_portal++)
     {
         r_dest = world->rooms + tr_portal->adjoining_room;
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
@@ -3044,11 +3049,11 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
 
     if(tr_room->num_triangles + tr_room->num_rectangles == 0)
     {
-        room->mesh = NULL;
+        room->content->mesh = NULL;
         return;
     }
 
-    mesh = room->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
+    mesh = room->content->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
     mesh->id = room_index;
     mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages();
 
@@ -3124,23 +3129,23 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
     // Find the number of different texture pages used and the number of non-null sprites
     uint32_t highestTexturePageFound = 0;
     int actualSpritesFound = 0;
-    for (uint32_t i = 0; i < room->sprites_count; i++)
+    for (uint32_t i = 0; i < room->content->sprites_count; i++)
     {
-        if (room->sprites[i].sprite)
+        if (room->content->sprites[i].sprite)
         {
             actualSpritesFound += 1;
-            highestTexturePageFound = std::max(highestTexturePageFound, room->sprites[i].sprite->texture);
+            highestTexturePageFound = std::max(highestTexturePageFound, room->content->sprites[i].sprite->texture);
         }
     }
     if (actualSpritesFound == 0)
     {
-        room->sprite_buffer = 0;
+        room->content->sprite_buffer = NULL;
         return;
     }
 
-    room->sprite_buffer = (struct sprite_buffer_s *) calloc(sizeof(struct sprite_buffer_s), 1);
-    room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
-    room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
+    room->content->sprite_buffer = (struct sprite_buffer_s *) calloc(sizeof(struct sprite_buffer_s), 1);
+    room->content->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
+    room->content->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->content->sprite_buffer->num_texture_pages);
 
     // First collect indices on a per-texture basis
     uint16_t **elements_for_texture = (uint16_t **)calloc(sizeof(uint16_t*), highestTexturePageFound + 1);
@@ -3148,9 +3153,9 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
     GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
 
     int writeIndex = 0;
-    for (int i = 0; i < room->sprites_count; i++)
+    for (int i = 0; i < room->content->sprites_count; i++)
     {
-        const struct room_sprite_s &room_sprite = room->sprites[i];
+        const struct room_sprite_s &room_sprite = room->content->sprites[i];
         if (room_sprite.sprite)
         {
             int vertexStart = writeIndex;
@@ -3189,9 +3194,9 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
 
             // Assign indices
             uint32_t texture = room_sprite.sprite->texture;
-            uint32_t start = room->sprite_buffer->element_count_per_texture[texture];
+            uint32_t start = room->content->sprite_buffer->element_count_per_texture[texture];
             uint32_t newElementCount = start + 6;
-            room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
+            room->content->sprite_buffer->element_count_per_texture[texture] = newElementCount;
             elements_for_texture[texture] = (uint16_t *)realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t));
 
             elements_for_texture[texture][start + 0] = vertexStart + 0;
@@ -3212,22 +3217,22 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
         {
             continue;
         }
-        elements = (uint16_t*)realloc(elements, (elementsSoFar + room->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0]));
-        memcpy(elements + elementsSoFar, elements_for_texture[i], room->sprite_buffer->element_count_per_texture[i]*sizeof(elements_for_texture[0][0]));
+        elements = (uint16_t*)realloc(elements, (elementsSoFar + room->content->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0]));
+        memcpy(elements + elementsSoFar, elements_for_texture[i], room->content->sprite_buffer->element_count_per_texture[i]*sizeof(elements_for_texture[0][0]));
 
-        elementsSoFar += room->sprite_buffer->element_count_per_texture[i];
+        elementsSoFar += room->content->sprite_buffer->element_count_per_texture[i];
         free(elements_for_texture[i]);
     }
     free(elements_for_texture);
 
     // Now load into OpenGL
-    qglGenBuffersARB(1, &room->sprite_buffer->array_buffer);
-    qglBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
+    qglGenBuffersARB(1, &room->content->sprite_buffer->array_buffer);
+    qglBindBufferARB(GL_ARRAY_BUFFER, room->content->sprite_buffer->array_buffer);
     qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    qglGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
-    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
+    qglGenBuffersARB(1, &room->content->sprite_buffer->element_array_buffer);
+    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->content->sprite_buffer->element_array_buffer);
     qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 }
@@ -3254,9 +3259,9 @@ void Res_GenVBOs(struct world_s *world)
 
     for(uint32_t i=0;i<world->room_count;i++)
     {
-        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
+        if((world->rooms[i].content->mesh) && (world->rooms[i].content->mesh->vertex_count))
         {
-            Mesh_GenVBO(world->rooms[i].mesh);
+            Mesh_GenVBO(world->rooms[i].content->mesh);
         }
     }
 }
@@ -3963,9 +3968,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             if(sp && entity->self->room)
             {
                 room_sprite_p rsp;
-                int sz = ++entity->self->room->sprites_count;
-                entity->self->room->sprites = (room_sprite_p)realloc(entity->self->room->sprites, sz * sizeof(room_sprite_t));
-                rsp = entity->self->room->sprites + sz - 1;
+                int sz = ++entity->self->room->content->sprites_count;
+                entity->self->room->content->sprites = (room_sprite_p)realloc(entity->self->room->content->sprites, sz * sizeof(room_sprite_t));
+                rsp = entity->self->room->content->sprites + sz - 1;
                 rsp->sprite = sp;
                 rsp->pos[0] = entity->transform[12];
                 rsp->pos[1] = entity->transform[13];
@@ -4342,8 +4347,8 @@ void Res_EntityToItem(struct RedBlackNode_s *n)
 
     for(uint32_t i=0;i<engine_world.room_count;i++)
     {
-        engine_container_p cont = engine_world.rooms[i].containers;
-        for(;cont;cont=cont->next)
+        engine_container_p cont = engine_world.rooms[i].content->containers;
+        for(; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {

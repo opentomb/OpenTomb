@@ -44,55 +44,76 @@ void Room_Empty(room_p room)
         return;
     }
 
-    room->containers = NULL;
+    if(room->content)
+    {
+        room->content->containers = NULL;
+
+        if(room->content->mesh)
+        {
+            BaseMesh_Clear(room->content->mesh);
+            free(room->content->mesh);
+            room->content->mesh = NULL;
+        }
+
+        if(room->content->static_mesh_count)
+        {
+            for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
+            {
+                Physics_DeleteObject(room->content->static_mesh[i].physics_body);
+                room->content->static_mesh[i].physics_body = NULL;
+
+                OBB_Clear(room->content->static_mesh[i].obb);
+                free(room->content->static_mesh[i].obb);
+                room->content->static_mesh[i].obb = NULL;
+                if(room->content->static_mesh[i].self)
+                {
+                    room->content->static_mesh[i].self->room = NULL;
+                    free(room->content->static_mesh[i].self);
+                    room->content->static_mesh[i].self = NULL;
+                }
+            }
+            free(room->content->static_mesh);
+            room->content->static_mesh = NULL;
+            room->content->static_mesh_count = 0;
+        }
+
+        Physics_DeleteObject(room->content->physics_body);
+        room->content->physics_body = NULL;
+
+        if(room->content->sprites_count)
+        {
+            free(room->content->sprites);
+            room->content->sprites = NULL;
+            room->content->sprites_count = 0;
+        }
+
+        if(room->content->light_count)
+        {
+            free(room->content->lights);
+            room->content->lights = NULL;
+            room->content->light_count = 0;
+        }
+
+        free(room->content);
+        room->content = NULL;
+    }
+
 
     p = room->portals;
     room->near_room_list_size = 0;
 
-    if(room->portal_count)
+    if(room->portals_count)
     {
-        for(uint16_t i=0;i<room->portal_count;i++,p++)
+        for(uint16_t i = 0;i < room->portals_count; i++, p++)
         {
             Portal_Clear(p);
         }
         free(room->portals);
         room->portals = NULL;
-        room->portal_count = 0;
+        room->portals_count = 0;
     }
 
     room->frustum = NULL;
-
-    if(room->mesh)
-    {
-        BaseMesh_Clear(room->mesh);
-        free(room->mesh);
-        room->mesh = NULL;
-    }
-
-    if(room->static_mesh_count)
-    {
-        for(uint32_t i=0;i<room->static_mesh_count;i++)
-        {
-            Physics_DeleteObject(room->static_mesh[i].physics_body);
-            room->static_mesh[i].physics_body = NULL;
-
-            OBB_Clear(room->static_mesh[i].obb);
-            free(room->static_mesh[i].obb);
-            room->static_mesh[i].obb = NULL;
-            if(room->static_mesh[i].self)
-            {
-                room->static_mesh[i].self->room = NULL;
-                free(room->static_mesh[i].self);
-                room->static_mesh[i].self = NULL;
-            }
-        }
-        free(room->static_mesh);
-        room->static_mesh = NULL;
-        room->static_mesh_count = 0;
-    }
-
-    Physics_DeleteObject(room->physics_body);
-    room->physics_body = NULL;
 
     if(room->sectors_count)
     {
@@ -101,20 +122,6 @@ void Room_Empty(room_p room)
         room->sectors_count = 0;
         room->sectors_x = 0;
         room->sectors_y = 0;
-    }
-
-    if(room->sprites_count)
-    {
-        free(room->sprites);
-        room->sprites = NULL;
-        room->sprites_count = 0;
-    }
-
-    if(room->light_count)
-    {
-        free(room->lights);
-        room->lights = NULL;
-        room->light_count = 0;
     }
 
     if(room->self)
@@ -128,9 +135,9 @@ void Room_Empty(room_p room)
 
 void Room_AddEntity(room_p room, struct entity_s *entity)
 {
-    engine_container_p curr;
+    engine_container_p curr = room->content->containers;
 
-    for(curr=room->containers;curr!=NULL;curr=curr->next)
+    for(; curr; curr = curr->next)
     {
         if(curr == entity->self)
         {
@@ -139,8 +146,8 @@ void Room_AddEntity(room_p room, struct entity_s *entity)
     }
 
     entity->self->room = room;
-    entity->self->next = room->containers;
-    room->containers = entity->self;
+    entity->self->next = room->content->containers;
+    room->content->containers = entity->self;
 }
 
 
@@ -148,19 +155,19 @@ int Room_RemoveEntity(room_p room, struct entity_s *entity)
 {
     engine_container_p previous_cont, current_cont;
 
-    if((entity == NULL) || (room->containers == NULL))
+    if((entity == NULL) || (room->content->containers == NULL))
     {
         return 0;
     }
 
-    if(room->containers == entity->self)
+    if(room->content->containers == entity->self)
     {
-        room->containers = entity->self->next;
+        room->content->containers = entity->self->next;
         entity->self->room = NULL;
         return 1;
     }
 
-    previous_cont = room->containers;
+    previous_cont = room->content->containers;
     current_cont = previous_cont->next;
     for(;current_cont!=NULL;)
     {
@@ -1168,20 +1175,20 @@ void Room_Enable(room_p room)
         return;
     }
 
-    if(room->physics_body != NULL)
+    if(room->content->physics_body != NULL)
     {
-        Physics_EnableObject(room->physics_body);
+        Physics_EnableObject(room->content->physics_body);
     }
 
-    for(uint32_t i=0;i<room->static_mesh_count;i++)
+    for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
-        if(room->static_mesh[i].physics_body != NULL)
+        if(room->content->static_mesh[i].physics_body != NULL)
         {
-            Physics_EnableObject(room->static_mesh[i].physics_body);
+            Physics_EnableObject(room->content->static_mesh[i].physics_body);
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -1202,20 +1209,20 @@ void Room_Disable(room_p room)
         return;
     }
 
-    if(room->physics_body != NULL)
+    if(room->content->physics_body)
     {
-        Physics_DisableObject(room->physics_body);
+        Physics_DisableObject(room->content->physics_body);
     }
 
-    for(uint32_t i=0;i<room->static_mesh_count;i++)
+    for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
-        if(room->static_mesh[i].physics_body != NULL)
+        if(room->content->static_mesh[i].physics_body)
         {
-            Physics_DisableObject(room->static_mesh[i].physics_body);
+            Physics_DisableObject(room->content->static_mesh[i].physics_body);
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -1230,7 +1237,7 @@ void Room_Disable(room_p room)
 
 void Room_SwapToBase(room_p room)
 {
-    if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
+    if((room->base_room != NULL) && (room->active == 1))               //If room is active alternate room
     {
         renderer.CleanList();
         Room_Disable(room);                             //Disable current room
@@ -1243,7 +1250,7 @@ void Room_SwapToBase(room_p room)
 
 void Room_SwapToAlternate(room_p room)
 {
-    if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
+    if((room->alternate_room != NULL) && (room->active == 1))          //If room is active base room
     {
         renderer.CleanList();
         Room_Disable(room);                             //Disable current room
@@ -1256,7 +1263,7 @@ void Room_SwapToAlternate(room_p room)
 
 room_p Room_CheckFlip(room_p r)
 {
-    if((r != NULL) && (r->active == 0))
+    if(r && (r->active == 0))
     {
         if((r->base_room != NULL) && (r->base_room->active))
         {
@@ -1276,7 +1283,7 @@ void Room_SwapPortals(room_p room, room_p dest_room)
     //Update portals in room rooms
     for(uint32_t i=0;i<engine_world.room_count;i++)//For every room in the world itself
     {
-        for(uint16_t j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
+        for(uint16_t j=0;j<engine_world.rooms[i].portals_count;j++)//For every portal in this room
         {
             if(engine_world.rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
             {
@@ -1292,17 +1299,17 @@ void Room_SwapItems(room_p room, room_p dest_room)
 {
     engine_container_p t;
 
-    for(t=room->containers;t!=NULL;t=t->next)
+    for(t=room->content->containers;t!=NULL;t=t->next)
     {
         t->room = dest_room;
     }
 
-    for(t=dest_room->containers;t!=NULL;t=t->next)
+    for(t=dest_room->content->containers;t!=NULL;t=t->next)
     {
         t->room = room;
     }
 
-    SWAPT(room->containers, dest_room->containers, t);
+    SWAPT(room->content->containers, dest_room->content->containers, t);
 }
 
 int World_AddEntity(world_p world, struct entity_s *entity)
@@ -1417,7 +1424,7 @@ struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
 int Room_IsJoined(room_p r1, room_p r2)
 {
     portal_p p = r1->portals;
-    for(uint16_t i=0;i<r1->portal_count;i++,p++)
+    for(uint16_t i = 0; i < r1->portals_count; i++, p++)
     {
         if(p->dest_room->id == r2->id)
         {
@@ -1426,7 +1433,7 @@ int Room_IsJoined(room_p r1, room_p r2)
     }
 
     p = r2->portals;
-    for(uint16_t i=0;i<r2->portal_count;i++,p++)
+    for(uint16_t i = 0; i < r2->portals_count; i++, p++)
     {
         if(p->dest_room->id == r1->id)
         {
@@ -1442,18 +1449,18 @@ void Room_BuildNearRoomsList(room_p room)
     room->near_room_list_size = 0;
 
     portal_p p = room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++)
+    for(uint16_t i = 0; i<room->portals_count; i++, p++)
     {
         Room_AddToNearRoomsList(room, p->dest_room);
     }
 
     uint16_t nc1 = room->near_room_list_size;
 
-    for(uint16_t i=0;i<nc1;i++)
+    for(uint16_t i = 0; i < nc1; i++)
     {
         room_p r = room->near_room_list[i];
         p = r->portals;
-        for(uint16_t j=0;j<r->portal_count;j++,p++)
+        for(uint16_t j = 0; j < r->portals_count; j++, p++)
         {
             Room_AddToNearRoomsList(room, p->dest_room);
         }

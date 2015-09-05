@@ -1201,21 +1201,21 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
 {
     btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, tweens, num_tweens, true, true);
-    room->physics_body = NULL;
+    room->content->physics_body = NULL;
 
     if(cshape)
     {
         btVector3 localInertia(0, 0, 0);
         btTransform tr;
         tr.setFromOpenGLMatrix(room->transform);
-        room->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
+        room->content->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
         btDefaultMotionState* motionState = new btDefaultMotionState(tr);
-        room->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        bt_engine_dynamicsWorld->addRigidBody(room->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-        room->physics_body->bt_body->setUserPointer(room->self);
-        room->physics_body->bt_body->setUserIndex(0);
-        room->physics_body->bt_body->setRestitution(1.0);
-        room->physics_body->bt_body->setFriction(1.0);
+        room->content->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+        bt_engine_dynamicsWorld->addRigidBody(room->content->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        room->content->physics_body->bt_body->setUserPointer(room->self);
+        room->content->physics_body->bt_body->setUserIndex(0);
+        room->content->physics_body->bt_body->setRestitution(1.0);
+        room->content->physics_body->bt_body->setFriction(1.0);
         room->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
         room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     }
@@ -1805,7 +1805,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    for(int i=1; i<=hair_setup->vertex_map_count; i++)
+    for(int i = 1; i <= hair_setup->vertex_map_count; i++)
     {
         hair_setup->head_vertex_map[i-1] = (uint32_t)lua_GetScalarField(lua, i);
     }
@@ -1843,18 +1843,9 @@ int Hair_GetElementsCount(struct hair_s *hair)
     return (hair)?(hair->element_count):(0);
 }
 
-int Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16])
+void Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16])
 {
-#ifndef BT_USE_DOUBLE_PRECISION
     hair->elements[element].body->getWorldTransform().getOpenGLMatrix(tr);
-#else
-    btScalar btTr[16];
-    hair->elements[element].body->getWorldTransform().getOpenGLMatrix(btTr);
-    for(int i = 0; i < 16; i++)
-    {
-        tr[i] = btTr[i];
-    }
-#endif
     *mesh = hair->elements[element].mesh;
 }
 
