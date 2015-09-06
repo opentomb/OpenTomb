@@ -2853,7 +2853,7 @@ int State_Control_Lara(Character* character, SSAnimation *ss_anim)
         case TR_STATE_LARA_CRAWL_TURN_LEFT:
             character->m_dirFlag = ENT_MOVE_FORWARD;
             character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14)) ? (1.0) : (0.0);
+            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((cmd->move[1] != -1) || resp->killed)
             {
@@ -2864,7 +2864,7 @@ int State_Control_Lara(Character* character, SSAnimation *ss_anim)
         case TR_STATE_LARA_CRAWL_TURN_RIGHT:
             character->m_dirFlag = ENT_MOVE_FORWARD;
             character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14)) ? (1.0) : (0.0);
+            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14)) ? (1.0f) : (0.0f);
 
             if((cmd->move[1] != 1) || resp->killed)
             {
@@ -2875,7 +2875,7 @@ int State_Control_Lara(Character* character, SSAnimation *ss_anim)
         case TR_STATE_LARA_CROUCH_TURN_LEFT:
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
             character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 23)) ? (0.6) : (0.0);
+            cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 23)) ? (0.6f) : (0.0f);
 
             if((cmd->move[1] == 0) || resp->killed)
             {

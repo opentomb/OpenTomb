@@ -2822,7 +2822,7 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(SECTOR_MATERIAL_OLDWOOD);
     EXPOSE_C(SECTOR_MATERIAL_OLDMETAL);
 
-    m_state.set("AnimFlag", lua::Table());
+    m_state.set("AnimMode", lua::Table());
     m_state["AnimMode"].set("NormalControl", static_cast<int>(world::animation::SSAnimationMode::NormalControl));
     m_state["AnimMode"].set("LoopLastFrame", static_cast<int>(world::animation::SSAnimationMode::LoopLastFrame));
     m_state["AnimMode"].set("WeaponCompat", static_cast<int>(world::animation::SSAnimationMode::WeaponCompat));

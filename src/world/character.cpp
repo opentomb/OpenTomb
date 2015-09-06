@@ -819,8 +819,8 @@ ClimbInfo Character::checkWallsClimbability()
 
 void Character::lean(CharacterCommand* cmd, btScalar max_lean)
 {
-    btScalar neg_lean = 360.0 - max_lean;
-    btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
+    btScalar neg_lean = 360.0f - max_lean;
+    btScalar lean_coeff = (max_lean == 0.0) ? (48.0f) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
@@ -1755,11 +1755,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->position[0], obj_s->position[1], floor + 0.5 * MeteringSectorSize));
+        from.setOrigin(btVector3(obj_s->position[0], obj_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5 * MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
