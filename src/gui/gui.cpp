@@ -342,12 +342,32 @@ TextLine *drawText(GLfloat x, GLfloat y, const char *fmt, ...)
     return nullptr;
 }
 
-void update()
+bool update()
 {
     if(fontManager != nullptr)
     {
         fontManager->Update();
     }
+
+    if(!Console::instance().isVisible() && engine::control_states.gui_inventory && main_inventory_manager)
+    {
+        if(engine::engine_world.character &&
+           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
+        {
+            main_inventory_manager->setInventory(&engine::engine_world.character->m_inventory);
+            main_inventory_manager->send(InventoryManager::InventoryState::Open);
+        }
+        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
+        {
+            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
+        }
+    }
+
+    if(Console::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    {
+        return true;
+    }
+    return false;
 }
 
 void resize()
@@ -524,47 +544,11 @@ void renderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time)
+void itemFrame(world::animation::SSBoneFrame *bf, btScalar time)
 {
-    int16_t frame, anim;
-    long int t;
-    btScalar dt;
-    world::animation::StateChange* stc;
+    bf->animations.stepAnimation(time);
 
-    bf->animations.lerp = 0.0;
-    stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
-    world::Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
-    if(anim != bf->animations.current_animation)
-    {
-        bf->animations.last_animation = bf->animations.current_animation;
-        /*frame %= bf->model->animations[anim].frames.size();
-        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames.size() - 1 + frame);
-
-        bf->last_state = bf->model->animations[anim].state_id;
-        bf->next_state = bf->model->animations[anim].state_id;
-        bf->current_animation = anim;
-        bf->current_frame = frame;
-        bf->next_animation = anim;
-        bf->next_frame = frame;*/
-        stc = bf->animations.model->animations[bf->animations.current_animation].findStateChangeByID(bf->animations.next_state);
-    }
-    else if(bf->animations.current_frame != frame)
-    {
-        if(bf->animations.current_frame == 0)
-        {
-            bf->animations.last_animation = bf->animations.current_animation;
-        }
-        bf->animations.current_frame = frame;
-    }
-
-    bf->animations.frame_time += time;
-
-    t = (bf->animations.frame_time) / bf->animations.period;
-    dt = bf->animations.frame_time - static_cast<btScalar>(t) * bf->animations.period;
-    bf->animations.frame_time = static_cast<btScalar>(frame) * bf->animations.period + dt;
-    bf->animations.lerp = dt / bf->animations.period;
-    world::Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    world::Entity::updateCurrentBoneFrame(bf, nullptr);
+    world::Entity::updateCurrentBoneFrame(bf);
 }
 
 /**
@@ -1104,7 +1088,7 @@ bool Fader::SetTexture(const char *texture_path)
     if(status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        ConsoleInfo::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
+        Console::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
         return false;
     }
 
@@ -1156,7 +1140,7 @@ bool Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
+    Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
     return true;
 #else
     SDL_Surface *surface = IMG_Load(texture_path);
@@ -2057,7 +2041,7 @@ void ItemNotifier::Draw()
     item->bf->animations.current_frame = 0;
     item->bf->animations.frame_time = 0.0;
 
-    Item_Frame(item->bf.get(), 0.0);
+    itemFrame(item->bf.get(), 0.0);
     btTransform matrix;
     matrix.setIdentity();
     util::Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);

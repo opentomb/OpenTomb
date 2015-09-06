@@ -9,9 +9,6 @@
 #include <BulletCollision/CollisionShapes/btSphereShape.h>
 #include <LinearMath/btVector3.h>
 
-#include "engine/engine.h"
-#include "world/entity.h"
-
 /*------ Lara's model-------
              .=.
             | 14|
@@ -124,10 +121,3 @@ constexpr float CHARACTER_BOX_HALF_SIZE = 128.0f;
 constexpr float CHARACTER_BASE_RADIUS   = 128.0f;
 constexpr float CHARACTER_BASE_HEIGHT   = 512.0f;
 }
-
-namespace engine
-{
-struct EngineContainer;
-} // namespace engine
-
-int Sector_AllowTraverse(world::RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer> &cont);

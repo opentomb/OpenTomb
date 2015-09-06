@@ -850,21 +850,21 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
         switch(tween.ceiling_tween_type)
         {
             case TweenType::TwoTriangles:
-                {
-                    btScalar t = std::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
-                                          (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
-                    t = 1.0f / (1.0f + t);
-                    btVector3 o;
-                    o.setInterpolate3(tween.ceiling_corners[0], tween.ceiling_corners[2], t);
-                    trimesh->addTriangle(tween.ceiling_corners[0],
-                                         tween.ceiling_corners[1],
-                                         o, true);
-                    trimesh->addTriangle(tween.ceiling_corners[3],
-                                         tween.ceiling_corners[2],
-                                         o, true);
-                    cnt += 2;
-                }
-                break;
+            {
+                btScalar t = std::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
+                                      (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
+                t = 1.0f / (1.0f + t);
+                btVector3 o;
+                o.setInterpolate3(tween.ceiling_corners[0], tween.ceiling_corners[2], t);
+                trimesh->addTriangle(tween.ceiling_corners[0],
+                                     tween.ceiling_corners[1],
+                                     o, true);
+                trimesh->addTriangle(tween.ceiling_corners[3],
+                                     tween.ceiling_corners[2],
+                                     o, true);
+                cnt += 2;
+            }
+            break;
 
             case TweenType::TriangleLeft:
                 trimesh->addTriangle(tween.ceiling_corners[0],
@@ -901,7 +901,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
             {
                 btScalar t = std::abs((tween.floor_corners[2][2] - tween.floor_corners[3][2]) /
                                       (tween.floor_corners[0][2] - tween.floor_corners[1][2]));
-                t = 1.0f / (1.0f + t);
+                t = 1.0 / (1.0 + t);
                 btVector3 o;
                 o.setInterpolate3(tween.floor_corners[0], tween.floor_corners[2], t);
                 trimesh->addTriangle(tween.floor_corners[0],

@@ -247,5 +247,6 @@ int  execCmd(const char *ch);
 
 void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void internalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+void internalPreTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
 } // namespace engine

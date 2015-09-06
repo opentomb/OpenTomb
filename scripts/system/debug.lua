@@ -45,7 +45,7 @@ function checkDebugKeys()
         setEntityMoveType(player, MOVE_FREE_FALLING);
         setEntityResponse(player, RESP_KILL, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-        setEntityAnimFlag(player, ANIM_NORMAL_CONTROL);
+        setEntityAnimFlag(player, AnimMode.NormalControl);
     end;
     
     if(checkKey(KEY_1, true)) then setCharacterCurrentWeapon(player, 1) end;

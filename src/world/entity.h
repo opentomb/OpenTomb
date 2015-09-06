@@ -7,12 +7,14 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
-#include <LinearMath/btVector3.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
+#include "animation/animation.h"
+#include "core/orientedboundingbox.h"
+#include "engine/engine.h"
 #include "engine/game.h"
-#include "world/animation/animation.h"
-#include "world/object.h"
-#include "world/core/orientedboundingbox.h"
+#include "object.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -141,6 +143,7 @@ public:
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
     btScalar                            m_speedMult = TR_FRAME_RATE;
+    btScalar                            m_vspeed_override;
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
@@ -150,6 +153,12 @@ public:
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
+
+    btTransform m_lerp_last_transform; // interp
+    btTransform m_lerp_curr_transform; // interp
+    bool        m_lerp_valid;
+    bool        m_lerp_skip;
+    btScalar    m_lerp;
 
     core::OrientedBoundingBox m_obb;                // oriented bounding box
 
@@ -184,8 +193,17 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-    animation::AnimUpdate frame(btScalar time);  // process frame + trying to change state
+
+    animation::AnimUpdate stepAnimation(btScalar time);
+    virtual void frame(btScalar time);  // entity frame step
+
+    bool isPlayer()
+    {
+        // FIXME: isPlayer()
+        return (Entity*)engine::engine_world.character.get() == this;
+    }
+
+    void updateInterpolation(btScalar time);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -197,8 +215,8 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(animation::SSAnimation *ss_anim, animation::AnimUpdate changing);
+    static void updateCurrentBoneFrame(animation::SSBoneFrame *bf);
+    void doAnimCommand(const animation::AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -221,10 +239,6 @@ public:
         return m_transform * m_bf.boundingBox.getCenter();
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t frame, animation::AnimUpdate /*state*/)
-    {
-        m_bf.animations.current_frame = frame;
-    }
 
     virtual void processSectorImpl()
     {
@@ -254,7 +268,15 @@ public:
     btVector3 applyGravity(btScalar time);
 
 private:
-    void doAnimMove(int16_t *anim, int16_t *frame);
+//    void doAnimMove(int16_t *anim, int16_t *frame);
+    void slerpBones(btScalar lerp);
+    void lerpTransform(btScalar lerp);
+
+    static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
+    {
+        btVector3 d = bb_max - bb_min;
+        return btMin(d[0], btMin(d[1], d[2]));
+    }
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);

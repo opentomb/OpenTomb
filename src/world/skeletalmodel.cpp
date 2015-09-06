@@ -13,66 +13,53 @@ void SkeletalModel::clear()
     animations.clear();
 }
 
+/**
+ * Expand compressed frames
+ * For animations with rate>1, interpolate frames over
+ * the real frame range.
+ */
 void SkeletalModel::interpolateFrames()
 {
     animation::AnimationFrame* anim = animations.data();
 
     for(uint16_t i = 0; i < animations.size(); i++, anim++)
     {
-        if(anim->frames.size() > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
+        int length = anim->frames.size();
+        int rate = anim->original_frame_rate;
+        if(length > 1 && rate > 1)
         {
-            std::vector<animation::BoneFrame> new_bone_frames(anim->original_frame_rate * (anim->frames.size() - 1) + 1);
-            /*
-             * the first frame does not changes
-             */
-            animation::BoneFrame* bf = new_bone_frames.data();
-            bf->bone_tags.resize(mesh_count);
-            bf->position.setZero();
-            bf->move.setZero();
-            bf->command = 0x00;
-            bf->center = anim->frames[0].center;
-            bf->position = anim->frames[0].position;
-            bf->boundingBox = anim->frames[0].boundingBox;
-            for(uint16_t k = 0; k < mesh_count; k++)
-            {
-                bf->bone_tags[k].offset = anim->frames[0].bone_tags[k].offset;
-                bf->bone_tags[k].qrotate = anim->frames[0].bone_tags[k].qrotate;
-            }
-            bf++;
+            int destIdx = int((length - 1) / rate) * rate;
+            int srcIdx = 0;
 
-            for(uint16_t j = 1; j < anim->frames.size(); j++)
+            while(destIdx >= 0)
             {
-                for(uint16_t l = 1; l <= anim->original_frame_rate; l++)
+                srcIdx = destIdx / rate;
+                for(int j = rate - 1; j>0; j--)
                 {
-                    bf->position.setZero();
-                    bf->move.setZero();
-                    bf->command = 0x00;
-                    btScalar lerp = static_cast<btScalar>(l) / anim->original_frame_rate;
-                    btScalar t = 1.0f - lerp;
+                    if(destIdx + j >= length) continue;
 
-                    bf->bone_tags.resize(mesh_count);
+                    btScalar lerp = static_cast<btScalar>(j) / static_cast<btScalar>(rate);
 
-                    bf->center = t * anim->frames[j - 1].center + lerp * anim->frames[j].center;
-
-                    bf->position = t * anim->frames[j - 1].position + lerp * anim->frames[j].position;
-
-                    bf->boundingBox.max = t * anim->frames[j - 1].boundingBox.max + lerp * anim->frames[j].boundingBox.max;
-                    bf->boundingBox.min = t * anim->frames[j - 1].boundingBox.min + lerp * anim->frames[j].boundingBox.min;
+                    anim->frames[destIdx + j].center = anim->frames[srcIdx].center.lerp(anim->frames[srcIdx + 1].center, lerp);
+                    anim->frames[destIdx + j].position = anim->frames[srcIdx].position.lerp(anim->frames[srcIdx + 1].position, lerp);
+                    anim->frames[destIdx + j].boundingBox.max = anim->frames[srcIdx].boundingBox.max.lerp(anim->frames[srcIdx + 1].boundingBox.max, lerp);
+                    anim->frames[destIdx + j].boundingBox.min = anim->frames[srcIdx].boundingBox.min.lerp(anim->frames[srcIdx + 1].boundingBox.min, lerp);
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
-                        bf->bone_tags[k].offset = anim->frames[j - 1].bone_tags[k].offset.lerp(anim->frames[j].bone_tags[k].offset, lerp);
-                        bf->bone_tags[k].qrotate = util::Quat_Slerp(anim->frames[j - 1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].offset = anim->frames[srcIdx].bone_tags[k].offset.lerp(
+                            anim->frames[srcIdx + 1].bone_tags[k].offset, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].qrotate = util::Quat_Slerp(anim->frames[srcIdx].bone_tags[k].qrotate,
+                                                                                          anim->frames[srcIdx + 1].bone_tags[k].qrotate, lerp);
                     }
-                    bf++;
                 }
-            }
+                if(destIdx > 0)
+                {
+                    anim->frames[destIdx] = anim->frames[srcIdx];
+                }
 
-            /*
-             * swap old and new animation bone brames
-             * free old bone frames;
-             */
-            anim->frames = std::move(new_bone_frames);
+                destIdx -= rate;
+            }
         }
     }
 }
@@ -92,7 +79,10 @@ void SkeletalModel::updateTransparencyFlag()
 
 void SkeletalModel::fillSkinnedMeshMap()
 {
-    MeshTreeTag* tree_tag = mesh_tree.data();
+    core::Vertex* v, *rv;
+    MeshTreeTag* tree_tag, *prev_tree_tag;
+
+    tree_tag = mesh_tree.data();
     for(uint16_t i = 0; i < mesh_count; i++, tree_tag++)
     {
         if(!tree_tag->mesh_skin)
@@ -102,10 +92,10 @@ void SkeletalModel::fillSkinnedMeshMap()
 
         tree_tag->mesh_skin->m_matrixIndices.resize(tree_tag->mesh_skin->m_vertices.size());
         core::BaseMesh::MatrixIndex* ch = tree_tag->mesh_skin->m_matrixIndices.data();
-        core::Vertex* v = tree_tag->mesh_skin->m_vertices.data();
+        v = tree_tag->mesh_skin->m_vertices.data();
         for(size_t k = 0; k < tree_tag->mesh_skin->m_vertices.size(); k++, v++, ch++)
         {
-            core::Vertex* rv = tree_tag->mesh_base->findVertex(v->position);
+            rv = tree_tag->mesh_base->findVertex(v->position);
             if(rv != nullptr)
             {
                 ch->i = 0;
@@ -118,7 +108,7 @@ void SkeletalModel::fillSkinnedMeshMap()
                 ch->i = 0;
                 ch->j = 1;
                 auto tv = v->position + tree_tag->offset;
-                MeshTreeTag* prev_tree_tag = mesh_tree.data();
+                prev_tree_tag = mesh_tree.data();
                 for(uint16_t l = 0; l < mesh_count; l++, prev_tree_tag++)
                 {
                     rv = prev_tree_tag->mesh_base->findVertex(tv);

@@ -527,11 +527,6 @@ namespace
 
 void frame(btScalar time)
 {
-    if(time > 0.1)
-    {
-        time = 0.1f;
-    }
-
     engine_frame_time = time;
     fpsCycle(time);
 
@@ -557,17 +552,27 @@ void showDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        gui::drawText(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
-                      ent->m_bf.animations.last_animation,
+        gui::drawText(30.0, 30.0, "curr_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
                       ent->m_bf.animations.current_animation,
-                      ent->m_bf.animations.next_animation,
                       ent->m_bf.animations.last_state,
                       ent->m_bf.animations.next_state,
-                      engine_world.character->m_currentSpeed,
+                      ent->m_currentSpeed,
                       ent->m_bf.animations.current_frame
                       );
+        gui::drawText(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
+                ent->m_bf.animations.lerp_last_animation,
+                ent->m_bf.animations.lerp_last_frame,
+                ent->m_bf.animations.frame_time,
+                ent->m_bf.animations.lerp,
+                ent->m_lerp_last_transform.getOrigin().x(),
+                ent->m_lerp_last_transform.getOrigin().y(),
+                ent->m_lerp_last_transform.getOrigin().z(),
+                ent->m_lerp_curr_transform.getOrigin().x(),
+                ent->m_lerp_curr_transform.getOrigin().y(),
+                ent->m_lerp_curr_transform.getOrigin().z()
+                );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2]);
+        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f, entlerp = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2], ent->m_angles[0], ent->m_lerp);
     }
 
     if(last_cont != nullptr)
@@ -643,11 +648,127 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
     }
 }
 
+
+// FIXME: restore/update interp transform
+// This is a kludge to interpolate Entity->m_transform (for rendering/bone updates),
+// but also keep it in sync for the entity's frame actions:
+void restoreEntityLerpTransforms()
+{
+    if(engine_world.character)
+    {
+        if(engine_world.character->m_lerp_valid)
+        {
+            engine_world.character->m_transform = engine_world.character->m_lerp_curr_transform;
+        }
+        engine_world.character->m_lerp_last_transform = engine_world.character->m_transform;
+    }
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        std::shared_ptr<world::Entity> entity = entityPair.second;
+        if(entity->m_enabled)
+        {
+            if(entity->m_lerp_valid)
+            {
+                entity->m_transform = entity->m_lerp_curr_transform;
+            }
+            entity->m_lerp_last_transform = entity->m_transform;
+        }
+    }
+    return;
+}
+void storeEntityLerpTransforms()
+{
+    if(engine_world.character)
+    {
+        if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+        {
+            engine_world.character->m_lerp_curr_transform = engine_world.character->m_transform;
+            engine_world.character->m_lerp_valid = true;
+            engine_world.character->m_lerp = 0.0f;
+
+            if(engine_world.character->m_lerp_skip)
+            {
+                engine_world.character->m_bf.animations.lerp_last_animation = engine_world.character->m_bf.animations.current_animation;
+                engine_world.character->m_bf.animations.lerp_last_frame = engine_world.character->m_bf.animations.current_frame;
+                engine_world.character->m_lerp_last_transform = engine_world.character->m_lerp_curr_transform;
+                engine_world.character->m_lerp_skip = false;
+            }
+
+            // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
+            btScalar tmp = engine_world.character->m_bf.animations.lerp;
+            engine_world.character->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
+            engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf);
+            engine_world.character->updateRigidBody(false);
+            engine_world.character->ghostUpdate();
+            engine_world.character->m_bf.animations.lerp = tmp;
+
+        }
+    }
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        std::shared_ptr<world::Entity> entity = entityPair.second;
+        if(entity->m_enabled)
+        {
+            if(!(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+            {
+                entity->m_lerp_curr_transform = entity->m_transform;
+                entity->m_lerp_valid = true;
+                entity->m_lerp = 0.0f;
+
+                if(entity->m_lerp_skip)
+                {
+                    entity->m_bf.animations.lerp_last_animation = entity->m_bf.animations.current_animation;
+                    entity->m_bf.animations.lerp_last_frame = entity->m_bf.animations.current_frame;
+                    entity->m_lerp_last_transform = entity->m_lerp_curr_transform;
+                    entity->m_lerp_skip = false;
+                }
+
+                btScalar tmp = entity->m_bf.animations.lerp;
+                entity->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
+                entity->updateCurrentBoneFrame(&entity->m_bf);
+                entity->updateRigidBody(false);
+                entity->ghostUpdate();
+                entity->m_bf.animations.lerp = tmp;
+            }
+        }
+    }
+    return;
+}
+
+
 /**
- * update current room of bullet object
+ * Pre-physics step callback
+ */
+void internalPreTickCallback(btDynamicsWorld * world, btScalar timeStep)
+{
+    btScalar engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = timeStep;
+    restoreEntityLerpTransforms();
+
+    engine_lua.doTasks(timeStep);
+    Game_UpdateAI();
+    audio::update();
+
+    if(engine_world.character)
+    {
+        engine_world.character->frame(timeStep);
+    }
+    for(const auto& entPair : engine_world.entity_tree)
+    {
+        entPair.second->frame(timeStep);
+    }
+
+    storeEntityLerpTransforms();
+    engine_frame_time = engine_frame_time_backup;
+    return;
+}
+
+/**
+ * Post-physics step callback
  */
 void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
 {
+    // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
         assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
@@ -664,6 +785,7 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             }
         }
     }
+    return;
 }
 
 void initDefaultGlobals()
@@ -734,6 +856,7 @@ void initBullet()
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
     bt_engine_dynamicsWorld->setInternalTickCallback(internalTickCallback);
+    bt_engine_dynamicsWorld->setInternalTickCallback(internalPreTickCallback, 0, true);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);

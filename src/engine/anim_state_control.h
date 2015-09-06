@@ -39,12 +39,6 @@ namespace
 }
 
 
-// Animation control flags
-
-#define ANIM_NORMAL_CONTROL  (0)
-#define ANIM_LOOP_LAST_FRAME (1)
-#define ANIM_LOCK            (2) // Animation will be locked once and for all.
-
 // Surface movement directions
 
 #define ENT_STAY 0x00000000
@@ -715,7 +709,7 @@ namespace
 //   ====== ANIMATION COMMANDS ======
 
 #define TR_ANIMCOMMAND_SETPOSITION  1
-#define TR_ANIMCOMMAND_JUMPDISTANCE 2
+#define TR_ANIMCOMMAND_SETVELOCITY  2
 #define TR_ANIMCOMMAND_EMPTYHANDS   3
 #define TR_ANIMCOMMAND_KILL         4
 #define TR_ANIMCOMMAND_PLAYSOUND    5

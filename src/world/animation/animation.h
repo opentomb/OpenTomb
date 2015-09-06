@@ -13,6 +13,7 @@ namespace world
 {
 struct Character;
 struct SkeletalModel;
+struct Entity;
 
 namespace core
 {
@@ -27,6 +28,12 @@ enum class AnimUpdate
     None,
     NewFrame,
     NewAnim
+};
+
+struct AnimCommand
+{
+    int cmdId;
+    int param[3];
 };
 
 /*
@@ -112,14 +119,12 @@ struct BoneTag
  */
 struct BoneFrame
 {
-    uint16_t            command;
-    std::vector<BoneTag> bone_tags;
-    btVector3 position;
-    core::BoundingBox boundingBox;
-    btVector3 center;
-    btVector3 move;                                                // move command data
-    btScalar v_Vertical;                                             // jump command data
-    btScalar v_Horizontal;                                           // jump command data
+    std::vector<BoneTag> bone_tags;                 // bones data
+    btVector3            position;                       // position (base offset)
+    core::BoundingBox    boundingBox;
+    btVector3            center;                    // bounding box centre
+
+    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
 /*
@@ -142,6 +147,8 @@ struct AnimationFrame
 
     AnimationFrame   *next_anim;              // Next default animation
     int                         next_frame;             // Next default frame
+
+    std::vector<AnimCommand> animCommands; // cmds for end-of-anim
 
     StateChange* findStateChangeByAnim(int state_change_anim)
     {
@@ -176,27 +183,40 @@ struct AnimationFrame
     }
 };
 
+enum class SSAnimationMode
+{
+    NormalControl,
+    LoopLastFrame,
+    WeaponCompat,
+    Locked
+};
+
 struct SSAnimation
 {
     int16_t                     last_state = 0;
     int16_t                     next_state = 0;
-    int16_t                     last_animation = 0;
     int16_t                     current_animation = 0;                              //
-    int16_t                     next_animation = 0;                                 //
-    //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+                                                                                    //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t                     current_frame = 0;                                  //
-    int16_t                     next_frame = 0;                                     //
 
-    uint16_t                    anim_flags = 0;                                     // additional animation control param
+    SSAnimationMode mode = SSAnimationMode::NormalControl;
 
-    btScalar                    period = 1.0f / 30;                                 // one frame change period
-    btScalar                    frame_time = 0;                                     // current time
+    btScalar                    period = 1.0f / 30.0f;                              // one frame change period
+    btScalar                    frame_time = 0;                                     // time in current frame
+
+                                                                                    // lerp:
     btScalar                    lerp = 0;
+    int16_t                     lerp_last_animation = 0;
+    int16_t                     lerp_last_frame = 0;
 
-    void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
+    void(*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
+
+    void setAnimation(int animation, int frame = 0, int another_model = -1);
+    bool findStateChange(uint32_t stateid, uint16_t& animid_out, uint16_t& frameid_inout);
+    AnimUpdate stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
 };
 
 struct SSBoneTag

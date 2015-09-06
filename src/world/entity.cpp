@@ -695,8 +695,6 @@ void Entity::updateTransform()
     m_angles[2] = util::wrapAngle(m_angles[2]);
 
     m_transform.getBasis().setEulerZYX(m_angles[1] * util::RadPerDeg, m_angles[2] * util::RadPerDeg, m_angles[0] * util::RadPerDeg);
-
-    fixPenetrations(nullptr);
 }
 
 void Entity::updateCurrentSpeed(bool zeroVz)
@@ -746,42 +744,28 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->lerp = 0.0;
         ss_anim->current_animation = 0;
         ss_anim->current_frame = 0;
-        ss_anim->next_animation = 0;
-        ss_anim->next_frame = 0;
         ss_anim->period = 1.0f / TR_FRAME_RATE;
     }
 }
 
-void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransform* etr)
+void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf)
 {
     animation::SSBoneTag* btag = bf->bone_tags.data();
     animation::BoneTag* src_btag, *next_btag;
     SkeletalModel* model = bf->animations.model;
-    animation::BoneFrame* curr_bf, *next_bf;
+    animation::BoneFrame* last_bf, *next_bf;
 
-    next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
-    curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
+    next_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
+    last_bf = &model->animations[bf->animations.lerp_last_animation].frames[bf->animations.lerp_last_frame];
 
-    btVector3 tr, cmd_tr;
-    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
-    {
-        tr = etr->getBasis() * curr_bf->move;
-        cmd_tr = tr * bf->animations.lerp;
-    }
-    else
-    {
-        tr.setZero();
-        cmd_tr.setZero();
-    }
-
-    bf->boundingBox.max = curr_bf->boundingBox.max.lerp(next_bf->boundingBox.max, bf->animations.lerp) + cmd_tr;
-    bf->boundingBox.min = curr_bf->boundingBox.min.lerp(next_bf->boundingBox.min, bf->animations.lerp) + cmd_tr;
-    bf->center = curr_bf->center.lerp(next_bf->center, bf->animations.lerp) + cmd_tr;
-    bf->position = curr_bf->position.lerp(next_bf->position, bf->animations.lerp) + cmd_tr;
+    bf->boundingBox.max = last_bf->boundingBox.max.lerp(next_bf->boundingBox.max, bf->animations.lerp);
+    bf->boundingBox.min = last_bf->boundingBox.min.lerp(next_bf->boundingBox.min, bf->animations.lerp);
+    bf->center = last_bf->center.lerp(next_bf->center, bf->animations.lerp);
+    bf->position = last_bf->position.lerp(next_bf->position, bf->animations.lerp);
 
     next_btag = next_bf->bone_tags.data();
-    src_btag = curr_bf->bone_tags.data();
-    for(uint16_t k = 0; k < curr_bf->bone_tags.size(); k++, btag++, src_btag++, next_btag++)
+    src_btag = last_bf->bone_tags.data();
+    for(uint16_t k = 0; k < last_bf->bone_tags.size(); k++, btag++, src_btag++, next_btag++)
     {
         btag->offset = src_btag->offset.lerp(next_btag->offset, bf->animations.lerp);
         btag->transform.getOrigin() = btag->offset;
@@ -800,9 +784,9 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
             {
                 if((ov_anim->model != nullptr) && ov_anim->model->mesh_tree[k].replace_anim)
                 {
-                    animation::BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
-                    animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
-                    ov_src_btag = &ov_curr_bf->bone_tags[k];
+                    animation::BoneFrame* ov_last_bf = &ov_anim->model->animations[ov_anim->lerp_last_animation].frames[ov_anim->lerp_last_frame];
+                    animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
+                    ov_src_btag = &ov_last_bf->bone_tags[k];
                     ov_next_btag = &ov_next_bf->bone_tags[k];
                     ov_lerp = ov_anim->lerp;
                     break;
@@ -819,7 +803,7 @@ void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf, const btTransfor
     btag = bf->bone_tags.data();
     btag->full_transform = btag->transform;
     btag++;
-    for(uint16_t k = 1; k < curr_bf->bone_tags.size(); k++, btag++)
+    for(uint16_t k = 1; k < last_bf->bone_tags.size(); k++, btag++)
     {
         btag->full_transform = btag->parent->full_transform * btag->transform;
     }
@@ -830,91 +814,122 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(animation::SSAnimation *ss_anim, animation::AnimUpdate /*changing*/)
+
+/**
+ * Callback to handle anim commands
+ * @param command
+ */
+void Entity::doAnimCommand(const animation::AnimCommand& command)
 {
-    if(engine::engine_world.anim_commands.empty() || (ss_anim->model == nullptr))
+    switch(command.cmdId)
     {
-        return;  // If no anim commands
-    }
-
-    animation::AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
-    if(af->num_anim_commands > 0 && af->num_anim_commands <= 255)
-    {
-        assert(af->anim_command < engine::engine_world.anim_commands.size());
-        int16_t *pointer = &engine::engine_world.anim_commands[af->anim_command];
-
-        for(uint32_t i = 0; i < af->num_anim_commands; i++)
-        {
-            assert(pointer < &engine::engine_world.anim_commands.back());
-            const auto command = *pointer;
-            ++pointer;
-            switch(command)
+        case TR_ANIMCOMMAND_SETPOSITION:    // (tr_x, tr_y, tr_z)
             {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 3; // Parse through 3 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 2; // Parse through 2 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    ///@FIXME: Behaviour is yet to be discovered.
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == static_cast<int>(af->frames.size()) - 1)
-                    {
-                        kill();
-                    }
-
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    if(ss_anim->current_frame == pointer[0])
-                    {
-                        int16_t sound_index = pointer[1] & 0x3FFF;
-
-                        // Quick workaround for TR3 quicksand.
-                        if((getSubstanceState() == Substance::QuicksandConsumed) ||
-                           (getSubstanceState() == Substance::QuicksandShallow))
-                        {
-                            sound_index = 18;
-                        }
-
-                        if(pointer[1] & TR_ANIMCOMMAND_CONDITION_WATER)
-                        {
-                            if(getSubstanceState() == Substance::WaterShallow)
-                                audio::send(sound_index, audio::EmitterType::Entity, m_id);
-                        }
-                        else if(pointer[1] & TR_ANIMCOMMAND_CONDITION_LAND)
-                        {
-                            if(getSubstanceState() != Substance::WaterShallow)
-                                audio::send(sound_index, audio::EmitterType::Entity, m_id);
-                        }
-                        else
-                        {
-                            audio::send(sound_index, audio::EmitterType::Entity, m_id);
-                        }
-                    }
-                    pointer += 2;
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    if(ss_anim->current_frame == pointer[0])
-                    {
-                        uint16_t effect_id = pointer[1] & 0x3FFF;
-                        if(effect_id > 0)
-                            engine_lua.execEffect(effect_id, m_id);
-                    }
-                    pointer += 2;
-                    break;
+                // x=x, y=z, z=-y
+                const btScalar x = btScalar(command.param[0]);
+                const btScalar y = btScalar(command.param[2]);
+                const btScalar z = -btScalar(command.param[1]);
+                btVector3 ofs(x, y, z);
+                m_transform.getOrigin() += m_transform.getBasis() * ofs;
+                m_lerp_skip = true;
             }
-        }
+            break;
+
+        case TR_ANIMCOMMAND_SETVELOCITY:    // (float vertical, float horizontal)
+            {
+                btScalar vert;
+                const btScalar horiz = btScalar(command.param[1]);
+                if(btFuzzyZero(m_vspeed_override))
+                {
+                    vert  = -btScalar(command.param[0]);
+                }
+                else
+                {
+                    vert  = m_vspeed_override;
+                    m_vspeed_override = 0.0f;
+                }
+                jump(vert, horiz);
+            }
+            break;
+
+        case TR_ANIMCOMMAND_EMPTYHANDS:     // ()
+            // This command is used only for Lara.
+            // Reset interaction-blocking
+            break;
+
+        case TR_ANIMCOMMAND_KILL:           // ()
+            // This command is usually used only for non-Lara items,
+            // although there seem to be Lara-anims with this cmd id (tr4 anim 415, shotgun overlay)
+            // TODO: for switches, this command indicates the trigger-frame
+            if(!isPlayer())
+            {
+                kill();
+            }
+            break;
+
+        case TR_ANIMCOMMAND_PLAYSOUND:      // (sndParam)
+            {
+                int16_t sound_index = command.param[0] & 0x3FFF;
+
+                // Quick workaround for TR3 quicksand.
+                if((getSubstanceState() == Substance::QuicksandConsumed) ||
+                   (getSubstanceState() == Substance::QuicksandShallow))
+                {
+                    sound_index = 18;
+                }
+
+                if(command.param[0] & TR_ANIMCOMMAND_CONDITION_WATER)
+                {
+                    if(getSubstanceState() == Substance::WaterShallow)
+                        audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                }
+                else if(command.param[0] & TR_ANIMCOMMAND_CONDITION_LAND)
+                {
+                    if(getSubstanceState() != Substance::WaterShallow)
+                        audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                }
+                else
+                {
+                    audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                }
+            }
+            break;
+
+        case TR_ANIMCOMMAND_PLAYEFFECT:     // (flipeffectParam)
+            {
+                const uint16_t effect_id = command.param[0] & 0x3FFF;
+                if(effect_id == 0)  // rollflip
+                {
+                    // FIXME: wrapping angles are bad for quat lerp:
+                    m_angles[0] += 180.0;
+
+                    if(m_moveType == MoveType::Underwater)
+                    {
+                        m_angles[1] = -m_angles[1];                         // for underwater case
+                    }
+                    if(m_dirFlag == ENT_MOVE_BACKWARD)
+                    {
+                        m_dirFlag = ENT_MOVE_FORWARD;
+                    }
+                    else if(m_dirFlag == ENT_MOVE_FORWARD)
+                    {
+                        m_dirFlag = ENT_MOVE_BACKWARD;
+                    }
+                    updateTransform();
+                    m_lerp_skip = true;
+                }
+                else
+                {
+                    engine_lua.execEffect(effect_id, m_id);
+                }
+            }
+            break;
+
+        default:
+            // Unknown command
+            break;
     }
+    return;
 }
 
 void Entity::processSector()
@@ -953,42 +968,14 @@ void Entity::processSector()
 
 void Entity::setAnimation(int animation, int frame, int another_model)
 {
-    if(!m_bf.animations.model || animation >= static_cast<int>(m_bf.animations.model->animations.size()))
-    {
-        return;
-    }
+    m_bf.animations.setAnimation(animation, frame, another_model);
 
-    animation = (animation < 0) ? (0) : (animation);
     m_bt.no_fix_all = false;
 
-    if(another_model >= 0)
-    {
-        SkeletalModel* model = engine::engine_world.getModelByID(another_model);
-        if(!model || animation >= static_cast<int>(model->animations.size()))
-            return;
-        m_bf.animations.model = model;
-    }
-
-    animation::AnimationFrame* anim = &m_bf.animations.model->animations[animation];
-
-    m_bf.animations.lerp = 0.0;
-    frame %= anim->frames.size();
-    frame = (frame >= 0) ? (frame) : static_cast<int>(anim->frames.size() - 1 + frame);
-    m_bf.animations.period = 1.0f / TR_FRAME_RATE;
-
-    m_bf.animations.last_state = anim->state_id;
-    m_bf.animations.next_state = anim->state_id;
-    m_bf.animations.current_animation = animation;
-    m_bf.animations.current_frame = frame;
-    m_bf.animations.next_animation = animation;
-    m_bf.animations.next_frame = frame;
-
-    //long int t = (bf.animations.frame_time) / bf.animations.period;
-    //btScalar dt = bf.animations.frame_time - (btScalar)t * bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period;// + dt;
-
-    updateCurrentBoneFrame(&m_bf, &m_transform);
-    updateRigidBody(false);
+    // some items (jeep) need this here...
+    updateCurrentBoneFrame(&m_bf);
+//    updateRigidBody(false);
+    return;
 }
 
 int Entity::getAnimDispatchCase(uint32_t id)
@@ -1015,180 +1002,118 @@ int Entity::getAnimDispatchCase(uint32_t id)
     return -1;
 }
 
-/*
- * Next frame and next anim calculation function.
- */
-void Entity::getNextFrame(animation::SSBoneFrame *bf, btScalar time, animation::StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+
+// ----------------------------------------
+void Entity::slerpBones(btScalar lerp)
 {
-    animation::AnimationFrame* curr_anim = &bf->animations.model->animations[bf->animations.current_animation];
-
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
-    *frame = (*frame >= 0.0f) ? (*frame) : (0.0f);                                    // paranoid checking
-    *anim = bf->animations.current_animation;
-
-    /*
-     * Flag has a highest priority
-     */
-    if(anim_flags == ANIM_LOOP_LAST_FRAME)
+    for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
-        if(*frame >= static_cast<int>(curr_anim->frames.size() - 1))
-        {
-            *frame = curr_anim->frames.size() - 1;
-            *anim = bf->animations.current_animation;                          // paranoid dublicate
-        }
-        return;
+        // TODO: should we have independent timing for overlay animations?
+        ss_anim->lerp = lerp;
+        ss_anim->frame_time = m_bf.animations.frame_time;
     }
-    else if(anim_flags == ANIM_LOCK)
-    {
-        *frame = 0;
-        *anim = bf->animations.current_animation;
-        return;
-    }
-
-    /*
-     * Check next anim if frame >= frames.size()
-     */
-    if(*frame >= static_cast<int>(curr_anim->frames.size()))
-    {
-        if(curr_anim->next_anim)
-        {
-            *frame = curr_anim->next_frame;
-            *anim = curr_anim->next_anim->id;
-            return;
-        }
-
-        *frame %= curr_anim->frames.size();
-        *anim = bf->animations.current_animation;                             // paranoid dublicate
-        return;
-    }
-
-    /*
-     * State change check
-     */
-    if(stc != nullptr)
-    {
-        animation::AnimDispatch* disp = stc->anim_dispatch.data();
-        for(uint16_t i = 0; i < stc->anim_dispatch.size(); i++, disp++)
-        {
-            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
-            {
-                *anim = disp->next_anim;
-                *frame = disp->next_frame;
-                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames.size();
-                return;                                                         // anim was changed
-            }
-        }
-    }
+    m_bf.animations.lerp = lerp;
+    updateCurrentBoneFrame(&m_bf);
+    return;
 }
 
-void Entity::doAnimMove(int16_t *anim, int16_t *frame)
+void Entity::lerpTransform(btScalar lerp)
 {
-    if(m_bf.animations.model != nullptr)
+    if(m_lerp_valid)
     {
-        animation::AnimationFrame* curr_af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-        animation::BoneFrame* curr_bf = &curr_af->frames[m_bf.animations.current_frame];
-
-        if(curr_bf->command & ANIM_CMD_JUMP)
-        {
-            jump(-curr_bf->v_Vertical, curr_bf->v_Horizontal);
-        }
-        if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
-        {
-            m_angles[0] += 180.0;
-            if(m_moveType == MoveType::Underwater)
-            {
-                m_angles[1] = -m_angles[1];                         // for underwater case
-            }
-            if(m_dirFlag == ENT_MOVE_BACKWARD)
-            {
-                m_dirFlag = ENT_MOVE_FORWARD;
-            }
-            else if(m_dirFlag == ENT_MOVE_FORWARD)
-            {
-                m_dirFlag = ENT_MOVE_BACKWARD;
-            }
-            updateTransform();
-            setAnimation(curr_af->next_anim->id, curr_af->next_frame);
-            *anim = m_bf.animations.current_animation;
-            *frame = m_bf.animations.current_frame;
-        }
-        if(curr_bf->command & ANIM_CMD_MOVE)
-        {
-            btVector3 tr = m_transform.getBasis() * curr_bf->move;
-            m_transform.getOrigin() += tr;
-        }
+        btQuaternion q,quatLast,quatCurr;
+        quatLast = m_lerp_last_transform.getRotation();
+        quatCurr = m_lerp_curr_transform.getRotation();
+        q = util::Quat_Slerp(quatLast, quatCurr, lerp);
+        m_transform.setRotation(q);
+        m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
     }
+    return;
 }
 
-/**
- * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
- */
- ///@TODO: rewrite as a cycle through all bf.animations list
-animation::AnimUpdate Entity::frame(btScalar time)
+void Entity::updateInterpolation(btScalar time)
 {
-    int16_t frame, anim;
-    long int t;
-    btScalar dt;
-    animation::StateChange* stc;
-    animation::SSAnimation* ss_anim;
+    if(!(m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    {
+        // Bone animation interp:
+        btScalar lerp;
+        lerp = m_bf.animations.lerp;
+        slerpBones(lerp);
+        lerp += time / m_bf.animations.period;
+        if( lerp > 1.0 )
+        {
+            lerp = 1.0;
+        }
+        m_bf.animations.lerp = lerp;
+
+        // Entity transform interp:
+        lerpTransform(m_lerp);
+        m_lerp += time / GAME_LOGIC_REFRESH_INTERVAL;
+        if( m_lerp > 1.0 )
+        {
+            m_lerp = 1.0;
+        }
+    }
+    return;
+}
+
+animation::AnimUpdate Entity::stepAnimation(btScalar time)
+{
+    animation::AnimUpdate stepResult = animation::AnimUpdate::None;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
         return animation::AnimUpdate::None;
     }
-
-    if(m_bf.animations.anim_flags & ANIM_LOCK)
+    if(m_bf.animations.mode == animation::SSAnimationMode::Locked)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
-    ss_anim = &m_bf.animations;
+    stepResult = m_bf.animations.stepAnimation(time, this);
 
-    ghostUpdate();
+//    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
-    m_bf.animations.lerp = 0.0;
-    stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
-    getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.anim_flags);
-
-    animation::AnimUpdate ret = animation::AnimUpdate::None;
-    if(m_bf.animations.current_animation != anim)
-    {
-        m_bf.animations.last_animation = m_bf.animations.current_animation;
-
-        ret = animation::AnimUpdate::NewAnim;
-        doAnimCommands(&m_bf.animations, ret);
-        doAnimMove(&anim, &frame);
-
-        setAnimation(anim, frame);
-        stc = m_bf.animations.model->animations[m_bf.animations.current_animation].findStateChangeByID(m_bf.animations.next_state);
-    }
-    else if(m_bf.animations.current_frame != frame)
-    {
-        if(m_bf.animations.current_frame == 0)
-        {
-            m_bf.animations.last_animation = m_bf.animations.current_animation;
-        }
-
-        ret = animation::AnimUpdate::NewFrame;
-        doAnimCommands(&m_bf.animations, ret);
-        doAnimMove(&anim, &frame);
-    }
-
-    // AnimationFrame* af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
-    m_bf.animations.frame_time += time;
-
-    t = (m_bf.animations.frame_time) / m_bf.animations.period;
-    dt = m_bf.animations.frame_time - static_cast<btScalar>(t) * m_bf.animations.period;
-    m_bf.animations.frame_time = static_cast<btScalar>(frame) * m_bf.animations.period + dt;
-    m_bf.animations.lerp = dt / m_bf.animations.period;
-    getNextFrame(&m_bf, m_bf.animations.period, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
-
-    frameImpl(time, frame, ret);
-
-    updateCurrentBoneFrame(&m_bf, &m_transform);
+    updateCurrentBoneFrame(&m_bf);
     fixPenetrations(nullptr);
 
-    return ret;
+    return stepResult;
 }
+
+/**
+ * Entity framestep actions
+ * @param time      frame time
+ */
+void Entity::frame(btScalar time)
+{
+    if(!m_enabled )
+    {
+        return;
+    }
+    if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    {
+        // Ragdoll
+        updateRigidBody(false); // bbox update, room update, m_transform from btBody...
+        return;
+    }
+
+    fixPenetrations(nullptr);
+    processSector();    // triggers
+    engine_lua.loopEntity(id());
+
+    if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
+        checkCollisionCallbacks();
+
+    stepAnimation(time);
+
+    // TODO: check rigidbody update requirements.
+    //       If m_transform changes, rigid body must be updated regardless of anim frame change...
+    //if(animStepResult != ENTITY_ANIM_NONE)
+    //{ }
+    updateCurrentBoneFrame(&m_bf);
+    updateRigidBody(false);
+    return;
+}
+
 
 /**
  * The function rebuild / renew entity's BV
@@ -1267,6 +1192,12 @@ Entity::Entity(uint32_t id)
     , m_self(std::make_shared<engine::EngineContainer>())
 {
     m_transform.setIdentity();
+
+    m_lerp_last_transform = m_lerp_curr_transform = m_transform;
+    m_lerp_valid = false;
+    m_lerp_skip = false;
+    m_lerp = 0.0f;
+
     m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;
     m_self->room = nullptr;
@@ -1289,8 +1220,6 @@ Entity::Entity(uint32_t id)
     m_bf.animations.lerp = 0.0;
     m_bf.animations.current_animation = 0;
     m_bf.animations.current_frame = 0;
-    m_bf.animations.next_animation = 0;
-    m_bf.animations.next_frame = 0;
     m_bf.animations.next = nullptr;
     m_bf.bone_tags.clear();
     m_bf.boundingBox.max.setZero();
@@ -1375,7 +1304,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup bodies.
     m_bt.bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity::updateCurrentBoneFrame(&m_bf, &m_transform);
+    Entity::updateCurrentBoneFrame(&m_bf);
     m_bt.no_fix_all = false;
     m_bt.no_fix_body_parts = 0x00000000;
 #if 0
