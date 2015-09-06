@@ -235,18 +235,6 @@ setModelCollisionMap(0, 12, 6);
 setModelCollisionMap(0, 13, 10);            -- braces 3
 setModelCollisionMap(0, 14, 13);
 
-setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -2, 0x03);
-
-if(getEngineVersion() >= Engine.II) then
-    setAnimCommandTransform(0, 205,  1, 0x00);
-    setAnimCommandTransform(0, 203, -2, 0x03);
-end
-
--- Fix for reach jump height (was hardcoded in originals)
-
-setAnimVerticalSpeed(0, 26, -1, -116);
-
 -- Generate UV rotation texture animations for waterfalls in TR4+ versions
 
 if (getEngineVersion() == Engine.IV) then

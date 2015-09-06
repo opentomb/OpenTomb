@@ -1,5 +1,6 @@
 #include "inventory.h"
 
+#include "gui/gui.h"
 #include "script/script.h"
 #include "strings.h"
 #include "util/vmath.h"
@@ -454,12 +455,12 @@ void InventoryManager::render()
                     }
                 }
                 util::Mat4_RotateZ(matrix, 90.0f + m_itemAngle - ang);
-                gui::Item_Frame(bi->bf.get(), 0.0f);                            // here will be time != 0 for using items animation
+                gui::itemFrame(bi->bf.get(), 0.0f);                            // here will be time != 0 for using items animation
             }
             else
             {
                 util::Mat4_RotateZ(matrix, 90.0f - ang);
-                gui::Item_Frame(bi->bf.get(), 0.0f);
+                gui::itemFrame(bi->bf.get(), 0.0f);
             }
             util::Mat4_Translate(matrix, -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2]);
             util::Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);

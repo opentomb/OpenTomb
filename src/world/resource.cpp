@@ -1352,7 +1352,7 @@ void Res_Sector_FixHeights(RoomSector* sector)
     }
 }
 
-void GenerateAnimCommandsTransform(SkeletalModel* model)
+void GenerateAnimCommands(SkeletalModel* model)
 {
     if(engine::engine_world.anim_commands.empty())
     {
@@ -1379,41 +1379,49 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
             ++pointer;
             switch(command)
             {
+                /*
+                 * End-of-anim commands:
+                 */
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    af->frames[af->frames.size() - 1].move[0] = static_cast<btScalar>(pointer[0]);                          // x = x;
-                    af->frames[af->frames.size() - 1].move[2] = -static_cast<btScalar>(pointer[1]);                          // z =-y
-                    af->frames[af->frames.size() - 1].move[1] = static_cast<btScalar>(pointer[2]);                          // y = z
-                    af->frames[af->frames.size() - 1].command |= ANIM_CMD_MOVE;
-                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
+                    af->animCommands.push_back({command, pointer[0], pointer[1], pointer[2]});
+                    // ConsoleInfo::instance().printf("ACmd MOVE: anim = %d, x = %d, y = %d, z = %d", static_cast<int>(anim), pointer[0], pointer[1], pointer[2]);
                     pointer += 3;
                     break;
 
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames.size() - 1].v_Vertical = pointer[0];
-                    af->frames[af->frames.size() - 1].v_Horizontal = pointer[1];
-                    af->frames[af->frames.size() - 1].command |= ANIM_CMD_JUMP;
+                case TR_ANIMCOMMAND_SETVELOCITY:
+                    af->animCommands.push_back({command, pointer[0], pointer[1], 0});
+                    // ConsoleInfo::instance().printf("ACmd JUMP: anim = %d, vVert = %d, vHoriz = %d", static_cast<int>(anim), pointer[0], pointer[1]);
                     pointer += 2;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
+                    af->animCommands.push_back({command, 0, 0, 0});
+                    // ConsoleInfo::instance().printf("ACmd EMTYHANDS: anim = %d", static_cast<int>(anim));
                     break;
 
                 case TR_ANIMCOMMAND_KILL:
+                    af->animCommands.push_back({command, 0, 0, 0});
+                    // ConsoleInfo::instance().printf("ACmd KILL: anim = %d", static_cast<int>(anim));
                     break;
 
+                /*
+                 * Per frame commands:
+                 */
                 case TR_ANIMCOMMAND_PLAYSOUND:
+                    if(pointer[0] < af->frames.size())
+                    {
+                        af->frames[pointer[0]].animCommands.push_back({command, pointer[1], 0, 0});
+                    }
+                    // ConsoleInfo::instance().printf("ACmd PLAYSOUND: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                     pointer += 2;
                     break;
 
                 case TR_ANIMCOMMAND_PLAYEFFECT:
-                    switch(pointer[1] & 0x3FFF)
+                    if(pointer[0] < af->frames.size())
                     {
-                        case TR_EFFECT_CHANGEDIRECTION:
-                            af->frames[pointer[0]].command |= ANIM_CMD_CHANGE_DIRECTION;
-                            Console::instance().printf("ROTATE: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
-                            break;
+                        af->frames[pointer[0]].animCommands.push_back({command, pointer[1], 0, 0});
                     }
+//                    ConsoleInfo::instance().printf("ACmd FLIPEFFECT: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                     pointer += 2;
                     break;
             }
@@ -3106,10 +3114,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         bone_frame->bone_tags.resize(model->mesh_count);
 
         bone_frame->position.setZero();
-        bone_frame->move.setZero();
-        bone_frame->v_Horizontal = 0.0;
-        bone_frame->v_Vertical = 0.0;
-        bone_frame->command = 0x00;
         for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
         {
             tree_tag = &model->mesh_tree[k];
@@ -3167,14 +3171,27 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
+//        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
+        // FIXME: number of frames is always (frame_end - frame_start + 1)
+        // this matters for transitional anims, which run through their frame length with the same anim frame.
+        // This should ideally be solved without filling identical frames,
+        // but due to the amount of currFrame-indexing, waste dummy frames for now:
+        // (I haven't seen this for framerate==1 animation, but it would be possible,
+        //  also, resizing now saves re-allocations in interpolateFrames later)
+        anim->frames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
+
+        int numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
+        if(numFrameData > anim->frames.size()) {
+            numFrameData = anim->frames.size();
+        }
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
         // Parse AnimCommands
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
         // See http://evpopov.com/dl/TR4format.html#Animations for details.
-
+        // FIXME: This is done here only to adjust relative frame indices
+        //        see GenerateAnimCommands()
         if((anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255))
         {
             // Calculate current animation anim command block offset.
@@ -3199,7 +3216,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                         pointer += 3;
                         break;
 
-                    case TR_ANIMCOMMAND_JUMPDISTANCE:
+                    case TR_ANIMCOMMAND_SETVELOCITY:
                         // Parse through 2 operands.
                         pointer += 2;
                         break;
@@ -3224,10 +3241,14 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
          */
         bone_frame = anim->frames.data();
         for(uint16_t j = 0; j < anim->frames.size(); j++, bone_frame++, frame_offset += frame_step)
+//        for(uint16_t j = 0; j < numFrameData; j++, bone_frame++, frame_offset += frame_step)
         {
+            // !Need bonetags in empty frames:
             bone_frame->bone_tags.resize(model->mesh_count);
+
+            if(j >= numFrameData) continue; // only create bone_tags for rate>1 fill-frames
+
             bone_frame->position.setZero();
-            bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->m_frameData.size())
@@ -3327,7 +3348,6 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
     /*
      * state change's loading
      */
-
 #if LOG_ANIM_DISPATCHES
     if(model->animations.size() > 1)
     {
@@ -3395,8 +3415,18 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
                         uint16_t low = tr_adisp->low - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low = low  % anim->frames.size();
-                        adsp->frame_high = (high - 1) % anim->frames.size();
+                        // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
+                        // secifically fall anims (75,77 etc), which may fail to change state),
+                        // And: if theses values are > framesize, then they're probably faulty and won't be fixed by modulo anyway:
+//                        adsp->frame_low = low  % anim->frames.size();
+//                        adsp->frame_high = (high - 1) % anim->frames.size();
+                        if(low > anim->frames.size() || high > anim->frames.size())
+                        {
+                            //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
+                            Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
+                        }
+                        adsp->frame_low = low;
+                        adsp->frame_high = high;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 
@@ -3410,7 +3440,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             }
         }
     }
-    GenerateAnimCommandsTransform(model);
+    GenerateAnimCommands(model);
 }
 
 size_t TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind)

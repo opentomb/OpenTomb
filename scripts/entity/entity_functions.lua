@@ -651,7 +651,7 @@ end
 function boulder_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
-    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityAnimFlag(id, AnimMode.Locked);
     setEntityActivity(id, false);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -670,7 +670,7 @@ end
 function dart_init(id)  -- TR1 dart / TR2 flying disks
 
     setEntityTypeFlag(id, ENTITY_TYPE_COLLCHECK);
-    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityAnimFlag(id, AnimMode.Locked);
     
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, true);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_ROOMCOLLISION, true);
@@ -779,7 +779,7 @@ function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
-    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityAnimFlag(id, AnimMode.Locked);
     setEntityActivity(id, false);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -1810,7 +1810,7 @@ function snake_init(id)
         if(entity_funcs[object_id].disturbed) then
             local speed_Lara = getEntitySpeedLinear(player);
         
-            setEntityAnimFlag(object_id, ANIM_NORMAL_CONTROL);  -- Unfreeze anim
+            setEntityAnimFlag(object_id, AnimMode.NormalControl);  -- Unfreeze anim
             
             setEntityState(object_id, 0);   -- Protect
             rotateEntityToEntity(object_id, player, 0, 1.5, true, -20.0);
@@ -1849,7 +1849,7 @@ function snake_init(id)
             setEntityState(object_id, 3);   -- Suspend
             
             local a,f,c = getEntityAnim(object_id);
-            if(f == 45) then setEntityAnimFlag(object_id, ANIM_LOCK) end; -- Prevent shaking
+            if(f == 45) then setEntityAnimFlag(object_id, AnimMode.Locked) end; -- Prevent shaking
         end;
     end;
     

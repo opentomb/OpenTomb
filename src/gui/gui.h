@@ -611,11 +611,11 @@ void drawNotifier();
 /**
  * General GUI update routines.
  */
-void update();
+bool update();
 void resize();  // Called every resize event.
 
+
+void itemFrame(world::animation::SSBoneFrame *bf, btScalar time);
 void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix);
-void Item_Frame(world::animation::SSBoneFrame *bf, btScalar time);
 
 } // namespace gui
-

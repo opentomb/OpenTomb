@@ -1,5 +1,6 @@
 #pragma once
 
+#include "character_controller.h"
 #include "entity.h"
 #include "hair.h"
 
@@ -15,11 +16,33 @@ struct InventoryNode;
 
 namespace world
 {
+namespace
+{
+// Lara's character behavior constants
+constexpr int   DEFAULT_MAX_MOVE_ITERATIONS             = 3;                              //!< @fixme magic
+constexpr float DEFAULT_MIN_STEP_UP_HEIGHT              = 128.0f;                         //!< @fixme check original
+constexpr float DEFAULT_MAX_STEP_UP_HEIGHT              = 256.0f + 32.0f;                 //!< @fixme check original
+constexpr float DEFAULT_FALL_DOWN_HEIGHT                = 320.0f;                         //!< @fixme check original
+constexpr float DEFAULT_CLIMB_UP_HEIGHT                 = 1920.0f;                        //!< @fixme check original
+constexpr float DEFAULT_CRITICAL_SLANT_Z_COMPONENT      = 0.810f;                         //!< @fixme cos(alpha = 30 deg)
+constexpr float DEFAULT_CRITICAL_WALL_COMPONENT         = -0.707f;                        //!< @fixme cos(alpha = 45 deg)
+constexpr float DEFAULT_CHARACTER_SLIDE_SPEED_MULT      = 75.0f;                          //!< @fixme magic - not like in original
+constexpr float DEFAULT_CHARACTER_CLIMB_R               = 32.0f;
+constexpr float DEFAULT_CHARACTER_WADE_DEPTH            = 256.0f;
+
+constexpr float CHARACTER_BOX_HALF_SIZE = 128.0f;
+constexpr float CHARACTER_BASE_RADIUS = 128.0f;
+constexpr float CHARACTER_BASE_HEIGHT = 512.0f;
+
+//! If less than this much of Lara is looking out of the water, she goes from wading to swimming.
+//! @fixme Guess
+constexpr float DEFAULT_CHARACTER_SWIM_DEPTH = 100.0f;
+} // anonymous namespace
 
 struct CharacterCommand
 {
-    btVector3 rotation = {0,0,0};
-    std::array<int8_t, 3> move{ {0,0,0} };
+    btVector3 rot = { 0,0,0 };
+    std::array<int8_t, 3> move{ { 0,0,0 } };
 
     bool        roll = false;
     bool        jump = false;
@@ -49,7 +72,6 @@ struct CharacterResponse
     bool        killed = false;
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
-    //int8_t      step_up;
     SlideType   slide = SlideType::None;
     LeanType    lean = LeanType::None;
 };
@@ -207,7 +229,7 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    void state_func();
+    int(*state_func)(Character* entity, animation::SSAnimation *ssAnim) = nullptr;
 
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -252,8 +274,10 @@ struct Character : public Entity
     void transferToRoom(Room* /*room*/) override
     {
     }
+
     void updateHair() override;
-    void frameImpl(btScalar time, int16_t frame, animation::AnimUpdate state) override;
+    void frame(btScalar time) override;
+
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override
@@ -288,7 +312,7 @@ struct Character : public Entity
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void lean(btScalar max_lean);
+    void lean(CharacterCommand* cmd, btScalar max_lean);
     btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
     btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 

@@ -612,7 +612,9 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const util::ma
             // Simplification: Always translation matrix, no invert needed
             invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
 
-            util::matrix4 globalFromHair(entity->m_hairs[h]->m_elements[i].body->getWorldTransform() * invOriginToHairModel);
+            btTransform hairWorldTransform;
+            entity->m_hairs[h]->m_elements[i].body->getMotionState()->getWorldTransform(hairWorldTransform);
+            util::matrix4 globalFromHair(hairWorldTransform * invOriginToHairModel);
 
             std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i + 1][0]);
         }

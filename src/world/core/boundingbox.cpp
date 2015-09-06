@@ -19,7 +19,7 @@ btCollisionShape *BT_CSfromBBox(const BoundingBox &boundingBox, bool /*useCompre
 
     OrientedBoundingBox obb;
     obb.rebuild(boundingBox);
-    for(const Polygon& p : obb.base_polygons)
+    for(const core::Polygon& p : obb.base_polygons)
     {
         if(p.isBroken())
         {

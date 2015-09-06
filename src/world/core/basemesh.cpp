@@ -10,7 +10,7 @@ namespace core
 
 void BaseMesh::polySortInMesh()
 {
-    for(Polygon& p : m_polygons)
+    for(Polygon &p : m_polygons)
     {
         if(p.anim_id > 0 && p.anim_id <= engine::engine_world.anim_sequences.size())
         {
@@ -237,9 +237,8 @@ void BaseMesh::genFaces()
         if(p.isBroken())
             continue;
 
-        size_t elementCount = (p.vertices.size() - 2) * 3;
-        if(p.double_side)
-            elementCount *= 2;
+        uint32_t elementCount = (p.vertices.size() - 2) * 3;
+        if(p.double_side) elementCount *= 2;
 
         if(p.anim_id == 0)
         {
@@ -267,14 +266,14 @@ void BaseMesh::genFaces()
     }
 
     m_elements.resize(numNormalElements + m_alphaElements);
-    size_t elementOffset = 0;
-    std::vector<size_t> startPerTexture(m_texturePageCount, 0);
+    uint32_t elementOffset = 0;
+    std::vector<uint32_t> startPerTexture(m_texturePageCount, 0);
     for(uint32_t i = 0; i < m_texturePageCount; i++)
     {
         startPerTexture[i] = elementOffset;
         elementOffset += m_elementsPerTexture[i];
     }
-    size_t startTransparent = elementOffset;
+    uint32_t startTransparent = elementOffset;
 
     m_allAnimatedElements.resize(m_animatedElementCount + m_alphaAnimatedElementCount);
     size_t animatedStart = 0;
@@ -288,8 +287,8 @@ void BaseMesh::genFaces()
         if(p.isBroken())
             continue;
 
-        size_t elementCount = (p.vertices.size() - 2) * 3;
-        size_t backwardsStartOffset = elementCount;
+        uint32_t elementCount = (p.vertices.size() - 2) * 3;
+        uint32_t backwardsStartOffset = elementCount;
         if(p.double_side)
         {
             elementCount *= 2;
@@ -300,7 +299,7 @@ void BaseMesh::genFaces()
             // Not animated
             uint32_t texture = p.tex_index;
 
-            size_t oldStart;
+            uint32_t oldStart;
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = startPerTexture[texture];
@@ -316,26 +315,26 @@ void BaseMesh::genFaces()
                 m_transparentPolygons[transparentPolygonStart].isAnimated = false;
                 transparentPolygonStart += 1;
             }
-            size_t backwardsStart = oldStart + backwardsStartOffset;
+            uint32_t backwardsStart = oldStart + backwardsStartOffset;
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            size_t startElement = addVertex(p.vertices[0]);
-            size_t previousElement = addVertex(p.vertices[1]);
+            uint32_t startElement = addVertex(p.vertices[0]);
+            uint32_t previousElement = addVertex(p.vertices[1]);
 
             for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                size_t thisElement = addVertex(p.vertices[j]);
+                uint32_t thisElement = addVertex(p.vertices[j]);
 
-                m_elements[oldStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
-                m_elements[oldStart + (j - 2) * 3 + 1] = static_cast<GLuint>(previousElement);
-                m_elements[oldStart + (j - 2) * 3 + 2] = static_cast<GLuint>(thisElement);
+                m_elements[oldStart + (j - 2) * 3 + 0] = startElement;
+                m_elements[oldStart + (j - 2) * 3 + 1] = previousElement;
+                m_elements[oldStart + (j - 2) * 3 + 2] = thisElement;
 
                 if(p.double_side)
                 {
-                    m_elements[backwardsStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
-                    m_elements[backwardsStart + (j - 2) * 3 + 1] = static_cast<GLuint>(thisElement);
-                    m_elements[backwardsStart + (j - 2) * 3 + 2] = static_cast<GLuint>(previousElement);
+                    m_elements[backwardsStart + (j - 2) * 3 + 0] = startElement;
+                    m_elements[backwardsStart + (j - 2) * 3 + 1] = thisElement;
+                    m_elements[backwardsStart + (j - 2) * 3 + 2] = previousElement;
                 }
 
                 previousElement = thisElement;
@@ -344,7 +343,7 @@ void BaseMesh::genFaces()
         else
         {
             // Animated
-            size_t oldStart;
+            uint32_t oldStart;
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = animatedStart;
@@ -360,26 +359,26 @@ void BaseMesh::genFaces()
                 m_transparentPolygons[transparentPolygonStart].isAnimated = true;
                 transparentPolygonStart += 1;
             }
-            size_t backwardsStart = oldStart + backwardsStartOffset;
+            uint32_t backwardsStart = oldStart + backwardsStartOffset;
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            size_t startElement = addAnimatedVertex(p.vertices[0]);
-            size_t previousElement = addAnimatedVertex(p.vertices[1]);
+            uint32_t startElement = addAnimatedVertex(p.vertices[0]);
+            uint32_t previousElement = addAnimatedVertex(p.vertices[1]);
 
             for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                size_t thisElement = addAnimatedVertex(p.vertices[j]);
+                uint32_t thisElement = addAnimatedVertex(p.vertices[j]);
 
-                m_allAnimatedElements[oldStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
-                m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = static_cast<GLuint>(previousElement);
-                m_allAnimatedElements[oldStart + (j - 2) * 3 + 2] = static_cast<GLuint>(thisElement);
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 0] = startElement;
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = previousElement;
+                m_allAnimatedElements[oldStart + (j - 2) * 3 + 2] = thisElement;
 
                 if(p.double_side)
                 {
-                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 0] = static_cast<GLuint>(startElement);
-                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 1] = static_cast<GLuint>(thisElement);
-                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 2] = static_cast<GLuint>(previousElement);
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 0] = startElement;
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 1] = thisElement;
+                    m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 2] = previousElement;
                 }
 
                 previousElement = thisElement;
@@ -390,10 +389,11 @@ void BaseMesh::genFaces()
 
 btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useCompression, bool buildBvh, bool is_static)
 {
-    btTriangleMesh *trimesh = new btTriangleMesh;
-
     uint32_t cnt = 0;
-    for(const Polygon &p : mesh->m_polygons)
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btCollisionShape* ret;
+
+    for(const struct Polygon &p : mesh->m_polygons)
     {
         if(p.isBroken())
         {
@@ -416,7 +416,6 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
         return nullptr;
     }
 
-    btCollisionShape* ret;
     if(is_static)
     {
         ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);

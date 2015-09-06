@@ -17,6 +17,53 @@ extern GLfloat cast_ray[6];                                                 // p
 namespace world
 {
 
+namespace
+{
+/**
+ *
+ * @param rs: room sector pointer
+ * @param floor: floor height
+ * @return 0x01: can traverse, 0x00 can not;
+ */
+int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer>& container)
+{
+    btScalar f0 = rs->floor_corners[0][2];
+    if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
+       (rs->floor_corners[2][2] != f0) || (rs->floor_corners[3][2] != f0))
+    {
+        return 0x00;
+    }
+
+    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= MeteringSectorSize))
+    {
+        return 0x01;
+    }
+
+    engine::BtEngineClosestRayResultCallback cb(container);
+    btVector3 from, to;
+    to[0] = from[0] = rs->position[0];
+    to[1] = from[1] = rs->position[1];
+    from[2] = floor + MeteringSectorSize * 0.5f;
+    to[2] = floor - MeteringSectorSize * 0.5f;
+    engine::bt_engine_dynamicsWorld->rayTest(from, to, cb);
+    if(cb.hasHit())
+    {
+        btVector3 v;
+        v.setInterpolate3(from, to, cb.m_closestHitFraction);
+        if(std::abs(v[2] - floor) < 1.1)
+        {
+            engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
+            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            {
+                return 0x01;
+            }
+        }
+    }
+
+    return 0x00;
+}
+} // anonymous namespace
+
 HeightInfo::HeightInfo()
 {
     sp->setMargin(COLLISION_MARGIN_DEFAULT);
@@ -770,14 +817,14 @@ ClimbInfo Character::checkWallsClimbability()
     return ret;
 }
 
-void Character::lean(btScalar max_lean)
+void Character::lean(CharacterCommand* cmd, btScalar max_lean)
 {
-    btScalar neg_lean = 360.0f - max_lean;
-    btScalar lean_coeff = (max_lean == 0.0) ? (48.0f) : (max_lean * 3);
+    btScalar neg_lean = 360.0 - max_lean;
+    btScalar lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3);
 
     // Continously lean character, according to current left/right direction.
 
-    if((m_command.move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
+    if((cmd->move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -793,7 +840,7 @@ void Character::lean(btScalar max_lean)
             }
         }
     }
-    else if(m_command.move[1] == 1) // Right direction
+    else if(cmd->move[1] == 1) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
@@ -805,7 +852,7 @@ void Character::lean(btScalar max_lean)
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff*2) / 2) * engine::engine_frame_time);
+                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine::engine_frame_time);
                 if(m_angles[2] < 180.0) m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
@@ -815,7 +862,7 @@ void Character::lean(btScalar max_lean)
             }
         }
     }
-    else if(m_command.move[1] == -1)     // Left direction
+    else if(cmd->move[1] == -1)     // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
@@ -887,11 +934,11 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
     if(axis > 1) return 0.0;
 
     uint8_t curr_rot_dir = 0;
-    if(m_command.rotation[axis] < 0.0)
+    if(m_command.rot[axis] < 0.0)
     {
         curr_rot_dir = 1;
     }
-    else if(m_command.rotation[axis] > 0.0)
+    else if(m_command.rot[axis] > 0.0)
     {
         curr_rot_dir = 2;
     }
@@ -913,8 +960,7 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
                 else
                 {
                     m_inertiaAngular[axis] += max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] > max_angle)
-                        m_inertiaAngular[axis] = max_angle;
+                    if(m_inertiaAngular[axis] > max_angle) m_inertiaAngular[axis] = max_angle;
                 }
             }
             else
@@ -926,14 +972,13 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
                 else
                 {
                     m_inertiaAngular[axis] -= max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] < -max_angle)
-                        m_inertiaAngular[axis] = -max_angle;
+                    if(m_inertiaAngular[axis] < -max_angle) m_inertiaAngular[axis] = -max_angle;
                 }
             }
         }
     }
 
-    return std::abs(m_inertiaAngular[axis]) * m_command.rotation[axis];
+    return std::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
 }
 
 /*
@@ -942,8 +987,8 @@ btScalar Character::inertiaAngular(btScalar max_angle, btScalar accel, uint8_t a
 int Character::moveOnFloor()
 {
     /*
-     * init height info structure
-     */
+    * init height info structure
+    */
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
@@ -965,8 +1010,8 @@ int Character::moveOnFloor()
     btVector3 speed(0.0, 0.0, 0.0);
 
     /*
-     * check move type
-     */
+    * check move type
+    */
     if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight < position[2])
@@ -986,7 +1031,7 @@ int Character::moveOnFloor()
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
-            //ang = (ang < 0.0)?(ang + 360.0):(ang);
+                                                                                                   //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
                 + floorNormal[1] * m_transform.getBasis().getColumn(1)[1];
             if(t >= 0.0)
@@ -1046,8 +1091,8 @@ int Character::moveOnFloor()
     }
 
     /*
-     * now move normally
-     */
+    * now move normally
+    */
     m_speed = speed;
     btVector3 positionDelta = speed * engine::engine_frame_time;
     const btScalar distance = positionDelta.length();
@@ -1114,8 +1159,8 @@ int Character::freeFalling()
     btVector3& pos = m_transform.getOrigin();
 
     /*
-     * init height info structure
-     */
+    * init height info structure
+    */
 
     m_response.slide = SlideType::None;
     m_response.horizontal_collide = 0x00;
@@ -1229,7 +1274,7 @@ int Character::monkeyClimbing()
     m_speed[2] = 0.0;
 
     m_response.slide = SlideType::None;
-    m_response.lean  = LeanType::None;
+    m_response.lean = LeanType::None;
 
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
@@ -1271,7 +1316,7 @@ int Character::monkeyClimbing()
     updateCurrentHeight();
     pos += move;
     fixPenetrations(&move);                              // get horizontal collide
-    ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
+                                                         ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
     if(m_heightInfo.ceiling_hit && (pos[2] + m_bf.boundingBox.max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
         pos[2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
@@ -1371,7 +1416,7 @@ int Character::climbing()
 
     t = m_currentSpeed * m_speedMult;
     m_response.vertical_collide |= 0x01;
-    m_angles[0] += m_command.rotation[0];
+    m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
@@ -1434,10 +1479,10 @@ int Character::moveUnderWater()
     }
 
     m_response.slide = SlideType::None;
-    m_response.lean  = LeanType::None;
+    m_response.lean = LeanType::None;
 
     m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide   = 0x00;
+    m_response.vertical_collide = 0x00;
 
     // Calculate current speed.
 
@@ -1494,17 +1539,17 @@ int Character::moveOnWater()
     auto& pos = m_transform.getOrigin();
 
     m_response.slide = SlideType::None;
-    m_response.lean  = LeanType::None;
+    m_response.lean = LeanType::None;
 
     m_response.horizontal_collide = 0x00;
-    m_response.vertical_collide   = 0x00;
+    m_response.vertical_collide = 0x00;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_ONWATER, 0);
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
     updateTransform();     // apply rotations
 
-    // Calculate current speed.
+                           // Calculate current speed.
 
     btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, std::abs(m_command.move[0]) != 0 || std::abs(m_command.move[1]) != 0);
 
@@ -1542,8 +1587,8 @@ int Character::moveOnWater()
     }
 
     /*
-     * Prepare to moving
-     */
+    * Prepare to moving
+    */
     m_speed = spd;
     move = spd * engine::engine_frame_time;
     ghostUpdate();
@@ -1579,20 +1624,20 @@ int Character::findTraverse()
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0 });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0] + MeteringSectorSize), static_cast<btScalar>(ch_s->position[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0 });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0] - MeteringSectorSize), static_cast<btScalar>(ch_s->position[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0 });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0]), static_cast<btScalar>(ch_s->position[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0 });
+        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0]), static_cast<btScalar>(ch_s->position[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(obj_s != nullptr)
@@ -1603,9 +1648,9 @@ int Character::findTraverse()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
-                    int oz = static_cast<int>( (m_angles[0] + 45.0f) / 90.0f );
+                    int oz = (m_angles[0] + 45.0f) / 90.0f;
                     m_angles[0] = oz * 90.0f;
                     m_traversedObject = e;
                     updateTransform();
@@ -1633,20 +1678,20 @@ int Character::checkTraverse(const Entity& obj)
     {
         if(m_transform.getBasis().getColumn(1)[0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0 });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0] - MeteringSectorSize), static_cast<btScalar>(obj_s->position[1]), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0 });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0] + MeteringSectorSize), static_cast<btScalar>(obj_s->position[1]), static_cast<btScalar>(0.0) });
         }
         // OY move case
         else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0 });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0]), static_cast<btScalar>(obj_s->position[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
         }
         else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0 });
+            ch_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0]), static_cast<btScalar>(obj_s->position[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
         }
         ch_s = ch_s->checkPortalPointer();
     }
@@ -1682,25 +1727,25 @@ int Character::checkTraverse(const Entity& obj)
     RoomSector* next_s = nullptr;
 
     /*
-     * PUSH MOVE CHECK
-     */
-     // OX move case
+    * PUSH MOVE CHECK
+    */
+    // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0 });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0] + MeteringSectorSize), static_cast<btScalar>(obj_s->position[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0 });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0] - MeteringSectorSize), static_cast<btScalar>(obj_s->position[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0 });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0]), static_cast<btScalar>(obj_s->position[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0 });
+        next_s = obj_s->owner_room->getSectorRaw({ static_cast<btScalar>(obj_s->position[0]), static_cast<btScalar>(obj_s->position[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1710,11 +1755,11 @@ int Character::checkTraverse(const Entity& obj)
     {
         btTransform from;
         from.setIdentity();
-        from.setOrigin(btVector3(obj_s->position[0], obj_s->position[1], floor + 0.5f * MeteringSectorSize));
+        from.setOrigin(btVector3(obj_s->position[0], obj_s->position[1], floor + 0.5 * MeteringSectorSize));
 
         btTransform to;
         to.setIdentity();
-        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
+        to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5 * MeteringSectorSize));
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
@@ -1728,26 +1773,26 @@ int Character::checkTraverse(const Entity& obj)
     }
 
     /*
-     * PULL MOVE CHECK
-     */
+    * PULL MOVE CHECK
+    */
     next_s = nullptr;
     // OX move case
     if(m_transform.getBasis().getColumn(1)[0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0 });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0] - MeteringSectorSize), static_cast<btScalar>(ch_s->position[1]), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0 });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0] + MeteringSectorSize), static_cast<btScalar>(ch_s->position[1]), static_cast<btScalar>(0.0) });
     }
     // OY move case
     else if(m_transform.getBasis().getColumn(1)[1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0 });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0]), static_cast<btScalar>(ch_s->position[1] - MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
     else if(m_transform.getBasis().getColumn(1)[1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0 });
+        next_s = ch_s->owner_room->getSectorRaw({ static_cast<btScalar>(ch_s->position[0]), static_cast<btScalar>(ch_s->position[1] + MeteringSectorSize), static_cast<btScalar>(0.0) });
     }
 
     if(next_s)
@@ -1789,7 +1834,10 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    state_func();
+    if(state_func)
+    {
+        state_func(this, &m_bf.animations);
+    }
 
     switch(m_moveType)
     {
@@ -1825,6 +1873,8 @@ void Character::applyCommands()
             m_moveType = MoveType::OnFloor;
             break;
     };
+
+    m_command.rot.setZero();
 
     updateRigidBody(true);
     updatePlatformPostStep();
@@ -2156,25 +2206,25 @@ void Character::updateHair()
 
         // Calculate mixed velocities.
         btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
+        new_transform[12+1] - hair->owner_body_transform[12+1],
+        new_transform[12+2] - hair->owner_body_transform[12+2]);
         mix_vel *= 1.0 / engine_frame_time;
 
         if(0)
         {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            sub_tr = hair->owner_body_transform.inverse() * new_transform;
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang[2], mix_ang[1], mix_ang[0]);
-            mix_ang *= 1.0 / engine_frame_time;
+        btScalar sub_tr[16];
+        btTransform ang_tr;
+        btVector3 mix_ang;
+        sub_tr = hair->owner_body_transform.inverse() * new_transform;
+        ang_tr.setFromOpenGLMatrix(sub_tr);
+        ang_tr.getBasis().getEulerYPR(mix_ang[2], mix_ang[1], mix_ang[0]);
+        mix_ang *= 1.0 / engine_frame_time;
 
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
+        // Looks like angular velocity breaks up constraints on VERY fast moves,
+        // like mid-air turn. Probably, I've messed up with multiplier value...
 
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+        hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
         }
         Mat4_Copy(hair->owner_body_transform, new_transform);*/
 
@@ -2186,7 +2236,7 @@ void Character::updateHair()
         /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
         for(int j=0;j<hair->element_count;j++)
         {
-            hair->elements[j].body->applyCentralForce(mix_vel);
+        hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
         if(auto ownerChar = hair->m_ownerChar.lock())
@@ -2196,21 +2246,73 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, animation::AnimUpdate state)
+void Character::frame(btScalar time)
 {
-    // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    animation::AnimUpdate animStepResult = animation::AnimUpdate::None;
 
-    m_currentSpeed = static_cast<btScalar>( (af->speed_x + frame * af->accel_x) ) / (1<<16); //Decompiled from TOMB5.EXE
+    if(!m_enabled && !isPlayer())
+    {
+        return;
+    }
+    if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    {
+        // Ragdoll
+        updateRigidBody(false); // bbox update, room update, m_transform from btBody...
+        return;
+    }
+    if(isPlayer() && (engine::control_states.noclip || engine::control_states.free_look))
+    {
+        updateCurrentBoneFrame(&m_bf);
+        updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+        return;
+    }
 
-    m_bf.animations.current_frame = frame;
+    fixPenetrations(nullptr);
+    processSector();
+
+    if(isPlayer())  // Player:
+    {
+        updateParams();
+        checkCollisionCallbacks();  // physics collision checks, lua callbacks
+    }
+    else            // Other Character entities:
+    {
+        engine_lua.loopEntity(id());
+        if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
+            checkCollisionCallbacks();
+    }
+
+    animStepResult = stepAnimation(time);
+    if(m_bf.animations.onFrame != nullptr)
+    {
+        m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);
+    }
+
+    applyCommands();    // state_func()
+
+    if(m_command.action && (m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    {
+        checkActivators();          // bbox check f. interact/pickup, lua callbacks
+    }
+    if(getParam(PARAM_HEALTH) <= 0.0)
+    {
+        m_response.killed = true;   // Kill, if no HP.
+    }
+    updateHair();
 
     doWeaponFrame(time);
 
-    if(m_bf.animations.onFrame != nullptr)
-    {
-        m_bf.animations.onFrame(this, &m_bf.animations, state);
-    }
+    // Update acceleration/speed, it is calculated per anim frame index
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1 << 16); //Decompiled from TOMB5.EXE
+
+
+                                                                                              // TODO: check rigidbody update requirements.
+                                                                                              //if(animStepResult != ENTITY_ANIM_NONE)
+                                                                                              //{ }
+    updateCurrentBoneFrame(&m_bf);
+    updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+    return;
 }
 
 void Character::processSectorImpl()
@@ -2238,7 +2340,7 @@ void Character::processSectorImpl()
     if(lowest_sector->flags & SECTOR_FLAG_DEATH)
     {
         if((m_moveType == MoveType::OnFloor) ||
-           (m_moveType == MoveType::Wade)    ||
+           (m_moveType == MoveType::Wade) ||
            (m_moveType == MoveType::Quicksand))
         {
             if(m_heightInfo.floor_hit)
@@ -2294,7 +2396,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     m_response.vertical_collide = 0x00;
 
     m_response.slide = SlideType::None;
-    m_response.lean  = LeanType::None;
+    m_response.lean = LeanType::None;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
@@ -2369,85 +2471,55 @@ btVector3 Character::camPosForFollowing(btScalar dz)
 void Character::doWeaponFrame(btScalar time)
 {
     /* anims (TR1 - TR5):
-     * pistols:
-     * 0: idle to fire;
-     * 1: draw weapon (short?);
-     * 2: draw weapon (full);
-     * 3: fire process;
-     *
-     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
-     * 0: idle to fire;
-     * 1: draw weapon;
-     * 2: fire process;
-     * 3: hide weapon;
-     * 4: idle to fire (targeted);
-     */
+    * pistols:
+    * 0: idle to fire;
+    * 1: draw weapon (short?);
+    * 2: draw weapon (full);
+    * 3: fire process;
+    *
+    * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
+    * 0: idle to fire;
+    * 1: draw weapon;
+    * 2: fire process;
+    * 3: hide weapon;
+    * 4: idle to fire (targeted);
+    */
     if(m_command.ready_weapon && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
     {
         setWeaponModel(m_currentWeapon, 1);
     }
 
-    btScalar dt;
-    int t;
-
     for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->mode = animation::SSAnimationMode::NormalControl;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
                     if(m_command.ready_weapon)   // ready weapon
                     {
-                        ss_anim->current_animation = 1;
-                        ss_anim->next_animation = 1;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(1);  // draw from holster
+                                                   // fixme: reset lerp:
+                        ss_anim->lerp_last_animation = ss_anim->current_animation;
+                        ss_anim->lerp_last_frame = ss_anim->current_frame;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = 3;
-                        ss_anim->current_frame = ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(3);  // holster weapon
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
                     else if(m_command.action)
@@ -2456,60 +2528,32 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        // do nothing here, may be;
+                        // stay at frame 0
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
 
                 case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
+                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(m_command.action)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 2;
-                    }
-                    else if(m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_weaponCurrentState = WeaponState::Fire;
+                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                        {
+                            ss_anim->setAnimation(2);  // shooting cycle
+                            m_weaponCurrentState = WeaponState::Fire;
+                        }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2517,56 +2561,22 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
+                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            ss_anim->setAnimation(2);  // shooting cycle
+                                                       // bang
                         }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        ss_anim->setAnimation(0, -1);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
 
                 case WeaponState::IdleToHide:
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    if(ss_anim->current_frame < t - 1)
+                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }
@@ -2575,60 +2585,33 @@ void Character::doWeaponFrame(btScalar time)
         }
         else if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() == 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->mode = animation::SSAnimationMode::WeaponCompat;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
                     if(m_command.ready_weapon)   // ready weapon
                     {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(2);  // draw from holster
+                                                   // fixme: reset lerp:
+                        ss_anim->lerp_last_animation = ss_anim->current_animation;
+                        ss_anim->lerp_last_frame = ss_anim->current_frame;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(2, -1);  // draw weapon, end for reverse
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
                     else if(m_command.action)
@@ -2637,60 +2620,31 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        // do nothing here, may be;
+                        // stay
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
 
                 case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(m_command.action)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 3;
-                    }
-                    else if(m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_weaponCurrentState = WeaponState::Fire;
+                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                        {
+                            ss_anim->setAnimation(3);  // shooting cycle
+                            m_weaponCurrentState = WeaponState::Fire;
+                        }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2698,66 +2652,29 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
+                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            ss_anim->setAnimation(3);  // shooting cycle
+                                                       // bang
                         }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        ss_anim->setAnimation(0, -1);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
 
                 case WeaponState::IdleToHide:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }
                     break;
             };
         }
-
-        doAnimCommands(ss_anim, animation::AnimUpdate::None);
     }
 }
 
