@@ -11,7 +11,7 @@
 #include "render.h"
 #include "frustum.h"
 #include "camera.h"
-#include "../world.h"
+#include "../room.h"
 
 
 #define SPLIT_EMPTY         (0x00)

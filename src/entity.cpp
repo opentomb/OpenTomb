@@ -17,6 +17,7 @@ extern "C" {
 #include "mesh.h"
 #include "skeletal_model.h"
 #include "entity.h"
+#include "room.h"
 #include "world.h"
 #include "engine.h"
 #include "engine_physics.h"
@@ -99,7 +100,7 @@ void Entity_Clear(entity_p entity)
     {
         if((entity->self->room != NULL) && (entity != engine_world.Character))
         {
-            Room_RemoveEntity(entity->self->room, entity);
+            Room_RemoveObject(entity->self->room, entity->self);
         }
 
         if(entity->obb)
@@ -215,7 +216,7 @@ void Entity_UpdateRoomPos(entity_p ent)
         v[2] /= 2.0;
         Mat4_vec3_mul_macro(pos, ent->transform, v);
     }
-    new_room = Room_FindPosCogerrence(pos, ent->self->room);
+    new_room = World_FindRoomByPosCogerrence(&engine_world, pos, ent->self->room);
     if(new_room)
     {
         new_sector = Room_GetSectorXYZ(new_room, pos);
@@ -230,11 +231,11 @@ void Entity_UpdateRoomPos(entity_p ent)
             {
                 if(ent->self->room)
                 {
-                    Room_RemoveEntity(ent->self->room, ent);
+                    Room_RemoveObject(ent->self->room, ent->self);
                 }
                 if(new_room)
                 {
-                    Room_AddEntity(new_room, ent);
+                    Room_AddObject(new_room, ent->self);
                 }
             }
         }

@@ -17,6 +17,7 @@
 #include "frustum.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "../room.h"
 #include "../world.h"
 #include "../script.h"
 #include "../mesh.h"
@@ -235,7 +236,7 @@ void CRender::GenWorldList(struct camera_s *cam)
     cam->frustum->next = NULL;
     m_camera = cam;
 
-    room_p curr_room = Room_FindPosCogerrence(cam->pos, cam->current_room);     // find room that contains camera
+    room_p curr_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);     // find room that contains camera
 
     cam->current_room = curr_room;                                              // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room

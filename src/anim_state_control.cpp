@@ -13,6 +13,7 @@
 #include "engine.h"
 #include "audio.h"
 #include "engine_physics.h"
+#include "room.h"
 #include "world.h"
 #include "game.h"
 #include "skeletal_model.h"

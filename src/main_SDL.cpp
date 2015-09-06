@@ -39,6 +39,7 @@ extern "C" {
 #include "script.h"
 #include "engine.h"
 #include "controls.h"
+#include "room.h"
 #include "world.h"
 #include "gui.h"
 #include "skeletal_model.h"

@@ -21,6 +21,7 @@ extern "C" {
 #include "engine_lua.h"
 #include "engine_physics.h"
 #include "controls.h"
+#include "room.h"
 #include "world.h"
 #include "game.h"
 #include "audio.h"
@@ -424,7 +425,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = Room_FindPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(&engine_world, engine_camera.pos, engine_camera.current_room);
     }
     else if(control_states.noclip != 0)
     {
@@ -434,7 +435,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = Room_FindPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(&engine_world, engine_camera.pos, engine_camera.current_room);
 
         ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
         pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
@@ -653,7 +654,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
     //Modify cam pos for quicksand rooms
     cam->pos[2] -= 128.0;
-    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
+    cam->current_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);
     cam->pos[2] += 128.0;
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
@@ -661,7 +662,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     }
 
     Cam_SetRotation(cam, control_states.cam_angles);
-    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
+    cam->current_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);
 }
 
 

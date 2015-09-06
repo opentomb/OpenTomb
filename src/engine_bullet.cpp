@@ -31,6 +31,7 @@ extern "C" {
 #include "script.h"
 #include "entity.h"
 #include "resource.h"
+#include "room.h"
 #include "world.h"
 
 /*

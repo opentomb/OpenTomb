@@ -30,6 +30,7 @@ extern "C" {
 #include "gui.h"
 #include "entity.h"
 #include "gameflow.h"
+#include "room.h"
 #include "world.h"
 #include "resource.h"
 #include "script.h"

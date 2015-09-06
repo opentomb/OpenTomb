@@ -30,6 +30,7 @@ extern "C" {
 #include "entity.h"
 #include "character_controller.h"
 #include "engine_string.h"
+#include "room.h"
 #include "world.h"
 
 ALfloat                     listener_position[3];

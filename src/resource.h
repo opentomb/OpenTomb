@@ -2,54 +2,6 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-// Here you can specify the way OpenTomb processes room collision -
-// in a classic TR way (floor data collision) or in a modern way
-// (derived from actual room mesh).
-
-#define TR_MESH_ROOM_COLLISION 0
-
-// Metering step and sector size are basic Tomb Raider world metrics.
-// Use these defines at all times, when you're referencing classic TR
-// dimensions and terrain manipulations.
-
-#define TR_METERING_STEP        (256.0)
-#define TR_METERING_SECTORSIZE  (1024.0)
-
-// Wall height is a magical constant which specifies that sector with such
-// height contains impassable wall.
-
-#define TR_METERING_WALLHEIGHT  (32512)
-
-// Penetration configuration specifies collision type for floor and ceiling
-// sectors (squares).
-
-#define TR_PENETRATION_CONFIG_SOLID             0   // Ordinary sector.
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_A   1   // TR3-5 triangulated door.
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_B   2   // TR3-5 triangulated door.
-#define TR_PENETRATION_CONFIG_WALL              3   // Wall (0x81 == TR_METERING_WALLHEIGHT)
-#define TR_PENETRATION_CONFIG_GHOST             4   // No collision.
-
-// There are two types of diagonal splits - we call them north-east (NE) and
-// north-west (NW). In case there is no diagonal in sector (TR1-2 classic sector),
-// then NONE type is used.
-
-#define TR_SECTOR_DIAGONAL_TYPE_NONE            0
-#define TR_SECTOR_DIAGONAL_TYPE_NE              1
-#define TR_SECTOR_DIAGONAL_TYPE_NW              2
-
-// Tween is a short word for "inbeTWEEN vertical polygon", which is needed to fill
-// the gap between two sectors with different heights. If adjacent sector heights are
-// similar, it means that tween is degenerated (doesn't exist physically) - in that
-// case we use NONE type. If only one of two heights' pairs is similar, then tween is
-// either right or left pointed triangle (where "left" or "right" is derived by viewing
-// triangle from front side). If none of the heights are similar, we need quad tween.
-
-#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3   // 
-#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
-
 ///@FIXME: Move skybox item IDs to script!
 
 #define TR_ITEM_SKYBOX_TR2 254
@@ -89,7 +41,7 @@ void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_t
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
-int      Res_Sector_IsWall(struct room_sector_s *ws, struct room_sector_s *ns);
+int      Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector);
 
 void     Res_Poly_SortInMesh(struct base_mesh_s *mesh);
 void     TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);

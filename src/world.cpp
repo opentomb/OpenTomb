@@ -15,6 +15,7 @@
 #include "render/bordered_texture_atlas.h"
 #include "vt/vt_level.h"
 #include "audio.h"
+#include "room.h"
 #include "world.h"
 #include "mesh.h"
 #include "skeletal_model.h"
@@ -34,430 +35,7 @@ int  compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
 
-
-void Room_Empty(room_p room)
-{
-    portal_p p;
-
-    if(room == NULL)
-    {
-        return;
-    }
-
-    if(room->content)
-    {
-        room->content->containers = NULL;
-
-        if(room->content->mesh)
-        {
-            BaseMesh_Clear(room->content->mesh);
-            free(room->content->mesh);
-            room->content->mesh = NULL;
-        }
-
-        if(room->content->static_mesh_count)
-        {
-            for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
-            {
-                Physics_DeleteObject(room->content->static_mesh[i].physics_body);
-                room->content->static_mesh[i].physics_body = NULL;
-
-                OBB_Clear(room->content->static_mesh[i].obb);
-                free(room->content->static_mesh[i].obb);
-                room->content->static_mesh[i].obb = NULL;
-                if(room->content->static_mesh[i].self)
-                {
-                    room->content->static_mesh[i].self->room = NULL;
-                    free(room->content->static_mesh[i].self);
-                    room->content->static_mesh[i].self = NULL;
-                }
-            }
-            free(room->content->static_mesh);
-            room->content->static_mesh = NULL;
-            room->content->static_mesh_count = 0;
-        }
-
-        Physics_DeleteObject(room->content->physics_body);
-        room->content->physics_body = NULL;
-
-        if(room->content->sprites_count)
-        {
-            free(room->content->sprites);
-            room->content->sprites = NULL;
-            room->content->sprites_count = 0;
-        }
-
-        if(room->content->light_count)
-        {
-            free(room->content->lights);
-            room->content->lights = NULL;
-            room->content->light_count = 0;
-        }
-
-        free(room->content);
-        room->content = NULL;
-    }
-
-
-    p = room->portals;
-    room->near_room_list_size = 0;
-
-    if(room->portals_count)
-    {
-        for(uint16_t i = 0;i < room->portals_count; i++, p++)
-        {
-            Portal_Clear(p);
-        }
-        free(room->portals);
-        room->portals = NULL;
-        room->portals_count = 0;
-    }
-
-    room->frustum = NULL;
-
-    if(room->sectors_count)
-    {
-        free(room->sectors);
-        room->sectors = NULL;
-        room->sectors_count = 0;
-        room->sectors_x = 0;
-        room->sectors_y = 0;
-    }
-
-    if(room->self)
-    {
-        room->self->room = NULL;
-        free(room->self);
-        room->self = NULL;
-    }
-}
-
-
-void Room_AddEntity(room_p room, struct entity_s *entity)
-{
-    engine_container_p curr = room->content->containers;
-
-    for(; curr; curr = curr->next)
-    {
-        if(curr == entity->self)
-        {
-            return;
-        }
-    }
-
-    entity->self->room = room;
-    entity->self->next = room->content->containers;
-    room->content->containers = entity->self;
-}
-
-
-int Room_RemoveEntity(room_p room, struct entity_s *entity)
-{
-    engine_container_p previous_cont, current_cont;
-
-    if((entity == NULL) || (room->content->containers == NULL))
-    {
-        return 0;
-    }
-
-    if(room->content->containers == entity->self)
-    {
-        room->content->containers = entity->self->next;
-        entity->self->room = NULL;
-        return 1;
-    }
-
-    previous_cont = room->content->containers;
-    current_cont = previous_cont->next;
-    for(;current_cont!=NULL;)
-    {
-        if(current_cont == entity->self)
-        {
-            previous_cont->next = current_cont->next;
-            entity->self->room = NULL;
-            return 1;
-        }
-
-        previous_cont = current_cont;
-        current_cont = current_cont->next;
-    }
-
-    return 0;
-}
-
-
-void Room_AddToNearRoomsList(room_p room, room_p r)
-{
-    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
-    {
-        room->near_room_list[room->near_room_list_size] = r;
-        room->near_room_list_size++;
-    }
-}
-
-
-int Room_IsInNearRoomsList(room_p r0, room_p r1)
-{
-    if(r0 && r1)
-    {
-        if(r0->id == r1->id)
-        {
-            return 1;
-        }
-
-        if(r1->near_room_list_size >= r0->near_room_list_size)
-        {
-            for(uint16_t i=0;i<r0->near_room_list_size;i++)
-            {
-                if(r0->near_room_list[i]->id == r1->id)
-                {
-                    return 1;
-                }
-            }
-        }
-        else
-        {
-            for(uint16_t i=0;i<r1->near_room_list_size;i++)
-            {
-                if(r1->near_room_list[i]->id == r0->id)
-                {
-                    return 1;
-                }
-            }
-        }
-    }
-
-    return 0;
-}
-
-
-int Room_HasSector(room_p room, int x, int y)
-{
-    if(x < room->sectors_x && y < room->sectors_y )
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-
-room_sector_p Sector_CheckPortalPointerRaw(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->portal_to_room >= 0))
-    {
-        room_p r = engine_world.rooms + rs->portal_to_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
-        {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
-        }
-    }
-
-    return rs;
-}
-
-
-room_sector_p Sector_CheckPortalPointer(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->portal_to_room >= 0))
-    {
-        room_p r = engine_world.rooms + rs->portal_to_room;
-        if((rs->owner_room->base_room != NULL) && (r->alternate_room != NULL))
-        {
-            r = r->alternate_room;
-        }
-        else if((rs->owner_room->alternate_room != NULL) && (r->base_room != NULL))
-        {
-            r = r->base_room;
-        }
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
-        {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
-        }
-    }
-
-    return rs;
-}
-
-
-room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->owner_room->base_room != NULL))
-    {
-        room_p r = rs->owner_room->base_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
-        {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
-        }
-    }
-
-    return rs;
-}
-
-
-room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
-    {
-        room_p r = rs->owner_room->alternate_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
-        {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
-        }
-    }
-
-    return rs;
-}
-
-
-int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
-{
-    s1 = Sector_CheckPortalPointer(s1);
-    s2 = Sector_CheckPortalPointer(s2);
-
-    if(s1->owner_room == s2->owner_room)
-    {
-        return 0;
-    }
-
-    room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
-    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
-
-    // 2 next conditions are the stick for TR_V door-roll-wall
-    if(s1p->portal_to_room < 0)
-    {
-        s1p = Sector_CheckAlternateRoom(s1p);
-        if(s1p->portal_to_room < 0)
-        {
-            return 0;
-        }
-    }
-    if(s2p->portal_to_room < 0)
-    {
-        s2p = Sector_CheckAlternateRoom(s2p);
-        if(s2p->portal_to_room < 0)
-        {
-            return 0;
-        }
-    }
-
-    if((Sector_CheckPortalPointer(s1p) == Sector_CheckBaseRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckBaseRoom(s2)) ||
-       (Sector_CheckPortalPointer(s1p) == Sector_CheckAlternateRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckAlternateRoom(s2)))
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-
-bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
-{
-    if(!s1 || !s2) return false;
-    if( s1 ==  s2) return true;
-
-    if( (s1->floor != s2->floor) ||
-        (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
-    {
-          return false;
-    }
-
-    for(int i = 0; i < 4; i++)
-    {
-        if(s1->floor_corners[0][2] != s2->floor_corners[0][2])
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
-{
-    if(!s1 || !s2) return false;
-    if( s1 ==  s2) return true;
-
-    if( (s1->ceiling != s2->ceiling) ||
-        (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_above || s2->sector_above)) )
-    {
-          return false;
-    }
-
-    for(int i = 0; i < 4; i++)
-    {
-        if(s1->ceiling_corners[0][2] != s2->ceiling_corners[0][2])
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
-{
-    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
-
-    if(r1[2] > r2[2])
-    {
-        vec3_copy(v, r1);
-    }
-    else
-    {
-        vec3_copy(v, r2);
-    }
-}
-
-
-void Sector_LowestCeilingCorner(room_sector_p rs, float v[3])
-{
-    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
-    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
-
-    if(r1[2] < r2[2])
-    {
-        vec3_copy(v, r1);
-    }
-    else
-    {
-        vec3_copy(v, r2);
-    }
-}
-
-
-int Room_IsOverlapped(room_p r0, room_p r1)
-{
-    if((r0 == r1) || (r0 == r1->alternate_room) || (r0->alternate_room == r1))
-    {
-        return 0;
-    }
-
-    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
-       r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
-       r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
-    {
-        return 0;
-    }
-
-    return !Room_IsJoined(r0, r1);
-}
-
+void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room);
 
 void World_Prepare(world_p world)
 {
@@ -781,15 +359,15 @@ void RBItemFree(void *x)
 }
 
 
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id)
+uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id)
 {
-    if(engine_world.entity_tree != NULL)
+    if(world && world->entity_tree)
     {
-        skeletal_model_p model = World_GetModelByID(&engine_world, model_id);
+        skeletal_model_p model = World_GetModelByID(world, model_id);
         if(model != NULL)
         {
-            entity_p ent = World_GetEntityByID(&engine_world, id);
-            RedBlackNode_p node = engine_world.entity_tree->root;
+            entity_p ent = World_GetEntityByID(world, id);
+            RedBlackNode_p node = world->entity_tree->root;
 
             if(ent != NULL)
             {
@@ -802,9 +380,9 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                     vec3_copy(ent->angles, ang);
                     Entity_UpdateTransform(ent);
                 }
-                if(room_id < engine_world.room_count)
+                if(room_id < world->room_count)
                 {
-                    ent->self->room = engine_world.rooms + room_id;
+                    ent->self->room = world->rooms + room_id;
                     ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
                 }
                 else
@@ -840,10 +418,10 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                 vec3_copy(ent->angles, ang);
                 Entity_UpdateTransform(ent);
             }
-            if(room_id < engine_world.room_count)
+            if(room_id < world->room_count)
             {
-                ent->self->room = engine_world.rooms + room_id;
-                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                ent->self->room = world->rooms + room_id;
+                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
             }
             else
             {
@@ -871,9 +449,9 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             Entity_RebuildBV(ent);
             if(ent->self->room != NULL)
             {
-                Room_AddEntity(ent->self->room, ent);
+                Room_AddObject(ent->self->room, ent->self);
             }
-            World_AddEntity(&engine_world, ent);
+            World_AddEntity(world, ent);
 
             return ent->id;
         }
@@ -928,390 +506,6 @@ struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
 }
 
 
-inline int Room_IsPointIn(room_p room, float dot[3])
-{
-    return (dot[0] >= room->bb_min[0]) && (dot[0] < room->bb_max[0]) &&
-           (dot[1] >= room->bb_min[1]) && (dot[1] < room->bb_max[1]) &&
-           (dot[2] >= room->bb_min[2]) && (dot[2] < room->bb_max[2]);
-}
-
-
-room_p Room_FindPos(float pos[3])
-{
-    room_p r = engine_world.rooms;
-    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
-    {
-        if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
-        {
-            return r;
-        }
-    }
-    return NULL;
-}
-
-
-room_p Room_FindPosCogerrence(float new_pos[3], room_p room)
-{
-    if(room == NULL)
-    {
-        return Room_FindPos(new_pos);
-    }
-
-    if(room->active &&
-       (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
-       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]))
-    {
-        if((new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
-        {
-            return room;
-        }
-        else if(new_pos[2] >= room->bb_max[2])
-        {
-            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
-            if(orig_sector->sector_above != NULL)
-            {
-                return Room_CheckFlip(orig_sector->sector_above->owner_room);
-            }
-        }
-        else if(new_pos[2] < room->bb_min[2])
-        {
-            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
-            if(orig_sector->sector_below != NULL)
-            {
-                return Room_CheckFlip(orig_sector->sector_below->owner_room);
-            }
-        }
-    }
-
-    room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);
-    if((new_sector != NULL) && (new_sector->portal_to_room >= 0))
-    {
-        return Room_CheckFlip(engine_world.rooms + new_sector->portal_to_room);
-    }
-
-    for(uint16_t i=0;i<room->near_room_list_size;i++)
-    {
-        room_p r = room->near_room_list[i];
-        if(r->active &&
-           (new_pos[0] >= r->bb_min[0]) && (new_pos[0] < r->bb_max[0]) &&
-           (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
-           (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
-        {
-            return r;
-        }
-    }
-
-    return Room_FindPos(new_pos);
-}
-
-
-room_p Room_GetByID(world_p w, unsigned int ID)
-{
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
-    {
-        if(ID == r->id)
-        {
-            return r;
-        }
-    }
-    return NULL;
-}
-
-
-room_sector_p Room_GetSectorRaw(room_p room, float pos[3])
-{
-    int x, y;
-    room_sector_p ret = NULL;
-
-    if((room == NULL) || !room->active)
-    {
-        return NULL;
-    }
-
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
-    {
-        return NULL;
-    }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
-    ret = room->sectors + x * room->sectors_y + y;
-    return ret;
-}
-
-
-room_sector_p Room_GetSectorCheckFlip(room_p room, float pos[3])
-{
-    int x, y;
-    room_sector_p ret = NULL;
-
-    if(room != NULL)
-    {
-        if(room->active == 0)
-        {
-            if((room->base_room != NULL) && (room->base_room->active))
-            {
-                room = room->base_room;
-            }
-            else if((room->alternate_room != NULL) && (room->alternate_room->active))
-            {
-                room = room->alternate_room;
-            }
-        }
-    }
-    else
-    {
-        return NULL;
-    }
-
-    if(!room->active)
-    {
-        return NULL;
-    }
-
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
-    {
-        return NULL;
-    }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
-    ret = room->sectors + x * room->sectors_y + y;
-    return ret;
-}
-
-
-room_sector_p Sector_CheckFlip(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->owner_room->active == 0))
-    {
-        if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
-        {
-            room_p r = rs->owner_room->base_room;
-            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
-        }
-        else if((rs->owner_room->alternate_room != NULL) && (rs->owner_room->alternate_room->active))
-        {
-            room_p r = rs->owner_room->alternate_room;
-            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
-        }
-    }
-
-    return rs;
-}
-
-
-room_sector_p Sector_GetLowest(room_sector_p sector)
-{
-    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
-
-    return Sector_CheckFlip(sector);
-}
-
-
-room_sector_p Sector_GetHighest(room_sector_p sector)
-{
-    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
-
-    return sector;
-}
-
-
-room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
-{
-    int x, y;
-    room_sector_p ret = NULL;
-
-    room = Room_CheckFlip(room);
-
-    if(!room->active)
-    {
-        return NULL;
-    }
-
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
-    {
-        return NULL;
-    }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
-    ret = room->sectors + x * room->sectors_y + y;
-
-    /*
-     * resolve Z overlapped neighboard rooms. room below has more priority.
-     */
-    if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
-    {
-        return Sector_CheckFlip(ret->sector_below);
-    }
-
-    if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
-    {
-        return Sector_CheckFlip(ret->sector_above);
-    }
-
-    return ret;
-}
-
-
-void Room_Enable(room_p room)
-{
-    if(room->active)
-    {
-        return;
-    }
-
-    if(room->content->physics_body != NULL)
-    {
-        Physics_EnableObject(room->content->physics_body);
-    }
-
-    for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
-    {
-        if(room->content->static_mesh[i].physics_body != NULL)
-        {
-            Physics_EnableObject(room->content->static_mesh[i].physics_body);
-        }
-    }
-
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
-    {
-        switch(cont->object_type)
-        {
-            case OBJECT_ENTITY:
-                Entity_Enable((entity_p)cont->object);
-                break;
-        }
-    }
-
-    room->active = 1;
-}
-
-
-void Room_Disable(room_p room)
-{
-    if(!room->active)
-    {
-        return;
-    }
-
-    if(room->content->physics_body)
-    {
-        Physics_DisableObject(room->content->physics_body);
-    }
-
-    for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
-    {
-        if(room->content->static_mesh[i].physics_body)
-        {
-            Physics_DisableObject(room->content->static_mesh[i].physics_body);
-        }
-    }
-
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
-    {
-        switch(cont->object_type)
-        {
-            case OBJECT_ENTITY:
-                Entity_Disable((entity_p)cont->object);
-                break;
-        }
-    }
-
-    room->active = 0;
-}
-
-void Room_SwapToBase(room_p room)
-{
-    if((room->base_room != NULL) && (room->active == 1))               //If room is active alternate room
-    {
-        renderer.CleanList();
-        Room_Disable(room);                             //Disable current room
-        Room_Disable(room->base_room);                  //Paranoid
-        Room_SwapPortals(room, room->base_room);        //Update portals to match this room
-        Room_SwapItems(room, room->base_room);          //Update items to match this room
-        Room_Enable(room->base_room);                   //Enable original room
-    }
-}
-
-void Room_SwapToAlternate(room_p room)
-{
-    if((room->alternate_room != NULL) && (room->active == 1))          //If room is active base room
-    {
-        renderer.CleanList();
-        Room_Disable(room);                             //Disable current room
-        Room_Disable(room->alternate_room);             //Paranoid
-        Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
-        Room_SwapItems(room, room->alternate_room);     //Update items to match this room
-        Room_Enable(room->alternate_room);              //Enable base room
-    }
-}
-
-room_p Room_CheckFlip(room_p r)
-{
-    if(r && (r->active == 0))
-    {
-        if((r->base_room != NULL) && (r->base_room->active))
-        {
-            r = r->base_room;
-        }
-        else if((r->alternate_room != NULL) && (r->alternate_room->active))
-        {
-            r = r->alternate_room;
-        }
-    }
-
-    return r;
-}
-
-void Room_SwapPortals(room_p room, room_p dest_room)
-{
-    //Update portals in room rooms
-    for(uint32_t i=0;i<engine_world.room_count;i++)//For every room in the world itself
-    {
-        for(uint16_t j=0;j<engine_world.rooms[i].portals_count;j++)//For every portal in this room
-        {
-            if(engine_world.rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
-            {
-                engine_world.rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
-                //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
-            }
-        }
-        Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
-    }
-}
-
-void Room_SwapItems(room_p room, room_p dest_room)
-{
-    engine_container_p t;
-
-    for(t=room->content->containers;t!=NULL;t=t->next)
-    {
-        t->room = dest_room;
-    }
-
-    for(t=dest_room->content->containers;t!=NULL;t=t->next)
-    {
-        t->room = room;
-    }
-
-    SWAPT(room->content->containers, dest_room->content->containers, t);
-}
-
 int World_AddEntity(world_p world, struct entity_s *entity)
 {
     RB_InsertIgnore(&entity->id, entity, world->entity_tree);
@@ -1362,48 +556,7 @@ int World_DeleteItem(world_p world, uint32_t item_id)
 }
 
 
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
-{
-    long int i, min, max;
-
-    min = 0;
-    max = w->skeletal_model_count - 1;
-    if(w->skeletal_models[min].id == id)
-    {
-        return w->skeletal_models + min;
-    }
-    if(w->skeletal_models[max].id == id)
-    {
-        return w->skeletal_models + max;
-    }
-    do
-    {
-        i = (min + max) / 2;
-        if(w->skeletal_models[i].id == id)
-        {
-            return w->skeletal_models + i;
-        }
-
-        if(w->skeletal_models[i].id < id)
-        {
-            min = i;
-        }
-        else
-        {
-            max = i;
-        }
-    }
-    while(min < max - 1);
-
-    return NULL;
-}
-
-
-/*
- * find sprite by ID.
- * not a binary search - sprites may be not sorted by ID
- */
-struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
+struct sprite_s *World_GetSpriteByID(world_p world, uint32_t ID)
 {
     sprite_p sp = world->sprites;
     for(uint32_t i=0;i<world->sprites_count;i++,sp++)
@@ -1418,38 +571,166 @@ struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
 }
 
 
-/*
- * Check for join portals existing
- */
-int Room_IsJoined(room_p r1, room_p r2)
+struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id)
 {
-    portal_p p = r1->portals;
-    for(uint16_t i = 0; i < r1->portals_count; i++, p++)
+    long int i, min, max;
+
+    min = 0;
+    max = world->skeletal_model_count - 1;
+    if(world->skeletal_models[min].id == id)
     {
-        if(p->dest_room->id == r2->id)
+        return world->skeletal_models + min;
+    }
+    if(world->skeletal_models[max].id == id)
+    {
+        return world->skeletal_models + max;
+    }
+    do
+    {
+        i = (min + max) / 2;
+        if(world->skeletal_models[i].id == id)
         {
-            return 1;
+            return world->skeletal_models + i;
+        }
+
+        if(world->skeletal_models[i].id < id)
+        {
+            min = i;
+        }
+        else
+        {
+            max = i;
         }
     }
+    while(min < max - 1);
 
-    p = r2->portals;
-    for(uint16_t i = 0; i < r2->portals_count; i++, p++)
-    {
-        if(p->dest_room->id == r1->id)
-        {
-            return 1;
-        }
-    }
-
-    return 0;
+    return NULL;
 }
 
-void Room_BuildNearRoomsList(room_p room)
+
+struct room_s *World_FindRoomByPos(world_p world, float pos[3])
+{
+    room_p r = world->rooms;
+    for(uint32_t i = 0; i < world->room_count; i++, r++)
+    {
+        if(r->active &&
+           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
+           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+        {
+            return r;
+        }
+    }
+    return NULL;
+}
+
+
+struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct room_s *old_room)
+{
+    if(old_room == NULL)
+    {
+        return World_FindRoomByPos(world, pos);
+    }
+
+    if(old_room->active &&
+       (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
+       (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
+    {
+        if((pos[2] >= old_room->bb_min[2]) && (pos[2] < old_room->bb_max[2]))
+        {
+            return old_room;
+        }
+        else if(pos[2] >= old_room->bb_max[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
+            if(orig_sector->sector_above != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+            }
+        }
+        else if(pos[2] < old_room->bb_min[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
+            if(orig_sector->sector_below != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+            }
+        }
+    }
+
+    room_sector_p new_sector = Room_GetSectorRaw(old_room, pos);
+    if((new_sector != NULL) && new_sector->portal_to_room)
+    {
+        return Room_CheckFlip(new_sector->portal_to_room);
+    }
+
+    for(uint16_t i=0;i<old_room->near_room_list_size;i++)
+    {
+        room_p r = old_room->near_room_list[i];
+        if(r->active &&
+           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
+           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+        {
+            return r;
+        }
+    }
+
+    return World_FindRoomByPos(world, pos);
+}
+
+
+void World_SwapRoomToBase(world_p world, struct room_s *room)
+{
+    if((room->base_room != NULL) && (room->active == 1))            // If room is active alternate room
+    {
+        renderer.CleanList();
+        Room_Disable(room);                                         // Disable current room
+        Room_Disable(room->base_room);                              // Paranoid
+        World_SwapRoomPortals(world, room, room->base_room);        // Update portals to match this room
+        Room_SwapItems(room, room->base_room);                      // Update items to match this room
+        Room_Enable(room->base_room);                               // Enable original room
+    }
+}
+
+void World_SwapRoomToAlternate(world_p world, struct room_s *room)
+{
+    if((room->alternate_room != NULL) && (room->active == 1))       // If room is active base room
+    {
+        renderer.CleanList();
+        Room_Disable(room);                                         // Disable current room
+        Room_Disable(room->alternate_room);                         // Paranoid
+        World_SwapRoomPortals(world, room, room->alternate_room);   // Update portals to match this room
+        Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
+        Room_Enable(room->alternate_room);                          // Enable base room
+    }
+}
+
+
+void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room)
+{
+    //Update portals in room rooms
+    for(uint32_t i = 0; i < world->room_count; i++)//For every room in the world itself
+    {
+        for(uint16_t j = 0; j < world->rooms[i].portals_count; j++)//For every portal in this room
+        {
+            if(world->rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
+            {
+                world->rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
+                //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
+            }
+        }
+        World_BuildNearRoomsList(world, world->rooms + i); //Rebuild room near list!
+    }
+}
+
+
+void World_BuildNearRoomsList(world_p world, struct room_s *room)
 {
     room->near_room_list_size = 0;
 
     portal_p p = room->portals;
-    for(uint16_t i = 0; i<room->portals_count; i++, p++)
+    for(uint16_t i = 0; i < room->portals_count; i++, p++)
     {
         Room_AddToNearRoomsList(room, p->dest_room);
     }
@@ -1467,17 +748,16 @@ void Room_BuildNearRoomsList(room_p room)
     }
 }
 
-void Room_BuildOverlappedRoomsList(room_p room)
+void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
 {
     room->overlapped_room_list_size = 0;
 
-    for(uint32_t i=0;i<engine_world.room_count;i++)
+    for(uint32_t i = 0; i < world->room_count; i++)
     {
-        if(Room_IsOverlapped(room, engine_world.rooms+i))
+        if(Room_IsOverlapped(room, world->rooms + i))
         {
-            room->overlapped_room_list[room->overlapped_room_list_size] = engine_world.rooms+i;
+            room->overlapped_room_list[room->overlapped_room_list_size] = world->rooms + i;
             room->overlapped_room_list_size++;
         }
     }
 }
-

@@ -29,6 +29,7 @@ extern "C" {
 #include "gui.h"
 #include "audio.h"
 #include "controls.h"
+#include "room.h"
 #include "world.h"
 #include "inventory.h"
 
@@ -176,7 +177,7 @@ int lua_DumpRoom(lua_State * lua)
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
         for(uint32_t i=0;i<r->sectors_count;i++,rs++)
         {
-            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
+            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room)?(rs->portal_to_room->id):(-1));
         }
         for(static_mesh_p sm = r->content->static_mesh; sm < r->content->static_mesh + r->content->static_mesh_count;sm++)
         {
@@ -1358,7 +1359,7 @@ int lua_SpawnEntity(lua_State * lua)
         ov_id = lua_tointeger(lua, 9);
     }
 
-    uint32_t id = World_SpawnEntity(model_id, room_id, pos, ang, ov_id);
+    uint32_t id = World_SpawnEntity(&engine_world, model_id, room_id, pos, ang, ov_id);
     if(id == 0xFFFFFFFF)
     {
         lua_pushnil(lua);
@@ -1596,8 +1597,8 @@ int lua_SimilarSector(lua_State * lua)
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
 
-    curr_sector = Sector_CheckPortalPointer(curr_sector);
-    next_sector = Sector_CheckPortalPointer(next_sector);
+    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
+    next_sector = Sector_GetPortalSectorTarget(next_sector);
 
     bool ignore_doors = lua_toboolean(lua, 5);
 
@@ -1650,7 +1651,7 @@ int lua_GetSectorHeight(lua_State * lua)
     }
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
-    curr_sector = Sector_CheckPortalPointer(curr_sector);
+    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
     float point[3];
     (ceiling)?(Sector_LowestCeilingCorner(curr_sector, point)):(Sector_HighestFloorCorner(curr_sector, point));
 
@@ -3025,9 +3026,9 @@ int lua_SetEntityRoomMove(lua_State * lua)
         {
             if(ent->self->room != NULL)
             {
-                Room_RemoveEntity(ent->self->room, ent);
+                Room_RemoveObject(ent->self->room, ent->self);
             }
-            Room_AddEntity(r, ent);
+            Room_AddObject(r, ent->self);
         }
     }
     Entity_UpdateRoomPos(ent);
@@ -3668,11 +3669,11 @@ int lua_SetFlipState(lua_State *lua)
                 {
                     if(state)
                     {
-                        Room_SwapToAlternate(current_room);
+                        World_SwapRoomToAlternate(&engine_world, current_room);
                     }
                     else
                     {
-                        Room_SwapToBase(current_room);
+                        World_SwapRoomToBase(&engine_world, current_room);
                     }
                 }
             }
@@ -3685,11 +3686,11 @@ int lua_SetFlipState(lua_State *lua)
             {
                 if(state)
                 {
-                    Room_SwapToAlternate(current_room);
+                    World_SwapRoomToAlternate(&engine_world, current_room);
                 }
                 else
                 {
-                    Room_SwapToBase(current_room);
+                    World_SwapRoomToBase(&engine_world, current_room);
                 }
             }
 

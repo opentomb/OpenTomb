@@ -7,6 +7,7 @@
 
 #include "vt/tr_versions.h"
 #include "audio.h"
+#include "room.h"
 #include "world.h"
 #include "character_controller.h"
 #include "anim_state_control.h"
@@ -232,7 +233,7 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
 
-    r = Room_FindPosCogerrence(pos, r);
+    r = World_FindRoomByPosCogerrence(&engine_world, pos, r);
     r = Room_CheckFlip(r);
     if(r)
     {
@@ -1667,7 +1668,7 @@ int Character_FindTraverse(struct entity_s *ch)
 
     if(obj_s != NULL)
     {
-        obj_s = Sector_CheckPortalPointer(obj_s);
+        obj_s = Sector_GetPortalSectorTarget(obj_s);
         for(engine_container_p cont = obj_s->owner_room->content->containers;cont!=NULL;cont=cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1764,7 +1765,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
             float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (float)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
-        ch_s = Sector_CheckPortalPointer(ch_s);
+        ch_s = Sector_GetPortalSectorTarget(ch_s);
     }
 
     if((ch_s == NULL) || (obj_s == NULL))
@@ -1822,7 +1823,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
 
-    next_s = Sector_CheckPortalPointer(next_s);
+    next_s = Sector_GetPortalSectorTarget(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         from[0] = obj_s->pos[0];
@@ -1865,7 +1866,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 
-    next_s = Sector_CheckPortalPointer(next_s);
+    next_s = Sector_GetPortalSectorTarget(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         from[0] = ch_s->pos[0];
