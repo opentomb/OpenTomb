@@ -116,7 +116,7 @@ void Engine_InitGL()
 {
     InitGLExtFuncs();
     qglClearColor(0.0, 0.0, 0.0, 1.0);
-    glShadeModel(GL_SMOOTH);
+    //qglShadeModel(GL_SMOOTH);
 
     qglEnable(GL_DEPTH_TEST);
     qglDepthFunc(GL_LEQUAL);
@@ -177,11 +177,11 @@ void Engine_InitSDLControls()
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
-                    sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
-                    if(!sdl_haptic)
-                    {
-                        Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
-                    }
+                sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
+                if(!sdl_haptic)
+                {
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                }
             }
         }
         else

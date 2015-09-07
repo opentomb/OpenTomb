@@ -17,7 +17,7 @@
 #include "room.h"
 
 
-void Room_Empty(struct room_s *room)
+void Room_Clear(struct room_s *room)
 {
     portal_p p;
 

@@ -29,12 +29,11 @@
 #include "inventory.h"
 
 
-void World_GenRBTrees(struct world_s *world);
 int  compEntityEQ(void *x, void *y);
 int  compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
-
+void World_GenRBTrees(struct world_s *world);
 void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room);
 
 void World_Prepare(world_p world)
@@ -86,7 +85,7 @@ void World_Prepare(world_p world)
 
 void World_Open(struct world_s *world, class VT_Level *tr)
 {
-    World_Empty(world);
+    World_Clear(world);
 
     world->version = tr->game_version;
 
@@ -199,7 +198,7 @@ void World_GenRBTrees(struct world_s *world)
 }
 
 
-void World_Empty(world_p world)
+void World_Clear(world_p world)
 {
     extern engine_container_p last_cont;
 
@@ -230,7 +229,7 @@ void World_Empty(world_p world)
 
     for(uint32_t i=0;i<world->room_count;i++)
     {
-        Room_Empty(world->rooms+i);
+        Room_Clear(world->rooms+i);
     }
     free(world->rooms);
     world->rooms = NULL;

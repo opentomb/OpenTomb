@@ -349,7 +349,7 @@ typedef struct room_s
 }room_t, *room_p;
 
 
-void Room_Empty(struct room_s *room);
+void Room_Clear(struct room_s *room);
 void Room_Enable(struct room_s *room);
 void Room_Disable(struct room_s *room);
 int  Room_AddObject(struct room_s *room, struct engine_container_s *cont);

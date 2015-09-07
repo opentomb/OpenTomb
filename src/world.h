@@ -100,7 +100,7 @@ typedef struct world_s
 
 void World_Prepare(world_p world);
 void World_Open(struct world_s *world, class VT_Level *tr);
-void World_Empty(world_p world);
+void World_Clear(world_p world);
 uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
@@ -110,7 +110,7 @@ int World_DeleteEntity(world_p world, struct entity_s *entity);
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s *World_GetSpriteByID(world_p world, uint32_t ID);
-struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id);            // binary search the model by ID
+struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id);        // binary search the model by ID
 
 struct room_s *World_FindRoomByPos(world_p world, float pos[3]);
 struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct room_s *old_room);

@@ -171,7 +171,6 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
     if(state == 0x02)
     {
         float *v = ent->character->climb.point;
-
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
         ent->transform[12 + 1] = v[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
         ent->transform[12 + 2] = v[2] - ent->bf->bb_max[2];
@@ -208,7 +207,7 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
             Entity_SetAnimation(ent, TR_ANIMATION_LARA_HANG_IDLE, -1);
         }
 
-        ent->no_fix_all = 0x00;
+        ent->no_fix_all = 0x01;
         ent_to_edge_climb(ent, ss_anim, state);
         ss_anim->onFrame = NULL;
     }
@@ -2753,11 +2752,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     else if(cmd->action && (resp->horizontal_collide == 0) &&
                        (next_fc.floor_point[2] < pos[2] - ent->character->Height))
                     {
+                        ///@TODO: here is pretty sticky code... I need to project correct interface for Character_CheckClimbability() function.
                         float temp[3];
-                        vec3_copy(temp, pos);                                       // save entity position
-                        pos[0] = next_fc.floor_point[0];
-                        pos[1] = next_fc.floor_point[1];
-                        vec3_mul_scalar(global_offset, ent->transform + 4, 0.5 * CRAWL_FORWARD_OFFSET);
+                        t = ent->character->forvard_size + LARA_TRY_HANG_WALL_OFFSET;
+                        vec3_copy(temp, pos);                                   // save entity position
+                        pos[0] += ent->transform[4 + 0] * (ent->bf->bb_min[1] - 0.5 * t);
+                        pos[1] += ent->transform[4 + 1] * (ent->bf->bb_min[1] - 0.5 * t);
+                        vec3_mul_scalar(global_offset, ent->transform + 4, t);
                         global_offset[2] += 128.0;
                         curr_fc->floor_hit = next_fc.floor_hit;
                         vec3_copy(curr_fc->floor_point, next_fc.floor_point);
@@ -2769,7 +2770,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         curr_fc->ceiling_obj = next_fc.ceiling_obj;
 
                         *climb = Character_CheckClimbability(ent, global_offset, &next_fc, 1.5 * ent->bf->bb_max[2]);
-                        vec3_copy(pos, temp);                                       // restore entity position
+                        vec3_copy(pos, temp);                                   // restore entity position
                         if(climb->can_hang)
                         {
                             ent->angles[0] = climb->edge_z_ang;

@@ -838,7 +838,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         {
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                         }
-
                     }
                     else
                     {

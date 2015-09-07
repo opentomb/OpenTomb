@@ -120,7 +120,7 @@ void Engine_Shutdown(int val)
 {
     Engine_LuaClearTasks();
     renderer.SetWorld(NULL);
-    World_Empty(&engine_world);
+    World_Clear(&engine_world);
     Engine_Destroy();
 
     /* no more renderings */
