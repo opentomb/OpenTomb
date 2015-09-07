@@ -9,6 +9,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
+#include "engine.h"
 #include "game.h"
 #include "mesh.h"
 #include "object.h"
@@ -136,6 +137,7 @@ public:
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
     btScalar                            m_speedMult = TR_FRAME_RATE;
+    btScalar                            m_vspeed_override;
 
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
@@ -145,6 +147,12 @@ public:
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
+
+    btTransform m_lerp_last_transform; // interp
+    btTransform m_lerp_curr_transform; // interp
+    bool        m_lerp_valid;
+    bool        m_lerp_skip;
+    btScalar    m_lerp;
 
     OBB m_obb;                // oriented bounding box
 
@@ -179,8 +187,17 @@ public:
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-    int  frame(btScalar time);  // process frame + trying to change state
+
+    int stepAnimation(btScalar time);
+    virtual void frame(btScalar time);  // entity frame step
+
+    bool isPlayer()
+    {
+        // FIXME: isPlayer()
+        return (Entity*)engine_world.character.get() == this;
+    }
+
+    void updateInterpolation(btScalar time);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -192,8 +209,8 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
-    void doAnimCommands(SSAnimation *ss_anim, int changing);
+    static void updateCurrentBoneFrame(SSBoneFrame *bf);
+    void doAnimCommand(const AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -217,10 +234,6 @@ public:
         return m_transform * v;
     }
     virtual void transferToRoom(Room *room);
-    virtual void frameImpl(btScalar /*time*/, int16_t frame, int /*state*/)
-    {
-        m_bf.animations.current_frame = frame;
-    }
 
     virtual void processSectorImpl()
     {
@@ -250,7 +263,9 @@ public:
     btVector3 applyGravity(btScalar time);
 
 private:
-    void doAnimMove(int16_t *anim, int16_t *frame);
+//    void doAnimMove(int16_t *anim, int16_t *frame);
+    void slerpBones(btScalar lerp);
+    void lerpTransform(btScalar lerp);
 
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {

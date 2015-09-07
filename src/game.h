@@ -9,14 +9,18 @@
 
 // Original (canonical) TR frame rate.
 // Needed for animation speed calculations.
-
 #define TR_FRAME_RATE (30.0f)
 
-// This is the global game logic refresh interval.
+// This is the global game logic refresh interval (physics timestep)
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
-
+// This should be a multiple of TR_FRAME_RATE (1/30,60,90,120,...)
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0f / 60.0f)
+
+// Max. number of game steps that are caught-up between
+// rendering: This limits escalation if the system is too
+// slow to keep up the logic interval.
+#define MAX_SIM_SUBSTEPS (6)
 
 namespace script
 {
@@ -49,10 +53,7 @@ void Game_LevelTransition(uint16_t level_index);
 
 void Game_ApplyControls(std::shared_ptr<Entity> ent);
 
-void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
-void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
 void Game_UpdateAI();
-void Game_UpdateCharacters();
 
 void Cam_FollowEntity(Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);

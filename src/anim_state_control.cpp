@@ -55,19 +55,15 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
 
 void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
 {
-    AnimationFrame* af = &ss_anim->model->animations[ss_anim->current_animation];
-
-    if(ss_anim->current_frame >= static_cast<int>(af->frames.size() - 1))
+    // FIXME: this is more like an end-of-anim operation
+    if(ss_anim->current_animation != ss_anim->lerp_last_animation)
     {
-        auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-        ent->setAnimation(af->next_anim->id, af->next_frame);
-        auto p = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
-        move -= p;
-        ent->m_transform.getOrigin() += move;
-        ent->m_transform.getOrigin()[2] = ent->m_climb.point[2];
-        Entity::updateCurrentBoneFrame(&ent->m_bf, &ent->m_transform);
-        ent->updateRigidBody(false);
-        ent->ghostUpdate();
+        ent->m_transform.getOrigin() = ent->m_climb.point;
+
+        // FIXME: position adjust after climb
+        btVector3 climbfix(0, ent->m_climbR, 0);
+        ent->m_transform.getOrigin() = ent->m_climb.point + ent->m_transform.getBasis() * climbfix;
+
         ent->m_moveType = MoveType::OnFloor;
         ss_anim->onFrame = nullptr;
     }
@@ -449,8 +445,11 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                     {
                         if(pos[2] + 1920.0 >= next_fc.floor_point[2])
                         {
-                            // MAGIC: Vertical speed override is based on ledge height - thanks to T4Larson!
-                            ss_anim->model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames[ss_anim->model->animations[TR_ANIMATION_LARA_STAY_TO_GRAB].frames.size()-1].v_Vertical = -3 - (int)sqrt(-9600 - 12 * -(next_fc.floor_point[2]-pos[2]));
+                            // Fixme: grabheight/gravity values
+                            const btScalar grabheight = 800.0f;  // Lara arms-up...estimated
+                            const btScalar distance = next_fc.floor_point[2]-pos[2] - grabheight;
+                            const btScalar gravity = 6;          // based on tr gravity accel (6 units / tick^2)
+                            character->m_vspeed_override = 3.0f + sqrt(gravity * 2.0f * distance);
                             ss_anim->next_state = TR_STATE_LARA_JUMP_UP;
                             break;
                         }
@@ -880,7 +879,7 @@ int State_Control_Lara(Character* character, struct SSAnimation *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_LARA_WALK_FORWARD;
                 }
-                else if(cmd->jump && (ss_anim->last_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
+                else if(cmd->jump)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;
                 }

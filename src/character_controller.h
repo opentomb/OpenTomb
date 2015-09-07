@@ -386,8 +386,10 @@ struct Character : public Entity
     void transferToRoom(Room* /*room*/) override
     {
     }
+
     void updateHair() override;
-    void frameImpl(btScalar time, int16_t frame, int state) override;
+    void frame(btScalar time) override;
+
     void processSectorImpl() override;
     void jump(btScalar vert, btScalar v_horizontal) override;
     void kill() override

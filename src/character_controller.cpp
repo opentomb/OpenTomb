@@ -1865,6 +1865,8 @@ void Character::applyCommands()
             break;
     };
 
+    m_command.rot.setZero();
+
     updateRigidBody(true);
     updatePlatformPostStep();
 }
@@ -2240,21 +2242,79 @@ void Character::updateHair()
     }
 }
 
-void Character::frameImpl(btScalar time, int16_t frame, int state)
+/**
+ * Character framestep actions
+ * @param time      frame time
+ */
+void Character::frame(btScalar time)
 {
-    // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    int animStepResult = ENTITY_ANIM_NONE;
 
-    m_currentSpeed = (af->speed_x + frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+    if(!m_enabled && !isPlayer())
+    {
+        return;
+    }
+    if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    {
+        // Ragdoll
+        updateRigidBody(false); // bbox update, room update, m_transform from btBody...
+        return;
+    }
+    if(isPlayer() && (control_states.noclip || control_states.free_look))
+    {
+        updateCurrentBoneFrame(&m_bf);
+        updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+        return;
+    }
 
-    m_bf.animations.current_frame = frame;
+    fixPenetrations(nullptr);
+    m_bt.no_fix_all = false;    // FIXME
+
+    processSector();
+
+    if(isPlayer())  // Player:
+    {
+        updateParams();
+        checkCollisionCallbacks();  // physics collision checks, lua callbacks
+    }
+    else            // Other Character entities:
+    {
+        engine_lua.loopEntity(id());
+        if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
+            checkCollisionCallbacks();
+    }
+
+    animStepResult = stepAnimation(time);
+    if(m_bf.animations.onFrame != nullptr)
+    {
+        m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);
+    }
+
+    applyCommands();    // state_func()
+
+    if(m_command.action && (m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    {
+        checkActivators();          // bbox check f. interact/pickup, lua callbacks
+    }
+    if(getParam(PARAM_HEALTH) <= 0.0)
+    {
+        m_response.killed = true;   // Kill, if no HP.
+    }
+    updateHair();
 
     doWeaponFrame(time);
 
-    if(m_bf.animations.onFrame != nullptr)
-    {
-        m_bf.animations.onFrame(this, &m_bf.animations, state);
-    }
+    // Update acceleration/speed, it is calculated per anim frame index
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+
+
+    // TODO: check rigidbody update requirements.
+    //if(animStepResult != ENTITY_ANIM_NONE)
+    //{ }
+    updateCurrentBoneFrame(&m_bf);
+    updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
+    return;
 }
 
 void Character::processSectorImpl()
@@ -2431,67 +2491,37 @@ void Character::doWeaponFrame(btScalar time)
         setWeaponModel(m_currentWeapon, 1);
     }
 
-    btScalar dt;
-    int t;
-
     for(SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
         if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
                     if(m_command.ready_weapon)   // ready weapon
                     {
-                        ss_anim->current_animation = 1;
-                        ss_anim->next_animation = 1;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(1);  // draw from holster
+                        // fixme: reset lerp:
+                        ss_anim->lerp_last_animation = ss_anim->current_animation;
+                        ss_anim->lerp_last_frame = ss_anim->current_frame;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = 3;
-                        ss_anim->current_frame = ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(3);  // holster weapon
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
                     else if(m_command.action)
@@ -2500,60 +2530,29 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        // do nothing here, may be;
+                        // stay at frame 0
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
 
                 case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
+                    if(ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 2;
-                    }
-                    else if(m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_weaponCurrentState = WeaponState::Fire;
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                    if(m_command.action) {
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
+                        {
+                            ss_anim->setAnimation(2);  // shooting cycle
+                            m_weaponCurrentState = WeaponState::Fire;
+                        }
+                    } else {
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2561,56 +2560,22 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            ss_anim->setAnimation(2);  // shooting cycle
+                            // bang
                         }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        ss_anim->setAnimation(0,-1);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
 
                 case WeaponState::IdleToHide:
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    if(ss_anim->current_frame < t - 1)
+                    if( ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }
@@ -2619,60 +2584,33 @@ void Character::doWeaponFrame(btScalar time)
         }
         else if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() == 4))
         {
+            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+            ss_anim->anim_flags = ANIM_WEAPON_COMPAT;
             switch(m_weaponCurrentState)
             {
                 case WeaponState::Hide:
                     if(m_command.ready_weapon)   // ready weapon
                     {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(2);  // draw from holster
+                        // fixme: reset lerp:
+                        ss_anim->lerp_last_animation = ss_anim->current_animation;
+                        ss_anim->lerp_last_frame = ss_anim->current_frame;
                         m_weaponCurrentState = WeaponState::HideToReady;
                     }
                     break;
 
                 case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
+                    if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
                     if(m_command.ready_weapon)
                     {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->frame_time = 0.0;
+                        ss_anim->setAnimation(2,-1);  // draw weapon, end for reverse
                         m_weaponCurrentState = WeaponState::IdleToHide;
                     }
                     else if(m_command.action)
@@ -2681,60 +2619,28 @@ void Character::doWeaponFrame(btScalar time)
                     }
                     else
                     {
-                        // do nothing here, may be;
+                        // stay
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                     }
                     break;
 
                 case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    if(ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::Idle;
                     }
                     break;
 
                 case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 3;
-                    }
-                    else if(m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_weaponCurrentState = WeaponState::Fire;
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                    if(m_command.action) {
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
+                        {
+                            ss_anim->setAnimation(3);  // shooting cycle
+                            m_weaponCurrentState = WeaponState::Fire;
+                        }
+                    } else {
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
@@ -2742,65 +2648,28 @@ void Character::doWeaponFrame(btScalar time)
                 case WeaponState::Fire:
                     if(m_command.action)
                     {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
+                        if(ss_anim->stepAnimation(time, this) == ENTITY_ANIM_NEWANIM )
                         {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
+                            ss_anim->setAnimation(3);  // shooting cycle
+                            // bang
                         }
                     }
                     else
                     {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                        ss_anim->setAnimation(0,-1);  // hold drawn weapon to aim at target transition
                         m_weaponCurrentState = WeaponState::FireToIdle;
                     }
                     break;
 
                 case WeaponState::IdleToHide:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - static_cast<btScalar>(ss_anim->current_frame) * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
+                    // reverse stepping:
+                    if( ss_anim->stepAnimation(-time, this) == ENTITY_ANIM_NEWANIM)
                     {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
                         m_weaponCurrentState = WeaponState::Hide;
                         setWeaponModel(m_currentWeapon, 0);
                     }
                     break;
             };
         }
-
-        doAnimCommands(ss_anim, 0);
     }
 }

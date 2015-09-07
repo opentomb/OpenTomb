@@ -441,6 +441,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         pos[2] -= 512.0;
         ent->m_transform.getOrigin() = pos;
         ent->updateTransform();
+        ent->m_lerp_curr_transform = ent->m_transform;
     }
     else
     {
@@ -484,20 +485,20 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
         {
-            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
+            ch->m_command.rot[0] += -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ch->m_command.rot[0] = -2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
+            ch->m_command.rot[0] += -2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
         }
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0))
         {
-            ch->m_command.rot[1] = -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
+            ch->m_command.rot[1] += -2 * DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ch->m_command.rot[1] = 2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
+            ch->m_command.rot[1] += 2 * DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[0]);
         }
 
         ch->m_command.move = move_logic;
@@ -677,85 +678,12 @@ void Cam_FollowEntity(Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btS
     cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition(), cam->m_currentRoom);
 }
 
-void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
-{
-    for(auto entityPair : entities)
-    {
-        std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->m_enabled)
-        {
-            entity->processSector();
-            engine_lua.loopEntity(entity->id());
-
-            if(entity->m_typeFlags & ENTITY_TYPE_COLLCHECK)
-                entity->checkCollisionCallbacks();
-        }
-    }
-}
-
-void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
-{
-    for(auto entityPair : entities)
-    {
-        std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
-        {
-            entity->updateRigidBody(false);
-        }
-        else if(entity->frame(engine_frame_time))
-        {
-            entity->updateRigidBody(false);
-        }
-    }
-}
-
 void Game_UpdateAI()
 {
     //for(ALL CHARACTERS, EXCEPT PLAYER)
     {
         // UPDATE AI commands
     }
-}
-
-void Game_UpdateCharactersTree(const std::map<uint32_t, std::shared_ptr<Entity> >& entities)
-{
-    for(const auto& entPair : entities)
-    {
-        std::shared_ptr<Character> ent = std::dynamic_pointer_cast<Character>(entPair.second);
-        if(!ent)
-            continue;
-
-        if(ent->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            ent->checkActivators();
-        }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
-        {
-            ent->m_response.killed = true;                                      // Kill, if no HP.
-        }
-        ent->applyCommands();
-        ent->updateHair();
-    }
-}
-
-void Game_UpdateCharacters()
-{
-    std::shared_ptr<Character> ent = engine_world.character;
-
-    if(ent)
-    {
-        if(ent->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            ent->checkActivators();
-        }
-        if(ent->getParam(PARAM_HEALTH) <= 0.0)
-        {
-            ent->m_response.killed = true;   // Kill, if no HP.
-        }
-        ent->updateHair();
-    }
-
-    Game_UpdateCharactersTree(engine_world.entity_tree);
 }
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
@@ -766,36 +694,25 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
     return dt;
 }
 
+
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
+
+    // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
+    if(time > GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS))
+    {
+        time = GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS);
+        engine_frame_time = time;   // FIXME
+    }
     game_logic_time += time;
 
-    const bool is_character = (engine_world.character != nullptr);
 
     // GUI and controls should be updated at all times!
-
     Controls_PollSDLInput();
-    Gui_Update();
 
-    ///@FIXME: I have no idea what's happening here! - Lwmte
-
-    if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
-    {
-        if((is_character) &&
-           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
-        {
-            main_inventory_manager->setInventory(&engine_world.character->m_inventory);
-            main_inventory_manager->send(InventoryManager::InventoryState::Open);
-        }
-        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
-        {
-            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
-        }
-    }
-
-    // If console or inventory is active, only thing to update is audio.
-    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    // TODO: implement pause mechanism
+    if(Gui_Update())
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
@@ -805,52 +722,22 @@ void Game_Frame(btScalar time)
         return;
     }
 
-    // We're going to update main logic with a fixed step.
-    // This allows to conserve CPU resources and keep everything in sync!
-
-    if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
-    {
-        btScalar dt = Game_Tick(&game_logic_time);
-        engine_lua.doTasks(dt);
-        Game_UpdateAI();
-        Audio_Update();
-
-        if(is_character)
-        {
-            engine_world.character->processSector();
-            engine_world.character->updateParams();
-            engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
-        }
-
-        Game_LoopEntities(engine_world.entity_tree);
-    }
-
-    // This must be called EVERY frame to max out smoothness.
-    // Includes animations, camera movement, and so on.
-
+    // Translate input to character commands, move camera:
+    // TODO: decouple cam movement
     Game_ApplyControls(engine_world.character);
 
-    if(is_character)
-    {
-        if(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
-        {
-            engine_world.character->updateRigidBody(false);
-        }
+    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
+
+    if(engine_world.character) {
+        engine_world.character->updateInterpolation(time);
+
         if(!control_states.noclip && !control_states.free_look)
-        {
-            engine_world.character->frame(engine_frame_time);
-            engine_world.character->applyCommands();
-            engine_world.character->frame(0.0);
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
-        }
     }
-
-    Game_UpdateCharacters();
-
-    Game_UpdateAllEntities(engine_world.entity_tree);
-
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0f, 0);
+    for(auto entityPair : engine_world.entity_tree)
+    {
+        entityPair.second->updateInterpolation(time);
+    }
 
     Controls_RefreshStates();
     engine_world.updateAnimTextures();

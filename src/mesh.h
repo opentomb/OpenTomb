@@ -16,9 +16,9 @@
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
-#define ANIM_CMD_MOVE               0x01
-#define ANIM_CMD_CHANGE_DIRECTION   0x02
-#define ANIM_CMD_JUMP               0x04
+//#define ANIM_CMD_MOVE               0x01
+//#define ANIM_CMD_CHANGE_DIRECTION   0x02
+//#define ANIM_CMD_JUMP               0x04
 #include "loader/datatypes.h"
 #include "obb.h"
 
@@ -196,6 +196,14 @@ struct AnimSeq
     std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
 };
 
+
+struct AnimCommand
+{
+    int cmdId;
+    int param[3];
+};
+
+
 /*
  * room static mesh.
  */
@@ -250,28 +258,42 @@ struct SSBoneTag
 
 struct SkeletalModel;
 struct Character;
+struct StateChange;
+
+
+// Animation control flags
+#define ANIM_NORMAL_CONTROL  (0)
+#define ANIM_LOOP_LAST_FRAME (1)
+#define ANIM_LOCK            (2) // Animation will be locked once and for all.
+#define ANIM_WEAPON_COMPAT   (3) // Animation compatibility flag for old weapon overlay anims with
+                                 //   possible invalid state/animcmd/nextAnim values.
 
 struct SSAnimation
 {
     int16_t                     last_state = 0;
     int16_t                     next_state = 0;
-    int16_t                     last_animation = 0;
     int16_t                     current_animation = 0;                              //
-    int16_t                     next_animation = 0;                                 //
     //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t                     current_frame = 0;                                  //
-    int16_t                     next_frame = 0;                                     //
 
     uint16_t                    anim_flags = 0;                                     // additional animation control param
 
-    btScalar                    period = 1.0f / 30;                                 // one frame change period
-    btScalar                    frame_time = 0;                                     // current time
+    btScalar                    period = 1.0f / 30.0f;                              // one frame change period
+    btScalar                    frame_time = 0;                                     // time in current frame
+
+    // lerp:
     btScalar                    lerp = 0;
+    int16_t                     lerp_last_animation = 0;
+    int16_t                     lerp_last_frame = 0;
 
     void(*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
+
+    void setAnimation(int animation, int frame = 0, int another_model = -1);
+    bool findStateChange(uint32_t stateid, uint16_t& animid_out, uint16_t& frameid_inout);
+    int  stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
 };
 
 /*
@@ -306,15 +328,13 @@ struct BoneTag
  */
 struct BoneFrame
 {
-    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
-    std::vector<BoneTag> bone_tags;                                              // bones data
-    btVector3 pos;                                                 // position (base offset)
-    btVector3 bb_min;                                              // bounding box min coordinates
-    btVector3 bb_max;                                              // bounding box max coordinates
-    btVector3 centre;                                              // bounding box centre
-    btVector3 move;                                                // move command data
-    btScalar            v_Vertical;                                             // jump command data
-    btScalar            v_Horizontal;                                           // jump command data
+    std::vector<BoneTag> bone_tags;                 // bones data
+    btVector3            pos;                       // position (base offset)
+    btVector3            bb_min;                    // bounding box min coordinates
+    btVector3            bb_max;                    // bounding box max coordinates
+    btVector3            centre;                    // bounding box centre
+
+    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
 /*
@@ -353,21 +373,23 @@ struct StateChange
  */
 struct AnimationFrame
 {
-    uint32_t                    id;
-    uint8_t                     original_frame_rate;
-    int32_t                     speed_x;                // Forward-backward speed
-    int32_t                     accel_x;                // Forward-backward accel
-    int32_t                     speed_y;                // Left-right speed
-    int32_t                     accel_y;                // Left-right accel
-    uint32_t                    anim_command;
-    uint32_t                    num_anim_commands;
-    uint16_t                    state_id;
-    std::vector<BoneFrame> frames;                 // Frame data
+    uint32_t                 id;
+    uint8_t                  original_frame_rate;
+    int32_t                  speed_x;               // Forward-backward speed
+    int32_t                  accel_x;               // Forward-backward accel
+    int32_t                  speed_y;               // Left-right speed
+    int32_t                  accel_y;               // Left-right accel
+    uint32_t                 anim_command;
+    uint32_t                 num_anim_commands;
+    uint16_t                 state_id;
+    std::vector<BoneFrame>   frames;                // Frame data
 
-    std::vector<StateChange> state_change;           // Animation statechanges data
+    std::vector<StateChange> state_change;          // Animation statechanges data
 
-    AnimationFrame   *next_anim;              // Next default animation
-    int                         next_frame;             // Next default frame
+    AnimationFrame           *next_anim;            // Next default animation
+    int                      next_frame;            // Next default frame
+
+    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
 /*

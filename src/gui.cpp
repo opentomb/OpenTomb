@@ -333,12 +333,32 @@ TextLine *Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
     return nullptr;
 }
 
-void Gui_Update()
+bool Gui_Update()
 {
     if(fontManager != nullptr)
     {
         fontManager->Update();
     }
+
+    if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
+    {
+        if(engine_world.character &&
+           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
+        {
+            main_inventory_manager->setInventory(&engine_world.character->m_inventory);
+            main_inventory_manager->send(InventoryManager::InventoryState::Open);
+        }
+        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
+        {
+            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
+        }
+    }
+
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    {
+        return true;
+    }
+    return false;
 }
 
 void Gui_Resize()
@@ -516,45 +536,9 @@ void Gui_RenderStrings()
  */
 void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 {
-    int16_t frame, anim;
-    long int t;
-    btScalar dt;
-    StateChange* stc;
+    bf->animations.stepAnimation(time);
 
-    bf->animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
-    Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
-    if(anim != bf->animations.current_animation)
-    {
-        bf->animations.last_animation = bf->animations.current_animation;
-        /*frame %= bf->model->animations[anim].frames.size();
-        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames.size() - 1 + frame);
-
-        bf->last_state = bf->model->animations[anim].state_id;
-        bf->next_state = bf->model->animations[anim].state_id;
-        bf->current_animation = anim;
-        bf->current_frame = frame;
-        bf->next_animation = anim;
-        bf->next_frame = frame;*/
-        stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
-    }
-    else if(bf->animations.current_frame != frame)
-    {
-        if(bf->animations.current_frame == 0)
-        {
-            bf->animations.last_animation = bf->animations.current_animation;
-        }
-        bf->animations.current_frame = frame;
-    }
-
-    bf->animations.frame_time += time;
-
-    t = (bf->animations.frame_time) / bf->animations.period;
-    dt = bf->animations.frame_time - static_cast<btScalar>(t) * bf->animations.period;
-    bf->animations.frame_time = static_cast<btScalar>(frame) * bf->animations.period + dt;
-    bf->animations.lerp = dt / bf->animations.period;
-    Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity::updateCurrentBoneFrame(bf, nullptr);
+    Entity::updateCurrentBoneFrame(bf);
 }
 
 /**
