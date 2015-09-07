@@ -1126,6 +1126,8 @@ void Entity::frame(btScalar time)
     }
 
     fixPenetrations(nullptr);
+    m_bt.no_fix_all = false;    // FIXME
+
     processSector();    // triggers
     engine_lua.loopEntity(id());
 

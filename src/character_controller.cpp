@@ -2268,6 +2268,8 @@ void Character::frame(btScalar time)
     }
 
     fixPenetrations(nullptr);
+    m_bt.no_fix_all = false;    // FIXME
+
     processSector();
 
     if(isPlayer())  // Player:
