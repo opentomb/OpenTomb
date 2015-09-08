@@ -195,9 +195,7 @@ private:
 };
 
 btVector3 listener_position;
-struct FxManager    fxManager;
-
-bool                        StreamTrack::damp_active = false;
+FxManager fxManager;
 
 // ======== AUDIOSOURCE CLASS IMPLEMENTATION ========
 
@@ -502,525 +500,6 @@ void Source::LinkEmitter()
     }
 }
 
-// ======== STREAMTRACK CLASS IMPLEMENTATION ========
-
-StreamTrack::StreamTrack()
-{
-    alGenBuffers(StreamBufferCount, buffers);              // Generate all buffers at once.
-    alGenSources(1, &source);
-    format = 0x00;
-    rate = 0;
-    dampable = false;
-
-    wad_file = nullptr;
-    snd_file = nullptr;
-
-    if(alIsSource(source))
-    {
-        alSource3f(source, AL_POSITION, 0.0f, 0.0f, -1.0f); // OpenAL tut says this.
-        alSource3f(source, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
-        alSource3f(source, AL_DIRECTION, 0.0f, 0.0f, 0.0f);
-        alSourcef(source, AL_ROLLOFF_FACTOR, 0.0f);
-        alSourcei(source, AL_SOURCE_RELATIVE, AL_TRUE);
-        alSourcei(source, AL_LOOPING, AL_FALSE); // No effect, but just in case...
-
-        current_track = -1;
-        current_volume = 0.0f;
-        damped_volume = 0.0f;
-        active = false;
-        ending = false;
-        stream_type = StreamType::Oneshot;
-
-        // Setting method to -1 at init is required to prevent accidental
-        // ov_clear call, which results in crash, if no vorbis file was
-        // associated with given vorbis file structure.
-
-        method = StreamMethod::Any;
-    }
-}
-
-StreamTrack::~StreamTrack()
-{
-    Stop(); // In case we haven't stopped yet.
-
-    alDeleteSources(1, &source);
-    alDeleteBuffers(StreamBufferCount, buffers);
-}
-
-bool StreamTrack::Load(const char *path, const int index, const StreamType type, const StreamMethod load_method)
-{
-    if(path == nullptr)
-    {
-        return false;   // Do not load, if path, type or method are incorrect.
-    }
-
-    current_track = index;
-    stream_type = type;
-    method = load_method;
-    dampable = (stream_type == StreamType::Background);   // Damp only looped (BGM) tracks.
-
-    // Select corresponding stream loading method.
-
-    if(method == StreamMethod::Track)
-    {
-        return (Load_Track(path));
-    }
-    else
-    {
-        return (Load_Wad(static_cast<uint8_t>(index), path));
-    }
-}
-
-bool StreamTrack::Unload()
-{
-    bool result = false;
-
-    if(alIsSource(source))  // Stop and unlink all associated buffers.
-    {
-        int queued;
-        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-
-        while(queued--)
-        {
-            ALuint buffer;
-            alSourceUnqueueBuffers(source, 1, &buffer);
-        }
-    }
-
-    if(snd_file)
-    {
-        sf_close(snd_file);
-        snd_file = nullptr;
-        result = true;
-    }
-
-    if(wad_file)
-    {
-        fclose(wad_file);
-        wad_file = nullptr;
-        result = true;
-    }
-
-    return result;
-}
-
-bool StreamTrack::Load_Track(const char *path)
-{
-    memset(&sf_info, 0, sizeof(sf_info));
-    if(!(snd_file = sf_open(path, SFM_READ, &sf_info)))
-    {
-        engine::Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
-        method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
-        return false;
-    }
-
-    Console::instance().notify(SYSNOTE_TRACK_OPENED, path,
-                                   sf_info.channels, sf_info.samplerate);
-
-#ifdef AUDIO_OPENAL_FLOAT
-    if(sf_info.channels == 1)
-        format = AL_FORMAT_MONO_FLOAT32;
-    else
-        format = AL_FORMAT_STEREO_FLOAT32;
-#else
-    if(sf_info.channels == 1)
-        format = AL_FORMAT_MONO16;
-    else
-        format = AL_FORMAT_STEREO16;
-#endif
-
-    rate = sf_info.samplerate;
-
-    return true;    // Success!
-}
-
-bool StreamTrack::Load_Wad(uint8_t index, const char* filename)
-{
-    if(index >= WADCount)
-    {
-        Console::instance().warning(SYSWARN_WAD_OUT_OF_BOUNDS, WADCount);
-        return false;
-    }
-    else
-    {
-        wad_file = fopen(filename, "rb");
-
-        if(!wad_file)
-        {
-            Console::instance().warning(SYSWARN_FILE_NOT_FOUND, filename);
-            return false;
-        }
-        else
-        {
-            char track_name[WADNameLength];
-            uint32_t offset = 0;
-            uint32_t length = 0;
-
-            setbuf(wad_file, nullptr);
-            fseek(wad_file, (index * WADStride), 0);
-            fread(static_cast<void*>(track_name), WADNameLength, 1, wad_file);
-            fread(static_cast<void*>(&length), sizeof(uint32_t), 1, wad_file);
-            fread(static_cast<void*>(&offset), sizeof(uint32_t), 1, wad_file);
-
-            fseek(wad_file, offset, 0);
-
-            if(!(snd_file = sf_open_fd(fileno(wad_file), SFM_READ, &sf_info, false)))
-            {
-                Console::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
-                method = StreamMethod::Any;
-                return false;
-            }
-            else
-            {
-                Console::instance().notify(SYSNOTE_WAD_PLAYING, filename, offset, length);
-                Console::instance().notify(SYSNOTE_TRACK_OPENED, track_name,
-                                               sf_info.channels, sf_info.samplerate);
-            }
-
-#ifdef AUDIO_OPENAL_FLOAT
-            if(sf_info.channels == 1)
-                format = AL_FORMAT_MONO_FLOAT32;
-            else
-                format = AL_FORMAT_STEREO_FLOAT32;
-#else
-            if(sf_info.channels == 1)
-                format = AL_FORMAT_MONO16;
-            else
-                format = AL_FORMAT_STEREO16;
-#endif
-
-            rate = sf_info.samplerate;
-
-            return true;    // Success!
-        }
-    }
-}
-
-bool StreamTrack::Play(bool fade_in)
-{
-    int buffers_to_play = 0;
-
-    // At start-up, we fill all available buffers.
-    // TR soundtracks contain a lot of short tracks, like Lara speech etc., and
-    // there is high chance that such short tracks won't fill all defined buffers.
-    // For this reason, we count amount of filled buffers, and immediately stop
-    // allocating them as long as Stream() routine returns false. Later, we use
-    // this number for queuing buffers to source.
-
-    for(int i = 0; i < StreamBufferCount; i++, buffers_to_play++)
-    {
-        if(!Stream(buffers[i]))
-        {
-            if(!i)
-            {
-                engine::Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
-                return false;
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    if(fade_in)     // If fade-in flag is set, do it.
-    {
-        current_volume = 0.0;
-    }
-    else
-    {
-        current_volume = 1.0;
-    }
-
-    if(audio_settings.use_effects)
-    {
-        if(stream_type == StreamType::Chat)
-        {
-            SetFX();
-        }
-        else
-        {
-            UnsetFX();
-        }
-    }
-
-    alSourcef(source, AL_GAIN, current_volume * audio_settings.music_volume);
-    alSourceQueueBuffers(source, buffers_to_play, buffers);
-    alSourcePlay(source);
-
-    ending = false;
-    active = true;
-    return   true;
-}
-
-void StreamTrack::Pause()
-{
-    if(alIsSource(source))
-        alSourcePause(source);
-}
-
-void StreamTrack::End()     // Smoothly end track with fadeout.
-{
-    ending = true;
-}
-
-void StreamTrack::Stop()    // Immediately stop track.
-{
-    if(alIsSource(source))  // Stop and unlink all associated buffers.
-    {
-        if(IsPlaying()) alSourceStop(source);
-    }
-}
-
-bool StreamTrack::Update()
-{
-    int  processed = 0;
-    bool buffered = true;
-    bool change_gain = false;
-
-    if(!active) return true; // Nothing to do here.
-
-    if(!IsPlaying())
-    {
-        Unload();
-        active = false;
-        return true;
-    }
-
-    // Update damping, if track supports it.
-
-    if(dampable)
-    {
-        // We check if damp condition is active, and if so, is it already at low-level or not.
-
-        if(damp_active && (damped_volume < StreamDampLevel))
-        {
-            damped_volume += StreamDampSpeed;
-
-            // Clamp volume.
-            damped_volume = util::clamp(damped_volume, 0.0f, StreamDampLevel);
-            change_gain   = true;
-        }
-        else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
-        {
-            damped_volume -= StreamDampSpeed;
-
-            // Clamp volume.
-            damped_volume = util::clamp(damped_volume, 0.0f, StreamDampLevel);
-            change_gain   = true;
-        }
-    }
-
-    if(ending)     // If track is ending, crossfade it.
-    {
-        switch(stream_type)
-        {
-            case StreamType::Background:
-                current_volume -= CrossfadeBackground;
-                break;
-
-            case StreamType::Oneshot:
-                current_volume -= CrossfadeOneshot;
-                break;
-
-            case StreamType::Chat:
-                current_volume -= CrossfadeChat;
-                break;
-        }
-
-        // Crossfade has ended, we can now kill the stream.
-        if(current_volume <= 0.0)
-        {
-            Stop();
-            return true;    // Stop track, although return success, as everything is normal.
-        }
-        else
-        {
-            change_gain = true;
-        }
-    }
-    else
-    {
-        // If track is not ending and playing, restore it from crossfade.
-        if(current_volume < 1.0)
-        {
-            switch(stream_type)
-            {
-                case StreamType::Background:
-                    current_volume += CrossfadeBackground;
-                    break;
-
-                case StreamType::Oneshot:
-                    current_volume += CrossfadeOneshot;
-                    break;
-
-                case StreamType::Chat:
-                    current_volume += CrossfadeChat;
-                    break;
-            }
-
-            // Clamp volume.
-            current_volume = util::clamp(current_volume, 0.0f, 1.0f);
-            change_gain    = true;
-        }
-    }
-
-    if(change_gain) // If any condition which modify track gain was met, call AL gain change.
-    {
-        alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
-                  (1.0f - damped_volume)       *  // Damp volume.
-                  audio_settings.music_volume);  // Global music volume setting.
-    }
-
-    // Check if any track buffers were already processed.
-
-    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
-
-    while(processed--)  // Manage processed buffers.
-    {
-        ALuint buffer;
-        alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.
-        buffered = Stream(buffer);                      // Refill processed buffer.
-        if(buffered)
-            alSourceQueueBuffers(source, 1, &buffer);   // Relink processed buffer.
-    }
-
-    return buffered;
-}
-
-bool StreamTrack::IsTrack(const int track_index)    // Check if track has specific index.
-{
-    return (current_track == track_index);
-}
-
-bool StreamTrack::IsType(const StreamType track_type)      // Check if track has specific type.
-{
-    return (track_type == stream_type);
-}
-
-bool StreamTrack::IsActive()                         // Check if track is still active.
-{
-    return active;
-}
-
-bool StreamTrack::IsDampable()                      // Check if track is dampable.
-{
-    return dampable;
-}
-
-bool StreamTrack::IsPlaying()                       // Check if track is playing.
-{
-    if(alIsSource(source))
-    {
-        ALenum state = AL_STOPPED;
-        alGetSourcei(source, AL_SOURCE_STATE, &state);
-
-        // Paused state and existing file pointers also counts as playing.
-        return ((state == AL_PLAYING) || (state == AL_PAUSED));
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool StreamTrack::Stream(ALuint buffer)
-{
-    assert(audio_settings.stream_buffer_size >= sf_info.channels - 1);
-#ifdef AUDIO_OPENAL_FLOAT
-    std::vector<ALfloat> pcm(audio_settings.stream_buffer_size);
-#else
-    std::vector<ALshort> pcm(audio_settings.stream_buffer_size);
-#endif
-    size_t size = 0;
-
-    // SBS - C + 1 is important to avoid endless loops if the buffer size isn't a multiple of the channels
-    while(size < pcm.size() - sf_info.channels + 1)
-    {
-        // we need to read a multiple of sf_info.channels here
-        const size_t samplesToRead = ((audio_settings.stream_buffer_size - size) / sf_info.channels) * sf_info.channels;
-#ifdef AUDIO_OPENAL_FLOAT
-        const sf_count_t samplesRead = sf_read_float(snd_file, pcm.data() + size, samplesToRead);
-#else
-        const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead);
-#endif
-
-        if(samplesRead > 0)
-        {
-            size += samplesRead;
-        }
-        else
-        {
-            int error = sf_error(snd_file);
-            if(error != SF_ERR_NO_ERROR)
-            {
-                logSndfileError(error);
-                return false;
-            }
-            else
-            {
-                if(stream_type == StreamType::Background)
-                {
-                    sf_seek(snd_file, 0, SEEK_SET);
-                }
-                else
-                {
-                    break;   // Stream is ending - do nothing.
-                }
-            }
-        }
-    }
-
-    if(size == 0)
-        return false;
-
-    alBufferData(buffer, format, pcm.data(), static_cast<ALsizei>(size * sizeof(pcm[0])), rate);
-    return true;
-}
-
-void StreamTrack::SetFX()
-{
-    ALuint effect;
-    ALuint slot;
-
-    // Reverb FX is applied globally through audio send. Since player can
-    // jump between adjacent rooms with different reverb info, we assign
-    // several (2 by default) interchangeable audio sends, which are switched
-    // every time current room reverb is changed.
-
-    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
-    {
-        fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot = (++fxManager.current_slot > (MaxSlots - 1)) ? (0) : (fxManager.current_slot);
-
-        effect = fxManager.al_effect[fxManager.current_room_type];
-        slot = fxManager.al_slot[fxManager.current_slot];
-
-        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
-        {
-            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
-        }
-    }
-    else    // Do not switch audio send.
-    {
-        slot = fxManager.al_slot[fxManager.current_slot];
-    }
-
-    // Assign global reverb FX to channel.
-
-    alSource3i(source, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
-}
-
-void StreamTrack::UnsetFX()
-{
-    // Remove any audio sends and direct filters from channel.
-
-    alSourcei(source, AL_DIRECT_FILTER, AL_FILTER_NULL);
-    alSource3i(source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
-}
-
-// ======== END STREAMTRACK CLASS IMPLEMENTATION ========
-
 // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
 // call this one.
 
@@ -1101,7 +580,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Finally - load our track.
 
-    if(!engine::engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
+    if(!engine::engine_world.stream_tracks[target_stream].load(file_path, track_index, stream_type, load_method))
     {
         Console::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
         return StreamError::LoadError;
@@ -1109,37 +588,13 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!engine::engine_world.stream_tracks[target_stream].Play(do_fade_in))
+    if(!engine::engine_world.stream_tracks[target_stream].play(do_fade_in))
     {
         Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
     }
 
     return StreamError::Processed;   // Everything is OK!
-}
-
-// General damping update procedure. Constantly checks if damp condition exists, and
-// if so, it lowers the volume of tracks which are dampable.
-
-void updateStreamsDamping()
-{
-    StreamTrack::damp_active = false;   // Reset damp activity flag.
-
-    // Scan for any tracks that can provoke damp. Usually it's any tracks that are
-    // NOT background. So we simply check this condition and set damp activity flag
-    // if condition is met.
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if(engine::engine_world.stream_tracks[i].IsPlaying())
-        {
-            if(!engine::engine_world.stream_tracks[i].IsType(StreamType::Background))
-            {
-                StreamTrack::damp_active = true;
-                return; // No need to check more, we found at least one condition.
-            }
-        }
-    }
 }
 
 // Update routine for all streams. Should be placed into main loop.
@@ -1150,7 +605,7 @@ void updateStreams()
 
     for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        engine::engine_world.stream_tracks[i].Update();
+        engine::engine_world.stream_tracks[i].update();
     }
 }
 
@@ -1158,8 +613,8 @@ bool isTrackPlaying(int32_t track_index)
 {
     for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if(((track_index == -1) || (engine::engine_world.stream_tracks[i].IsTrack(track_index))) &&
-           engine::engine_world.stream_tracks[i].IsPlaying())
+        if(((track_index == -1) || (engine::engine_world.stream_tracks[i].isTrack(track_index))) &&
+           engine::engine_world.stream_tracks[i].isPlaying())
         {
             return true;
         }
@@ -1207,50 +662,14 @@ int getFreeStream()
 {
     for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
     {
-        if((!engine::engine_world.stream_tracks[i].IsPlaying()) &&
-           (!engine::engine_world.stream_tracks[i].IsActive()))
+        if((!engine::engine_world.stream_tracks[i].isPlaying()) &&
+           (!engine::engine_world.stream_tracks[i].isActive()))
         {
             return i;
         }
     }
 
     return -1;  // If no free source, return error.
-}
-
-bool stopStreams(StreamType stream_type)
-{
-    bool result = false;
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if(engine::engine_world.stream_tracks[i].IsPlaying() &&
-           (engine::engine_world.stream_tracks[i].IsType(stream_type) ||
-            stream_type == StreamType::Any)) // Stop ALL streams at once.
-        {
-            result = true;
-            engine::engine_world.stream_tracks[i].Stop();
-        }
-    }
-
-    return result;
-}
-
-bool endStreams(StreamType stream_type)
-{
-    bool result = false;
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if((stream_type == StreamType::Any) ||                              // End ALL streams at once.
-           ((engine::engine_world.stream_tracks[i].IsPlaying()) &&
-            (engine::engine_world.stream_tracks[i].IsType(stream_type))))
-        {
-            result = true;
-            engine::engine_world.stream_tracks[i].End();
-        }
-    }
-
-    return result;
 }
 
 // ======== Audio source global methods ========

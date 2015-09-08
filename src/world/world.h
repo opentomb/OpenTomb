@@ -7,6 +7,7 @@
 #include <LinearMath/btVector3.h>
 
 #include "audio/audio.h"
+#include "audio/streamtrack.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
 #include "object.h"

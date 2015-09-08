@@ -21,6 +21,12 @@ struct Entity;
 namespace audio
 {
 
+#ifndef AL_ALEXT_PROTOTYPES
+extern "C" LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot;
+extern "C" LPALISEFFECT alIsEffect;
+extern "C" LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti;
+#endif
+
 namespace
 {
 // AL_UNITS constant is used to translate native TR coordinates into
@@ -218,33 +224,7 @@ enum TR_AUDIO_SOUND_GLOBALID
     TR_AUDIO_SOUND_GLOBALID_LASTINDEX
 };
 
-
-// Stream loading method describes the way audiotracks are loaded.
-// There are either seperate track files or single CDAUDIO.WAD file.
-
-enum class StreamMethod
-{
-    Any,
-    Track,  // Separate tracks. Used in TR 1, 2, 4, 5.
-    WAD    // WAD file.  Used in TR3.
-};
-
-// Audio stream type defines stream behaviour. While background track
-// loops forever until interrupted by other background track, one-shot
-// and chat tracks doesn't interrupt them, playing in parallel instead.
-// However, all stream types could be interrupted by next pending track
-// with same type.
-
-enum class StreamType
-{
-    Any,
-    Background,    // BGM tracks.
-    Oneshot,       // One-shot music pieces.
-    Chat          // Chat tracks.
-};
-
 // Audio settings structure.
-
 struct Settings
 {
     ALfloat     music_volume = 0;
@@ -358,68 +338,6 @@ private:
     void SetVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };
 
-// Main stream track class is used to create multi-channel soundtrack player,
-// which differs from classic TR scheme, where each new soundtrack interrupted
-// previous one. With flexible class handling, we now can implement multitrack
-// player with automatic channel and crossfade management.
-
-class StreamTrack
-{
-public:
-    StreamTrack();      // Stream track constructor.
-    ~StreamTrack();      // Stream track destructor.
-
-     // Load routine prepares track for playing. Arguments are track index,
-     // stream type (background, one-shot or chat) and load method, which
-     // differs for TR1-2, TR3 and TR4-5.
-
-    bool Load(const char *path, const int index, const StreamType type, const StreamMethod load_method);
-    bool Unload();
-
-    bool Play(bool fade_in = false);     // Begins to play track.
-    void Pause();                        // Pauses track, preserving position.
-    void End();                          // End track with fade-out.
-    void Stop();                         // Immediately stop track.
-    bool Update();                       // Update track and manage streaming.
-
-    bool IsTrack(const int track_index); // Checks desired track's index.
-    bool IsType(const StreamType track_type);   // Checks desired track's type.
-    bool IsPlaying();                    // Checks if track is playing.
-    bool IsActive();                     // Checks if track is still active.
-    bool IsDampable();                   // Checks if track is dampable.
-
-    void SetFX();                        // Set reverb FX, according to room flag.
-    void UnsetFX();                      // Remove any reverb FX from source.
-
-    static bool damp_active;             // Global flag for damping BGM tracks.
-
-private:
-    bool Load_Track(const char *path);                     // Track loading.
-    bool Load_Wad(uint8_t index, const char *filename);    // Wad loading.
-
-    bool Stream(ALuint buffer);          // General stream routine.
-
-    FILE*           wad_file;   // General handle for opened wad file.
-    SNDFILE*        snd_file;   // Sndfile file reader needs its own handle.
-    SF_INFO         sf_info;
-
-    // General OpenAL fields
-
-    ALuint          source;
-    ALuint          buffers[StreamBufferCount];
-    ALenum          format;
-    ALsizei         rate;
-    ALfloat         current_volume;     // Stream volume, considering fades.
-    ALfloat         damped_volume;      // Additional damp volume multiplier.
-
-    bool            active;             // If track is active or not.
-    bool            ending;             // Used when track is being faded by other one.
-    bool            dampable;           // Specifies if track can be damped by others.
-    StreamType      stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
-    int             current_track;      // Needed to prevent same track sending.
-    StreamMethod    method;             // TRACK (TR1-2/4-5) or WAD (TR3).
-};
-
 // General audio routines.
 
 void initGlobals();
@@ -458,11 +376,6 @@ int  getFreeStream();                          // Get free (stopped) stream.
 bool isTrackPlaying(int32_t track_index = -1); // See if track is already playing.
 bool trackAlreadyPlayed(uint32_t track_index, int8_t mask = 0);      // Check if track played with given activation mask.
 void updateStreams();                          // Update all streams.
-void updateStreamsDamping();                   // See if there any damping tracks playing.
-void pauseStreams(StreamType stream_type = StreamType::Any);       // Pause ALL streams (of specified type).
-void resumeStreams(StreamType stream_type = StreamType::Any);      // Resume ALL streams.
-bool endStreams(StreamType stream_type = StreamType::Any);         // End ALL streams (with crossfade).
-bool stopStreams(StreamType stream_type = StreamType::Any);        // Immediately stop ALL streams.
 
 // Generally, you need only this function to trigger any track.
 StreamError streamPlay(const uint32_t track_index, const uint8_t mask = 0);

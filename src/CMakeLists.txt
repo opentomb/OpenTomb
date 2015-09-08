@@ -27,6 +27,7 @@ list(APPEND PRJ_SRC
     util/matrix4.cpp
 
     audio/audio.cpp
+    audio/streamtrack.cpp
 
     render/gl_util.cpp
     render/render.cpp
@@ -83,6 +84,7 @@ list(APPEND PRJ_HDR
     util/matrix4.h
 
     audio/audio.h
+    audio/streamtrack.h
 
     render/gl_util.h
     render/render.h
