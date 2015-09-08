@@ -66,6 +66,7 @@ enum font_Type
 #define GUI_MAX_FONTS      8    // 8 fonts is PLENTY.
 
 void Con_Init();
+void Con_SetExecFunction(int(*exec_cmd)(char *ch));
 void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();

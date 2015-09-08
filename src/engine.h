@@ -116,19 +116,17 @@ extern float                                 engine_frame_time;
 extern struct camera_s                       engine_camera;
 extern struct world_s                        engine_world;
 
-
 engine_container_p Container_Create();
 
-void Engine_Init_Pre();     // Initial init
-void Engine_Init_Post();    // Finalizing init
 
-void Engine_InitDefaultGlobals();
-
-void Engine_Destroy();
+void Engine_Start(const char *config_name);
 void Engine_Shutdown(int val) __attribute__((noreturn));
+void Engine_Destroy();
+void Engine_SetDone();
+void Engine_LoadConfig(const char *filename);
+void Engine_SaveConfig(const char *filename);
 
-void Engine_Frame(float time);
-void Engine_Display();
+void Engine_MainLoop();
 
 // PC-specific level loader routines.
 
@@ -143,9 +141,5 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 int  Engine_LoadMap(const char *name);
 
 extern "C" int  Engine_ExecCmd(char *ch);
-
-void Engine_InitConfig(const char *filename);
-void Engine_SaveConfig();
-
 
 #endif

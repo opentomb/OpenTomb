@@ -118,7 +118,6 @@ typedef struct control_settings_s
 extern struct engine_control_state_s            control_states;
 extern struct control_settings_s                control_mapper;
 
-void Controls_PollSDLInput();
 void Controls_DebugKeys(int button, int state);
 void Controls_PrimaryMouseDown(float from[3], float to[3]);
 void Controls_SecondaryMouseDown();

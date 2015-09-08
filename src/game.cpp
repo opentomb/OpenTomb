@@ -676,7 +676,6 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
         lua_LoopEntity(engine_lua, entity->id);
     }
 
-
     if(x->left != NULL)
     {
         Game_LoopEntities(x->left);
@@ -803,7 +802,6 @@ void Game_Frame(float time)
 
     // GUI and controls should be updated at all times!
 
-    Controls_PollSDLInput();
     Gui_Update();
 
     ///@FIXME: I have no idea what's happening here! - Lwmte
@@ -876,7 +874,10 @@ void Game_Frame(float time)
 
     Game_UpdateCharacters();
 
-    if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
+    if(is_entitytree)
+    {
+        Game_UpdateAllEntities(engine_world.entity_tree->root);
+    }
 
     Physics_StepSimulation(time);
 

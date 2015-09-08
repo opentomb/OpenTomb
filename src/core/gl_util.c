@@ -14,7 +14,6 @@
 #include "system.h"
 
 #define GL_LOG_FILENAME "gl_log.txt"
-#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 
 /* Miscellaneous */
@@ -287,158 +286,158 @@ void InitGLExtFuncs()
                             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
     /* Miscellaneous */
-    SAFE_GET_PROC(qglClearIndex, PFNGLCLEARINDEXPROC, "glClearIndex");
-    SAFE_GET_PROC(qglClearColor, PFNGLCLEARCOLORPROC, "glClearColor");
-    SAFE_GET_PROC(qglClear, PFNGLCLEARPROC, "glClear");
-    SAFE_GET_PROC(qglIndexMask, PFNGLINDEXMASKPROC, "glIndexMask");
-    SAFE_GET_PROC(qglColorMask, PFNGLCOLORMASKPROC, "glColorMask");
-    SAFE_GET_PROC(qglAlphaFunc, PFNGLALPHAFUNCPROC, "glAlphaFunc");
-    SAFE_GET_PROC(qglBlendFunc, PFNGLBLENDFUNCPROC, "glBlendFunc");
-    SAFE_GET_PROC(qglLogicOp, PFNGLLOGICOPPROC, "glLogicOp");
-    SAFE_GET_PROC(qglCullFace, PFNGLCULLFACEPROC, "glCullFace");
-    SAFE_GET_PROC(qglFrontFace, PFNGLFRONTFACEPROC, "glFrontFace");
-    SAFE_GET_PROC(qglPushAttrib, PFNGLPUSHATTRIBPROC, "glPushAttrib");
-    SAFE_GET_PROC(qglPointSize, PFNGLPOINTSIZEPROC, "glPointSize");
-    SAFE_GET_PROC(qglLineWidth, PFNGLLINEWIDTHPROC, "glLineWidth");
-    SAFE_GET_PROC(qglLineStipple, PFNGLLINESTIPPLEPROC, "glLineStipple");
-    SAFE_GET_PROC(qglPolygonMode, PFNGLPOLYGONMODEPROC, "glPolygonMode");
-    SAFE_GET_PROC(qglPolygonOffset, PFNGLPOLYGONOFFSETPROC, "glPolygonOffset");
-    SAFE_GET_PROC(qglPolygonStipple, PFNGLPOLYGONSTIPPLEPROC, "glPolygonStipple");
-    SAFE_GET_PROC(qglGetPolygonStipple, PFNGLGETPOLYGONSTIPPLEPROC, "glGetPolygonStipple");
-    SAFE_GET_PROC(qglEdgeFlag, PFNGLEDGEFLAGPROC, "glEdgeFlag");
-    SAFE_GET_PROC(qglEdgeFlagv, PFNGLEDGEFLAGVPROC, "glEdgeFlagv");
-    SAFE_GET_PROC(qglScissor, PFNGLSCISSORPROC, "glScissor");
-    SAFE_GET_PROC(qglClipPlane, PFNGLCLIPPLANEPROC, "glClipPlane");
-    SAFE_GET_PROC(qglGetClipPlane, PFNGLGETCLIPPLANEPROC, "glGetClipPlane");
-    SAFE_GET_PROC(qglDrawBuffer, PFNGLDRAWBUFFERPROC, "glDrawBuffer");
-    SAFE_GET_PROC(qglReadBuffer, PFNGLREADBUFFERPROC, "glReadBuffer");
-    SAFE_GET_PROC(qglEnable, PFNGLENABLEPROC, "glEnable");
-    SAFE_GET_PROC(qglDisable, PFNGLDISABLEPROC, "glDisable");
-    SAFE_GET_PROC(qglIsEnabled, PFNGLISENABLEDPROC, "glIsEnabled");
-    SAFE_GET_PROC(qglEnableClientState, PFNGLENABLECLIENTSTATEPROC, "glEnableClientState");
-    SAFE_GET_PROC(qglDisableClientState, PFNGLDISABLECLIENTSTATEPROC, "glDisableClientState");
-    SAFE_GET_PROC(qglGetError, PFNGLGETERRORPROC, "glGetError");
-    SAFE_GET_PROC(qglGetString, PFNGLGETSTRINGPROC, "glGetString");
-    SAFE_GET_PROC(qglGetBooleanv, PFNGLGETBOOLEANVPROC, "glGetBooleanv");
-    SAFE_GET_PROC(qglGetDoublev, PFNGLGETDOUBLEVPROC, "glGetDoublev");
-    SAFE_GET_PROC(qglGetFloatv, PFNGLGETFLOATVPROC, "glGetFloatv");
-    SAFE_GET_PROC(qglGetIntegerv, PFNGLGETIINTEGERVPROC, "glGetIntegerv");
-    SAFE_GET_PROC(qglPushAttrib, PFNGLPUSHATTRIBPROC, "glPushAttrib");
-    SAFE_GET_PROC(qglPopAttrib, PFNGLPOPATTRIBPROC, "glPopAttrib");
-    SAFE_GET_PROC(qglPushClientAttrib, PFNGLPUSHCLIENTATTRIBPROC, "glPushClientAttrib");  /* 1.1 */
-    SAFE_GET_PROC(qglPopClientAttrib, PFNGLPOPCLIENTATTRIBPROC, "glPopClientAttrib");  /* 1.1 */
-    SAFE_GET_PROC(qglRenderMode, PFNGLRENDERMODEPROC, "glRenderMode");
-    SAFE_GET_PROC(qglFinish, PFNGLFINISHPROC, "glFinish");
-    SAFE_GET_PROC(qglFlush, PFNGLFLUSHPROC, "glFlush");
-    SAFE_GET_PROC(qglHint, PFNGLHINTPROC, "glHint");
+    qglClearIndex = (PFNGLCLEARINDEXPROC)SDL_GL_GetProcAddress("glClearIndex");
+    qglClearColor = (PFNGLCLEARCOLORPROC)SDL_GL_GetProcAddress("glClearColor");
+    qglClear = (PFNGLCLEARPROC)SDL_GL_GetProcAddress("glClear");
+    qglIndexMask = (PFNGLINDEXMASKPROC)SDL_GL_GetProcAddress("glIndexMask");
+    qglColorMask = (PFNGLCOLORMASKPROC)SDL_GL_GetProcAddress("glColorMask");
+    qglAlphaFunc = (PFNGLALPHAFUNCPROC)SDL_GL_GetProcAddress("glAlphaFunc");
+    qglBlendFunc = (PFNGLBLENDFUNCPROC)SDL_GL_GetProcAddress("glBlendFunc");
+    qglLogicOp = (PFNGLLOGICOPPROC)SDL_GL_GetProcAddress("glLogicOp");
+    qglCullFace = (PFNGLCULLFACEPROC)SDL_GL_GetProcAddress("glCullFace");
+    qglFrontFace = (PFNGLFRONTFACEPROC)SDL_GL_GetProcAddress("glFrontFace");
+    qglPushAttrib = (PFNGLPUSHATTRIBPROC)SDL_GL_GetProcAddress("glPushAttrib");
+    qglPointSize = (PFNGLPOINTSIZEPROC)SDL_GL_GetProcAddress("glPointSize");
+    qglLineWidth = (PFNGLLINEWIDTHPROC)SDL_GL_GetProcAddress("glLineWidth");
+    qglLineStipple = (PFNGLLINESTIPPLEPROC)SDL_GL_GetProcAddress("glLineStipple");
+    qglPolygonMode = (PFNGLPOLYGONMODEPROC)SDL_GL_GetProcAddress("glPolygonMode");
+    qglPolygonOffset = (PFNGLPOLYGONOFFSETPROC)SDL_GL_GetProcAddress("glPolygonOffset");
+    qglPolygonStipple = (PFNGLPOLYGONSTIPPLEPROC)SDL_GL_GetProcAddress("glPolygonStipple");
+    qglGetPolygonStipple = (PFNGLGETPOLYGONSTIPPLEPROC)SDL_GL_GetProcAddress("glGetPolygonStipple");
+    qglEdgeFlag = (PFNGLEDGEFLAGPROC)SDL_GL_GetProcAddress("glEdgeFlag");
+    qglEdgeFlagv = (PFNGLEDGEFLAGVPROC)SDL_GL_GetProcAddress("glEdgeFlagv");
+    qglScissor = (PFNGLSCISSORPROC)SDL_GL_GetProcAddress("glScissor");
+    qglClipPlane = (PFNGLCLIPPLANEPROC)SDL_GL_GetProcAddress("glClipPlane");
+    qglGetClipPlane = (PFNGLGETCLIPPLANEPROC)SDL_GL_GetProcAddress("glGetClipPlane");
+    qglDrawBuffer = (PFNGLDRAWBUFFERPROC)SDL_GL_GetProcAddress("glDrawBuffer");
+    qglReadBuffer = (PFNGLREADBUFFERPROC)SDL_GL_GetProcAddress("glReadBuffer");
+    qglEnable = (PFNGLENABLEPROC)SDL_GL_GetProcAddress("glEnable");
+    qglDisable = (PFNGLDISABLEPROC)SDL_GL_GetProcAddress("glDisable");
+    qglIsEnabled = (PFNGLISENABLEDPROC)SDL_GL_GetProcAddress("glIsEnabled");
+    qglEnableClientState = (PFNGLENABLECLIENTSTATEPROC)SDL_GL_GetProcAddress("glEnableClientState");
+    qglDisableClientState = (PFNGLDISABLECLIENTSTATEPROC)SDL_GL_GetProcAddress("glDisableClientState");
+    qglGetError = (PFNGLGETERRORPROC)SDL_GL_GetProcAddress("glGetError");
+    qglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
+    qglGetBooleanv = (PFNGLGETBOOLEANVPROC)SDL_GL_GetProcAddress("glGetBooleanv");
+    qglGetDoublev = (PFNGLGETDOUBLEVPROC)SDL_GL_GetProcAddress("glGetDoublev");
+    qglGetFloatv = (PFNGLGETFLOATVPROC)SDL_GL_GetProcAddress("glGetFloatv");
+    qglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
+    qglPushAttrib = (PFNGLPUSHATTRIBPROC)SDL_GL_GetProcAddress("glPushAttrib");
+    qglPopAttrib = (PFNGLPOPATTRIBPROC)SDL_GL_GetProcAddress("glPopAttrib");
+    qglPushClientAttrib = (PFNGLPUSHCLIENTATTRIBPROC)SDL_GL_GetProcAddress("glPushClientAttrib");  /* 1.1 */
+    qglPopClientAttrib = (PFNGLPOPCLIENTATTRIBPROC)SDL_GL_GetProcAddress("glPopClientAttrib");  /* 1.1 */
+    qglRenderMode = (PFNGLRENDERMODEPROC)SDL_GL_GetProcAddress("glRenderMode");
+    qglFinish = (PFNGLFINISHPROC)SDL_GL_GetProcAddress("glFinish");
+    qglFlush = (PFNGLFLUSHPROC)SDL_GL_GetProcAddress("glFlush");
+    qglHint = (PFNGLHINTPROC)SDL_GL_GetProcAddress("glHint");
 
     /* Depth Buffer */
-    SAFE_GET_PROC(qglClearDepth, PFNGLCLEARDEPTHPROC, "glClearDepth");
-    SAFE_GET_PROC(qglDepthFunc, PFNGLDEPTHFUNCPROC, "glDepthFunc");
-    SAFE_GET_PROC(qglDepthMask, PFNGLDEPTHMASKPROC, "glDepthMask");
-    SAFE_GET_PROC(qglDepthRange, PFNGLDEPTHRANGEPROC, "glDepthRange");
+    qglClearDepth = (PFNGLCLEARDEPTHPROC)SDL_GL_GetProcAddress("glClearDepth");
+    qglDepthFunc = (PFNGLDEPTHFUNCPROC)SDL_GL_GetProcAddress("glDepthFunc");
+    qglDepthMask = (PFNGLDEPTHMASKPROC)SDL_GL_GetProcAddress("glDepthMask");
+    qglDepthRange = (PFNGLDEPTHRANGEPROC)SDL_GL_GetProcAddress("glDepthRange");
 
     /* Accumulation Buffer */
-    SAFE_GET_PROC(qglClearAccum, PFNGLCLEARACCUMPROC, "glClearAccum");               
-    SAFE_GET_PROC(qglAccum, PFNGLACCUMPROC, "glAccum");
+    qglClearAccum = (PFNGLCLEARACCUMPROC)SDL_GL_GetProcAddress("glClearAccum");               
+    qglAccum = (PFNGLACCUMPROC)SDL_GL_GetProcAddress("glAccum");
 
     /* Transformation */
-    SAFE_GET_PROC(qglMatrixMode, PFNGLMATRIXMODEPROC, "glMatrixMode");
-    SAFE_GET_PROC(qglOrtho, PFNGLORTHOPROC, "glOrtho");
-    SAFE_GET_PROC(qglFrustum, PFNGLFRUSTUMPROC, "glFrustum");
-    SAFE_GET_PROC(qglViewport, PFNGLVIEWPORTPROC, "glViewport");
-    SAFE_GET_PROC(qglPushMatrix, PFNGLPUSHMATRIXPROC, "glPushMatrix");
-    SAFE_GET_PROC(qglPopMatrix, PFNGLPOPMATRIXPROC, "glPopMatrix");
-    SAFE_GET_PROC(qglLoadIdentity, PFNGLLOADIDENTITYPROC, "glLoadIdentity");
-    SAFE_GET_PROC(qglLoadMatrixd, PFNGLLOADMATRIXDPROC, "glLoadMatrixd");
-    SAFE_GET_PROC(qglLoadMatrixf, PFNGLLOADMATRIXFPROC, "glLoadMatrixf");
-    SAFE_GET_PROC(qglMultMatrixd, PFNGLMULTMATRIXDPROC, "glMultMatrixd");
-    SAFE_GET_PROC(qglMultMatrixf, PFNGLMULTMATRIXFPROC, "glMultMatrixf");
-    SAFE_GET_PROC(qglRotated, PFNGLROTATEDPROC, "glRotated");
-    SAFE_GET_PROC(qglRotatef, PFNGLROTATEFPROC, "glRotatef");
-    SAFE_GET_PROC(qglScaled, PFNGLSCALEDPROC, "glScaled");
-    SAFE_GET_PROC(qglScalef, PFNGLSCALEFPROC, "glScalef");
-    SAFE_GET_PROC(qglTranslated, PFNGLTRANSLATEDPROC, "glTranslated");
-    SAFE_GET_PROC(qglTranslatef, PFNGLTRANSLATEFPROC, "glTranslatef");
+    qglMatrixMode = (PFNGLMATRIXMODEPROC)SDL_GL_GetProcAddress("glMatrixMode");
+    qglOrtho = (PFNGLORTHOPROC)SDL_GL_GetProcAddress("glOrtho");
+    qglFrustum = (PFNGLFRUSTUMPROC)SDL_GL_GetProcAddress("glFrustum");
+    qglViewport = (PFNGLVIEWPORTPROC)SDL_GL_GetProcAddress("glViewport");
+    qglPushMatrix = (PFNGLPUSHMATRIXPROC)SDL_GL_GetProcAddress("glPushMatrix");
+    qglPopMatrix = (PFNGLPOPMATRIXPROC)SDL_GL_GetProcAddress("glPopMatrix");
+    qglLoadIdentity = (PFNGLLOADIDENTITYPROC)SDL_GL_GetProcAddress("glLoadIdentity");
+    qglLoadMatrixd = (PFNGLLOADMATRIXDPROC)SDL_GL_GetProcAddress("glLoadMatrixd");
+    qglLoadMatrixf = (PFNGLLOADMATRIXFPROC)SDL_GL_GetProcAddress("glLoadMatrixf");
+    qglMultMatrixd = (PFNGLMULTMATRIXDPROC)SDL_GL_GetProcAddress("glMultMatrixd");
+    qglMultMatrixf = (PFNGLMULTMATRIXFPROC)SDL_GL_GetProcAddress("glMultMatrixf");
+    qglRotated = (PFNGLROTATEDPROC)SDL_GL_GetProcAddress("glRotated");
+    qglRotatef = (PFNGLROTATEFPROC)SDL_GL_GetProcAddress("glRotatef");
+    qglScaled = (PFNGLSCALEDPROC)SDL_GL_GetProcAddress("glScaled");
+    qglScalef = (PFNGLSCALEFPROC)SDL_GL_GetProcAddress("glScalef");
+    qglTranslated = (PFNGLTRANSLATEDPROC)SDL_GL_GetProcAddress("glTranslated");
+    qglTranslatef = (PFNGLTRANSLATEFPROC)SDL_GL_GetProcAddress("glTranslatef");
     
     /* Raster functions */
-    SAFE_GET_PROC(qglPixelZoom, PFNGLPIXELZOOMPROC, "glPixelZoom");
-    SAFE_GET_PROC(qglPixelStoref, PFNGLPIXELSTOREFPROC, "glPixelStoref");
-    SAFE_GET_PROC(qglPixelStorei, PFNGLPIXELSTOREIPROC, "glPixelStorei");
-    SAFE_GET_PROC(qglPixelTransferf, PFNGLPIXELTRANSFERFPROC, "glPixelTransferf");
-    SAFE_GET_PROC(qglPixelTransferi, PFNGLPIXELTRANSFERIPROC, "glPixelTransferi");
-    SAFE_GET_PROC(qglPixelMapfv, PFNGLPIXELMAPFVPROC, "glPixelMapfv");
-    SAFE_GET_PROC(qglPixelMapuiv, PFNGLPIXELMAPUIVPROC, "glPixelMapuiv");
-    SAFE_GET_PROC(qglPixelMapusv, PFNGLPIXELMAPUSVPROC, "glPixelMapusv");
-    SAFE_GET_PROC(qglGetPixelMapfv, PFNGLGETPIXELMAPFVPROC, "glGetPixelMapfv");
-    SAFE_GET_PROC(qglGetPixelMapuiv, PFNGLGETPIXELMAPUIVPROC, "glGetPixelMapuiv");
-    SAFE_GET_PROC(qglGetPixelMapusv, PFNGLGETPIXELMAPUSVPROC, "glGetPixelMapusv");
-    SAFE_GET_PROC(qglBitmap, PFNGLBITMAPPROC, "glBitmap");
-    SAFE_GET_PROC(qglReadPixels, PFNGLREADPIXELSPROC, "glReadPixels");
-    SAFE_GET_PROC(qglDrawPixels, PFNGLDRAWPIXELSPROC, "glDrawPixels");
-    SAFE_GET_PROC(qglCopyPixels, PFNGLCOPYPIXELSPROC, "glCopyPixels");
+    qglPixelZoom = (PFNGLPIXELZOOMPROC)SDL_GL_GetProcAddress("glPixelZoom");
+    qglPixelStoref = (PFNGLPIXELSTOREFPROC)SDL_GL_GetProcAddress("glPixelStoref");
+    qglPixelStorei = (PFNGLPIXELSTOREIPROC)SDL_GL_GetProcAddress("glPixelStorei");
+    qglPixelTransferf = (PFNGLPIXELTRANSFERFPROC)SDL_GL_GetProcAddress("glPixelTransferf");
+    qglPixelTransferi = (PFNGLPIXELTRANSFERIPROC)SDL_GL_GetProcAddress("glPixelTransferi");
+    qglPixelMapfv = (PFNGLPIXELMAPFVPROC)SDL_GL_GetProcAddress("glPixelMapfv");
+    qglPixelMapuiv = (PFNGLPIXELMAPUIVPROC)SDL_GL_GetProcAddress("glPixelMapuiv");
+    qglPixelMapusv = (PFNGLPIXELMAPUSVPROC)SDL_GL_GetProcAddress("glPixelMapusv");
+    qglGetPixelMapfv = (PFNGLGETPIXELMAPFVPROC)SDL_GL_GetProcAddress("glGetPixelMapfv");
+    qglGetPixelMapuiv = (PFNGLGETPIXELMAPUIVPROC)SDL_GL_GetProcAddress("glGetPixelMapuiv");
+    qglGetPixelMapusv = (PFNGLGETPIXELMAPUSVPROC)SDL_GL_GetProcAddress("glGetPixelMapusv");
+    qglBitmap = (PFNGLBITMAPPROC)SDL_GL_GetProcAddress("glBitmap");
+    qglReadPixels = (PFNGLREADPIXELSPROC)SDL_GL_GetProcAddress("glReadPixels");
+    qglDrawPixels = (PFNGLDRAWPIXELSPROC)SDL_GL_GetProcAddress("glDrawPixels");
+    qglCopyPixels = (PFNGLCOPYPIXELSPROC)SDL_GL_GetProcAddress("glCopyPixels");
 
     /* Stenciling */
-    SAFE_GET_PROC(qglStencilFunc, PFNGLSTENCILFUNCPROC, "glStencilFunc");
-    SAFE_GET_PROC(qglStencilMask, PFNGLSTENCILMASKPROC, "glStencilMask");
-    SAFE_GET_PROC(qglStencilOp, PFNGLSTENCILOPPROC, "glStencilOp");
-    SAFE_GET_PROC(qglClearStencil, PFNGLCLEARSTENCILPROC, "glClearStencil");
+    qglStencilFunc = (PFNGLSTENCILFUNCPROC)SDL_GL_GetProcAddress("glStencilFunc");
+    qglStencilMask = (PFNGLSTENCILMASKPROC)SDL_GL_GetProcAddress("glStencilMask");
+    qglStencilOp = (PFNGLSTENCILOPPROC)SDL_GL_GetProcAddress("glStencilOp");
+    qglClearStencil = (PFNGLCLEARSTENCILPROC)SDL_GL_GetProcAddress("glClearStencil");
 
     /* Texture mapping */
-    SAFE_GET_PROC(qglTexGend, PFNGLTEXGENDPROC, "glTexGend");
-    SAFE_GET_PROC(qglTexGenf, PFNGLTEXGENFPROC, "glTexGenf");
-    SAFE_GET_PROC(qglTexGeni, PFNGLTEXGENIPROC, "glTexGeni");
-    SAFE_GET_PROC(qglTexGendv, PFNGLTEXGENDVPROC, "glTexGendv");
-    SAFE_GET_PROC(qglTexGenfv, PFNGLTEXGENFVPROC, "glTexGenfv");
-    SAFE_GET_PROC(qglTexGeniv, PFNGLTEXGENIVPROC, "glTexGeniv");
-    SAFE_GET_PROC(qglGetTexGendv, PFNGLGETTEXGENDVPROC, "glGetTexGendv");
-    SAFE_GET_PROC(qglGetTexGenfv, PFNGLGETTEXGENFVPROC, "glGetTexGenfv");
-    SAFE_GET_PROC(qglGetTexGeniv, PFNGLGETTEXGENIVPROC, "glGetTexGeniv");
-    SAFE_GET_PROC(qglTexEnvf, PFNGLTEXENVFPROC, "glTexEnvf");
-    SAFE_GET_PROC(qglTexEnvi, PFNGLTEXENVIPROC, "glTexEnvi");
-    SAFE_GET_PROC(qglTexEnvfv, PFNGLTEXENVFVPROC, "glTexEnvfv");
-    SAFE_GET_PROC(qglTexEnviv, PFNGLTEXENVIVPROC, "glTexEnviv");
-    SAFE_GET_PROC(qglGetTexEnvfv, PFNGLGETTEXENVFVPROC, "glGetTexEnvfv");
-    SAFE_GET_PROC(qglGetTexEnviv, PFNGLGETTEXENVIVPROC, "glGetTexEnviv");
-    SAFE_GET_PROC(qglTexParameterf, PFNGLTEXPARAMETERFPROC, "glTexParameterf");
-    SAFE_GET_PROC(qglTexParameteri, PFNGLTEXPARAMETERIPROC, "glTexParameteri");
-    SAFE_GET_PROC(qglTexParameterfv, PFNGLTEXPARAMETERFVPROC, "glTexParameterfv");
-    SAFE_GET_PROC(qglTexParameteriv, PFNGLTEXPARAMETERIVPROC, "glTexParameteriv");
-    SAFE_GET_PROC(qglGetTexParameterfv, PFNGLGETTEXPARAMETERFVPROC, "glGetTexParameterfv");
-    SAFE_GET_PROC(qglGetTexParameteriv, PFNGLGETTEXPARAMETERIVPROC, "glGetTexParameteriv");
-    SAFE_GET_PROC(qglGetTexLevelParameterfv, PFNGLGETTEXLEVELPARAMETERFVPROC, "glGetTexLevelParameterfv");
-    SAFE_GET_PROC(qglGetTexLevelParameteriv, PFNGLGETTEXLEVELPARAMETERIVPROC, "glGetTexLevelParameteriv");
-    SAFE_GET_PROC(qglTexImage1D, PFNGLTEXIMAGE1DPROC, "glTexImage1D");
-    SAFE_GET_PROC(qglTexImage2D, PFNGLTEXIMAGE2DPROC, "glTexImage2D");
-    SAFE_GET_PROC(qglGetTexImage, PFNGLGETTEXIMAGEPROC, "glGetTexImage");
+    qglTexGend = (PFNGLTEXGENDPROC)SDL_GL_GetProcAddress("glTexGend");
+    qglTexGenf = (PFNGLTEXGENFPROC)SDL_GL_GetProcAddress("glTexGenf");
+    qglTexGeni = (PFNGLTEXGENIPROC)SDL_GL_GetProcAddress("glTexGeni");
+    qglTexGendv = (PFNGLTEXGENDVPROC)SDL_GL_GetProcAddress("glTexGendv");
+    qglTexGenfv = (PFNGLTEXGENFVPROC)SDL_GL_GetProcAddress("glTexGenfv");
+    qglTexGeniv = (PFNGLTEXGENIVPROC)SDL_GL_GetProcAddress("glTexGeniv");
+    qglGetTexGendv = (PFNGLGETTEXGENDVPROC)SDL_GL_GetProcAddress("glGetTexGendv");
+    qglGetTexGenfv = (PFNGLGETTEXGENFVPROC)SDL_GL_GetProcAddress("glGetTexGenfv");
+    qglGetTexGeniv = (PFNGLGETTEXGENIVPROC)SDL_GL_GetProcAddress("glGetTexGeniv");
+    qglTexEnvf = (PFNGLTEXENVFPROC)SDL_GL_GetProcAddress("glTexEnvf");
+    qglTexEnvi = (PFNGLTEXENVIPROC)SDL_GL_GetProcAddress("glTexEnvi");
+    qglTexEnvfv = (PFNGLTEXENVFVPROC)SDL_GL_GetProcAddress("glTexEnvfv");
+    qglTexEnviv = (PFNGLTEXENVIVPROC)SDL_GL_GetProcAddress("glTexEnviv");
+    qglGetTexEnvfv = (PFNGLGETTEXENVFVPROC)SDL_GL_GetProcAddress("glGetTexEnvfv");
+    qglGetTexEnviv = (PFNGLGETTEXENVIVPROC)SDL_GL_GetProcAddress("glGetTexEnviv");
+    qglTexParameterf = (PFNGLTEXPARAMETERFPROC)SDL_GL_GetProcAddress("glTexParameterf");
+    qglTexParameteri = (PFNGLTEXPARAMETERIPROC)SDL_GL_GetProcAddress("glTexParameteri");
+    qglTexParameterfv = (PFNGLTEXPARAMETERFVPROC)SDL_GL_GetProcAddress("glTexParameterfv");
+    qglTexParameteriv = (PFNGLTEXPARAMETERIVPROC)SDL_GL_GetProcAddress("glTexParameteriv");
+    qglGetTexParameterfv = (PFNGLGETTEXPARAMETERFVPROC)SDL_GL_GetProcAddress("glGetTexParameterfv");
+    qglGetTexParameteriv = (PFNGLGETTEXPARAMETERIVPROC)SDL_GL_GetProcAddress("glGetTexParameteriv");
+    qglGetTexLevelParameterfv = (PFNGLGETTEXLEVELPARAMETERFVPROC)SDL_GL_GetProcAddress("glGetTexLevelParameterfv");
+    qglGetTexLevelParameteriv = (PFNGLGETTEXLEVELPARAMETERIVPROC)SDL_GL_GetProcAddress("glGetTexLevelParameteriv");
+    qglTexImage1D = (PFNGLTEXIMAGE1DPROC)SDL_GL_GetProcAddress("glTexImage1D");
+    qglTexImage2D = (PFNGLTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glTexImage2D");
+    qglGetTexImage = (PFNGLGETTEXIMAGEPROC)SDL_GL_GetProcAddress("glGetTexImage");
     
     /* 1.1 functions */
     /* texture objects */
-    SAFE_GET_PROC(qglGenTextures, PFNGLGENTEXTURESPROC, "glGenTextures");
-    SAFE_GET_PROC(qglDeleteTextures, PFNGLDELETETEXTURESPROC, "glDeleteTextures");
-    SAFE_GET_PROC(qglBindTexture, PFNGLBINDTEXTUREPROC, "glBindTexture");
-    SAFE_GET_PROC(qglPrioritizeTextures, PFNGLPRIORITIZETEXTURESPROC, "glPrioritizeTextures");
-    SAFE_GET_PROC(qglAreTexturesResident, PFNGLARETEXTURESRESIDENTPROC, "glAreTexturesResident");
-    SAFE_GET_PROC(qglIsTexture, PFNGLISTEXTUREPROC, "glIsTexture");
+    qglGenTextures = (PFNGLGENTEXTURESPROC)SDL_GL_GetProcAddress("glGenTextures");
+    qglDeleteTextures = (PFNGLDELETETEXTURESPROC)SDL_GL_GetProcAddress("glDeleteTextures");
+    qglBindTexture = (PFNGLBINDTEXTUREPROC)SDL_GL_GetProcAddress("glBindTexture");
+    qglPrioritizeTextures = (PFNGLPRIORITIZETEXTURESPROC)SDL_GL_GetProcAddress("glPrioritizeTextures");
+    qglAreTexturesResident = (PFNGLARETEXTURESRESIDENTPROC)SDL_GL_GetProcAddress("glAreTexturesResident");
+    qglIsTexture = (PFNGLISTEXTUREPROC)SDL_GL_GetProcAddress("glIsTexture");
     /* texture mapping */
-    SAFE_GET_PROC(qglTexSubImage1D, PFNGLTEXSUBIMAGE1DPROC, "glTexSubImage1D");
-    SAFE_GET_PROC(qglTexSubImage2D, PFNGLTEXSUBIMAGE2DPROC, "glTexSubImage2D");
-    SAFE_GET_PROC(qglCopyTexImage1D, PFNGLCOPYTEXIMAGE1DPROC, "glCopyTexImage1D");
-    SAFE_GET_PROC(qglCopyTexImage2D, PFNGLCOPYTEXIMAGE2DPROC, "glCopyTexImage2D");
-    SAFE_GET_PROC(qglCopyTexSubImage1D, PFNGLCOPYTEXSUBIMAGE1DPROC, "glCopyTexSubImage1D");
-    SAFE_GET_PROC(qglCopyTexSubImage2D, PFNGLCOPYTEXSUBIMAGE2DPROC, "glCopyTexSubImage2D");
+    qglTexSubImage1D = (PFNGLTEXSUBIMAGE1DPROC)SDL_GL_GetProcAddress("glTexSubImage1D");
+    qglTexSubImage2D = (PFNGLTEXSUBIMAGE2DPROC)SDL_GL_GetProcAddress("glTexSubImage2D");
+    qglCopyTexImage1D = (PFNGLCOPYTEXIMAGE1DPROC)SDL_GL_GetProcAddress("glCopyTexImage1D");
+    qglCopyTexImage2D = (PFNGLCOPYTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glCopyTexImage2D");
+    qglCopyTexSubImage1D = (PFNGLCOPYTEXSUBIMAGE1DPROC)SDL_GL_GetProcAddress("glCopyTexSubImage1D");
+    qglCopyTexSubImage2D = (PFNGLCOPYTEXSUBIMAGE2DPROC)SDL_GL_GetProcAddress("glCopyTexSubImage2D");
     /* vertex arrays */
-    SAFE_GET_PROC(qglVertexPointer, PFNGLVERTEXPOINTERPROC, "glVertexPointer");
-    SAFE_GET_PROC(qglNormalPointer, PFNGLNORMALPOINTERPROC, "glNormalPointer");
-    SAFE_GET_PROC(qglColorPointer, PFNGLCOLORPOINTERPROC, "glColorPointer");
-    SAFE_GET_PROC(qglIndexPointer, PFNGLINDEXPOINTERPROC, "glIndexPointer");
-    SAFE_GET_PROC(qglTexCoordPointer, PFNGLTEXCOORDPOINTERPROC, "glTexCoordPointer");
-    SAFE_GET_PROC(qglEdgeFlagPointer, PFNGLEDGEFLAGPOINTERPROC, "glEdgeFlagPointer");
-    SAFE_GET_PROC(qglGetPointerv, PFNGLGETPOINTERVPROC, "glGetPointerv");
-    SAFE_GET_PROC(qglArrayElement, PFNGLARRAYELEMENTPROC, "glArrayElement");
-    SAFE_GET_PROC(qglDrawArrays, PFNGLDRAWARRAYSPROC, "glDrawArrays");
-    SAFE_GET_PROC(qglDrawElements, PFNGLDRAWELEMENTSPROC, "glDrawElements");
-    SAFE_GET_PROC(qglInterleavedArrays, PFNGLINTERLEAVEDARRAYSPROC, "glInterleavedArrays");
+    qglVertexPointer = (PFNGLVERTEXPOINTERPROC)SDL_GL_GetProcAddress("glVertexPointer");
+    qglNormalPointer = (PFNGLNORMALPOINTERPROC)SDL_GL_GetProcAddress("glNormalPointer");
+    qglColorPointer = (PFNGLCOLORPOINTERPROC)SDL_GL_GetProcAddress("glColorPointer");
+    qglIndexPointer = (PFNGLINDEXPOINTERPROC)SDL_GL_GetProcAddress("glIndexPointer");
+    qglTexCoordPointer = (PFNGLTEXCOORDPOINTERPROC)SDL_GL_GetProcAddress("glTexCoordPointer");
+    qglEdgeFlagPointer = (PFNGLEDGEFLAGPOINTERPROC)SDL_GL_GetProcAddress("glEdgeFlagPointer");
+    qglGetPointerv = (PFNGLGETPOINTERVPROC)SDL_GL_GetProcAddress("glGetPointerv");
+    qglArrayElement = (PFNGLARRAYELEMENTPROC)SDL_GL_GetProcAddress("glArrayElement");
+    qglDrawArrays = (PFNGLDRAWARRAYSPROC)SDL_GL_GetProcAddress("glDrawArrays");
+    qglDrawElements = (PFNGLDRAWELEMENTSPROC)SDL_GL_GetProcAddress("glDrawElements");
+    qglInterleavedArrays = (PFNGLINTERLEAVEDARRAYSPROC)SDL_GL_GetProcAddress("glInterleavedArrays");
     
     const char* buf = (const char*)qglGetString(GL_EXTENSIONS);
     engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
@@ -455,63 +454,63 @@ void InitGLExtFuncs()
     /// VBO funcs
     if(IsGLExtensionSupported("GL_ARB_vertex_buffer_object"))
     {
-        SAFE_GET_PROC(qglBindBufferARB, PFNGLBINDBUFFERARBPROC, "glBindBufferARB");
-        SAFE_GET_PROC(qglDeleteBuffersARB, PFNGLDELETEBUFFERSARBPROC, "glDeleteBuffersARB");
-        SAFE_GET_PROC(qglGenBuffersARB, PFNGLGENBUFFERSARBPROC, "glGenBuffersARB");
-        SAFE_GET_PROC(qglIsBufferARB, PFNGLISBUFFERARBPROC, "glIsBufferARB");
-        SAFE_GET_PROC(qglBufferDataARB, PFNGLBUFFERDATAARBPROC, "glBufferDataARB");
-        SAFE_GET_PROC(qglBufferSubDataARB, PFNGLBUFFERSUBDATAARBPROC, "glBufferSubDataARB");
-        SAFE_GET_PROC(qglGetBufferSubDataARB, PFNGLGETBUFFERSUBDATAARBPROC, "glGetBufferSubDataARB");
-        SAFE_GET_PROC(qglMapBufferARB, PFNGLMAPBUFFERARBPROC, "glMapBufferARB");
-        SAFE_GET_PROC(qglUnmapBufferARB, PFNGLUNMAPBUFFERARBPROC, "glUnmapBufferARB");
-        SAFE_GET_PROC(qglGetBufferParameterivARB, PFNGLGETBUFFERPARAMETERIVARBPROC, "glGetBufferParameterivARB");
-        SAFE_GET_PROC(qglGetBufferPointervARB, PFNGLGETBUFFERPOINTERVARBPROC, "glGetBufferPointervARB");
+        qglBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
+        qglDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
+        qglGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
+        qglIsBufferARB = (PFNGLISBUFFERARBPROC)SDL_GL_GetProcAddress("glIsBufferARB");
+        qglBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
+        qglBufferSubDataARB = (PFNGLBUFFERSUBDATAARBPROC)SDL_GL_GetProcAddress("glBufferSubDataARB");
+        qglGetBufferSubDataARB = (PFNGLGETBUFFERSUBDATAARBPROC)SDL_GL_GetProcAddress("glGetBufferSubDataARB");
+        qglMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
+        qglUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+        qglGetBufferParameterivARB = (PFNGLGETBUFFERPARAMETERIVARBPROC)SDL_GL_GetProcAddress("glGetBufferParameterivARB");
+        qglGetBufferPointervARB = (PFNGLGETBUFFERPOINTERVARBPROC)SDL_GL_GetProcAddress("glGetBufferPointervARB");
 
-        SAFE_GET_PROC(qglActiveTextureARB, PFNGLACTIVETEXTUREARBPROC, "glActiveTextureARB");
-        SAFE_GET_PROC(qglClientActiveTextureARB, PFNGLCLIENTACTIVETEXTUREARBPROC, "glClientActiveTextureARB");
+        qglActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)SDL_GL_GetProcAddress("glActiveTextureARB");
+        qglClientActiveTextureARB = (PFNGLCLIENTACTIVETEXTUREARBPROC)SDL_GL_GetProcAddress("glClientActiveTextureARB");
 
-        SAFE_GET_PROC(qglMultiTexCoord1dARB, PFNGLMULTITEXCOORD1DARBPROC, "glMultiTexCoord1dARB");
-        SAFE_GET_PROC(qglMultiTexCoord1dvARB, PFNGLMULTITEXCOORD1DVARBPROC, "glMultiTexCoord1dvARB");
-        SAFE_GET_PROC(qglMultiTexCoord1fARB, PFNGLMULTITEXCOORD1FARBPROC, "glMultiTexCoord1fARB");
-        SAFE_GET_PROC(qglMultiTexCoord1fvARB, PFNGLMULTITEXCOORD1FVARBPROC, "glMultiTexCoord1fvARB");
-        SAFE_GET_PROC(qglMultiTexCoord1iARB, PFNGLMULTITEXCOORD1IARBPROC, "glMultiTexCoord1iARB");
-        SAFE_GET_PROC(qglMultiTexCoord1ivARB, PFNGLMULTITEXCOORD1IVARBPROC, "glMultiTexCoord1ivARB");
-        SAFE_GET_PROC(qglMultiTexCoord1sARB, PFNGLMULTITEXCOORD1SARBPROC, "glMultiTexCoord1sARB");
-        SAFE_GET_PROC(qglMultiTexCoord1svARB, PFNGLMULTITEXCOORD1SVARBPROC, "glMultiTexCoord1svARB");
+        qglMultiTexCoord1dARB = (PFNGLMULTITEXCOORD1DARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1dARB");
+        qglMultiTexCoord1dvARB = (PFNGLMULTITEXCOORD1DVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1dvARB");
+        qglMultiTexCoord1fARB = (PFNGLMULTITEXCOORD1FARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1fARB");
+        qglMultiTexCoord1fvARB = (PFNGLMULTITEXCOORD1FVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1fvARB");
+        qglMultiTexCoord1iARB = (PFNGLMULTITEXCOORD1IARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1iARB");
+        qglMultiTexCoord1ivARB = (PFNGLMULTITEXCOORD1IVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1ivARB");
+        qglMultiTexCoord1sARB = (PFNGLMULTITEXCOORD1SARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1sARB");
+        qglMultiTexCoord1svARB = (PFNGLMULTITEXCOORD1SVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord1svARB");
 
-        SAFE_GET_PROC(qglMultiTexCoord2dARB, PFNGLMULTITEXCOORD2DARBPROC, "glMultiTexCoord2dARB");
-        SAFE_GET_PROC(qglMultiTexCoord2dvARB, PFNGLMULTITEXCOORD2DVARBPROC, "glMultiTexCoord2dvARB");
-        SAFE_GET_PROC(qglMultiTexCoord2fARB, PFNGLMULTITEXCOORD2FARBPROC, "glMultiTexCoord2fARB");
-        SAFE_GET_PROC(qglMultiTexCoord2fvARB, PFNGLMULTITEXCOORD2FVARBPROC, "glMultiTexCoord2fvARB");
-        SAFE_GET_PROC(qglMultiTexCoord2iARB, PFNGLMULTITEXCOORD2IARBPROC, "glMultiTexCoord2iARB");
-        SAFE_GET_PROC(qglMultiTexCoord2ivARB, PFNGLMULTITEXCOORD2IVARBPROC, "glMultiTexCoord2ivARB");
-        SAFE_GET_PROC(qglMultiTexCoord2sARB, PFNGLMULTITEXCOORD2SARBPROC, "glMultiTexCoord2sARB");
-        SAFE_GET_PROC(qglMultiTexCoord2svARB, PFNGLMULTITEXCOORD2SVARBPROC, "glMultiTexCoord2svARB");
+        qglMultiTexCoord2dARB = (PFNGLMULTITEXCOORD2DARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2dARB");
+        qglMultiTexCoord2dvARB = (PFNGLMULTITEXCOORD2DVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2dvARB");
+        qglMultiTexCoord2fARB = (PFNGLMULTITEXCOORD2FARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2fARB");
+        qglMultiTexCoord2fvARB = (PFNGLMULTITEXCOORD2FVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2fvARB");
+        qglMultiTexCoord2iARB = (PFNGLMULTITEXCOORD2IARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2iARB");
+        qglMultiTexCoord2ivARB = (PFNGLMULTITEXCOORD2IVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2ivARB");
+        qglMultiTexCoord2sARB = (PFNGLMULTITEXCOORD2SARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2sARB");
+        qglMultiTexCoord2svARB = (PFNGLMULTITEXCOORD2SVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord2svARB");
 
-        SAFE_GET_PROC(qglMultiTexCoord3dARB, PFNGLMULTITEXCOORD3DARBPROC, "glMultiTexCoord3dARB");
-        SAFE_GET_PROC(qglMultiTexCoord3dvARB, PFNGLMULTITEXCOORD3DVARBPROC, "glMultiTexCoord3dvARB");
-        SAFE_GET_PROC(qglMultiTexCoord3fARB, PFNGLMULTITEXCOORD3FARBPROC, "glMultiTexCoord3fARB");
-        SAFE_GET_PROC(qglMultiTexCoord3fvARB, PFNGLMULTITEXCOORD3FVARBPROC, "glMultiTexCoord3fvARB");
-        SAFE_GET_PROC(qglMultiTexCoord3iARB, PFNGLMULTITEXCOORD3IARBPROC, "glMultiTexCoord3iARB");
-        SAFE_GET_PROC(qglMultiTexCoord3ivARB, PFNGLMULTITEXCOORD3IVARBPROC, "glMultiTexCoord3ivARB");
-        SAFE_GET_PROC(qglMultiTexCoord3sARB, PFNGLMULTITEXCOORD3SARBPROC, "glMultiTexCoord3sARB");
-        SAFE_GET_PROC(qglMultiTexCoord3svARB, PFNGLMULTITEXCOORD3SVARBPROC, "glMultiTexCoord3svARB");
+        qglMultiTexCoord3dARB = (PFNGLMULTITEXCOORD3DARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3dARB");
+        qglMultiTexCoord3dvARB = (PFNGLMULTITEXCOORD3DVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3dvARB");
+        qglMultiTexCoord3fARB = (PFNGLMULTITEXCOORD3FARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3fARB");
+        qglMultiTexCoord3fvARB = (PFNGLMULTITEXCOORD3FVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3fvARB");
+        qglMultiTexCoord3iARB = (PFNGLMULTITEXCOORD3IARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3iARB");
+        qglMultiTexCoord3ivARB = (PFNGLMULTITEXCOORD3IVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3ivARB");
+        qglMultiTexCoord3sARB = (PFNGLMULTITEXCOORD3SARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3sARB");
+        qglMultiTexCoord3svARB = (PFNGLMULTITEXCOORD3SVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord3svARB");
 
-        SAFE_GET_PROC(qglMultiTexCoord4dARB, PFNGLMULTITEXCOORD4DARBPROC, "glMultiTexCoord4dARB");
-        SAFE_GET_PROC(qglMultiTexCoord4dvARB, PFNGLMULTITEXCOORD4DVARBPROC, "glMultiTexCoord4dvARB");
-        SAFE_GET_PROC(qglMultiTexCoord4fARB, PFNGLMULTITEXCOORD4FARBPROC, "glMultiTexCoord4fARB");
-        SAFE_GET_PROC(qglMultiTexCoord4fvARB, PFNGLMULTITEXCOORD4FVARBPROC, "glMultiTexCoord4fvARB");
-        SAFE_GET_PROC(qglMultiTexCoord4iARB, PFNGLMULTITEXCOORD4IARBPROC, "glMultiTexCoord4iARB");
-        SAFE_GET_PROC(qglMultiTexCoord4ivARB, PFNGLMULTITEXCOORD4IVARBPROC, "glMultiTexCoord4ivARB");
-        SAFE_GET_PROC(qglMultiTexCoord4sARB, PFNGLMULTITEXCOORD4SARBPROC, "glMultiTexCoord4sARB");
-        SAFE_GET_PROC(qglMultiTexCoord4svARB, PFNGLMULTITEXCOORD4SVARBPROC, "glMultiTexCoord4svARB");
+        qglMultiTexCoord4dARB = (PFNGLMULTITEXCOORD4DARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4dARB");
+        qglMultiTexCoord4dvARB = (PFNGLMULTITEXCOORD4DVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4dvARB");
+        qglMultiTexCoord4fARB = (PFNGLMULTITEXCOORD4FARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4fARB");
+        qglMultiTexCoord4fvARB = (PFNGLMULTITEXCOORD4FVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4fvARB");
+        qglMultiTexCoord4iARB = (PFNGLMULTITEXCOORD4IARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4iARB");
+        qglMultiTexCoord4ivARB = (PFNGLMULTITEXCOORD4IVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4ivARB");
+        qglMultiTexCoord4sARB = (PFNGLMULTITEXCOORD4SARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4sARB");
+        qglMultiTexCoord4svARB = (PFNGLMULTITEXCOORD4SVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4svARB");
 
-        SAFE_GET_PROC(qglBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
-        SAFE_GET_PROC(qglDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArrays");
-        SAFE_GET_PROC(qglGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArrays");
-        SAFE_GET_PROC(qglIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
+        qglBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
+        qglDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
+        qglGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
+        qglIsVertexArray = (PFNGLISVERTEXARRAYPROC)SDL_GL_GetProcAddress("glIsVertexArray");
 
-        SAFE_GET_PROC(qglGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
+        qglGenerateMipmap = (PFNGLGENERATEMIPMAPPROC)SDL_GL_GetProcAddress("glGenerateMipmap");
     }
     else
     {
@@ -520,53 +519,53 @@ void InitGLExtFuncs()
     }
     if(IsGLExtensionSupported("GL_ARB_shading_language_100"))
     {
-        SAFE_GET_PROC(qglDeleteObjectARB, PFNGLDELETEOBJECTARBPROC, "glDeleteObjectARB");
-        SAFE_GET_PROC(qglGetHandleARB, PFNGLGETHANDLEARBPROC, "glGetHandleARB");
-        SAFE_GET_PROC(qglDetachObjectARB, PFNGLDETACHOBJECTARBPROC, "glDetachObjectARB");
-        SAFE_GET_PROC(qglCreateShaderObjectARB, PFNGLCREATESHADEROBJECTARBPROC, "glCreateShaderObjectARB");
-        SAFE_GET_PROC(qglShaderSourceARB, PFNGLSHADERSOURCEARBPROC, "glShaderSourceARB");
-        SAFE_GET_PROC(qglCompileShaderARB, PFNGLCOMPILESHADERARBPROC, "glCompileShaderARB");
-        SAFE_GET_PROC(qglCreateProgramObjectARB, PFNGLCREATEPROGRAMOBJECTARBPROC, "glCreateProgramObjectARB");
-        SAFE_GET_PROC(qglAttachObjectARB, PFNGLATTACHOBJECTARBPROC, "glAttachObjectARB");
-        SAFE_GET_PROC(qglLinkProgramARB, PFNGLLINKPROGRAMARBPROC, "glLinkProgramARB");
-        SAFE_GET_PROC(qglUseProgramObjectARB, PFNGLUSEPROGRAMOBJECTARBPROC, "glUseProgramObjectARB");
-        SAFE_GET_PROC(qglValidateProgramARB, PFNGLVALIDATEPROGRAMARBPROC, "glValidateProgramARB");
-        SAFE_GET_PROC(qglUniform1fARB, PFNGLUNIFORM1FARBPROC, "glUniform1fARB");
-        SAFE_GET_PROC(qglUniform2fARB, PFNGLUNIFORM2FARBPROC, "glUniform2fARB");
-        SAFE_GET_PROC(qglUniform3fARB, PFNGLUNIFORM3FARBPROC, "glUniform3fARB");
-        SAFE_GET_PROC(qglUniform4fARB, PFNGLUNIFORM4FARBPROC, "glUniform4fARB");
-        SAFE_GET_PROC(qglUniform1iARB, PFNGLUNIFORM1IARBPROC, "glUniform1iARB");
-        SAFE_GET_PROC(qglUniform2iARB, PFNGLUNIFORM2IARBPROC, "glUniform2iARB");
-        SAFE_GET_PROC(qglUniform3iARB, PFNGLUNIFORM3IARBPROC, "glUniform3iARB");
-        SAFE_GET_PROC(qglUniform4iARB, PFNGLUNIFORM4IARBPROC, "glUniform4iARB");
-        SAFE_GET_PROC(qglUniform1fvARB, PFNGLUNIFORM1FVARBPROC, "glUniform1fvARB");
-        SAFE_GET_PROC(qglUniform2fvARB, PFNGLUNIFORM2FVARBPROC, "glUniform2fvARB");
-        SAFE_GET_PROC(qglUniform3fvARB, PFNGLUNIFORM3FVARBPROC, "glUniform3fvARB");
-        SAFE_GET_PROC(qglUniform4fvARB, PFNGLUNIFORM4FVARBPROC, "glUniform4fvARB");
-        SAFE_GET_PROC(qglUniform1ivARB, PFNGLUNIFORM1IVARBPROC, "glUniform1ivARB");
-        SAFE_GET_PROC(qglUniform2ivARB, PFNGLUNIFORM2IVARBPROC, "glUniform2ivARB");
-        SAFE_GET_PROC(qglUniform3ivARB, PFNGLUNIFORM3IVARBPROC, "glUniform3ivARB");
-        SAFE_GET_PROC(qglUniform4ivARB, PFNGLUNIFORM4IVARBPROC, "glUniform4ivARB");
-        SAFE_GET_PROC(qglUniformMatrix2fvARB, PFNGLUNIFORMMATRIX2FVARBPROC, "glUniformMatrix2fvARB");
-        SAFE_GET_PROC(qglUniformMatrix3fvARB, PFNGLUNIFORMMATRIX3FVARBPROC, "glUniformMatrix3fvARB");
-        SAFE_GET_PROC(qglUniformMatrix4fvARB, PFNGLUNIFORMMATRIX4FVARBPROC, "glUniformMatrix4fvARB");
-        SAFE_GET_PROC(qglGetObjectParameterfvARB, PFNGLGETOBJECTPARAMETERFVARBPROC, "glGetObjectParameterfvARB");
-        SAFE_GET_PROC(qglGetObjectParameterivARB, PFNGLGETOBJECTPARAMETERIVARBPROC, "glGetObjectParameterivARB");
-        SAFE_GET_PROC(qglGetInfoLogARB, PFNGLGETINFOLOGARBPROC, "glGetInfoLogARB");
-        SAFE_GET_PROC(qglGetAttachedObjectsARB, PFNGLGETATTACHEDOBJECTSARBPROC, "glGetAttachedObjectsARB");
-        SAFE_GET_PROC(qglGetUniformLocationARB, PFNGLGETUNIFORMLOCATIONARBPROC, "glGetUniformLocationARB");
-        SAFE_GET_PROC(qglGetActiveUniformARB, PFNGLGETACTIVEUNIFORMARBPROC, "glGetActiveUniformARB");
-        SAFE_GET_PROC(qglGetUniformfvARB, PFNGLGETUNIFORMFVARBPROC, "glGetUniformfvARB");
-        SAFE_GET_PROC(qglGetUniformivARB, PFNGLGETUNIFORMIVARBPROC, "glGetUniformivARB");
-        SAFE_GET_PROC(qglGetShaderSourceARB, PFNGLGETSHADERSOURCEARBPROC, "glGetShaderSourceARB");
+        qglDeleteObjectARB = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
+        qglGetHandleARB = (PFNGLGETHANDLEARBPROC)SDL_GL_GetProcAddress("glGetHandleARB");
+        qglDetachObjectARB = (PFNGLDETACHOBJECTARBPROC)SDL_GL_GetProcAddress("glDetachObjectARB");
+        qglCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShaderObjectARB");
+        qglShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSourceARB");
+        qglCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShaderARB");
+        qglCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
+        qglAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)SDL_GL_GetProcAddress("glAttachObjectARB");
+        qglLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
+        qglUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
+        qglValidateProgramARB = (PFNGLVALIDATEPROGRAMARBPROC)SDL_GL_GetProcAddress("glValidateProgramARB");
+        qglUniform1fARB = (PFNGLUNIFORM1FARBPROC)SDL_GL_GetProcAddress("glUniform1fARB");
+        qglUniform2fARB = (PFNGLUNIFORM2FARBPROC)SDL_GL_GetProcAddress("glUniform2fARB");
+        qglUniform3fARB = (PFNGLUNIFORM3FARBPROC)SDL_GL_GetProcAddress("glUniform3fARB");
+        qglUniform4fARB = (PFNGLUNIFORM4FARBPROC)SDL_GL_GetProcAddress("glUniform4fARB");
+        qglUniform1iARB = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
+        qglUniform2iARB = (PFNGLUNIFORM2IARBPROC)SDL_GL_GetProcAddress("glUniform2iARB");
+        qglUniform3iARB = (PFNGLUNIFORM3IARBPROC)SDL_GL_GetProcAddress("glUniform3iARB");
+        qglUniform4iARB = (PFNGLUNIFORM4IARBPROC)SDL_GL_GetProcAddress("glUniform4iARB");
+        qglUniform1fvARB = (PFNGLUNIFORM1FVARBPROC)SDL_GL_GetProcAddress("glUniform1fvARB");
+        qglUniform2fvARB = (PFNGLUNIFORM2FVARBPROC)SDL_GL_GetProcAddress("glUniform2fvARB");
+        qglUniform3fvARB = (PFNGLUNIFORM3FVARBPROC)SDL_GL_GetProcAddress("glUniform3fvARB");
+        qglUniform4fvARB = (PFNGLUNIFORM4FVARBPROC)SDL_GL_GetProcAddress("glUniform4fvARB");
+        qglUniform1ivARB = (PFNGLUNIFORM1IVARBPROC)SDL_GL_GetProcAddress("glUniform1ivARB");
+        qglUniform2ivARB = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
+        qglUniform3ivARB = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
+        qglUniform4ivARB = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
+        qglUniformMatrix2fvARB = (PFNGLUNIFORMMATRIX2FVARBPROC)SDL_GL_GetProcAddress("glUniformMatrix2fvARB");
+        qglUniformMatrix3fvARB = (PFNGLUNIFORMMATRIX3FVARBPROC)SDL_GL_GetProcAddress("glUniformMatrix3fvARB");
+        qglUniformMatrix4fvARB = (PFNGLUNIFORMMATRIX4FVARBPROC)SDL_GL_GetProcAddress("glUniformMatrix4fvARB");
+        qglGetObjectParameterfvARB = (PFNGLGETOBJECTPARAMETERFVARBPROC)SDL_GL_GetProcAddress("glGetObjectParameterfvARB");
+        qglGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)SDL_GL_GetProcAddress("glGetObjectParameterivARB");
+        qglGetInfoLogARB = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
+        qglGetAttachedObjectsARB = (PFNGLGETATTACHEDOBJECTSARBPROC)SDL_GL_GetProcAddress("glGetAttachedObjectsARB");
+        qglGetUniformLocationARB = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
+        qglGetActiveUniformARB = (PFNGLGETACTIVEUNIFORMARBPROC)SDL_GL_GetProcAddress("glGetActiveUniformARB");
+        qglGetUniformfvARB = (PFNGLGETUNIFORMFVARBPROC)SDL_GL_GetProcAddress("glGetUniformfvARB");
+        qglGetUniformivARB = (PFNGLGETUNIFORMIVARBPROC)SDL_GL_GetProcAddress("glGetUniformivARB");
+        qglGetShaderSourceARB = (PFNGLGETSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glGetShaderSourceARB");
 
-        SAFE_GET_PROC(qglBindAttribLocationARB, PFNGLBINDATTRIBLOCATIONARBPROC, "glBindAttribLocationARB");
-        SAFE_GET_PROC(qglGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
-        SAFE_GET_PROC(qglGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
-        SAFE_GET_PROC(qglEnableVertexAttribArrayARB, PFNGLENABLEVERTEXATTRIBARRAYARBPROC, "glEnableVertexAttribArrayARB");
-        SAFE_GET_PROC(qglDisableVertexAttribArrayARB, PFNGLDISABLEVERTEXATTRIBARRAYARBPROC, "glDisableVertexAttribArrayARB");
+        qglBindAttribLocationARB = (PFNGLBINDATTRIBLOCATIONARBPROC)SDL_GL_GetProcAddress("glBindAttribLocationARB");
+        qglGetActiveAttribARB = (PFNGLGETACTIVEATTRIBARBPROC)SDL_GL_GetProcAddress("glGetActiveAttribARB");
+        qglGetAttribLocationARB = (PFNGLGETATTRIBLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetAttribLocationARB");
+        qglEnableVertexAttribArrayARB = (PFNGLENABLEVERTEXATTRIBARRAYARBPROC)SDL_GL_GetProcAddress("glEnableVertexAttribArrayARB");
+        qglDisableVertexAttribArrayARB = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC)SDL_GL_GetProcAddress("glDisableVertexAttribArrayARB");
 
-        SAFE_GET_PROC(qglVertexAttribPointerARB, PFNGLVERTEXATTRIBPOINTERARBPROC, "glVertexAttribPointerARB");
+        qglVertexAttribPointerARB = (PFNGLVERTEXATTRIBPOINTERARBPROC)SDL_GL_GetProcAddress("glVertexAttribPointerARB");
     }
     else
     {
@@ -604,14 +603,11 @@ int IsGLExtensionSupported(const char *ext)
  */
 int checkOpenGLError()
 {
-    for( ; ; )
+    int ret = 0;
+    
+    for(GLenum  glErr = qglGetError(); glErr != GL_NO_ERROR; glErr = qglGetError())
     {
-        GLenum  glErr = qglGetError();
-        if(glErr == GL_NO_ERROR)
-        {
-            return 0;
-        }
-
+        ret = 1;
         switch(glErr)
         {
             case GL_INVALID_VALUE:
@@ -651,7 +647,8 @@ int checkOpenGLError()
                 break;
         };
     }
-    return 1;
+    
+    return ret;
 }
 
 void printInfoLog (GLhandleARB object)

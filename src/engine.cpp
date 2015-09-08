@@ -17,6 +17,7 @@ extern "C" {
 }
 
 #include "core/system.h"
+#include "core/gl_util.h"
 #include "core/gl_font.h"
 #include "core/console.h"
 #include "core/redblack.h"
@@ -27,6 +28,7 @@ extern "C" {
 #include "game.h"
 #include "audio.h"
 #include "mesh.h"
+#include "skeletal_model.h"
 #include "gui.h"
 #include "entity.h"
 #include "gameflow.h"
@@ -39,13 +41,20 @@ extern "C" {
 #include "engine_physics.h"
 #include "controls.h"
 
-extern SDL_Window                      *sdl_window;
-extern SDL_GLContext                    sdl_gl_context;
-extern SDL_GameController              *sdl_controller;
-extern SDL_Joystick                    *sdl_joystick;
-extern SDL_Haptic                      *sdl_haptic;
-extern ALCdevice                       *al_device;
-extern ALCcontext                      *al_context;
+#define NO_AUDIO        0
+
+SDL_Window             *sdl_window     = NULL;
+SDL_Joystick           *sdl_joystick   = NULL;
+SDL_GameController     *sdl_controller = NULL;
+SDL_Haptic             *sdl_haptic     = NULL;
+SDL_GLContext           sdl_gl_context = 0;
+ALCdevice              *al_device      = NULL;
+ALCcontext             *al_context     = NULL;
+
+static int engine_done = 0;
+float time_scale = 1.0;
+
+engine_container_p      last_cont = NULL;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -57,62 +66,80 @@ struct camera_s                         engine_camera;
 struct world_s                          engine_world;
 
 
-void Engine_InitDefaultGlobals()
+engine_container_p Container_Create()
 {
-    Sys_InitGlobals();
-    Con_InitGlobals();
-    Controls_InitGlobals();
-    Game_InitGlobals();
-    Audio_InitGlobals();
-}
+    engine_container_p ret;
 
-// First stage of initialization.
-void Engine_Init_Pre()
-{
-    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
-     * Rendering activation may be done later. */
-
-    Sys_Init();
-    Con_Init();
-    Engine_LuaInit();
-
-    lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
-
-    Gameflow_Init();
-    Cam_Init(&engine_camera);
-
-    Physics_Init();
-}
-
-// Second stage of initialization.
-void Engine_Init_Post()
-{
-    lua_CallVoidFunc(engine_lua, "loadscript_post", true);
-
-    Con_InitFont();
-
-    Gui_Init();
-
-    Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
+    ret = (engine_container_p)malloc(sizeof(engine_container_t));
+    ret->next = NULL;
+    ret->object = NULL;
+    ret->object_type = 0;
+    return ret;
 }
 
 
-void Engine_Destroy()
+void Engine_Init_Pre();
+void Engine_Init_Post();
+void Engine_InitGL();
+void Engine_InitAL();
+void Engine_InitSDLImage();
+void Engine_InitSDLVideo();
+void Engine_InitSDLControls();
+void Engine_InitDefaultGlobals();
+
+void Engine_Display();
+void Engine_PollSDLEvents();
+void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
+
+void ShowDebugInfo();
+
+void Engine_Start(const char *config_name)
 {
-    renderer.SetWorld(NULL);
-    Con_Destroy();
-    Sys_Destroy();
+#if defined(__MACOSX__)
+    FindConfigFile();
+#endif
 
-    Physics_Destroy();
+    // Set defaults parameters and load config file.
+    Engine_LoadConfig(config_name);
 
-    ///-----cleanup_end-----
-    if(engine_lua)
-    {
-        lua_close(engine_lua);
-        engine_lua = NULL;
-    }
+    // Primary initialization.
+    Engine_Init_Pre();
 
-    Gui_Destroy();
+    // Init generic SDL interfaces.
+    Engine_InitSDLControls();
+    Engine_InitSDLVideo();
+
+#if !defined(__MACOSX__)
+    Engine_InitSDLImage();
+#endif
+
+    // Additional OpenGL initialization.
+    Engine_InitGL();
+    renderer.DoShaders();
+
+    // Secondary (deferred) initialization.
+    Engine_Init_Post();
+
+    Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+
+    // Initial window resize.
+    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+
+    // OpenAL initialization.
+    Engine_InitAL();
+
+    // Clearing up memory for initial level loading.
+    World_Prepare(&engine_world);
+
+    // Setting up mouse.
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+    SDL_ShowCursor(0);
+
+    // Make splash screen.
+    //Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
+
+    luaL_dofile(engine_lua, "autoexec.lua");
 }
 
 
@@ -161,18 +188,642 @@ void Engine_Shutdown(int val)
 }
 
 
-engine_container_p Container_Create()
+void Engine_Destroy()
 {
-    engine_container_p ret;
+    renderer.SetWorld(NULL);
+    Con_Destroy();
+    Sys_Destroy();
 
-    ret = (engine_container_p)malloc(sizeof(engine_container_t));
-    ret->next = NULL;
-    ret->object = NULL;
-    ret->object_type = 0;
-    return ret;
+    Physics_Destroy();
+
+    ///-----cleanup_end-----
+    if(engine_lua)
+    {
+        lua_close(engine_lua);
+        engine_lua = NULL;
+    }
+
+    Gui_Destroy();
 }
 
 
+void Engine_SetDone()
+{
+    engine_done = 1;
+}
+
+
+void Engine_InitDefaultGlobals()
+{
+    Sys_InitGlobals();
+    Con_InitGlobals();
+    Controls_InitGlobals();
+    Game_InitGlobals();
+    Audio_InitGlobals();
+}
+
+// First stage of initialization.
+void Engine_Init_Pre()
+{
+    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
+     * Rendering activation may be done later. */
+
+    Sys_Init();
+    Con_Init();
+    Con_SetExecFunction(Engine_ExecCmd);
+    Engine_LuaInit();
+
+    lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
+
+    Gameflow_Init();
+    Cam_Init(&engine_camera);
+
+    Physics_Init();
+}
+
+// Second stage of initialization.
+void Engine_Init_Post()
+{
+    lua_CallVoidFunc(engine_lua, "loadscript_post", true);
+
+    Con_InitFont();
+
+    Gui_Init();
+
+    Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
+}
+
+
+void Engine_InitGL()
+{
+    InitGLExtFuncs();
+    qglClearColor(0.0, 0.0, 0.0, 1.0);
+    //qglShadeModel(GL_SMOOTH);
+
+    qglEnable(GL_DEPTH_TEST);
+    qglDepthFunc(GL_LEQUAL);
+
+    if(renderer.settings.antialias)
+    {
+         qglEnable(GL_MULTISAMPLE);
+    }
+    else
+    {
+        qglDisable(GL_MULTISAMPLE);
+    }
+
+    // Default state: Vertex array and color array are enabled, all others disabled.. Drawable
+    // items can rely on Vertex array to be enabled (but pointer can be
+    // anything). They have to enable other arrays based on their need and then
+    // return to default state
+    qglEnableClientState(GL_VERTEX_ARRAY);
+    qglEnableClientState(GL_COLOR_ARRAY);
+
+    // function use anyway.
+    qglAlphaFunc(GL_GEQUAL, 0.5);
+}
+
+
+void Engine_InitAL()
+{
+#if !NO_AUDIO
+    ALCint paramList[] = {
+        ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
+        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
+        ALC_FREQUENCY,       44100, 0};
+
+    Con_Printf("Audio driver: %s", SDL_GetCurrentAudioDriver());
+
+    al_device = alcOpenDevice(NULL);
+    if (!al_device)
+    {
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: No AL audio devices!");
+        return;
+    }
+
+    al_context = alcCreateContext(al_device, paramList);
+    if(!alcMakeContextCurrent(al_context))
+    {
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: AL context is not current!");
+        return;
+    }
+
+    alSpeedOfSound(330.0 * 512.0);
+    alDopplerVelocity(330.0 * 510.0);
+    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+#endif
+}
+
+
+#if !defined(__MACOSX__)
+void Engine_InitSDLImage()
+{
+    int flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    int init  = IMG_Init(flags);
+
+    if((init & flags) != flags)
+    {
+        Sys_DebugLog(SYS_LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
+    }
+}
+#endif
+
+
+void Engine_InitSDLVideo()
+{
+    Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
+    PFNGLGETSTRINGPROC lglGetString = NULL;
+
+    if(screen_info.FS_flag)
+    {
+        video_flags |= SDL_WINDOW_FULLSCREEN;
+    }
+    else
+    {
+        video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+    }
+
+    ///@TODO: is it really needede for correct work?
+    if(SDL_GL_LoadLibrary(NULL) < 0)
+    {
+        Sys_Error("Could not init OpenGL driver");
+    }
+
+    // Check for correct number of antialias samples.
+    if(renderer.settings.antialias)
+    {
+        PFNGLGETIINTEGERVPROC lglGetIntegerv = NULL;
+        /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
+        sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+        sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+        SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
+        lglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
+        GLint maxSamples = 0;
+        lglGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
+
+        if(renderer.settings.antialias_samples > maxSamples)
+        {
+            if(maxSamples == 0)
+            {
+                renderer.settings.antialias = 0;
+                renderer.settings.antialias_samples = 0;
+                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
+            }
+            else
+            {
+                renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+            }
+        }
+
+        SDL_GL_DeleteContext(sdl_gl_context);
+        SDL_DestroyWindow(sdl_window);
+
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
+    }
+    else
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
+#if STENCIL_FRUSTUM
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#endif
+    // set the opengl context version
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+    sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
+    lglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
+    Con_AddLine((const char*)lglGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
+    Con_AddLine((const char*)lglGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
+    Con_Printf("OpenGL version %s", lglGetString(GL_VERSION));
+    Con_AddLine((const char*)lglGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
+}
+
+
+void Engine_InitSDLControls()
+{
+    int    NumJoysticks;
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;   // These flags are used in any case.
+
+    if(control_mapper.use_joy == 1)
+    {
+        init_flags |= SDL_INIT_GAMECONTROLLER;                                  // Update init flags for joystick.
+
+        if(control_mapper.joy_rumble)
+        {
+            init_flags |= SDL_INIT_HAPTIC;                                      // Update init flags for force feedback.
+        }
+
+        SDL_Init(init_flags);
+
+        NumJoysticks = SDL_NumJoysticks();
+        if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
+        {
+            Sys_DebugLog(SYS_LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
+            return;
+        }
+
+        if(SDL_IsGameController(control_mapper.joy_number))                     // If joystick has mapping (e.g. X360 controller)
+        {
+            SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
+            sdl_controller = SDL_GameControllerOpen(control_mapper.joy_number);
+
+            if(!sdl_controller)
+            {
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
+                SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
+                control_mapper.use_joy = 0;
+            }
+            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            {
+                sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
+                if(!sdl_haptic)
+                {
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                }
+            }
+        }
+        else
+        {
+            SDL_JoystickEventState(SDL_ENABLE);                                 // If joystick isn't mapped, use generic API.
+            sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
+
+            if(!sdl_joystick)
+            {
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
+                SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
+                control_mapper.use_joy = 0;
+            }
+            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            {
+                sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
+                if(!sdl_haptic)
+                {
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
+                }
+            }
+        }
+
+        if(sdl_haptic)                                                          // To check if force feedback is working or not.
+        {
+            SDL_HapticRumbleInit(sdl_haptic);
+            SDL_HapticRumblePlay(sdl_haptic, 1.0, 300);
+        }
+    }
+    else
+    {
+        SDL_Init(init_flags);
+    }
+}
+
+
+void Engine_LoadConfig(const char *filename)
+{
+    Engine_InitDefaultGlobals();
+    if((filename != NULL) && Sys_FileFound(filename, 0))
+    {
+        lua_State *lua = luaL_newstate();
+        if(lua != NULL)
+        {
+            luaL_openlibs(lua);
+            lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
+            luaL_dofile(lua, filename);
+
+            lua_ParseScreen(lua, &screen_info);
+            lua_ParseRender(lua, &renderer.settings);
+            lua_ParseAudio(lua, &audio_settings);
+            lua_ParseConsole(lua);
+            lua_ParseControls(lua, &control_mapper);
+            lua_close(lua);
+        }
+    }
+    else
+    {
+        Sys_Warn("Could not find \"%s\"", filename);
+    }
+}
+
+
+void Engine_SaveConfig(const char *filename)
+{
+
+}
+
+
+void Engine_Display()
+{
+    if(!engine_done)
+    {
+        qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
+
+        Cam_Apply(&engine_camera);
+        Cam_RecalcClipPlanes(&engine_camera);
+        // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        if(screen_info.show_debuginfo)
+        {
+            ShowDebugInfo();
+        }
+
+        qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        qglEnableClientState(GL_NORMAL_ARRAY);
+        qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        qglFrontFace(GL_CW);
+
+        renderer.GenWorldList(&engine_camera);
+        renderer.DrawList();
+
+        Gui_SwitchGLMode(1);
+        qglEnable(GL_ALPHA_TEST);
+
+        Gui_DrawNotifier();
+        qglPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        Gui_Render();
+        Gui_SwitchGLMode(0);
+
+        renderer.DrawListDebugLines();
+
+        SDL_GL_SwapWindow(sdl_window);
+    }
+}
+
+
+void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
+{
+    screen_info.w = nominalW;
+    screen_info.h = nominalH;
+
+    screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+
+    Gui_Resize();
+
+    Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);
+    Cam_RecalcClipPlanes(&engine_camera);
+
+    qglViewport(0, 0, pixelsW, pixelsH);
+}
+
+
+void Engine_PollSDLEvents()
+{
+    SDL_Event event;
+    static int mouse_setup = 0;
+    //const float color[3] = {1.0f, 0.0f, 0.0f};
+    float from[3], to[3];
+
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_MOUSEMOTION:
+                if(!Con_IsShown() && control_states.mouse_look != 0 &&
+                    ((event.motion.x != (screen_info.w / 2)) ||
+                     (event.motion.y != (screen_info.h / 2))))
+                {
+                    if(mouse_setup)                                             // it is not perfect way, but cursor
+                    {                                                           // every engine start is in one place
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                    }
+
+                    if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
+                       (event.motion.x > ((screen_info.w / 2) + (screen_info.w / 4))) ||
+                       (event.motion.y < ((screen_info.h / 2)-(screen_info.h / 4))) ||
+                       (event.motion.y > ((screen_info.h / 2)+(screen_info.h / 4))))
+                    {
+                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+                    }
+                }
+                mouse_setup = 1;
+                break;
+
+            case SDL_MOUSEBUTTONDOWN:
+                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
+                {
+                    Controls_PrimaryMouseDown(from, to);
+                }
+                else if(event.button.button == 3)
+                {
+                    Controls_SecondaryMouseDown();
+                }
+                break;
+
+            // Controller events are only invoked when joystick is initialized as
+            // game controller, otherwise, generic joystick event will be used.
+            case SDL_CONTROLLERAXISMOTION:
+                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                break;
+
+            // Joystick events are still invoked, even if joystick is initialized as game
+            // controller - that's why we need sdl_joystick checking - to filter out
+            // duplicate event calls.
+
+            case SDL_JOYAXISMOTION:
+                if(sdl_joystick)
+                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
+                break;
+
+            case SDL_JOYHATMOTION:
+                if(sdl_joystick)
+                    Controls_JoyHat(event.jhat.value);
+                break;
+
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
+                if(sdl_joystick)
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                break;
+
+            case SDL_TEXTINPUT:
+            case SDL_TEXTEDITING:
+                if(Con_IsShown() && event.key.state)
+                {
+                    Con_Filter(event.text.text);
+                    return;
+                }
+                break;
+
+            case SDL_KEYUP:
+            case SDL_KEYDOWN:
+                if( (event.key.keysym.sym == SDLK_F4) &&
+                    (event.key.state == SDL_PRESSED)  &&
+                    (event.key.keysym.mod & KMOD_ALT) )
+                {
+                    Engine_SetDone();
+                    break;
+                }
+
+                if(Con_IsShown() && event.key.state)
+                {
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_RETURN:
+                        case SDLK_UP:
+                        case SDLK_DOWN:
+                        case SDLK_LEFT:
+                        case SDLK_RIGHT:
+                        case SDLK_HOME:
+                        case SDLK_END:
+                        case SDLK_BACKSPACE:
+                        case SDLK_DELETE:
+                            Con_Edit(event.key.keysym.sym);
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+                else
+                {
+                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    // DEBUG KEYBOARD COMMANDS
+                    Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                }
+                break;
+
+            case SDL_QUIT:
+                Engine_SetDone();
+                break;
+
+            case SDL_WINDOWEVENT:
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                }
+                break;
+
+            default:
+            break;
+        }
+    }
+    //renderer.debugDrawer->DrawLine(from, to, color, color);
+}
+
+
+void Engine_MainLoop()
+{
+    float time = 0.0f;
+    float newtime = 0.0f;
+    float oldtime = 0.0f;
+    float time_cycl = 0.0f;
+
+    int cycles = 0;
+    char fps_str[32] = "0.0";
+
+    while(!engine_done)
+    {
+        newtime = Sys_FloatTime();
+        time = newtime - oldtime;
+        oldtime = newtime;
+        time *= time_scale;
+
+        if(time > 0.1)
+        {
+            time = 0.1;
+        }
+
+        Sys_ResetTempMem();
+        engine_frame_time = time;
+        if(cycles < 20)
+        {
+            cycles++;
+            time_cycl += time;
+        }
+        else
+        {
+            screen_info.fps = (20.0 / time_cycl);
+            snprintf(fps_str, 32, "%.1f", screen_info.fps);
+            cycles = 0;
+            time_cycl = 0.0;
+        }
+
+        gui_text_line_p fps = Gui_OutTextXY(10.0, 10.0, fps_str);
+        fps->Xanchor = GUI_ANCHOR_HOR_RIGHT;
+        fps->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+        fps->font_id  = FONT_PRIMARY;
+        fps->style_id = FONTSTYLE_MENU_TITLE;
+        fps->show  = 1;
+
+        Engine_PollSDLEvents();
+        Game_Frame(time);
+        Gameflow_Do();
+
+        Engine_Display();
+    }
+}
+
+
+void ShowDebugInfo()
+{
+    entity_p ent;
+    ent = engine_world.Character;
+    if(ent && ent->character)
+    {
+        /*height_info_p fc = &ent->character->height_info
+        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        */
+
+        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
+        //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
+        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+    }
+
+    if(last_cont != NULL)
+    {
+        switch(last_cont->object_type)
+        {
+            case OBJECT_ENTITY:
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
+                break;
+
+            case OBJECT_STATIC_MESH:
+                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                break;
+
+            case OBJECT_ROOM_BASE:
+                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                break;
+        }
+
+    }
+
+    if(engine_camera.current_room != NULL)
+    {
+        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
+        if(rs != NULL)
+        {
+            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+        }
+    }
+    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+}
+
+
+/*
+ * MISC ENGINE FUNCTIONALITY
+ */
 int Engine_GetLevelFormat(const char *name)
 {
     // PLACEHOLDER: Currently, only PC levels are supported.
@@ -437,20 +1088,26 @@ int Engine_LoadMap(const char *name)
     switch(Engine_GetLevelFormat(name))
     {
         case LEVEL_FORMAT_PC:
-            if(Engine_LoadPCLevel(name) == false) return 0;
+            if(!Engine_LoadPCLevel(name))
+            {
+                return 0;
+            }
             break;
 
-        case LEVEL_FORMAT_PSX:
+        /*case LEVEL_FORMAT_PSX:
+            return 0;
             break;
 
         case LEVEL_FORMAT_DC:
+            return 0;
             break;
 
         case LEVEL_FORMAT_OPENTOMB:
-            break;
+            return 0;
+            break;*/
 
         default:
-            break;
+            return 0;
     }
 
     Audio_Init();
@@ -696,39 +1353,4 @@ int Engine_ExecCmd(char *ch)
     }
 
     return 0;
-}
-
-
-void Engine_InitConfig(const char *filename)
-{
-    lua_State *lua = luaL_newstate();
-
-    Engine_InitDefaultGlobals();
-
-    if(lua != NULL)
-    {
-        if((filename != NULL) && Sys_FileFound(filename, 0))
-        {
-            luaL_openlibs(lua);
-            lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
-            luaL_dofile(lua, filename);
-
-            lua_ParseScreen(lua, &screen_info);
-            lua_ParseRender(lua, &renderer.settings);
-            lua_ParseAudio(lua, &audio_settings);
-            lua_ParseConsole(lua);
-            lua_ParseControls(lua, &control_mapper);
-            lua_close(lua);
-        }
-        else
-        {
-            Sys_Warn("Could not find \"%s\"", filename);
-        }
-    }
-}
-
-
-void Engine_SaveConfig()
-{
-
 }

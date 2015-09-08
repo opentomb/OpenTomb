@@ -28,6 +28,8 @@ static struct
     uint16_t                   *line_style_id;
     char                      **line_text;                  // Console text
 
+    int                       (*exec_cmd)(char *ch);        // Exec function pointer
+    
     uint16_t                    line_size;                  // Console line size
     int16_t                     line_height;                // Height, including spacing
 
@@ -53,11 +55,11 @@ static void Con_FillBackgroundBuffer();
 static void Con_DrawBackground();
 static void Con_DrawCursor();
 
-int  Engine_ExecCmd(char *ch);
-
 void Con_Init()
 {
     uint16_t i;
+    
+    con_base.exec_cmd = NULL;
     
     con_base.log_pos = 0;
 
@@ -127,6 +129,12 @@ void Con_Init()
     }
 
     con_font_manager = glf_create_manager(GUI_MAX_FONTS, GUI_MAX_FONTSTYLES);
+}
+
+
+void Con_SetExecFunction(int(*exec_cmd)(char *ch))
+{
+    con_base.exec_cmd = exec_cmd;
 }
 
 
@@ -309,7 +317,7 @@ void Con_Edit(int key)
     if((key == SDLK_RETURN) && con_base.line_text[0])
     {
         Con_AddLog(con_base.line_text[0]);
-        if(!Engine_ExecCmd(con_base.line_text[0]))
+        if(con_base.exec_cmd && !con_base.exec_cmd(con_base.line_text[0]))
         {
             //Con_AddLine(con_base.text[0]);
         }
