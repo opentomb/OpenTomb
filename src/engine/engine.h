@@ -27,7 +27,7 @@ struct Room;
 
 namespace audio
 {
-extern Settings                  audio_settings;
+extern Settings audio_settings;
 } // namespace audio
 
 namespace engine
