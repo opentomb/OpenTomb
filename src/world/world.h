@@ -342,6 +342,85 @@ struct World
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
     std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
     std::shared_ptr<Room> getByID(unsigned int ID);
+
+    void pauseAllSources()
+    {
+        for(audio::Source& source : audio_sources)
+        {
+            if(source.isActive())
+            {
+                source.pause();
+            }
+        }
+    }
+
+    void stopAllSources()
+    {
+        for(audio::Source& source : audio_sources)
+        {
+            source.stop();
+        }
+    }
+
+    void resumeAllSources()
+    {
+        for(audio::Source& source : audio_sources)
+        {
+            if(source.isActive())
+            {
+                source.play();
+            }
+        }
+    }
+
+    int getFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
+    {
+        for(size_t i = 0; i < audio_sources.size(); i++)
+        {
+            if(!audio_sources[i].isActive())
+            {
+                return static_cast<int>(i);
+            }
+        }
+
+        return -1;
+    }
+
+    bool endStreams(audio::StreamType stream_type = audio::StreamType::Any)
+    {
+        bool result = false;
+
+        for(audio::StreamTrack& track : stream_tracks)
+        {
+            if((stream_type == audio::StreamType::Any) ||                              // End ALL streams at once.
+               (track.isPlaying() &&
+                track.isType(stream_type)))
+            {
+                result = true;
+                track.end();
+            }
+        }
+
+        return result;
+    }
+
+    bool stopStreams(audio::StreamType stream_type = audio::StreamType::Any)
+    {
+        bool result = false;
+
+        for(audio::StreamTrack& track : stream_tracks)
+        {
+            if(track.isPlaying() &&
+               (track.isType(stream_type) ||
+                stream_type == audio::StreamType::Any)) // Stop ALL streams at once.
+            {
+                result = true;
+                track.stop();
+            }
+        }
+
+        return result;
+    }
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);

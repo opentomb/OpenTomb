@@ -799,7 +799,7 @@ void Game_LevelTransition(uint16_t level_index)
     gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
     gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    audio::endStreams();
+    engine::engine_world.endStreams();
 }
 
 } // namespace engine

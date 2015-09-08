@@ -553,40 +553,4 @@ void StreamTrack::unsetFX()
     alSource3i(m_source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
 
-bool endStreams(StreamType stream_type)
-{
-    bool result = false;
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if((stream_type == StreamType::Any) ||                              // End ALL streams at once.
-           ((engine::engine_world.stream_tracks[i].isPlaying()) &&
-            (engine::engine_world.stream_tracks[i].isType(stream_type))))
-        {
-            result = true;
-            engine::engine_world.stream_tracks[i].end();
-        }
-    }
-
-    return result;
-}
-
-bool stopStreams(StreamType stream_type)
-{
-    bool result = false;
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if(engine::engine_world.stream_tracks[i].isPlaying() &&
-           (engine::engine_world.stream_tracks[i].isType(stream_type) ||
-            stream_type == StreamType::Any)) // Stop ALL streams at once.
-        {
-            result = true;
-            engine::engine_world.stream_tracks[i].stop();
-        }
-    }
-
-    return result;
-}
-
 } // namespace audio

@@ -14,24 +14,24 @@ extern FxManager fxManager;
 
 Source::~Source()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
-        alSourceStop(source_index);
-        alDeleteSources(1, &source_index);
+        alSourceStop(m_sourceIndex);
+        alDeleteSources(1, &m_sourceIndex);
     }
 }
 
-bool Source::IsActive()
+bool Source::isActive()
 {
-    return active;
+    return m_active;
 }
 
-bool Source::IsLooping()
+bool Source::isLooping()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
         ALint looping;
-        alGetSourcei(source_index, AL_LOOPING, &looping);
+        alGetSourcei(m_sourceIndex, AL_LOOPING, &looping);
         return (looping != AL_FALSE);
     }
     else
@@ -40,12 +40,12 @@ bool Source::IsLooping()
     }
 }
 
-bool Source::IsPlaying()
+bool Source::isPlaying()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
         ALenum state = AL_STOPPED;
-        alGetSourcei(source_index, AL_SOURCE_STATE, &state);
+        alGetSourcei(m_sourceIndex, AL_SOURCE_STATE, &state);
 
         // Paused state and existing file pointers also counts as playing.
         return ((state == AL_PLAYING) || (state == AL_PAUSED));
@@ -56,84 +56,84 @@ bool Source::IsPlaying()
     }
 }
 
-void Source::Play()
+void Source::play()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
-        if(emitter_type == EmitterType::Global)
+        if(m_emitterType == EmitterType::Global)
         {
-            alSourcei(source_index, AL_SOURCE_RELATIVE, AL_TRUE);
-            alSource3f(source_index, AL_POSITION, 0.0f, 0.0f, 0.0f);
-            alSource3f(source_index, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+            alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_TRUE);
+            alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
+            alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
             if(audio_settings.use_effects)
             {
-                UnsetFX();
+                unsetFX();
             }
         }
         else
         {
-            alSourcei(source_index, AL_SOURCE_RELATIVE, AL_FALSE);
-            LinkEmitter();
+            alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
+            linkEmitter();
 
             if(audio_settings.use_effects)
             {
-                SetFX();
-                SetUnderwater();
+                setFX();
+                setUnderwater();
             }
         }
 
-        alSourcePlay(source_index);
-        active = true;
+        alSourcePlay(m_sourceIndex);
+        m_active = true;
     }
 }
 
-void Source::Pause()
+void Source::pause()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
-        alSourcePause(source_index);
+        alSourcePause(m_sourceIndex);
     }
 }
 
-void Source::Stop()
+void Source::stop()
 {
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
-        alSourceStop(source_index);
+        alSourceStop(m_sourceIndex);
     }
 }
 
-void Source::Update()
+void Source::update()
 {
     // Bypass any non-active source.
-    if(!active) return;
+    if(!m_active) return;
 
     // Disable and bypass source, if it is stopped.
-    if(!IsPlaying())
+    if(!isPlaying())
     {
-        active = false;
+        m_active = false;
         return;
     }
 
     // Bypass source, if it is global.
-    if(emitter_type == EmitterType::Global) return;
+    if(m_emitterType == EmitterType::Global) return;
 
     ALfloat range, gain;
 
-    alGetSourcef(source_index, AL_GAIN, &gain);
-    alGetSourcef(source_index, AL_MAX_DISTANCE, &range);
+    alGetSourcef(m_sourceIndex, AL_GAIN, &gain);
+    alGetSourcef(m_sourceIndex, AL_MAX_DISTANCE, &range);
 
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(isInRange(emitter_type, emitter_ID, range, gain))
+    if(isInRange(m_emitterType, m_emitterID, range, gain))
     {
-        LinkEmitter();
+        linkEmitter();
 
-        if(audio_settings.use_effects && is_water != fxManager.water_state)
+        if(audio_settings.use_effects && m_isWater != fxManager.water_state)
         {
-            SetUnderwater();
+            setUnderwater();
         }
     }
     else
@@ -142,17 +142,17 @@ void Source::Update()
         // were activated for already destroyed entities to finish (e.g. grenade
         // explosions, ricochets, and so on).
 
-        if(IsLooping()) Stop();
+        if(isLooping()) stop();
     }
 }
 
-void Source::SetBuffer(ALint buffer)
+void Source::setBuffer(ALint buffer)
 {
     ALint buffer_index = engine::engine_world.audio_buffers[buffer];
 
-    if(alIsSource(source_index) && alIsBuffer(buffer_index))
+    if(alIsSource(m_sourceIndex) && alIsBuffer(buffer_index))
     {
-        alSourcei(source_index, AL_BUFFER, buffer_index);
+        alSourcei(m_sourceIndex, AL_BUFFER, buffer_index);
 
         // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
         // so there's extra debug info - maybe it'll help some day.
@@ -172,40 +172,40 @@ void Source::SetBuffer(ALint buffer)
     }
 }
 
-void Source::SetLooping(ALboolean is_looping)
+void Source::setLooping(ALboolean is_looping)
 {
-    alSourcei(source_index, AL_LOOPING, is_looping);
+    alSourcei(m_sourceIndex, AL_LOOPING, is_looping);
 }
 
-void Source::SetGain(ALfloat gain_value)
+void Source::setGain(ALfloat gain_value)
 {
-    alSourcef(source_index, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
+    alSourcef(m_sourceIndex, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
 }
 
-void Source::SetPitch(ALfloat pitch_value)
+void Source::setPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
-    alSourcef(source_index, AL_PITCH, util::clamp(pitch_value, 0.1f, 2.0f));
+    alSourcef(m_sourceIndex, AL_PITCH, util::clamp(pitch_value, 0.1f, 2.0f));
 }
 
-void Source::SetRange(ALfloat range_value)
+void Source::setRange(ALfloat range_value)
 {
     // Source will become fully audible on 1/6 of overall position.
-    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6.0f);
-    alSourcef(source_index, AL_MAX_DISTANCE, range_value);
+    alSourcef(m_sourceIndex, AL_REFERENCE_DISTANCE, range_value / 6.0f);
+    alSourcef(m_sourceIndex, AL_MAX_DISTANCE, range_value);
 }
 
-void Source::SetPosition(const ALfloat pos_vector[])
+void Source::setPosition(const ALfloat pos_vector[])
 {
-    alSourcefv(source_index, AL_POSITION, pos_vector);
+    alSourcefv(m_sourceIndex, AL_POSITION, pos_vector);
 }
 
-void Source::SetVelocity(const ALfloat vel_vector[])
+void Source::setVelocity(const ALfloat vel_vector[])
 {
-    alSourcefv(source_index, AL_VELOCITY, vel_vector);
+    alSourcefv(m_sourceIndex, AL_VELOCITY, vel_vector);
 }
 
-void Source::SetFX()
+void Source::setFX()
 {
     ALuint effect;
     ALuint slot;
@@ -236,18 +236,18 @@ void Source::SetFX()
 
     // Assign global reverb FX to channel.
 
-    alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+    alSource3i(m_sourceIndex, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
 }
 
-void Source::UnsetFX()
+void Source::unsetFX()
 {
     // Remove any audio sends and direct filters from channel.
 
-    alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
-    alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+    alSourcei(m_sourceIndex, AL_DIRECT_FILTER, AL_FILTER_NULL);
+    alSource3i(m_sourceIndex, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
 
-void Source::SetUnderwater()
+void Source::setUnderwater()
 {
     // Water low-pass filter is applied when source's is_water flag is set.
     // Note that it is applied directly to channel, i. e. all sources that
@@ -255,30 +255,30 @@ void Source::SetUnderwater()
 
     if(fxManager.water_state)
     {
-        alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
-        is_water = true;
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.al_filter);
+        m_isWater = true;
     }
     else
     {
-        alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
-        is_water = false;
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, AL_FILTER_NULL);
+        m_isWater = false;
     }
 }
 
-void Source::LinkEmitter()
+void Source::linkEmitter()
 {
-    switch(emitter_type)
+    switch(m_emitterType)
     {
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(emitter_ID))
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(m_emitterID))
             {
-                SetPosition(ent->m_transform.getOrigin());
-                SetVelocity(ent->m_speed);
+                setPosition(ent->m_transform.getOrigin());
+                setVelocity(ent->m_speed);
             }
             return;
 
         case EmitterType::SoundSource:
-            SetPosition(engine::engine_world.audio_emitters[emitter_ID].position);
+            setPosition(engine::engine_world.audio_emitters[m_emitterID].position);
             return;
     }
 }

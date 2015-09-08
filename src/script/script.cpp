@@ -2428,7 +2428,7 @@ void lua_PlayStream(int id, lua::Value mask)
 
 void lua_StopStreams()
 {
-    audio::stopStreams();
+    engine::engine_world.stopStreams();
 }
 
 void lua_PlaySound(int id, lua::Value ent_id)

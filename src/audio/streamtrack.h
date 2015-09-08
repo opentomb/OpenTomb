@@ -89,7 +89,4 @@ private:
 
 void updateStreamsDamping();                   // See if there any damping tracks playing.
 
-bool endStreams(StreamType stream_type = StreamType::Any);         // End ALL streams (with crossfade).
-bool stopStreams(StreamType stream_type = StreamType::Any);        // Immediately stop ALL streams.
-
 } // namespace audio

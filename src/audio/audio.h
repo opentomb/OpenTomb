@@ -289,9 +289,6 @@ int  deInit();
 void update();
 
 // Audio source (samples) routines.
-void pauseAllSources();    // Used to pause all effects currently playing.
-void stopAllSources();     // Used in audio deinit.
-void resumeAllSources();   // Used to resume all effects currently paused.
 void updateSources();      // Main sound loop.
 void updateListenerByCamera(world::Camera *cam);
 void updateListenerByEntity(std::shared_ptr<world::Entity> ent);

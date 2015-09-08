@@ -231,8 +231,8 @@ void Character::state_func()
 
     if(m_response.killed)  // Stop any music, if Lara is dead.
     {
-        audio::endStreams(audio::StreamType::Oneshot);
-        audio::endStreams(audio::StreamType::Chat);
+        engine::engine_world.endStreams(audio::StreamType::Oneshot);
+        engine::engine_world.endStreams(audio::StreamType::Chat);
     }
 
     StepType nextStep = StepType::Horizontal;

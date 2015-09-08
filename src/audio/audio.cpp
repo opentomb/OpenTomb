@@ -201,30 +201,30 @@ FxManager fxManager;
 
 Source::Source()
 {
-    active = false;
-    emitter_ID = -1;
-    emitter_type = EmitterType::Entity;
-    effect_index = 0;
-    sample_index = 0;
-    sample_count = 0;
-    is_water = false;
-    alGenSources(1, &source_index);
+    m_active = false;
+    m_emitterID = -1;
+    m_emitterType = EmitterType::Entity;
+    m_effectIndex = 0;
+    m_sampleIndex = 0;
+    m_sampleCount = 0;
+    m_isWater = false;
+    alGenSources(1, &m_sourceIndex);
 
-    if(alIsSource(source_index))
+    if(alIsSource(m_sourceIndex))
     {
-        alSourcef(source_index, AL_MIN_GAIN, 0.0);
-        alSourcef(source_index, AL_MAX_GAIN, 1.0);
+        alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
+        alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
 
         if(audio_settings.use_effects)
         {
-            alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
-            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1f);
+            alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
+            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
         }
         else
         {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0f);
+            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
         }
     }
 }
@@ -288,7 +288,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(target_stream == -1)
     {
-        do_fade_in = stopStreams(stream_type);  // If no free track found, hardly stop all tracks.
+        do_fade_in = engine::engine_world.stopStreams(stream_type);  // If no free track found, hardly stop all tracks.
         target_stream = getFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
@@ -299,7 +299,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
     }
     else
     {
-        do_fade_in = endStreams(stream_type);   // End all streams of this type with fadeout.
+        do_fade_in = engine::engine_world.endStreams(stream_type);   // End all streams of this type with fadeout.
 
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.
@@ -461,62 +461,19 @@ void updateSources()
 
     for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        engine::engine_world.audio_sources[i].Update();
+        engine::engine_world.audio_sources[i].update();
     }
-}
-
-void pauseAllSources()
-{
-    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
-    {
-        if(engine::engine_world.audio_sources[i].IsActive())
-        {
-            engine::engine_world.audio_sources[i].Pause();
-        }
-    }
-}
-
-void stopAllSources()
-{
-    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
-    {
-        engine::engine_world.audio_sources[i].Stop();
-    }
-}
-
-void resumeAllSources()
-{
-    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
-    {
-        if(engine::engine_world.audio_sources[i].IsActive())
-        {
-            engine::engine_world.audio_sources[i].Play();
-        }
-    }
-}
-
-int getFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
-{
-    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
-    {
-        if(!engine::engine_world.audio_sources[i].IsActive())
-        {
-            return i;
-        }
-    }
-
-    return -1;
 }
 
 int isEffectPlaying(int effect_ID, EmitterType entity_type, int entity_ID)
 {
     for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
     {
-        if(((entity_type == EmitterType::Any) || (engine::engine_world.audio_sources[i].emitter_type == entity_type)) &&
-           ((entity_ID == -1) || (engine::engine_world.audio_sources[i].emitter_ID == static_cast<int32_t>(entity_ID))) &&
-           ((effect_ID == -1) || (engine::engine_world.audio_sources[i].effect_index == static_cast<uint32_t>(effect_ID))))
+        if(((entity_type == EmitterType::Any) || (engine::engine_world.audio_sources[i].m_emitterType == entity_type)) &&
+           ((entity_ID == -1) || (engine::engine_world.audio_sources[i].m_emitterID == static_cast<int32_t>(entity_ID))) &&
+           ((effect_ID == -1) || (engine::engine_world.audio_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID))))
         {
-            if(engine::engine_world.audio_sources[i].IsPlaying())
+            if(engine::engine_world.audio_sources[i].isPlaying())
                 return i;
         }
     }
@@ -589,7 +546,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
     {
         if(effect->loop == loader::LoopType::PingPong)
         {
-            engine::engine_world.audio_sources[source_number].Stop();
+            engine::engine_world.audio_sources[source_number].stop();
         }
         else if(effect->loop != loader::LoopType::None) // Any other looping case (Wait / Loop).
         {
@@ -598,7 +555,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
     }
     else
     {
-        source_number = getFreeSource();  // Get free source.
+        source_number = engine::engine_world.getFreeSource();  // Get free source.
     }
 
     if(source_number != -1)  // Everything is OK, we're sending audio to channel.
@@ -621,24 +578,24 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
 
         Source *source = &engine::engine_world.audio_sources[source_number];
 
-        source->SetBuffer(buffer_index);
+        source->setBuffer(buffer_index);
 
         // Step 2. Check looped flag, and if so, set source type to looped.
 
         if(effect->loop == loader::LoopType::Forward)
         {
-            source->SetLooping(AL_TRUE);
+            source->setLooping(AL_TRUE);
         }
         else
         {
-            source->SetLooping(AL_FALSE);
+            source->setLooping(AL_FALSE);
         }
 
         // Step 3. Apply internal sound parameters.
 
-        source->emitter_ID = entity_ID;
-        source->emitter_type = entity_type;
-        source->effect_index = effect_ID;
+        source->m_emitterID = entity_ID;
+        source->m_emitterType = entity_type;
+        source->m_effectIndex = effect_ID;
 
         // Step 4. Apply sound effect properties.
 
@@ -646,27 +603,27 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
         {
             random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
             random_float = effect->pitch + ((random_float - 25.0f) / 200.0f);
-            source->SetPitch(random_float);
+            source->setPitch(random_float);
         }
         else
         {
-            source->SetPitch(effect->pitch);
+            source->setPitch(effect->pitch);
         }
 
         if(effect->rand_gain)   // Vary gain, if flag is set.
         {
             random_float = static_cast<ALfloat>( rand() % effect->rand_gain_var );
             random_float = effect->gain + (random_float - 25.0f) / 200.0f;
-            source->SetGain(random_float);
+            source->setGain(random_float);
         }
         else
         {
-            source->SetGain(effect->gain);
+            source->setGain(effect->gain);
         }
 
-        source->SetRange(effect->range);    // Set audible range.
+        source->setRange(effect->range);    // Set audible range.
 
-        source->Play();                     // Everything is OK, play sound now!
+        source->play();                     // Everything is OK, play sound now!
 
         return Error::Processed;
     }
@@ -682,7 +639,7 @@ Error kill(int effect_ID, EmitterType entity_type, int entity_ID)
 
     if(playing_sound != -1)
     {
-        engine::engine_world.audio_sources[playing_sound].Stop();
+        engine::engine_world.audio_sources[playing_sound].stop();
         return Error::Processed;
     }
 
@@ -826,8 +783,8 @@ void init(uint32_t num_Sources)
 
 int deInit()
 {
-    stopAllSources();
-    stopStreams();
+    engine::engine_world.stopAllSources();
+    engine::engine_world.stopStreams();
 
     deInitDelay();
 
