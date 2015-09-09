@@ -3888,7 +3888,10 @@ bool Engine_LuaInit()
 
 void Engine_LuaClearTasks()
 {
-    lua_CallVoidFunc(engine_lua, "clearTasks");
+    if(engine_lua)
+    {
+        lua_CallVoidFunc(engine_lua, "clearTasks");
+    }
 }
 
 void Engine_LuaRegisterFuncs(lua_State *lua)

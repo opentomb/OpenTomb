@@ -1824,7 +1824,7 @@ int lua_SetSectorFlags(lua_State * lua)
 void Res_ScriptsOpen(int engine_version)
 {
     char temp_script_name[256];
-    Engine_GetLevelScriptName(engine_version, temp_script_name);
+    Engine_GetLevelScriptName(engine_version, temp_script_name, NULL);
 
     level_script = luaL_newstate();
     if(level_script != NULL)

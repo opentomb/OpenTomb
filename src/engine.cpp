@@ -99,7 +99,7 @@ void Engine_Start(const char *config_name)
     FindConfigFile();
 #endif
 
-    // Set defaults parameters and load config file.
+    Engine_InitDefaultGlobals();
     Engine_LoadConfig(config_name);
 
     // Primary initialization.
@@ -108,6 +108,7 @@ void Engine_Start(const char *config_name)
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
+    Engine_InitAL();
 
 #if !defined(__MACOSX__)
     Engine_InitSDLImage();
@@ -120,13 +121,11 @@ void Engine_Start(const char *config_name)
     // Secondary (deferred) initialization.
     Engine_Init_Post();
 
+    // Make splash screen.
     Gui_LoadScreenAssignPic("resource/graphics/legal.png");
 
     // Initial window resize.
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
-
-    // OpenAL initialization.
-    Engine_InitAL();
 
     // Clearing up memory for initial level loading.
     World_Prepare(&engine_world);
@@ -136,19 +135,26 @@ void Engine_Start(const char *config_name)
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
 
-    // Make splash screen.
-    //Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
-
     luaL_dofile(engine_lua, "autoexec.lua");
 }
 
 
 void Engine_Shutdown(int val)
 {
-    Engine_LuaClearTasks();
     renderer.SetWorld(NULL);
+    lua_Clean(engine_lua);
     World_Clear(&engine_world);
-    Engine_Destroy();
+
+    if(engine_lua)
+    {
+        lua_close(engine_lua);
+        engine_lua = NULL;
+    }
+
+    Con_Destroy();
+    Sys_Destroy();
+    Physics_Destroy();
+    Gui_Destroy();
 
     /* no more renderings */
     SDL_GL_DeleteContext(sdl_gl_context);
@@ -185,25 +191,6 @@ void Engine_Shutdown(int val)
     SDL_Quit();
 
     exit(val);
-}
-
-
-void Engine_Destroy()
-{
-    renderer.SetWorld(NULL);
-    Con_Destroy();
-    Sys_Destroy();
-
-    Physics_Destroy();
-
-    ///-----cleanup_end-----
-    if(engine_lua)
-    {
-        lua_close(engine_lua);
-        engine_lua = NULL;
-    }
-
-    Gui_Destroy();
 }
 
 
@@ -258,18 +245,17 @@ void Engine_InitGL()
 {
     InitGLExtFuncs();
     qglClearColor(0.0, 0.0, 0.0, 1.0);
-    //qglShadeModel(GL_SMOOTH);
 
     qglEnable(GL_DEPTH_TEST);
     qglDepthFunc(GL_LEQUAL);
 
     if(renderer.settings.antialias)
     {
-         qglEnable(GL_MULTISAMPLE);
+        qglEnable(GL_MULTISAMPLE);
     }
     else
     {
-        qglDisable(GL_MULTISAMPLE);
+       qglDisable(GL_MULTISAMPLE);
     }
 
     // Default state: Vertex array and color array are enabled, all others disabled.. Drawable
@@ -352,6 +338,7 @@ void Engine_InitSDLVideo()
     // Check for correct number of antialias samples.
     if(renderer.settings.antialias)
     {
+        GLint maxSamples = 0;
         PFNGLGETIINTEGERVPROC lglGetIntegerv = NULL;
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
@@ -359,21 +346,19 @@ void Engine_InitSDLVideo()
         SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
         lglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
-        GLint maxSamples = 0;
         lglGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
+        maxSamples = (maxSamples > 16)?(16):(maxSamples);                       // Fix for faulty GL max. sample number.
 
         if(renderer.settings.antialias_samples > maxSamples)
         {
+            renderer.settings.antialias_samples = maxSamples;                   // Limit to max.
             if(maxSamples == 0)
             {
                 renderer.settings.antialias = 0;
-                renderer.settings.antialias_samples = 0;
                 Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
             }
             else
             {
-                renderer.settings.antialias_samples = maxSamples;   // Limit to max.
                 Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
             }
         }
@@ -492,7 +477,6 @@ void Engine_InitSDLControls()
 
 void Engine_LoadConfig(const char *filename)
 {
-    Engine_InitDefaultGlobals();
     if((filename != NULL) && Sys_FileFound(filename, 0))
     {
         lua_State *lua = luaL_newstate();
@@ -619,7 +603,7 @@ void Engine_PollSDLEvents()
                 }
                 else if(event.button.button == 3)
                 {
-                    Controls_SecondaryMouseDown();
+                    Controls_SecondaryMouseDown(&last_cont);
                 }
                 break;
 
@@ -640,19 +624,25 @@ void Engine_PollSDLEvents()
 
             case SDL_JOYAXISMOTION:
                 if(sdl_joystick)
+                {
                     Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
+                }
                 break;
 
             case SDL_JOYHATMOTION:
                 if(sdl_joystick)
+                {
                     Controls_JoyHat(event.jhat.value);
+                }
                 break;
 
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
                 // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
                 if(sdl_joystick)
+                {
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                }
                 break;
 
             case SDL_TEXTINPUT:
@@ -714,10 +704,20 @@ void Engine_PollSDLEvents()
                 break;
 
             default:
-            break;
+                break;
         }
     }
     //renderer.debugDrawer->DrawLine(from, to, color, color);
+}
+
+
+void Engine_JoyRumble(float power, int time)
+{
+    // JoyRumble is a simple wrapper for SDL's haptic rumble play.
+    if(sdl_haptic)
+    {
+        SDL_HapticRumblePlay(sdl_haptic, power, time);
+    }
 }
 
 
@@ -738,33 +738,29 @@ void Engine_MainLoop()
         oldtime = newtime;
         time *= time_scale;
 
-        if(time > 0.1)
-        {
-            time = 0.1;
-        }
-
-        Sys_ResetTempMem();
         engine_frame_time = time;
-        if(cycles < 20)
+
+        if(cycles < 32)
         {
             cycles++;
             time_cycl += time;
         }
         else
         {
-            screen_info.fps = (20.0 / time_cycl);
+            screen_info.fps = (32.0f / time_cycl);
             snprintf(fps_str, 32, "%.1f", screen_info.fps);
             cycles = 0;
-            time_cycl = 0.0;
+            time_cycl = 0.0f;
         }
 
-        gui_text_line_p fps = Gui_OutTextXY(10.0, 10.0, fps_str);
-        fps->Xanchor = GUI_ANCHOR_HOR_RIGHT;
-        fps->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
-        fps->font_id  = FONT_PRIMARY;
-        fps->style_id = FONTSTYLE_MENU_TITLE;
-        fps->show  = 1;
+        gui_text_line_p fps = Gui_OutTextXY(10.0f, 10.0f, fps_str);
+        fps->Xanchor    = GUI_ANCHOR_HOR_RIGHT;
+        fps->Yanchor    = GUI_ANCHOR_VERT_BOTTOM;
+        fps->font_id    = FONT_PRIMARY;
+        fps->style_id   = FONTSTYLE_MENU_TITLE;
+        fps->show       = 1;
 
+        Sys_ResetTempMem();
         Engine_PollSDLEvents();
         Game_Frame(time);
         Gameflow_Do();
@@ -1084,7 +1080,6 @@ int Engine_LoadMap(const char *name)
 
 
     // Here we can place different platform-specific level loading routines.
-
     switch(Engine_GetLevelFormat(name))
     {
         case LEVEL_FORMAT_PC:

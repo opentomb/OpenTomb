@@ -3000,9 +3000,6 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/main_SDL.cpp" />
-		<Unit filename="src/main_SDL.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/mesh.c">
 			<Option compilerVar="CC" />
 		</Unit>

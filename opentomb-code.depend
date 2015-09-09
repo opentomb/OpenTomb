@@ -6676,7 +6676,7 @@
 	"../alMain.h"
 	"../alThunk.h"
 
-1440850638 source:d:\dev\opentomb\src\anim_state_control.cpp
+1441647487 source:d:\dev\opentomb\src\anim_state_control.cpp
 	<stdlib.h>
 	<stdio.h>
 	"core/system.h"
@@ -6689,6 +6689,7 @@
 	"engine.h"
 	"audio.h"
 	"engine_physics.h"
+	"room.h"
 	"world.h"
 	"game.h"
 	"skeletal_model.h"
@@ -6705,7 +6706,7 @@
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
-1440092876 d:\dev\opentomb\src\core\console.h
+1441734347 d:\dev\opentomb\src\core\console.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -6735,7 +6736,7 @@
 	<SDL2/SDL_opengl.h>
 	"vmath.h"
 
-1440838512 d:\dev\opentomb\src\engine.h
+1441737919 d:\dev\opentomb\src\engine.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -7341,7 +7342,7 @@
 	"vt/tr_types.h"
 	"core/polygon.h"
 
-1440784066 d:\dev\opentomb\src\controls.h
+1441736596 d:\dev\opentomb\src\controls.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -9277,7 +9278,7 @@
 	"engine.h"
 	"entity.h"
 
-1440851377 source:d:\dev\opentomb\src\entity.cpp
+1441639645 source:d:\dev\opentomb\src\entity.cpp
 	<stdlib.h>
 	<math.h>
 	<lua.h>
@@ -9293,6 +9294,7 @@
 	"mesh.h"
 	"skeletal_model.h"
 	"entity.h"
+	"room.h"
 	"world.h"
 	"engine.h"
 	"engine_physics.h"
@@ -11588,12 +11590,11 @@
 	<stdio.h>
 	"vt_level.h"
 
-1440847692 source:d:\dev\opentomb\src\world.cpp
+1441640249 source:d:\dev\opentomb\src\world.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
-	<SDL2/SDL_platform.h>
-	<SDL2/SDL_opengl.h>
+	"core/gl_util.h"
 	"core/console.h"
 	"core/redblack.h"
 	"core/vmath.h"
@@ -11602,8 +11603,10 @@
 	"render/camera.h"
 	"render/frustum.h"
 	"render/render.h"
+	"render/bordered_texture_atlas.h"
 	"vt/vt_level.h"
 	"audio.h"
+	"room.h"
 	"world.h"
 	"mesh.h"
 	"skeletal_model.h"
@@ -16416,4 +16419,21 @@
 	"inventory.h"
 	"engine.h"
 	"world.h"
+
+1441639965 source:d:\dev\opentomb\src\room.cpp
+	<stdio.h>
+	<stdlib.h>
+	<SDL2/SDL.h>
+	"core/gl_util.h"
+	"core/console.h"
+	"core/redblack.h"
+	"core/vmath.h"
+	"core/polygon.h"
+	"core/obb.h"
+	"render/frustum.h"
+	"engine.h"
+	"engine_physics.h"
+	"entity.h"
+	"mesh.h"
+	"room.h"
 

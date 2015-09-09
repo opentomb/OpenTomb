@@ -121,10 +121,10 @@ engine_container_p Container_Create();
 
 void Engine_Start(const char *config_name);
 void Engine_Shutdown(int val) __attribute__((noreturn));
-void Engine_Destroy();
 void Engine_SetDone();
 void Engine_LoadConfig(const char *filename);
 void Engine_SaveConfig(const char *filename);
+void Engine_JoyRumble(float power, int time);
 
 void Engine_MainLoop();
 
@@ -137,7 +137,7 @@ int  Engine_GetPCLevelVersion(const char *name);
 
 int  Engine_GetLevelFormat(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
-void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
+void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix);
 int  Engine_LoadMap(const char *name);
 
 extern "C" int  Engine_ExecCmd(char *ch);

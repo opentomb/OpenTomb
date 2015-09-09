@@ -621,7 +621,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(resp->horizontal_collide & 0x01)
             {
-                Controls_JoyRumble(200.0, 200);
+                Engine_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 Entity_UpdateCurrentSpeed(ent, 1);
@@ -651,7 +651,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(resp->horizontal_collide & 0x01)
             {
-                Controls_JoyRumble(200.0, 200);
+                Engine_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_RIGHT;
                 Entity_UpdateCurrentSpeed(ent, 1);
@@ -677,7 +677,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(resp->horizontal_collide & 0x01)
             {
-                Controls_JoyRumble(200.0, 200);
+                Engine_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_LEFT;
                 Entity_UpdateCurrentSpeed(ent, 1);
@@ -847,7 +847,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else
                 {
-                    Controls_JoyRumble(200.0, 200);
+                    Engine_JoyRumble(200.0, 200);
 
                     if(cmd->move[0] == 1)
                     {
@@ -941,7 +941,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(resp->horizontal_collide & 0x01)
             {
-                Controls_JoyRumble(200.0, 200);
+                Engine_JoyRumble(200.0, 200);
 
                 i = Anim_GetAnimDispatchCase(ent->bf, 2);
                 if(i == 1)
@@ -2270,7 +2270,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     {
                         resp->kill = 1;
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_DEATH, 0);
-                        Controls_JoyRumble(200.0, 500);
+                        Engine_JoyRumble(200.0, 500);
                     }
                     else
                     {

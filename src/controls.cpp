@@ -5,7 +5,6 @@
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_events.h>
-#include <SDL2/SDL_haptic.h>
 
 extern "C" {
 #include <lua.h>
@@ -26,14 +25,6 @@ extern "C" {
 #include "gui.h"
 #include "game.h"
 #include "script.h"
-
-
-extern SDL_Joystick         *sdl_joystick;
-extern SDL_GameController   *sdl_controller;
-extern SDL_Haptic           *sdl_haptic;
-extern SDL_Window           *sdl_window;
-
-extern engine_container_p    last_cont;
 
 
 void Controls_Key(int32_t button, int state)
@@ -392,14 +383,6 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     }
 }
 
-void Controls_JoyRumble(float power, int time)
-{
-    // JoyRumble is a simple wrapper for SDL's haptic rumble play.
-
-    if(sdl_haptic)
-        SDL_HapticRumblePlay(sdl_haptic, power, time);
-}
-
 void Controls_RefreshStates()
 {
     for(int i = 0; i < ACT_LASTINDEX; i++)
@@ -528,7 +511,7 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
 }
 
 
-void Controls_SecondaryMouseDown()
+void Controls_SecondaryMouseDown(struct engine_container_s **cont)
 {
     float from[3], to[3];
     engine_container_t cam_cont;
@@ -546,7 +529,7 @@ void Controls_SecondaryMouseDown()
     {
         if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {
-            last_cont = cb.obj;
+            *cont = cb.obj;
         }
     }
 }
