@@ -2419,11 +2419,11 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        audio::streamPlay(id, mask.to<int>());
+        engine::engine_world.streamPlay(id, mask.to<int>());
     }
     else
     {
-        audio::streamPlay(id);
+        engine::engine_world.streamPlay(id, 0);
     }
 }
 
@@ -2452,11 +2452,11 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
     if(eid >= 0)
     {
-        result = audio::send(id, audio::EmitterType::Entity, eid);
+        result = engine::engine_world.send(id, audio::EmitterType::Entity, eid);
     }
     else
     {
-        result = audio::send(id, audio::EmitterType::Global);
+        result = engine::engine_world.send(id, audio::EmitterType::Global);
     }
 
     switch(result)
@@ -2492,11 +2492,11 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 
     if(eid == -1)
     {
-        result = audio::kill(id, audio::EmitterType::Global);
+        result = engine::engine_world.kill(id, audio::EmitterType::Global);
     }
     else
     {
-        result = audio::kill(id, audio::EmitterType::Entity, eid);
+        result = engine::engine_world.kill(id, audio::EmitterType::Entity, eid);
     }
 
     if(result == audio::Error::NoSample || result == audio::Error::NoChannel)

@@ -881,16 +881,16 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 if(command.param[0] & TR_ANIMCOMMAND_CONDITION_WATER)
                 {
                     if(getSubstanceState() == Substance::WaterShallow)
-                        audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                        engine::engine_world.send(sound_index, audio::EmitterType::Entity, m_id);
                 }
                 else if(command.param[0] & TR_ANIMCOMMAND_CONDITION_LAND)
                 {
                     if(getSubstanceState() != Substance::WaterShallow)
-                        audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                        engine::engine_world.send(sound_index, audio::EmitterType::Entity, m_id);
                 }
                 else
                 {
-                    audio::send(sound_index, audio::EmitterType::Entity, m_id);
+                    engine::engine_world.send(sound_index, audio::EmitterType::Entity, m_id);
                 }
             }
             break;

@@ -51,12 +51,12 @@ Source::~Source()
     }
 }
 
-bool Source::isActive()
+bool Source::isActive() const
 {
     return m_active;
 }
 
-bool Source::isLooping()
+bool Source::isLooping() const
 {
     if(alIsSource(m_sourceIndex))
     {
@@ -70,7 +70,7 @@ bool Source::isLooping()
     }
 }
 
-bool Source::isPlaying()
+bool Source::isPlaying() const
 {
     if(alIsSource(m_sourceIndex))
     {
@@ -137,7 +137,8 @@ void Source::stop()
 void Source::update()
 {
     // Bypass any non-active source.
-    if(!m_active) return;
+    if(!m_active)
+        return;
 
     // Disable and bypass source, if it is stopped.
     if(!isPlaying())
@@ -147,7 +148,8 @@ void Source::update()
     }
 
     // Bypass source, if it is global.
-    if(m_emitterType == EmitterType::Global) return;
+    if(m_emitterType == EmitterType::Global)
+        return;
 
     ALfloat range, gain;
 
@@ -157,7 +159,7 @@ void Source::update()
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(isInRange(m_emitterType, m_emitterID, range, gain))
+    if(engine::engine_world.isInRange(m_emitterType, m_emitterID, range, gain))
     {
         linkEmitter();
 

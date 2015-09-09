@@ -9,6 +9,7 @@
 #include "audio/audio.h"
 #include "audio/effect.h"
 #include "audio/emitter.h"
+#include "audio/settings.h"
 #include "audio/source.h"
 #include "audio/streamtrack.h"
 #include "bordered_texture_atlas.h"
@@ -345,113 +346,49 @@ struct World
     std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
     std::shared_ptr<Room> getByID(unsigned int ID);
 
-    void pauseAllSources()
-    {
-        for(audio::Source& source : audio_sources)
-        {
-            if(source.isActive())
-            {
-                source.pause();
-            }
-        }
-    }
+    void pauseAllSources();
 
-    void stopAllSources()
-    {
-        for(audio::Source& source : audio_sources)
-        {
-            source.stop();
-        }
-    }
+    void stopAllSources();
 
-    void resumeAllSources()
-    {
-        for(audio::Source& source : audio_sources)
-        {
-            if(source.isActive())
-            {
-                source.play();
-            }
-        }
-    }
+    void resumeAllSources();
 
-    int getFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
-    {
-        for(size_t i = 0; i < audio_sources.size(); i++)
-        {
-            if(!audio_sources[i].isActive())
-            {
-                return static_cast<int>(i);
-            }
-        }
+    int getFreeSource() const;
 
-        return -1;
-    }
+    bool endStreams(audio::StreamType stream_type = audio::StreamType::Any);
 
-    bool endStreams(audio::StreamType stream_type = audio::StreamType::Any)
-    {
-        bool result = false;
+    bool stopStreams(audio::StreamType stream_type = audio::StreamType::Any);
 
-        for(audio::StreamTrack& track : stream_tracks)
-        {
-            if((stream_type == audio::StreamType::Any) ||                              // End ALL streams at once.
-               (track.isPlaying() &&
-                track.isType(stream_type)))
-            {
-                result = true;
-                track.end();
-            }
-        }
+    bool isTrackPlaying(int32_t track_index = -1) const;
 
-        return result;
-    }
+    int findSource(int effect_ID = -1, audio::EmitterType entity_type = audio::EmitterType::Any, int entity_ID = -1) const;
 
-    bool stopStreams(audio::StreamType stream_type = audio::StreamType::Any)
-    {
-        bool result = false;
+    int getFreeStream() const;
 
-        for(audio::StreamTrack& track : stream_tracks)
-        {
-            if(track.isPlaying() &&
-               (track.isType(stream_type) ||
-                stream_type == audio::StreamType::Any)) // Stop ALL streams at once.
-            {
-                result = true;
-                track.stop();
-            }
-        }
+    // Update routine for all streams. Should be placed into main loop.
+    void updateStreams();
 
-        return result;
-    }
+    bool trackAlreadyPlayed(uint32_t track_index, int8_t mask);
 
-    bool isTrackPlaying(int32_t track_index = -1)
-    {
-        for(const audio::StreamTrack& track : stream_tracks)
-        {
-            if((track_index == -1 || track.isTrack(track_index)) && track.isPlaying())
-            {
-                return true;
-            }
-        }
+    btVector3 listener_position = {0,0,0};
 
-        return false;
-    }
+    void updateSources();
 
-    int findSource(int effect_ID = -1, audio::EmitterType entity_type = audio::EmitterType::Any, int entity_ID = -1)
-    {
-        for(uint32_t i = 0; i < audio_sources.size(); i++)
-        {
-            if((entity_type == audio::EmitterType::Any || audio_sources[i].m_emitterType == entity_type) &&
-               (entity_ID == -1                        || audio_sources[i].m_emitterID == static_cast<int32_t>(entity_ID)) &&
-               (effect_ID == -1                        || audio_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID)))
-            {
-                if(audio_sources[i].isPlaying())
-                    return i;
-            }
-        }
+    void updateAudio();
 
-        return -1;
-    }
+    // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
+    // call this one.
+    audio::StreamError streamPlay(const uint32_t track_index, const uint8_t mask);
+
+    bool deInitDelay();
+
+    void deInitAudio();
+
+    // If exist, immediately stop and destroy all effects with given parameters.
+    audio::Error kill(int effect_ID, audio::EmitterType entity_type = audio::EmitterType::Global, int entity_ID = 0);
+
+    bool isInRange(audio::EmitterType entity_type, int entity_ID, float range, float gain);
+
+    audio::Error send(int effect_ID, audio::EmitterType entity_type = audio::EmitterType::Global, int entity_ID = 0);
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);

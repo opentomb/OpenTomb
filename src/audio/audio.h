@@ -235,10 +235,8 @@ void initFX();
 
 void init(uint32_t num_Sources = MaxChannels);
 int  deInit();
-void update();
 
 // Audio source (samples) routines.
-void updateSources();      // Main sound loop.
 void updateListenerByCamera(world::Camera *cam);
 void updateListenerByEntity(std::shared_ptr<world::Entity> ent);
 
@@ -249,15 +247,6 @@ void loadOverridedSamples(world::World *world);
 
 int  loadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
-// Stream tracks (music / BGM) routines.
-
-int  getFreeStream();                          // Get free (stopped) stream.
-bool trackAlreadyPlayed(uint32_t track_index, int8_t mask = 0);      // Check if track played with given activation mask.
-void updateStreams();                          // Update all streams.
-
-// Generally, you need only this function to trigger any track.
-StreamError streamPlay(const uint32_t track_index, const uint8_t mask = 0);
-
 // Error handling routines.
 
 bool logALError(int error_marker = 0);    // AL-specific error handler.
@@ -267,6 +256,5 @@ void logSndfileError(int code);           // Sndfile-specific error handler.
 
 float   getByteDepth(SF_INFO sfInfo);
 void    loadALExtFunctions(ALCdevice* device);
-bool    deInitDelay();
 
 } // namespace audio

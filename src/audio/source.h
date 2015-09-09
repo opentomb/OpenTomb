@@ -43,9 +43,9 @@ public:
     void unsetFX();                         // Remove any reverb FX from source.
     void setUnderwater();                   // Apply low-pass underwater filter.
 
-    bool isLooping();           // Check if source is looping;
-    bool isPlaying();           // Check if source is currently playing.
-    bool isActive();            // Check if source is active.
+    bool isLooping() const;           // Check if source is looping;
+    bool isPlaying() const;           // Check if source is currently playing.
+    bool isActive() const;            // Check if source is active.
 
     int32_t     m_emitterID;     // Entity of origin. -1 means no entity (hence - empty source).
     EmitterType m_emitterType;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
@@ -65,8 +65,4 @@ private:
     void setVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };
 
-bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain);
-
-Error send(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);    // Send to play effect with given parameters.
-Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.
 } // namespace audio

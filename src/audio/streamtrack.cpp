@@ -18,6 +18,7 @@ bool StreamTrack::damp_active = false;
 
 // General damping update procedure. Constantly checks if damp condition exists, and
 // if so, it lowers the volume of tracks which are dampable.
+// FIXME Should be moved to engine
 void updateStreamsDamping()
 {
     StreamTrack::damp_active = false;   // Reset damp activity flag.
@@ -428,17 +429,17 @@ bool StreamTrack::isTrack(const int track_index) const    // Check if track has 
     return (m_currentTrack == track_index);
 }
 
-bool StreamTrack::isType(const StreamType track_type)      // Check if track has specific type.
+bool StreamTrack::isType(const StreamType track_type) const      // Check if track has specific type.
 {
     return (track_type == m_streamType);
 }
 
-bool StreamTrack::isActive()                         // Check if track is still active.
+bool StreamTrack::isActive() const                         // Check if track is still active.
 {
     return m_active;
 }
 
-bool StreamTrack::isDampable()                      // Check if track is dampable.
+bool StreamTrack::isDampable() const                      // Check if track is dampable.
 {
     return m_dampable;
 }

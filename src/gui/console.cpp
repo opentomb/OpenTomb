@@ -208,7 +208,7 @@ void Console::edit(int key, int mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            audio::send(engine_lua.getGlobalSound(audio::TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
+            engine::engine_world.send(engine_lua.getGlobalSound(audio::TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)

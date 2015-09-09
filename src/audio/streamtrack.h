@@ -50,10 +50,10 @@ public:
     bool update();                       // Update track and manage streaming.
 
     bool isTrack(const int track_index) const; // Checks desired track's index.
-    bool isType(const StreamType track_type);   // Checks desired track's type.
+    bool isType(const StreamType track_type) const;   // Checks desired track's type.
     bool isPlaying() const;                    // Checks if track is playing.
-    bool isActive();                     // Checks if track is still active.
-    bool isDampable();                   // Checks if track is dampable.
+    bool isActive() const;                     // Checks if track is still active.
+    bool isDampable() const;                   // Checks if track is dampable.
 
     void setFX();                        // Set reverb FX, according to room flag.
     void unsetFX();                      // Remove any reverb FX from source.

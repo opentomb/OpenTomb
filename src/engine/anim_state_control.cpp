@@ -283,7 +283,7 @@ void Character::state_func()
             }
             else if(m_response.slide == SlideType::Front)
             {
-                audio::send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, id());
+                engine::engine_world.send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, id());
 
                 if(m_command.jump)
                 {
@@ -301,7 +301,7 @@ void Character::state_func()
                 {
                     m_dirFlag = ENT_MOVE_BACKWARD;
                     setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-                    audio::send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, id());
+                    engine::engine_world.send(TR_AUDIO_SOUND_LANDING, audio::EmitterType::Entity, id());
                 }
                 else
                 {
@@ -1321,7 +1321,7 @@ void Character::state_func()
                 break;
             }
 
-            audio::kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, id());
+            engine::engine_world.kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, id());
             break;
 
         case TR_STATE_LARA_SLIDE_FORWARD:
@@ -1353,7 +1353,7 @@ void Character::state_func()
                 break;
             }
 
-            audio::kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, id());
+            engine::engine_world.kill(TR_AUDIO_SOUND_SLIDING, audio::EmitterType::Entity, id());
             break;
 
             // Miscellaneous animations
@@ -1448,11 +1448,11 @@ void Character::state_func()
                     if(was_traversed)
                     {
                         if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
-                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                            engine::engine_world.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                     else
                     {
-                        audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                        engine::engine_world.kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }
                 else
@@ -1462,7 +1462,7 @@ void Character::state_func()
                        (m_bf.animations.current_frame == 142))
                     {
                         if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
-                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                            engine::engine_world.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }
 
@@ -1472,7 +1472,7 @@ void Character::state_func()
             {
                 if(engine::engine_world.engineVersion > loader::Engine::TR3)
                 {
-                    audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                    engine::engine_world.kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                 }
             }
             break;
@@ -1536,11 +1536,11 @@ void Character::state_func()
                     {
                         if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
 
-                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                            engine::engine_world.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                     else
                     {
-                        audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                        engine::engine_world.kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }
                 else
@@ -1551,7 +1551,7 @@ void Character::state_func()
                        (m_bf.animations.current_frame == 156))
                     {
                         if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
-                            audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                            engine::engine_world.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }
 
@@ -1561,7 +1561,7 @@ void Character::state_func()
             {
                 if(engine::engine_world.engineVersion > loader::Engine::TR3)
                 {
-                    audio::kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
+                    engine::engine_world.kill(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                 }
             }
             break;
@@ -2234,7 +2234,7 @@ void Character::state_func()
                (int(m_speed[2]) >= (-FREE_FALL_SPEED_CRITICAL - 100)))
             {
                 m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-                audio::send(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());       // Scream
+                engine::engine_world.send(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());       // Scream
             }
             else if(m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
             {
@@ -2249,12 +2249,12 @@ void Character::state_func()
                 m_command.rot[1] = 0.0;
                 updateTransform();                                     // needed here to fix underwater in wall collision bug
                 setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-                audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());       // Stop scream
+                engine::engine_world.kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());       // Stop scream
 
                 // Splash sound is hardcoded, beginning with TR3.
                 if(engine::engine_world.engineVersion > loader::Engine::TR2)
                 {
-                    audio::send(TR_AUDIO_SOUND_SPLASH, audio::EmitterType::Entity, id());
+                    engine::engine_world.send(TR_AUDIO_SOUND_SPLASH, audio::EmitterType::Entity, id());
                 }
             }
             else if((m_response.vertical_collide & 0x01) || (m_moveType == MoveType::OnFloor))
@@ -2262,7 +2262,7 @@ void Character::state_func()
                 if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
                 {
                     setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
-                    audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());
+                    engine::engine_world.kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());
                 }
                 else if(m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
                 {
@@ -2289,7 +2289,7 @@ void Character::state_func()
                 if(m_response.killed)
                 {
                     m_bf.animations.next_state = TR_STATE_LARA_DEATH;
-                    audio::kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());
+                    engine::engine_world.kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, id());
                 }
             }
             else if(m_command.action)

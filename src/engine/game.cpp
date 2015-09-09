@@ -468,7 +468,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                audio::send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_small_medi = !control_states.use_small_medi;
@@ -481,7 +481,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                audio::send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_big_medi = !control_states.use_big_medi;
@@ -722,7 +722,7 @@ void Game_Frame(btScalar time)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
-            audio::update();
+            engine::engine_world.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
