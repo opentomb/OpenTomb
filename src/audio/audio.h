@@ -212,17 +212,6 @@ enum TR_AUDIO_SOUND_GLOBALID
     TR_AUDIO_SOUND_GLOBALID_LASTINDEX
 };
 
-// Audio settings structure.
-struct Settings
-{
-    ALfloat     music_volume = 0;
-    ALfloat     sound_volume = 0;
-    bool        use_effects = false;
-    bool        effects_initialized = false;
-    bool        listener_is_player = false; // RESERVED FOR FUTURE USE
-    int         stream_buffer_size = 0;
-};
-
 // FX manager structure.
 // It contains all necessary info to process sample FX (reverb and echo).
 
@@ -235,46 +224,6 @@ struct FxManager
     ALuint      current_room_type;
     ALuint      last_room_type;
     bool        water_state;    // If listener is underwater, all samples will damp.
-};
-
-// Effect structure.
-// Contains all global effect parameters.
-
-struct Effect
-{
-    // General sound source parameters (similar to TR sound info).
-
-    ALfloat     pitch = 0;          // [PIT in TR] Global pitch shift.
-    ALfloat     gain = 0;           // [VOL in TR] Global gain (volume).
-    ALfloat     range = 0;          // [RAD in TR] Range (radius).
-    ALuint      chance = 0;         // [CH  in TR] Chance to play.
-    loader::LoopType loop = loader::LoopType::None;
-    ALboolean   rand_pitch = false;     // Similar to flag 0x200000 (P) in native TRs.
-    ALboolean   rand_gain = false;      // Similar to flag 0x400000 (V) in native TRs.
-
-    // Additional sound source parameters.
-    // These are not natively in TR engines, but can be later assigned by
-    // external script.
-
-    ALboolean   rand_freq = false;          // Slightly randomize frequency.
-    ALuint      rand_pitch_var = 0;     // Pitch randomizer bounds.
-    ALuint      rand_gain_var = 0;      // Gain  randomizer bounds.
-    ALuint      rand_freq_var = 0;      // Frequency randomizer bounds.
-
-    // Sample reference parameters.
-
-    ALuint      sample_index = 0;       // First (or only) sample (buffer) index.
-    ALuint      sample_count = 0;       // Sample amount to randomly select from.
-};
-
-// Audio emitter (aka SoundSource) structure.
-
-struct Emitter
-{
-    ALuint      emitter_index;  // Unique emitter index.
-    ALuint      sound_index;    // Sound index.
-    btVector3   position;    // Vector coordinate.
-    uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
 };
 
 // Main audio source class.
@@ -303,7 +252,6 @@ int  loadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb
 // Stream tracks (music / BGM) routines.
 
 int  getFreeStream();                          // Get free (stopped) stream.
-bool isTrackPlaying(int32_t track_index = -1); // See if track is already playing.
 bool trackAlreadyPlayed(uint32_t track_index, int8_t mask = 0);      // Check if track played with given activation mask.
 void updateStreams();                          // Update all streams.
 

@@ -49,9 +49,9 @@ public:
     void stop();                         // Immediately stop track.
     bool update();                       // Update track and manage streaming.
 
-    bool isTrack(const int track_index); // Checks desired track's index.
+    bool isTrack(const int track_index) const; // Checks desired track's index.
     bool isType(const StreamType track_type);   // Checks desired track's type.
-    bool isPlaying();                    // Checks if track is playing.
+    bool isPlaying() const;                    // Checks if track is playing.
     bool isActive();                     // Checks if track is still active.
     bool isDampable();                   // Checks if track is dampable.
 

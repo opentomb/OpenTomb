@@ -3,6 +3,7 @@
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
+#include "settings.h"
 #include "util/helpers.h"
 
 using gui::Console;
@@ -422,7 +423,7 @@ bool StreamTrack::update()
     return buffered;
 }
 
-bool StreamTrack::isTrack(const int track_index)    // Check if track has specific index.
+bool StreamTrack::isTrack(const int track_index) const    // Check if track has specific index.
 {
     return (m_currentTrack == track_index);
 }
@@ -442,7 +443,7 @@ bool StreamTrack::isDampable()                      // Check if track is dampabl
     return m_dampable;
 }
 
-bool StreamTrack::isPlaying()                       // Check if track is playing.
+bool StreamTrack::isPlaying() const                       // Check if track is playing.
 {
     if(alIsSource(m_source))
     {

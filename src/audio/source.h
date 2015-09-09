@@ -66,7 +66,6 @@ private:
 };
 
 bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain);
-int  isEffectPlaying(int effect_ID = -1, EmitterType entity_type = EmitterType::Any, int entity_ID = -1);
 
 Error send(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);    // Send to play effect with given parameters.
 Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.

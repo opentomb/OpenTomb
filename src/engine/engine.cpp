@@ -29,6 +29,7 @@
 #include "LuaState.h"
 
 #include "audio/audio.h"
+#include "audio/settings.h"
 #include "character_controller.h"
 #include "common.h"
 #include "controls.h"
@@ -56,11 +57,6 @@
 #include "world/world.h"
 
 using gui::Console;
-
-namespace audio
-{
-Settings audio_settings{};
-} // namespace audio
 
 namespace render
 {

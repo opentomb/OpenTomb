@@ -7,6 +7,8 @@
 #include <LinearMath/btVector3.h>
 
 #include "audio/audio.h"
+#include "audio/effect.h"
+#include "audio/emitter.h"
 #include "audio/source.h"
 #include "audio/streamtrack.h"
 #include "bordered_texture_atlas.h"
@@ -420,6 +422,35 @@ struct World
         }
 
         return result;
+    }
+
+    bool isTrackPlaying(int32_t track_index = -1)
+    {
+        for(const audio::StreamTrack& track : stream_tracks)
+        {
+            if((track_index == -1 || track.isTrack(track_index)) && track.isPlaying())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    int findSource(int effect_ID = -1, audio::EmitterType entity_type = audio::EmitterType::Any, int entity_ID = -1)
+    {
+        for(uint32_t i = 0; i < audio_sources.size(); i++)
+        {
+            if((entity_type == audio::EmitterType::Any || audio_sources[i].m_emitterType == entity_type) &&
+               (entity_ID == -1                        || audio_sources[i].m_emitterID == static_cast<int32_t>(entity_ID)) &&
+               (effect_ID == -1                        || audio_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID)))
+            {
+                if(audio_sources[i].isPlaying())
+                    return i;
+            }
+        }
+
+        return -1;
     }
 };
 

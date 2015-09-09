@@ -10,6 +10,7 @@
 #include "LuaState.h"
 
 #include "audio/audio.h"
+#include "audio/settings.h"
 #include "character_controller.h"
 #include "engine/anim_state_control.h"
 #include "engine/controls.h"

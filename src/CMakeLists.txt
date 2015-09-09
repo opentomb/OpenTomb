@@ -29,6 +29,7 @@ list(APPEND PRJ_SRC
     audio/audio.cpp
     audio/streamtrack.cpp
     audio/source.cpp
+    audio/settings.cpp
 
     render/gl_util.cpp
     render/render.cpp
@@ -87,6 +88,9 @@ list(APPEND PRJ_HDR
     audio/audio.h
     audio/streamtrack.h
     audio/source.h
+    audio/effect.h
+    audio/settings.h
+    audio/emitter.h
 
     render/gl_util.h
     render/render.h

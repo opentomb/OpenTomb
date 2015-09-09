@@ -1447,7 +1447,7 @@ void Character::state_func()
                 {
                     if(was_traversed)
                     {
-                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
+                        if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                     else
@@ -1461,7 +1461,7 @@ void Character::state_func()
                        (m_bf.animations.current_frame == 110) ||
                        (m_bf.animations.current_frame == 142))
                     {
-                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
+                        if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }
@@ -1534,7 +1534,7 @@ void Character::state_func()
                 {
                     if(was_traversed)
                     {
-                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
+                        if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
 
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
@@ -1550,7 +1550,7 @@ void Character::state_func()
                        (m_bf.animations.current_frame == 124) ||
                        (m_bf.animations.current_frame == 156))
                     {
-                        if(audio::isEffectPlaying(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
+                        if(engine::engine_world.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id()) == -1)
                             audio::send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, id());
                     }
                 }

@@ -1,16 +1,46 @@
 #include "source.h"
 
 #include "engine/engine.h"
+#include "settings.h"
 #include "util/helpers.h"
 #include "world/entity.h"
 
 namespace audio
 {
 
-// FIXME Shouldn't be global
-extern Settings audio_settings;
 // FIXME This shouldn't be global
 extern FxManager fxManager;
+
+
+Source::Source()
+{
+    m_active = false;
+    m_emitterID = -1;
+    m_emitterType = EmitterType::Entity;
+    m_effectIndex = 0;
+    m_sampleIndex = 0;
+    m_sampleCount = 0;
+    m_isWater = false;
+    alGenSources(1, &m_sourceIndex);
+
+    if(alIsSource(m_sourceIndex))
+    {
+        alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
+        alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
+
+        if(audio_settings.use_effects)
+        {
+            alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
+            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
+        }
+        else
+        {
+            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
+        }
+    }
+}
 
 Source::~Source()
 {

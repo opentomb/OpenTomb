@@ -10,6 +10,7 @@
 #include "gui/console.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "settings.h"
 #include "strings.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
@@ -197,38 +198,6 @@ private:
 btVector3 listener_position;
 FxManager fxManager;
 
-// ======== AUDIOSOURCE CLASS IMPLEMENTATION ========
-
-Source::Source()
-{
-    m_active = false;
-    m_emitterID = -1;
-    m_emitterType = EmitterType::Entity;
-    m_effectIndex = 0;
-    m_sampleIndex = 0;
-    m_sampleCount = 0;
-    m_isWater = false;
-    alGenSources(1, &m_sourceIndex);
-
-    if(alIsSource(m_sourceIndex))
-    {
-        alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
-        alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
-
-        if(audio_settings.use_effects)
-        {
-            alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
-            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
-            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
-        }
-        else
-        {
-            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
-        }
-    }
-}
-
 // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
 // call this one.
 
@@ -253,7 +222,7 @@ StreamError streamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't play track, if it is already playing.
     // This should become useless option, once proper one-shot trigger functionality is implemented.
 
-    if(isTrackPlaying(track_index))
+    if(engine::engine_world.isTrackPlaying(track_index))
     {
         Console::instance().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
         return StreamError::Ignored;
@@ -336,20 +305,6 @@ void updateStreams()
     {
         engine::engine_world.stream_tracks[i].update();
     }
-}
-
-bool isTrackPlaying(int32_t track_index)
-{
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if(((track_index == -1) || (engine::engine_world.stream_tracks[i].isTrack(track_index))) &&
-           engine::engine_world.stream_tracks[i].isPlaying())
-        {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 bool trackAlreadyPlayed(uint32_t track_index, int8_t mask)
@@ -465,22 +420,6 @@ void updateSources()
     }
 }
 
-int isEffectPlaying(int effect_ID, EmitterType entity_type, int entity_ID)
-{
-    for(uint32_t i = 0; i < engine::engine_world.audio_sources.size(); i++)
-    {
-        if(((entity_type == EmitterType::Any) || (engine::engine_world.audio_sources[i].m_emitterType == entity_type)) &&
-           ((entity_ID == -1) || (engine::engine_world.audio_sources[i].m_emitterID == static_cast<int32_t>(entity_ID))) &&
-           ((effect_ID == -1) || (engine::engine_world.audio_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID))))
-        {
-            if(engine::engine_world.audio_sources[i].isPlaying())
-                return i;
-        }
-    }
-
-    return -1;
-}
-
 Error send(int effect_ID, EmitterType entity_type, int entity_ID)
 {
     int32_t         source_number;
@@ -540,7 +479,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
 
-    source_number = isEffectPlaying(effect_ID, entity_type, entity_ID);
+    source_number = engine::engine_world.findSource(effect_ID, entity_type, entity_ID);
 
     if(source_number != -1)
     {
@@ -635,7 +574,7 @@ Error send(int effect_ID, EmitterType entity_type, int entity_ID)
 
 Error kill(int effect_ID, EmitterType entity_type, int entity_ID)
 {
-    int playing_sound = isEffectPlaying(effect_ID, entity_type, entity_ID);
+    int playing_sound = engine::engine_world.findSource(effect_ID, entity_type, entity_ID);
 
     if(playing_sound != -1)
     {
@@ -823,7 +762,7 @@ bool deInitDelay()
 {
     const std::chrono::high_resolution_clock::time_point begin_time = std::chrono::high_resolution_clock::now();
 
-    while((isTrackPlaying()) || (isEffectPlaying() >= 0))
+    while(engine::engine_world.isTrackPlaying() || (engine::engine_world.findSource() >= 0))
     {
         auto curr_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1.0e6;
 

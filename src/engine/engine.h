@@ -25,11 +25,6 @@ class Camera;
 struct Room;
 } // namespace world
 
-namespace audio
-{
-extern Settings audio_settings;
-} // namespace audio
-
 namespace engine
 {
 
