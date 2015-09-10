@@ -510,9 +510,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -2075,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-08-17)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-09-10)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2479,7 +2476,8 @@ palette contains up to 256 four-byte entries;  the first three bytes are a <a hr
 is rigid.</p></div>
 <div class="paragraph"><p><em>Sprites</em> are two-dimensional images that are inserted into three-dimensional space, such as the &#8220;secret&#8221; dragons, ammunition, medi-packs, etc. There are also
 animated sprite sequences, such as the fire at the end of &#8220;The Great Wall.&#8221; Core had presumably used this method to reduce CPU utilization on the PlayStation
-and/or the earlier PCs. Sprites become less and less abundant; TR2 has very few scenery sprites, and TR3&#8217;s pickups are models instead of sprites.</p></div>
+and/or the earlier PCs. Sprites become less and less abundant; TR2 has very few scenery sprites, and TR3&#8217;s pickups are models instead of sprites.
+As of TR4, sprites are only used for visual effects (particle effects, shockwaves, bubbles, lensflares, cloud layer, etc.) and not as representations of game objects anymore.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_entities">2.3.5. Entities</h4>
@@ -5333,14 +5331,16 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
 <a id="tr_sprite_texture"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sprite_texture</span>   <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">;</span>
-     <span class="kt">uint8_t</span> <span class="n">x</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">;</span>         <span class="c1">// Texture page with the graphics for this sprite</span>
+
+     <span class="kt">uint8_t</span> <span class="n">x</span><span class="p">;</span>            <span class="c1">// TR1,TR2,TR3: Sprite texture coordinates</span>
      <span class="kt">uint8_t</span> <span class="n">y</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">Width</span><span class="p">;</span>        <span class="c1">// (ActualWidth  * 256) + 255</span>
     <span class="kt">uint16_t</span> <span class="n">Height</span><span class="p">;</span>       <span class="c1">// (ActualHeight * 256) + 255</span>
-     <span class="kt">int16_t</span> <span class="n">LeftSide</span><span class="p">;</span>
-     <span class="kt">int16_t</span> <span class="n">TopSide</span><span class="p">;</span>
-     <span class="kt">int16_t</span> <span class="n">RightSide</span><span class="p">;</span>
+
+     <span class="kt">int16_t</span> <span class="n">LeftSide</span><span class="p">;</span>     <span class="c1">// Left/Top/Right/Bottom:</span>
+     <span class="kt">int16_t</span> <span class="n">TopSide</span><span class="p">;</span>      <span class="c1">//     TR1,TR2,TR3: World size and centering</span>
+     <span class="kt">int16_t</span> <span class="n">RightSide</span><span class="p">;</span>    <span class="c1">//     TR4,TR5: Sprite texture coordinates</span>
      <span class="kt">int16_t</span> <span class="n">BottomSide</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
@@ -5348,7 +5348,8 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> <span class="monospaced">x</span> and <span class="monospaced">y</span> values <em>are not used</em> in this version. Additionally, formula for <span class="monospaced">Width</span> and <span class="monospaced">Height</span> is changed: now it&#8217;s <span class="monospaced">(ActualWidth - 1) * 256</span> and <span class="monospaced">(ActualHeight - 1) * 256</span> respectively.</p></div>
+</span> <span class="monospaced">x</span>, <span class="monospaced">y</span>, <span class="monospaced">Width</span> and <span class="monospaced">Height</span> values <em>are not used</em> in these versions: Instead, the <span class="monospaced">*Side</span> values define the sprite texture position on <span class="monospaced">Tile</span>. There is no object-size/centering information because sprites are not used for object graphics anymore.
+The <span class="monospaced">x</span>, <span class="monospaced">y</span>, <span class="monospaced">Width</span>, <span class="monospaced">Heigth</span> values seem to hold the sprite position/size from the original wad <em>before</em> the level conversion and should be considered unreliable.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_sprite_sequences">5.7. Sprite Sequences</h3>
@@ -8528,7 +8529,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-31 13:08:00 MSK
+Last updated 2015-08-03 14:53:12 CEST
 </div>
 </div>
 </body>
