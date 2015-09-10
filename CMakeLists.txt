@@ -7,6 +7,11 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release MinSizeRel RelWithDebInfo)
+endif()
+
 if(APPLE)
     file(GLOB OPENAL_SRC
         3rdparty/al/*.c
