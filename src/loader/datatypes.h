@@ -1780,10 +1780,11 @@ struct SpriteTexture
         if(sprite_texture.tile > 128)
             std::cerr << "sprite_texture.tile > 128\n";
 
-        int tx = reader.readU8();
-        int ty = reader.readU8();
-        int tw = reader.readU16();
-        int th = reader.readU16();
+        // skip tx,ty,tw,th : unused in tr4
+        reader.readU8();
+        reader.readU8();
+        reader.readU16();
+        reader.readU16();
         int tleft = reader.readI16();
         int ttop = reader.readI16();
         int tright = reader.readI16();
@@ -1791,13 +1792,14 @@ struct SpriteTexture
 
         sprite_texture.x0 = tleft;
         sprite_texture.x1 = tright;
-        sprite_texture.y0 = tbottom;
-        sprite_texture.y1 = ttop;
+        sprite_texture.y0 = ttop;
+        sprite_texture.y1 = tbottom;
 
-        sprite_texture.left_side = tx;
-        sprite_texture.right_side = tx + tw / 256;
-        sprite_texture.bottom_side = ty;
-        sprite_texture.top_side = ty + th / 256;
+        sprite_texture.left_side = -(tright - tleft) / 2;
+        sprite_texture.right_side = (tright - tleft) / 2;
+        sprite_texture.top_side = -(tbottom - ttop) / 2;
+        sprite_texture.bottom_side = (tbottom - ttop) / 2;
+
         return sprite_texture;
     }
 };
