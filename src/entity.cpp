@@ -1103,7 +1103,7 @@ int Entity::stepAnimation(btScalar time)
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
     updateCurrentBoneFrame(&m_bf);
-    fixPenetrations(nullptr);
+//    fixPenetrations(nullptr);
 
     return stepResult;
 }

@@ -53,10 +53,9 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int st
     }
 }
 
-void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int /*state*/)
+void ent_set_on_floor_after_climb(Character* ent, SSAnimation* ss_anim, int state)
 {
-    // FIXME: this is more like an end-of-anim operation
-    if(ss_anim->current_animation != ss_anim->lerp_last_animation)
+    if(state == ENTITY_ANIM_NEWANIM)
     {
         ent->m_transform.getOrigin() = ent->m_climb.point;
 

@@ -728,7 +728,8 @@ void Game_Frame(btScalar time)
 
     bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
 
-    if(engine_world.character) {
+    if(engine_world.character)
+    {
         engine_world.character->updateInterpolation(time);
 
         if(!control_states.noclip && !control_states.free_look)

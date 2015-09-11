@@ -1830,6 +1830,10 @@ void Character::applyCommands()
         state_func(this, &m_bf.animations);
     }
 
+    // Update speed after possible anim change, before movement (speed is calculated per anim frame index)
+    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
+
     switch(m_moveType)
     {
         case MoveType::OnFloor:
@@ -2285,6 +2289,7 @@ void Character::frame(btScalar time)
     }
 
     animStepResult = stepAnimation(time);
+
     if(m_bf.animations.onFrame != nullptr)
     {
         m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);
@@ -2303,11 +2308,6 @@ void Character::frame(btScalar time)
     updateHair();
 
     doWeaponFrame(time);
-
-    // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1<<16); //Decompiled from TOMB5.EXE
-
 
     // TODO: check rigidbody update requirements.
     //if(animStepResult != ENTITY_ANIM_NONE)
