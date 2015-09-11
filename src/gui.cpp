@@ -25,8 +25,6 @@
 #include "world.h"
 #include "inventory.h"
 
-extern SDL_Window  *sdl_window;
-
 static gui_text_line_p     gui_base_lines = NULL;
 static gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
 static uint16_t            temp_lines_used = 0;
@@ -1260,7 +1258,7 @@ void Gui_DrawLoadScreen(int value)
 
     Gui_SwitchGLMode(0);
 
-    SDL_GL_SwapWindow(sdl_window);
+    Engine_GLSwapWindow();
 }
 
 bool Gui_LoadScreenAssignPic(const char* pic_name)

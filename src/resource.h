@@ -38,7 +38,7 @@ void Res_GenBaseItems(struct world_s *world);
 void Res_GenVBOs(struct world_s *world);
 
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
-uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
 int      Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector);

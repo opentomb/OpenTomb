@@ -126,6 +126,7 @@ void Engine_LoadConfig(const char *filename);
 void Engine_SaveConfig(const char *filename);
 void Engine_JoyRumble(float power, int time);
 
+void Engine_GLSwapWindow();
 void Engine_MainLoop();
 
 // PC-specific level loader routines.

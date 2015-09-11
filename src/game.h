@@ -20,7 +20,6 @@ void Game_RegisterLuaFunctions(lua_State *lua);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 
-float Game_Tick(float *game_logic_time);
 void  Game_Frame(float time);
 
 void Game_Prepare();

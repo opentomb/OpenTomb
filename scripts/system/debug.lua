@@ -15,15 +15,7 @@ function checkDebugKeys()
         print("Ragdoll deactivated!");
         removeEntityRagdoll(player);
     end;
-    
-    if(checkKey(KEY_N, true)) then
-        noclip();
-    end;
-    
-    if(checkKey(KEY_G, true)) then
-        timescale();
-    end;
-    
+       
     if(checkKey(KEY_Y, true)) then
         debuginfo();
     end;

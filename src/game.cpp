@@ -34,7 +34,6 @@ extern "C" {
 #include "gui.h"
 #include "inventory.h"
 
-extern float time_scale;
 extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
@@ -99,6 +98,7 @@ int lua_noclip(lua_State * lua)
     return 0;
 }
 
+
 int lua_debuginfo(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
@@ -114,27 +114,6 @@ int lua_debuginfo(lua_State * lua)
     return 0;
 }
 
-int lua_timescale(lua_State * lua)
-{
-    if(lua_gettop(lua) == 0)
-    {
-        if(time_scale == 1.0)
-        {
-            time_scale = 0.033;
-        }
-        else
-        {
-            time_scale = 1.0;
-        }
-    }
-    else
-    {
-        time_scale = lua_tonumber(lua, 1);
-    }
-
-    Con_Printf("time_scale = %.3f", time_scale);
-    return 0;
-}
 
 void Game_InitGlobals()
 {
@@ -145,6 +124,7 @@ void Game_InitGlobals()
     control_states.cam_distance = 800.0;
 }
 
+
 void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
@@ -152,9 +132,8 @@ void Game_RegisterLuaFunctions(lua_State *lua)
         lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
-        lua_register(lua, "noclip", lua_noclip);
         lua_register(lua, "cam_distance", lua_cam_distance);
-        lua_register(lua, "timescale", lua_timescale);
+        lua_register(lua, "noclip", lua_noclip);
     }
 }
 
@@ -168,7 +147,7 @@ int Game_Load(const char* name)
     char *ch, local;
 
     local = 1;
-    for(ch=(char*)name;*ch;ch++)
+    for(ch = (char*)name; *ch; ch++)
     {
         if((*ch == '\\') || (*ch == '/'))
         {
@@ -276,12 +255,12 @@ void Save_Entity(FILE **f, entity_p ent)
     if(ent->character != NULL)
     {
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);
-        for(inventory_node_p i=ent->character->inventory;i!=NULL;i=i->next)
+        for(inventory_node_p i = ent->character->inventory; i; i = i->next)
         {
             fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
         }
 
-        for(int i=0;i<PARAM_LASTINDEX;i++)
+        for(int i = 0; i < PARAM_LASTINDEX; i++)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
         }
@@ -297,7 +276,7 @@ int Game_Save(const char* name)
     char local, *ch, token[512];
 
     local = 1;
-    for(ch=(char*)name;*ch;ch++)
+    for(ch = (char*)name; *ch; ch++)
     {
         if((*ch == '\\') || (*ch == '/'))
         {
@@ -325,8 +304,7 @@ int Game_Save(const char* name)
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
-
-    for(int i=0; i < engine_world.flip_count; i++)
+    for(uint32_t i = 0; i < engine_world.flip_count; i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_map[i]);
         fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_state[i]);
@@ -539,7 +517,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                     //If collided we want to go to back else right
                     if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
                     {
-                        cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK;
+                        cam->target_dir = TR_CAM_TARG_BACK;
                     }
                     else
                     {
@@ -579,7 +557,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                 targetAngle = (ent->angles[0] + 75.0) * (M_PI / 180.0);
                 break;
             default:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
+                targetAngle = (ent->angles[0]) * (M_PI / 180.0);
                 break;
             }
 
@@ -795,8 +773,8 @@ __inline float Game_Tick(float *game_logic_time)
 void Game_Frame(float time)
 {
     static float game_logic_time  = 0.0;
-                    game_logic_time += time;
 
+    game_logic_time += time;
     bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
     bool is_character  = (engine_world.Character != NULL);
 

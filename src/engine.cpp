@@ -41,18 +41,18 @@ extern "C" {
 #include "engine_physics.h"
 #include "controls.h"
 
-#define NO_AUDIO        0
 
-SDL_Window             *sdl_window     = NULL;
-SDL_Joystick           *sdl_joystick   = NULL;
-SDL_GameController     *sdl_controller = NULL;
-SDL_Haptic             *sdl_haptic     = NULL;
-SDL_GLContext           sdl_gl_context = 0;
-ALCdevice              *al_device      = NULL;
-ALCcontext             *al_context     = NULL;
+static SDL_Window             *sdl_window     = NULL;
+static SDL_Joystick           *sdl_joystick   = NULL;
+static SDL_GameController     *sdl_controller = NULL;
+static SDL_Haptic             *sdl_haptic     = NULL;
+static SDL_GLContext           sdl_gl_context = 0;
+static ALCdevice              *al_device      = NULL;
+static ALCcontext             *al_context     = NULL;
 
-static int engine_done = 0;
-float time_scale = 1.0;
+static int                      engine_done   = 0;
+
+float time_scale = 1.0f;
 
 engine_container_p      last_cont = NULL;
 
@@ -158,32 +158,39 @@ void Engine_Shutdown(int val)
 
     /* no more renderings */
     SDL_GL_DeleteContext(sdl_gl_context);
+    sdl_gl_context = 0;
     SDL_DestroyWindow(sdl_window);
+    sdl_window = NULL;
 
     if(sdl_joystick)
     {
         SDL_JoystickClose(sdl_joystick);
+        sdl_joystick = NULL;
     }
 
     if(sdl_controller)
     {
         SDL_GameControllerClose(sdl_controller);
+        sdl_controller = NULL;
     }
 
     if(sdl_haptic)
     {
         SDL_HapticClose(sdl_haptic);
+        sdl_haptic = NULL;
     }
 
     if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
     {
         alcMakeContextCurrent(NULL);
         alcDestroyContext(al_context);
+        al_context = NULL;
     }
 
     if(al_device)
     {
         alcCloseDevice(al_device);
+        al_device = NULL;
     }
 
     Sys_Destroy();
@@ -272,7 +279,6 @@ void Engine_InitGL()
 
 void Engine_InitAL()
 {
-#if !NO_AUDIO
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
@@ -297,7 +303,6 @@ void Engine_InitAL()
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
-#endif
 }
 
 
@@ -542,6 +547,12 @@ void Engine_Display()
 
         SDL_GL_SwapWindow(sdl_window);
     }
+}
+
+
+void Engine_GLSwapWindow()
+{
+    SDL_GL_SwapWindow(sdl_window);
 }
 
 
@@ -1125,15 +1136,10 @@ int Engine_LoadMap(const char *name)
 int Engine_ExecCmd(char *ch)
 {
     char token[1024];
-    char buf[1024];
-    char *pch;
-    room_p r;
-    room_sector_p sect;
-    FILE *f;
 
-    while(ch!=NULL)
+    while(ch != NULL)
     {
-        pch = ch;
+        char *pch = ch;
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
@@ -1277,10 +1283,10 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "room_info"))
         {
-            r = engine_camera.current_room;
+            room_p r = engine_camera.current_room;
             if(r)
             {
-                sect = Room_GetSectorXYZ(r, engine_camera.pos);
+                room_sector_p sect = Room_GetSectorXYZ(r, engine_camera.pos);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
@@ -1304,7 +1310,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            f = fopen("ascII.txt", "r");
+            FILE *f = fopen("ascII.txt", "r");
             if(f)
             {
                 long int size;
@@ -1340,6 +1346,7 @@ int Engine_ExecCmd(char *ch)
             }
             else
             {
+                char buf[1024];
                 snprintf(buf, 1024, "Command \"%s\" not found", token);
                 Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }

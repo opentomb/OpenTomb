@@ -448,11 +448,11 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_LOADGAME].primary   = SDLK_F6;
 }
 
-///@FIXME: Move to debug.lua script!!!
 void Controls_DebugKeys(int button, int state)
 {
     if(state)
     {
+        extern float time_scale;
         switch(button)
         {
             case SDLK_RETURN:
@@ -490,6 +490,21 @@ void Controls_DebugKeys(int button, int state)
                 }
                 break;
 
+            case SDLK_g:
+                if(time_scale == 1.0)
+                {
+                    time_scale = 0.033;
+                }
+                else
+                {
+                    time_scale = 1.0;
+                }
+                break;
+
+            case SDLK_n:
+                control_states.noclip = !control_states.noclip;
+                break;
+                
             default:
                 //Con_Printf("key = %d", button);
                 break;
