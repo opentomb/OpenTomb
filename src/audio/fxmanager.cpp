@@ -11,20 +11,21 @@ FxManager::~FxManager()
 {
     for(int i = 0; i < FxManager::MaxSlots; i++)
     {
-        if(FxManager::instance()->al_slot[i])
+        if(al_slot[i])
         {
-            alAuxiliaryEffectSloti(FxManager::instance()->al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
-            alDeleteAuxiliaryEffectSlots(1, &FxManager::instance()->al_slot[i]);
+            alAuxiliaryEffectSloti(al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+            alDeleteAuxiliaryEffectSlots(1, &al_slot[i]);
         }
     }
 
-    alDeleteFilters(1, &FxManager::instance()->al_filter);
-    alDeleteEffects(TR_AUDIO_FX_LASTINDEX, FxManager::instance()->al_effect.data());
+    alDeleteFilters(1, &al_filter);
+    alDeleteEffects(TR_AUDIO_FX_LASTINDEX, al_effect.data());
 }
 
 bool FxManager::loadReverb(int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    ALuint effect = FxManager::instance()->al_effect[effect_index];
+    assert(effect_index>=0 && effect_index < al_effect.size());
+    ALuint effect = al_effect[effect_index];
 
     if(alIsEffect(effect))
     {
