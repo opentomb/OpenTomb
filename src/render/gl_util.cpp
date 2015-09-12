@@ -100,9 +100,8 @@ void printShaderInfoLog(GLuint object)
 
 int loadShaderFromBuff(GLuint ShaderObj, char * source)
 {
-    int size;
     GLint compileStatus = 0;
-    size = strlen(source);
+    GLint size = strlen(source);
     glShaderSource(ShaderObj, 1, const_cast<const char **>(&source), &size);
     engine::Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);

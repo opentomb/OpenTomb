@@ -917,7 +917,6 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
 
 void Engine::loadSampleOverrideInfo()
 {
-
     int num_samples, num_sounds;
     char sample_name_mask[256];
     if(!engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))

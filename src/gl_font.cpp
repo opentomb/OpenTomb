@@ -170,7 +170,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         FT_Set_Char_Size(glf->ft_face.get(), font_size << 6, font_size << 6, 0, 0);
 
         // calculate texture atlas size
-        chars_in_row = 1 + std::sqrt(glf->glyphs.size());
+        chars_in_row = static_cast<GLint>( 1 + std::sqrt(glf->glyphs.size()) );
         glf->gl_tex_width = (font_size + padding) * chars_in_row;
         glf->gl_tex_width = NextPowerOf2(glf->gl_tex_width);
         if(glf->gl_tex_width > glf->gl_max_tex_width)
@@ -180,7 +180,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
 
         // create new atlas
         chars_in_row = glf->gl_tex_width / (font_size + padding);
-        chars_in_column = glf->glyphs.size() / chars_in_row + 1;
+        chars_in_column = static_cast<GLint>( glf->glyphs.size() / chars_in_row + 1 );
         glf->gl_tex_indexes.resize((chars_in_column * (font_size + padding)) / glf->gl_tex_width + 1);
         glGenTextures(static_cast<GLsizei>(glf->gl_tex_indexes.size()), glf->gl_tex_indexes.data());
 

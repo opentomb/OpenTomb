@@ -1651,8 +1651,7 @@ int Character::findTraverse()
                 Entity* e = static_cast<Entity*>(cont->object);
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
-                    int oz = (m_angles[0] + 45.0f) / 90.0f;
-                    m_angles[0] = oz * 90.0f;
+                    m_angles[0] = std::lround(m_angles[0] / 90.0f) * 90.0f;
                     m_traversedObject = e;
                     updateTransform();
                     return 1;
@@ -2300,7 +2299,7 @@ void Character::frame(btScalar time)
 
     // Update acceleration/speed, it is calculated per anim frame index
     auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / (1 << 16); //Decompiled from TOMB5.EXE
+    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / btScalar(1 << 16); //Decompiled from TOMB5.EXE
 
 
                                                                                               // TODO: check rigidbody update requirements.

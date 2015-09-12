@@ -1045,7 +1045,7 @@ int execCmd(const char *ch)
         ch = script::MainEngine::parse_token(ch, token.data());
         if(!strcmp(token.data(), "help"))
         {
-            for(size_t i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
+            for(int i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
             {
                 Console::instance().notify(i);
             }

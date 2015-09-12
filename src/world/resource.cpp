@@ -2455,7 +2455,7 @@ void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr)
             engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, true);
             for(uint16_t j = 0; j < seq->frames.size(); j++)
             {
-                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, static_cast<GLfloat>(j) * seq->uvrotate_speed, true);
+                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, j * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -3173,7 +3173,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
         //  also, resizing now saves re-allocations in interpolateFrames later)
         anim->frames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
 
-        int numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
+        size_t numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
         if(numFrameData > anim->frames.size()) {
             numFrameData = anim->frames.size();
         }
@@ -3239,7 +3239,8 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             // !Need bonetags in empty frames:
             bone_frame->bone_tags.resize(model->mesh_count);
 
-            if(j >= numFrameData) continue; // only create bone_tags for rate>1 fill-frames
+            if(j >= numFrameData)
+                continue; // only create bone_tags for rate>1 fill-frames
 
             bone_frame->position.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);

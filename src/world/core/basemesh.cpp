@@ -237,8 +237,9 @@ void BaseMesh::genFaces()
         if(p.isBroken())
             continue;
 
-        uint32_t elementCount = (p.vertices.size() - 2) * 3;
-        if(p.double_side) elementCount *= 2;
+        size_t elementCount = (p.vertices.size() - 2) * 3;
+        if(p.double_side)
+            elementCount *= 2;
 
         if(p.anim_id == 0)
         {
@@ -266,29 +267,29 @@ void BaseMesh::genFaces()
     }
 
     m_elements.resize(numNormalElements + m_alphaElements);
-    uint32_t elementOffset = 0;
-    std::vector<uint32_t> startPerTexture(m_texturePageCount, 0);
+    size_t elementOffset = 0;
+    std::vector<size_t> startPerTexture(m_texturePageCount, 0);
     for(uint32_t i = 0; i < m_texturePageCount; i++)
     {
         startPerTexture[i] = elementOffset;
         elementOffset += m_elementsPerTexture[i];
     }
-    uint32_t startTransparent = elementOffset;
+    size_t startTransparent = elementOffset;
 
     m_allAnimatedElements.resize(m_animatedElementCount + m_alphaAnimatedElementCount);
     size_t animatedStart = 0;
     size_t animatedStartTransparent = m_animatedElementCount;
 
     m_transparentPolygons.resize(transparent);
-    uint32_t transparentPolygonStart = 0;
+    size_t transparentPolygonStart = 0;
 
     for(const struct Polygon& p : m_polygons)
     {
         if(p.isBroken())
             continue;
 
-        uint32_t elementCount = (p.vertices.size() - 2) * 3;
-        uint32_t backwardsStartOffset = elementCount;
+        size_t elementCount = (p.vertices.size() - 2) * 3;
+        size_t backwardsStartOffset = elementCount;
         if(p.double_side)
         {
             elementCount *= 2;
@@ -299,7 +300,7 @@ void BaseMesh::genFaces()
             // Not animated
             uint32_t texture = p.tex_index;
 
-            uint32_t oldStart;
+            size_t oldStart;
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = startPerTexture[texture];
@@ -315,16 +316,16 @@ void BaseMesh::genFaces()
                 m_transparentPolygons[transparentPolygonStart].isAnimated = false;
                 transparentPolygonStart += 1;
             }
-            uint32_t backwardsStart = oldStart + backwardsStartOffset;
+            size_t backwardsStart = oldStart + backwardsStartOffset;
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = addVertex(p.vertices[0]);
-            uint32_t previousElement = addVertex(p.vertices[1]);
+            uint32_t startElement = static_cast<uint32_t>(addVertex(p.vertices[0]));
+            uint32_t previousElement = static_cast<uint32_t>(addVertex(p.vertices[1]));
 
             for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                uint32_t thisElement = addVertex(p.vertices[j]);
+                uint32_t thisElement = static_cast<uint32_t>(addVertex(p.vertices[j]));
 
                 m_elements[oldStart + (j - 2) * 3 + 0] = startElement;
                 m_elements[oldStart + (j - 2) * 3 + 1] = previousElement;
@@ -343,7 +344,7 @@ void BaseMesh::genFaces()
         else
         {
             // Animated
-            uint32_t oldStart;
+            size_t oldStart;
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
                 oldStart = animatedStart;
@@ -363,12 +364,12 @@ void BaseMesh::genFaces()
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = addAnimatedVertex(p.vertices[0]);
-            uint32_t previousElement = addAnimatedVertex(p.vertices[1]);
+            uint32_t startElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[0]));
+            uint32_t previousElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[1]));
 
             for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                uint32_t thisElement = addAnimatedVertex(p.vertices[j]);
+                uint32_t thisElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[j]));
 
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 0] = startElement;
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = previousElement;
