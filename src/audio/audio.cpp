@@ -103,77 +103,6 @@ private:
 
 // ======== Audio source global methods ========
 
-void loadOverridedSamples(const world::World *world)
-{
-    int  num_samples, num_sounds;
-    int  sample_index, sample_count;
-    char sample_name_mask[256];
-    char sample_name[256];
-
-    if(engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))
-    {
-        size_t buffer_counter = 0;
-
-        for(size_t i = 0; i < world->audioEngine.getBufferCount(); i++)
-        {
-            if(!world->audioEngine.isBufferMapped(i))
-                continue;
-
-            if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
-            {
-                for(int j = 0; j < sample_count; j++, buffer_counter++)
-                {
-                    sprintf(sample_name, sample_name_mask, (sample_index + j));
-                    if(engine::fileExists(sample_name))
-                    {
-                        loadALbufferFromFile(world->audioEngine.getBuffer(buffer_counter), sample_name);
-                    }
-                }
-            }
-            else
-            {
-                buffer_counter += world->audioEngine.getMappedSampleCount(i);
-            }
-        }
-    }
-}
-
-void initGlobals()
-{
-    audio_settings.music_volume = 0.7f;
-    audio_settings.sound_volume = 0.8f;
-    audio_settings.use_effects  = true;
-    audio_settings.listener_is_player = false;
-    audio_settings.stream_buffer_size = 32;
-}
-
-void init(uint32_t num_Sources)
-{
-    // FX should be inited first, as source constructor checks for FX slot to be created.
-
-    if(audio_settings.use_effects)
-        FxManager::instance()->init();
-
-    // Generate new source array.
-
-    num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
-    engine::engine_world.audioEngine.setSourceCount(num_Sources);
-
-    // Generate stream tracks array.
-
-    engine::engine_world.audioEngine.setStreamTrackCount(StreamSourceCount);
-
-    // Reset last room type used for assigning reverb.
-
-    FxManager::instance()->last_room_type = TR_AUDIO_FX_LASTINDEX;
-}
-
-void deInit()
-{
-    engine::engine_world.audioEngine.deInitAudio();
-    FxManager::instance().reset();
-}
-
 bool logALError(int error_marker)
 {
     ALenum err = alGetError();
@@ -302,7 +231,7 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 frameCount, SF_INF
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void updateListenerByCamera(world::Camera *cam)
+void updateListenerByCamera(FxManager& manager, world::Camera *cam)
 {
     ALfloat v[6] = {
         cam->getViewDir()[0], cam->getViewDir()[1], cam->getViewDir()[2],
@@ -321,18 +250,18 @@ void updateListenerByCamera(world::Camera *cam)
     {
         if(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER)
         {
-            FxManager::instance()->current_room_type = TR_AUDIO_FX_WATER;
+            manager.current_room_type = TR_AUDIO_FX_WATER;
         }
         else
         {
-            FxManager::instance()->current_room_type = cam->m_currentRoom->reverb_info;
+            manager.current_room_type = cam->m_currentRoom->reverb_info;
         }
 
-        if(FxManager::instance()->water_state != static_cast<bool>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
+        if(manager.water_state != static_cast<bool>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
         {
-            FxManager::instance()->water_state = (cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER) != 0;
+            manager.water_state = (cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER) != 0;
 
-            if(FxManager::instance()->water_state)
+            if(manager.water_state)
             {
                 engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
             }

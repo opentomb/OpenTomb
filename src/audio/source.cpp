@@ -26,7 +26,7 @@ Source::Source()
         alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
         alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
 
-        if(audio_settings.use_effects)
+        if(engine::engine_world.audioEngine.getSettings().use_effects)
         {
             alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
             alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
@@ -84,7 +84,7 @@ bool Source::isPlaying() const
     }
 }
 
-void Source::play()
+void Source::play(FxManager& manager)
 {
     if(alIsSource(m_sourceIndex))
     {
@@ -94,7 +94,7 @@ void Source::play()
             alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
             alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
-            if(audio_settings.use_effects)
+            if(engine::engine_world.audioEngine.getSettings().use_effects)
             {
                 unsetFX();
             }
@@ -104,10 +104,10 @@ void Source::play()
             alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
             linkEmitter();
 
-            if(audio_settings.use_effects)
+            if(engine::engine_world.audioEngine.getSettings().use_effects)
             {
-                setFX();
-                setUnderwater();
+                setFX(manager);
+                setUnderwater(manager);
             }
         }
 
@@ -132,7 +132,7 @@ void Source::stop()
     }
 }
 
-void Source::update()
+void Source::update(const FxManager& manager)
 {
     // Bypass any non-active source.
     if(!m_active)
@@ -161,9 +161,9 @@ void Source::update()
     {
         linkEmitter();
 
-        if(audio_settings.use_effects && m_isWater != FxManager::instance()->water_state)
+        if(engine::engine_world.audioEngine.getSettings().use_effects && m_isWater != manager.water_state)
         {
-            setUnderwater();
+            setUnderwater(manager);
         }
     }
     else
@@ -209,7 +209,7 @@ void Source::setLooping(ALboolean is_looping)
 
 void Source::setGain(ALfloat gain_value)
 {
-    alSourcef(m_sourceIndex, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * audio_settings.sound_volume);
+    alSourcef(m_sourceIndex, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * engine::engine_world.audioEngine.getSettings().sound_volume);
 }
 
 void Source::setPitch(ALfloat pitch_value)
@@ -235,24 +235,21 @@ void Source::setVelocity(const ALfloat vel_vector[])
     alSourcefv(m_sourceIndex, AL_VELOCITY, vel_vector);
 }
 
-void Source::setFX()
+void Source::setFX(FxManager& manager)
 {
-    ALuint effect;
-    ALuint slot;
-
     // Reverb FX is applied globally through audio send. Since player can
     // jump between adjacent rooms with different reverb info, we assign
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    const auto& manager = FxManager::instance();
-    if(manager->current_room_type != manager->last_room_type)  // Switch audio send.
+    ALuint slot = 0;
+    if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
     {
-        manager->last_room_type = manager->current_room_type;
-        manager->current_slot = (++manager->current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager->current_slot);
+        manager.last_room_type = manager.current_room_type;
+        manager.current_slot = (++manager.current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager.current_slot);
 
-        effect = manager->al_effect[manager->current_room_type];
-        slot = manager->al_slot[manager->current_slot];
+        ALuint effect = manager.al_effect[manager.current_room_type];
+        slot = manager.al_slot[manager.current_slot];
 
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
@@ -261,7 +258,7 @@ void Source::setFX()
     }
     else    // Do not switch audio send.
     {
-        slot = manager->al_slot[manager->current_slot];
+        slot = manager.al_slot[manager.current_slot];
     }
 
     // Assign global reverb FX to channel.
@@ -277,15 +274,15 @@ void Source::unsetFX()
     alSource3i(m_sourceIndex, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
 
-void Source::setUnderwater()
+void Source::setUnderwater(const FxManager& fxManager)
 {
     // Water low-pass filter is applied when source's is_water flag is set.
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
 
-    if(FxManager::instance()->water_state)
+    if(fxManager.water_state)
     {
-        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, FxManager::instance()->al_filter);
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.al_filter);
         m_isWater = true;
     }
     else

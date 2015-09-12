@@ -15,7 +15,4 @@ struct Settings
     int         stream_buffer_size = 32;
 };
 
-// FIXME Shouldn't be global
-extern Settings audio_settings;
-
 } // namespace audio

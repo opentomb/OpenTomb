@@ -29,19 +29,19 @@ public:
     Source();  // Audio source constructor.
     ~Source();  // Audio source destructor.
 
-    void play();    // Make source active and play it.
+    void play(FxManager& manager);    // Make source active and play it.
     void pause();   // Pause source (leaving it active).
     void stop();    // Stop and destroy source.
-    void update();  // Update source parameters.
+    void update(const FxManager &manager);  // Update source parameters.
 
     void setBuffer(ALint buffer);           // Assign buffer to source.
     void setLooping(ALboolean is_looping);  // Set looping flag.
     void setPitch(ALfloat pitch_value);     // Set pitch shift.
     void setGain(ALfloat gain_value);       // Set gain (volume).
     void setRange(ALfloat range_value);     // Set max. audible distance.
-    void setFX();                           // Set reverb FX, according to room flag.
+    void setFX(FxManager &manager);                           // Set reverb FX, according to room flag.
     void unsetFX();                         // Remove any reverb FX from source.
-    void setUnderwater();                   // Apply low-pass underwater filter.
+    void setUnderwater(const audio::FxManager &fxManager);                   // Apply low-pass underwater filter.
 
     bool isLooping() const;           // Check if source is looping;
     bool isPlaying() const;           // Check if source is currently playing.

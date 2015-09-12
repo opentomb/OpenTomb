@@ -4,6 +4,8 @@
 
 namespace audio
 {
+struct FxManager;
+
 // Audio stream type defines stream behaviour. While background track
 // loops forever until interrupted by other background track, one-shot
 // and chat tracks doesn't interrupt them, playing in parallel instead.
@@ -43,7 +45,7 @@ public:
     bool load(const char *path, const int index, const StreamType type, const StreamMethod load_method);
     bool unload();
 
-    bool play(bool fade_in = false);     // Begins to play track.
+    bool play(FxManager &manager, bool fade_in = false);     // Begins to play track.
     void pause();                        // Pauses track, preserving position.
     void end();                          // End track with fade-out.
     void stop();                         // Immediately stop track.
@@ -55,7 +57,7 @@ public:
     bool isActive() const;                     // Checks if track is still active.
     bool isDampable() const;                   // Checks if track is dampable.
 
-    void setFX();                        // Set reverb FX, according to room flag.
+    void setFX(FxManager& manager);                        // Set reverb FX, according to room flag.
     void unsetFX();                      // Remove any reverb FX from source.
 
     static bool damp_active;             // Global flag for damping BGM tracks.

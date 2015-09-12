@@ -28,6 +28,7 @@
 
 #include "LuaState.h"
 
+#include "audio/alext.h"
 #include "audio/audio.h"
 #include "audio/settings.h"
 #include "character_controller.h"
@@ -341,7 +342,7 @@ void initAL()
         Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
         ALCdevice* dev = alcOpenDevice(devlist);
 
-        if(audio::audio_settings.use_effects)
+        if(engine_world.audioEngine.getSettings().use_effects)
         {
             if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
@@ -790,7 +791,7 @@ void initDefaultGlobals()
     Controls_InitGlobals();
     Game_InitGlobals();
     render::renderer.initGlobals();
-    audio::initGlobals();
+    engine_world.audioEngine.resetSettings();
 }
 
 // First stage of initialization.
@@ -1091,7 +1092,7 @@ int loadMap(const std::string& name)
 
     engine_lua.clean();
 
-    audio::init();
+    engine_world.audioEngine.init();
 
     gui::drawLoadScreen(100);
 
@@ -1381,7 +1382,7 @@ void initConfig(const char *filename)
 
         state.parseScreen(&screen_info);
         state.parseRender(&render::renderer.settings());
-        state.parseAudio(&audio::audio_settings);
+        state.parseAudio(&engine_world.audioEngine.settings());
         state.parseConsole(&Console::instance());
         state.parseControls(&control_mapper);
         state.parseSystem(&system_settings);

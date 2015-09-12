@@ -3,6 +3,8 @@
 #include "audio.h"
 #include "effect.h"
 #include "emitter.h"
+#include "fxmanager.h"
+#include "settings.h"
 #include "source.h"
 #include "streamtrack.h"
 
@@ -115,6 +117,53 @@ public:
 
     void load(const world::World *world, const std::unique_ptr<loader::Level>& tr);
 
+    const Settings& getSettings() const
+    {
+        return m_settings;
+    }
+
+    Settings& settings()
+    {
+        return m_settings;
+    }
+
+    void resetSettings()
+    {
+        m_settings = Settings();
+    }
+
+    void loadSampleOverrideInfo();
+
+    FxManager& fxManager()
+    {
+        if(!m_fxManager)
+            throw std::runtime_error("FX Manager not initialized");
+        return *m_fxManager;
+    }
+
+    void init(uint32_t num_Sources = MaxChannels)
+    {
+        // FX should be inited first, as source constructor checks for FX slot to be created.
+
+        if(m_settings.use_effects)
+        {
+            m_fxManager.reset(new FxManager(true));
+        }
+
+        // Generate new source array.
+
+        num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
+        setSourceCount(num_Sources);
+
+        // Generate stream tracks array.
+
+        setStreamTrackCount(StreamSourceCount);
+
+        // Reset last room type used for assigning reverb.
+
+        m_fxManager->last_room_type = TR_AUDIO_FX_LASTINDEX;
+    }
+
 private:
     std::vector<Emitter> m_emitters;        //!< Audio emitters.
     std::vector<int16_t> m_effectMap;       //!< Effect indexes.
@@ -126,6 +175,10 @@ private:
     std::vector<uint8_t> m_trackMap;        //!< Stream track flag map.
 
     btVector3 m_listenerPosition = {0,0,0};
+
+    Settings m_settings;
+
+    std::unique_ptr<FxManager> m_fxManager{ new FxManager() };
 };
 
 } // namespace audio

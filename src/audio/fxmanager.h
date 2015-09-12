@@ -48,28 +48,10 @@ struct FxManager
     ALuint      last_room_type = 0;
     bool        water_state = false;    // If listener is underwater, all samples will damp.
 
-    static void reset()
-    {
-        instance().reset(new FxManager());
-    }
-
-    static void init()
-    {
-        if(!instance())
-            instance().reset(new FxManager(true));
-    }
-
-    static std::unique_ptr<FxManager>& instance()
-    {
-        static std::unique_ptr<FxManager> manager;
-        return manager;
-    }
-
     ~FxManager();
 
     bool loadReverb(int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
-private:
     explicit FxManager() = default;
     explicit FxManager(bool); // Bool param only used for distinguishing from default constructor
 };

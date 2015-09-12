@@ -20,6 +20,7 @@ struct Entity;
 
 namespace audio
 {
+struct FxManager;
 
 namespace
 {
@@ -180,21 +181,13 @@ enum TR_AUDIO_SOUND_GLOBALID
     TR_AUDIO_SOUND_GLOBALID_LASTINDEX
 };
 
-// General audio routines.
-
-void initGlobals();
-
-void init(uint32_t num_Sources = MaxChannels);
-void deInit();
-
 // Audio source (samples) routines.
-void updateListenerByCamera(world::Camera *cam);
+void updateListenerByCamera(FxManager &manager, world::Camera *cam);
 void updateListenerByEntity(std::shared_ptr<world::Entity> ent);
 
 bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_INFO *sfInfo);
 int  loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t sample_size, size_t uncomp_sample_size = 0);
 int  loadALbufferFromFile(ALuint buf_number, const char *fname);
-void loadOverridedSamples(const world::World *world);
 
 // Error handling routines.
 
@@ -204,6 +197,5 @@ void logSndfileError(int code);           // Sndfile-specific error handler.
 // Helper functions.
 
 float   getByteDepth(SF_INFO sfInfo);
-void    loadALExtFunctions(ALCdevice* device);
 
 } // namespace audio

@@ -68,7 +68,7 @@ void World::empty()
     engine::last_cont = nullptr;
     engine_lua.clearTasks();
 
-    audio::deInit(); // De-initialize and destroy all audio objects.
+    audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
     if(main_inventory_manager != nullptr)
     {

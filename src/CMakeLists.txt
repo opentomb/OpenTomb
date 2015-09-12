@@ -29,7 +29,6 @@ list(APPEND PRJ_SRC
     audio/audio.cpp
     audio/streamtrack.cpp
     audio/source.cpp
-    audio/settings.cpp
     audio/fxmanager.cpp
     audio/alext.cpp
     audio/engine.cpp

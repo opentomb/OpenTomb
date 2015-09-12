@@ -39,7 +39,7 @@ void Engine::resumeAllSources()
     {
         if(source.isActive())
         {
-            source.play();
+            source.play(fxManager());
         }
     }
 }
@@ -190,7 +190,7 @@ void Engine::updateSources()
 
     for(Source& src : m_sources)
     {
-        src.update();
+        src.update(fxManager());
     }
 }
 
@@ -199,13 +199,13 @@ void Engine::updateAudio()
     updateSources();
     updateStreams();
 
-    if(audio_settings.listener_is_player)
+    if(m_settings.listener_is_player)
     {
         updateListenerByEntity(engine::engine_world.character);
     }
     else
     {
-        updateListenerByCamera(render::renderer.camera());
+        updateListenerByCamera(fxManager(), render::renderer.camera());
     }
 }
 
@@ -294,7 +294,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!m_tracks[target_stream].play(do_fade_in))
+    if(!m_tracks[target_stream].play(fxManager(), do_fade_in))
     {
         Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
@@ -339,6 +339,8 @@ void Engine::deInitAudio()
 
     m_effects.clear();
     m_effectMap.clear();
+
+    m_fxManager.reset();
 }
 
 Error Engine::kill(int effect_ID, EmitterType entity_type, int entity_ID)
@@ -538,7 +540,7 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
 
         source->setRange(effect->range);    // Set audible range.
 
-        source->play();                     // Everything is OK, play sound now!
+        source->play(fxManager());                     // Everything is OK, play sound now!
 
         return Error::Processed;
     }
@@ -707,7 +709,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
     // NB! We need to override samples AFTER audio effects array is inited, as override
     //     routine refers to existence of certain audio effect in level.
 
-    loadOverridedSamples(world);
+    loadSampleOverrideInfo();
 
     // Hardcoded version-specific fixes!
 
@@ -740,6 +742,41 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
         m_emitters[i].sound_index = tr->m_soundSources[i].sound_id;
         m_emitters[i].position = btVector3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
         m_emitters[i].flags = tr->m_soundSources[i].flags;
+    }
+}
+
+void Engine::loadSampleOverrideInfo()
+{
+
+    int num_samples, num_sounds;
+    char sample_name_mask[256];
+    if(!engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))
+        return;
+
+    size_t buffer_counter = 0;
+
+    for(size_t i = 0; i < getBufferCount(); i++)
+    {
+        if(!isBufferMapped(i))
+            continue;
+
+        int sample_index, sample_count;
+        if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
+        {
+            for(int j = 0; j < sample_count; j++, buffer_counter++)
+            {
+                char sample_name[256];
+                snprintf(sample_name, 255, sample_name_mask, (sample_index + j));
+                if(engine::fileExists(sample_name))
+                {
+                    loadALbufferFromFile(getBuffer(buffer_counter), sample_name);
+                }
+            }
+        }
+        else
+        {
+            buffer_counter += getMappedSampleCount(i);
+        }
     }
 }
 
