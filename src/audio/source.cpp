@@ -1,16 +1,14 @@
 #include "source.h"
 
+#include "alext.h"
 #include "engine/engine.h"
+#include "fxmanager.h"
 #include "settings.h"
 #include "util/helpers.h"
 #include "world/entity.h"
 
 namespace audio
 {
-
-// FIXME This shouldn't be global
-extern FxManager fxManager;
-
 
 Source::Source()
 {
@@ -163,7 +161,7 @@ void Source::update()
     {
         linkEmitter();
 
-        if(audio_settings.use_effects && m_isWater != fxManager.water_state)
+        if(audio_settings.use_effects && m_isWater != FxManager::instance()->water_state)
         {
             setUnderwater();
         }
@@ -247,15 +245,15 @@ void Source::setFX()
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    const auto& manager = FxManager::instance();
+    if(manager->current_room_type != manager->last_room_type)  // Switch audio send.
     {
-        fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot = (++fxManager.current_slot > (MaxSlots - 1)) ? (0) : (fxManager.current_slot);
+        manager->last_room_type = manager->current_room_type;
+        manager->current_slot = (++manager->current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager->current_slot);
 
-        effect = fxManager.al_effect[fxManager.current_room_type];
-        slot = fxManager.al_slot[fxManager.current_slot];
+        effect = manager->al_effect[manager->current_room_type];
+        slot = manager->al_slot[manager->current_slot];
 
-        assert(alIsAuxiliaryEffectSlot != nullptr);
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
             alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
@@ -263,7 +261,7 @@ void Source::setFX()
     }
     else    // Do not switch audio send.
     {
-        slot = fxManager.al_slot[fxManager.current_slot];
+        slot = manager->al_slot[manager->current_slot];
     }
 
     // Assign global reverb FX to channel.
@@ -285,9 +283,9 @@ void Source::setUnderwater()
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
 
-    if(fxManager.water_state)
+    if(FxManager::instance()->water_state)
     {
-        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.al_filter);
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, FxManager::instance()->al_filter);
         m_isWater = true;
     }
     else

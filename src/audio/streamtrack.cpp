@@ -1,7 +1,9 @@
 #include "streamtrack.h"
 
+#include "alext.h"
 #include "engine/engine.h"
 #include "engine/system.h"
+#include "fxmanager.h"
 #include "gui/console.h"
 #include "settings.h"
 #include "util/helpers.h"
@@ -10,9 +12,6 @@ using gui::Console;
 
 namespace audio
 {
-
-// FIXME This shouldn't be global
-extern FxManager fxManager;
 
 bool StreamTrack::damp_active = false;
 
@@ -524,13 +523,14 @@ void StreamTrack::setFX()
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    const auto& manager = FxManager::instance();
+    if(manager->current_room_type != manager->last_room_type)  // Switch audio send.
     {
-        fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot = (++fxManager.current_slot > (MaxSlots - 1)) ? (0) : (fxManager.current_slot);
+        manager->last_room_type = manager->current_room_type;
+        manager->current_slot = (++manager->current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager->current_slot);
 
-        effect = fxManager.al_effect[fxManager.current_room_type];
-        slot = fxManager.al_slot[fxManager.current_slot];
+        effect = manager->al_effect[manager->current_room_type];
+        slot = manager->al_slot[manager->current_slot];
 
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
@@ -539,7 +539,7 @@ void StreamTrack::setFX()
     }
     else    // Do not switch audio send.
     {
-        slot = fxManager.al_slot[fxManager.current_slot];
+        slot = manager->al_slot[manager->current_slot];
     }
 
     // Assign global reverb FX to channel.

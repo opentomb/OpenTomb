@@ -21,12 +21,6 @@ struct Entity;
 namespace audio
 {
 
-#ifndef AL_ALEXT_PROTOTYPES
-extern "C" LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot;
-extern "C" LPALISEFFECT alIsEffect;
-extern "C" LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti;
-#endif
-
 namespace
 {
 // AL_UNITS constant is used to translate native TR coordinates into
@@ -41,14 +35,6 @@ constexpr float ALUnits = 1024.0;
 // reasons.
 
 constexpr int MaxChannels = 32;
-
-// MAX_SLOTS specifies amount of FX slots used to apply environmental
-// effects to sounds. We need at least two of them to prevent glitches
-// at environment transition (slots are cyclically changed, leaving
-// previously played samples at old slot). Maximum amount is 4, but
-// it's not recommended to set it more than 2.
-
-constexpr int MaxSlots = 2;
 
 // NUMBUFFERS is a number of buffers cyclically used for each stream.
 // Double is enough, but we use quad for further stability.
@@ -138,24 +124,6 @@ enum class StreamError
     Processed
 };
 
-// In TR3-5, there were 5 reverb / echo effect flags for each
-// room, but they were never used in PC versions - however, level
-// files still contain this info, so we now can re-use these flags
-// to assign reverb/echo presets to each room.
-// Also, underwater environment can be considered as additional
-// reverb flag, so overall amount is 6.
-
-enum TR_AUDIO_FX
-{
-    TR_AUDIO_FX_OUTSIDE,         // EFX_REVERB_PRESET_CITY
-    TR_AUDIO_FX_SMALLROOM,       // EFX_REVERB_PRESET_LIVINGROOM
-    TR_AUDIO_FX_MEDIUMROOM,      // EFX_REVERB_PRESET_WOODEN_LONGPASSAGE
-    TR_AUDIO_FX_LARGEROOM,       // EFX_REVERB_PRESET_DOME_TOMB
-    TR_AUDIO_FX_PIPE,            // EFX_REVERB_PRESET_PIPE_LARGE
-    TR_AUDIO_FX_WATER,           // EFX_REVERB_PRESET_UNDERWATER
-    TR_AUDIO_FX_LASTINDEX
-};
-
 // Audio map size is a size of effect ID array, which is used to translate
 // global effect IDs to level effect IDs. If effect ID in audio map is -1
 // (0xFFFF), it means that this effect is absent in current level.
@@ -212,29 +180,12 @@ enum TR_AUDIO_SOUND_GLOBALID
     TR_AUDIO_SOUND_GLOBALID_LASTINDEX
 };
 
-// FX manager structure.
-// It contains all necessary info to process sample FX (reverb and echo).
-
-struct FxManager
-{
-    ALuint      al_filter;
-    ALuint      al_effect[TR_AUDIO_FX_LASTINDEX];
-    ALuint      al_slot[MaxSlots];
-    ALuint      current_slot;
-    ALuint      current_room_type;
-    ALuint      last_room_type;
-    bool        water_state;    // If listener is underwater, all samples will damp.
-};
-
-// Main audio source class.
-
 // General audio routines.
 
 void initGlobals();
-void initFX();
 
 void init(uint32_t num_Sources = MaxChannels);
-int  deInit();
+void deInit();
 
 // Audio source (samples) routines.
 void updateListenerByCamera(world::Camera *cam);
@@ -244,8 +195,6 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 buffer_size, SF_IN
 int  loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t sample_size, size_t uncomp_sample_size = 0);
 int  loadALbufferFromFile(ALuint buf_number, const char *fname);
 void loadOverridedSamples(world::World *world);
-
-int  loadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
 // Error handling routines.
 

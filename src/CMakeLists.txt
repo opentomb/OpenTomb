@@ -30,6 +30,8 @@ list(APPEND PRJ_SRC
     audio/streamtrack.cpp
     audio/source.cpp
     audio/settings.cpp
+    audio/fxmanager.cpp
+    audio/alext.cpp
 
     render/gl_util.cpp
     render/render.cpp
@@ -91,6 +93,8 @@ list(APPEND PRJ_HDR
     audio/effect.h
     audio/settings.h
     audio/emitter.h
+    audio/fxmanager.h
+    audio/alext.h
 
     render/gl_util.h
     render/render.h
