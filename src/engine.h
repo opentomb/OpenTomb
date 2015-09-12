@@ -115,14 +115,17 @@ struct EngineControlState
     bool     gui_inventory = false;
 };
 
-extern EngineControlState            control_states;
-extern ControlSettings                control_mapper;
+extern EngineControlState   control_states;
+extern ControlSettings      control_mapper;
 
-extern AudioSettings                  audio_settings;
+extern AudioSettings        audio_settings;
 
-extern btScalar                                 engine_frame_time;
-extern Camera                          engine_camera;
-extern World                           engine_world;
+extern btScalar             engine_frame_time;
+extern Camera               engine_camera;
+extern World                engine_world;
+
+// FIXME: Remove this, when interp is in renderer:
+extern bool                 engine_is_in_framestep;
 
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
 extern btCollisionDispatcher                   *bt_engine_dispatcher;

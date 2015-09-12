@@ -69,6 +69,9 @@ btScalar           engine_frame_time = 0.0;
 Camera             engine_camera;
 World              engine_world;
 
+// FIXME: Remove this, when interp is in renderer:
+bool               engine_is_in_framestep = false;
+
 namespace
 {
 std::vector<btScalar> frame_vertex_buffer;
@@ -731,6 +734,8 @@ void Engine_InternalPreTickCallback(btDynamicsWorld* /* world */, btScalar timeS
 {
     btScalar engine_frame_time_backup = engine_frame_time;
     engine_frame_time = timeStep;
+    engine_is_in_framestep = true;
+
     restoreEntityLerpTransforms();
 
     engine_lua.doTasks(timeStep);
@@ -773,6 +778,7 @@ void Engine_InternalTickCallback(btDynamicsWorld* world, btScalar /* timeStep */
             }
         }
     }
+    engine_is_in_framestep = false;
     return;
 }
 

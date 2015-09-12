@@ -691,6 +691,11 @@ void Entity::updateTransform()
     m_angles[2] = WrapAngle(m_angles[2]);
 
     m_transform.getBasis().setEulerZYX(m_angles[1] * RadPerDeg, m_angles[2] * RadPerDeg, m_angles[0] * RadPerDeg);
+
+    // FIXME: Interp caching
+    if(!engine_is_in_framestep) {
+        m_lerp_curr_transform = m_transform;
+    }
 }
 
 void Entity::updateCurrentSpeed(bool zeroVz)
