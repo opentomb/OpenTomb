@@ -743,7 +743,7 @@ void internalPreTickCallback(btDynamicsWorld * world, btScalar timeStep)
 
     engine_lua.doTasks(timeStep);
     Game_UpdateAI();
-    engine::engine_world.updateAudio();
+    engine::engine_world.audioEngine.updateAudio();
 
     if(engine_world.character)
     {

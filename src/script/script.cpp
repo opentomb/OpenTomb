@@ -2419,26 +2419,26 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        engine::engine_world.streamPlay(id, mask.to<int>());
+        engine::engine_world.audioEngine.streamPlay(id, mask.to<int>());
     }
     else
     {
-        engine::engine_world.streamPlay(id, 0);
+        engine::engine_world.audioEngine.streamPlay(id, 0);
     }
 }
 
 void lua_StopStreams()
 {
-    engine::engine_world.stopStreams();
+    engine::engine_world.audioEngine.stopStreams();
 }
 
 void lua_PlaySound(int id, lua::Value ent_id)
 {
     if(id < 0) return;
 
-    if(static_cast<size_t>(id) >= engine::engine_world.audio_map.size())
+    if(static_cast<size_t>(id) >= engine::engine_world.audioEngine.getAudioMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audio_map.size());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getAudioMapSize());
         return;
     }
 
@@ -2452,11 +2452,11 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
     if(eid >= 0)
     {
-        result = engine::engine_world.send(id, audio::EmitterType::Entity, eid);
+        result = engine::engine_world.audioEngine.send(id, audio::EmitterType::Entity, eid);
     }
     else
     {
-        result = engine::engine_world.send(id, audio::EmitterType::Global);
+        result = engine::engine_world.audioEngine.send(id, audio::EmitterType::Global);
     }
 
     switch(result)
@@ -2476,9 +2476,9 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
 void lua_StopSound(uint32_t id, lua::Value ent_id)
 {
-    if(id >= engine::engine_world.audio_map.size())
+    if(id >= engine::engine_world.audioEngine.getAudioMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audio_map.size());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getAudioMapSize());
         return;
     }
 
@@ -2492,11 +2492,11 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 
     if(eid == -1)
     {
-        result = engine::engine_world.kill(id, audio::EmitterType::Global);
+        result = engine::engine_world.audioEngine.kill(id, audio::EmitterType::Global);
     }
     else
     {
-        result = engine::engine_world.kill(id, audio::EmitterType::Entity, eid);
+        result = engine::engine_world.audioEngine.kill(id, audio::EmitterType::Entity, eid);
     }
 
     if(result == audio::Error::NoSample || result == audio::Error::NoChannel)

@@ -15,30 +15,6 @@ namespace audio
 
 bool StreamTrack::damp_active = false;
 
-// General damping update procedure. Constantly checks if damp condition exists, and
-// if so, it lowers the volume of tracks which are dampable.
-// FIXME Should be moved to engine
-void updateStreamsDamping()
-{
-    StreamTrack::damp_active = false;   // Reset damp activity flag.
-
-    // Scan for any tracks that can provoke damp. Usually it's any tracks that are
-    // NOT background. So we simply check this condition and set damp activity flag
-    // if condition is met.
-
-    for(uint32_t i = 0; i < engine::engine_world.stream_tracks.size(); i++)
-    {
-        if(engine::engine_world.stream_tracks[i].isPlaying())
-        {
-            if(!engine::engine_world.stream_tracks[i].isType(StreamType::Background))
-            {
-                StreamTrack::damp_active = true;
-                return; // No need to check more, we found at least one condition.
-            }
-        }
-    }
-}
-
 StreamTrack::StreamTrack()
 {
     alGenBuffers(StreamBufferCount, m_buffers);              // Generate all buffers at once.

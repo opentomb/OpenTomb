@@ -103,7 +103,7 @@ private:
 
 // ======== Audio source global methods ========
 
-void loadOverridedSamples(world::World *world)
+void loadOverridedSamples(const world::World *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;
@@ -112,27 +112,27 @@ void loadOverridedSamples(world::World *world)
 
     if(engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))
     {
-        int buffer_counter = 0;
+        size_t buffer_counter = 0;
 
-        for(uint32_t i = 0; i < world->audio_buffers.size(); i++)
+        for(size_t i = 0; i < world->audioEngine.getBufferCount(); i++)
         {
-            if(world->audio_map[i] != -1)
+            if(!world->audioEngine.isBufferMapped(i))
+                continue;
+
+            if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
             {
-                if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
+                for(int j = 0; j < sample_count; j++, buffer_counter++)
                 {
-                    for(int j = 0; j < sample_count; j++, buffer_counter++)
+                    sprintf(sample_name, sample_name_mask, (sample_index + j));
+                    if(engine::fileExists(sample_name))
                     {
-                        sprintf(sample_name, sample_name_mask, (sample_index + j));
-                        if(engine::fileExists(sample_name))
-                        {
-                            loadALbufferFromFile(world->audio_buffers[buffer_counter], sample_name);
-                        }
+                        loadALbufferFromFile(world->audioEngine.getBuffer(buffer_counter), sample_name);
                     }
                 }
-                else
-                {
-                    buffer_counter += world->audio_effects[world->audio_map[i]].sample_count;
-                }
+            }
+            else
+            {
+                buffer_counter += world->audioEngine.getMappedSampleCount(i);
             }
         }
     }
@@ -157,11 +157,11 @@ void init(uint32_t num_Sources)
     // Generate new source array.
 
     num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
-    engine::engine_world.audio_sources.resize(num_Sources);
+    engine::engine_world.audioEngine.setSourceCount(num_Sources);
 
     // Generate stream tracks array.
 
-    engine::engine_world.stream_tracks.resize(StreamSourceCount);
+    engine::engine_world.audioEngine.setStreamTrackCount(StreamSourceCount);
 
     // Reset last room type used for assigning reverb.
 
@@ -170,7 +170,7 @@ void init(uint32_t num_Sources)
 
 void deInit()
 {
-    engine::engine_world.deInitAudio();
+    engine::engine_world.audioEngine.deInitAudio();
     FxManager::instance().reset();
 }
 
@@ -334,11 +334,11 @@ void updateListenerByCamera(world::Camera *cam)
 
             if(FxManager::instance()->water_state)
             {
-                engine::engine_world.send(TR_AUDIO_SOUND_UNDERWATER);
+                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
             }
             else
             {
-                engine::engine_world.kill(TR_AUDIO_SOUND_UNDERWATER);
+                engine::engine_world.audioEngine.kill(TR_AUDIO_SOUND_UNDERWATER);
             }
         }
     }

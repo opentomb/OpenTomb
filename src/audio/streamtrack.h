@@ -87,6 +87,4 @@ private:
     StreamMethod    m_method;            //!< TRACK (TR1-2/4-5) or WAD (TR3).
 };
 
-void updateStreamsDamping();                   // See if there any damping tracks playing.
-
 } // namespace audio

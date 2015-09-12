@@ -157,7 +157,7 @@ void Source::update()
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(engine::engine_world.isInRange(m_emitterType, m_emitterID, range, gain))
+    if(engine::engine_world.audioEngine.isInRange(m_emitterType, m_emitterID, range, gain))
     {
         linkEmitter();
 
@@ -178,7 +178,7 @@ void Source::update()
 
 void Source::setBuffer(ALint buffer)
 {
-    ALint buffer_index = engine::engine_world.audio_buffers[buffer];
+    ALuint buffer_index = engine::engine_world.audioEngine.getBuffer(buffer);
 
     if(alIsSource(m_sourceIndex) && alIsBuffer(buffer_index))
     {
@@ -308,7 +308,7 @@ void Source::linkEmitter()
             return;
 
         case EmitterType::SoundSource:
-            setPosition(engine::engine_world.audio_emitters[m_emitterID].position);
+            setPosition(engine::engine_world.audioEngine.getEmitter(m_emitterID).position);
             return;
     }
 }

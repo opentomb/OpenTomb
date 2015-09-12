@@ -468,7 +468,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                engine::engine_world.send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_small_medi = !control_states.use_small_medi;
@@ -481,7 +481,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                engine::engine_world.send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
             control_states.use_big_medi = !control_states.use_big_medi;
@@ -722,7 +722,7 @@ void Game_Frame(btScalar time)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
-            engine::engine_world.updateAudio();
+            engine::engine_world.audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -799,7 +799,7 @@ void Game_LevelTransition(uint16_t level_index)
     gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
     gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine::engine_world.endStreams();
+    engine::engine_world.audioEngine.endStreams();
 }
 
 } // namespace engine

@@ -6,12 +6,7 @@
 
 #include <LinearMath/btVector3.h>
 
-#include "audio/audio.h"
-#include "audio/effect.h"
-#include "audio/emitter.h"
-#include "audio/settings.h"
-#include "audio/source.h"
-#include "audio/streamtrack.h"
+#include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
 #include "object.h"
@@ -315,14 +310,7 @@ struct World
 
     std::vector<int16_t> anim_commands;
 
-    std::vector<audio::Emitter> audio_emitters;         // Audio emitters.
-    std::vector<int16_t> audio_map;              // Effect indexes.
-    std::vector<audio::Effect> audio_effects;          // Effects and their parameters.
-
-    std::vector<ALuint> audio_buffers;          // Samples.
-    std::vector<audio::Source> audio_sources;          // Channels.
-    std::vector<audio::StreamTrack> stream_tracks;          // Stream tracks.
-    std::vector<uint8_t> stream_track_map;       // Stream track flag map.
+    audio::Engine audioEngine;
 
     void updateAnimTextures();
     void calculateWaterTint(float* tint, bool fixed_colour);
@@ -345,50 +333,6 @@ struct World
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
     std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
     std::shared_ptr<Room> getByID(unsigned int ID);
-
-    void pauseAllSources();
-
-    void stopAllSources();
-
-    void resumeAllSources();
-
-    int getFreeSource() const;
-
-    bool endStreams(audio::StreamType stream_type = audio::StreamType::Any);
-
-    bool stopStreams(audio::StreamType stream_type = audio::StreamType::Any);
-
-    bool isTrackPlaying(int32_t track_index = -1) const;
-
-    int findSource(int effect_ID = -1, audio::EmitterType entity_type = audio::EmitterType::Any, int entity_ID = -1) const;
-
-    int getFreeStream() const;
-
-    // Update routine for all streams. Should be placed into main loop.
-    void updateStreams();
-
-    bool trackAlreadyPlayed(uint32_t track_index, int8_t mask);
-
-    btVector3 listener_position = {0,0,0};
-
-    void updateSources();
-
-    void updateAudio();
-
-    // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
-    // call this one.
-    audio::StreamError streamPlay(const uint32_t track_index, const uint8_t mask);
-
-    bool deInitDelay();
-
-    void deInitAudio();
-
-    // If exist, immediately stop and destroy all effects with given parameters.
-    audio::Error kill(int effect_ID, audio::EmitterType entity_type = audio::EmitterType::Global, int entity_ID = 0);
-
-    bool isInRange(audio::EmitterType entity_type, int entity_ID, float range, float gain);
-
-    audio::Error send(int effect_ID, audio::EmitterType entity_type = audio::EmitterType::Global, int entity_ID = 0);
 };
 
 Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
