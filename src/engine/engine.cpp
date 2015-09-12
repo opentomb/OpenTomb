@@ -546,17 +546,9 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
         return;
     }
 
-    if(r0 && r1)
+    if(r0 && r1 && r0->isInNearRoomsList(*r1))
     {
-        if(r0->isInNearRoomsList(*r1))
-        {
-            dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-            return;
-        }
-        else
-        {
-            return;
-        }
+        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
     }
 }
 
@@ -697,7 +689,6 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             }
         }
     }
-    return;
 }
 
 void initDefaultGlobals()

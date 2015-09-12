@@ -1527,58 +1527,58 @@ void ProgressBar::SetColor(BarColorType colType,
             mBaseMainColor[2] = static_cast<float>(B) / maxColValue;
             mBaseMainColor[3] = static_cast<float>(A) / maxColValue;
             mBaseMainColor[4] = mBaseMainColor[3];
-            return;
+            break;
         case BarColorType::BaseFade:
             mBaseFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBaseFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBaseFadeColor[2] = static_cast<float>(B) / maxColValue;
             mBaseFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBaseFadeColor[4] = mBaseFadeColor[3];
-            return;
+            break;
         case BarColorType::AltMain:
             mAltMainColor[0] = static_cast<float>(R) / maxColValue;
             mAltMainColor[1] = static_cast<float>(G) / maxColValue;
             mAltMainColor[2] = static_cast<float>(B) / maxColValue;
             mAltMainColor[3] = static_cast<float>(A) / maxColValue;
             mAltMainColor[4] = mAltMainColor[3];
-            return;
+            break;
         case BarColorType::AltFade:
             mAltFadeColor[0] = static_cast<float>(R) / maxColValue;
             mAltFadeColor[1] = static_cast<float>(G) / maxColValue;
             mAltFadeColor[2] = static_cast<float>(B) / maxColValue;
             mAltFadeColor[3] = static_cast<float>(A) / maxColValue;
             mAltFadeColor[4] = mAltFadeColor[3];
-            return;
+            break;
         case BarColorType::BackMain:
             mBackMainColor[0] = static_cast<float>(R) / maxColValue;
             mBackMainColor[1] = static_cast<float>(G) / maxColValue;
             mBackMainColor[2] = static_cast<float>(B) / maxColValue;
             mBackMainColor[3] = static_cast<float>(A) / maxColValue;
             mBackMainColor[4] = mBackMainColor[3];
-            return;
+            break;
         case BarColorType::BackFade:
             mBackFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBackFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBackFadeColor[2] = static_cast<float>(B) / maxColValue;
             mBackFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBackFadeColor[4] = mBackFadeColor[3];
-            return;
+            break;
         case BarColorType::BorderMain:
             mBorderMainColor[0] = static_cast<float>(R) / maxColValue;
             mBorderMainColor[1] = static_cast<float>(G) / maxColValue;
             mBorderMainColor[2] = static_cast<float>(B) / maxColValue;
             mBorderMainColor[3] = static_cast<float>(A) / maxColValue;
             mBorderMainColor[4] = mBorderMainColor[3];
-            return;
+            break;
         case BarColorType::BorderFade:
             mBorderFadeColor[0] = static_cast<float>(R) / maxColValue;
             mBorderFadeColor[1] = static_cast<float>(G) / maxColValue;
             mBorderFadeColor[2] = static_cast<float>(B) / maxColValue;
             mBorderFadeColor[3] = static_cast<float>(A) / maxColValue;
             mBorderFadeColor[4] = mBorderFadeColor[3];
-            return;
+            break;
         default:
-            return;
+            break;
     }
 }
 
@@ -1968,43 +1968,41 @@ void ItemNotifier::Animate()
     {
         return;
     }
+
+    if(mRotateTime)
+    {
+        mCurrRotX += (engine::engine_frame_time * mRotateTime);
+        //mCurrRotY += (engine_frame_time * mRotateTime);
+
+        mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0f) : (mCurrRotX);
+        //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
+    }
+
+    if(mCurrTime == 0)
+    {
+        float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+        step = std::max(0.5f, step);
+
+        mCurrPosX -= step;
+        mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
+
+        if(mCurrPosX == mEndPosX)
+            mCurrTime += engine::engine_frame_time;
+    }
+    else if(mCurrTime < mShowTime)
+    {
+        mCurrTime += engine::engine_frame_time;
+    }
     else
     {
-        if(mRotateTime)
-        {
-            mCurrRotX += (engine::engine_frame_time * mRotateTime);
-            //mCurrRotY += (engine_frame_time * mRotateTime);
+        float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+        step = std::max(0.5f, step);
 
-            mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0f) : (mCurrRotX);
-            //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
-        }
+        mCurrPosX += step;
+        mCurrPosX = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);
 
-        if(mCurrTime == 0)
-        {
-            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
-            step = std::max(0.5f, step);
-
-            mCurrPosX -= step;
-            mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
-
-            if(mCurrPosX == mEndPosX)
-                mCurrTime += engine::engine_frame_time;
-        }
-        else if(mCurrTime < mShowTime)
-        {
-            mCurrTime += engine::engine_frame_time;
-        }
-        else
-        {
-            float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
-            step = std::max(0.5f, step);
-
-            mCurrPosX += step;
-            mCurrPosX = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);
-
-            if(mCurrPosX == mStartPosX)
-                Reset();
-        }
+        if(mCurrPosX == mStartPosX)
+            Reset();
     }
 }
 

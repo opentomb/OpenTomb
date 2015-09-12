@@ -928,7 +928,6 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             // Unknown command
             break;
     }
-    return;
 }
 
 void Entity::processSector()
@@ -974,7 +973,6 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     // some items (jeep) need this here...
     updateCurrentBoneFrame(&m_bf);
 //    updateRigidBody(false);
-    return;
 }
 
 int Entity::getAnimDispatchCase(uint32_t id)
@@ -1013,7 +1011,6 @@ void Entity::slerpBones(btScalar lerp)
     }
     m_bf.animations.lerp = lerp;
     updateCurrentBoneFrame(&m_bf);
-    return;
 }
 
 void Entity::lerpTransform(btScalar lerp)
@@ -1027,7 +1024,6 @@ void Entity::lerpTransform(btScalar lerp)
         m_transform.setRotation(q);
         m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
     }
-    return;
 }
 
 void Entity::updateInterpolation(btScalar time)
@@ -1053,7 +1049,6 @@ void Entity::updateInterpolation(btScalar time)
             m_lerp = 1.0;
         }
     }
-    return;
 }
 
 animation::AnimUpdate Entity::stepAnimation(btScalar time)
@@ -1110,7 +1105,6 @@ void Entity::frame(btScalar time)
     //{ }
     updateCurrentBoneFrame(&m_bf);
     updateRigidBody(false);
-    return;
 }
 
 

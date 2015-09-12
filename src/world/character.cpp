@@ -2308,7 +2308,6 @@ void Character::frame(btScalar time)
                                                                                               //{ }
     updateCurrentBoneFrame(&m_bf);
     updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
-    return;
 }
 
 void Character::processSectorImpl()

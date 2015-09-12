@@ -302,11 +302,11 @@ void Source::linkEmitter()
                 setPosition(ent->m_transform.getOrigin());
                 setVelocity(ent->m_speed);
             }
-            return;
+            break;
 
         case EmitterType::SoundSource:
             setPosition(engine::engine_world.audioEngine.getEmitter(m_emitterID).position);
-            return;
+            break;
     }
 }
 

@@ -391,7 +391,8 @@ void lua_SetCharacterParam(int id, int parameter, float value, lua::Value max_va
         Console::instance().warning(SYSWARN_NO_CHARACTER, id);
         return;
     }
-    else if(!max_value.is<lua::Number>())
+    
+    if(!max_value.is<lua::Number>())
     {
         ent->setParam(parameter, value);
     }

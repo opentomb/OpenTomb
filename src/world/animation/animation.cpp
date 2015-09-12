@@ -115,7 +115,6 @@ void SSAnimation::setAnimation(int animation, int frame, int another_model)
     period = 1.0f / TR_FRAME_RATE;
     //    m_bf.animations.lerp = 0.0f;
     //    m_bf.animations.frame_time = 0.0f;
-    return;
 }
 
 /**
