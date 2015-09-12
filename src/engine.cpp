@@ -739,6 +739,7 @@ void Engine_MainLoop()
     float oldtime = 0.0f;
     float time_cycl = 0.0f;
 
+    const int max_cycles = 64;
     int cycles = 0;
     char fps_str[32] = "0.0";
 
@@ -751,14 +752,14 @@ void Engine_MainLoop()
 
         engine_frame_time = time;
 
-        if(cycles < 32)
+        if(cycles < max_cycles)
         {
             cycles++;
             time_cycl += time;
         }
         else
         {
-            screen_info.fps = (32.0f / time_cycl);
+            screen_info.fps = ((float)max_cycles / time_cycl);
             snprintf(fps_str, 32, "%.1f", screen_info.fps);
             cycles = 0;
             time_cycl = 0.0f;

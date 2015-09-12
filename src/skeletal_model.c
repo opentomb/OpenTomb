@@ -30,11 +30,11 @@ void SkeletalModel_Clear(skeletal_model_p model)
         if(model->animation_count)
         {
             animation_frame_p anim = model->animations;
-            for(uint16_t i=0;i<model->animation_count;i++,anim++)
+            for(uint16_t i = 0; i < model->animation_count; i++, anim++)
             {
                 if(anim->state_change_count)
                 {
-                    for(uint16_t j=0;j<anim->state_change_count;j++)
+                    for(uint16_t j = 0; j < anim->state_change_count; j++)
                     {
                         anim->state_change[j].anim_dispatch_count = 0;
                         free(anim->state_change[j].anim_dispatch);
@@ -48,7 +48,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
                 if(anim->frames_count)
                 {
-                    for(uint16_t j=0;j<anim->frames_count;j++)
+                    for(uint16_t j = 0; j < anim->frames_count; j++)
                     {
                         if(anim->frames[j].bone_tag_count)
                         {
@@ -123,7 +123,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
 
     bf->bone_tags[0].parent = NULL;                                             // root
-    for(uint16_t i=0;i<bf->bone_tag_count;i++)
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
         bf->bone_tags[i].index = i;
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
@@ -159,7 +159,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
     dst->command = src->command;
     vec3_copy(dst->move, src->move);
 
-    for(uint16_t i=0;i<dst->bone_tag_count;i++)
+    for(uint16_t i = 0; i < dst->bone_tag_count; i++)
     {
         vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
         vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
@@ -173,7 +173,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
     bone_frame_p bf, new_bone_frames;
     float lerp, t;
 
-    for(uint16_t i=0;i<model->animation_count;i++,anim++)
+    for(uint16_t i = 0; i < model->animation_count; i++, anim++)
     {
         if(anim->frames_count > 1 && anim->original_frame_rate > 1)             // we can't interpolate one frame or rate < 2!
         {
@@ -192,21 +192,21 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             vec3_copy(bf->pos, anim->frames[0].pos);
             vec3_copy(bf->bb_max, anim->frames[0].bb_max);
             vec3_copy(bf->bb_min, anim->frames[0].bb_min);
-            for(uint16_t k=0;k<model->mesh_count;k++)
+            for(uint16_t k = 0; k < model->mesh_count; k++)
             {
                 vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
                 vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
             }
             bf++;
 
-            for(uint16_t j=1;j<anim->frames_count;j++)
+            for(uint16_t j = 1; j < anim->frames_count; j++)
             {
-                for(uint16_t l=1;l<=anim->original_frame_rate;l++)
+                for(uint16_t lerp_index = 1; lerp_index <= anim->original_frame_rate; lerp_index++)
                 {
                     vec3_set_zero(bf->pos);
                     vec3_set_zero(bf->move);
                     bf->command = 0x00;
-                    lerp = ((float)l) / (float)anim->original_frame_rate;
+                    lerp = ((float)lerp_index) / (float)anim->original_frame_rate;
                     t = 1.0 - lerp;
 
                     bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
@@ -228,7 +228,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                     bf->bb_min[1] = t * anim->frames[j-1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
                     bf->bb_min[2] = t * anim->frames[j-1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
 
-                    for(uint16_t k=0;k<model->mesh_count;k++)
+                    for(uint16_t k = 0; k < model->mesh_count; k++)
                     {
                         bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
                         bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
@@ -244,7 +244,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
              * swap old and new animation bone brames
              * free old bone frames;
              */
-            for(uint16_t j=0;j<anim->frames_count;j++)
+            for(uint16_t j = 0; j < anim->frames_count; j++)
             {
                 if(anim->frames[j].bone_tag_count)
                 {
@@ -264,7 +264,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 void SkeletonModel_FillTransparency(skeletal_model_p model)
 {
     model->transparency_flags = MESH_FULL_OPAQUE;
-    for(uint16_t i=0;i<model->mesh_count;i++)
+    for(uint16_t i = 0; i < model->mesh_count; i++)
     {
         if(model->mesh_tree[i].mesh_base->transparency_polygons != NULL)
         {
@@ -279,7 +279,7 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 {
     mesh_tree_tag_p ret = (mesh_tree_tag_p)malloc(tags_count * sizeof(mesh_tree_tag_t));
 
-    for(int i=0;i<tags_count;i++)
+    for(int i = 0; i < tags_count; i++)
     {
         ret[i].mesh_base = src[i].mesh_base;
         ret[i].mesh_skin = src[i].mesh_skin;
@@ -293,7 +293,7 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 
 void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    for(int i=0;i<tags_count;i++)
+    for(int i = 0; i < tags_count; i++)
     {
         dst[i].mesh_base = src[i].mesh_base;
     }
@@ -301,7 +301,7 @@ void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count
 
 void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    for(int i=0;i<tags_count;i++)
+    for(int i = 0; i < tags_count; i++)
     {
         dst[i].mesh_skin = src[i].mesh_base;
     }
@@ -310,7 +310,7 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
 vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3])
 {
     vertex_p mv = mesh->vertices;
-    for(uint32_t i=0;i<mesh->vertex_count;i++,mv++)
+    for(uint32_t i = 0; i < mesh->vertex_count; i++, mv++)
     {
         if(vec3_dist_sq(v, mv->position) < 4.0)
         {
@@ -330,7 +330,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
     mesh_tree_tag_p tree_tag, prev_tree_tag;
 
     tree_tag = model->mesh_tree;
-    for(uint16_t i=0;i<model->mesh_count;i++,tree_tag++)
+    for(uint16_t i = 0; i < model->mesh_count; i++, tree_tag++)
     {
         mesh_base = tree_tag->mesh_base;
         mesh_skin = tree_tag->mesh_skin;
@@ -342,7 +342,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
 
         ch = mesh_skin->skin_map = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t));
         v = mesh_skin->vertices;
-        for(uint32_t k=0;k<mesh_skin->vertex_count;k++,v++,ch++)
+        for(uint32_t k = 0; k < mesh_skin->vertex_count; k++, v++, ch++)
         {
             rv = FindVertexInMesh(mesh_base, v->position);
             if(rv != NULL)
@@ -356,7 +356,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
                 *ch = 0;
                 vec3_add(tv, v->position, tree_tag->offset);
                 prev_tree_tag = model->mesh_tree;
-                for(uint16_t l=0;l<model->mesh_count;l++,prev_tree_tag++)
+                for(uint16_t mesh_index = 0; mesh_index < model->mesh_count; mesh_index++, prev_tree_tag++)
                 {
                     rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv);
                     if(rv != NULL)
@@ -407,7 +407,7 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
     vec3_add(bf->pos, bf->pos, cmd_tr);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
-    for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
+    for(uint16_t k = 0; k < curr_bf->bone_tag_count; k++, btag++, src_btag++, next_btag++)
     {
         vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
@@ -422,7 +422,7 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
             bone_tag_p ov_src_btag = src_btag;
             bone_tag_p ov_next_btag = next_btag;
             float ov_lerp = bf->animations.lerp;
-            for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
+            for(ss_animation_p ov_anim = bf->animations.next; ov_anim; ov_anim = ov_anim->next)
             {
                 if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
@@ -445,7 +445,7 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
     btag = bf->bone_tags;
     Mat4_Copy(btag->full_transform, btag->transform);
     btag++;
-    for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
+    for(uint16_t k = 1; k < curr_bf->bone_tag_count; k++, btag++)
     {
         Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
     }
@@ -480,9 +480,9 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
     if(state_change_anim >= 0)
     {
         state_change_p ret = anim->state_change;
-        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+        for(uint16_t i = 0; i < anim->state_change_count; i++, ret++)
         {
-            for(uint16_t j=0;j<ret->anim_dispatch_count;j++)
+            for(uint16_t j = 0; j < ret->anim_dispatch_count; j++)
             {
                 if(ret->anim_dispatch[j].next_anim == state_change_anim)
                 {
@@ -499,7 +499,7 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
 {
     state_change_p ret = anim->state_change;
-    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+    for(uint16_t i = 0; i < anim->state_change_count; i++, ret++)
     {
         if(ret->id == id)
         {
@@ -516,12 +516,12 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
     animation_frame_p anim = bf->animations.model->animations + bf->animations.current_animation;
     state_change_p stc = anim->state_change;
 
-    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
+    for(uint16_t i = 0; i < anim->state_change_count; i++, stc++)
     {
         if(stc->id == id)
         {
             anim_dispatch_p disp = stc->anim_dispatch;
-            for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
+            for(uint16_t j = 0; j < stc->anim_dispatch_count; j++, disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (bf->animations.current_frame >= disp->frame_low) && (bf->animations.current_frame <= disp->frame_high))
                 {
@@ -571,7 +571,7 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
     if(stc != NULL)
     {
         anim_dispatch_p disp = stc->anim_dispatch;
-        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
+        for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
             if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) /*|| (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)*/))
             {

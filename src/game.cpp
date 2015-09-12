@@ -761,7 +761,7 @@ void Game_UpdateCharacters()
     }
 }
 
-__inline float Game_Tick(float *game_logic_time)
+__inline float CutTimeToLogicTime(float *game_logic_time)
 {
     int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
     float dt = (float)t * GAME_LOGIC_REFRESH_INTERVAL;
@@ -804,7 +804,7 @@ void Game_Frame(float time)
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
             Audio_Update();
-            Game_Tick(&game_logic_time);
+            CutTimeToLogicTime(&game_logic_time);
         }
         return;
     }
@@ -815,7 +815,7 @@ void Game_Frame(float time)
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
-        float dt = Game_Tick(&game_logic_time);
+        float dt = CutTimeToLogicTime(&game_logic_time);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
@@ -830,12 +830,9 @@ void Game_Frame(float time)
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
 
-
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-
     Game_ApplyControls(engine_world.Character);
-
     if(is_character)
     {
         if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -902,7 +899,6 @@ void Game_Prepare()
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
-
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
 }
 

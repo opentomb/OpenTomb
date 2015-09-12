@@ -1333,8 +1333,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                ent->speed[0] *= 0.2;
-                ent->speed[1] *= 0.2;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(resp->slide == 0)
@@ -2689,8 +2687,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             Character_Lean(ent, cmd, 0.0);
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                ent->speed[0] *= 0.5;
-                ent->speed[1] *= 0.5;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
 

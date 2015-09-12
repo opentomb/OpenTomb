@@ -367,6 +367,11 @@ void Room_SwapItems(struct room_s *room, struct room_s *dest_room);
 
 struct room_s *Room_CheckFlip(struct room_s *r);
 
+// NOTE: Functions which take native TR level structures as argument will have
+// additional _TR_ prefix. Functions which doesn't use specific TR structures
+// should NOT use such prefix!
+void Room_GenSpritesBuffer(struct room_s *room);
+
 struct room_sector_s *Sector_CheckBaseRoom(struct room_sector_s *rs);
 struct room_sector_s *Sector_CheckAlternateRoom(struct room_sector_s *rs);
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
