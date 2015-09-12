@@ -2,6 +2,7 @@
 
 #include "engine/engine.h"
 #include "entity.h"
+#include "loader/level.h"
 #include "resource.h"
 #include "staticmesh.h"
 #include "world.h"

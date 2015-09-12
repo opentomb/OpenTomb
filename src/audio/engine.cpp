@@ -1,10 +1,11 @@
 #include "engine.h"
 
-#include "settings.h"
-
+#include "alext.h"
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
+#include "loader/level.h"
+#include "settings.h"
 #include "script/script.h"
 #include "world/character.h"
 
@@ -14,6 +15,174 @@ using gui::Console;
 
 namespace audio
 {
+// Audio de-initialization delay gives some time to OpenAL to shut down its
+// currently active sources. If timeout is reached, it means that something is
+// really wrong with audio subsystem; usually five seconds is enough.
+constexpr float AudioDeinitDelay = 5.0f;
+
+namespace
+{
+bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 frameCount, SF_INFO *sfInfo)
+{
+    if(sfInfo->channels > 1)   // We can't use non-mono samples.
+    {
+        engine::Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
+        return false;
+    }
+
+#ifdef AUDIO_OPENAL_FLOAT
+    std::vector<ALfloat> frames(frameCount);
+    /*const sf_count_t samplesRead =*/ sf_readf_float(wavFile, frames.data(), frames.size());
+
+    alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, &frames.front(), frameCount * sizeof(frames[0]), sfInfo->samplerate);
+#else
+    std::vector<ALshort> frames(frameCount);
+    /*const sf_count_t samplesRead =*/ sf_readf_short(wavFile, frames.data(), frames.size());
+
+    alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), frameCount * sizeof(frames[0]), sfInfo->samplerate);
+#endif
+    checkALError(__FUNCTION__);
+    return true;
+}
+
+bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t sample_size, size_t uncomp_sample_size = 0)
+{
+    struct MemBufferFileIo : public SF_VIRTUAL_IO
+    {
+        MemBufferFileIo(const uint8_t* data, sf_count_t dataSize)
+            : SF_VIRTUAL_IO()
+            , m_data(data)
+            , m_dataSize(dataSize)
+        {
+            assert(data != nullptr);
+
+            get_filelen = &MemBufferFileIo::getFileLength;
+            seek = &MemBufferFileIo::doSeek;
+            read = &MemBufferFileIo::doRead;
+            write = &MemBufferFileIo::doWrite;
+            tell = &MemBufferFileIo::doTell;
+        }
+
+        static sf_count_t getFileLength(void *user_data)
+        {
+            auto self = static_cast<MemBufferFileIo*>(user_data);
+            return self->m_dataSize;
+        }
+
+        static sf_count_t doSeek(sf_count_t offset, int whence, void *user_data)
+        {
+            auto self = static_cast<MemBufferFileIo*>(user_data);
+            switch(whence)
+            {
+                case SEEK_SET:
+                    assert(offset >= 0 && offset <= self->m_dataSize);
+                    self->m_where = offset;
+                    break;
+                case SEEK_CUR:
+                    assert(self->m_where + offset <= self->m_dataSize && self->m_where + offset >= 0);
+                    self->m_where += offset;
+                    break;
+                case SEEK_END:
+                    assert(offset >= 0 && offset <= self->m_dataSize);
+                    self->m_where = self->m_dataSize - offset;
+                    break;
+                default:
+                    assert(false);
+            }
+            return self->m_where;
+        }
+
+        static sf_count_t doRead(void *ptr, sf_count_t count, void *user_data)
+        {
+            auto self = static_cast<MemBufferFileIo*>(user_data);
+            if(self->m_where + count > self->m_dataSize)
+                count = self->m_dataSize - self->m_where;
+
+            assert(self->m_where + count <= self->m_dataSize);
+
+            uint8_t* buf = static_cast<uint8_t*>(ptr);
+            std::copy(self->m_data + self->m_where, self->m_data + self->m_where + count, buf);
+            self->m_where += count;
+            return count;
+        }
+
+        static sf_count_t doWrite(const void* /*ptr*/, sf_count_t /*count*/, void* /*user_data*/)
+        {
+            return 0; // read-only
+        }
+
+        static sf_count_t doTell(void *user_data)
+        {
+            auto self = static_cast<MemBufferFileIo*>(user_data);
+            return self->m_where;
+        }
+
+    private:
+        const uint8_t* const m_data;
+        const sf_count_t m_dataSize;
+        sf_count_t m_where = 0;
+    };
+
+    MemBufferFileIo wavMem(sample_pointer, sample_size);
+    SF_INFO sfInfo;
+    memset(&sfInfo, 0, sizeof(sfInfo));
+    SNDFILE* sample = sf_open_virtual(&wavMem, SFM_READ, &sfInfo, &wavMem);
+
+    if(!sample)
+    {
+        engine::Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        return false;
+    }
+
+    // Uncomp_sample_size explicitly specifies amount of raw sample data
+    // to load into buffer. It is only used in TR4/5 with ADPCM samples,
+    // because full-sized ADPCM sample contains a bit of silence at the end,
+    // which should be removed. That's where uncomp_sample_size comes into
+    // business.
+    // Note that we also need to compare if uncomp_sample_size is smaller
+    // than native wav length, because for some reason many TR5 uncomp sizes
+    // are messed up and actually more than actual sample size.
+
+    size_t real_size = sfInfo.frames * sizeof(uint16_t);
+
+    if((uncomp_sample_size == 0) || (real_size < uncomp_sample_size))
+    {
+        uncomp_sample_size = real_size;
+    }
+
+    // We need to change buffer size, as we're using floats here.
+
+    const auto frameCount = uncomp_sample_size / sizeof(uint16_t);
+
+    // Find out sample format and load it correspondingly.
+    // Note that with OpenAL, we can have samples of different formats in same level.
+
+    bool result = fillALBuffer(buf_number, sample, static_cast<Uint32>(frameCount), &sfInfo);
+
+    sf_close(sample);
+
+    return result;   // Zero means success.
+}
+
+bool loadALbufferFromFile(ALuint buf_number, const char *fname)
+{
+    SF_INFO sfInfo;
+    SNDFILE* file = sf_open(fname, SFM_READ, &sfInfo);
+
+    if(!file)
+    {
+        Console::instance().warning(SYSWARN_CANT_OPEN_FILE);
+        return false;
+    }
+
+    bool result = fillALBuffer(buf_number, file, static_cast<Uint32>(sfInfo.frames), &sfInfo);
+
+    sf_close(file);
+
+    return result;   // Zero means success.
+}
+} // anonymous namespace
+
 void Engine::pauseAllSources()
 {
     for(Source& source : m_sources)
@@ -201,11 +370,11 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        updateListenerByEntity(engine::engine_world.character);
+        m_fxManager->updateListener(engine::engine_world.character.get());
     }
     else
     {
-        updateListenerByCamera(fxManager(), render::renderer.camera());
+        m_fxManager->updateListener(render::renderer.camera());
     }
 }
 
@@ -561,7 +730,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
     // If script had no such parameter, we define map bounds by default.
     m_trackMap.resize(engine_lua.getNumTracks(), 0);
     if(m_trackMap.empty())
-        m_trackMap.resize(audio::StreamMapSize, 0);
+        m_trackMap.resize(StreamMapSize, 0);
 
     // Generate new audio effects array.
     m_effects.resize(tr->m_soundDetails.size());
@@ -592,7 +761,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
                 {
                     pointer = tr->m_samplesData.data() + tr->m_sampleIndices[i];
                     uint32_t size = tr->m_sampleIndices[(i + 1)] - tr->m_sampleIndices[i];
-                    audio::loadALbufferFromMem(m_buffers[i], pointer, size);
+                    loadALbufferFromMem(m_buffers[i], pointer, size);
                 }
                 break;
 
@@ -620,7 +789,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
                         {
                             size_t uncomp_size = ind2 - ind1;
                             auto* srcData = tr->m_samplesData.data() + ind1;
-                            audio::loadALbufferFromMem(m_buffers[i], srcData, uncomp_size);
+                            loadALbufferFromMem(m_buffers[i], srcData, uncomp_size);
                             i++;
                             if(i >= m_buffers.size())
                             {
@@ -635,7 +804,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
                 pointer = tr->m_samplesData.data() + ind1;
                 if(i < m_buffers.size())
                 {
-                    audio::loadALbufferFromMem(m_buffers[i], pointer, uncomp_size);
+                    loadALbufferFromMem(m_buffers[i], pointer, uncomp_size);
                 }
                 break;
             }
@@ -655,7 +824,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    audio::loadALbufferFromMem(m_buffers[i], pointer, comp_size, uncomp_size);
+                    loadALbufferFromMem(m_buffers[i], pointer, comp_size, uncomp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;
@@ -777,6 +946,115 @@ void Engine::loadSampleOverrideInfo()
         {
             buffer_counter += getMappedSampleCount(i);
         }
+    }
+}
+
+void Engine::init(uint32_t num_Sources)
+{
+    // FX should be inited first, as source constructor checks for FX slot to be created.
+
+    if(m_settings.use_effects)
+    {
+        m_fxManager.reset(new FxManager(true));
+    }
+
+    // Generate new source array.
+
+    num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
+    setSourceCount(num_Sources);
+
+    // Generate stream tracks array.
+
+    setStreamTrackCount(StreamSourceCount);
+
+    // Reset last room type used for assigning reverb.
+
+    m_fxManager->last_room_type = TR_AUDIO_FX_LASTINDEX;
+}
+
+void Engine::initDevice()
+{
+#if !NO_AUDIO
+
+    ALCint paramList[] = {
+        ALC_STEREO_SOURCES,  StreamSourceCount,
+        ALC_MONO_SOURCES,   (MaxChannels - StreamSourceCount),
+        ALC_FREQUENCY,       44100, 0 };
+
+    engine::Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
+
+    const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+
+    if(!devlist)
+    {
+        engine::Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
+        return;
+    }
+
+    while(*devlist)
+    {
+        engine::Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
+        ALCdevice* dev = alcOpenDevice(devlist);
+
+        if(m_settings.use_effects)
+        {
+            if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
+            {
+                engine::Sys_DebugLog(LOG_FILENAME, " EFX supported!");
+                m_device = dev;
+                m_context = alcCreateContext(m_device, paramList);
+                // fails e.g. with Rapture3D, where EFX is supported
+                if(m_context)
+                {
+                    break;
+                }
+            }
+            alcCloseDevice(dev);
+            devlist += std::strlen(devlist) + 1;
+        }
+        else
+        {
+            m_device = dev;
+            m_context = alcCreateContext(m_device, paramList);
+            break;
+        }
+    }
+
+    if(!m_context)
+    {
+        engine::Sys_DebugLog(LOG_FILENAME, " Failed to create OpenAL context.");
+        alcCloseDevice(m_device);
+        m_device = nullptr;
+        return;
+    }
+
+    alcMakeContextCurrent(m_context);
+
+    loadALExtFunctions(m_device);
+
+    std::string driver = "OpenAL library: ";
+    driver += alcGetString(m_device, ALC_DEVICE_SPECIFIER);
+    Console::instance().addLine(driver, gui::FontStyle::ConsoleInfo);
+
+    alSpeedOfSound(330.0 * 512.0);
+    alDopplerVelocity(330.0 * 510.0);
+    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+#endif
+}
+
+void Engine::closeDevice()
+{
+    if(m_context)  // T4Larson <t4larson@gmail.com>: fixed
+    {
+        alcMakeContextCurrent(nullptr);
+        alcDestroyContext(m_context);
+        m_context = nullptr;
+    }
+
+    if(m_device)
+    {
+        alcCloseDevice(m_device);
+        m_device = nullptr;
     }
 }
 

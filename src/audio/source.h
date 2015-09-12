@@ -8,6 +8,8 @@
 
 namespace audio
 {
+struct FxManager;
+
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
 // or global events, we have defined these three types of emitters.
@@ -41,7 +43,7 @@ public:
     void setRange(ALfloat range_value);     // Set max. audible distance.
     void setFX(FxManager &manager);                           // Set reverb FX, according to room flag.
     void unsetFX();                         // Remove any reverb FX from source.
-    void setUnderwater(const audio::FxManager &fxManager);                   // Apply low-pass underwater filter.
+    void setUnderwater(const FxManager &fxManager);                   // Apply low-pass underwater filter.
 
     bool isLooping() const;           // Check if source is looping;
     bool isPlaying() const;           // Check if source is currently playing.

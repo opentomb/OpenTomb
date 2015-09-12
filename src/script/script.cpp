@@ -3673,19 +3673,19 @@ void script::ScriptEngine::parseControls(engine::ControlSettings *cs)
     cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"];
     cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"];
     cs->mouse_scale_y = (*this)["controls"]["mouse_scale_y"];
-    cs->use_joy = (*this)["controls"]["use_joy"];
+    cs->use_joy = (*this)["controls"]["use_joy"].to<bool>();
     cs->joy_number = (*this)["controls"]["joy_number"];
-    cs->joy_rumble = (*this)["controls"]["joy_rumble"];
+    cs->joy_rumble = (*this)["controls"]["joy_rumble"].to<bool>();
     cs->joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"];
     cs->joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"];
     cs->joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"];
     cs->joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"];
-    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"];
-    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"];
+    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].to<bool>();
+    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].to<bool>();
     cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"];
     cs->joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"];
-    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"];
-    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"];
+    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].to<bool>();
+    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].to<bool>();
     cs->joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"];
     cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"];
 }

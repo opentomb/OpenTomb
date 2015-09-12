@@ -487,7 +487,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             control_states.use_big_medi = !control_states.use_big_medi;
         }
 
-        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
+        if(control_mapper.use_joy && (control_mapper.joy_move_x != 0))
         {
             ch->m_command.rot[0] += -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_x;
         }
@@ -496,7 +496,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             ch->m_command.rot[0] += -2 * util::DegPerRad * engine_frame_time * static_cast<btScalar>(move_logic[1]);
         }
 
-        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0))
+        if(control_mapper.use_joy && (control_mapper.joy_move_y != 0))
         {
             ch->m_command.rot[1] += -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_y;
         }

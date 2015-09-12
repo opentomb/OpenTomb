@@ -195,7 +195,6 @@ void initGL();
 void initSDLControls();
 void initSDLVideo();
 void initSDLImage();
-void initAL();
 void initBullet();
 
 // Config parser

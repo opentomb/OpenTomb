@@ -407,20 +407,20 @@ void Controls_RefreshStates()
 void Controls_InitGlobals()
 {
     control_mapper.mouse_sensitivity = 25.0;
-    control_mapper.use_joy = 0;
+    control_mapper.use_joy = false;
 
     control_mapper.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
-    control_mapper.joy_rumble = 0;              ///@FIXME: Make it according to GetCaps of default joystick.
+    control_mapper.joy_rumble = false;              ///@FIXME: Make it according to GetCaps of default joystick.
 
     control_mapper.joy_axis_map[AXIS_MOVE_X] = 0;
     control_mapper.joy_axis_map[AXIS_MOVE_Y] = 1;
     control_mapper.joy_axis_map[AXIS_LOOK_X] = 2;
     control_mapper.joy_axis_map[AXIS_LOOK_Y] = 3;
 
-    control_mapper.joy_look_invert_x = 0;
-    control_mapper.joy_look_invert_y = 0;
-    control_mapper.joy_move_invert_x = 0;
-    control_mapper.joy_move_invert_y = 0;
+    control_mapper.joy_look_invert_x = false;
+    control_mapper.joy_look_invert_y = false;
+    control_mapper.joy_move_invert_x = false;
+    control_mapper.joy_move_invert_y = false;
 
     control_mapper.joy_look_deadzone = 1500;
     control_mapper.joy_move_deadzone = 1500;

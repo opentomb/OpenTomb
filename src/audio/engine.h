@@ -8,8 +8,56 @@
 #include "source.h"
 #include "streamtrack.h"
 
+namespace world
+{
+class World;
+} // namespace world
+
+namespace loader
+{
+class Level;
+} // namespace loader
+
 namespace audio
 {
+// Certain sound effect indexes were changed across different TR
+// versions, despite remaining the same - mostly, it happened with
+// menu sounds and some general sounds. For such effects, we specify
+// additional remap enumeration list, which is fed into Lua script
+// to get actual effect ID for current game version.
+
+enum TR_AUDIO_SOUND_GLOBALID
+{
+    TR_AUDIO_SOUND_GLOBALID_MENUOPEN,
+    TR_AUDIO_SOUND_GLOBALID_MENUCLOSE,
+    TR_AUDIO_SOUND_GLOBALID_MENUROTATE,
+    TR_AUDIO_SOUND_GLOBALID_MENUPAGE,
+    TR_AUDIO_SOUND_GLOBALID_MENUSELECT,
+    TR_AUDIO_SOUND_GLOBALID_MENUWEAPON,
+    TR_AUDIO_SOUND_GLOBALID_MENUCLANG,
+    TR_AUDIO_SOUND_GLOBALID_MENUAUDIOTEST,
+    TR_AUDIO_SOUND_GLOBALID_LASTINDEX
+};
+
+// Possible types of errors returned by Audio_Send / Audio_Kill functions.
+enum class Error
+{
+    NoSample,
+    NoChannel,
+    Ignored,
+    Processed
+};
+
+// Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
+enum class StreamError
+{
+    PlayError,
+    LoadError,
+    WrongTrack,
+    NoFreeStream,
+    Ignored,
+    Processed
+};
 
 class Engine
 {
@@ -141,30 +189,34 @@ public:
         return *m_fxManager;
     }
 
-    void init(uint32_t num_Sources = MaxChannels)
-    {
-        // FX should be inited first, as source constructor checks for FX slot to be created.
+    // MAX_CHANNELS defines maximum amount of sound sources (channels)
+    // that can play at the same time. Contemporary devices can play
+    // up to 256 channels, but we set it to 32 for compatibility
+    // reasons.
 
-        if(m_settings.use_effects)
-        {
-            m_fxManager.reset(new FxManager(true));
-        }
+    static constexpr int MaxChannels = 32;
 
-        // Generate new source array.
+    // NUMSOURCES tells the engine how many sources we should reserve for
+    // in-game music and BGMs, considering crossfades. By default, it's 6,
+    // as it's more than enough for typical TR audio setup (one BGM track
+    // plus one one-shot track or chat track in TR5).
 
-        num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
-        setSourceCount(num_Sources);
+    static constexpr int StreamSourceCount = 6;
 
-        // Generate stream tracks array.
-
-        setStreamTrackCount(StreamSourceCount);
-
-        // Reset last room type used for assigning reverb.
-
-        m_fxManager->last_room_type = TR_AUDIO_FX_LASTINDEX;
-    }
+    void init(uint32_t num_Sources = MaxChannels);
+    void initDevice();
+    void closeDevice();
 
 private:
+    // MAP_SIZE is similar to sound map size, but it is used to mark
+    // already played audiotracks. Note that audiotracks CAN play several
+    // times, if they were consequently called with increasing activation
+    // flags (e.g., at first we call it with 00001 flag, then with 00101,
+    // and so on). If all activation flags were set, including only once
+    // flag, audiotrack won't play anymore.
+
+    static constexpr int StreamMapSize = 256;
+
     std::vector<Emitter> m_emitters;        //!< Audio emitters.
     std::vector<int16_t> m_effectMap;       //!< Effect indexes.
     std::vector<Effect> m_effects;          //!< Effects and their parameters.
@@ -179,6 +231,9 @@ private:
     Settings m_settings;
 
     std::unique_ptr<FxManager> m_fxManager{ new FxManager() };
+
+    ALCdevice* m_device = nullptr;
+    ALCcontext* m_context = nullptr;
 };
 
 } // namespace audio

@@ -2,6 +2,11 @@
 
 #include "audio/audio.h"
 
+#include <sndfile.h>
+#include <AL/al.h>
+
+#include <cstdint>
+
 namespace audio
 {
 struct FxManager;
@@ -63,6 +68,11 @@ public:
     static bool damp_active;             // Global flag for damping BGM tracks.
 
 private:
+    // NUMBUFFERS is a number of buffers cyclically used for each stream.
+    // Double is enough, but we use quad for further stability.
+
+    static constexpr int StreamBufferCount = 4;
+
     bool loadTrack(const char *path);                     // Track loading.
     bool loadWad(uint8_t index, const char *filename);    // Wad loading.
 

@@ -2,7 +2,10 @@
 
 #include "alext.h"
 #include "audio.h"
+#include "engine/engine.h"
 #include "engine/system.h"
+#include "world/camera.h"
+#include "world/room.h"
 
 namespace audio
 {
@@ -85,6 +88,58 @@ FxManager::FxManager(bool)
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
     loadReverb(TR_AUDIO_FX_WATER, &reverb6);
+}
+
+/**
+ * Updates listener parameters by camera structure. For correct speed calculation
+ * that function have to be called every game frame.
+ * @param cam - pointer to the camera structure.
+ */
+void FxManager::updateListener(world::Camera *cam)
+{
+    ALfloat v[6] = {
+        cam->getViewDir()[0], cam->getViewDir()[1], cam->getViewDir()[2],
+        cam->getUpDir()[0], cam->getUpDir()[1], cam->getUpDir()[2]
+    };
+
+    alListenerfv(AL_ORIENTATION, v);
+
+    alListenerfv(AL_POSITION, cam->getPosition());
+
+    btVector3 v2 = (cam->getPosition() - cam->m_prevPos) / engine::engine_frame_time;
+    alListenerfv(AL_VELOCITY, v2);
+    cam->m_prevPos = cam->getPosition();
+
+    if(cam->m_currentRoom)
+    {
+        if(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER)
+        {
+            current_room_type = TR_AUDIO_FX_WATER;
+        }
+        else
+        {
+            current_room_type = cam->m_currentRoom->reverb_info;
+        }
+
+        if(water_state != static_cast<bool>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
+        {
+            water_state = (cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER) != 0;
+
+            if(water_state)
+            {
+                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
+            }
+            else
+            {
+                engine::engine_world.audioEngine.kill(TR_AUDIO_SOUND_UNDERWATER);
+            }
+        }
+    }
+}
+
+void FxManager::updateListener(world::Entity* /*ent*/)
+{
+    ///@FIXME: Add entity listener updater here.
 }
 
 }

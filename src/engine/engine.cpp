@@ -72,8 +72,6 @@ SDL_Joystick           *sdl_joystick = nullptr;
 SDL_GameController     *sdl_controller = nullptr;
 SDL_Haptic             *sdl_haptic = nullptr;
 SDL_GLContext           sdl_gl_context = nullptr;
-ALCdevice              *al_device = nullptr;
-ALCcontext             *al_context = nullptr;
 
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
@@ -134,7 +132,7 @@ void initSDLControls()
 {
     Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
 
-    if(control_mapper.use_joy == 1)
+    if(control_mapper.use_joy)
     {
         init_flags |= SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
 
@@ -162,7 +160,7 @@ void initSDLControls()
             {
                 Sys_DebugLog(LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
-                control_mapper.use_joy = 0;
+                control_mapper.use_joy = false;
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
@@ -182,7 +180,7 @@ void initSDLControls()
             {
                 Sys_DebugLog(LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
-                control_mapper.use_joy = 0;
+                control_mapper.use_joy = false;
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
@@ -318,76 +316,6 @@ void initSDLImage()
 }
 #endif
 
-void initAL()
-{
-#if !NO_AUDIO
-
-    ALCint paramList[] = {
-        ALC_STEREO_SOURCES,  audio::StreamSourceCount,
-        ALC_MONO_SOURCES,   (audio::MaxChannels - audio::StreamSourceCount),
-        ALC_FREQUENCY,       44100, 0 };
-
-    Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
-
-    const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
-
-    if(!devlist)
-    {
-        Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
-        return;
-    }
-
-    while(*devlist)
-    {
-        Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
-        ALCdevice* dev = alcOpenDevice(devlist);
-
-        if(engine_world.audioEngine.getSettings().use_effects)
-        {
-            if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
-            {
-                Sys_DebugLog(LOG_FILENAME, " EFX supported!");
-                al_device = dev;
-                al_context = alcCreateContext(al_device, paramList);
-                // fails e.g. with Rapture3D, where EFX is supported
-                if(al_context)
-                {
-                    break;
-                }
-            }
-            alcCloseDevice(dev);
-            devlist += std::strlen(devlist) + 1;
-        }
-        else
-        {
-            al_device = dev;
-            al_context = alcCreateContext(al_device, paramList);
-            break;
-        }
-    }
-
-    if(!al_context)
-    {
-        Sys_DebugLog(LOG_FILENAME, " Failed to create OpenAL context.");
-        alcCloseDevice(al_device);
-        al_device = nullptr;
-        return;
-    }
-
-    alcMakeContextCurrent(al_context);
-
-    audio::loadALExtFunctions(al_device);
-
-    std::string driver = "OpenAL library: ";
-    driver += alcGetString(al_device, ALC_DEVICE_SPECIFIER);
-    Console::instance().addLine(driver, gui::FontStyle::ConsoleInfo);
-
-    alSpeedOfSound(330.0 * 512.0);
-    alDopplerVelocity(330.0 * 510.0);
-    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
-#endif
-}
-
 void start()
 {
 #if defined(__MACOSX__)
@@ -419,7 +347,7 @@ void start()
     resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     // OpenAL initialization.
-    initAL();
+    engine_world.audioEngine.initDevice();
 
     Console::instance().notify(SYSNOTE_ENGINE_INITED);
 
@@ -938,16 +866,7 @@ void shutdown(int val)
         SDL_HapticClose(sdl_haptic);
     }
 
-    if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
-    {
-        alcMakeContextCurrent(nullptr);
-        alcDestroyContext(al_context);
-    }
-
-    if(al_device)
-    {
-        alcCloseDevice(al_device);
-    }
+    engine_world.audioEngine.closeDevice();
 
     /* free temporary memory */
     frame_vertex_buffer.clear();

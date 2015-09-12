@@ -96,23 +96,23 @@ struct ControlSettings
     float    mouse_scale_y = 0.01f;
 
     // Global joystick settings.
-    bool   use_joy = 0;
+    bool   use_joy = false;
     int    joy_number = 0;
-    bool   joy_rumble = 0;
+    bool   joy_rumble = false;
 
     // Look axis settings.
     btScalar joy_look_x = 0;                        // Raw look axis data!
     btScalar joy_look_y = 0;                        // Raw look axis data!
-    bool     joy_look_invert_x = 0;
-    bool     joy_look_invert_y = 0;
+    bool     joy_look_invert_x = false;
+    bool     joy_look_invert_y = false;
     btScalar joy_look_sensitivity = 0;
     int16_t  joy_look_deadzone = 0;
 
     // Move axis settings.
     btScalar joy_move_x = 0;                        // Raw move axis data!
     btScalar joy_move_y = 0;                        // Raw move axis data!
-    bool     joy_move_invert_x = 0;
-    bool     joy_move_invert_y = 0;
+    bool     joy_move_invert_x = false;
+    bool     joy_move_invert_y = false;
     btScalar joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 

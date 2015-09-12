@@ -12,8 +12,32 @@ using gui::Console;
 
 namespace audio
 {
+// Crossfades for different track types are also different,
+// since background ones tend to blend in smoothly, while one-shot
+// tracks should be switched fastly.
+constexpr float CrossfadeOneshot = GAME_LOGIC_REFRESH_INTERVAL / 0.3f;
+constexpr float CrossfadeBackground = GAME_LOGIC_REFRESH_INTERVAL / 1.0f;
+constexpr float CrossfadeChat = GAME_LOGIC_REFRESH_INTERVAL / 0.1f;
+
+// Damp coefficient specifies target volume level on a tracks
+// that are being silenced (background music). The larger it is, the bigger
+// silencing is.
+constexpr float StreamDampLevel = 0.6f;
+
+// Damp fade speed is used when dampable track is either being
+// damped or un-damped.
+constexpr float StreamDampSpeed = GAME_LOGIC_REFRESH_INTERVAL / 1.0f;
+
+// CDAUDIO.WAD step size defines CDAUDIO's header stride, on which each track
+// info is placed. Also CDAUDIO count specifies static amount of tracks existing
+// in CDAUDIO.WAD file. Name length specifies maximum string size for trackname.
+constexpr int WADStride     = 268;
+constexpr int WADNameLength = 260;
+constexpr int WADCount      = 130;
+
 
 bool StreamTrack::damp_active = false;
+
 
 StreamTrack::StreamTrack()
 {
