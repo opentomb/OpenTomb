@@ -44,7 +44,7 @@ private:
     //! Current log position plus one
     //! @note It's off-by-one, because line 0 is a virtual empty line.
     size_t m_historyPos = 0;
-    size_t m_historySize;
+    size_t m_historySize = 1000;
     //! The most recent entry is at the front.
     std::vector<std::string> m_historyLines;
 

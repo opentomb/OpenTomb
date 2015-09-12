@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 #include "util/vmath.h"

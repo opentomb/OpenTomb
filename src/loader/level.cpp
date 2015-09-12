@@ -20,7 +20,6 @@
  */
 
 #include <SDL2/SDL.h>
-#include <GL/glew.h>
 #include <algorithm>
 
 #include "level.h"
@@ -199,7 +198,6 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
             break;
         default:
             throw std::runtime_error("Invalid game version");
-            break;
     }
 
     result->m_sfxPath = sfxPath;

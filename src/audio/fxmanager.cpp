@@ -137,7 +137,7 @@ void FxManager::updateListener(world::Camera *cam)
     }
 }
 
-void FxManager::updateListener(world::Entity* /*ent*/)
+void FxManager::updateListener(world::Character* /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "character_controller.h"
 #include "entity.h"
 #include "hair.h"
 
@@ -105,7 +104,7 @@ struct HeightInfo
     bool                                        ceiling_hit = false;
     const btCollisionObject                    *ceiling_obj = nullptr;
 
-    btScalar                                    transition_level;
+    btScalar                                    transition_level = 0;
     bool                                        water = false;
     QuicksandPosition                           quicksand = QuicksandPosition::None;
 };

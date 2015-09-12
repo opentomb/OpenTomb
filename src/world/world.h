@@ -10,8 +10,7 @@
 #include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
-#include "object.h"
-#include "world/core/boundingbox.h"
+#include "world/core/sprite.h"
 #include "world/skeletalmodel.h"
 
 class btCollisionShape;
@@ -31,7 +30,6 @@ struct StaticMesh;
 namespace core
 {
 struct SpriteBuffer;
-struct Sprite;
 struct Light;
 } // namespace core
 namespace animation

@@ -2,7 +2,6 @@
 
 #include <map>
 #include <memory>
-#include <vector>
 
 #include "world/entity.h"
 #include "world/world.h"

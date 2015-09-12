@@ -1,32 +1,20 @@
 #include "world.h"
 
-#include <algorithm>
-#include <chrono>
-#include <cstdio>
-#include <cstdlib>
-
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "audio/audio.h"
 #include "camera.h"
 #include "engine/engine.h"
 #include "entity.h"
 #include "gui/console.h"
 #include "inventory.h"
-#include "render/render.h"
 #include "resource.h"
 #include "script/script.h"
-#include "engine/system.h"
 #include "util/vmath.h"
 #include "world/character.h"
-#include "world/core/basemesh.h"
-#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/core/sprite.h"
-#include "world/portal.h"
 #include "world/room.h"
-#include "world/staticmesh.h"
 
 namespace engine
 {

@@ -1,16 +1,14 @@
 #pragma once
 
 #include <array>
-#include <memory>
 
 #include <AL/al.h>
-#include <AL/alext.h>
 #include <AL/efx-presets.h>
 
 namespace world
 {
 class Camera;
-class Entity;
+struct Character;
 }
 
 namespace audio
@@ -58,7 +56,7 @@ struct FxManager
 
     bool loadReverb(int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
     void updateListener(world::Camera *cam);
-    void updateListener(world::Entity* ent);
+    void updateListener(world::Character* ent);
 
     explicit FxManager() = default;
     explicit FxManager(bool); // Bool param only used for distinguishing from default constructor

@@ -1,6 +1,5 @@
 #include "shader_manager.h"
 
-#include <cassert>
 #include <sstream>
 
 namespace render

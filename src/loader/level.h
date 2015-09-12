@@ -4,10 +4,7 @@
 #include "game.h"
 
 #include <memory>
-#include <string>
 #include <vector>
-
-#include <SDL2/SDL_rwops.h>
 
 namespace loader
 {

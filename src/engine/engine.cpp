@@ -2,12 +2,6 @@
 
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -28,10 +22,6 @@
 
 #include "LuaState.h"
 
-#include "audio/alext.h"
-#include "audio/audio.h"
-#include "audio/settings.h"
-#include "character_controller.h"
 #include "common.h"
 #include "controls.h"
 #include "engine/game.h"
@@ -41,15 +31,12 @@
 #include "gui/gui.h"
 #include "inventory.h"
 #include "loader/level.h"
-#include "render/gl_util.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
-#include "util/vmath.h"
 #include "world/camera.h"
 #include "world/character.h"
 #include "world/core/polygon.h"
-#include "world/core/sprite.h"
 #include "world/entity.h"
 #include "world/resource.h"
 #include "world/room.h"
@@ -781,7 +768,7 @@ void initBullet()
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
     bt_engine_dynamicsWorld->setInternalTickCallback(internalTickCallback);
-    bt_engine_dynamicsWorld->setInternalTickCallback(internalPreTickCallback, 0, true);
+    bt_engine_dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
@@ -1355,7 +1342,7 @@ int engine_lua_printf(const char *fmt, ...)
 
 btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 {
-    const EngineContainer* c1 = (const EngineContainer*)rayResult.m_collisionObject->getUserPointer();
+    const EngineContainer* c1 = static_cast<const EngineContainer*>(rayResult.m_collisionObject->getUserPointer());
 
     if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
     {
@@ -1388,7 +1375,7 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
 {
     const world::Room* r0 = m_container ? m_container->room : nullptr;
-    const EngineContainer* c1 = (const EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
+    const EngineContainer* c1 = static_cast<const EngineContainer*>(convexResult.m_hitCollisionObject->getUserPointer());
     const world::Room* r1 = c1 ? c1->room : nullptr;
 
     if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))

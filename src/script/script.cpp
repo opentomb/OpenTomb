@@ -1,18 +1,14 @@
 #include "script.h"
 
 #include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
 
 #include <GL/glew.h>
 
 #include "LuaState.h"
 
-#include "audio/audio.h"
 #include "audio/settings.h"
 #include "character_controller.h"
-#include "engine/anim_state_control.h"
 #include "engine/controls.h"
 #include "engine/engine.h"
 #include "engine/game.h"

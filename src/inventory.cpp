@@ -1,5 +1,6 @@
 #include "inventory.h"
 
+#include "audio/audio.h"
 #include "gui/gui.h"
 #include "script/script.h"
 #include "strings.h"

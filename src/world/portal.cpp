@@ -2,8 +2,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 
 #include <LinearMath/btVector3.h>
 

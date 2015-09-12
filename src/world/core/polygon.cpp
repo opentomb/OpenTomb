@@ -1,8 +1,6 @@
 #include "polygon.h"
 
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 
 #include "util/vmath.h"
 

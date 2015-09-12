@@ -12,10 +12,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
 #include <cstring>
-
-#include "loader/level.h"
 
 #include "bsp_tree_2d.h"
 #include "world/core/polygon.h"

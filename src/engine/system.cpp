@@ -1,8 +1,5 @@
 #include "system.h"
 
-#include <cstdio>
-#include <cstdlib>
-
 #include "gui/console.h"
 #include "engine.h"
 #include "gui/gui.h"

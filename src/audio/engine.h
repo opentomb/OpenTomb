@@ -1,6 +1,8 @@
 #pragma once
 
-#include "audio.h"
+#include <cassert>
+#include <memory>
+
 #include "effect.h"
 #include "emitter.h"
 #include "fxmanager.h"
@@ -8,9 +10,11 @@
 #include "source.h"
 #include "streamtrack.h"
 
+#include <AL/alc.h>
+
 namespace world
 {
-class World;
+struct World;
 } // namespace world
 
 namespace loader

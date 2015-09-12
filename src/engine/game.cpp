@@ -9,6 +9,7 @@
 #include "LuaState.h"
 
 #include "anim_state_control.h"
+#include "audio/audio.h"
 #include "character_controller.h"
 #include "controls.h"
 #include "engine.h"
@@ -22,7 +23,6 @@
 #include "util/vmath.h"
 #include "world/camera.h"
 #include "world/character.h"
-#include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/room.h"
 #include "world/world.h"
@@ -702,8 +702,6 @@ inline btScalar Game_Tick(btScalar *game_logic_time)
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time = 0.0;
-
-    const bool is_character = (engine_world.character != nullptr);
 
     // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
     if(time > GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS))

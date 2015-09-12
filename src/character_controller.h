@@ -1,14 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <list>
-#include <vector>
-
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletCollision/CollisionShapes/btBoxShape.h>
-#include <BulletCollision/CollisionShapes/btSphereShape.h>
-#include <LinearMath/btVector3.h>
-
 /*------ Lara's model-------
              .=.
             | 14|

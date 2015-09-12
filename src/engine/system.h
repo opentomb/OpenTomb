@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include <LinearMath/btScalar.h>
-
 #include <GL/glew.h>
 
 namespace engine

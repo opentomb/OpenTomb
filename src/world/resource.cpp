@@ -4,28 +4,21 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <numeric>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include <SDL2/SDL.h>
-
 #include "LuaState.h"
 #include "loader/level.h"
 
-#include "audio/audio.h"
 #include "bordered_texture_atlas.h"
-#include "character_controller.h"
 #include "engine/anim_state_control.h"
 #include "engine/engine.h"
-#include "engine/game.h"
 #include "engine/gameflow.h"
 #include "engine/system.h"
 #include "gui/console.h"
 #include "gui/gui.h"
-#include "render/gl_util.h"
 #include "render/render.h"
 #include "render/shader_description.h"
 #include "script/script.h"

@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include "audio/audio.h"
 #include "character_controller.h"
 #include "engine/engine.h"
 #include "loader/game.h"

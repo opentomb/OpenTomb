@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <LinearMath/btVector3.h>
-
 #include <GL/glew.h>
 
 namespace render

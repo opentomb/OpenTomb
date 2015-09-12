@@ -1,13 +1,14 @@
 #include "engine.h"
 
 #include "alext.h"
+#include "audio.h"
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
 #include "loader/level.h"
 #include "settings.h"
 #include "script/script.h"
-#include "world/character.h"
+#include "strings.h"
 
 #include <chrono>
 
@@ -445,7 +446,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
     }
     else
     {
-        do_fade_in = endStreams(stream_type);   // End all streams of this type with fadeout.
+        endStreams(stream_type);   // End all streams of this type with fadeout.
 
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.

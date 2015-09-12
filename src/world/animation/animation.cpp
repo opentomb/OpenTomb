@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 #include "engine/game.h"
-#include "render/vertex_array.h"
 #include "world/entity.h"
 #include "world/skeletalmodel.h"
 
@@ -27,8 +26,8 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
 
     int stack = 0;
     std::vector<SSBoneTag*> parents(bone_tags.size());
-    parents[0] = NULL;
-    bone_tags[0].parent = NULL;                                             // root
+    parents[0] = nullptr;
+    bone_tags[0].parent = nullptr;                                             // root
     for(uint16_t i = 0; i<bone_tags.size(); i++)
     {
         bone_tags[i].index = i;

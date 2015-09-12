@@ -1,6 +1,5 @@
 #include "helpers.h"
 
-#include <LinearMath/btScalar.h>
 #include <fstream>
 
 #include <SDL2/SDL_endian.h>

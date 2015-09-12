@@ -7,8 +7,6 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
 #include "animation/animation.h"
 #include "core/orientedboundingbox.h"
@@ -200,7 +198,7 @@ public:
     bool isPlayer()
     {
         // FIXME: isPlayer()
-        return (Entity*)engine::engine_world.character.get() == this;
+        return reinterpret_cast<Entity*>(engine::engine_world.character.get()) == this;
     }
 
     void updateInterpolation(btScalar time);

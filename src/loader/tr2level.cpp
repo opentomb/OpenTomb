@@ -22,6 +22,7 @@
 #include "tr2level.h"
 
 #include <iostream>
+#include <string>
 
 using namespace loader;
 

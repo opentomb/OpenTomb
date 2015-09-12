@@ -1,10 +1,5 @@
 #include "bsp_tree.h"
 
-#include <cassert>
-#include <cstdint>
-
-#include <LinearMath/btScalar.h>
-
 #include "render.h"
 #include "util/vmath.h"
 #include "world/core/frustum.h"

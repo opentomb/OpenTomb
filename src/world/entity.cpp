@@ -1,7 +1,6 @@
 #include "entity.h"
 
 #include <cmath>
-#include <cstdlib>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -393,7 +392,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
             break;
         }
         int iter = static_cast<int>((4.0 * move_len / btag->mesh_base->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
-        move /= (btScalar)iter;
+        move /= static_cast<btScalar>(iter);
 
         for(int j = 0; j <= iter; j++)
         {

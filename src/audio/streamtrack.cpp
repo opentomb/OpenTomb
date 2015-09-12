@@ -1,11 +1,13 @@
 #include "streamtrack.h"
 
 #include "alext.h"
+#include "audio.h"
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "fxmanager.h"
 #include "gui/console.h"
 #include "settings.h"
+#include "strings.h"
 #include "util/helpers.h"
 
 using gui::Console;
@@ -149,8 +151,7 @@ bool StreamTrack::loadTrack(const char *path)
         return false;
     }
 
-    Console::instance().notify(SYSNOTE_TRACK_OPENED, path,
-                                   m_sfInfo.channels, m_sfInfo.samplerate);
+    Console::instance().notify(SYSNOTE_TRACK_OPENED, path, m_sfInfo.channels, m_sfInfo.samplerate);
 
 #ifdef AUDIO_OPENAL_FLOAT
     if(m_sfInfo.channels == 1)
@@ -158,10 +159,10 @@ bool StreamTrack::loadTrack(const char *path)
     else
         m_format = AL_FORMAT_STEREO_FLOAT32;
 #else
-    if(sf_info.channels == 1)
-        format = AL_FORMAT_MONO16;
+    if(m_sfInfo.channels == 1)
+        m_format = AL_FORMAT_MONO16;
     else
-        format = AL_FORMAT_STEREO16;
+        m_format = AL_FORMAT_STEREO16;
 #endif
 
     m_rate = m_sfInfo.samplerate;
@@ -218,10 +219,10 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
             else
                 m_format = AL_FORMAT_STEREO_FLOAT32;
 #else
-            if(sf_info.channels == 1)
-                format = AL_FORMAT_MONO16;
+            if(m_sfInfo.channels == 1)
+                m_format = AL_FORMAT_MONO16;
             else
-                format = AL_FORMAT_STEREO16;
+                m_format = AL_FORMAT_STEREO16;
 #endif
 
             m_rate = m_sfInfo.samplerate;
@@ -477,7 +478,7 @@ bool StreamTrack::stream(ALuint buffer)
 #ifdef AUDIO_OPENAL_FLOAT
         const sf_count_t samplesRead = sf_read_float(m_sndFile, pcm.data() + size, samplesToRead);
 #else
-        const sf_count_t samplesRead = sf_read_short(snd_file, pcm.data() + size, samplesToRead);
+        const sf_count_t samplesRead = sf_read_short(m_sndFile, pcm.data() + size, samplesToRead);
 #endif
 
         if(samplesRead > 0)

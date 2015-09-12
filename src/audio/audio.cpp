@@ -1,24 +1,12 @@
 #include "audio.h"
 
 #include <chrono>
-#include <cstdio>
 
 #include <SDL2/SDL.h>
 
 #include "engine/engine.h"
 #include "engine/system.h"
-#include "fxmanager.h"
 #include "gui/console.h"
-#include "render/render.h"
-#include "script/script.h"
-#include "settings.h"
-#include "strings.h"
-#include "util/helpers.h"
-#include "util/vmath.h"
-#include "world/camera.h"
-#include "world/character.h"
-#include "world/entity.h"
-#include "world/room.h"
 
 using gui::Console;
 

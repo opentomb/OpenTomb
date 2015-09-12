@@ -6,7 +6,6 @@
 
 #include "engine/engine.h"
 #include "frustum.h"
-#include "render/vertex_array.h"
 #include "util/vmath.h"
 #include "world/core/polygon.h"
 #include "world/entity.h"

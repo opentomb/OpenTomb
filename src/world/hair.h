@@ -5,7 +5,6 @@
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btVector3.h>
 
-#include "character_controller.h"
 #include "engine/engine.h"
 #include "world/entity.h"
 #include "world/world.h"

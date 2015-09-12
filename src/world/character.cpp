@@ -1,5 +1,6 @@
 #include "character.h"
 
+#include "character_controller.h"
 #include "engine/anim_state_control.h"
 #include "gui/gui.h"
 #include "inventory.h"
@@ -2245,8 +2246,6 @@ void Character::updateHair()
 
 void Character::frame(btScalar time)
 {
-    animation::AnimUpdate animStepResult = animation::AnimUpdate::None;
-
     if(!m_enabled && !isPlayer())
     {
         return;
@@ -2279,7 +2278,7 @@ void Character::frame(btScalar time)
             checkCollisionCallbacks();
     }
 
-    animStepResult = stepAnimation(time);
+    animation::AnimUpdate animStepResult = stepAnimation(time);
     if(m_bf.animations.onFrame != nullptr)
     {
         m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);

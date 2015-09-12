@@ -10,7 +10,6 @@
 #include "common.h"
 #include "engine/engine.h"
 #include "engine/game.h"
-#include "engine/system.h"
 #include "gui/console.h"
 #include "inventory.h"
 #include "script/script.h"

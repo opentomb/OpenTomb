@@ -1,11 +1,7 @@
 #pragma once
 
-#include <cstdio>
-
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
-
-#include <SDL2/SDL.h>
 
 #include "LuaState.h"
 

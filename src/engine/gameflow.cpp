@@ -1,8 +1,5 @@
 #include "gameflow.h"
 
-#include <cstdio>
-#include <cstdlib>
-
 #include "engine/engine.h"
 #include "gui/gui.h"
 #include "script/script.h"
