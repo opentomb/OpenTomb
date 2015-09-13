@@ -146,18 +146,18 @@ public:
      * @param coordiantes The coordinates of the specified texture.
      * you don't think you'll need them all.
      */
-    void getCoordinates(unsigned long texture,
+    void getCoordinates(polygon_p poly,
+                        unsigned long texture,
                         bool reverse,
-                        polygon_p poly,
                         signed shift = 0,
                         bool split = false) const;
     
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
-    void getSpriteCoordinates(unsigned long sprite_texture,
-                              uint32_t &outPage,
-                              GLfloat *coordinates) const;
+    void getSpriteCoordinates(GLfloat *coordinates,
+                              unsigned long sprite_texture,
+                              uint32_t &outPage) const;
     
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a

@@ -19,23 +19,18 @@
 #define LOG_ANIM_DISPATCHES 0
 
 class  VT_Level;
-struct RedBlackNode_s;
 struct base_mesh_s;
-struct world_s;
 struct room_s;
 struct room_sector_s;
 struct sector_tween_s;
 
 
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
-uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
-
 bool     Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
 void     Res_Poly_SortInMesh(struct base_mesh_s *mesh, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas);
 
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.
-
 bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index, class VT_Level *tr);
 int  Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, struct room_sector_s *sector, class VT_Level *tr);
 int  Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *s2, struct portal_s *p);

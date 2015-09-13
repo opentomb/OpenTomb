@@ -397,9 +397,9 @@ void bordered_texture_atlas::getWhiteTextureCoordinates(polygon_p poly)
     }
 }
 
-void bordered_texture_atlas::getCoordinates(unsigned long texture,
+void bordered_texture_atlas::getCoordinates(polygon_p poly,
+                                         unsigned long texture,
                                          bool reverse,
-                                         polygon_p poly,
                                          signed shift,
                                          bool split)  const
 {
@@ -454,7 +454,7 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
     }
 }
 
-void bordered_texture_atlas::getSpriteCoordinates(unsigned long sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
+void bordered_texture_atlas::getSpriteCoordinates(GLfloat *coordinates, unsigned long sprite_texture, uint32_t &outPage) const
 {
     assert(sprite_texture < number_sprite_textures);
 

@@ -68,6 +68,7 @@ uint32_t TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 
 // Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
 int      Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector);
@@ -84,6 +85,14 @@ int      Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector
  *  |   3|___________|2            |  0 |___________| 3
  *  |-------------------> OX       |--------------------> OXY
  */
+
+
+uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
+{
+    v1 = (v1 > v2)?(v1):(v2);
+    v2 = (v3 > v4)?(v3):(v4);
+    return (v1 > v2)?(v1):(v2);
+}
 
 
 void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
@@ -549,12 +558,6 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
     }    ///END for(uint16_t h = 0; h < room->sectors_y-1; h++)
 }
 
-uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
-{
-    v1 = (v1 > v2)?(v1):(v2);
-    v2 = (v3 > v4)?(v3):(v4);
-    return (v1 > v2)?(v1):(v2);
-}
 
 bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index, class VT_Level *tr)
 {
@@ -1578,7 +1581,7 @@ void Res_Poly_SortInMesh(struct base_mesh_s *mesh, struct anim_seq_s *anim_seque
         {
             anim_seq_p seq = anim_sequences + (p->anim_id - 1);
             // set tex coordinates to the first frame for correct texture transform in renderer
-            atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
+            atlas->getCoordinates(p, seq->frame_list[0], false, 0, seq->uvrotate);
         }
 
         if(p->transparency >= 2)
@@ -1724,7 +1727,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         TR_AccumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
         TR_SetupTexturedFace(tr_mesh, face3->vertices, p);
 
-        atlas->getCoordinates(face3->texture & tex_mask, 0, p);
+        atlas->getCoordinates(p, face3->texture & tex_mask, 0);
     }
 
     /*
@@ -1767,7 +1770,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         TR_AccumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
         TR_SetupTexturedFace(tr_mesh, face4->vertices, p);
 
-        atlas->getCoordinates(face4->texture & tex_mask, 0, p);
+        atlas->getCoordinates(p, face4->texture & tex_mask, 0);
     }
 
     /*
@@ -1893,7 +1896,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         p->double_side = tr_room->triangles[i].texture & 0x8000;
         p->transparency = tr->object_textures[masked_texture].transparency_flags;
         Res_SetAnimTexture(p, masked_texture, anim_sequences, anim_sequences_count);
-        atlas->getCoordinates(masked_texture, 0, p);
+        atlas->getCoordinates(p, masked_texture, 0);
     }
 
     /*
@@ -1907,7 +1910,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
         p->transparency = tr->object_textures[masked_texture].transparency_flags;
         Res_SetAnimTexture(p, masked_texture, anim_sequences, anim_sequences_count);
-        atlas->getCoordinates(masked_texture, 0, p);
+        atlas->getCoordinates(p, masked_texture, 0);
     }
 
     /*

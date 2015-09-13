@@ -307,13 +307,14 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
     }
 }
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3])
+vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3], int32_t *founded_index)
 {
     vertex_p mv = mesh->vertices;
     for(uint32_t i = 0; i < mesh->vertex_count; i++, mv++)
     {
         if(vec3_dist_sq(v, mv->position) < 4.0)
         {
+            *founded_index = i;
             return mv;
         }
     }
@@ -328,23 +329,22 @@ void FillSkinnedMeshMap(skeletal_model_p model)
     vertex_p v, rv;
     base_mesh_p mesh_base, mesh_skin;
     mesh_tree_tag_p tree_tag, prev_tree_tag;
+    int32_t founded_index = -1;
 
     tree_tag = model->mesh_tree;
     for(uint16_t i = 0; i < model->mesh_count; i++, tree_tag++)
     {
+        if(!tree_tag->mesh_skin)
+        {
+            continue;
+        }
         mesh_base = tree_tag->mesh_base;
         mesh_skin = tree_tag->mesh_skin;
-
-        if(!mesh_skin)
-        {
-            return;
-        }
-
         ch = mesh_skin->skin_map = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t));
         v = mesh_skin->vertices;
         for(uint32_t k = 0; k < mesh_skin->vertex_count; k++, v++, ch++)
         {
-            rv = FindVertexInMesh(mesh_base, v->position);
+            rv = FindVertexInMesh(mesh_base, v->position, &founded_index);
             if(rv != NULL)
             {
                 *ch = 1;
@@ -355,17 +355,13 @@ void FillSkinnedMeshMap(skeletal_model_p model)
             {
                 *ch = 0;
                 vec3_add(tv, v->position, tree_tag->offset);
-                prev_tree_tag = model->mesh_tree;
-                for(uint16_t mesh_index = 0; mesh_index < model->mesh_count; mesh_index++, prev_tree_tag++)
+                prev_tree_tag = model->mesh_tree + tree_tag->parent;
+                rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv, &founded_index);
+                if(rv != NULL)
                 {
-                    rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv);
-                    if(rv != NULL)
-                    {
-                        *ch = 2;
-                        vec3_sub(v->position, rv->position, tree_tag->offset);
-                        vec3_copy(v->normal, rv->normal);
-                        break;
-                    }
+                    *ch = 2;
+                    vec3_sub(v->position, rv->position, tree_tag->offset);
+                    vec3_copy(v->normal, rv->normal);
                 }
             }
         }

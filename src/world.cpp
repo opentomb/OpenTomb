@@ -130,7 +130,7 @@ void World_Prepare(world_p world)
 }
 
 
-void World_Open(struct world_s *world, class VT_Level *tr)
+void World_Open(world_p world, class VT_Level *tr)
 {
     World_Clear(world);
 
@@ -222,6 +222,12 @@ void World_Open(struct world_s *world, class VT_Level *tr)
     // Fix initial room states
     World_FixRooms(world);
     Gui_DrawLoadScreen(970);
+
+    if(world->tex_atlas)
+    {
+        delete world->tex_atlas;
+        world->tex_atlas = NULL;
+    }
 }
 
 
@@ -312,7 +318,6 @@ void World_Clear(world_p world)
     }
 
     /*mesh empty*/
-
     if(world->meshes_count)
     {
         for(uint32_t i=0;i<world->meshes_count;i++)
@@ -607,7 +612,7 @@ struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id)
 }
 
 
-struct skeletal_model_s* World_GetSkybox(struct world_s *world)
+struct skeletal_model_s* World_GetSkybox(world_p world)
 {
     switch(world->version)
     {
@@ -834,6 +839,7 @@ void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *de
 /*
  * Load level functions
  */
+/// that scripts will be enabled after world -> singleton
 /*int lua_SetSectorFloorConfig(lua_State * lua)
 {
     int id, sx, sy, top;
@@ -1352,7 +1358,7 @@ void World_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                 seq->frame_rate = 0.05 * 16;
             }
             seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
+            engine_world.tex_atlas->getCoordinates(&p0, seq->frame_list[0], false);
             for(uint16_t j = 0; j < seq->frames_count; j++)
             {
                 if(seq->uvrotate)
@@ -1360,7 +1366,7 @@ void World_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                     seq->frames[j].uvrotate_max = 0.5 * world->tex_atlas->getTextureHeight(seq->frame_list[j]);
                     seq->frames[j].current_uvrotate = 0.0;
                 }
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
+                engine_world.tex_atlas->getCoordinates(&p, seq->frame_list[j], false);
                 seq->frames[j].tex_ind = p.tex_index;
                 if(j > 0)   // j == 0 -> d == 0;
                 {
@@ -1438,7 +1444,7 @@ void World_GenSprites(struct world_s *world, class VT_Level *tr)
         s->top = tr_st->top_side;
         s->bottom = tr_st->bottom_side;
 
-        world->tex_atlas->getSpriteCoordinates(i, s->texture, s->tex_coord);
+        world->tex_atlas->getSpriteCoordinates(s->tex_coord, i, s->texture);
     }
 
     for(uint32_t i = 0; i < tr->sprite_sequences_count; i++)

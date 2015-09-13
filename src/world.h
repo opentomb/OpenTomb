@@ -99,18 +99,14 @@ typedef struct world_s
     uint8_t                    *stream_track_map;       // Stream track flag map.
     
     /// private:
-    lua_State                  *objects_flags_conf;
-    lua_State                  *ent_ID_override;
-    lua_State                  *level_script;
+    struct lua_State           *objects_flags_conf;
+    struct lua_State           *ent_ID_override;
+    struct lua_State           *level_script;
 }world_t, *world_p;
 
 
-///@TODO: delete that prototype here:
-void World_SetStaticMeshProperties(world_p world, struct static_mesh_s *r_static);
-
-
 void World_Prepare(world_p world);
-void World_Open(struct world_s *world, class VT_Level *tr);
+void World_Open(world_p world, class VT_Level *tr);
 void World_Clear(world_p world);
 uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
@@ -122,7 +118,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s *World_GetSpriteByID(world_p world, uint32_t ID);
 struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id);        // binary search the model by ID
-struct skeletal_model_s* World_GetSkybox(struct world_s *world);
+struct skeletal_model_s* World_GetSkybox(world_p world);
 
 struct room_s *World_FindRoomByPos(world_p world, float pos[3]);
 struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct room_s *old_room);
