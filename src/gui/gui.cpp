@@ -36,9 +36,8 @@ extern SDL_Window  *sdl_window;
 namespace gui
 {
 
-TextLine*     gui_base_lines = nullptr;
-TextLine      gui_temp_lines[MaxTempLines];
-uint16_t      temp_lines_used = 0;
+std::list<const TextLine*> gui_base_lines;
+std::list<TextLine> gui_temp_lines;
 
 FontManager       *fontManager = nullptr;
 
@@ -52,7 +51,6 @@ void init()
     initBars();
     initFaders();
     initNotifier();
-    initTempLines();
 
     glGenBuffers(1, &crosshairBuffer);
     fillCrosshairBuffer();
@@ -66,32 +64,9 @@ void initFontManager()
     fontManager = new FontManager();
 }
 
-void initTempLines()
-{
-    for(int i = 0; i < MaxTempLines; i++)
-    {
-        gui_temp_lines[i].text.clear();
-        gui_temp_lines[i].show = false;
-
-        gui_temp_lines[i].next = nullptr;
-        gui_temp_lines[i].prev = nullptr;
-
-        gui_temp_lines[i].font_id = FontType::Secondary;
-        gui_temp_lines[i].style_id = FontStyle::Generic;
-    }
-}
-
 void destroy()
 {
-    for(int i = 0; i < MaxTempLines; i++)
-    {
-        gui_temp_lines[i].show = false;
-        gui_temp_lines[i].text.clear();
-    }
-
     destroyFaders();
-
-    temp_lines_used = MaxTempLines;
 
     /*if(main_inventory_menu)
     {
@@ -112,40 +87,14 @@ void destroy()
     }
 }
 
-void addLine(TextLine *line)
+void addLine(const TextLine* line)
 {
-    if(gui_base_lines == nullptr)
-    {
-        gui_base_lines = line;
-        line->next = nullptr;
-        line->prev = nullptr;
-        return;
-    }
-
-    line->prev = nullptr;
-    line->next = gui_base_lines;
-    gui_base_lines->prev = line;
-    gui_base_lines = line;
+    gui_base_lines.push_back(line);
 }
 
-// line must be in the list, otherway You crash engine!
-void deleteLine(TextLine *line)
+void deleteLine(const TextLine *line)
 {
-    if(line == gui_base_lines)
-    {
-        gui_base_lines = line->next;
-        if(gui_base_lines != nullptr)
-        {
-            gui_base_lines->prev = nullptr;
-        }
-        return;
-    }
-
-    line->prev->next = line->next;
-    if(line->next)
-    {
-        line->next->prev = line->prev;
-    }
+    gui_base_lines.erase(std::find(gui_base_lines.begin(), gui_base_lines.end(), line));
 }
 
 void moveLine(TextLine *line)
@@ -160,38 +109,32 @@ void moveLine(TextLine *line)
  */
 TextLine *drawText(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(fontManager && (temp_lines_used < MaxTempLines - 1))
-    {
-        va_list argptr;
-        TextLine* l = gui_temp_lines + temp_lines_used;
+    if(!fontManager)
+        return nullptr;
 
-        l->font_id = FontType::Secondary;
-        l->style_id = FontStyle::Generic;
+    va_list argptr;
+    gui_temp_lines.emplace_back();
+    TextLine* l = &gui_temp_lines.back();
 
-        va_start(argptr, fmt);
-        char tmpStr[LineDefaultSize];
-        vsnprintf(tmpStr, LineDefaultSize, fmt, argptr);
-        l->text = tmpStr;
-        va_end(argptr);
+    l->font_id = FontType::Secondary;
+    l->style_id = FontStyle::Generic;
 
-        l->next = nullptr;
-        l->prev = nullptr;
+    va_start(argptr, fmt);
+    char tmpStr[LineDefaultSize];
+    vsnprintf(tmpStr, LineDefaultSize, fmt, argptr);
+    l->text = tmpStr;
+    va_end(argptr);
 
-        temp_lines_used++;
+    l->X = x;
+    l->Y = y;
+    l->Xanchor = HorizontalAnchor::Left;
+    l->Yanchor = VerticalAnchor::Bottom;
 
-        l->X = x;
-        l->Y = y;
-        l->Xanchor = HorizontalAnchor::Left;
-        l->Yanchor = VerticalAnchor::Bottom;
+    l->absXoffset = l->X * engine::screen_info.scale_factor;
+    l->absYoffset = l->Y * engine::screen_info.scale_factor;
 
-        l->absXoffset = l->X * engine::screen_info.scale_factor;
-        l->absYoffset = l->Y * engine::screen_info.scale_factor;
-
-        l->show = true;
-        return l;
-    }
-
-    return nullptr;
+    l->show = true;
+    return l;
 }
 
 bool update()
@@ -224,21 +167,16 @@ bool update()
 
 void resize()
 {
-    TextLine* l = gui_base_lines;
-
-    while(l)
+    for(const TextLine* l : gui_base_lines)
     {
         l->absXoffset = l->X * engine::screen_info.scale_factor;
         l->absYoffset = l->Y * engine::screen_info.scale_factor;
-
-        l = l->next;
     }
 
-    l = gui_temp_lines;
-    for(uint16_t i = 0; i < temp_lines_used; i++, l++)
+    for(const TextLine& l : gui_temp_lines)
     {
-        l->absXoffset = l->X * engine::screen_info.scale_factor;
-        l->absYoffset = l->Y * engine::screen_info.scale_factor;
+        l.absXoffset = l.X * engine::screen_info.scale_factor;
+        l.absYoffset = l.Y * engine::screen_info.scale_factor;
     }
 
     resizeProgressBars();
@@ -272,7 +210,7 @@ void render()
     glEnable(GL_DEPTH_TEST);
 }
 
-void renderStringLine(TextLine *l)
+void renderStringLine(const TextLine *l)
 {
     GLfloat real_x = 0.0, real_y = 0.0;
 
@@ -281,8 +219,8 @@ void renderStringLine(TextLine *l)
         return;
     }
 
-    FontTexture* gl_font = fontManager->GetFont(static_cast<FontType>(l->font_id));
-    FontStyleData* style = fontManager->GetFontStyle(static_cast<FontStyle>(l->style_id));
+    FontTexture* gl_font = fontManager->GetFont(l->font_id);
+    FontStyleData* style = fontManager->GetFontStyle(l->style_id);
 
     if((gl_font == nullptr) || (style == nullptr) || (!l->show) || (style->hidden))
     {
@@ -341,7 +279,7 @@ void renderStringLine(TextLine *l)
         gl_font->gl_font_color[0] = 0.0f;
         gl_font->gl_font_color[1] = 0.0f;
         gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = static_cast<float>(style->color[3]) * FontShadowTransparency;// Derive alpha from base color.
+        gl_font->gl_font_color[3] = style->color[3] * FontShadowTransparency;// Derive alpha from base color.
         glf_render_str(gl_font,
                        (real_x + FontShadowHorizontalShift),
                        (real_y + FontShadowVerticalShift),
@@ -354,39 +292,34 @@ void renderStringLine(TextLine *l)
 
 void renderStrings()
 {
-    if(fontManager != nullptr)
+    if(fontManager == nullptr)
+        return;
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
+    glUseProgram(shader->program);
+    GLfloat screenSize[2] = {
+        static_cast<GLfloat>(engine::screen_info.w),
+        static_cast<GLfloat>(engine::screen_info.h)
+    };
+    glUniform2fv(shader->screenSize, 1, screenSize);
+    glUniform1i(shader->sampler, 0);
+
+    for(const TextLine* l : gui_base_lines)
     {
-        TextLine* l = gui_base_lines;
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
-        glUseProgram(shader->program);
-        GLfloat screenSize[2] = {
-            static_cast<GLfloat>(engine::screen_info.w),
-            static_cast<GLfloat>(engine::screen_info.h)
-        };
-        glUniform2fv(shader->screenSize, 1, screenSize);
-        glUniform1i(shader->sampler, 0);
-
-        while(l)
-        {
-            renderStringLine(l);
-            l = l->next;
-        }
-
-        l = gui_temp_lines;
-        for(uint16_t i = 0; i < temp_lines_used; i++, l++)
-        {
-            if(l->show)
-            {
-                renderStringLine(l);
-                l->show = false;
-            }
-        }
-
-        temp_lines_used = 0;
+        renderStringLine(l);
     }
+
+    for(const TextLine& l : gui_temp_lines)
+    {
+        if(l.show)
+        {
+            renderStringLine(&l);
+        }
+    }
+
+    gui_temp_lines.clear();
 }
 
 /**

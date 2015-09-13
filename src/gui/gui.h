@@ -77,46 +77,14 @@ struct TextLine
 
     GLfloat                     X;
     HorizontalAnchor            Xanchor;
-    GLfloat                     absXoffset;
+    mutable GLfloat             absXoffset;
     GLfloat                     Y;
     VerticalAnchor              Yanchor;
-    GLfloat                     absYoffset;
+    mutable GLfloat             absYoffset;
 
-    GLfloat                     rect[4];    //x0, yo, x1, y1
+    mutable GLfloat             rect[4];    //x0, yo, x1, y1
 
     bool                        show;
-
-    TextLine     *next;
-    TextLine     *prev;
-};
-
-struct Rect
-{
-    GLfloat                     rect[4];
-    GLfloat                     absRect[4];
-
-    GLfloat                     X;  GLfloat absX;
-    GLfloat                     Y;  GLfloat absY;
-    int8_t                      align;
-
-    GLuint                      texture;
-    GLfloat                     color[16]; // TL, TR, BL, BR x 4
-    uint32_t                    blending_mode;
-
-    int16_t                     line_count;
-    TextLine            *lines;
-
-    int8_t                      state;      // Opening / static / closing
-    int8_t                      show;
-    GLfloat                     current_alpha;
-
-    int8_t                      focused;
-    int8_t                      focus_index;
-
-    int8_t                      selectable;
-    int8_t                      selection_index;
-
-    char                       *lua_click_function;
 };
 
 // Fader is a simple full-screen rectangle, which always sits above the scene,
@@ -149,13 +117,12 @@ void initFontManager();
 void init();
 void destroy();
 
-void initTempLines();
 void fillCrosshairBuffer();
 
-void addLine(TextLine* line);
-void deleteLine(TextLine* line);
+void addLine(const TextLine *line);
+void deleteLine(const TextLine* line);
 void moveLine(TextLine* line);
-void renderStringLine(TextLine* l);
+void renderStringLine(const TextLine* l);
 void renderStrings();
 
 extern FontManager       *fontManager;
