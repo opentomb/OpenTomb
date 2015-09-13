@@ -24,12 +24,6 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 
-#ifdef BT_USE_DOUBLE_PRECISION
-    #define GL_BT_SCALAR GL_DOUBLE
-#else
-    #define GL_BT_SCALAR GL_FLOAT
-#endif
-
 #define STENCIL_FRUSTUM 1
 
 struct portal_s;
@@ -153,7 +147,7 @@ class CRender
         void DrawBSPBackToFront(struct bsp_node_s *root);
 
         void DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals);
-        void DrawSkinMesh(struct base_mesh_s *mesh, float transform[16]);
+        void DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, float transform[16]);
         void DrawSkyBox(const float matrix[16]);
 
         void DrawSkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);

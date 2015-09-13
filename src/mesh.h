@@ -39,7 +39,7 @@ typedef struct base_mesh_s
     float                   bb_min[3];                                          // AABB bounding volume
     float                   bb_max[3];                                          // AABB bounding volume
     float                   R;                                                  // radius of the bounding sphere
-    int8_t                 *skin_map;                                           // vertices map for skin mesh
+    uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;
     GLuint                  vbo_index_array;
@@ -121,10 +121,12 @@ typedef struct light_s
  */
 void BaseMesh_Clear(base_mesh_p mesh);
 void BaseMesh_FindBB(base_mesh_p mesh);
-void Mesh_GenVBO(struct base_mesh_s *mesh);
+void BaseMesh_GenVBO(struct base_mesh_s *mesh);
 
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
-void Mesh_GenFaces(base_mesh_p mesh);
+uint32_t BaseMesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
+uint32_t BaseMesh_FindVertexIndex(base_mesh_p mesh, float v[3]);
+void     BaseMesh_GenFaces(base_mesh_p mesh);
+
 
 #ifdef	__cplusplus
 }

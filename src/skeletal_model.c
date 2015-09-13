@@ -70,7 +70,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
 }
 
 
-void TreeTag_GenParentsIndexes(skeletal_model_p model)
+void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
     int stack = 0;
     uint16_t parents[model->mesh_count];
@@ -99,72 +99,6 @@ void TreeTag_GenParentsIndexes(skeletal_model_p model)
     }
 }
 
-
-void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
-{
-    vec3_set_zero(bf->bb_min);
-    vec3_set_zero(bf->bb_max);
-    vec3_set_zero(bf->centre);
-    vec3_set_zero(bf->pos);
-    bf->animations.anim_flags = 0x0000;
-    bf->animations.frame_time = 0.0;
-    bf->animations.period = 1.0 / 30.0;
-    bf->animations.next_state = 0;
-    bf->animations.lerp = 0.0;
-    bf->animations.current_animation = 0;
-    bf->animations.current_frame = 0;
-    bf->animations.next_animation = 0;
-    bf->animations.next_frame = 0;
-
-    bf->animations.next = NULL;
-    bf->animations.onFrame = NULL;
-    bf->animations.model = model;
-    bf->bone_tag_count = model->mesh_count;
-    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-
-    bf->bone_tags[0].parent = NULL;                                             // root
-    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
-    {
-        bf->bone_tags[i].index = i;
-        bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
-        bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
-        bf->bone_tags[i].mesh_slot = NULL;
-        bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
-
-        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
-        vec4_set_zero(bf->bone_tags[i].qrotate);
-        Mat4_E_macro(bf->bone_tags[i].transform);
-        Mat4_E_macro(bf->bone_tags[i].full_transform);
-
-        if(i > 0)
-        {
-            bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
-        }
-    }
-}
-
-
-void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
-{
-    if(dst->bone_tag_count < src->bone_tag_count)
-    {
-        dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
-    }
-    dst->bone_tag_count = src->bone_tag_count;
-    vec3_copy(dst->pos, src->pos);
-    vec3_copy(dst->centre, src->centre);
-    vec3_copy(dst->bb_max, src->bb_max);
-    vec3_copy(dst->bb_min, src->bb_min);
-
-    dst->command = src->command;
-    vec3_copy(dst->move, src->move);
-
-    for(uint16_t i = 0; i < dst->bone_tag_count; i++)
-    {
-        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
-        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
-    }
-}
 
 void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 {
@@ -261,7 +195,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 }
 
 
-void SkeletonModel_FillTransparency(skeletal_model_p model)
+void SkeletalModel_FillTransparency(skeletal_model_p model)
 {
     model->transparency_flags = MESH_FULL_OPAQUE;
     for(uint16_t i = 0; i < model->mesh_count; i++)
@@ -275,61 +209,14 @@ void SkeletonModel_FillTransparency(skeletal_model_p model)
 }
 
 
-mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
+void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model)
 {
-    mesh_tree_tag_p ret = (mesh_tree_tag_p)malloc(tags_count * sizeof(mesh_tree_tag_t));
-
-    for(int i = 0; i < tags_count; i++)
-    {
-        ret[i].mesh_base = src[i].mesh_base;
-        ret[i].mesh_skin = src[i].mesh_skin;
-        ret[i].flag = src[i].flag;
-        vec3_copy(ret[i].offset, src[i].offset);
-        ret[i].replace_anim = src[i].replace_anim;
-        ret[i].replace_mesh = src[i].replace_mesh;
-    }
-    return ret;
-}
-
-void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
-{
-    for(int i = 0; i < tags_count; i++)
-    {
-        dst[i].mesh_base = src[i].mesh_base;
-    }
-}
-
-void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
-{
-    for(int i = 0; i < tags_count; i++)
-    {
-        dst[i].mesh_skin = src[i].mesh_base;
-    }
-}
-
-vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3], int32_t *founded_index)
-{
-    vertex_p mv = mesh->vertices;
-    for(uint32_t i = 0; i < mesh->vertex_count; i++, mv++)
-    {
-        if(vec3_dist_sq(v, mv->position) < 4.0)
-        {
-            *founded_index = i;
-            return mv;
-        }
-    }
-
-    return NULL;
-}
-
-void FillSkinnedMeshMap(skeletal_model_p model)
-{
-    int8_t *ch;
+    uint32_t *ch;
+    uint32_t founded_index = 0xFFFFFFFF;
     float tv[3];
-    vertex_p v, rv;
+    vertex_p v, founded_vertex;
     base_mesh_p mesh_base, mesh_skin;
     mesh_tree_tag_p tree_tag, prev_tree_tag;
-    int32_t founded_index = -1;
 
     tree_tag = model->mesh_tree;
     for(uint16_t i = 0; i < model->mesh_count; i++, tree_tag++)
@@ -340,31 +227,117 @@ void FillSkinnedMeshMap(skeletal_model_p model)
         }
         mesh_base = tree_tag->mesh_base;
         mesh_skin = tree_tag->mesh_skin;
-        ch = mesh_skin->skin_map = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t));
+        ch = mesh_skin->skin_map = (uint32_t*)malloc(mesh_skin->vertex_count * sizeof(uint32_t));
         v = mesh_skin->vertices;
         for(uint32_t k = 0; k < mesh_skin->vertex_count; k++, v++, ch++)
         {
-            rv = FindVertexInMesh(mesh_base, v->position, &founded_index);
-            if(rv != NULL)
+            *ch = 0xFFFFFFFF;
+            founded_index = BaseMesh_FindVertexIndex(mesh_base, v->position);
+            if(founded_index != 0xFFFFFFFF)
             {
-                *ch = 1;
-                vec3_copy(v->position, rv->position);
-                vec3_copy(v->normal, rv->normal);
+                founded_vertex = mesh_base->vertices + founded_index;
+                vec3_copy(v->position, founded_vertex->position);
+                vec3_copy(v->normal, founded_vertex->normal);
             }
             else
             {
-                *ch = 0;
                 vec3_add(tv, v->position, tree_tag->offset);
                 prev_tree_tag = model->mesh_tree + tree_tag->parent;
-                rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv, &founded_index);
-                if(rv != NULL)
+                founded_index = BaseMesh_FindVertexIndex(prev_tree_tag->mesh_base, tv);
+                if(founded_index != 0xFFFFFFFF)
                 {
-                    *ch = 2;
-                    vec3_sub(v->position, rv->position, tree_tag->offset);
-                    vec3_copy(v->normal, rv->normal);
+                    founded_vertex = prev_tree_tag->mesh_base->vertices + founded_index;
+                    *ch = founded_index;
+                    vec3_sub(v->position, founded_vertex->position, tree_tag->offset);
+                    vec3_copy(v->normal, founded_vertex->normal);
                 }
             }
         }
+    }
+}
+
+
+void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
+{
+    for(int i = 0; i < tags_count; i++)
+    {
+        dst[i].mesh_base = src[i].mesh_base;
+    }
+}
+
+
+void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
+{
+    for(int i = 1; i < tags_count; i++)
+    {
+        dst[i].mesh_skin = src[i].mesh_base;
+    }
+}
+
+
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
+{
+    vec3_set_zero(bf->bb_min);
+    vec3_set_zero(bf->bb_max);
+    vec3_set_zero(bf->centre);
+    vec3_set_zero(bf->pos);
+    bf->animations.anim_flags = 0x0000;
+    bf->animations.frame_time = 0.0;
+    bf->animations.period = 1.0 / 30.0;
+    bf->animations.next_state = 0;
+    bf->animations.lerp = 0.0;
+    bf->animations.current_animation = 0;
+    bf->animations.current_frame = 0;
+    bf->animations.next_animation = 0;
+    bf->animations.next_frame = 0;
+
+    bf->animations.next = NULL;
+    bf->animations.onFrame = NULL;
+    bf->animations.model = model;
+    bf->bone_tag_count = model->mesh_count;
+    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+
+    bf->bone_tags[0].parent = NULL;                                             // root
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    {
+        bf->bone_tags[i].index = i;
+        bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
+        bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+        bf->bone_tags[i].mesh_slot = NULL;
+        bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
+
+        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
+        vec4_set_zero(bf->bone_tags[i].qrotate);
+        Mat4_E_macro(bf->bone_tags[i].transform);
+        Mat4_E_macro(bf->bone_tags[i].full_transform);
+
+        if(i > 0)
+        {
+            bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
+        }
+    }
+}
+
+
+void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
+{
+    if(dst->bone_tag_count < src->bone_tag_count)
+    {
+        dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
+    }
+    dst->bone_tag_count = src->bone_tag_count;
+    vec3_copy(dst->pos, src->pos);
+    vec3_copy(dst->centre, src->centre);
+    vec3_copy(dst->bb_max, src->bb_max);
+    vec3_copy(dst->bb_min, src->bb_min);
+
+    dst->command = src->command;
+    vec3_copy(dst->move, src->move);
+
+    for(uint16_t i = 0; i < dst->bone_tag_count; i++)
+    {
+        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
+        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
     }
 }
 

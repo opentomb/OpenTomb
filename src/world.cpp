@@ -1970,7 +1970,7 @@ void World_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(smodel, i, world->meshes, world->anim_commands, tr);
-        SkeletonModel_FillTransparency(smodel);
+        SkeletalModel_FillTransparency(smodel);
     }
 }
 
@@ -2109,7 +2109,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                         {
                             // In TR1, Lara has unified head mesh for all her alternate skins.
                             // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1);
+                            SkeletalModel_CopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1);
                         }
                     }
                     break;
@@ -2118,11 +2118,11 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                     LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletalModel_CopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                         tmp = World_GetModelByID(world, 11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
-                            SkeletonCopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                            SkeletalModel_CopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                         }
                     }
                     break;
@@ -2133,14 +2133,14 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                     LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletalModel_CopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                     }
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
+                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                 // skin skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletalModel_CopyMeshesToSkinned(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                     }
-                    FillSkinnedMeshMap(&world->skeletal_models[0]);
+                    SkeletalModel_FillSkinnedMeshMap(&world->skeletal_models[0]);
                     break;
             };
 
@@ -2529,7 +2529,7 @@ void World_GenVBOs(struct world_s *world)
     {
         if(world->meshes[i].vertex_count)
         {
-            Mesh_GenVBO(world->meshes + i);
+            BaseMesh_GenVBO(world->meshes + i);
         }
     }
 
@@ -2537,7 +2537,7 @@ void World_GenVBOs(struct world_s *world)
     {
         if((world->rooms[i].content->mesh) && (world->rooms[i].content->mesh->vertex_count))
         {
-            Mesh_GenVBO(world->rooms[i].content->mesh);
+            BaseMesh_GenVBO(world->rooms[i].content->mesh);
         }
     }
 }

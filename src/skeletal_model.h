@@ -17,17 +17,9 @@ extern "C" {
 #define ANIM_LOOP_LAST_FRAME            (1)
 #define ANIM_LOCK                       (2)
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <stdint.h>
-#include "core/vmath.h"
 
-struct polygon_s;
 struct base_mesh_s;
-struct engine_container_s;
-struct obb_s;
-struct vertex_s;
-struct entity_s;
 
 /*
  * Animated skeletal model. Taken from openraider.
@@ -199,17 +191,16 @@ typedef struct skeletal_model_s
 
 
 void SkeletalModel_Clear(skeletal_model_p model);
-void TreeTag_GenParentsIndexes(skeletal_model_p model);
-void SkeletonModel_FillTransparency(skeletal_model_p model);
+void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
 void SkeletalModel_InterpolateFrames(skeletal_model_p models);
-void FillSkinnedMeshMap(skeletal_model_p model);
+
+void SkeletalModel_FillTransparency(skeletal_model_p model);
+void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model);
+void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
+void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
-
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
-mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count);
-void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
-void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 
 void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
 void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);

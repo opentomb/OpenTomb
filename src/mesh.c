@@ -8,8 +8,6 @@
 #include "mesh.h"
 
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, float v[3]);
-
 void BaseMesh_Clear(base_mesh_p mesh)
 {
     if(mesh->vbo_vertex_array)
@@ -145,7 +143,7 @@ void BaseMesh_FindBB(base_mesh_p mesh)
 }
 
 
-void Mesh_GenVBO(struct base_mesh_s *mesh)
+void BaseMesh_GenVBO(struct base_mesh_s *mesh)
 {
     mesh->vbo_vertex_array = 0;
     mesh->vbo_index_array = 0;
@@ -257,7 +255,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
 /*
  * FACES FUNCTIONS
  */
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
+uint32_t BaseMesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
     vertex_p v = mesh->vertices;
     uint32_t ind = 0;
@@ -287,7 +285,22 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 }
 
 
-void Mesh_GenFaces(base_mesh_p mesh)
+uint32_t BaseMesh_FindVertexIndex(base_mesh_p mesh, float v[3])
+{
+    vertex_p mv = mesh->vertices;
+    for(uint32_t i = 0; i < mesh->vertex_count; i++, mv++)
+    {
+        if(vec3_dist_sq(v, mv->position) < 4.0)
+        {
+            return i;
+        }
+    }
+
+    return 0xFFFFFFFF;
+}
+
+
+void BaseMesh_GenFaces(base_mesh_p mesh)
 {
     // Note: This code relies on NULL being an all-zero value, which is true on
     // any reasonable system these days.
@@ -317,12 +330,12 @@ void Mesh_GenFaces(base_mesh_p mesh)
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = Mesh_AddVertex(mesh, p->vertices);
-            uint32_t previousElement = Mesh_AddVertex(mesh, p->vertices + 1);
+            uint32_t startElement = BaseMesh_AddVertex(mesh, p->vertices);
+            uint32_t previousElement = BaseMesh_AddVertex(mesh, p->vertices + 1);
 
             for(uint16_t j = 2; j < p->vertex_count; j++)
             {
-                uint32_t thisElement = Mesh_AddVertex(mesh, p->vertices + j);
+                uint32_t thisElement = BaseMesh_AddVertex(mesh, p->vertices + j);
 
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;

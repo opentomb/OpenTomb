@@ -395,7 +395,7 @@ void CRender::DrawList()
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->m_vbo);
         qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         qglBufferDataARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->GetActiveVertexCount() * sizeof(vertex_t), dynamicBSP->GetVertexArray(), GL_DYNAMIC_DRAW);
-        qglVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
         qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
         qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
         qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
@@ -657,7 +657,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         qglTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
         // Setup static data
         qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        qglVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
+        qglVertexPointer(3, GL_FLOAT, sizeof(GLfloat [10]), 0);
         qglColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
         qglNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
 
@@ -678,7 +678,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
     if(mesh->vbo_vertex_array)
     {
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-        qglVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
         qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
         qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
         qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
@@ -690,8 +690,8 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         // Standard normals are always float. Overridden normals (from skinning)
         // are float.
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        qglVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
-        qglNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
+        qglVertexPointer(3, GL_FLOAT, 0, overrideVertices);
+        qglNormalPointer(GL_FLOAT, 0, overrideNormals);
     }
 
     const uint32_t *elementsbase = mesh->elements;
@@ -716,13 +716,13 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
     }
 }
 
-void CRender::DrawSkinMesh(struct base_mesh_s *mesh, float transform[16])
+void CRender::DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, float transform[16])
 {
     uint32_t i;
     vertex_p v;
-    float *p_vertex, *src_v, *dst_v, t;
+    float *p_vertex, *src_v, *dst_v;
     GLfloat *p_normale, *src_n, *dst_n;
-    int8_t *ch = mesh->skin_map;
+    uint32_t *ch = mesh->skin_map;
     size_t buf_size = mesh->vertex_count * 3 * sizeof(GLfloat);
 
     p_vertex  = (GLfloat*)Sys_GetTempMem(buf_size);
@@ -730,46 +730,22 @@ void CRender::DrawSkinMesh(struct base_mesh_s *mesh, float transform[16])
     dst_v = p_vertex;
     dst_n = p_normale;
     v = mesh->vertices;
-    for(i=0; i<mesh->vertex_count; i++,v++)
+    for(i = 0; i < mesh->vertex_count; i++, v++, ch++)
     {
         src_v = v->position;
         src_n = v->normal;
-        switch(*ch)
+        if(*ch == 0xFFFFFFFF)
         {
-        case 0:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-
-            vec3_add(dst_v, dst_v, src_v);
-            dst_v[0] /= 2.0;
-            dst_v[1] /= 2.0;
-            dst_v[2] /= 2.0;
-            vec3_add(dst_n, dst_n, src_n);
-            vec3_norm(dst_n, t);
-            break;
-
-        case 2:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-            //vec3_copy(dst_n, src_n);
-            break;
-
-        case 1:
             vec3_copy(dst_v, src_v);
             vec3_copy(dst_n, src_n);
-            break;
         }
-        ch++;
+        else
+        {
+            Mat4_vec3_mul_inv(dst_v, transform, parent_mesh->vertices[*ch].position);
+            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
+            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
+            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
+        }
         dst_v += 3;
         dst_n += 3;
     }
@@ -831,9 +807,9 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
         {
             this->DrawMesh(btag->mesh_slot, NULL, NULL);
         }
-        if(btag->mesh_skin)
+        if(btag->mesh_skin && btag->parent)
         {
-            this->DrawSkinMesh(btag->mesh_skin, btag->transform);
+            this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->transform);
         }
     }
 }

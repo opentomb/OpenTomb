@@ -1832,7 +1832,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         free(mesh->vertices);
         mesh->vertices = NULL;
     }
-    Mesh_GenFaces(mesh);
+    BaseMesh_GenFaces(mesh);
 }
 
 void TR_SetupRoomPolygonVertices(polygon_p p, base_mesh_p mesh, const tr5_room_t *tr_room, const uint16_t *vertices)
@@ -1945,7 +1945,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         free(mesh->vertices);
         mesh->vertices = NULL;
     }
-    Mesh_GenFaces(mesh);
+    BaseMesh_GenFaces(mesh);
 }
 
 
@@ -1997,7 +1997,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         }
     }
 
-    TreeTag_GenParentsIndexes(model);
+    SkeletalModel_GenParentsIndexes(model);
 
     for(uint16_t i = 1; i + 1 < model->mesh_count; i++)
     {
