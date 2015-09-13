@@ -66,6 +66,12 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     }
 }
 
+void SSBoneFrame::itemFrame(btScalar time)
+{
+    animations.stepAnimation(time);
+    Entity::updateCurrentBoneFrame(this);
+}
+
 void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
 {
     dst->bone_tags.resize(src->bone_tags.size());

@@ -7,6 +7,7 @@
 
 #include "bsp_tree.h"
 #include "engine/engine.h"
+#include "engine/system.h"
 #include "gui/console.h"
 #include "shader_description.h"
 #include "shader_manager.h"
@@ -1439,6 +1440,105 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
             }
         };
     }
+}
+
+/**
+ * The base function, that draws one item by them id. Items may be animated.
+ * This time for correct time calculation that function must be called every frame.
+ * @param item_id - the base item id;
+ * @param size - the item size on the screen;
+ * @param str - item description - shows near / under item model;
+ */
+void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix, const util::matrix4& guiProjectionMatrix)
+{
+    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
+    glUseProgram(shader->program);
+    glUniform1i(shader->number_of_lights, 0);
+    glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+
+    if(size != 0.0)
+    {
+        auto bb = bf->boundingBox.getDiameter();
+        if(bb[0] >= bb[1])
+        {
+            size /= ((bb[0] >= bb[2]) ? (bb[0]) : (bb[2]));
+        }
+        else
+        {
+            size /= ((bb[1] >= bb[2]) ? (bb[1]) : (bb[2]));
+        }
+        size *= 0.8f;
+
+        btTransform scaledMatrix;
+        scaledMatrix.setIdentity();
+        if(size < 1.0)          // only reduce items size...
+        {
+            util::Mat4_Scale(scaledMatrix, size, size, size);
+        }
+        util::matrix4 scaledMvMatrix(mvMatrix * scaledMatrix);
+        util::matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+
+        // Render with scaled model view projection matrix
+        // Use original modelview matrix, as that is used for normals whose size shouldn't change.
+        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+    }
+    else
+    {
+        util::matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
+        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+    }
+}
+
+namespace
+{
+GLuint crosshairBuffer = 0;
+VertexArray *crosshairArray = nullptr;
+}
+
+void fillCrosshairBuffer()
+{
+    if(!crosshairBuffer)
+        glGenBuffers(1, &crosshairBuffer);
+
+    struct BufferEntry
+    {
+        GLfloat position[2];
+        uint8_t color[4];
+    };
+
+    BufferEntry crosshair_buf[4] = {
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f + 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+
+    VertexArrayAttribute attribs[] = {
+        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, position)),
+        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, color))
+    };
+    crosshairArray = new VertexArray(0, 2, attribs);
+}
+
+void drawCrosshair()
+{
+    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
+
+    glUseProgram(shader->program);
+    GLfloat factor[2] = {
+        2.0f / engine::screen_info.w,
+        2.0f / engine::screen_info.h
+    };
+    glUniform2fv(shader->factor, 1, factor);
+    GLfloat offset[2] = { -1.f, -1.f };
+    glUniform2fv(shader->offset, 1, offset);
+
+    crosshairArray->bind();
+
+    glDrawArrays(GL_LINES, 0, 4);
 }
 
 } // namespace render

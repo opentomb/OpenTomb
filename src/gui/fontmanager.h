@@ -94,11 +94,11 @@ public:
 
     uint32_t getFontCount()
     {
-        return static_cast<uint32_t>(fonts.size());
+        return static_cast<uint32_t>(m_fonts.size());
     }
     uint32_t getFontStyleCount()
     {
-        return static_cast<uint32_t>(styles.size());
+        return static_cast<uint32_t>(m_styles.size());
     }
 
     void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
@@ -107,14 +107,14 @@ public:
 private:
     Font*            GetFontAddress(const FontType index);
 
-    GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
-    bool             mFadeDirection;
+    GLfloat          m_fadeValue = 0; // Multiplier used with font RGB values to animate fade.
+    bool             m_fadeDirection = true;
 
-    std::list<FontStyleData> styles;
+    std::list<FontStyleData> m_styles;
 
-    std::list<Font>  fonts;
+    std::list<Font>  m_fonts;
 
-    FT_Library       font_library;  // GLF font library unit.
+    FT_Library       m_fontLibrary = nullptr;  // GLF font library unit.
 };
 
 } //namespace gui

@@ -250,6 +250,12 @@ struct SSBoneFrame
     bool hasSkin;                                       // whether any skinned meshes need rendering
 
     void fromModel(SkeletalModel* model);
+
+    /**
+     * That function updates item animation and rebuilds skeletal matrices;
+     * @param bf - extended bone frame of the item;
+     */
+    void itemFrame(btScalar time);
 };
 
 void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);

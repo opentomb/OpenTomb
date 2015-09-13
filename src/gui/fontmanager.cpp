@@ -8,25 +8,21 @@ namespace gui
 
 FontManager::FontManager()
 {
-    this->font_library = nullptr;
-    FT_Init_FreeType(&this->font_library);
-
-    this->mFadeValue = 0.0;
-    this->mFadeDirection = true;
+    FT_Init_FreeType(&m_fontLibrary);
 }
 
 FontManager::~FontManager()
 {
     // must be freed before releasing the library
-    styles.clear();
-    fonts.clear();
-    FT_Done_FreeType(this->font_library);
-    this->font_library = nullptr;
+    m_styles.clear();
+    m_fonts.clear();
+    FT_Done_FreeType(m_fontLibrary);
+    m_fontLibrary = nullptr;
 }
 
 FontTexture *FontManager::GetFont(const FontType index)
 {
-    for(const Font& current_font : this->fonts)
+    for(const Font& current_font : m_fonts)
     {
         if(current_font.index == index)
         {
@@ -39,7 +35,7 @@ FontTexture *FontManager::GetFont(const FontType index)
 
 Font *FontManager::GetFontAddress(const FontType index)
 {
-    for(Font& current_font : this->fonts)
+    for(Font& current_font : m_fonts)
     {
         if(current_font.index == index)
         {
@@ -52,7 +48,7 @@ Font *FontManager::GetFontAddress(const FontType index)
 
 FontStyleData *FontManager::GetFontStyle(const FontStyle index)
 {
-    for(FontStyleData& current_style : this->styles)
+    for(FontStyleData& current_style : m_styles)
     {
         if(current_style.index == index)
         {
@@ -74,18 +70,18 @@ bool FontManager::AddFont(const FontType index, const uint32_t size, const char*
 
     if(desired_font == nullptr)
     {
-        if(this->fonts.size() >= MaxFonts)
+        if(m_fonts.size() >= MaxFonts)
         {
             return false;
         }
 
-        this->fonts.emplace_front();
-        desired_font = &this->fonts.front();
+        m_fonts.emplace_front();
+        desired_font = &m_fonts.front();
         desired_font->size = static_cast<uint16_t>(size);
         desired_font->index = index;
     }
 
-    desired_font->gl_font = glf_create_font(this->font_library, path, size);
+    desired_font->gl_font = glf_create_font(m_fontLibrary, path, size);
 
     return true;
 }
@@ -101,13 +97,13 @@ bool FontManager::AddFontStyle(const FontStyle index,
 
     if(desired_style == nullptr)
     {
-        if(this->styles.size() >= static_cast<int>(FontStyle::Sentinel))
+        if(m_styles.size() >= static_cast<int>(FontStyle::Sentinel))
         {
             return false;
         }
 
-        this->styles.emplace_front();
-        desired_style = &this->styles.front();
+        m_styles.emplace_front();
+        desired_style = &m_styles.front();
         desired_style->index = index;
     }
 
@@ -134,16 +130,16 @@ bool FontManager::AddFontStyle(const FontStyle index,
 
 bool FontManager::RemoveFont(const FontType index)
 {
-    if(this->fonts.empty())
+    if(m_fonts.empty())
     {
         return false;
     }
 
-    for(auto it = this->fonts.begin(); it != this->fonts.end(); ++it)
+    for(auto it = m_fonts.begin(); it != m_fonts.end(); ++it)
     {
         if(it->index == index)
         {
-            this->fonts.erase(it);
+            m_fonts.erase(it);
             return true;
         }
     }
@@ -153,16 +149,16 @@ bool FontManager::RemoveFont(const FontType index)
 
 bool FontManager::RemoveFontStyle(const FontStyle index)
 {
-    if(this->styles.empty())
+    if(m_styles.empty())
     {
         return false;
     }
 
-    for(auto it = this->styles.begin(); it != this->styles.end(); ++it)
+    for(auto it = m_styles.begin(); it != m_styles.end(); ++it)
     {
         if(it->index == index)
         {
-            this->styles.erase(it);
+            m_styles.erase(it);
             return true;
         }
     }
@@ -172,34 +168,34 @@ bool FontManager::RemoveFontStyle(const FontStyle index)
 
 void FontManager::Update()
 {
-    if(this->mFadeDirection)
+    if(m_fadeDirection)
     {
-        this->mFadeValue += engine::engine_frame_time * FontFadeSpeed;
+        m_fadeValue += engine::engine_frame_time * FontFadeSpeed;
 
-        if(this->mFadeValue >= 1.0)
+        if(m_fadeValue >= 1.0)
         {
-            this->mFadeValue = 1.0;
-            this->mFadeDirection = false;
+            m_fadeValue = 1.0;
+            m_fadeDirection = false;
         }
     }
     else
     {
-        this->mFadeValue -= engine::engine_frame_time * FontFadeSpeed;
+        m_fadeValue -= engine::engine_frame_time * FontFadeSpeed;
 
-        if(this->mFadeValue <= FontFadeMin)
+        if(m_fadeValue <= FontFadeMin)
         {
-            this->mFadeValue = FontFadeMin;
-            this->mFadeDirection = true;
+            m_fadeValue = FontFadeMin;
+            m_fadeDirection = true;
         }
     }
 
-    for(FontStyleData& current_style : this->styles)
+    for(FontStyleData& current_style : m_styles)
     {
         if(current_style.fading)
         {
-            current_style.real_color[0] = current_style.color[0] * this->mFadeValue;
-            current_style.real_color[1] = current_style.color[1] * this->mFadeValue;
-            current_style.real_color[2] = current_style.color[2] * this->mFadeValue;
+            current_style.real_color[0] = current_style.color[0] * m_fadeValue;
+            current_style.real_color[1] = current_style.color[1] * m_fadeValue;
+            current_style.real_color[2] = current_style.color[2] * m_fadeValue;
         }
         else
         {
@@ -210,7 +206,7 @@ void FontManager::Update()
 
 void FontManager::Resize()
 {
-    for(Font& current_font : this->fonts)
+    for(Font& current_font : m_fonts)
     {
         glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * engine::screen_info.scale_factor));
     }

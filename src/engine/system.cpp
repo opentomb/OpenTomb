@@ -3,6 +3,7 @@
 #include "gui/console.h"
 #include "engine.h"
 #include "gui/gui.h"
+#include "gui/textline.h"
 
 namespace engine
 {

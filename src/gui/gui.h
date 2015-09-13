@@ -7,8 +7,6 @@
 
 #include <list>
 
-struct InventoryNode;
-
 namespace gui
 {
 
@@ -58,35 +56,6 @@ enum class HorizontalAnchor
     Center
 };
 
-// Horizontal alignment is simple side alignment, like in original TRs.
-// It means that X coordinate will be either used for left, right or
-// center orientation.
-enum class LineAlignment
-{
-    Left,
-    Right,
-    Center
-};
-
-struct TextLine
-{
-    std::string                 text;
-
-    FontType                    font_id;
-    FontStyle                   style_id;
-
-    GLfloat                     X;
-    HorizontalAnchor            Xanchor;
-    mutable GLfloat             absXoffset;
-    GLfloat                     Y;
-    VerticalAnchor              Yanchor;
-    mutable GLfloat             absYoffset;
-
-    mutable GLfloat             rect[4];    //x0, yo, x1, y1
-
-    bool                        show;
-};
-
 // Fader is a simple full-screen rectangle, which always sits above the scene,
 // and, when activated, either shows or hides gradually - hence, creating illusion
 // of fade in and fade out effects.
@@ -117,20 +86,7 @@ void initFontManager();
 void init();
 void destroy();
 
-void fillCrosshairBuffer();
-
-void addLine(const TextLine *line);
-void deleteLine(const TextLine* line);
-void moveLine(TextLine* line);
-void renderStringLine(const TextLine* l);
-void renderStrings();
-
-extern FontManager       *fontManager;
-
-/**
- * Draws text using a FontType::Secondary.
- */
-TextLine* drawText(GLfloat x, GLfloat y, const char *fmt, ...);
+extern std::unique_ptr<FontManager> fontManager;
 
 /**
  * Helper method to setup OpenGL state for console drawing.
@@ -179,7 +135,6 @@ void drawRect(const GLfloat &x, const GLfloat &y,
 /**
  * General GUI drawing routines.
  */
-void drawCrosshair();
 void drawLoadScreen(int value);
 void drawInventory();
 
@@ -189,8 +144,6 @@ void drawInventory();
 bool update();
 void resize();  // Called every resize event.
 
-
-void itemFrame(world::animation::SSBoneFrame *bf, btScalar time);
-void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix);
+extern util::matrix4 guiProjectionMatrix;
 
 } // namespace gui

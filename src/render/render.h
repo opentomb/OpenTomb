@@ -292,4 +292,8 @@ private:
 
 extern Render renderer;
 
+void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix, const util::matrix4 &guiProjectionMatrix);
+void fillCrosshairBuffer();
+void drawCrosshair();
+
 } // namespace render
