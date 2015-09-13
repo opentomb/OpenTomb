@@ -15,6 +15,7 @@
 #include "engine.h"
 #include "gameflow.h"
 #include "gui/console.h"
+#include "gui/fader.h"
 #include "gui/gui.h"
 #include "inventory.h"
 #include "render/render.h"

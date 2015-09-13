@@ -25,7 +25,7 @@ FxManager::~FxManager()
     alDeleteEffects(TR_AUDIO_FX_LASTINDEX, al_effect.data());
 }
 
-bool FxManager::loadReverb(int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
+bool FxManager::loadReverb(TR_AUDIO_FX effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
     assert(effect_index>=0 && effect_index < al_effect.size());
     ALuint effect = al_effect[effect_index];

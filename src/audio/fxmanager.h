@@ -54,7 +54,7 @@ struct FxManager
 
     ~FxManager();
 
-    bool loadReverb(int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
+    bool loadReverb(TR_AUDIO_FX effect_index, const EFXEAXREVERBPROPERTIES *reverb);
     void updateListener(world::Camera *cam);
     void updateListener(world::Character* ent);
 

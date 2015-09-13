@@ -15,6 +15,7 @@
 #include "engine/gameflow.h"
 #include "engine/system.h"
 #include "gui/console.h"
+#include "gui/fader.h"
 #include "inventory.h"
 #include "render/render.h"
 #include "strings.h"
@@ -2378,10 +2379,10 @@ void lua_CamShake(float power, float time, lua::Value id)
 void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
 {
     gui::fadeSetup(gui::FaderType::Effect,
-                  alpha,
-                  R, G, B,
-                  loader::BlendingMode::Multiply,
-                  fadeinSpeed, fadeoutSpeed);
+                   alpha,
+                   R, G, B,
+                   loader::BlendingMode::Multiply,
+                   fadeinSpeed, fadeoutSpeed);
 }
 
 void lua_FlashStart()

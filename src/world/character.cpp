@@ -3,6 +3,7 @@
 #include "character_controller.h"
 #include "engine/anim_state_control.h"
 #include "gui/gui.h"
+#include "gui/itemnotifier.h"
 #include "inventory.h"
 #include "resource.h"
 #include "script/script.h"

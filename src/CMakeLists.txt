@@ -19,6 +19,10 @@ list(APPEND PRJ_SRC
 
     gui/gui.cpp
     gui/console.cpp
+    gui/fontmanager.cpp
+    gui/fader.cpp
+    gui/itemnotifier.cpp
+    gui/progressbar.cpp
 
     script/script.cpp
 
@@ -80,6 +84,10 @@ list(APPEND PRJ_HDR
 
     gui/gui.h
     gui/console.h
+    gui/fontmanager.h
+    gui/fader.h
+    gui/itemnotifier.h
+    gui/progressbar.h
 
     script/script.h
 
