@@ -4,6 +4,9 @@
 #include <vector>
 
 #include <GL/glew.h>
+#include <LinearMath/btScalar.h>
+
+#include "render/vertex_array.h"
 
 namespace render
 {

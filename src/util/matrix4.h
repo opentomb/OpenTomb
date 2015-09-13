@@ -583,7 +583,7 @@ struct matrix4
     }
     explicit matrix4(const float *matrix4)
     {
-        memcpy(c_ptr(), matrix4, sizeof(float[16]));
+        std::copy(matrix4+0, matrix4+16, c_ptr());
     }
     matrix4(const matrix4 &) = default;
     matrix4& operator=(const matrix4&) = default;
