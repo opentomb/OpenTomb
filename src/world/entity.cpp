@@ -978,20 +978,18 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 int Entity::getAnimDispatchCase(uint32_t id)
 {
     animation::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    animation::StateChange* stc = anim->stateChanges.data();
 
-    for(uint16_t i = 0; i < anim->stateChanges.size(); i++, stc++)
+    for(const animation::StateChange& stc : anim->stateChanges)
     {
-        if(stc->id == id)
+        if(stc.id != id)
+            continue;
+
+        for(size_t j = 0; j < stc.anim_dispatch.size(); j++)
         {
-            animation::AnimDispatch* disp = stc->anim_dispatch.data();
-            for(uint16_t j = 0; j < stc->anim_dispatch.size(); j++, disp++)
+            const animation::AnimDispatch& disp = stc.anim_dispatch[j];
+            if((disp.frame_high >= disp.frame_low) && (m_bf.animations.current_frame >= disp.frame_low) && (m_bf.animations.current_frame <= disp.frame_high))
             {
-                if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
-                    //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
-                {
-                    return static_cast<int>(j);
-                }
+                return static_cast<int>(j);
             }
         }
     }
