@@ -8,7 +8,6 @@
 
 #include "LuaState.h"
 
-#include "anim_state_control.h"
 #include "audio/audio.h"
 #include "character_controller.h"
 #include "controls.h"

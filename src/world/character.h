@@ -2,6 +2,7 @@
 
 #include "entity.h"
 #include "hair.h"
+#include "statecontroller.h"
 
 #include <list>
 
@@ -228,8 +229,6 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
-    void state_func();
-
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
@@ -339,6 +338,9 @@ struct Character : public Entity
     int   setParamMaximum(int parameter, float max_value);
 
     int   setWeaponModel(int weapon_model, int armed);
+
+private:
+    StateController m_stateController;
 };
 
 } // namespace world

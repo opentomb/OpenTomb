@@ -1,7 +1,6 @@
 #include "character.h"
 
 #include "character_controller.h"
-#include "engine/anim_state_control.h"
 #include "gui/gui.h"
 #include "gui/itemnotifier.h"
 #include "inventory.h"
@@ -73,6 +72,7 @@ HeightInfo::HeightInfo()
 
 Character::Character(uint32_t id)
     : Entity(id)
+    , m_stateController(this)
 {
     m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 
@@ -1835,7 +1835,7 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    state_func();
+    m_stateController.handle( m_bf.animations.last_state );
 
     switch(m_moveType)
     {

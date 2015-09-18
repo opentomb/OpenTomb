@@ -112,6 +112,16 @@ enum class MoveType
    Dozy
 };
 
+// Surface movement directions (m_dirFlag)
+
+#define ENT_STAY 0x00000000
+#define ENT_MOVE_FORWARD 0x00000001
+#define ENT_MOVE_BACKWARD 0x00000002
+#define ENT_MOVE_LEFT 0x00000004
+#define ENT_MOVE_RIGHT 0x00000008
+#define ENT_MOVE_JUMP 0x00000010
+#define ENT_MOVE_CROUCH 0x00000020
+
 struct Entity : public Object
 {
 private:

@@ -10,7 +10,6 @@
 #include "LuaState.h"
 
 #include "character_controller.h"
-#include "engine/anim_state_control.h"
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
@@ -19,6 +18,7 @@
 #include "util/helpers.h"
 #include "util/vmath.h"
 #include "world.h"
+#include "world/animation/animcommands.h"
 #include "world/core/orientedboundingbox.h"
 #include "world/core/util.h"
 #include "world/room.h"

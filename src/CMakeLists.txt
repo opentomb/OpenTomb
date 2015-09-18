@@ -55,6 +55,7 @@ list(APPEND PRJ_SRC
     world/character.cpp
     world/skeletalmodel.cpp
     world/room.cpp
+    world/statecontroller.cpp
 
     world/core/orientedboundingbox.cpp
     world/core/polygon.cpp
@@ -69,7 +70,6 @@ list(APPEND PRJ_SRC
     engine/engine.cpp
     engine/controls.cpp
     engine/gameflow.cpp
-    engine/anim_state_control.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -126,6 +126,7 @@ list(APPEND PRJ_HDR
     world/staticmesh.h
     world/skeletalmodel.h
     world/room.h
+    world/statecontroller.h
 
     world/core/sprite.h
     world/core/orientedboundingbox.h
@@ -136,13 +137,15 @@ list(APPEND PRJ_HDR
     world/core/light.h
 
     world/animation/animation.h
+    world/animation/animids.h
+    world/animation/animcommands.h
+    world/animation/animeffects.h
 
     engine/game.h
     engine/system.h
     engine/engine.h
     engine/controls.h
     engine/gameflow.h
-    engine/anim_state_control.h
 )
 
 if(MINGW)

@@ -12,8 +12,8 @@
 #include "LuaState.h"
 #include "loader/level.h"
 
+#include "animation/animids.h"
 #include "bordered_texture_atlas.h"
-#include "engine/anim_state_control.h"
 #include "engine/engine.h"
 #include "engine/gameflow.h"
 #include "engine/system.h"
@@ -25,6 +25,7 @@
 #include "strings.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
+#include "world/animation/animcommands.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
 #include "world/core/light.h"
@@ -1341,7 +1342,7 @@ void Res_Sector_FixHeights(RoomSector* sector)
     for(size_t i = 0; i < 4; i++)
     {
         if(sector->ceiling_corners[i].m_floats[2] == sector->floor_corners[i].m_floats[2])
-            sector->ceiling_corners[i].m_floats[2] += engine::LaraHangVerticalEpsilon;
+            sector->ceiling_corners[i].m_floats[2] += LaraHangVerticalEpsilon;
     }
 }
 
