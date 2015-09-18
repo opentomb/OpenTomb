@@ -701,19 +701,19 @@ void Entity::updateCurrentSpeed(bool zeroVz)
     btScalar t = m_currentSpeed * m_speedMult;
     btScalar vz = (zeroVz) ? (0.0f) : (m_speed[2]);
 
-    if(m_dirFlag & ENT_MOVE_FORWARD)
+    if(m_moveDir == MoveDirection::Forward)
     {
         m_speed = m_transform.getBasis().getColumn(1) * t;
     }
-    else if(m_dirFlag & ENT_MOVE_BACKWARD)
+    else if(m_moveDir == MoveDirection::Backward)
     {
         m_speed = m_transform.getBasis().getColumn(1) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_LEFT)
+    else if(m_moveDir == MoveDirection::Left)
     {
         m_speed = m_transform.getBasis().getColumn(0) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_RIGHT)
+    else if(m_moveDir == MoveDirection::Right)
     {
         m_speed = m_transform.getBasis().getColumn(0) * t;
     }
@@ -906,13 +906,13 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                     {
                         m_angles[1] = -m_angles[1];                         // for underwater case
                     }
-                    if(m_dirFlag == ENT_MOVE_BACKWARD)
+                    if(m_moveDir == MoveDirection::Backward)
                     {
-                        m_dirFlag = ENT_MOVE_FORWARD;
+                        m_moveDir = MoveDirection::Forward;
                     }
-                    else if(m_dirFlag == ENT_MOVE_FORWARD)
+                    else if(m_moveDir == MoveDirection::Forward)
                     {
-                        m_dirFlag = ENT_MOVE_BACKWARD;
+                        m_moveDir = MoveDirection::Backward;
                     }
                     updateTransform();
                     m_lerp_skip = true;
@@ -1179,15 +1179,11 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_moveType(MoveType::OnFloor)
     , m_self(std::make_shared<engine::EngineContainer>())
 {
     m_transform.setIdentity();
 
     m_lerp_last_transform = m_lerp_curr_transform = m_transform;
-    m_lerp_valid = false;
-    m_lerp_skip = false;
-    m_lerp = 0.0f;
 
     m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;

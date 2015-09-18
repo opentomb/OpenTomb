@@ -87,7 +87,7 @@ Character::Character(uint32_t id)
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
-    m_dirFlag = ENT_STAY;
+    m_moveDir = MoveDirection::Stay;
 }
 
 Character::~Character()
@@ -1060,25 +1060,25 @@ int Character::moveOnFloor()
 
             updateTransform(); // apply rotations
 
-            if(m_dirFlag & ENT_MOVE_FORWARD)
+            if(m_moveDir == MoveDirection::Forward)
             {
                 speed = m_transform.getBasis().getColumn(1) * fullSpeed;
             }
-            else if(m_dirFlag & ENT_MOVE_BACKWARD)
+            else if(m_moveDir == MoveDirection::Backward)
             {
                 speed = m_transform.getBasis().getColumn(1) * -fullSpeed;
             }
-            else if(m_dirFlag & ENT_MOVE_LEFT)
+            else if(m_moveDir == MoveDirection::Left)
             {
                 speed = m_transform.getBasis().getColumn(0) * -fullSpeed;
             }
-            else if(m_dirFlag & ENT_MOVE_RIGHT)
+            else if(m_moveDir == MoveDirection::Right)
             {
                 speed = m_transform.getBasis().getColumn(0) * fullSpeed;
             }
             else
             {
-                //dir_flag = ENT_MOVE_FORWARD;
+                //dir_flag = DirFlag::Forward;
             }
             m_response.slide = SlideType::None;
         }
@@ -1289,25 +1289,25 @@ int Character::monkeyClimbing()
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
 
-    if(m_dirFlag & ENT_MOVE_FORWARD)
+    if(m_moveDir == MoveDirection::Forward)
     {
         spd = m_transform.getBasis().getColumn(1) * t;
     }
-    else if(m_dirFlag & ENT_MOVE_BACKWARD)
+    else if(m_moveDir == MoveDirection::Backward)
     {
         spd = m_transform.getBasis().getColumn(1) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_LEFT)
+    else if(m_moveDir == MoveDirection::Left)
     {
         spd = m_transform.getBasis().getColumn(0) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_RIGHT)
+    else if(m_moveDir == MoveDirection::Right)
     {
         spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
-        //dir_flag = ENT_MOVE_FORWARD;
+        //dir_flag = DirFlag::Forward;
     }
 
     m_speed = spd;
@@ -1363,19 +1363,19 @@ int Character::wallsClimbing()
     pos[0] = climb->point[0] - m_transform.getBasis().getColumn(1)[0] * m_bf.boundingBox.max[1];
     pos[1] = climb->point[1] - m_transform.getBasis().getColumn(1)[1] * m_bf.boundingBox.max[1];
 
-    if(m_dirFlag == ENT_MOVE_FORWARD)
+    if(m_moveDir == MoveDirection::Forward)
     {
         spd += climb->up;
     }
-    else if(m_dirFlag == ENT_MOVE_BACKWARD)
+    else if(m_moveDir == MoveDirection::Backward)
     {
         spd -= climb->up;
     }
-    else if(m_dirFlag == ENT_MOVE_RIGHT)
+    else if(m_moveDir == MoveDirection::Right)
     {
         spd += climb->right;
     }
-    else if(m_dirFlag == ENT_MOVE_LEFT)
+    else if(m_moveDir == MoveDirection::Left)
     {
         spd -= climb->right;
     }
@@ -1423,19 +1423,19 @@ int Character::climbing()
     m_angles[2] = 0.0;
     updateTransform();                                                 // apply rotations
 
-    if(m_dirFlag == ENT_MOVE_FORWARD)
+    if(m_moveDir == MoveDirection::Forward)
     {
         spd = m_transform.getBasis().getColumn(1) * t;
     }
-    else if(m_dirFlag == ENT_MOVE_BACKWARD)
+    else if(m_moveDir == MoveDirection::Backward)
     {
         spd = m_transform.getBasis().getColumn(1) * -t;
     }
-    else if(m_dirFlag == ENT_MOVE_LEFT)
+    else if(m_moveDir == MoveDirection::Left)
     {
         spd = m_transform.getBasis().getColumn(0) * -t;
     }
-    else if(m_dirFlag == ENT_MOVE_RIGHT)
+    else if(m_moveDir == MoveDirection::Right)
     {
         spd = m_transform.getBasis().getColumn(0) * t;
     }
@@ -1555,19 +1555,19 @@ int Character::moveOnWater()
 
     btScalar t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, std::abs(m_command.move[0]) != 0 || std::abs(m_command.move[1]) != 0);
 
-    if((m_dirFlag & ENT_MOVE_FORWARD) && (m_command.move[0] == 1))
+    if((m_moveDir == MoveDirection::Forward) && (m_command.move[0] == 1))
     {
         spd = m_transform.getBasis().getColumn(1) * t;
     }
-    else if((m_dirFlag & ENT_MOVE_BACKWARD) && (m_command.move[0] == -1))
+    else if((m_moveDir == MoveDirection::Backward) && (m_command.move[0] == -1))
     {
         spd = m_transform.getBasis().getColumn(1) * -t;
     }
-    else if((m_dirFlag & ENT_MOVE_LEFT) && (m_command.move[1] == -1))
+    else if((m_moveDir == MoveDirection::Left) && (m_command.move[1] == -1))
     {
         spd = m_transform.getBasis().getColumn(0) * -t;
     }
-    else if((m_dirFlag & ENT_MOVE_RIGHT) && (m_command.move[1] == 1))
+    else if((m_moveDir == MoveDirection::Right) && (m_command.move[1] == 1))
     {
         spd = m_transform.getBasis().getColumn(0) * t;
     }
@@ -2367,25 +2367,25 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     t = v_horizontal * m_speedMult;
 
     // Calculate the direction of jump by vector multiplication.
-    if(m_dirFlag & ENT_MOVE_FORWARD)
+    if(m_moveDir == MoveDirection::Forward)
     {
         spd = m_transform.getBasis().getColumn(1) * t;
     }
-    else if(m_dirFlag & ENT_MOVE_BACKWARD)
+    else if(m_moveDir == MoveDirection::Backward)
     {
         spd = m_transform.getBasis().getColumn(1) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_LEFT)
+    else if(m_moveDir == MoveDirection::Left)
     {
         spd = m_transform.getBasis().getColumn(0) * -t;
     }
-    else if(m_dirFlag & ENT_MOVE_RIGHT)
+    else if(m_moveDir == MoveDirection::Right)
     {
         spd = m_transform.getBasis().getColumn(0) * t;
     }
     else
     {
-        m_dirFlag = ENT_MOVE_FORWARD;
+        m_moveDir = MoveDirection::Forward;
     }
 
     m_response.vertical_collide = 0x00;

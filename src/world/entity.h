@@ -112,15 +112,17 @@ enum class MoveType
    Dozy
 };
 
-// Surface movement directions (m_dirFlag)
-
-#define ENT_STAY 0x00000000
-#define ENT_MOVE_FORWARD 0x00000001
-#define ENT_MOVE_BACKWARD 0x00000002
-#define ENT_MOVE_LEFT 0x00000004
-#define ENT_MOVE_RIGHT 0x00000008
-#define ENT_MOVE_JUMP 0x00000010
-#define ENT_MOVE_CROUCH 0x00000020
+// Surface movement directions
+enum class MoveDirection
+{
+    Stay,
+    Forward,
+    Backward,
+    Left,
+    Right,
+    Jump,
+    Crouch
+};
 
 struct Entity : public Object
 {
@@ -142,8 +144,8 @@ public:
     bool m_active = true;
     bool m_visible = true;
 
-    uint8_t                             m_dirFlag = 0;           // (move direction)
-    MoveType                            m_moveType = MoveType::StaticPos;          // on floor / free fall / swim ....
+    MoveDirection                       m_moveDir = MoveDirection::Stay;           // (move direction)
+    MoveType                            m_moveType = MoveType::OnFloor;          // on floor / free fall / swim ....
 
     bool m_wasRendered;       // render once per frame trigger
     bool m_wasRenderedLines; // same for debug lines
@@ -164,9 +166,9 @@ public:
 
     btTransform m_lerp_last_transform; // interp
     btTransform m_lerp_curr_transform; // interp
-    bool        m_lerp_valid;
-    bool        m_lerp_skip;
-    btScalar    m_lerp;
+    bool        m_lerp_valid = false;
+    bool        m_lerp_skip = false;
+    btScalar    m_lerp = 0;
 
     core::OrientedBoundingBox m_obb;                // oriented bounding box
 

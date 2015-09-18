@@ -2069,7 +2069,7 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
     ent->updateRoomPos();
 
     ent->m_moveType = static_cast<world::MoveType>(moveType);
-    ent->m_dirFlag = dirFlag;
+    ent->m_moveDir = static_cast<world::MoveDirection>(dirFlag);
 }
 
 uint32_t lua_GetEntityMeshCount(int id)
