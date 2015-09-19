@@ -39,6 +39,39 @@ extern "C" {
 #include "inventory.h"
 #include "resource.h"
 
+
+typedef struct fd_command_s
+{
+    uint16_t    function : 5;               // 0b00000000 00011111
+    uint16_t    function_value : 3;         // 0b00000000 11100000  TR_III+
+    uint16_t    sub_function : 7;           // 0b01111111 00000000
+    uint16_t    end_bit : 1;                // 0b10000000 00000000
+}fd_command_t, *fd_command_p;
+
+typedef struct fd_trigger_head_s
+{
+    uint16_t    timer_field : 8;            // 0b00000000 11111111   Used as common parameter for some commands.
+    uint16_t    only_once : 1;              // 0b00000001 00000000
+    uint16_t    trigger_mask : 5;           // 0b00111110 00000000
+    uint16_t    uncnown : 2;
+}fd_trigger_head_t, *fd_trigger_head_p;
+
+typedef struct fd_trigger_function_s
+{
+    uint16_t    operands : 10;              // 0b00000011 11111111
+    uint16_t    trigger_function : 5;       // 0b01111100 00000000
+    uint16_t    cont_bit : 1;               // 0b10000000 00000000
+}fd_trigger_function_t, *fd_trigger_function_p;
+
+typedef struct fd_slope_s
+{
+    uint16_t    slope_t10 : 4;              // 0b00000000 00001111
+    uint16_t    slope_t11 : 4;              // 0b00000000 11110000
+    uint16_t    slope_t12 : 4;              // 0b00001111 00000000
+    uint16_t    slope_t13 : 4;              // 0b11110000 00000000
+}fd_slope_t, *fd_slope_p;
+
+
 /*
  * Helper functions to convert legacy TR structs to native OpenTomb structs.
  */
@@ -727,9 +760,11 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
 
 int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, struct room_sector_s *sector, class VT_Level *tr)
 {
+    int ret = 0;
+
     if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
     {
-        return 0;
+        return ret;
     }
 
     sector->flags = 0;  // Clear sector flags before parsing.
@@ -741,30 +776,17 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
     uint16_t *end_p = tr->floor_data + tr->floor_data_size - 1;
     uint16_t *entry = tr->floor_data + sector->trig_index;
 
-    int ret = 0;
-    uint16_t end_bit = 0;
-
+    fd_command_t fd_command;
     do
     {
-        // TR_I - TR_II
-        //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
-        //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-
-        //TR_III+, but works with TR_I - TR_II
-        uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
-        uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
-        uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-
-        end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
-
+        fd_command = *((fd_command_p)entry);
         entry++;
-
-        switch(function)
+        switch(fd_command.function)
         {
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
-                if(sub_function == 0x00)
+                if(fd_command.sub_function == 0x00)
                 {
-                    if((*entry >= 0) && (*entry < rooms_count))
+                    if(*entry < rooms_count)
                     {
                         sector->portal_to_room = rooms + *entry;
                         sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
@@ -775,7 +797,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                 break;
 
             case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
-                if(sub_function == 0x00)
+                if(fd_command.sub_function == 0x00)
                 {
                     int8_t raw_y_slant =  (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
@@ -810,7 +832,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                 break;
 
             case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
-                if(sub_function == 0x00)
+                if(fd_command.sub_function == 0x00)
                 {
                     int8_t raw_y_slant =  (*entry & 0x00FF);
                     int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
@@ -846,6 +868,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGERS
                 {
+                    fd_trigger_head_t fd_trigger_head = *((fd_trigger_head_p)entry);
+
                     char header[128];               header[0]            = 0;   // Header condition
                     char once_condition[128];       once_condition[0]    = 0;   // One-shot condition
                     char cont_events[4096];         cont_events[0]       = 0;   // Continous trigger events
@@ -863,10 +887,6 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     int condition   = 0;                        // No condition by default.
                     int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
 
-                    int8_t  timer_field  =  (*entry) & 0x00FF;          // Used as common parameter for some commands.
-                    uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
-                    uint8_t only_once    = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
-
                     // Processed entities lookup array initialization.
 
                     int32_t ent_lookup_table[64];
@@ -875,9 +895,9 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
                     // some specific entity classes.
 
-                    int activator_type = ( (sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
-                                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
-                                           (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+                    int activator_type = ( (fd_command.sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
+                                           (fd_command.sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
+                                           (fd_command.sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
 
                     // Table cell header.
 
@@ -887,7 +907,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     strcat(script, buf);
                     buf[0] = 0;     // Zero out buffer to prevent further trashing.
 
-                    switch(sub_function)
+                    switch(fd_command.sub_function)
                     {
                         case TR_FD_TRIGTYPE_TRIGGER:
                         case TR_FD_TRIGTYPE_HEAVY:
@@ -898,7 +918,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                         case TR_FD_TRIGTYPE_ANTIPAD:
                             // Check move type for triggering entity.
                             snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
-                            if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
+                            if(fd_command.sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
                             condition = 1;  // Set additional condition.
                             break;
 
@@ -945,7 +965,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                         case TR_FD_TRIGTYPE_MONKEY:
                         case TR_FD_TRIGTYPE_CLIMB:
                             // Check move type for triggering entity.
-                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
+                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (fd_command.sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
                             condition = 1;  // Set additional condition.
                             break;
 
@@ -963,20 +983,14 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
                     strcat(header, buf);    // Add condition to header.
 
-                    uint16_t cont_bit = 0;
-                    uint16_t argn = 0;
-
                     // Now parse operand chain for trigger function!
-
+                    uint16_t argn = 0;
+                    fd_trigger_function_t fd_trigger_function;
                     do
                     {
                         entry++;
-
-                        uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
-                        uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
-                                 cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
-
-                        switch(trigger_function)
+                        fd_trigger_function = *((fd_trigger_function_p)entry);
+                        switch(fd_trigger_function.trigger_function)
                         {
                             case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
                                 // If activator is specified, first item operand counts as activator index (except
@@ -989,7 +1003,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
+                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", fd_trigger_function.operands, fd_trigger_function.operands, fd_trigger_function.operands);
                                             }
                                             else
                                             {
@@ -999,38 +1013,38 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                             strcat(script, buf);
 
                                             // Trigger activation mask is here filtered through activator's own mask.
-                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
+                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", fd_trigger_head.trigger_mask);
                                             strcat(script, buf);
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                                if(only_once)
+                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", fd_trigger_function.operands, fd_trigger_function.operands, fd_trigger_head.timer_field);
+                                                if(fd_trigger_head.only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
-                                                    snprintf(buf2, 128, " setEntityLock(%d, 1) \n", operands);
+                                                    snprintf(buf2, 128, " setEntityLock(%d, 1) \n", fd_trigger_function.operands);
                                                 }
                                                 else
                                                 {
                                                     // Create statement for antitriggering a switch.
-                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", fd_trigger_function.operands, fd_trigger_function.operands);
                                                 }
                                             }
                                             else
                                             {
                                                 // Ordinary type case (e.g. heavy switch).
-                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", fd_trigger_function.operands, mask_mode, fd_trigger_head.only_once, fd_trigger_head.timer_field);
                                                 strcat(item_events, buf);
                                                 snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
                                             }
                                             break;
 
                                         case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", fd_trigger_function.operands, fd_trigger_function.operands, fd_trigger_function.operands);
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityEnability(%d)) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityEnability(%d)) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", fd_trigger_function.operands, fd_trigger_function.operands, fd_trigger_function.operands);
                                             break;
                                     }
 
@@ -1042,7 +1056,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                     // This results in setting same activation mask twice, effectively blocking entity from activation.
                                     // To prevent this, a lookup table was implemented to know if entity already had its activation
                                     // command added.
-                                    if(!Res_IsEntityProcessed(ent_lookup_table, operands, tr))
+                                    if(!Res_IsEntityProcessed(ent_lookup_table, fd_trigger_function.operands, tr))
                                     {
                                         // Other item operands are simply parsed as activation functions. Switch case is special, because
                                         // function is fed with activation mask argument derived from activator mask filter (switch_mask),
@@ -1050,16 +1064,16 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                         // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                                         if(activator == TR_ACTIVATOR_SWITCH)
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", fd_trigger_function.operands, mask_mode, fd_trigger_head.only_once, fd_trigger_head.timer_field);
                                             strcat(item_events, buf);
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", operands, mask_mode, only_once);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", fd_trigger_function.operands, mask_mode, fd_trigger_head.only_once);
                                             strcat(anti_events, buf);
                                         }
                                         else
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", operands, trigger_mask, mask_mode, only_once, timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", fd_trigger_function.operands, fd_trigger_head.trigger_mask, mask_mode, fd_trigger_head.only_once, fd_trigger_head.timer_field);
                                             strcat(item_events, buf);
-                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
+                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", fd_trigger_function.operands);
                                             strcat(anti_events, buf);
                                         }
                                     }
@@ -1074,7 +1088,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                     uint8_t cam_timer = ((*entry) & 0x00FF);
                                     uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
                                     uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                    cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                                    fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
 
                                     snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
                                     strcat(single_events, buf);
@@ -1082,7 +1096,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 break;
 
                             case TR_FD_TRIGFUNC_UWCURRENT:
-                                snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
+                                snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", fd_trigger_function.operands);
                                 strcat(cont_events, buf);
                                 break;
 
@@ -1091,12 +1105,12 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 // anti-events array.
                                 if(activator == TR_ACTIVATOR_SWITCH)
                                 {
-                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", operands, operands);
+                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", fd_trigger_function.operands, fd_trigger_function.operands);
                                     strcat(single_events, buf);
                                 }
                                 else
                                 {
-                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", operands, trigger_mask, operands);
+                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", fd_trigger_function.operands, fd_trigger_head.trigger_mask, fd_trigger_function.operands);
                                     strcat(single_events, buf);
                                 }
                                 break;
@@ -1104,39 +1118,39 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             case TR_FD_TRIGFUNC_FLIPON:
                                 // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_ON trigger, room will remain flipped.
-                                snprintf(buf, 128, "   setFlipState(%d, 1); \n", operands);
+                                snprintf(buf, 128, "   setFlipState(%d, 1); \n", fd_trigger_function.operands);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPOFF:
                                 // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                                 // the switch with FLIP_OFF trigger, room will remain unflipped.
-                                snprintf(buf, 128, "   setFlipState(%d, 0); \n", operands);
+                                snprintf(buf, 128, "   setFlipState(%d, 0); \n", fd_trigger_function.operands);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_LOOKAT:
-                                snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
+                                snprintf(buf, 128, "   setCamTarget(%d, %d); \n", fd_trigger_function.operands, fd_trigger_head.timer_field);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_ENDLEVEL:
-                                snprintf(buf, 128, "   setLevel(%d); \n", operands);
+                                snprintf(buf, 128, "   setLevel(%d); \n", fd_trigger_function.operands);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_PLAYTRACK:
-                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
+                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", fd_trigger_function.operands, ((uint16_t)fd_trigger_head.trigger_mask << 1) + fd_trigger_head.only_once);
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_FLIPEFFECT:
-                                snprintf(buf, 128, "   doEffect(%d, %d); \n", operands, timer_field);
+                                snprintf(buf, 128, "   doEffect(%d, %d); \n", fd_trigger_function.operands, fd_trigger_head.timer_field);
                                 strcat(cont_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_SECRET:
-                                snprintf(buf, 128, "   findSecret(%d); \n", operands);
+                                snprintf(buf, 128, "   findSecret(%d); \n", fd_trigger_function.operands);
                                 strcat(single_events, buf);
                                 break;
 
@@ -1149,15 +1163,15 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 {
                                     entry++;
                                     uint8_t flyby_once  = ((*entry) & 0x0100) >> 8;
-                                    cont_bit  = ((*entry) & 0x8000) >> 15;
+                                    fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;
 
-                                    snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
+                                    snprintf(buf, 128, "   playFlyby(%d, %d); \n", fd_trigger_function.operands, flyby_once);
                                     strcat(cont_events, buf);
                                 }
                                 break;
 
                             case TR_FD_TRIGFUNC_CUTSCENE:
-                                snprintf(buf, 128, "   playCutscene(%d); \n", operands);
+                                snprintf(buf, 128, "   playCutscene(%d); \n", fd_trigger_function.operands);
                                 strcat(single_events, buf);
                                 break;
 
@@ -1165,7 +1179,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 break;
                         };
                     }
-                    while(!cont_bit && entry < end_p);
+                    while(!fd_trigger_function.cont_bit && entry < end_p);
 
                     if(script[0])
                     {
@@ -1177,8 +1191,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                         // events sequence to prevent it to be merged into continous
                         // events.
 
-                        if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
-                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
+                        if((fd_command.sub_function == TR_FD_TRIGTYPE_HEAVY) ||
+                           (fd_command.sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
@@ -1238,7 +1252,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                             {
                                 strcat(script, buf2);
-                                if(!only_once)
+                                if(!fd_trigger_head.only_once)
                                 {
                                     strcat(script, single_events);
                                     strcat(script, anti_events);    // Single/continous events are engaged along with
@@ -1266,7 +1280,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
             case TR_FD_FUNC_CLIMB:
                 // First 4 sector flags are similar to subfunction layout.
-                sector->flags |= sub_function;
+                sector->flags |= (uint32_t)fd_command.sub_function;
                 break;
 
             case TR_FD_FUNC_MONKEY:
@@ -1301,49 +1315,29 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
             default:
                 // Other functions are TR3+ collisional triangle functions.
-                if( (function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
-                    (function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE) )
+                if( (fd_command.function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
+                    (fd_command.function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE) )
                 {
-                    entry--;    // Go back, since these functions are parsed differently.
-
-                    end_bit = ((*entry) & 0x8000) >> 15;      // 0b10000000 00000000
-
-                    int16_t  slope_t01  = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                    int16_t  slope_t00  = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                    uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
-
-                    // t01/t02 are 5-bit values, where sign is specified by 0x10 mask.
-
-                    if(slope_t01 & 0x10) slope_t01 |= 0xFFF0;
-                    if(slope_t00 & 0x10) slope_t00 |= 0xFFF0;
-
+                    fd_slope_t fd_slope = *((fd_slope_p)entry);
+                    float overall_adjustment = (float)Res_Sector_BiggestCorner(fd_slope.slope_t10, fd_slope.slope_t11, fd_slope.slope_t12, fd_slope.slope_t13) * TR_METERING_STEP;
                     entry++;
 
-                    uint16_t slope_t13  = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                    uint16_t slope_t12  = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                    uint16_t slope_t11  = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                    uint16_t slope_t10  = ((*entry) & 0x000F);            // 0b00000000 00001111
-
-                    entry++;
-
-                    float overall_adjustment = (float)Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
-
-                    if( (function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
-                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
-                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)  )
+                    if( (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
+                        (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
+                        (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)  )
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((float)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((float)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((float)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((float)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((float)fd_slope.slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((float)fd_slope.slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((float)fd_slope.slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((float)fd_slope.slope_t11 * TR_METERING_STEP);
 
-                        if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
+                        if(fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
                         }
-                        else if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)
+                        else if(fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)
                         {
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
                         }
@@ -1352,22 +1346,22 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_FLOORTRIANGLE_NE)           ||
-                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
-                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)  )
+                    else if( (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NE)           ||
+                             (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
+                             (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)  )
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->floor_corners[0][2] -= overall_adjustment - ((float)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= overall_adjustment - ((float)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= overall_adjustment - ((float)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3][2] -= overall_adjustment - ((float)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((float)fd_slope.slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((float)fd_slope.slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((float)fd_slope.slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((float)fd_slope.slope_t11 * TR_METERING_STEP);
 
-                        if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
+                        if(fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
                         }
-                        else if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)
+                        else if(fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)
                         {
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
                         }
@@ -1376,22 +1370,22 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NW)           ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)  )
+                    else if( (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NW)           ||
+                             (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
+                             (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)  )
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(fd_slope.slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(fd_slope.slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(fd_slope.slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(fd_slope.slope_t12 * TR_METERING_STEP);
 
-                        if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
+                        if(fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
                         }
-                        else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)
+                        else if(fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)
                         {
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
                         }
@@ -1400,22 +1394,22 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
                         }
                     }
-                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NE)           ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
-                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)  )
+                    else if( (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NE)           ||
+                             (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
+                             (fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)  )
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (float)(fd_slope.slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (float)(fd_slope.slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (float)(fd_slope.slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (float)(fd_slope.slope_t12 * TR_METERING_STEP);
 
-                        if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
+                        if(fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
                         }
-                        else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)
+                        else if(fd_command.function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)
                         {
                             sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
                         }
@@ -1433,7 +1427,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
         };
         ret++;
     }
-    while(!end_bit && entry < end_p);
+    while(!fd_command.end_bit && entry < end_p);
 
     if(sector->floor == TR_METERING_WALLHEIGHT)
     {

@@ -193,7 +193,7 @@ typedef struct climb_info_s
     float                       edge_normale[3];
     float                       edge_tan_xy[2];
     float                       edge_z_ang;
-    // bone number?
+
     struct engine_container_s  *edge_obj;
 }climb_info_t, *climb_info_p;
 
@@ -223,25 +223,24 @@ typedef struct character_command_s
 {
     float       rot[3];
     int8_t      move[3];
-
-    int8_t      roll;
-    int8_t      jump;
-    int8_t      crouch;
-    int8_t      shift;
-    int8_t      action;
-    int8_t      ready_weapon;
-    int8_t      sprint;
-
     int8_t      flags;
+    
+    uint16_t    roll : 1;
+    uint16_t    jump : 1;
+    uint16_t    crouch : 1;
+    uint16_t    shift : 1;
+    uint16_t    action : 1;
+    uint16_t    ready_weapon : 1;
+    uint16_t    sprint : 1;
 }character_command_t, *character_command_p;
 
 typedef struct character_response_s
 {
-    int8_t      kill;
-    int8_t      burn;
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    int8_t      slide;
+    uint16_t    kill : 1;
+    uint16_t    burn : 1;
+    uint16_t    slide : 2;
 }character_response_t, *character_response_p;
 
 typedef struct character_param_s

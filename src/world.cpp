@@ -2550,7 +2550,7 @@ void World_FixRooms(struct world_s *world)
     {
         if(r->base_room != NULL)
         {
-            Room_Disable(r);    // Disable current room
+            Room_Disable(r);
         }
 
         // Isolated rooms may be used for rolling ball trick (for ex., LEVEL4.PHD).

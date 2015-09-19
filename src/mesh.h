@@ -35,10 +35,14 @@ typedef struct base_mesh_s
     struct polygon_s       *transparency_polygons;                              // transparency mesh's polygons list
     struct polygon_s       *animated_polygons;                                  // opaque animated mesh's polygons list
 
-    uint32_t                faces_count;                                        // face with structure wrapping
+    uint32_t                faces_count;                                        // faces with static texture
     struct mesh_face_s     *faces;
 
+    uint32_t                animated_faces_count;                               // faces with animated texture
+    struct mesh_face_s     *animated_faces;
+    
     uint32_t                vertex_count;                                       // number of mesh's vertices
+    uint32_t                animated_vertex_count;
     struct vertex_s        *vertices;
 
     float                   centre[3];                                          // geometry centre of mesh
@@ -48,16 +52,8 @@ typedef struct base_mesh_s
     uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;
-    //GLuint                  vbo_index_array;
-    
-    // Buffers for animated polygons
-    // The first contains position, normal and color.
-    // The second contains the texture coordinates. It gets updated every frame.
-    //size_t                  num_animated_elements;
-    //GLuint                  animated_vertex_array;
-    //GLuint                  animated_texcoord_array;
-    //GLuint                  animated_index_array;
-    //size_t                  animated_index_array_length;
+    GLuint                  vbo_animated_vertex_array;
+    GLuint                  vbo_animated_texcoord_array;
 }base_mesh_t, *base_mesh_p;
 
 

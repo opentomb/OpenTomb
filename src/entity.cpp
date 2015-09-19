@@ -79,7 +79,7 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf->centre);
     vec3_set_zero(ret->bf->pos);
     vec3_set_zero(ret->angles);
-    vec4_set_zero(ret->speed);
+    vec3_set_zero(ret->speed);
     vec3_set_one(ret->scaling);
 
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;

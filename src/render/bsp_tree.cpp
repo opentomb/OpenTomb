@@ -54,13 +54,13 @@ void CDynamicBSP::AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 
     bp->indexes        = (GLuint*)(m_tree_buffer + m_tree_allocated);
     m_tree_allocated  += p->vertex_count * sizeof(GLint);
-    GLuint *vi = bp->indexes;
+
     //vertex_p v = m_vertex_buffer + m_vertex_allocated;
     //vertex_p pv = p->vertices;
     memcpy(m_vertex_buffer + m_vertex_allocated, p->vertices, p->vertex_count * sizeof(vertex_t));
-    for(uint16_t i = 0; i < p->vertex_count; i++, vi++/*, v++, pv++*/)
+    for(uint16_t i = 0; i < p->vertex_count; i++/*, v++, pv++*/)
     {
-        *vi = m_vertex_allocated++;
+        bp->indexes[i] = m_vertex_allocated++;
         //*v  = *pv;
     }
 

@@ -698,8 +698,10 @@ int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
         }
     }
 
-    if((Sector_GetPortalSectorTarget(s1p) == Sector_CheckBaseRoom(s1)) && (Sector_GetPortalSectorTarget(s2p) == Sector_GetPortalSectorTarget(s2)) ||
-       (Sector_GetPortalSectorTarget(s1p) == Sector_CheckAlternateRoom(s1)) && (Sector_GetPortalSectorTarget(s2p) == Sector_GetPortalSectorTarget(s2)))
+    s1p = Sector_GetPortalSectorTarget(s1p);
+    s2p = Sector_GetPortalSectorTarget(s2p);
+    if(((s1p == Sector_CheckBaseRoom(s1)) && (s2p == Sector_GetPortalSectorTarget(s2))) ||
+       ((s1p == Sector_CheckAlternateRoom(s1)) && (s2p == Sector_GetPortalSectorTarget(s2))))
     {
         return 1;
     }

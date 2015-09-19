@@ -504,7 +504,7 @@ void Controls_DebugKeys(int button, int state)
             case SDLK_n:
                 control_states.noclip = !control_states.noclip;
                 break;
-                
+
             default:
                 //Con_Printf("key = %d", button);
                 break;

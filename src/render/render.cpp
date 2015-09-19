@@ -632,21 +632,21 @@ void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
 
 void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
 {
-    /*if(mesh->num_animated_elements > 0)
+    if(mesh->animated_polygons)
     {
         // Respecify the tex coord buffer
-        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->vbo_animated_texcoord_array);
         // Tell OpenGL to discard the old values
-        qglBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        qglBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) qglMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
-        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+        for(polygon_p p = mesh->animated_polygons; p; p = p->next)
         {
             anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
             uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
-            for(uint16_t i=0;i<p->vertex_count;i++,data+=2)
+            for(uint16_t i = 0; i < p->vertex_count; i++, data += 2)
             {
                 ApplyAnimTextureTransformation(data, p->vertices[i].tex_coord, tf);
             }
@@ -656,19 +656,22 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         // Setup altered buffer
         qglTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
         // Setup static data
-        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        qglVertexPointer(3, GL_FLOAT, sizeof(GLfloat [10]), 0);
-        qglColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
-        qglNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->vbo_animated_vertex_array);
+        qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+        qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
 
-        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        if(m_active_texture != m_world->textures[0])                              ///@FIXME: UGLY HACK!
+        mesh_face_p face = mesh->animated_faces;
+        for(uint32_t face_index = 0; face_index < mesh->animated_faces_count; face_index++, face++)
         {
-            m_active_texture = m_world->textures[0];
-            qglBindTexture(GL_TEXTURE_2D, m_active_texture);
+            if(m_active_texture != face->texture_index)
+            {
+                m_active_texture = face->texture_index;
+                qglBindTexture(GL_TEXTURE_2D, m_active_texture);
+            }
+            qglDrawElements(GL_TRIANGLES, face->elements_count, GL_UNSIGNED_INT, face->elements);
         }
-        qglDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
-    }*/
+    }
 
     if(mesh->vertex_count == 0)
     {
@@ -694,11 +697,6 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         qglNormalPointer(GL_FLOAT, 0, overrideNormals);
     }
 
-    /*const uint32_t *elementsbase = mesh->elements;
-        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
-        elementsbase = NULL;
-
-    unsigned long offset = 0;*/
     mesh_face_p face = mesh->faces;
     for(uint32_t face_index = 0; face_index < mesh->faces_count; face_index++, face++)
     {

@@ -8,20 +8,27 @@
 
 
 void BaseMesh_AddPolygonToFaces(base_mesh_p mesh, struct polygon_s *p);
+void BaseMesh_AddAnimatedPolygonToFaces(base_mesh_p mesh, struct vertex_s *vertex_data, uint32_t *vertex_index, struct polygon_s *p);
 
 void BaseMesh_Clear(base_mesh_p mesh)
 {
-    if(mesh->vbo_vertex_array)
+    if(qglIsBufferARB(mesh->vbo_vertex_array))
     {
         qglDeleteBuffersARB(1, &mesh->vbo_vertex_array);
         mesh->vbo_vertex_array = 0;
     }
 
-    /*if(mesh->vbo_index_array)
+    if(qglIsBufferARB(mesh->vbo_animated_vertex_array))
     {
-        qglDeleteBuffersARB(1, &mesh->vbo_index_array);
-        mesh->vbo_index_array = 0;
-    }*/
+        qglDeleteBuffersARB(1, &mesh->vbo_animated_vertex_array);
+        mesh->vbo_animated_vertex_array = 0;
+    }
+    
+    if(qglIsBufferARB(mesh->vbo_animated_texcoord_array))
+    {
+        qglDeleteBuffersARB(1, &mesh->vbo_animated_texcoord_array);
+        mesh->vbo_animated_texcoord_array = 0;
+    }
 
     if(mesh->polygons != NULL)
     {
@@ -95,6 +102,22 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->faces_count = 0;
     }
 
+    if(mesh->animated_faces)
+    {
+        for(uint32_t i = 0; i < mesh->animated_faces_count; i++)
+        {
+            if(mesh->animated_faces[i].elements)
+            {
+                free(mesh->animated_faces[i].elements);
+                mesh->animated_faces[i].elements = NULL;
+            }
+            mesh->animated_faces[i].elements_count = 0;
+        }
+        free(mesh->animated_faces);
+        mesh->animated_faces = NULL;
+        mesh->animated_faces_count = 0;
+    }
+    
     mesh->vertex_count = 0;
 }
 
@@ -151,12 +174,9 @@ void BaseMesh_FindBB(base_mesh_p mesh)
 void BaseMesh_GenVBO(struct base_mesh_s *mesh)
 {
     mesh->vbo_vertex_array = 0;
-    //mesh->vbo_index_array = 0;
-    if(qglGenBuffersARB == NULL)                                                // if not supported, pointer is NULL
-    {
-        abort();
-    }
-
+    mesh->vbo_animated_vertex_array = 0;
+    mesh->vbo_animated_texcoord_array = 0;
+    
     /// now, begin VBO filling!
     qglGenBuffersARB(1, &mesh->vbo_vertex_array);
     if(mesh->vbo_vertex_array == 0)
@@ -167,91 +187,35 @@ void BaseMesh_GenVBO(struct base_mesh_s *mesh)
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
     qglBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
 
-    // Fill indexes vbo
-    /*qglGenBuffersARB(1, &mesh->vbo_index_array);
-    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
-
-    GLsizeiptr elementsSize = 0;
-    for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
-    {
-        elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
-    }
-    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);*/
-
     // Now for animated polygons, if any
-    /*mesh->num_animated_elements = 0;
-    mesh->animated_index_array_length = 0;
-    if (mesh->animated_polygons != 0)
+    mesh->animated_faces = NULL;
+    mesh->animated_faces_count = 0;
+    mesh->animated_vertex_count = 0;
+    if(mesh->animated_polygons)
     {
         for (polygon_p p = mesh->animated_polygons; p != 0; p = p->next)
         {
-            mesh->num_animated_elements += p->vertex_count;
-            mesh->animated_index_array_length += 3*(p->vertex_count - 2);
-            if (p->double_side)
-            {
-                mesh->animated_index_array_length += 3*(p->vertex_count - 2);
-            }
+            mesh->animated_vertex_count += p->vertex_count;
         }
 
-        // Prepare buffer data
-        size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
-        uint8_t *vertexData = (uint8_t*)malloc(mesh->num_animated_elements * stride * sizeof(uint8_t));
-        uint32_t *elementData = (uint32_t*)malloc(mesh->animated_index_array_length * sizeof(uint32_t));
-
-        // Fill it.
-        size_t offset = 0;
-        size_t elementOffset = 0;
+        vertex_p vertex_data = (vertex_p)malloc(mesh->animated_vertex_count * sizeof(vertex_t));
+        uint32_t vertex_index = 0;
         for (polygon_p p = mesh->animated_polygons; p != 0; p = p->next)
         {
-            size_t begin = offset;
-            for (int i = 0; i < p->vertex_count; i++)
-            {
-                memcpy(&vertexData[offset*stride + 0], p->vertices[i].position, sizeof(GLfloat [3]));
-                memcpy(&vertexData[offset*stride + 12], p->vertices[i].color, sizeof(GLfloat [4]));
-                memcpy(&vertexData[offset*stride + 28], p->vertices[i].normal, sizeof(GLfloat [3]));
-
-                if (i >= 2)
-                {
-                    elementData[elementOffset+0] = begin;
-                    elementData[elementOffset+1] = offset-1;
-                    elementData[elementOffset+2] = offset;
-                    elementOffset += 3;
-
-                    if (p->double_side)
-                    {
-                        elementData[elementOffset+0] = offset;
-                        elementData[elementOffset+1] = offset-1;
-                        elementData[elementOffset+2] = begin;
-                        elementOffset += 3;
-                    }
-                }
-                offset++;
-            }
+            BaseMesh_AddAnimatedPolygonToFaces(mesh, vertex_data, &vertex_index, p);
         }
-
+        
         // And upload.
-        qglGenBuffersARB(1, &mesh->animated_vertex_array);
-        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        qglBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
-        free(vertexData);
-
-        qglGenBuffersARB(1, &mesh->animated_index_array);
-        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
-        free(elementData);
+        qglGenBuffersARB(1, &mesh->vbo_animated_vertex_array);
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->vbo_animated_vertex_array);
+        qglBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(vertex_t), vertex_data, GL_STATIC_DRAW);
+        free(vertex_data);
 
         // Prepare empty buffer for tex coords
-        qglGenBuffersARB(1, &mesh->animated_texcoord_array);
-        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-        qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
+        qglGenBuffersARB(1, &mesh->vbo_animated_texcoord_array);
+        qglBindBufferARB(GL_ARRAY_BUFFER, mesh->vbo_animated_texcoord_array);
+        qglBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
     }
-    else
-    {
-        // No animated data
-        mesh->animated_vertex_array = 0;
-        mesh->animated_texcoord_array = 0;
-    }*/
-
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
@@ -347,6 +311,71 @@ void BaseMesh_AddPolygonToFaces(base_mesh_p mesh, struct polygon_s *p)
     {
         uint32_t thisElement = BaseMesh_AddVertex(mesh, p->vertices + j);
 
+        *current_index++ = startElement;
+        *current_index++ = previousElement;
+        *current_index++ = thisElement;
+
+        if (p->double_side)
+        {
+            *current_index++ = startElement;
+            *current_index++ = thisElement;
+            *current_index++ = previousElement;
+        }
+
+        previousElement = thisElement;
+    }
+}
+
+
+void BaseMesh_AddAnimatedPolygonToFaces(base_mesh_p mesh, struct vertex_s *vertex_data, uint32_t *vertex_index, struct polygon_s *p)
+{
+    mesh_face_p current_face = NULL;
+    uint32_t add_elements_count = (p->vertex_count - 2) * 3;
+    GLuint *current_index;
+    
+    if (p->double_side)
+    {
+        add_elements_count *= 2;
+    }
+    
+    for(uint32_t i = 0; i < mesh->animated_faces_count; i++)
+    {
+        if(mesh->animated_faces[i].texture_index == p->texture_index)
+        {
+            current_face = mesh->animated_faces + i;
+            break;
+        }
+    }
+    
+    if(current_face == NULL)
+    {
+        mesh->animated_faces = (mesh_face_p)realloc(mesh->animated_faces, (mesh->animated_faces_count + 1) * sizeof(mesh_face_t));
+        current_face = mesh->animated_faces + mesh->animated_faces_count;
+        mesh->animated_faces_count++;
+        current_face->elements = NULL;
+        current_face->elements_count = 0;
+        current_face->texture_index = p->texture_index;
+    }
+    
+    current_face->elements = (GLuint *)realloc(current_face->elements, (current_face->elements_count + add_elements_count) * sizeof(GLuint));
+    current_index = current_face->elements + current_face->elements_count;
+    current_face->elements_count += add_elements_count;
+
+    // Render the face as a triangle array
+    uint32_t startElement = *vertex_index;
+    vertex_data[*vertex_index] = p->vertices[0];
+    (*vertex_index)++;
+    
+    uint32_t previousElement = *vertex_index;
+    vertex_data[*vertex_index] = p->vertices[1];
+    (*vertex_index)++;
+
+    for(uint16_t j = 2; j < p->vertex_count; j++)
+    {
+        uint32_t thisElement = *vertex_index;
+        vertex_data[*vertex_index] = p->vertices[j];
+        (*vertex_index)++;
+        
         *current_index++ = startElement;
         *current_index++ = previousElement;
         *current_index++ = thisElement;
