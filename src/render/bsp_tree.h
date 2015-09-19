@@ -14,7 +14,7 @@ typedef struct bsp_polygon_s
 {
     uint16_t                vertex_count;                                       // number of vertices
     GLuint                 *indexes;                                            // vertices indexes
-    uint16_t                tex_index;                                          // texture index
+    uint16_t                texture_index;                                      // texture index
     uint16_t                transparency;                                       // transparency information
     
     struct bsp_polygon_s   *next;                                               // polygon list (for BSP using)

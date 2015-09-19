@@ -16,19 +16,12 @@ extern "C" {
 class  AudioSource;
 class  StreamTrack;
 class  bordered_texture_atlas;
-struct physics_object_s;
-struct room_sector_s;
 struct room_s;
-struct polygon_s;
-struct camera_s;
-struct portal_s;
-struct frustum_s;
 struct base_item_s;
 struct base_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
 struct RedBlackHeader_s;
-struct ss_bone_frame_s;
 
 struct lua_State;
 

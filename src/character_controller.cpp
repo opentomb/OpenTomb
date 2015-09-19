@@ -631,7 +631,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
         d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
         ret.edge_tan_xy[0] /= d;
         ret.edge_tan_xy[1] /= d;
-        vec3_copy(ret.t, ret.edge_tan_xy);
+        ret.t[0] = ret.edge_tan_xy[0];
+        ret.t[1] = ret.edge_tan_xy[1];
 
         vec3_sub(tmp, ret.edge_point, ent->transform + 12);
         tmp[2] += 2.0 * ent->character->climb_r;
@@ -1999,7 +2000,7 @@ void Character_UpdateParams(struct entity_s *ent)
 
 bool IsCharacter(struct entity_s *ent)
 {
-    return (ent != NULL) && (ent->character != NULL);
+    return ent && ent->character;
 }
 
 int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value)

@@ -25,7 +25,7 @@ extern "C" {
  */
 typedef struct vertex_s
 {
-    float        position[4];
+    float           position[4];
     GLfloat         normal[4];
     GLfloat         color[4];
     GLfloat         tex_coord[2];
@@ -35,13 +35,13 @@ typedef struct vertex_s
 typedef struct polygon_s
 {
     struct vertex_s    *vertices;                                               // vertices data
+    GLuint              texture_index;                                          // texture index
     uint16_t            vertex_count;                                           // number of vertices
-    uint16_t            tex_index;                                              // texture index
     uint16_t            anim_id;                                                // anim texture ID
     uint16_t            frame_offset;                                           // anim texture frame offset
     uint16_t            transparency;                                           // transparency information
     uint8_t             double_side;                                            // double side flag
-    float            plane[4];                                               // polygon plane equation
+    float               plane[4];                                               // polygon plane equation
 
     struct polygon_s   *next;                                                   // polygon list (for BSP using)
 }polygon_t, *polygon_p;
@@ -52,7 +52,7 @@ typedef struct polygon_s
 
 typedef struct tex_frame_s
 {
-    uint16_t    tex_ind;
+    GLuint      texture_index;
     GLfloat     mat[4];
     GLfloat     move[2];
     GLfloat     uvrotate_max;           // Reference value used to restart rotation.

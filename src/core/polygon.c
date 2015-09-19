@@ -91,7 +91,7 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
     dst->anim_id = src->anim_id;
     dst->frame_offset = src->frame_offset;
     dst->double_side  = src->double_side;
-    dst->tex_index = src->tex_index;
+    dst->texture_index = src->texture_index;
     dst->transparency = src->transparency;
 
     vec4_copy(dst->plane, src->plane);
@@ -425,14 +425,14 @@ void Polygon_Split(polygon_p src, float n[4], polygon_p front, polygon_p back)
     front->anim_id = src->anim_id;
     front->frame_offset = src->frame_offset;
     front->double_side = src->double_side;
-    front->tex_index = src->tex_index;
+    front->texture_index = src->texture_index;
     front->transparency = src->transparency;
 
     vec4_copy(back->plane, src->plane);
     back->anim_id = src->anim_id;
     back->frame_offset = src->frame_offset;
     back->double_side = src->double_side;
-    back->tex_index = src->tex_index;
+    back->texture_index = src->texture_index;
     back->transparency = src->transparency;
 
     curr_v = src->vertices;

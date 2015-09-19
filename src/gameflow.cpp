@@ -43,9 +43,6 @@ void Gameflow_Do()
 
     for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
-        if(gameflow_manager.Actions[i].opcode == TR_GAMEFLOW_NOENTRY) continue;
-        completed = false;
-
         switch(gameflow_manager.Actions[i].opcode)
         {
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
@@ -85,11 +82,14 @@ void Gameflow_Do()
                 }
                 break;
 
+            case TR_GAMEFLOW_NOENTRY:
+                continue;
+
             default:
                 gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
                 break;  ///@FIXME: Implement all other gameflow opcodes here!
-
-        }   // end switch(gameflow_manager.Operand)
+        };   // end switch(gameflow_manager.Operand)
+        completed = false;
     }
 
     if(completed) gameflow_manager.NextAction = false;    // Reset action marker!

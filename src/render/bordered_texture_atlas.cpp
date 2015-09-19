@@ -180,7 +180,8 @@ file_object_textures(NULL),
 number_sprite_textures(0),
 canonical_textures_for_sprite_textures(NULL),
 number_canonical_object_textures(0),
-canonical_object_textures(NULL)
+canonical_object_textures(NULL),
+textures_indexes(NULL)
 {
     GLint max_texture_edge_length = 0;
     qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
@@ -364,7 +365,7 @@ float bordered_texture_atlas::getTextureHeight(unsigned long texture) const
 void bordered_texture_atlas::getWhiteTextureCoordinates(polygon_p poly)
 {
     const canonical_object_texture &canonical = canonical_object_textures[0];
-    poly->tex_index = canonical.new_page;
+    poly->texture_index = textures_indexes[canonical.new_page];
     for (unsigned long i = 0; i < poly->vertex_count; i++)
     {
         unsigned x_coord;
@@ -409,7 +410,7 @@ void bordered_texture_atlas::getCoordinates(polygon_p poly,
     const file_object_texture &file_object_texture = file_object_textures[texture];
     const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = canonical.new_page;
+    poly->texture_index = textures_indexes[canonical.new_page];
     for (unsigned long i = 0; i < poly->vertex_count; i++)
     {
         unsigned x_coord;
@@ -454,14 +455,14 @@ void bordered_texture_atlas::getCoordinates(polygon_p poly,
     }
 }
 
-void bordered_texture_atlas::getSpriteCoordinates(GLfloat *coordinates, unsigned long sprite_texture, uint32_t &outPage) const
+void bordered_texture_atlas::getSpriteCoordinates(GLfloat *coordinates, unsigned long sprite_texture, uint32_t *outPage) const
 {
     assert(sprite_texture < number_sprite_textures);
 
     unsigned long canonical_index = canonical_textures_for_sprite_textures[sprite_texture];
     const canonical_object_texture &canonical = canonical_object_textures[canonical_index];
 
-    outPage = canonical.new_page;
+    *outPage = textures_indexes[canonical.new_page];
 
     unsigned pixel_coordinates[8] = {
         // top right
@@ -492,11 +493,13 @@ unsigned long bordered_texture_atlas::getNumAtlasPages() const
     return number_result_pages;
 }
 
-void bordered_texture_atlas::createTextures(GLuint *textureNames) const
+void bordered_texture_atlas::createTextures(GLuint *textureNames)
 {
     GLubyte *data = (GLubyte *) malloc(4 * result_page_width * result_page_width);
 
     qglGenTextures((GLsizei) number_result_pages, textureNames);
+
+    textures_indexes = textureNames;
 
     for (unsigned long page = 0; page < number_result_pages; page++)
     {

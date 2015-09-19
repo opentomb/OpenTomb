@@ -1688,7 +1688,6 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
     mesh->R = tr_mesh->collision_size;
-    mesh->num_texture_pages = atlas->getNumAtlasPages();
 
     mesh->vertex_count = tr_mesh->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
@@ -1737,7 +1736,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
     {
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
-        p->tex_index = 0;
+        p->texture_index = 0;
         p->transparency = 0;
         p->anim_id = 0;
 
@@ -1781,7 +1780,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         face4 = &tr_mesh->coloured_rectangles[i];
         col = face4->texture & 0xff;
         Polygon_Resize(p, 4);
-        p->tex_index = 0;
+        p->texture_index = 0;
         p->transparency = 0;
         p->anim_id = 0;
 
@@ -1870,7 +1869,6 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
 
     mesh = room->content->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
     mesh->id = room_index;
-    mesh->num_texture_pages = (uint32_t)atlas->getNumAtlasPages();
 
     mesh->vertex_count = tr_room->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));

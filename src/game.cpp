@@ -321,6 +321,7 @@ int Game_Save(const char* name)
     return 1;
 }
 
+
 void Game_ApplyControls(struct entity_s *ent)
 {
     int8_t move_logic[3];
@@ -761,6 +762,7 @@ void Game_UpdateCharacters()
         Game_UpdateCharactersTree(engine_world.entity_tree->root);
     }
 }
+
 
 __inline float CutTimeToLogicTime(float *game_logic_time)
 {

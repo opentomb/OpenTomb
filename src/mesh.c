@@ -1,12 +1,13 @@
 
 #include <stdlib.h>
 
-//#include "core/system.h"
 #include "core/gl_util.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
 #include "mesh.h"
 
+
+void BaseMesh_AddPolygonToFaces(base_mesh_p mesh, struct polygon_s *p);
 
 void BaseMesh_Clear(base_mesh_p mesh)
 {
@@ -16,17 +17,17 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->vbo_vertex_array = 0;
     }
 
-    if(mesh->vbo_index_array)
+    /*if(mesh->vbo_index_array)
     {
         qglDeleteBuffersARB(1, &mesh->vbo_index_array);
         mesh->vbo_index_array = 0;
-    }
+    }*/
 
     if(mesh->polygons != NULL)
     {
-        for(uint32_t i=0;i<mesh->polygons_count;i++)
+        for(uint32_t i = 0; i < mesh->polygons_count; i++)
         {
-            Polygon_Clear(mesh->polygons+i);
+            Polygon_Clear(mesh->polygons + i);
         }
         free(mesh->polygons);
         mesh->polygons = NULL;
@@ -36,7 +37,7 @@ void BaseMesh_Clear(base_mesh_p mesh)
     if(mesh->transparency_polygons != NULL)
     {
         polygon_p p = mesh->transparency_polygons;
-        for(polygon_p next=p->next;p!=NULL;)
+        for(polygon_p next = p->next; p;)
         {
             Polygon_Clear(p);
             free(p);
@@ -52,7 +53,7 @@ void BaseMesh_Clear(base_mesh_p mesh)
     if(mesh->animated_polygons != NULL)
     {
         polygon_p p = mesh->animated_polygons;
-        for(polygon_p next=p->next;p!=NULL;)
+        for(polygon_p next = p->next; p;)
         {
             Polygon_Clear(p);
             free(p);
@@ -78,16 +79,20 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->skin_map = NULL;
     }
 
-    if(mesh->element_count_per_texture)
+    if(mesh->faces)
     {
-        free(mesh->element_count_per_texture);
-        mesh->element_count_per_texture = NULL;
-    }
-
-    if (mesh->elements)
-    {
-        free(mesh->elements);
-        mesh->elements = NULL;
+        for(uint32_t i = 0; i < mesh->faces_count; i++)
+        {
+            if(mesh->faces[i].elements)
+            {
+                free(mesh->faces[i].elements);
+                mesh->faces[i].elements = NULL;
+            }
+            mesh->faces[i].elements_count = 0;
+        }
+        free(mesh->faces);
+        mesh->faces = NULL;
+        mesh->faces_count = 0;
     }
 
     mesh->vertex_count = 0;
@@ -105,7 +110,7 @@ void BaseMesh_FindBB(base_mesh_p mesh)
         vec3_copy(mesh->bb_min, v->position);
         vec3_copy(mesh->bb_max, v->position);
         v ++;
-        for(uint32_t i=1;i<mesh->vertex_count;i++,v++)
+        for(uint32_t i = 1; i < mesh->vertex_count; i++, v++)
         {
             // X
             if(mesh->bb_min[0] > v->position[0])
@@ -146,7 +151,7 @@ void BaseMesh_FindBB(base_mesh_p mesh)
 void BaseMesh_GenVBO(struct base_mesh_s *mesh)
 {
     mesh->vbo_vertex_array = 0;
-    mesh->vbo_index_array = 0;
+    //mesh->vbo_index_array = 0;
     if(qglGenBuffersARB == NULL)                                                // if not supported, pointer is NULL
     {
         abort();
@@ -163,7 +168,7 @@ void BaseMesh_GenVBO(struct base_mesh_s *mesh)
     qglBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
 
     // Fill indexes vbo
-    qglGenBuffersARB(1, &mesh->vbo_index_array);
+    /*qglGenBuffersARB(1, &mesh->vbo_index_array);
     qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
 
     GLsizeiptr elementsSize = 0;
@@ -171,10 +176,10 @@ void BaseMesh_GenVBO(struct base_mesh_s *mesh)
     {
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
-    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
+    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);*/
 
     // Now for animated polygons, if any
-    mesh->num_animated_elements = 0;
+    /*mesh->num_animated_elements = 0;
     mesh->animated_index_array_length = 0;
     if (mesh->animated_polygons != 0)
     {
@@ -245,7 +250,7 @@ void BaseMesh_GenVBO(struct base_mesh_s *mesh)
         // No animated data
         mesh->animated_vertex_array = 0;
         mesh->animated_texcoord_array = 0;
-    }
+    }*/
 
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
@@ -258,30 +263,30 @@ void BaseMesh_GenVBO(struct base_mesh_s *mesh)
 uint32_t BaseMesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
     vertex_p v = mesh->vertices;
-    uint32_t ind = 0;
+    uint32_t vertex_index = 0;
 
-    for(ind=0;ind<mesh->vertex_count;ind++,v++)
+    for(vertex_index = 0; vertex_index < mesh->vertex_count; vertex_index++, v++)
     {
         if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
            v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
             ///@QUESTION: color check?
         {
-            return ind;
+            return vertex_index;
         }
     }
 
-    ind = mesh->vertex_count;                                                   // paranoid
+    vertex_index = mesh->vertex_count;
     mesh->vertex_count++;
     mesh->vertices = (vertex_p)realloc(mesh->vertices, mesh->vertex_count * sizeof(vertex_t));
 
-    v = mesh->vertices + ind;
+    v = mesh->vertices + vertex_index;
     vec3_copy(v->position, vertex->position);
     vec3_copy(v->normal, vertex->normal);
     vec4_copy(v->color, vertex->color);
     v->tex_coord[0] = vertex->tex_coord[0];
     v->tex_coord[1] = vertex->tex_coord[1];
 
-    return ind;
+    return vertex_index;
 }
 
 
@@ -300,73 +305,75 @@ uint32_t BaseMesh_FindVertexIndex(base_mesh_p mesh, float v[3])
 }
 
 
+void BaseMesh_AddPolygonToFaces(base_mesh_p mesh, struct polygon_s *p)
+{
+    mesh_face_p current_face = NULL;
+    uint32_t add_elements_count = (p->vertex_count - 2) * 3;
+    GLuint *current_index;
+    
+    if (p->double_side)
+    {
+        add_elements_count *= 2;
+    }
+    
+    for(uint32_t i = 0; i < mesh->faces_count; i++)
+    {
+        if(mesh->faces[i].texture_index == p->texture_index)
+        {
+            current_face = mesh->faces + i;
+            break;
+        }
+    }
+    
+    if(current_face == NULL)
+    {
+        mesh->faces = (mesh_face_p)realloc(mesh->faces, (mesh->faces_count + 1) * sizeof(mesh_face_t));
+        current_face = mesh->faces + mesh->faces_count;
+        mesh->faces_count++;
+        current_face->elements = NULL;
+        current_face->elements_count = 0;
+        current_face->texture_index = p->texture_index;
+    }
+    
+    current_face->elements = (GLuint *)realloc(current_face->elements, (current_face->elements_count + add_elements_count) * sizeof(GLuint));
+    current_index = current_face->elements + current_face->elements_count;
+    current_face->elements_count += add_elements_count;
+
+    // Render the face as a triangle array
+    uint32_t startElement = BaseMesh_AddVertex(mesh, p->vertices);
+    uint32_t previousElement = BaseMesh_AddVertex(mesh, p->vertices + 1);
+
+    for(uint16_t j = 2; j < p->vertex_count; j++)
+    {
+        uint32_t thisElement = BaseMesh_AddVertex(mesh, p->vertices + j);
+
+        *current_index++ = startElement;
+        *current_index++ = previousElement;
+        *current_index++ = thisElement;
+
+        if (p->double_side)
+        {
+            *current_index++ = startElement;
+            *current_index++ = thisElement;
+            *current_index++ = previousElement;
+        }
+
+        previousElement = thisElement;
+    }
+}
+
+
 void BaseMesh_GenFaces(base_mesh_p mesh)
 {
-    // Note: This code relies on NULL being an all-zero value, which is true on
-    // any reasonable system these days.
-    if(mesh->element_count_per_texture == NULL)
-    {
-        mesh->element_count_per_texture = (uint32_t *)calloc(sizeof(uint32_t), mesh->num_texture_pages);
-    }
-    // First collect indices on a per-texture basis
-    uint32_t **elements_for_texture = (uint32_t **)calloc(sizeof(uint32_t*), mesh->num_texture_pages);
-
     polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    mesh->faces_count = 0;
+    mesh->faces = NULL;
+    
+    for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
     {
         if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
         {
-            uint32_t texture = p->tex_index;
-            uint32_t oldStart = mesh->element_count_per_texture[texture];
-            uint32_t elementCount = (p->vertex_count - 2) * 3;
-            uint32_t backwardsStart = oldStart + elementCount;
-            if (p->double_side)
-            {
-                elementCount *= 2;
-            }
-
-            mesh->element_count_per_texture[texture] += elementCount;
-            elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
-
-            // Render the polygon as a triangle fan. That is obviously correct for
-            // a triangle and also correct for any quad.
-            uint32_t startElement = BaseMesh_AddVertex(mesh, p->vertices);
-            uint32_t previousElement = BaseMesh_AddVertex(mesh, p->vertices + 1);
-
-            for(uint16_t j = 2; j < p->vertex_count; j++)
-            {
-                uint32_t thisElement = BaseMesh_AddVertex(mesh, p->vertices + j);
-
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
-
-                if (p->double_side)
-                {
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 1] = thisElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 2] = previousElement;
-                }
-
-                previousElement = thisElement;
-            }
+            BaseMesh_AddPolygonToFaces(mesh, p);
         }
     }
-
-    // Now flatten all these indices to a single array
-    mesh->elements = NULL;
-    uint32_t elementsSoFar = 0;
-    for(uint32_t i = 0; i < mesh->num_texture_pages; i++)
-    {
-        if(elements_for_texture[i] == NULL)
-        {
-            continue;
-        }
-        mesh->elements = (uint32_t*)realloc(mesh->elements, (elementsSoFar + mesh->element_count_per_texture[i])*sizeof(elements_for_texture[i][0]));
-        memcpy(mesh->elements + elementsSoFar, elements_for_texture[i], mesh->element_count_per_texture[i]*sizeof(elements_for_texture[i][0]));
-
-        elementsSoFar += mesh->element_count_per_texture[i];
-        free(elements_for_texture[i]);
-    }
-    free(elements_for_texture);
 }

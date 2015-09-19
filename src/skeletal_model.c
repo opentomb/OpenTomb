@@ -268,9 +268,12 @@ void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags
 
 void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    for(int i = 1; i < tags_count; i++)
+    for(int i = 0; i < tags_count; i++)
     {
-        dst[i].mesh_skin = src[i].mesh_base;
+        if(i != src[i].parent)
+        {
+            dst[i].mesh_skin = src[i].mesh_base;
+        }
     }
 }
 

@@ -160,7 +160,7 @@ void CRender::UpdateAnimTextures()
     if(m_world)
     {
         anim_seq_p seq = m_world->anim_sequences;
-        for(uint16_t i=0;i<m_world->anim_sequences_count;i++,seq++)
+        for(uint16_t i = 0; i < m_world->anim_sequences_count; i++, seq++)
         {
             if(seq->frame_lock)
             {
@@ -258,7 +258,7 @@ void CRender::GenWorldList(struct camera_s *cam)
     else                                                                        // camera is out of all rooms
     {
         curr_room = m_world->rooms;                                             // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(uint32_t i=0; i<m_world->room_count; i++,curr_room++)
+        for(uint32_t i = 0; i < m_world->room_count; i++, curr_room++)
         {
             if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, cam->frustum))
             {
@@ -526,9 +526,9 @@ void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
         };
     }
 
-    if(m_active_texture != m_world->textures[p->tex_index])
+    if(m_active_texture != p->texture_index)
     {
-        m_active_texture = m_world->textures[p->tex_index];
+        m_active_texture = p->texture_index;
         qglBindTexture(GL_TEXTURE_2D, m_active_texture);
     }
     qglDrawElements(GL_TRIANGLE_FAN, p->vertex_count, GL_UNSIGNED_INT, p->indexes);
@@ -632,7 +632,7 @@ void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
 
 void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
 {
-    if(mesh->num_animated_elements > 0)
+    /*if(mesh->num_animated_elements > 0)
     {
         // Respecify the tex coord buffer
         qglBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
@@ -668,7 +668,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
             qglBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
         qglDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
-    }
+    }*/
 
     if(mesh->vertex_count == 0)
     {
@@ -694,25 +694,20 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
         qglNormalPointer(GL_FLOAT, 0, overrideNormals);
     }
 
-    const uint32_t *elementsbase = mesh->elements;
+    /*const uint32_t *elementsbase = mesh->elements;
         qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
         elementsbase = NULL;
 
-    unsigned long offset = 0;
-    for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
+    unsigned long offset = 0;*/
+    mesh_face_p face = mesh->faces;
+    for(uint32_t face_index = 0; face_index < mesh->faces_count; face_index++, face++)
     {
-        if(mesh->element_count_per_texture[texture] == 0)
+        if(m_active_texture != face->texture_index)
         {
-            continue;
-        }
-
-        if(m_active_texture != m_world->textures[texture])
-        {
-            m_active_texture = m_world->textures[texture];
+            m_active_texture = face->texture_index;
             qglBindTexture(GL_TEXTURE_2D, m_active_texture);
         }
-        qglDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
-        offset += mesh->element_count_per_texture[texture];
+        qglDrawElements(GL_TRIANGLES, face->elements_count, GL_UNSIGNED_INT, face->elements);
     }
 }
 
@@ -1014,7 +1009,7 @@ void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[1
 {
     if (room->content->sprites_count > 0 && room->content->sprite_buffer)
     {
-        const sprite_shader_description *shader = shaderManager->getSpriteShader();
+        /*const sprite_shader_description *shader = shaderManager->getSpriteShader();
         qglUseProgramObjectARB(shader->program);
         qglUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, modelViewMatrix);
         qglUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
@@ -1059,7 +1054,7 @@ void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[1
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
         qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        qglPopClientAttrib();
+        qglPopClientAttrib();*/
     }
 }
 

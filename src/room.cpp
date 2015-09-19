@@ -472,17 +472,18 @@ struct room_s *Room_CheckFlip(struct room_s *r)
 
 void Room_GenSpritesBuffer(struct room_s *room)
 {
+    room->content->sprite_buffer = NULL;
     // Find the number of different texture pages used and the number of non-null sprites
-    uint32_t highestTexturePageFound = 0;
+    /*uint32_t highestTexturePageFound = 0;
     int actualSpritesFound = 0;
     for (uint32_t i = 0; i < room->content->sprites_count; i++)
     {
         if (room->content->sprites[i].sprite)
         {
             actualSpritesFound += 1;
-            if(highestTexturePageFound < room->content->sprites[i].sprite->texture)
+            if(highestTexturePageFound < room->content->sprites[i].sprite->texture_index)
             {
-                highestTexturePageFound = room->content->sprites[i].sprite->texture;
+                highestTexturePageFound = room->content->sprites[i].sprite->texture_index;
             }
         }
     }
@@ -583,7 +584,7 @@ void Room_GenSpritesBuffer(struct room_s *room)
     qglGenBuffersARB(1, &room->content->sprite_buffer->element_array_buffer);
     qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->content->sprite_buffer->element_array_buffer);
     qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
-    free(elements);
+    free(elements);*/
 }
 
 

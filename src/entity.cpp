@@ -195,6 +195,7 @@ void Entity_DisableCollision(entity_p ent)
     }
 }
 
+
 void Entity_UpdateRoomPos(entity_p ent)
 {
     float pos[3];

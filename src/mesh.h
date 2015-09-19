@@ -16,6 +16,13 @@ extern "C" {
 struct polygon_s;
 struct vertex_s;
 
+typedef struct mesh_face_s
+{
+    GLuint                  texture_index;
+    GLuint                  elements_count;
+    GLuint                 *elements;    
+}mesh_face_t, *mesh_face_p;
+
 /*
  * base mesh, uses everywhere
  */
@@ -28,9 +35,8 @@ typedef struct base_mesh_s
     struct polygon_s       *transparency_polygons;                              // transparency mesh's polygons list
     struct polygon_s       *animated_polygons;                                  // opaque animated mesh's polygons list
 
-    uint32_t                num_texture_pages;                                  // face without structure wrapping
-    uint32_t               *element_count_per_texture;                          //
-    uint32_t               *elements;                                           //
+    uint32_t                faces_count;                                        // face with structure wrapping
+    struct mesh_face_s     *faces;
 
     uint32_t                vertex_count;                                       // number of mesh's vertices
     struct vertex_s        *vertices;
@@ -42,16 +48,16 @@ typedef struct base_mesh_s
     uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;
-    GLuint                  vbo_index_array;
+    //GLuint                  vbo_index_array;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
-    size_t                  num_animated_elements;
-    GLuint                  animated_vertex_array;
-    GLuint                  animated_texcoord_array;
-    GLuint                  animated_index_array;
-    size_t                  animated_index_array_length;
+    //size_t                  num_animated_elements;
+    //GLuint                  animated_vertex_array;
+    //GLuint                  animated_texcoord_array;
+    //GLuint                  animated_index_array;
+    //size_t                  animated_index_array_length;
 }base_mesh_t, *base_mesh_p;
 
 
@@ -61,7 +67,7 @@ typedef struct base_mesh_s
 typedef struct sprite_s
 {
     uint32_t            id;                                                     // object's ID
-    uint32_t            texture;                                                // texture number
+    GLuint              texture_index;
     GLfloat             tex_coord[8];                                           // texture coordinates
     uint32_t            flag;
     float               left;                                                   // world sprite's gabarites

@@ -1367,7 +1367,7 @@ void World_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                     seq->frames[j].current_uvrotate = 0.0;
                 }
                 engine_world.tex_atlas->getCoordinates(&p, seq->frame_list[j], false);
-                seq->frames[j].tex_ind = p.tex_index;
+                seq->frames[j].texture_index = p.texture_index;
                 if(j > 0)   // j == 0 -> d == 0;
                 {
                     ///@PARANOID: texture transformation may be not only move
@@ -1444,7 +1444,7 @@ void World_GenSprites(struct world_s *world, class VT_Level *tr)
         s->top = tr_st->top_side;
         s->bottom = tr_st->bottom_side;
 
-        world->tex_atlas->getSpriteCoordinates(s->tex_coord, i, s->texture);
+        world->tex_atlas->getSpriteCoordinates(s->tex_coord, i, &s->texture_index);
     }
 
     for(uint32_t i = 0; i < tr->sprite_sequences_count; i++)

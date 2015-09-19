@@ -101,6 +101,8 @@ class bordered_texture_atlas
     unsigned long number_canonical_object_textures;
     canonical_object_texture *canonical_object_textures;
     
+    GLuint *textures_indexes;
+    
     /*! Lays out the texture data and switches the atlas to laid out mode. */
     void layOutTextures();
     
@@ -157,7 +159,7 @@ public:
      */
     void getSpriteCoordinates(GLfloat *coordinates,
                               unsigned long sprite_texture,
-                              uint32_t &outPage) const;
+                              uint32_t *outPage) const;
     
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a
@@ -178,7 +180,7 @@ public:
      * @param textureNames The names of the textures.
      * @param additionalTextureNames How many texture names to create in addition to the needed ones.
      */
-    void createTextures(GLuint *textureNames) const;
+    void createTextures(GLuint *textureNames);
 
 };
 

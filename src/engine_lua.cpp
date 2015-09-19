@@ -53,7 +53,7 @@ int lua_print(lua_State * lua)
        Con_AddLine("nil", FONTSTYLE_CONSOLE_EVENT);
     }
 
-    for(int i=1;i<=top;i++)
+    for(int i = 1; i <= top; i++)
     {
         switch(lua_type(lua, i))
         {
@@ -151,6 +151,7 @@ int lua_BindKey(lua_State *lua)
      return 0;
  }
 
+
 int lua_DumpRoom(lua_State * lua)
 {
     room_p r = NULL;
@@ -227,7 +228,6 @@ int lua_SetRoomEnabled(lua_State * lua)
 /*
  * Base engine functions
  */
-
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
@@ -317,6 +317,7 @@ int lua_SetEntityCollision(lua_State * lua)
     return 0;
 }
 
+
 int lua_SetEntityCollisionFlags(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -352,6 +353,7 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntitySectorFlags(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
@@ -364,6 +366,7 @@ int lua_GetEntitySectorFlags(lua_State *lua)
     }
     return 0;
 }
+
 
 int lua_GetEntitySectorIndex(lua_State *lua)
 {
@@ -378,6 +381,7 @@ int lua_GetEntitySectorIndex(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetEntitySectorMaterial(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
@@ -390,6 +394,7 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
     }
     return 0;
 }
+
 
 int lua_SameRoom(lua_State *lua)
 {
@@ -411,6 +416,7 @@ int lua_SameRoom(lua_State *lua)
     lua_pushboolean(lua, 0);
     return 1;
 }
+
 
 int lua_NewSector(lua_State *lua)
 {
@@ -600,6 +606,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -669,6 +676,7 @@ int lua_SetCharacterParam(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetCharacterCombatMode(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;
@@ -682,6 +690,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_ChangeCharacterParam(lua_State * lua)
 {
@@ -713,6 +722,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_AddCharacterHair(lua_State *lua)
 {
@@ -755,6 +765,7 @@ int lua_AddCharacterHair(lua_State *lua)
     return 0;
 }
 
+
 int lua_ResetCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
@@ -792,6 +803,7 @@ int lua_ResetCharacterHair(lua_State *lua)
     }
     return 0;
 }
+
 
 int lua_AddEntityRagdoll(lua_State *lua)
 {
@@ -831,6 +843,7 @@ int lua_AddEntityRagdoll(lua_State *lua)
     return 0;
 }
 
+
 int lua_RemoveEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
@@ -859,6 +872,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetSecretStatus(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No parameter specified - return
@@ -869,6 +883,7 @@ int lua_GetSecretStatus(lua_State *lua)
     lua_pushinteger(lua, (int)gameflow_manager.SecretsTriggerMap[secret_number]);
     return 1;
 }
+
 
 int lua_SetSecretStatus(lua_State *lua)
 {
@@ -947,6 +962,7 @@ int lua_AddFont(lua_State *lua)
     return 0;
 }
 
+
 int lua_AddFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) < 12)
@@ -979,6 +995,7 @@ int lua_AddFontStyle(lua_State *lua)
     return 0;
 }
 
+
 int lua_RemoveFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
@@ -995,6 +1012,7 @@ int lua_RemoveFont(lua_State *lua)
     return 0;
 }
 
+
 int lua_RemoveFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
@@ -1010,6 +1028,7 @@ int lua_RemoveFontStyle(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_AddItem(lua_State * lua)
 {
@@ -1372,7 +1391,6 @@ int lua_SpawnEntity(lua_State * lua)
     return 1;
 }
 
-
 /*
  * Moveables script control section
  */
@@ -1404,6 +1422,7 @@ int lua_GetEntityVector(lua_State * lua)
     lua_pushnumber(lua, e2->transform[12+2] - e1->transform[12+2]);
     return 3;
 }
+
 
 int lua_GetEntityDistance(lua_State * lua)
 {
@@ -1487,6 +1506,7 @@ int lua_GetEntityPosition(lua_State * lua)
     return 6;
 }
 
+
 int lua_GetEntityAngles(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
@@ -1511,6 +1531,7 @@ int lua_GetEntityAngles(lua_State * lua)
     return 3;
 }
 
+
 int lua_GetEntityScaling(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
@@ -1534,6 +1555,7 @@ int lua_GetEntityScaling(lua_State * lua)
 
     return 3;
 }
+
 
 int lua_SetEntityScaling(lua_State * lua)
 {
@@ -1564,6 +1586,7 @@ int lua_SetEntityScaling(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_SimilarSector(lua_State * lua)
 {
@@ -1614,6 +1637,7 @@ int lua_SimilarSector(lua_State * lua)
     return 1;
 }
 
+
 int lua_GetSectorHeight(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1658,6 +1682,7 @@ int lua_GetSectorHeight(lua_State * lua)
     lua_pushnumber(lua, point[2]);
     return 1;
 }
+
 
 int lua_SetEntityPosition(lua_State * lua)
 {
@@ -1713,6 +1738,7 @@ int lua_SetEntityPosition(lua_State * lua)
     return 0;
 }
 
+
 int lua_SetEntityAngles(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1745,6 +1771,7 @@ int lua_SetEntityAngles(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_MoveEntityGlobal(lua_State * lua)
 {
@@ -1805,6 +1832,7 @@ int lua_MoveEntityLocal(lua_State * lua)
     return 0;
 }
 
+
 int lua_MoveEntityToSink(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -1848,6 +1876,7 @@ int lua_MoveEntityToSink(lua_State * lua)
     return 0;
 }
 
+
 int lua_MoveEntityToEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1883,6 +1912,7 @@ int lua_MoveEntityToEntity(lua_State * lua)
     return 0;
 }
 
+
 int lua_RotateEntity(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -1917,6 +1947,7 @@ int lua_RotateEntity(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
@@ -1940,6 +1971,7 @@ int lua_GetEntitySpeed(lua_State * lua)
     return 3;
 }
 
+
 int lua_GetEntitySpeedLinear(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
@@ -1960,6 +1992,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
     lua_pushnumber(lua, vec3_abs(ent->speed));
     return 1;
 }
+
 
 int lua_SetEntitySpeed(lua_State * lua)
 {
@@ -2031,6 +2064,7 @@ int lua_SetEntityAnim(lua_State * lua)
     return 0;
 }
 
+
 int lua_SetEntityAnimFlag(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -2054,6 +2088,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_SetEntityBodyPartFlag(lua_State * lua)
 {
@@ -2221,6 +2256,7 @@ int lua_GetEntityVisibility(lua_State * lua)
     return 1;
 }
 
+
 int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -2341,6 +2377,7 @@ int lua_GetEntityTriggerLayout(lua_State *lua)
     return 3;
 }
 
+
 int lua_SetEntityTriggerLayout(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -2376,6 +2413,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
     return 0;
 }
 
+
 int lua_SetEntityLock(lua_State * lua)
 {
     if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
@@ -2390,6 +2428,7 @@ int lua_SetEntityLock(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntityLock(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
@@ -2402,6 +2441,7 @@ int lua_GetEntityLock(lua_State * lua)
     }
     return 0;
 }
+
 
 int lua_SetEntityEvent(lua_State * lua)
 {
@@ -2418,6 +2458,7 @@ int lua_SetEntityEvent(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntityEvent(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
@@ -2431,6 +2472,7 @@ int lua_GetEntityEvent(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetEntityMask(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
@@ -2443,6 +2485,7 @@ int lua_GetEntityMask(lua_State * lua)
     }
     return 0;
 }
+
 
 int lua_SetEntityMask(lua_State * lua)
 {
@@ -2458,6 +2501,7 @@ int lua_SetEntityMask(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntitySectorStatus(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;
@@ -2470,6 +2514,7 @@ int lua_GetEntitySectorStatus(lua_State *lua)
     }
     return 0;
 }
+
 
 int lua_SetEntitySectorStatus(lua_State *lua)
 {
@@ -2485,6 +2530,7 @@ int lua_SetEntitySectorStatus(lua_State *lua)
     }
     return 0;
 }
+
 
 int lua_GetEntityOCB(lua_State * lua)
 {
@@ -2509,6 +2555,7 @@ int lua_SetEntityOCB(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -2532,6 +2579,7 @@ int lua_GetEntityFlags(lua_State * lua)
 
     return 3;
 }
+
 
 int lua_SetEntityFlags(lua_State * lua)
 {
@@ -2597,6 +2645,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     return 1;
 }
+
 
 int lua_SetEntityTypeFlag(lua_State *lua)
 {
@@ -2668,6 +2717,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
     return 1;
 }
 
+
 int lua_SetEntityStateFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -2738,6 +2788,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
     return 1;
 }
 
+
 int lua_SetEntityCallbackFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -2776,6 +2827,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetEntityTimer(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No arguments provided - return.
@@ -2790,6 +2842,7 @@ int lua_GetEntityTimer(lua_State * lua)
     return 1;
 }
 
+
 int lua_SetEntityTimer(lua_State * lua)
 {
     if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
@@ -2803,6 +2856,7 @@ int lua_SetEntityTimer(lua_State * lua)
     ent->timer = lua_tonumber(lua, 2);
     return 0;
 }
+
 
 int lua_GetEntityMoveType(lua_State * lua)
 {
@@ -2825,6 +2879,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 
     return 1;
 }
+
 
 int lua_SetEntityMoveType(lua_State * lua)
 {
@@ -2928,6 +2983,7 @@ int lua_SetEntityResponse(lua_State * lua)
     return 0;
 }
 
+
 int lua_GetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -2950,6 +3006,7 @@ int lua_GetEntityState(lua_State * lua)
     return 1;
 }
 
+
 int lua_GetEntityModel(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -2971,6 +3028,7 @@ int lua_GetEntityModel(lua_State * lua)
 
     return 1;
 }
+
 
 int lua_SetEntityState(lua_State * lua)
 {
@@ -2998,11 +3056,12 @@ int lua_SetEntityState(lua_State * lua)
     return 0;
 }
 
+
 int lua_SetEntityRoomMove(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Warning("expecting arguments (id, room_id, move_type, dir_flag)");
+        Con_Warning("expecting arguments (entity_id, room_id, move_type, dir_flag)");
         return 0;
     }
 
@@ -3067,6 +3126,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
     return 1;
 }
 
+
 int lua_SetEntityMeshswap(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -3094,6 +3154,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_SetModelMeshReplaceFlag(lua_State *lua)
 {
@@ -3125,6 +3186,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
     return 0;
 }
 
+
 int lua_SetModelAnimReplaceFlag(lua_State *lua)
 {
     if(lua_gettop(lua) < 3)
@@ -3154,6 +3216,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_CopyMeshFromModelToModel(lua_State *lua)
 {
@@ -3194,6 +3257,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     return 0;
 }
 
+
 int lua_PushEntityBody(lua_State *lua)
 {
     if(lua_gettop(lua) != 5)
@@ -3229,6 +3293,7 @@ int lua_PushEntityBody(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_SetEntityBodyMass(lua_State *lua)
 {
@@ -3277,6 +3342,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     return 0;
 }
 
+
 int lua_LockEntityBodyLinearFactor(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -3313,6 +3379,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     return 0;
 }
 
+
 int lua_SetCharacterWeaponModel(lua_State *lua)
 {
     if(lua_gettop(lua) < 3)
@@ -3336,6 +3403,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
@@ -3358,6 +3426,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
         return 0;
     }
 }
+
 
 int lua_SetCharacterCurrentWeapon(lua_State *lua)
 {
@@ -3385,7 +3454,6 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 /*
  * Camera functions
  */
-
 int lua_CamShake(lua_State *lua)
 {
     if(lua_gettop(lua) != 2) return 0;
@@ -3396,6 +3464,7 @@ int lua_CamShake(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_FlashSetup(lua_State *lua)
 {
@@ -3409,6 +3478,7 @@ int lua_FlashSetup(lua_State *lua)
     return 0;
 }
 
+
 int lua_FlashStart(lua_State *lua)
 {
     //Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
@@ -3418,7 +3488,6 @@ int lua_FlashStart(lua_State *lua)
 /*
  * General gameplay functions
  */
-
 int lua_PlayStream(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -3450,6 +3519,7 @@ int lua_PlayStream(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_PlaySound(lua_State *lua)
 {
@@ -3546,11 +3616,13 @@ int lua_StopSound(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetLevel(lua_State *lua)
 {
     lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
     return 1;
 }
+
 
 int lua_SetLevel(lua_State *lua)
 {
@@ -3568,6 +3640,7 @@ int lua_SetLevel(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_SetGame(lua_State *lua)
 {
@@ -3603,6 +3676,7 @@ int lua_SetGame(lua_State *lua)
     return 0;
 }
 
+
 int lua_LoadMap(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
@@ -3614,7 +3688,7 @@ int lua_LoadMap(lua_State *lua)
     if(lua_isstring(lua, 1))
     {
         const char *s = lua_tostring(lua, 1);
-        if((s != NULL) && (s[0] != 0) && (strcmp(s, gameflow_manager.CurrentLevelPath) != 0))
+        if((s != NULL) && (s[0] != 0))
         {
             if(!lua_isnil(lua, 2))
             {
@@ -3626,7 +3700,10 @@ int lua_LoadMap(lua_State *lua)
             }
             char file_path[MAX_ENGINE_PATH];
             lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
-            //Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
+            if(!Gui_LoadScreenAssignPic(file_path))
+            {
+                Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+            }
             Engine_LoadMap(s);
         }
     }
@@ -3638,7 +3715,6 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
-
 int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
@@ -3701,6 +3777,7 @@ int lua_SetFlipState(lua_State *lua)
     return 0;
 }
 
+
 int lua_SetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
@@ -3732,6 +3809,7 @@ int lua_SetFlipMap(lua_State *lua)
     return 0;
 }
 
+
 int lua_GetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) == 1)
@@ -3753,6 +3831,7 @@ int lua_GetFlipMap(lua_State *lua)
         return 0;
     }
 }
+
 
 int lua_GetFlipState(lua_State *lua)
 {
@@ -3779,7 +3858,6 @@ int lua_GetFlipState(lua_State *lua)
 /*
  * Generate UV rotate animations
  */
-
 int lua_genUVRotateAnimation(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
@@ -3829,7 +3907,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
             seq->frames->uvrotate_max = 0.5 * (v_max - v_min);
             seq->frames->current_uvrotate = 0.0f;
-            seq->frames->tex_ind = p->tex_index;
+            seq->frames->texture_index = p->texture_index;
             seq->frames->mat[0] = 1.0;
             seq->frames->mat[1] = 0.0;
             seq->frames->mat[2] = 0.0;
@@ -3864,6 +3942,7 @@ static int engine_LuaPanic(lua_State *lua) {
     return 0;
 }
 
+
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
@@ -3886,6 +3965,7 @@ bool Engine_LuaInit()
     }
 }
 
+
 void Engine_LuaClearTasks()
 {
     if(engine_lua)
@@ -3893,6 +3973,7 @@ void Engine_LuaClearTasks()
         lua_CallVoidFunc(engine_lua, "clearTasks");
     }
 }
+
 
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {

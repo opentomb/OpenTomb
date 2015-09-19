@@ -48,7 +48,7 @@ void CDynamicBSP::AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
 
     bsp_polygon_p bp = (bsp_polygon_p)(m_tree_buffer + m_tree_allocated);
     m_tree_allocated  += sizeof(bsp_polygon_t);
-    bp->tex_index      = p->tex_index;
+    bp->texture_index  = p->texture_index;
     bp->transparency   = p->transparency;
     bp->vertex_count   = p->vertex_count;
 
@@ -58,7 +58,7 @@ void CDynamicBSP::AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
     //vertex_p v = m_vertex_buffer + m_vertex_allocated;
     //vertex_p pv = p->vertices;
     memcpy(m_vertex_buffer + m_vertex_allocated, p->vertices, p->vertex_count * sizeof(vertex_t));
-    for(uint16_t i=0;i<p->vertex_count;i++,vi++/*,v++,pv++*/)
+    for(uint16_t i = 0; i < p->vertex_count; i++, vi++/*, v++, pv++*/)
     {
         *vi = m_vertex_allocated++;
         //*v  = *pv;
@@ -110,7 +110,7 @@ void CDynamicBSP::AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
     uint16_t in_plane = 0;
     float dist;
     vertex_p v = p->vertices;
-    for(uint16_t i=0;i<p->vertex_count;i++,v++)
+    for(uint16_t i = 0; i < p->vertex_count; i++, v++)
     {
         dist = vec3_plane_dist(root->plane, v->position);
         if (dist > SPLIT_EPSILON)
@@ -231,7 +231,7 @@ CDynamicBSP::~CDynamicBSP()
 
 void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f)
 {
-    for(;(p!=NULL)&&(!m_realloc_state);p=p->next)
+    for(;p && (!m_realloc_state); p = p->next)
     {
         m_temp_allocated = 0;
         polygon_p np = this->CreatePolygon(p->vertex_count);
@@ -245,7 +245,7 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
         np->transparency = p->transparency;
 
         Mat4_vec3_rot_macro(np->plane, transform, p->plane);
-        for(uint16_t i=0;i<p->vertex_count;i++)
+        for(uint16_t i = 0; i < p->vertex_count; i++)
         {
             src_v = p->vertices + i;
             dst_v = np->vertices + i;
@@ -253,7 +253,7 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
         }
         np->plane[3] = -vec3_dot(np->plane, np->vertices[0].position);
 
-        for(frustum_p ff=f;(!visible)&&(ff!=NULL);ff=ff->next)
+        for(frustum_p ff = f; (!visible) && ff; ff = ff->next)
         {
             if(Frustum_IsPolyVisible(np, ff))
             {
@@ -269,9 +269,9 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
                 anim_seq_p seq = m_anim_seq + p->anim_id - 1;
                 uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
                 tex_frame_p tf = seq->frames + frame;
-                np->tex_index = tf->tex_ind;
+                np->texture_index = tf->texture_index;
 
-                for(uint16_t i=0;i<p->vertex_count;i++)
+                for(uint16_t i = 0; i < p->vertex_count; i++)
                 {
                     src_v = p->vertices + i;
                     dst_v = np->vertices + i;
@@ -282,8 +282,8 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
             }
             else
             {
-                np->tex_index = p->tex_index;
-                for(uint16_t i=0;i<p->vertex_count;i++)
+                np->texture_index = p->texture_index;
+                for(uint16_t i = 0; i < p->vertex_count; i++)
                 {
                     src_v = p->vertices + i;
                     dst_v = np->vertices + i;
