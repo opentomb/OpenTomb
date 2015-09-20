@@ -467,16 +467,11 @@ void Entity::checkCollisionCallbacks()
     while((cobj = getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag)) != nullptr)
     {
         // do callbacks here:
-        engine::ObjectType type = engine::ObjectType::StaticMesh;
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cobj->getUserPointer());
-        if(cont != nullptr)
-        {
-            type = cont->object_type;
-        }
 
-        if(type == engine::ObjectType::Entity)
+        if(cont && cont->contains<Entity>())
         {
-            Entity* activator = static_cast<Entity*>(cont->object);
+            Entity* activator = static_cast<Entity*>(cont->getObject());
 
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
@@ -485,10 +480,9 @@ void Entity::checkCollisionCallbacks()
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
-        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) &&
-                (type == engine::ObjectType::RoomBase))
+        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && cont->contains<Room>())
         {
-            Room* activator = static_cast<Room*>(cont->object);
+            Room* activator = static_cast<Room*>(cont->getObject());
             engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
         }
     }
@@ -1063,10 +1057,10 @@ void Entity::checkActivators()
     auto containers = m_self->room->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
-        if (cont->object_type != engine::ObjectType::Entity || !cont->object)
+        if(!cont->contains<Entity>())
                 continue;
 
-        Entity* e = static_cast<Entity*>(cont->object);
+        Entity* e = static_cast<Entity*>(cont->getObject());
         if (!e->m_enabled)
                 continue;
 
@@ -1112,14 +1106,13 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_self(std::make_shared<engine::EngineContainer>())
+    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>())
 {
     m_transform.setIdentity();
 
     m_lerp_last_transform = m_lerp_curr_transform = m_transform;
 
-    m_self->object = this;
-    m_self->object_type = engine::ObjectType::Entity;
+    m_self->setObject(this);
     m_self->room = nullptr;
     m_self->collision_type = engine::CollisionType::None;
     m_obb.transform = &m_transform;

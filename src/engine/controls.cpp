@@ -631,7 +631,6 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown()
 {
-    EngineContainer* cont = new EngineContainer();
     btScalar dbgR = 128.0;
     btVector3 v = engine_camera.getPosition();
     btVector3 dir = engine_camera.getViewDir();
@@ -649,8 +648,8 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
+    EngineContainer* cont = new EngineContainerImpl<BulletObject>();
     cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
-    cont->object_type = engine::ObjectType::BulletMisc;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -661,7 +660,7 @@ void Controls_SecondaryMouseDown()
     btVector3 from = engine_camera.getPosition();
     btVector3 to = from + engine_camera.getViewDir() * 32768.0;
 
-    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainer>();
+    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainerImpl<BulletObject>>();
     cam_cont->room = engine_camera.m_currentRoom;
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
@@ -680,7 +679,7 @@ void Controls_SecondaryMouseDown()
 
         if(EngineContainer* c0 = static_cast<EngineContainer*>(cbc.m_collisionObject->getUserPointer()))
         {
-            if(c0->object_type == engine::ObjectType::BulletMisc)
+            if(c0->contains<BulletObject>())
             {
                 btCollisionObject* obj = const_cast<btCollisionObject*>(cbc.m_collisionObject);
                 btRigidBody* body = btRigidBody::upcast(obj);

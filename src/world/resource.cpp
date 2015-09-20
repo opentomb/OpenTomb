@@ -1797,10 +1797,9 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
     room->ambient_lighting[0] = tr->m_rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->m_rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->m_rooms[room_index].light_colour.b * 2;
-    room->self.reset(new engine::EngineContainer());
+    room->self.reset(new engine::EngineContainerImpl<Room>());
     room->self->room = room.get();
-    room->self->object = room.get();
-    room->self->object_type = engine::ObjectType::RoomBase;
+    room->self->setObject( room.get() );
     room->near_room_list.clear();
     room->overlapped_room_list.clear();
 
@@ -1821,10 +1820,9 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         }
         room->static_mesh.emplace_back(std::make_shared<StaticMesh>());
         std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
-        r_static->self = std::make_shared<engine::EngineContainer>();
+        r_static->self = std::make_shared<engine::EngineContainerImpl<StaticMesh>>();
         r_static->self->room = room.get();
-        r_static->self->object = room->static_mesh[i].get();
-        r_static->self->object_type = engine::ObjectType::StaticMesh;
+        r_static->self->setObject( room->static_mesh[i].get() );
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
         r_static->position[0] = tr_room->static_meshes[i].position.x;
@@ -3728,10 +3726,10 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
         {
             for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
             {
-                if(cont->object_type != engine::ObjectType::Entity)
+                if(!cont->contains<Entity>())
                     continue;
 
-                Entity* ent = static_cast<Entity*>(cont->object);
+                Entity* ent = static_cast<Entity*>(cont->getObject());
                 if(ent->m_bf.animations.model->id != item->world_model_id)
                     continue;
 

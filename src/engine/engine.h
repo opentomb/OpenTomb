@@ -31,15 +31,6 @@ namespace engine
 #define LEVEL_FORMAT_DC         2
 #define LEVEL_FORMAT_OPENTOMB   3   // Maybe some day...
 
-enum class ObjectType
-{
-    StaticMesh,
-    RoomBase,
-    Entity,
-    Hair,
-    BulletMisc
-};
-
 enum class CollisionShape
 {
     Box,
@@ -78,11 +69,67 @@ enum class CollisionType
 
 struct EngineContainer
 {
-    ObjectType object_type = ObjectType::StaticMesh;
     CollisionType collision_type = CollisionType::None;
     CollisionShape collision_shape = CollisionShape::Box;
-    world::Object* object = nullptr;
+
+    virtual world::Object* getObject() = 0;
+    virtual const world::Object* getObject() const = 0;
+
+    template<class U>
+    bool contains() const
+    {
+        static_assert(std::is_base_of<world::Object,U>::value, "U must be derived from world::Object");
+        return dynamic_cast<const U*>(getObject()) != nullptr;
+    }
+
     world::Room* room = nullptr;
+
+    virtual ~EngineContainer() = default;
+};
+
+template<class T>
+class EngineContainerImpl : public EngineContainer
+{
+    static_assert(std::is_base_of<world::Object,T>::value, "T must be derived from world::Object");
+public:
+    virtual T* getObject() override
+    {
+        return m_object;
+    }
+
+    virtual const T* getObject() const override
+    {
+        return m_object;
+    }
+
+    void setObject(T* obj)
+    {
+        m_object = obj;
+    }
+
+private:
+    T* m_object = nullptr;
+};
+
+struct BulletObject : public world::Object
+{
+};
+
+template<>
+class EngineContainerImpl<BulletObject> : public EngineContainer
+{
+public:
+    virtual BulletObject* getObject() override
+    {
+        static BulletObject obj;
+        return &obj;
+    }
+
+    virtual const BulletObject* getObject() const override
+    {
+        static BulletObject obj;
+        return &obj;
+    }
 };
 
 struct EngineControlState

@@ -293,7 +293,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
 
-        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && (cont->object_type == engine::ObjectType::RoomBase)))
+        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && cont->contains<world::Room>()))
         {
             move.setInterpolate3(from, to, cb.m_closestHitFraction);
             ent->m_transform.getOrigin()[2] = move[2];

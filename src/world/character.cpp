@@ -54,7 +54,7 @@ int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<e
         if(std::abs(v[2] - floor) < 1.1)
         {
             engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-            if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            if(cont && cont->contains<Entity>() && ((static_cast<Entity*>(cont->getObject()))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -998,9 +998,9 @@ int Character::moveOnFloor()
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.boundingBox.min[2]))
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
-        if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity))
+        if(cont && cont->contains<Entity>())
         {
-            Entity* e = static_cast<Entity*>(cont->object);
+            Entity* e = static_cast<Entity*>(cont->getObject());
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_STAND, e->id(), id());
@@ -1647,9 +1647,9 @@ int Character::findTraverse()
         obj_s = obj_s->checkPortalPointer();
         for(std::shared_ptr<engine::EngineContainer>& cont : obj_s->owner_room->containers)
         {
-            if(cont->object_type == engine::ObjectType::Entity)
+            if(cont->contains<Entity>())
             {
-                Entity* e = static_cast<Entity*>(cont->object);
+                Entity* e = static_cast<Entity*>(cont->getObject());
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     m_angles[0] = std::lround(m_angles[0] / 90.0f) * 90.0f;
@@ -1718,7 +1718,7 @@ int Character::checkTraverse(const Entity& obj)
     if(cb.hasHit())
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-        if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
+        if(cont && cont->contains<Entity>() && ((static_cast<Entity*>(cont->getObject()))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return TraverseNone;
         }
@@ -2342,7 +2342,7 @@ void Character::processSectorImpl()
             {
                 engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
 
-                if((cont != nullptr) && (cont->object_type == engine::ObjectType::RoomBase))
+                if(cont && cont->contains<Room>())
                 {
                     setParam(PARAM_HEALTH, 0.0);
                     m_response.killed = true;

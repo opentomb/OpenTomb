@@ -16,6 +16,7 @@ class btRigidBody;
 namespace engine
 {
 struct EngineContainer;
+template<class T> class EngineContainerImpl;
 }
 
 namespace loader
@@ -128,7 +129,7 @@ struct Room : public Object
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
     std::unique_ptr<btRigidBody> bt_body;
 
-    std::unique_ptr<engine::EngineContainer> self;
+    std::unique_ptr<engine::EngineContainerImpl<Room>> self;
 
     ~Room();
 

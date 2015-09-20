@@ -36,7 +36,7 @@ struct HairSetup;
 
 struct Hair : public Object
 {
-    std::unique_ptr<engine::EngineContainer> m_container;
+    std::unique_ptr<engine::EngineContainerImpl<Hair>> m_container;
 
     std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
     uint32_t m_ownerBody;         // Owner entity's body ID.

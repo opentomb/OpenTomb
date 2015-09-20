@@ -743,20 +743,17 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
     {
         for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
         {
-            switch(cont->object_type)
+            if(!cont->contains<world::Entity>())
+                continue;
+            world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
+            if(!ent->m_wasRendered)
             {
-                case engine::ObjectType::Entity:
-                    world::Entity* ent = static_cast<world::Entity*>(cont->object);
-                    if(!ent->m_wasRendered)
-                    {
-                        if(ent->m_obb.isVisibleInRoom(*room, *m_cam))
-                        {
-                            renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
-                        }
-                        ent->m_wasRendered = true;
-                    }
-                    break;
-            };
+                if(ent->m_obb.isVisibleInRoom(*room, *m_cam))
+                {
+                    renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
+                }
+                ent->m_wasRendered = true;
+            }
         }
     }
 #if STENCIL_FRUSTUM
@@ -818,13 +815,11 @@ bool Render::addRoom(world::Room* room)
 
     for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
     {
-        switch(cont->object_type)
-        {
-            case engine::ObjectType::Entity:
-                static_cast<world::Entity*>(cont->object)->m_wasRendered = false;
-                static_cast<world::Entity*>(cont->object)->m_wasRenderedLines = false;
-                break;
-        };
+        if(!cont->contains<world::Entity>())
+            continue;
+
+        static_cast<world::Entity*>(cont->getObject())->m_wasRendered = false;
+        static_cast<world::Entity*>(cont->getObject())->m_wasRenderedLines = false;
     }
 
     for(world::RoomSprite& sp : room->sprites)
@@ -916,19 +911,19 @@ void Render::drawList()
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
         for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
         {
-            if(cont->object_type == engine::ObjectType::Entity)
+            if(!cont->contains<world::Entity>())
+                continue;
+
+            world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
+            if(!ent->m_bf.animations.model->has_transparency || !ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
+                continue;
+
+            for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
             {
-                world::Entity* ent = static_cast<world::Entity*>(cont->object);
-                if(ent->m_bf.animations.model->has_transparency && ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
+                if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                 {
-                    for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
-                    {
-                        if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
-                        {
-                            auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
-                        }
-                    }
+                    auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
+                    render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
                 }
             }
         }
@@ -1423,22 +1418,18 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
 
     for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
     {
-        switch(cont->object_type)
+        if(!cont->contains<world::Entity>())
+            continue;
+
+        world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
+        if(ent->m_wasRenderedLines)
+            continue;
+
+        if(ent->m_obb.isVisibleInRoom(*room, cam))
         {
-            case engine::ObjectType::Entity:
-            {
-                world::Entity* ent = static_cast<world::Entity*>(cont->object);
-                if(!ent->m_wasRenderedLines)
-                {
-                    if(ent->m_obb.isVisibleInRoom(*room, cam))
-                    {
-                        debugDrawer.drawEntityDebugLines(ent, render);
-                    }
-                    ent->m_wasRenderedLines = true;
-                }
-                break;
-            }
-        };
+            debugDrawer.drawEntityDebugLines(ent, render);
+        }
+        ent->m_wasRenderedLines = true;
     }
 }
 

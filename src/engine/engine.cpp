@@ -491,19 +491,17 @@ void showDebugInfo()
 
     if(last_cont != nullptr)
     {
-        switch(last_cont->object_type)
+        if(last_cont->contains<world::Entity>())
         {
-            case engine::ObjectType::Entity:
-                gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<world::Entity*>(last_cont->object)->id(), static_cast<world::Entity*>(last_cont->object)->m_bf.animations.model->id);
-                break;
-
-            case engine::ObjectType::StaticMesh:
-                gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::StaticMesh*>(last_cont->object)->object_id);
-                break;
-
-            case engine::ObjectType::RoomBase:
-                gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<world::Room*>(last_cont->object)->id);
-                break;
+            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<world::Entity*>(last_cont->getObject())->id(), static_cast<world::Entity*>(last_cont->getObject())->m_bf.animations.model->id);
+        }
+        else if(last_cont->contains<world::StaticMesh>())
+        {
+            gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::StaticMesh*>(last_cont->getObject())->object_id);
+        }
+        else if(last_cont->contains<world::Room>())
+        {
+            gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<world::Room*>(last_cont->getObject())->id);
         }
     }
 
@@ -685,7 +683,7 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
             EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
-            if(cont && (cont->object_type == engine::ObjectType::BulletMisc))
+            if(cont && cont->contains<BulletObject>())
             {
                 cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
             }
@@ -785,9 +783,9 @@ void dumpRoom(world::Room* r)
         }
         for(const std::shared_ptr<EngineContainer>& cont : r->containers)
         {
-            if(cont->object_type == engine::ObjectType::Entity)
+            if(cont->contains<world::Entity>())
             {
-                world::Entity* ent = static_cast<world::Entity*>(cont->object);
+                world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
                 Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
             }
         }
@@ -1202,9 +1200,9 @@ int execCmd(const char *ch)
                     }
                     for(const std::shared_ptr<EngineContainer>& cont : sect->owner_room->containers)
                     {
-                        if(cont->object_type == engine::ObjectType::Entity)
+                        if(cont->contains<world::Entity>())
                         {
-                            world::Entity* e = static_cast<world::Entity*>(cont->object);
+                            world::Entity* e = static_cast<world::Entity*>(cont->getObject());
                             Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
                         }
                     }

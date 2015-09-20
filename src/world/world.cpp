@@ -85,7 +85,7 @@ void World::empty()
                 engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(body->getUserPointer());
                 body->setUserPointer(nullptr);
 
-                if(cont && (cont->object_type == engine::ObjectType::BulletMisc))
+                if(cont && cont->contains<engine::BulletObject>())
                 {
                     if(body->getMotionState())
                     {
