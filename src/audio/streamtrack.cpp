@@ -17,9 +17,9 @@ namespace audio
 // Crossfades for different track types are also different,
 // since background ones tend to blend in smoothly, while one-shot
 // tracks should be switched fastly.
-constexpr float CrossfadeOneshot = GAME_LOGIC_REFRESH_INTERVAL / 0.3f;
-constexpr float CrossfadeBackground = GAME_LOGIC_REFRESH_INTERVAL / 1.0f;
-constexpr float CrossfadeChat = GAME_LOGIC_REFRESH_INTERVAL / 0.1f;
+constexpr float CrossfadeOneshot = 1 / world::animation::GameLogicFrameRate / 0.3f;
+constexpr float CrossfadeBackground = 1 / world::animation::GameLogicFrameRate / 1.0f;
+constexpr float CrossfadeChat = 1 / world::animation::GameLogicFrameRate / 0.1f;
 
 // Damp coefficient specifies target volume level on a tracks
 // that are being silenced (background music). The larger it is, the bigger
@@ -28,7 +28,7 @@ constexpr float StreamDampLevel = 0.6f;
 
 // Damp fade speed is used when dampable track is either being
 // damped or un-damped.
-constexpr float StreamDampSpeed = GAME_LOGIC_REFRESH_INTERVAL / 1.0f;
+constexpr float StreamDampSpeed = 1 / world::animation::GameLogicFrameRate;
 
 // CDAUDIO.WAD step size defines CDAUDIO's header stride, on which each track
 // info is placed. Also CDAUDIO count specifies static amount of tracks existing
@@ -527,7 +527,7 @@ void StreamTrack::setFX(FxManager& manager)
         manager.last_room_type = manager.current_room_type;
         manager.current_slot = (++manager.current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager.current_slot);
 
-        ALuint effect = manager.al_effect[manager.current_room_type];
+        ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
         slot = manager.al_slot[manager.current_slot];
 
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))

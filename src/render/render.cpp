@@ -438,7 +438,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
 
     world::Room* room = entity->m_self->room;
 
-    float ambient_component[4];
+    GLfloat ambient_component[4];
     ambient_component[0] = room->ambient_lighting[0];
     ambient_component[1] = room->ambient_lighting[1];
     ambient_component[2] = room->ambient_lighting[2];
@@ -745,7 +745,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
         {
             switch(cont->object_type)
             {
-                case OBJECT_ENTITY:
+                case engine::ObjectType::Entity:
                     world::Entity* ent = static_cast<world::Entity*>(cont->object);
                     if(!ent->m_wasRendered)
                     {
@@ -820,7 +820,7 @@ bool Render::addRoom(world::Room* room)
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY:
+            case engine::ObjectType::Entity:
                 static_cast<world::Entity*>(cont->object)->m_wasRendered = false;
                 static_cast<world::Entity*>(cont->object)->m_wasRenderedLines = false;
                 break;
@@ -916,7 +916,7 @@ void Render::drawList()
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
         for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            if(cont->object_type == engine::ObjectType::Entity)
             {
                 world::Entity* ent = static_cast<world::Entity*>(cont->object);
                 if(ent->m_bf.animations.model->has_transparency && ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
@@ -1425,7 +1425,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY:
+            case engine::ObjectType::Entity:
             {
                 world::Entity* ent = static_cast<world::Entity*>(cont->object);
                 if(!ent->m_wasRenderedLines)

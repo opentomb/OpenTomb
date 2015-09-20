@@ -248,7 +248,7 @@ void Source::setFX(FxManager& manager)
         manager.last_room_type = manager.current_room_type;
         manager.current_slot = (++manager.current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager.current_slot);
 
-        ALuint effect = manager.al_effect[manager.current_room_type];
+        ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
         slot = manager.al_slot[manager.current_slot];
 
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))

@@ -115,7 +115,7 @@ void Entity::disableCollision()
 
 void Entity::genRigidBody()
 {
-    if((m_bf.animations.model == nullptr) || (m_self->collision_type == COLLISION_TYPE_NONE))
+    if((m_bf.animations.model == nullptr) || (m_self->collision_type == engine::CollisionType::None))
         return;
 
     m_bt.bt_body.clear();
@@ -126,19 +126,19 @@ void Entity::genRigidBody()
         btCollisionShape *cshape;
         switch(m_self->collision_shape)
         {
-            case COLLISION_SHAPE_SPHERE:
+            case engine::CollisionShape::Sphere:
                 cshape = core::BT_CSfromSphere(mesh->m_radius);
                 break;
 
-            case COLLISION_SHAPE_TRIMESH_CONVEX:
+            case engine::CollisionShape::TriMeshConvex:
                 cshape = core::BT_CSfromMesh(mesh, true, true, false);
                 break;
 
-            case COLLISION_SHAPE_TRIMESH:
+            case engine::CollisionShape::TriMesh:
                 cshape = core::BT_CSfromMesh(mesh, true, true, true);
                 break;
 
-            case COLLISION_SHAPE_BOX:
+            case engine::CollisionShape::Box:
             default:
                 cshape = core::BT_CSfromBBox(mesh->boundingBox, true, true);
                 break;
@@ -149,29 +149,28 @@ void Entity::genRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            if(m_self->collision_shape != COLLISION_SHAPE_TRIMESH)
+            if(m_self->collision_shape != engine::CollisionShape::TriMesh)
                 cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
-            btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-            m_bt.bt_body.back().reset(new btRigidBody(0.0, motionState, cshape, localInertia));
+            m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
             switch(m_self->collision_type)
             {
-                case COLLISION_TYPE_KINEMATIC:
+                case engine::CollisionType::Kinematic:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
                     break;
 
-                case COLLISION_TYPE_GHOST:
+                case engine::CollisionType::Ghost:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
                     break;
 
-                case COLLISION_TYPE_ACTOR:
-                case COLLISION_TYPE_VEHICLE:
+                case engine::CollisionType::Actor:
+                case engine::CollisionType::Vehicle:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     break;
 
-                case COLLISION_TYPE_STATIC:
+                case engine::CollisionType::Static:
                 default:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
                     break;
@@ -232,7 +231,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
             engine::EngineContainer* cont0 = static_cast<engine::EngineContainer*>(manifold->getBody0()->getUserPointer());
             engine::EngineContainer* cont1 = static_cast<engine::EngineContainer*>(manifold->getBody1()->getUserPointer());
-            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            if((cont0->collision_type == engine::CollisionType::Ghost) || (cont1->collision_type == engine::CollisionType::Ghost))
             {
                 continue;
             }
@@ -468,14 +467,14 @@ void Entity::checkCollisionCallbacks()
     while((cobj = getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag)) != nullptr)
     {
         // do callbacks here:
-        int type = -1;
+        engine::ObjectType type = engine::ObjectType::StaticMesh;
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cobj->getUserPointer());
         if(cont != nullptr)
         {
             type = cont->object_type;
         }
 
-        if(type == OBJECT_ENTITY)
+        if(type == engine::ObjectType::Entity)
         {
             Entity* activator = static_cast<Entity*>(cont->object);
 
@@ -487,7 +486,7 @@ void Entity::checkCollisionCallbacks()
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) &&
-                (type == OBJECT_ROOM_BASE))
+                (type == engine::ObjectType::RoomBase))
         {
             Room* activator = static_cast<Room*>(cont->object);
             engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
@@ -673,7 +672,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->collision_type != COLLISION_TYPE_STATIC)
+        if(m_self->collision_type != engine::CollisionType::Static)
         {
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {
@@ -698,7 +697,7 @@ void Entity::updateTransform()
 
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
-    btScalar t = m_currentSpeed * m_speedMult;
+    btScalar t = m_currentSpeed * animation::FrameRate;
     btScalar vz = (zeroVz) ? (0.0f) : (m_speed[2]);
 
     if(m_moveDir == MoveDirection::Forward)
@@ -743,68 +742,6 @@ void Entity::addOverrideAnim(int model_id)
         ss_anim->lerp = 0.0;
         ss_anim->current_animation = 0;
         ss_anim->current_frame = 0;
-        ss_anim->period = 1.0f / TR_FRAME_RATE;
-    }
-}
-
-void Entity::updateCurrentBoneFrame(animation::SSBoneFrame *bf)
-{
-    animation::SSBoneTag* btag = bf->bone_tags.data();
-    animation::BoneTag* src_btag, *next_btag;
-    SkeletalModel* model = bf->animations.model;
-    animation::BoneFrame* last_bf, *next_bf;
-
-    next_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
-    last_bf = &model->animations[bf->animations.lerp_last_animation].frames[bf->animations.lerp_last_frame];
-
-    bf->boundingBox.max = last_bf->boundingBox.max.lerp(next_bf->boundingBox.max, bf->animations.lerp);
-    bf->boundingBox.min = last_bf->boundingBox.min.lerp(next_bf->boundingBox.min, bf->animations.lerp);
-    bf->center = last_bf->center.lerp(next_bf->center, bf->animations.lerp);
-    bf->position = last_bf->position.lerp(next_bf->position, bf->animations.lerp);
-
-    next_btag = next_bf->bone_tags.data();
-    src_btag = last_bf->bone_tags.data();
-    for(uint16_t k = 0; k < last_bf->bone_tags.size(); k++, btag++, src_btag++, next_btag++)
-    {
-        btag->offset = src_btag->offset.lerp(next_btag->offset, bf->animations.lerp);
-        btag->transform.getOrigin() = btag->offset;
-        btag->transform.getOrigin()[3] = 1.0;
-        if(k == 0)
-        {
-            btag->transform.getOrigin() += bf->position;
-            btag->qrotate = util::Quat_Slerp(src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
-        }
-        else
-        {
-            animation::BoneTag* ov_src_btag = src_btag;
-            animation::BoneTag* ov_next_btag = next_btag;
-            btScalar ov_lerp = bf->animations.lerp;
-            for(animation::SSAnimation* ov_anim = bf->animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
-            {
-                if((ov_anim->model != nullptr) && ov_anim->model->mesh_tree[k].replace_anim)
-                {
-                    animation::BoneFrame* ov_last_bf = &ov_anim->model->animations[ov_anim->lerp_last_animation].frames[ov_anim->lerp_last_frame];
-                    animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
-                    ov_src_btag = &ov_last_bf->bone_tags[k];
-                    ov_next_btag = &ov_next_bf->bone_tags[k];
-                    ov_lerp = ov_anim->lerp;
-                    break;
-                }
-            }
-            btag->qrotate = util::Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
-        }
-        btag->transform.setRotation(btag->qrotate);
-    }
-
-    /*
-     * build absolute coordinate matrix system
-     */
-    btag = bf->bone_tags.data();
-    btag->full_transform = btag->transform;
-    btag++;
-    for(uint16_t k = 1; k < last_bf->bone_tags.size(); k++, btag++)
-    {
-        btag->full_transform = btag->parent->full_transform * btag->transform;
     }
 }
 
@@ -952,15 +889,15 @@ void Entity::processSector()
     if((m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (m_typeFlags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-                try
-                {
-                        if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
-                }
-                catch (lua::RuntimeError& error)
-                {
+        try
+        {
+            if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+        }
+        catch (lua::RuntimeError& error)
+        {
             engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
-                }
+        }
     }
 }
 
@@ -971,7 +908,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
     m_bt.no_fix_all = false;
 
     // some items (jeep) need this here...
-    updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
 //    updateRigidBody(false);
 }
 
@@ -1008,20 +945,16 @@ void Entity::slerpBones(btScalar lerp)
         ss_anim->frame_time = m_bf.animations.frame_time;
     }
     m_bf.animations.lerp = lerp;
-    updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
 }
 
 void Entity::lerpTransform(btScalar lerp)
 {
-    if(m_lerp_valid)
-    {
-        btQuaternion q,quatLast,quatCurr;
-        quatLast = m_lerp_last_transform.getRotation();
-        quatCurr = m_lerp_curr_transform.getRotation();
-        q = util::Quat_Slerp(quatLast, quatCurr, lerp);
-        m_transform.setRotation(q);
-        m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
-    }
+    if(!m_lerp_valid)
+        return;
+
+    m_transform.setRotation( util::Quat_Slerp(m_lerp_last_transform.getRotation(), m_lerp_curr_transform.getRotation(), lerp) );
+    m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
 }
 
 void Entity::updateInterpolation(btScalar time)
@@ -1032,7 +965,7 @@ void Entity::updateInterpolation(btScalar time)
         btScalar lerp;
         lerp = m_bf.animations.lerp;
         slerpBones(lerp);
-        lerp += time / m_bf.animations.period;
+        lerp += time * animation::FrameRate;
         if( lerp > 1.0 )
         {
             lerp = 1.0;
@@ -1041,7 +974,7 @@ void Entity::updateInterpolation(btScalar time)
 
         // Entity transform interp:
         lerpTransform(m_lerp);
-        m_lerp += time / GAME_LOGIC_REFRESH_INTERVAL;
+        m_lerp += time * animation::GameLogicFrameRate;
         if( m_lerp > 1.0 )
         {
             m_lerp = 1.0;
@@ -1065,7 +998,7 @@ animation::AnimUpdate Entity::stepAnimation(btScalar time)
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
-    updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
     fixPenetrations(nullptr);
 
     return stepResult;
@@ -1101,7 +1034,7 @@ void Entity::frame(btScalar time)
     //       If m_transform changes, rigid body must be updated regardless of anim frame change...
     //if(animStepResult != ENTITY_ANIM_NONE)
     //{ }
-    updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
     updateRigidBody(false);
 }
 
@@ -1127,10 +1060,10 @@ void Entity::checkActivators()
             return;
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
-        auto containers = m_self->room->containers;
+    auto containers = m_self->room->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
-        if (cont->object_type != OBJECT_ENTITY || !cont->object)
+        if (cont->object_type != engine::ObjectType::Entity || !cont->object)
                 continue;
 
         Entity* e = static_cast<Entity*>(cont->object);
@@ -1186,9 +1119,9 @@ Entity::Entity(uint32_t id)
     m_lerp_last_transform = m_lerp_curr_transform = m_transform;
 
     m_self->object = this;
-    m_self->object_type = OBJECT_ENTITY;
+    m_self->object_type = engine::ObjectType::Entity;
     m_self->room = nullptr;
-    m_self->collision_type = 0;
+    m_self->collision_type = engine::CollisionType::None;
     m_obb.transform = &m_transform;
     m_bt.bt_body.clear();
     m_bt.bt_joints.clear();
@@ -1291,7 +1224,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup bodies.
     m_bt.bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity::updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
     m_bt.no_fix_all = false;
     m_bt.no_fix_body_parts = 0x00000000;
 #if 0

@@ -182,9 +182,7 @@ void onFrameCrawlToClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUp
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        CharacterCommand* cmd = &ent->m_command;
-
-        if(!cmd->action)
+        if(!ent->m_command.action)
         {
             ent->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
             ent->m_moveType = MoveType::FreeFalling;
@@ -1523,7 +1521,7 @@ void StateController::pushablePush()
     m_character->m_bf.animations.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size());
+    int i = static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size());
 
     if(!m_character->m_command.action || !(Character::TraverseForward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
     {
@@ -1611,7 +1609,7 @@ void StateController::pushablePull()
     m_character->m_bf.animations.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size());
+    int i = static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size());
 
     if(!m_character->m_command.action || !(Character::TraverseBackward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
     {
@@ -3241,10 +3239,10 @@ void StateController::tightropeBalancingLeft()
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
         m_character->m_transform.getOrigin() += m_character->m_transform.getBasis() * btVector3(-256.0, 192.0, -640.0);
     }
-    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size() / 2) && (m_character->m_command.move[1] == 1))
+    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_character->m_command.move[1] == 1))
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size()-m_character->m_bf.animations.current_frame);
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
     }
 }
 
@@ -3258,10 +3256,10 @@ void StateController::tightropeBalancingRight()
         m_character->m_transform.getOrigin() += m_character->m_transform.getBasis() * btVector3(256.0, 192.0, -640.0);
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
     }
-    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size() / 2) && (m_character->m_command.move[1] == -1))
+    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_character->m_command.move[1] == -1))
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size()-m_character->m_bf.animations.current_frame);
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
     }
 }
 
@@ -3296,7 +3294,7 @@ bool StateController::isLowVerticalSpace() const
 
 bool StateController::isLastFrame() const
 {
-    return static_cast<int>(m_character->m_bf.animations.model->animations[m_character->m_bf.animations.current_animation].frames.size()) <= m_character->m_bf.animations.current_frame + 1;
+    return static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()) <= m_character->m_bf.animations.current_frame + 1;
 }
 
 void StateController::setNextState(int state)

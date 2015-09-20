@@ -493,15 +493,15 @@ void showDebugInfo()
     {
         switch(last_cont->object_type)
         {
-            case OBJECT_ENTITY:
+            case engine::ObjectType::Entity:
                 gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<world::Entity*>(last_cont->object)->id(), static_cast<world::Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
-            case OBJECT_STATIC_MESH:
+            case engine::ObjectType::StaticMesh:
                 gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::StaticMesh*>(last_cont->object)->object_id);
                 break;
 
-            case OBJECT_ROOM_BASE:
+            case engine::ObjectType::RoomBase:
                 gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<world::Room*>(last_cont->object)->id);
                 break;
         }
@@ -602,8 +602,8 @@ void storeEntityLerpTransforms()
 
             // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
             btScalar tmp = engine_world.character->m_bf.animations.lerp;
-            engine_world.character->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
-            engine_world.character->updateCurrentBoneFrame(&engine_world.character->m_bf);
+            engine_world.character->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
+            engine_world.character->m_bf.updateCurrentBoneFrame();
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
             engine_world.character->m_bf.animations.lerp = tmp;
@@ -630,8 +630,8 @@ void storeEntityLerpTransforms()
                 }
 
                 btScalar tmp = entity->m_bf.animations.lerp;
-                entity->m_bf.animations.lerp += GAME_LOGIC_REFRESH_INTERVAL / engine_world.character->m_bf.animations.period;
-                entity->updateCurrentBoneFrame(&entity->m_bf);
+                entity->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
+                entity->m_bf.updateCurrentBoneFrame();
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
                 entity->m_bf.animations.lerp = tmp;
@@ -685,7 +685,7 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
             EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
-            if(cont && (cont->object_type == OBJECT_BULLET_MISC))
+            if(cont && (cont->object_type == engine::ObjectType::BulletMisc))
             {
                 cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
             }
@@ -785,7 +785,7 @@ void dumpRoom(world::Room* r)
         }
         for(const std::shared_ptr<EngineContainer>& cont : r->containers)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            if(cont->object_type == engine::ObjectType::Entity)
             {
                 world::Entity* ent = static_cast<world::Entity*>(cont->object);
                 Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
@@ -1202,7 +1202,7 @@ int execCmd(const char *ch)
                     }
                     for(const std::shared_ptr<EngineContainer>& cont : sect->owner_room->containers)
                     {
-                        if(cont->object_type == OBJECT_ENTITY)
+                        if(cont->object_type == engine::ObjectType::Entity)
                         {
                             world::Entity* e = static_cast<world::Entity*>(cont->object);
                             Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
@@ -1337,7 +1337,7 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 {
     const EngineContainer* c1 = static_cast<const EngineContainer*>(rayResult.m_collisionObject->getUserPointer());
 
-    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == CollisionType::Ghost))))
     {
         return 1.0;
     }
@@ -1371,7 +1371,7 @@ btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::
     const EngineContainer* c1 = static_cast<const EngineContainer*>(convexResult.m_hitCollisionObject->getUserPointer());
     const world::Room* r1 = c1 ? c1->room : nullptr;
 
-    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == CollisionType::Ghost))))
     {
         return 1.0;
     }

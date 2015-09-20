@@ -54,7 +54,7 @@ int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<e
         if(std::abs(v[2] - floor) < 1.1)
         {
             engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-            if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -925,7 +925,7 @@ btScalar Character::inertiaLinear(btScalar max_speed, btScalar accel, bool comma
         }
     }
 
-    return m_inertiaLinear * m_speedMult;
+    return m_inertiaLinear * animation::FrameRate;
 }
 
 /*
@@ -998,7 +998,7 @@ int Character::moveOnFloor()
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.boundingBox.min[2]))
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
-        if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY))
+        if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity))
         {
             Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
@@ -1031,7 +1031,7 @@ int Character::moveOnFloor()
         if(floorNormal[2] > 0.02 && floorNormal[2] < m_criticalSlantZComponent)
         {
             floorNormal[2] = -floorNormal[2];
-            speed = floorNormal * m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            speed = floorNormal * animation::FrameRate * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             const btScalar zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
                                                                                                    //ang = (ang < 0.0)?(ang + 360.0):(ang);
             btScalar t = floorNormal[0] * m_transform.getBasis().getColumn(1)[0]
@@ -1053,7 +1053,7 @@ int Character::moveOnFloor()
         }
         else    // no slide - free to walk
         {
-            const btScalar fullSpeed = m_currentSpeed * m_speedMult;
+            const btScalar fullSpeed = m_currentSpeed * animation::FrameRate;
             m_response.vertical_collide |= 0x01;
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
@@ -1281,7 +1281,7 @@ int Character::monkeyClimbing()
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    t = m_currentSpeed * m_speedMult;
+    t = m_currentSpeed * animation::FrameRate;
     m_response.vertical_collide |= 0x01;
 
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_MONKEYSWING, 0);
@@ -1384,7 +1384,7 @@ int Character::wallsClimbing()
     {
         spd /= t;
     }
-    m_speed = spd * m_currentSpeed * m_speedMult;
+    m_speed = spd * m_currentSpeed * animation::FrameRate;
     move = m_speed * engine::engine_frame_time;
 
     ghostUpdate();
@@ -1416,7 +1416,7 @@ int Character::climbing()
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    t = m_currentSpeed * m_speedMult;
+    t = m_currentSpeed * animation::FrameRate;
     m_response.vertical_collide |= 0x01;
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
@@ -1647,7 +1647,7 @@ int Character::findTraverse()
         obj_s = obj_s->checkPortalPointer();
         for(std::shared_ptr<engine::EngineContainer>& cont : obj_s->owner_room->containers)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            if(cont->object_type == engine::ObjectType::Entity)
             {
                 Entity* e = static_cast<Entity*>(cont->object);
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
@@ -1718,7 +1718,7 @@ int Character::checkTraverse(const Entity& obj)
     if(cb.hasHit())
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-        if((cont != nullptr) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
+        if((cont != nullptr) && (cont->object_type == engine::ObjectType::Entity) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return TraverseNone;
         }
@@ -2258,7 +2258,7 @@ void Character::frame(btScalar time)
     }
     if(isPlayer() && (engine::control_states.noclip || engine::control_states.free_look))
     {
-        updateCurrentBoneFrame(&m_bf);
+        m_bf.updateCurrentBoneFrame();
         updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
         return;
     }
@@ -2306,7 +2306,7 @@ void Character::frame(btScalar time)
                                                                                               // TODO: check rigidbody update requirements.
                                                                                               //if(animStepResult != ENTITY_ANIM_NONE)
                                                                                               //{ }
-    updateCurrentBoneFrame(&m_bf);
+    m_bf.updateCurrentBoneFrame();
     updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
 }
 
@@ -2342,7 +2342,7 @@ void Character::processSectorImpl()
             {
                 engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
 
-                if((cont != nullptr) && (cont->object_type == OBJECT_ROOM_BASE))
+                if((cont != nullptr) && (cont->object_type == engine::ObjectType::RoomBase))
                 {
                     setParam(PARAM_HEALTH, 0.0);
                     m_response.killed = true;
@@ -2364,7 +2364,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     btVector3 spd(0.0, 0.0, 0.0);
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * m_speedMult;
+    t = v_horizontal * animation::FrameRate;
 
     // Calculate the direction of jump by vector multiplication.
     if(m_moveDir == MoveDirection::Forward)
@@ -2398,7 +2398,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
     m_speed = spd;
 
     // Apply vertical speed.
-    m_speed[2] = v_vertical * m_speedMult;
+    m_speed[2] = v_vertical * animation::FrameRate;
     m_moveType = MoveType::FreeFalling;
 }
 

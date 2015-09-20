@@ -969,7 +969,7 @@ void Engine::init(uint32_t num_Sources)
 
     // Reset last room type used for assigning reverb.
 
-    m_fxManager->last_room_type = TR_AUDIO_FX_LASTINDEX;
+    m_fxManager->last_room_type = loader::ReverbInfo::Sentinel;
 }
 
 void Engine::initDevice()

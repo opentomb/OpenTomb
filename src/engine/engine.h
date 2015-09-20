@@ -31,25 +31,34 @@ namespace engine
 #define LEVEL_FORMAT_DC         2
 #define LEVEL_FORMAT_OPENTOMB   3   // Maybe some day...
 
-#define OBJECT_STATIC_MESH                      (0x0001)
-#define OBJECT_ROOM_BASE                        (0x0002)
-#define OBJECT_ENTITY                           (0x0003)
-#define OBJECT_HAIR                             (0x0004)
-#define OBJECT_BULLET_MISC                      (0x7FFF)
+enum class ObjectType
+{
+    StaticMesh,
+    RoomBase,
+    Entity,
+    Hair,
+    BulletMisc
+};
 
-#define COLLISION_SHAPE_BOX                     (0x0001)
-#define COLLISION_SHAPE_BOX_BASE                (0x0002)     // use single box collision
-#define COLLISION_SHAPE_SPHERE                  (0x0003)
-#define COLLISION_SHAPE_TRIMESH                 (0x0004)     // for static objects and room's!
-#define COLLISION_SHAPE_TRIMESH_CONVEX          (0x0005)     // for dynamic objects
+enum class CollisionShape
+{
+    Box,
+    BoxBase,      //!< use single box collision
+    Sphere,
+    TriMesh,      //!< for static objects and room's!
+    TriMeshConvex //!< for dynamic objects
+};
 
-#define COLLISION_TYPE_NONE                     (0x0000)
-#define COLLISION_TYPE_STATIC                   (0x0001)     // static object - never moved
-#define COLLISION_TYPE_KINEMATIC                (0x0003)     // doors and other moveable statics
-#define COLLISION_TYPE_DYNAMIC                  (0x0005)     // hellow full physics interaction
-#define COLLISION_TYPE_ACTOR                    (0x0007)     // actor, enemies, NPC, animals
-#define COLLISION_TYPE_VEHICLE                  (0x0009)     // car, moto, bike
-#define COLLISION_TYPE_GHOST                    (0x000B)     // no fix character position, but works in collision callbacks and interacts with dynamic objects
+enum class CollisionType
+{
+    None,
+    Static,    //!< static object - never moved
+    Kinematic, //!< doors and other moveable statics
+    Dynamic,   //!< hellow full physics interaction
+    Actor,     //!< actor, enemies, NPC, animals
+    Vehicle,   //!< car, moto, bike
+    Ghost      //!< no fix character position, but works in collision callbacks and interacts with dynamic objects
+};
 
 #define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
@@ -69,9 +78,9 @@ namespace engine
 
 struct EngineContainer
 {
-    uint16_t object_type = 0;
-    lua::Integer collision_type = COLLISION_TYPE_NONE;
-    lua::Integer collision_shape = 0;
+    ObjectType object_type = ObjectType::StaticMesh;
+    CollisionType collision_type = CollisionType::None;
+    CollisionShape collision_shape = CollisionShape::Box;
     world::Object* object = nullptr;
     world::Room* room = nullptr;
 };

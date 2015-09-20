@@ -148,21 +148,16 @@ void lua_SetEntityCollision(int id, bool val)
     }
 }
 
-void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value cshape)
+void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableCollision, lua::Value cshape)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
-    if(ent != nullptr)
-    {
-        if(ctype.is<lua::Integer>())
-        {
-            ent->m_self->collision_type = ctype;
-        }
-        if(cshape.is<lua::Integer>())
-        {
-            ent->m_self->collision_shape = cshape;
-        }
+    if(ent == nullptr)
+        return;
 
-        if(ent->m_self->collision_type & 0x0001)
+    if(ctype.is<lua::Integer>() && enableCollision.is<lua::Boolean>())
+    {
+        ent->m_self->collision_type = static_cast<engine::CollisionType>(ctype.toInt());
+        if(enableCollision.to<lua::Boolean>())
         {
             ent->enableCollision();
         }
@@ -170,6 +165,10 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value cshape)
         {
             ent->disableCollision();
         }
+    }
+    if(cshape.is<lua::Integer>())
+    {
+        ent->m_self->collision_shape = static_cast<engine::CollisionShape>(cshape.toInt());
     }
 }
 
@@ -294,7 +293,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     {
         engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
 
-        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && (cont->object_type == OBJECT_ROOM_BASE)))
+        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && (cont->object_type == engine::ObjectType::RoomBase)))
         {
             move.setInterpolate3(from, to, cb.m_closestHitFraction);
             ent->m_transform.getOrigin()[2] = move[2];
@@ -335,7 +334,7 @@ std::tuple<float, float, float, float> lua_GetEntityActivationOffset(int id)
     if(ent == nullptr)
         return{};
 
-    return std::tuple<float, float, float, float>(
+    return std::make_tuple(
         ent->m_activationOffset[0],
         ent->m_activationOffset[1],
         ent->m_activationOffset[2],
@@ -820,10 +819,10 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
 
     for(int i = 1; table[i].is<lua::Table>(); i++)
     {
-        if(table[i][1].is<lua::Number>()
-           && table[i][2].is<lua::Number>()
-           && table[i][3].is<lua::Number>()
-           && table[i][4].is<lua::Number>())
+        if(   table[i][1].is<lua::Integer>()
+           && table[i][2].is<lua::Integer>()
+           && table[i][3].is<lua::Integer>()
+           && table[i][4].is<lua::Integer>())
         {
             model->animations[anim].frames[frame].animCommands.push_back({ table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt() });
         }
@@ -2792,19 +2791,19 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(ENTITY_CALLBACK_HIT);
     EXPOSE_C(ENTITY_CALLBACK_ROOMCOLLISION);
 
-    EXPOSE_C(COLLISION_TYPE_NONE);
-    EXPOSE_C(COLLISION_TYPE_STATIC);
-    EXPOSE_C(COLLISION_TYPE_KINEMATIC);
-    EXPOSE_C(COLLISION_TYPE_DYNAMIC);
-    EXPOSE_C(COLLISION_TYPE_ACTOR);
-    EXPOSE_C(COLLISION_TYPE_VEHICLE);
-    EXPOSE_C(COLLISION_TYPE_GHOST);
+    m_state.set("COLLISION_TYPE_NONE", static_cast<int>(engine::CollisionType::None));
+    m_state.set("COLLISION_TYPE_STATIC", static_cast<int>(engine::CollisionType::Static));
+    m_state.set("COLLISION_TYPE_KINEMATIC", static_cast<int>(engine::CollisionType::Kinematic));
+    m_state.set("COLLISION_TYPE_DYNAMIC", static_cast<int>(engine::CollisionType::Dynamic));
+    m_state.set("COLLISION_TYPE_ACTOR", static_cast<int>(engine::CollisionType::Actor));
+    m_state.set("COLLISION_TYPE_VEHICLE", static_cast<int>(engine::CollisionType::Vehicle));
+    m_state.set("COLLISION_TYPE_GHOST", static_cast<int>(engine::CollisionType::Ghost));
 
-    EXPOSE_C(COLLISION_SHAPE_BOX);
-    EXPOSE_C(COLLISION_SHAPE_BOX_BASE);
-    EXPOSE_C(COLLISION_SHAPE_SPHERE);
-    EXPOSE_C(COLLISION_SHAPE_TRIMESH);
-    EXPOSE_C(COLLISION_SHAPE_TRIMESH_CONVEX);
+    m_state.set("COLLISION_SHAPE_BOX", static_cast<int>(engine::CollisionShape::Box));
+    m_state.set("COLLISION_SHAPE_BOX_BASE", static_cast<int>(engine::CollisionShape::BoxBase));
+    m_state.set("COLLISION_SHAPE_SPHERE", static_cast<int>(engine::CollisionShape::Sphere));
+    m_state.set("COLLISION_SHAPE_TRIMESH", static_cast<int>(engine::CollisionShape::TriMesh));
+    m_state.set("COLLISION_SHAPE_TRIMESH_CONVEX", static_cast<int>(engine::CollisionShape::TriMeshConvex));
 
     EXPOSE_C(SECTOR_MATERIAL_MUD);
     EXPOSE_C(SECTOR_MATERIAL_SNOW);
@@ -3111,20 +3110,6 @@ void ScriptEngine::exposeConstants()
 
     m_state.set("JOY_TRIGGERLEFT", 1204); // Only for XBOX360-like controllers - analog triggers.
     m_state.set("JOY_TRIGGERRIGHT", 1205);
-
-    EXPOSE_C(COLLISION_TYPE_NONE);
-    EXPOSE_C(COLLISION_TYPE_STATIC);
-    EXPOSE_C(COLLISION_TYPE_KINEMATIC);
-    EXPOSE_C(COLLISION_TYPE_DYNAMIC);
-    EXPOSE_C(COLLISION_TYPE_ACTOR);
-    EXPOSE_C(COLLISION_TYPE_VEHICLE);
-    EXPOSE_C(COLLISION_TYPE_GHOST);
-
-    EXPOSE_C(COLLISION_SHAPE_BOX);
-    EXPOSE_C(COLLISION_SHAPE_BOX_BASE);
-    EXPOSE_C(COLLISION_SHAPE_SPHERE);
-    EXPOSE_C(COLLISION_SHAPE_TRIMESH);
-    EXPOSE_C(COLLISION_SHAPE_TRIMESH_CONVEX);
 
     EXPOSE_CCNS(world, PARAM_HEALTH);
     EXPOSE_CCNS(world, PARAM_AIR);

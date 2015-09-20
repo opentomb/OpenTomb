@@ -5,6 +5,8 @@
 #include "object.h"
 #include "portal.h"
 
+#include <GL/glew.h>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -89,7 +91,7 @@ struct Room : public Object
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
     int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-    uint8_t                     reverb_info;                                    // room reverb type
+    loader::ReverbInfo          reverb_info;                                    // room reverb type
     uint8_t                     water_scheme;
     uint8_t                     alternate_group;
 
@@ -106,7 +108,8 @@ struct Room : public Object
 
     core::BoundingBox boundingBox;
     btTransform transform;                                  // GL transformation matrix
-    btScalar                    ambient_lighting[3];
+
+    GLfloat ambient_lighting[3];
 
     std::vector<core::Light> lights;
 
@@ -127,6 +130,8 @@ struct Room : public Object
 
     std::unique_ptr<engine::EngineContainer> self;
 
+    ~Room();
+
     void enable();
     void disable();
     void swapToAlternate();
@@ -141,7 +146,6 @@ struct Room : public Object
     bool isOverlapped(Room *r1);
     bool isInNearRoomsList(const Room &r) const;
     bool hasSector(int x, int y);//If this room contains a sector
-    void empty();
     void addEntity(Entity *entity);
     bool removeEntity(Entity* entity);
     void addToNearRoomsList(std::shared_ptr<Room> r);

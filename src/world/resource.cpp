@@ -49,7 +49,10 @@ void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
     if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
     {
         uint16_t flg;
-        lua::tie(ent->m_self->collision_type, ent->m_self->collision_shape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
+        int collisionType, collisionShape;
+        lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
+        ent->m_self->collision_type = static_cast<engine::CollisionType>(collisionType);
+        ent->m_self->collision_shape = static_cast<engine::CollisionShape>(collisionShape);
 
         ent->m_visible = !ent->m_visible;
         ent->m_typeFlags |= flg;
@@ -89,8 +92,8 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 
     if(_collision_type > 0)
     {
-        r_static->self->collision_type = _collision_type;
-        r_static->self->collision_shape = _collision_shape;
+        r_static->self->collision_type = static_cast<engine::CollisionType>(_collision_type);
+        r_static->self->collision_shape = static_cast<engine::CollisionShape>(_collision_shape);
         r_static->hide = _hide;
     }
 }
@@ -1797,7 +1800,7 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
     room->self.reset(new engine::EngineContainer());
     room->self->room = room.get();
     room->self->object = room.get();
-    room->self->object_type = OBJECT_ROOM_BASE;
+    room->self->object_type = engine::ObjectType::RoomBase;
     room->near_room_list.clear();
     room->overlapped_room_list.clear();
 
@@ -1821,7 +1824,7 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         r_static->self = std::make_shared<engine::EngineContainer>();
         r_static->self->room = room.get();
         r_static->self->object = room->static_mesh[i].get();
-        r_static->self->object_type = OBJECT_STATIC_MESH;
+        r_static->self->object_type = engine::ObjectType::StaticMesh;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
         r_static->position[0] = tr_room->static_meshes[i].position.x;
@@ -1869,12 +1872,12 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
             ((tr_static->collision_box[0].x == -tr_static->collision_box[0].y) && (tr_static->collision_box[0].y == tr_static->collision_box[0].z) &&
              (tr_static->collision_box[1].x == -tr_static->collision_box[1].y) && (tr_static->collision_box[1].y == tr_static->collision_box[1].z)) )
         {
-            r_static->self->collision_type = COLLISION_NONE;
+            r_static->self->collision_type = engine::CollisionType::None;
         }
         else
         {
-            r_static->self->collision_type  = COLLISION_TYPE_STATIC;
-            r_static->self->collision_shape = COLLISION_SHAPE_BOX;
+            r_static->self->collision_type  = engine::CollisionType::Static;
+            r_static->self->collision_shape = engine::CollisionShape::Box;
         }
 
         // Set additional static mesh properties from level script override.
@@ -1882,23 +1885,23 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         Res_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
-        if(r_static->self->collision_type != COLLISION_NONE)
+        if(r_static->self->collision_type != engine::CollisionType::None)
         {
             switch(r_static->self->collision_shape)
             {
-                case COLLISION_SHAPE_BOX:
+                case engine::CollisionShape::Box:
                     cshape = core::BT_CSfromBBox(r_static->collisionBoundingBox, true, true);
                     break;
 
-                case COLLISION_SHAPE_BOX_BASE:
+                case engine::CollisionShape::BoxBase:
                     cshape = core::BT_CSfromBBox(r_static->mesh->boundingBox, true, true);
                     break;
 
-                case COLLISION_SHAPE_TRIMESH:
+                case engine::CollisionShape::TriMesh:
                     cshape = core::BT_CSfromMesh(r_static->mesh, true, true, true);
                     break;
 
-                case COLLISION_SHAPE_TRIMESH_CONVEX:
+                case engine::CollisionShape::TriMeshConvex:
                     cshape = core::BT_CSfromMesh(r_static->mesh, true, true, false);
                     break;
 
@@ -2201,8 +2204,8 @@ void Res_GenRoomCollision(World *world)
             room->bt_body->setUserPointer(room->self.get());
             room->bt_body->setRestitution(1.0);
             room->bt_body->setFriction(1.0);
-            room->self->collision_type = COLLISION_TYPE_STATIC;                    // meshtree
-            room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+            room->self->collision_type = engine::CollisionType::Static;                    // meshtree
+            room->self->collision_shape = engine::CollisionShape::TriMesh;
         }
     }
 }
@@ -3575,8 +3578,8 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
         entity->m_OCB = tr_item->ocb;
         entity->m_timer = 0.0;
 
-        entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
-        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
+        entity->m_self->collision_type = engine::CollisionType::Kinematic;
+        entity->m_self->collision_shape = engine::CollisionShape::TriMeshConvex;
         entity->m_moveType = MoveType::StaticPos;
         entity->m_inertiaLinear = 0.0;
         entity->m_inertiaAngular[0] = 0.0;
@@ -3628,8 +3631,8 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
 
             lara->m_moveType = MoveType::OnFloor;
             world->character = lara;
-            lara->m_self->collision_type = COLLISION_TYPE_ACTOR;
-            lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
+            lara->m_self->collision_type = engine::CollisionType::Actor;
+            lara->m_self->collision_shape = engine::CollisionShape::TriMeshConvex;
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM;
 
@@ -3725,7 +3728,7 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
         {
             for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
             {
-                if(cont->object_type != OBJECT_ENTITY)
+                if(cont->object_type != engine::ObjectType::Entity)
                     continue;
 
                 Entity* ent = static_cast<Entity*>(cont->object);

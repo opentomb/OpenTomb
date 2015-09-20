@@ -23,6 +23,15 @@ struct BaseMesh;
 namespace animation
 {
 
+//! Default fixed TR framerate needed for animation calculation
+constexpr float FrameRate = 30;
+
+// This is the global game logic refresh interval (physics timestep)
+// All game logic should be refreshed at this rate, including
+// enemy AI, values processing and audio update.
+// This should be a multiple of animation::FrameRate (1/30,60,90,120,...)
+constexpr float GameLogicFrameRate = 2*FrameRate;
+
 enum class AnimUpdate
 {
     None,
@@ -110,10 +119,6 @@ struct BoneTag
     btQuaternion qrotate;                                           // rotation quaternion
 };
 
-#define ANIM_CMD_MOVE               0x01
-#define ANIM_CMD_CHANGE_DIRECTION   0x02
-#define ANIM_CMD_JUMP               0x04
-
 /*
  * base frame of animated skeletal model
  */
@@ -150,12 +155,12 @@ struct AnimationFrame
 
     std::vector<AnimCommand> animCommands; // cmds for end-of-anim
 
-    StateChange* findStateChangeByAnim(int state_change_anim)
+    const StateChange* findStateChangeByAnim(int state_change_anim) const
     {
         if(state_change_anim < 0)
             return nullptr;
 
-        for(StateChange& stateChange : stateChanges)
+        for(const StateChange& stateChange : stateChanges)
         {
             for(const AnimDispatch& dispatch : stateChange.anim_dispatch)
             {
@@ -169,9 +174,9 @@ struct AnimationFrame
         return nullptr;
     }
 
-    StateChange* findStateChangeByID(uint32_t id)
+    const StateChange* findStateChangeByID(uint32_t id) const
     {
-        for(StateChange& stateChange : stateChanges)
+        for(const StateChange& stateChange : stateChanges)
         {
             if(stateChange.id == id)
             {
@@ -201,7 +206,6 @@ struct SSAnimation
 
     SSAnimationMode mode = SSAnimationMode::NormalControl;
 
-    btScalar                    period = 1.0f / 30.0f;                              // one frame change period
     btScalar                    frame_time = 0;                                     // time in current frame
 
                                                                                     // lerp:
@@ -217,6 +221,8 @@ struct SSAnimation
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     bool findStateChange(uint32_t stateid, uint16_t& animid_out, uint16_t& frameid_inout);
     AnimUpdate stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
+
+    const AnimationFrame& getCurrentAnimationFrame() const;
 };
 
 struct SSBoneTag
@@ -256,6 +262,8 @@ struct SSBoneFrame
      * @param bf - extended bone frame of the item;
      */
     void itemFrame(btScalar time);
+
+    void updateCurrentBoneFrame();
 };
 
 void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);

@@ -152,7 +152,6 @@ public:
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
-    btScalar                            m_speedMult = TR_FRAME_RATE;
     btScalar                            m_vspeed_override;
 
     btScalar                            m_inertiaLinear;     // linear inertia
@@ -170,7 +169,7 @@ public:
     bool        m_lerp_skip = false;
     btScalar    m_lerp = 0;
 
-    core::OrientedBoundingBox m_obb;                // oriented bounding box
+    core::OrientedBoundingBox m_obb;
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
@@ -225,7 +224,6 @@ public:
         return Substance::None;
     }
 
-    static void updateCurrentBoneFrame(animation::SSBoneFrame *bf);
     void doAnimCommand(const animation::AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);

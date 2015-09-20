@@ -12,73 +12,48 @@
 namespace world
 {
 
-void Room::empty()
+Room::~Room()
 {
-    containers.clear();
-
-    near_room_list.clear();
-
-    portals.clear();
-
-    frustum.clear();
-
-    mesh.reset();
-
-    if(!static_mesh.empty())
+    for(std::shared_ptr<StaticMesh>& mesh : static_mesh)
     {
-        for(uint32_t i = 0; i < static_mesh.size(); i++)
+        if(btRigidBody* body = mesh->bt_body)
         {
-            if(btRigidBody* body = static_mesh[i]->bt_body)
+            body->setUserPointer(nullptr);
+            if(auto state = body->getMotionState())
             {
-                body->setUserPointer(nullptr);
-                if(body->getMotionState())
-                {
-                    delete body->getMotionState();
-                    body->setMotionState(nullptr);
-                }
-                body->setCollisionShape(nullptr);
-
-                engine::bt_engine_dynamicsWorld->removeRigidBody(body);
-                delete body;
-                static_mesh[i]->bt_body = nullptr;
+                delete state;
+                body->setMotionState(nullptr);
             }
+            body->setCollisionShape(nullptr);
 
-            if(static_mesh[i]->self)
-            {
-                static_mesh[i]->self->room = nullptr;
-                static_mesh[i]->self.reset();
-            }
+            engine::bt_engine_dynamicsWorld->removeRigidBody(body);
+            delete body;
+            mesh->bt_body = nullptr;
         }
-        static_mesh.clear();
+
+        if(mesh->self)
+        {
+            mesh->self->room = nullptr;
+            mesh->self.reset();
+        }
     }
 
     if(bt_body)
     {
         bt_body->setUserPointer(nullptr);
-        if(bt_body->getMotionState())
+        if(auto state = bt_body->getMotionState())
         {
-            delete bt_body->getMotionState();
+            delete state;
             bt_body->setMotionState(nullptr);
         }
-        if(bt_body->getCollisionShape())
+        if(auto shape = bt_body->getCollisionShape())
         {
-            delete bt_body->getCollisionShape();
+            delete shape;
             bt_body->setCollisionShape(nullptr);
         }
 
         engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
-        bt_body.reset();
     }
-
-    sectors.clear();
-    sectors_x = 0;
-    sectors_y = 0;
-
-    sprites.clear();
-
-    lights.clear();
-
-    self.reset();
 }
 
 void Room::addEntity(Entity* entity)
@@ -92,7 +67,7 @@ void Room::addEntity(Entity* entity)
     }
 
     entity->m_self->room = this;
-    containers.insert(containers.begin(), entity->m_self);
+    containers.emplace_back(entity->m_self);
 }
 
 bool Room::removeEntity(Entity* entity)
@@ -104,13 +79,6 @@ bool Room::removeEntity(Entity* entity)
     if(it != containers.end())
     {
         containers.erase(it);
-        entity->m_self->room = nullptr;
-        return true;
-    }
-
-    if(containers.front() == entity->m_self)
-    {
-        containers.erase(containers.begin());
         entity->m_self->room = nullptr;
         return true;
     }

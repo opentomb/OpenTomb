@@ -650,7 +650,7 @@ void Controls_PrimaryMouseDown()
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
     cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
-    cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
+    cont->object_type = engine::ObjectType::BulletMisc;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -680,7 +680,7 @@ void Controls_SecondaryMouseDown()
 
         if(EngineContainer* c0 = static_cast<EngineContainer*>(cbc.m_collisionObject->getUserPointer()))
         {
-            if(c0->object_type == OBJECT_BULLET_MISC)
+            if(c0->object_type == engine::ObjectType::BulletMisc)
             {
                 btCollisionObject* obj = const_cast<btCollisionObject*>(cbc.m_collisionObject);
                 btRigidBody* body = btRigidBody::upcast(obj);

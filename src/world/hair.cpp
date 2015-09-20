@@ -33,7 +33,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     m_container.reset(new engine::EngineContainer());
     m_container->room = parent_entity->m_self->room;
-    m_container->object_type = OBJECT_HAIR;
+    m_container->object_type = engine::ObjectType::Hair;
     m_container->object = this;
 
     // Setup initial hair parameters.

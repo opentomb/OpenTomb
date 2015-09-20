@@ -85,7 +85,7 @@ void World::empty()
                 engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(body->getUserPointer());
                 body->setUserPointer(nullptr);
 
-                if(cont && (cont->object_type == OBJECT_BULLET_MISC))
+                if(cont && (cont->object_type == engine::ObjectType::BulletMisc))
                 {
                     if(body->getMotionState())
                     {
@@ -104,8 +104,6 @@ void World::empty()
         }
     }
 
-    for(auto room : rooms)
-    { room->empty(); }
     rooms.clear();
 
     flip_data.clear();
@@ -520,7 +518,7 @@ void World::updateAnimTextures()                                                
     }
 }
 
-void World::calculateWaterTint(float* tint, bool fixed_colour)
+void World::calculateWaterTint(GLfloat* tint, bool fixed_colour)
 {
     if(engineVersion < loader::Engine::TR4)  // If water room and level is TR1-3
     {

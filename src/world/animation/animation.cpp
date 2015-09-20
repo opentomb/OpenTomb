@@ -28,7 +28,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     std::vector<SSBoneTag*> parents(bone_tags.size());
     parents[0] = nullptr;
     bone_tags[0].parent = nullptr;                                             // root
-    for(uint16_t i = 0; i<bone_tags.size(); i++)
+    for(size_t i = 0; i<bone_tags.size(); i++)
     {
         bone_tags[i].index = i;
         bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
@@ -69,7 +69,59 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
 void SSBoneFrame::itemFrame(btScalar time)
 {
     animations.stepAnimation(time);
-    Entity::updateCurrentBoneFrame(this);
+    updateCurrentBoneFrame();
+}
+
+void SSBoneFrame::updateCurrentBoneFrame()
+{
+    animation::BoneFrame* next_bf = &animations.model->animations[animations.current_animation].frames[animations.current_frame];
+    animation::BoneFrame* last_bf = &animations.model->animations[animations.lerp_last_animation].frames[animations.lerp_last_frame];
+
+    boundingBox.max = last_bf->boundingBox.max.lerp(next_bf->boundingBox.max, animations.lerp);
+    boundingBox.min = last_bf->boundingBox.min.lerp(next_bf->boundingBox.min, animations.lerp);
+    center = last_bf->center.lerp(next_bf->center, animations.lerp);
+    position = last_bf->position.lerp(next_bf->position, animations.lerp);
+
+    for(uint16_t k = 0; k < last_bf->bone_tags.size(); k++)
+    {
+        bone_tags[k].offset = last_bf->bone_tags[k].offset.lerp(next_bf->bone_tags[k].offset, animations.lerp);
+        bone_tags[k].transform.getOrigin() = bone_tags[k].offset;
+        bone_tags[k].transform.getOrigin()[3] = 1.0;
+        if(k == 0)
+        {
+            bone_tags[k].transform.getOrigin() += position;
+            bone_tags[k].qrotate = util::Quat_Slerp(last_bf->bone_tags[k].qrotate, next_bf->bone_tags[k].qrotate, animations.lerp);
+        }
+        else
+        {
+            animation::BoneTag* ov_src_btag = &last_bf->bone_tags[k];
+            animation::BoneTag* ov_next_btag = &next_bf->bone_tags[k];
+            btScalar ov_lerp = animations.lerp;
+            for(animation::SSAnimation* ov_anim = animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
+            {
+                if(ov_anim->model == nullptr || !ov_anim->model->mesh_tree[k].replace_anim)
+                    continue;
+
+                animation::BoneFrame* ov_last_bf = &ov_anim->model->animations[ov_anim->lerp_last_animation].frames[ov_anim->lerp_last_frame];
+                animation::BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
+                ov_src_btag = &ov_last_bf->bone_tags[k];
+                ov_next_btag = &ov_next_bf->bone_tags[k];
+                ov_lerp = ov_anim->lerp;
+                break;
+            }
+            bone_tags[k].qrotate = util::Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
+        }
+        bone_tags[k].transform.setRotation(bone_tags[k].qrotate);
+    }
+
+    /*
+     * build absolute coordinate matrix system
+     */
+    bone_tags[0].full_transform = bone_tags[0].transform;
+    for(size_t k = 1; k < last_bf->bone_tags.size(); k++)
+    {
+        bone_tags[k].full_transform = bone_tags[k].parent->full_transform * bone_tags[k].transform;
+    }
 }
 
 void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
@@ -77,8 +129,7 @@ void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
     dst->bone_tags.resize(src->bone_tags.size());
     dst->position = src->position;
     dst->center = src->center;
-    dst->boundingBox.max = src->boundingBox.max;
-    dst->boundingBox.min = src->boundingBox.min;
+    dst->boundingBox = src->boundingBox;
 
     dst->animCommands = src->animCommands;
 
@@ -118,7 +169,6 @@ void SSAnimation::setAnimation(int animation, int frame, int another_model)
     last_state = anim->state_id;
     next_state = anim->state_id;
 
-    period = 1.0f / TR_FRAME_RATE;
     //    m_bf.animations.lerp = 0.0f;
     //    m_bf.animations.frame_time = 0.0f;
 }
@@ -161,65 +211,59 @@ bool SSAnimation::findStateChange(uint32_t stateid, uint16_t& animid_inout, uint
 */
 AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
 {
-    uint16_t frame_id, anim_id;
-    const std::vector<AnimationFrame>& animlist = model->animations;
     AnimUpdate stepResult = AnimUpdate::NewFrame;
-
-    anim_id = current_animation;
-    frame_id = current_frame;
 
     // --------
     // FIXME: hack for reverse framesteps (weaponanims):
     if(time < 0.0f)
     {
         frame_time -= time;
-        if(frame_time + GAME_LOGIC_REFRESH_INTERVAL / 2.0f < period)
+        if(frame_time + 1 / animation::GameLogicFrameRate / 2.0f < 1/FrameRate)
         {
-            lerp = frame_time / period;
-            stepResult = AnimUpdate::None;
+            lerp = frame_time * FrameRate;
+            return AnimUpdate::None;
         }
         else
         {
-            lerp_last_animation = anim_id;
-            lerp_last_frame = frame_id;
+            lerp_last_animation = current_animation;
+            lerp_last_frame = current_frame;
             frame_time = 0.0f;
             lerp = 0.0f;
-            if(frame_id > 0)
+            if(current_frame > 0)
             {
-                frame_id--;
+                current_frame--;
                 stepResult = AnimUpdate::NewFrame;
             }
             else
             {
-                frame_id = animlist[anim_id].frames.size() - 1;
+                current_frame = getCurrentAnimationFrame().frames.size() - 1;
                 stepResult = AnimUpdate::NewAnim;
             }
-            current_frame = frame_id;
         }
         return stepResult;
     }
     // --------
 
     frame_time += time;
-    if(frame_time + GAME_LOGIC_REFRESH_INTERVAL / 2.0f < period)
+    if(frame_time + 1 / animation::GameLogicFrameRate / 2.0f < 1/FrameRate)
     {
-        lerp = frame_time / period; // re-sync
+        lerp = frame_time * FrameRate; // re-sync
         return AnimUpdate::None;
     }
 
-    lerp_last_animation = anim_id;
-    lerp_last_frame = frame_id;
+    lerp_last_animation = current_animation;
+    lerp_last_frame = current_frame;
     frame_time = 0.0f;
     lerp = 0.0f;
 
-    frame_id++;
+    uint16_t frame_id = current_frame + 1;
 
     // check anim flags:
     if(mode == SSAnimationMode::LoopLastFrame)
     {
-        if(frame_id >= static_cast<int>(animlist[anim_id].frames.size()))
+        if(frame_id >= static_cast<int>(getCurrentAnimationFrame().frames.size()))
         {
-            current_frame = animlist[anim_id].frames.size() - 1;
+            current_frame = getCurrentAnimationFrame().frames.size() - 1;
             return AnimUpdate::NewFrame;    // period time has passed so it's a new frame, or should this be none?
         }
     }
@@ -230,7 +274,7 @@ AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
     }
     else if(mode == SSAnimationMode::WeaponCompat)
     {
-        if(frame_id >= animlist[anim_id].frames.size())
+        if(frame_id >= getCurrentAnimationFrame().frames.size())
         {
             frame_id = 0;
             return AnimUpdate::NewAnim;
@@ -243,35 +287,36 @@ AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
     }
 
     // check state change:
+    uint16_t anim_id = current_animation;
     if(next_state != last_state)
     {
         if(findStateChange(next_state, anim_id, frame_id))
         {
-            last_state = animlist[anim_id].state_id;
+            last_state = model->animations[anim_id].state_id;
             next_state = last_state;
             stepResult = AnimUpdate::NewAnim;
         }
     }
 
     // check end of animation:
-    if(frame_id >= animlist[anim_id].frames.size())
+    if(frame_id >= model->animations[anim_id].frames.size())
     {
         if(cmdEntity)
         {
-            for(AnimCommand acmd : animlist[anim_id].animCommands)  // end-of-anim cmdlist
+            for(AnimCommand acmd : model->animations[anim_id].animCommands)  // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
-        if(animlist[anim_id].next_anim)
+        if(model->animations[anim_id].next_anim)
         {
-            frame_id = animlist[anim_id].next_frame;
-            anim_id = animlist[anim_id].next_anim->id;
+            frame_id = model->animations[anim_id].next_frame;
+            anim_id = model->animations[anim_id].next_anim->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
-            if(anim_id < animlist.size() && frame_id < animlist[anim_id].frames.size())
+            if(anim_id < model->animations.size() && frame_id < model->animations[anim_id].frames.size())
             {
-                last_state = animlist[anim_id].state_id;
+                last_state = model->animations[anim_id].state_id;
                 next_state = last_state;
             }
             else
@@ -293,12 +338,17 @@ AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
 
     if(cmdEntity)
     {
-        for(AnimCommand acmd : animlist[anim_id].frames[frame_id].animCommands)  // frame cmdlist
+        for(AnimCommand acmd : model->animations[anim_id].frames[frame_id].animCommands)  // frame cmdlist
         {
             cmdEntity->doAnimCommand(acmd);
         }
     }
     return stepResult;
+}
+
+const AnimationFrame &SSAnimation::getCurrentAnimationFrame() const
+{
+    return model->animations[current_animation];
 }
 
 } // namespace animation

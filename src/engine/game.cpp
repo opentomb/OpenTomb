@@ -692,8 +692,8 @@ void Game_UpdateAI()
 
 inline btScalar Game_Tick(btScalar *game_logic_time)
 {
-    int t = static_cast<int>(*game_logic_time / GAME_LOGIC_REFRESH_INTERVAL);
-    btScalar dt = static_cast<btScalar>(t) * GAME_LOGIC_REFRESH_INTERVAL;
+    int t = static_cast<int>(*game_logic_time * world::animation::GameLogicFrameRate);
+    btScalar dt = static_cast<btScalar>(t) / world::animation::GameLogicFrameRate;
     *game_logic_time -= dt;
     return dt;
 }
@@ -704,9 +704,9 @@ void Game_Frame(btScalar time)
     static btScalar game_logic_time = 0.0;
 
     // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
-    if(time > GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS))
+    if(time > btScalar(MAX_SIM_SUBSTEPS) / world::animation::GameLogicFrameRate)
     {
-        time = GAME_LOGIC_REFRESH_INTERVAL * btScalar(MAX_SIM_SUBSTEPS);
+        time = btScalar(MAX_SIM_SUBSTEPS) / world::animation::GameLogicFrameRate;
         engine_frame_time = time;   // FIXME
     }
     game_logic_time += time;
@@ -718,7 +718,7 @@ void Game_Frame(btScalar time)
     // TODO: implement pause mechanism
     if(gui::update())
     {
-        if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
+        if(game_logic_time >= 1/world::animation::GameLogicFrameRate)
         {
             engine::engine_world.audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
@@ -730,7 +730,7 @@ void Game_Frame(btScalar time)
     // TODO: decouple cam movement
     Game_ApplyControls(engine_world.character);
 
-    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, GAME_LOGIC_REFRESH_INTERVAL);
+    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1/world::animation::GameLogicFrameRate);
 
     if(engine_world.character) {
         engine_world.character->updateInterpolation(time);
