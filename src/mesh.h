@@ -44,6 +44,7 @@ typedef struct base_mesh_s
     uint32_t                vertex_count;                                       // number of mesh's vertices
     uint32_t                animated_vertex_count;
     struct vertex_s        *vertices;
+    struct vertex_s        *animated_vertices;
 
     float                   centre[3];                                          // geometry centre of mesh
     float                   bb_min[3];                                          // AABB bounding volume
@@ -123,7 +124,6 @@ typedef struct light_s
  */
 void BaseMesh_Clear(base_mesh_p mesh);
 void BaseMesh_FindBB(base_mesh_p mesh);
-void BaseMesh_GenVBO(struct base_mesh_s *mesh);
 
 uint32_t BaseMesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
 uint32_t BaseMesh_FindVertexIndex(base_mesh_p mesh, float v[3]);

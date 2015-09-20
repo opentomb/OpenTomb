@@ -27,7 +27,6 @@ struct sector_tween_s;
 
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
 bool     Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
-void     Res_Poly_SortInMesh(struct base_mesh_s *mesh, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas);
 
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.

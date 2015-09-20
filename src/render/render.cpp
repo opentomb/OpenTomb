@@ -632,7 +632,7 @@ void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
 
 void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals)
 {
-    if(mesh->animated_polygons)
+    if(mesh->animated_vertex_count)
     {
         // Respecify the tex coord buffer
         qglBindBufferARB(GL_ARRAY_BUFFER, mesh->vbo_animated_texcoord_array);

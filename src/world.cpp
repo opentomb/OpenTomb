@@ -75,7 +75,6 @@ void World_GenSpritesBuffer(struct world_s *world);
 void World_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void World_GenRoomCollision(struct world_s *world);
 void World_GenSamples(struct world_s *world, class VT_Level *tr);
-void World_GenVBOs(struct world_s *world);
 void World_FixRooms(struct world_s *world);
 void World_MakeEntityItems(world_p world, struct RedBlackNode_s *n);            // Assign pickup functions to previously created base items.
 
@@ -209,11 +208,6 @@ void World_Open(world_p world, class VT_Level *tr)
 
     World_ScriptsClose(world);
     Gui_DrawLoadScreen(940);
-
-    // Generate VBOs for meshes.
-
-    World_GenVBOs(world);
-    Gui_DrawLoadScreen(950);
 
     // Process level autoexec loading.
     World_AutoexecOpen(world);
@@ -1415,7 +1409,7 @@ void World_GenMeshes(struct world_s *world, class VT_Level *tr)
     for(uint32_t i = 0; i < world->meshes_count; i++, base_mesh++)
     {
         TR_GenMesh(base_mesh, i, world->anim_sequences, world->anim_sequences_count, world->tex_atlas, tr);
-        Res_Poly_SortInMesh(base_mesh, world->anim_sequences, world->anim_sequences_count, world->tex_atlas);
+        BaseMesh_GenFaces(base_mesh);
     }
 }
 
@@ -1553,7 +1547,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     TR_GenRoomMesh(room, room->id, world->anim_sequences, world->anim_sequences_count, world->tex_atlas, tr);
     if(room->content->mesh)
     {
-        Res_Poly_SortInMesh(room->content->mesh, world->anim_sequences, world->anim_sequences_count, world->tex_atlas);
+        BaseMesh_GenFaces(room->content->mesh);
     }
     /*
      *  let us load static room meshes
@@ -2519,26 +2513,6 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
         world->audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
         world->audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
         world->audio_emitters[i].flags         =  tr->sound_sources[i].flags;
-    }
-}
-
-
-void World_GenVBOs(struct world_s *world)
-{
-    for(uint32_t i = 0; i < world->meshes_count; i++)
-    {
-        if(world->meshes[i].vertex_count)
-        {
-            BaseMesh_GenVBO(world->meshes + i);
-        }
-    }
-
-    for(uint32_t i = 0; i < world->room_count; i++)
-    {
-        if((world->rooms[i].content->mesh) && (world->rooms[i].content->mesh->vertex_count))
-        {
-            BaseMesh_GenVBO(world->rooms[i].content->mesh);
-        }
     }
 }
 

@@ -1558,38 +1558,6 @@ bool Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct an
 }
 
 
-__inline void AddPolygonCopyToList(const polygon_p polygon, polygon_s *&list)
-{
-    polygon_p np = (polygon_p)calloc(1, sizeof(polygon_t));
-    Polygon_Copy(np, (polygon_p)polygon);
-    np->next = list;
-    list = np;
-}
-
-void Res_Poly_SortInMesh(struct base_mesh_s *mesh, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas)
-{
-    polygon_p p = mesh->polygons;
-    for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
-    {
-        if((p->anim_id > 0) && (p->anim_id <= anim_sequences_count))
-        {
-            anim_seq_p seq = anim_sequences + (p->anim_id - 1);
-            // set tex coordinates to the first frame for correct texture transform in renderer
-            atlas->getCoordinates(p, seq->frame_list[0], false, 0, seq->uvrotate);
-        }
-
-        if(p->transparency >= 2)
-        {
-            AddPolygonCopyToList(p, mesh->transparency_polygons);
-        }
-        else if((p->anim_id > 0) && (p->anim_id <= anim_sequences_count))
-        {
-            AddPolygonCopyToList(p, mesh->animated_polygons);
-        }
-    }
-}
-
-
 static void TR_CopyNormals(const polygon_p polygon, base_mesh_p mesh, const uint16_t *mesh_vertex_indices)
 {
     for(int i = 0; i < polygon->vertex_count; i++)
@@ -1597,6 +1565,7 @@ static void TR_CopyNormals(const polygon_p polygon, base_mesh_p mesh, const uint
         vec3_copy(polygon->vertices[i].normal, mesh->vertices[mesh_vertex_indices[i]].normal);
     }
 }
+
 
 void TR_AccumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
 {
@@ -1825,7 +1794,17 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         free(mesh->vertices);
         mesh->vertices = NULL;
     }
-    BaseMesh_GenFaces(mesh);
+
+    p = mesh->polygons;
+    for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
+    {
+        if((p->anim_id > 0) && (p->anim_id <= anim_sequences_count))
+        {
+            anim_seq_p seq = anim_sequences + (p->anim_id - 1);
+            // set tex coordinates to the first frame for correct texture transform in renderer
+            atlas->getCoordinates(p, seq->frame_list[0], false, 0, seq->uvrotate);
+        }
+    }
 }
 
 void TR_SetupRoomPolygonVertices(polygon_p p, base_mesh_p mesh, const tr5_room_t *tr_room, const uint16_t *vertices)
@@ -1937,7 +1916,17 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         free(mesh->vertices);
         mesh->vertices = NULL;
     }
-    BaseMesh_GenFaces(mesh);
+
+    p = mesh->polygons;
+    for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
+    {
+        if((p->anim_id > 0) && (p->anim_id <= anim_sequences_count))
+        {
+            anim_seq_p seq = anim_sequences + (p->anim_id - 1);
+            // set tex coordinates to the first frame for correct texture transform in renderer
+            atlas->getCoordinates(p, seq->frame_list[0], false, 0, seq->uvrotate);
+        }
+    }
 }
 
 
