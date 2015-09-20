@@ -113,7 +113,7 @@ void Character_Clean(struct entity_s *ent)
 
     if(actor->hairs)
     {
-        for(int i=0;i<actor->hair_count;i++)
+        for(int i = 0; i < actor->hair_count; i++)
         {
             Hair_Delete(actor->hairs[i]);
             actor->hairs[i] = NULL;

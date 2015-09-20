@@ -62,7 +62,7 @@ int Polygon_IsBroken(polygon_p p)
 
     next_v = p->vertices;
     curr_v = p->vertices + p->vertex_count - 1;
-    for(uint16_t i=0;i<p->vertex_count;i++)
+    for(uint16_t i = 0; i < p->vertex_count; i++)
     {
         vec3_sub(dif, next_v->position, curr_v->position);
         if(vec3_sqabs(dif) < 0.0001)
@@ -96,7 +96,7 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
 
     vec4_copy(dst->plane, src->plane);
 
-    for(uint16_t i=0;i<src->vertex_count;i++)
+    for(uint16_t i = 0; i < src->vertex_count; i++)
     {
         dst->vertices[i] = src->vertices[i];
     }
@@ -120,7 +120,7 @@ void Polygon_MoveSelf(polygon_p p, float move[3])
     vertex_p v;
 
     v = p->vertices;
-    for(uint16_t i=0;i<p->vertex_count;i++,v++)
+    for(uint16_t i = 0; i < p->vertex_count; i++, v++)
     {
         vec3_add_to(v->position, move);
     }
@@ -135,7 +135,7 @@ void Polygon_Move(polygon_p ret, polygon_p src, float move[3])
 
     ret_v = ret->vertices;
     src_v = src->vertices;
-    for(uint16_t i=0;i<src->vertex_count;i++,ret_v++,src_v++)
+    for(uint16_t i = 0; i < src->vertex_count; i++, ret_v++, src_v++)
     {
         vec3_add(ret_v->position, src_v->position, move);
     }
@@ -153,7 +153,7 @@ void Polygon_TransformSelf(polygon_p p, float tr[16])
     Mat4_vec3_rot_macro(v, tr, p->plane);
     vec3_copy(p->plane, v);
     vp = p->vertices;
-    for(uint16_t i=0;i<p->vertex_count;i++,vp++)
+    for(uint16_t i = 0; i < p->vertex_count; i++, vp++)
     {
         Mat4_vec3_mul_macro(v, tr, vp->position);
         vec3_copy(vp->position, v);
@@ -172,7 +172,7 @@ void Polygon_Transform(polygon_p ret, polygon_p src, float tr[16])
     Mat4_vec3_rot_macro(ret->plane, tr, src->plane);
     ret_v = ret->vertices;
     src_v = src->vertices;
-    for(uint16_t i=0;i<src->vertex_count;i++,ret_v++,src_v++)
+    for(uint16_t i = 0; i < src->vertex_count; i++, ret_v++, src_v++)
     {
         Mat4_vec3_mul_macro(ret_v->position, tr, src_v->position);
         Mat4_vec3_rot_macro(ret_v->normal, tr, src_v->normal);
@@ -199,7 +199,7 @@ int Polygon_RayIntersect(polygon_p p, float dir[3], float dot[3], float *t)
     vec3_sub(T, dot, vp[0].position);
 
     vec3_sub(E2, vp[1].position, vp[0].position)
-    for(uint16_t i=0;i<p->vertex_count-2;i++,vp++)
+    for(uint16_t i = 0; i < p->vertex_count - 2; i++, vp++)
     {
         vec3_copy(E1, E2)                                                       // PREV
         vec3_sub(E2, vp[2].position, p->vertices[0].position)                   // NEXT
@@ -244,7 +244,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
     prev_v = p1->vertices + p1->vertex_count - 1;
     curr_v = p1->vertices;
     dist[0] = vec3_plane_dist(p2->plane, prev_v->position);
-    for(uint16_t i=0;i<p1->vertex_count;i++)
+    for(uint16_t i = 0; i < p1->vertex_count; i++)
     {
         dist[1] = vec3_plane_dist(p2->plane, curr_v->position);
         if(dist[1] > SPLIT_EPSILON)
@@ -289,7 +289,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
     prev_v = p2->vertices + p2->vertex_count - 1;
     curr_v = p2->vertices;
     dist[0] = vec3_plane_dist(p1->plane, prev_v->position);
-    for(uint16_t i=0;i<p2->vertex_count;i++)
+    for(uint16_t i = 0; i < p2->vertex_count; i++)
     {
         dist[1] = vec3_plane_dist(p1->plane, curr_v->position);
         if(dist[1] > SPLIT_EPSILON)
@@ -439,7 +439,7 @@ void Polygon_Split(polygon_p src, float n[4], polygon_p front, polygon_p back)
     prev_v = src->vertices + src->vertex_count - 1;
     
     dist[0] = vec3_plane_dist(n, prev_v->position);
-    for(uint16_t i=0;i<src->vertex_count;i++)
+    for(uint16_t i = 0; i < src->vertex_count; i++)
     {
         dist[1] = vec3_plane_dist(n, curr_v->position);
 
@@ -510,7 +510,7 @@ int Polygon_IsInsideBBox(polygon_p p, float bb_min[3], float bb_max[3])
 {
     vertex_p v = p->vertices;
 
-    for(uint16_t i=0;i<p->vertex_count;i++,v++)
+    for(uint16_t i = 0; i < p->vertex_count; i++, v++)
     {
         if((v->position[0] < bb_min[0]) || (v->position[0] > bb_max[0]) ||
            (v->position[1] < bb_min[1]) || (v->position[1] > bb_max[1]) ||
@@ -528,7 +528,7 @@ int Polygon_IsInsideBQuad(polygon_p p, float bb_min[3], float bb_max[3])
 {
     vertex_p v = p->vertices;
 
-    for(uint16_t i=0;i<p->vertex_count;i++,v++)
+    for(uint16_t i = 0; i < p->vertex_count; i++, v++)
     {
         if((v->position[0] < bb_min[0]) || (v->position[0] > bb_max[0]) ||
            (v->position[1] < bb_min[1]) || (v->position[1] > bb_max[1]))

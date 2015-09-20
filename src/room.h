@@ -214,6 +214,26 @@ struct base_mesh_s;
 struct physics_object_s;
 struct sprite_buffer_s;
 
+
+typedef struct trigger_command_s
+{
+    uint16_t                        function;
+    uint16_t                        operands;
+    struct trigger_command_s       *next;
+}trigger_command_t, *trigger_command_p;
+
+
+typedef struct trigger_header_s
+{
+    uint16_t    function_value;
+    uint16_t    sub_function : 15;
+    uint16_t    once : 1;
+    uint16_t    timer;
+    uint16_t    mask;
+    struct trigger_command_s       *commands;
+}trigger_header_t, *trigger_header_p;
+
+
 typedef struct room_box_s
 {
     int32_t     x_min;
@@ -223,6 +243,7 @@ typedef struct room_box_s
     int32_t     true_floor;
     int32_t     overlap_index;
 }room_box_t, *room_box_p;
+
 
 typedef struct room_sector_s
 {
@@ -235,6 +256,7 @@ typedef struct room_sector_s
     int32_t                     floor;
     int32_t                     ceiling;
 
+    struct trigger_header_s    *trigger;
     struct room_sector_s       *sector_below;
     struct room_sector_s       *sector_above;
     struct room_s              *owner_room;    // Room that contain this sector

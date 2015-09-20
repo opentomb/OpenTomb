@@ -52,14 +52,14 @@ typedef struct fd_trigger_head_s
 {
     uint16_t    timer_field : 8;            // 0b00000000 11111111   Used as common parameter for some commands.
     uint16_t    only_once : 1;              // 0b00000001 00000000
-    uint16_t    trigger_mask : 5;           // 0b00111110 00000000
+    uint16_t    mask : 5;                   // 0b00111110 00000000
     uint16_t    uncnown : 2;
 }fd_trigger_head_t, *fd_trigger_head_p;
 
 typedef struct fd_trigger_function_s
 {
     uint16_t    operands : 10;              // 0b00000011 11111111
-    uint16_t    trigger_function : 5;       // 0b01111100 00000000
+    uint16_t    function : 5;               // 0b01111100 00000000
     uint16_t    cont_bit : 1;               // 0b10000000 00000000
 }fd_trigger_function_t, *fd_trigger_function_p;
 
@@ -870,6 +870,17 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                 {
                     fd_trigger_head_t fd_trigger_head = *((fd_trigger_head_p)entry);
 
+                    if(sector->trigger == NULL)
+                    {
+                        sector->trigger = (trigger_header_p)malloc(sizeof(trigger_header_t));
+                    }
+                    sector->trigger->commands = NULL;
+                    sector->trigger->function_value = fd_command.function_value;
+                    sector->trigger->sub_function = fd_command.sub_function;
+                    sector->trigger->mask = fd_trigger_head.mask;
+                    sector->trigger->timer = fd_trigger_head.timer_field;
+                    sector->trigger->once = fd_trigger_head.only_once;
+
                     char header[128];               header[0]            = 0;   // Header condition
                     char once_condition[128];       once_condition[0]    = 0;   // One-shot condition
                     char cont_events[4096];         cont_events[0]       = 0;   // Continous trigger events
@@ -988,9 +999,16 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     fd_trigger_function_t fd_trigger_function;
                     do
                     {
+                        trigger_command_p command = (trigger_command_p)malloc(sizeof(trigger_command_t));
+                        command->next = sector->trigger->commands;
+                        sector->trigger->commands = command;
+
                         entry++;
                         fd_trigger_function = *((fd_trigger_function_p)entry);
-                        switch(fd_trigger_function.trigger_function)
+                        command->function = fd_trigger_function.function;
+                        command->operands = fd_trigger_function.operands;
+
+                        switch(fd_trigger_function.function)
                         {
                             case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
                                 // If activator is specified, first item operand counts as activator index (except
@@ -1013,7 +1031,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                             strcat(script, buf);
 
                                             // Trigger activation mask is here filtered through activator's own mask.
-                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", fd_trigger_head.trigger_mask);
+                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", fd_trigger_head.mask);
                                             strcat(script, buf);
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
@@ -1071,7 +1089,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                         }
                                         else
                                         {
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", fd_trigger_function.operands, fd_trigger_head.trigger_mask, mask_mode, fd_trigger_head.only_once, fd_trigger_head.timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", fd_trigger_function.operands, fd_trigger_head.mask, mask_mode, fd_trigger_head.only_once, fd_trigger_head.timer_field);
                                             strcat(item_events, buf);
                                             snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", fd_trigger_function.operands);
                                             strcat(anti_events, buf);
@@ -1110,7 +1128,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 }
                                 else
                                 {
-                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", fd_trigger_function.operands, fd_trigger_head.trigger_mask, fd_trigger_function.operands);
+                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", fd_trigger_function.operands, fd_trigger_head.mask, fd_trigger_function.operands);
                                     strcat(single_events, buf);
                                 }
                                 break;
@@ -1140,7 +1158,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 break;
 
                             case TR_FD_TRIGFUNC_PLAYTRACK:
-                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", fd_trigger_function.operands, ((uint16_t)fd_trigger_head.trigger_mask << 1) + fd_trigger_head.only_once);
+                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", fd_trigger_function.operands, ((uint16_t)fd_trigger_head.mask << 1) + fd_trigger_head.only_once);
                                 strcat(single_events, buf);
                                 break;
 

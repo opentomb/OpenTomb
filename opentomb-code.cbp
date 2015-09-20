@@ -48,7 +48,7 @@
 			<Add directory="src/freetype2/include" />
 		</Compiler>
 		<Linker>
-			<Add option="-static -m32 -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread" />
+			<Add option="-static -m32 -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />

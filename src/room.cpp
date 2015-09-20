@@ -86,7 +86,7 @@ void Room_Clear(struct room_s *room)
 
     if(room->portals_count)
     {
-        for(uint16_t i = 0;i < room->portals_count; i++, p++)
+        for(uint16_t i = 0; i < room->portals_count; i++, p++)
         {
             Portal_Clear(p);
         }
@@ -99,6 +99,22 @@ void Room_Clear(struct room_s *room)
 
     if(room->sectors_count)
     {
+        room_sector_p s = room->sectors;
+        for(uint32_t i = 0; i < room->sectors_count; i++, s++)
+        {
+            if(s->trigger)
+            {
+                for(trigger_command_p current_command = s->trigger->commands; current_command; )
+                {
+                    trigger_command_p next_command = current_command->next;
+                    current_command->next = NULL;
+                    free(current_command);
+                    current_command = next_command;
+                }
+                free(s->trigger);
+                s->trigger = NULL;
+            }
+        }
         free(room->sectors);
         room->sectors = NULL;
         room->sectors_count = 0;
@@ -220,7 +236,7 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 
     previous_cont = room->content->containers;
     current_cont = previous_cont->next;
-    for(;current_cont!=NULL;)
+    while(current_cont)
     {
         if(current_cont == cont)
         {
@@ -410,7 +426,7 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
 
         if(r1->near_room_list_size >= r0->near_room_list_size)
         {
-            for(uint16_t i=0;i<r0->near_room_list_size;i++)
+            for(uint16_t i = 0; i < r0->near_room_list_size; i++)
             {
                 if(r0->near_room_list[i]->id == r1->id)
                 {
@@ -420,7 +436,7 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
         }
         else
         {
-            for(uint16_t i=0;i<r1->near_room_list_size;i++)
+            for(uint16_t i = 0; i < r1->near_room_list_size; i++)
             {
                 if(r1->near_room_list[i]->id == r0->id)
                 {
@@ -438,12 +454,12 @@ void Room_SwapItems(struct room_s *room, struct room_s *dest_room)
 {
     engine_container_p t;
 
-    for(t=room->content->containers;t!=NULL;t=t->next)
+    for(t = room->content->containers; t; t = t->next)
     {
         t->room = dest_room;
     }
 
-    for(t=dest_room->content->containers;t!=NULL;t=t->next)
+    for(t = dest_room->content->containers; t; t = t->next)
     {
         t->room = room;
     }
@@ -593,7 +609,7 @@ void Room_GenSpritesBuffer(struct room_s *room)
  */
 room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
 {
-    if((rs != NULL) && (rs->owner_room->base_room != NULL))
+    if(rs && rs->owner_room->base_room)
     {
         room_p r = rs->owner_room->base_room;
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
@@ -610,7 +626,7 @@ room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
 
 room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
 {
-    if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
+    if(rs && rs->owner_room->alternate_room)
     {
         room_p r = rs->owner_room->alternate_room;
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
@@ -627,7 +643,7 @@ room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
 
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 {
-    if((rs != NULL) && (rs->portal_to_room != NULL))
+    if(rs && rs->portal_to_room)
     {
         room_p r = rs->portal_to_room;
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
@@ -644,7 +660,7 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 
 struct room_sector_s *Sector_GetPortalSectorTarget(struct room_sector_s *rs)
 {
-    if((rs != NULL) && (rs->portal_to_room != NULL))
+    if(rs && rs->portal_to_room)
     {
         room_p r = rs->portal_to_room;
         if((rs->owner_room->base_room != NULL) && (r->alternate_room != NULL))
@@ -712,14 +728,14 @@ int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 
 struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
 {
-    if((rs != NULL) && (rs->owner_room->active == 0))
+    if(rs && (rs->owner_room->active == 0))
     {
-        if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
+        if(rs->owner_room->base_room && rs->owner_room->base_room->active)
         {
             room_p r = rs->owner_room->base_room;
             rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
         }
-        else if((rs->owner_room->alternate_room != NULL) && (rs->owner_room->alternate_room->active))
+        else if(rs->owner_room->alternate_room && rs->owner_room->alternate_room->active)
         {
             room_p r = rs->owner_room->alternate_room;
             rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
@@ -732,15 +748,15 @@ struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
 
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 {
-    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
+    for(sector = Sector_CheckFlip(sector); sector->sector_below; sector = Sector_CheckFlip(sector->sector_below));
 
-    return Sector_CheckFlip(sector);
+    return sector;
 }
 
 
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector)
 {
-    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
+    for(sector = Sector_CheckFlip(sector); sector->sector_above; sector = Sector_CheckFlip(sector->sector_above));
 
     return sector;
 }

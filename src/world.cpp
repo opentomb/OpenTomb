@@ -1684,7 +1684,8 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
-
+        sector->trigger = NULL;
+        
         if(tr->game_version < TR_III)
         {
             sector->box_index = tr_room->sector_list[i].box_index;

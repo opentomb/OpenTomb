@@ -6730,17 +6730,17 @@
 1439230022 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
 
-1439230092 d:\dev\opentomb\src\core\polygon.h
+1442644096 d:\dev\opentomb\src\core\polygon.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	"vmath.h"
 
-1441737919 d:\dev\opentomb\src\engine.h
+1441991765 d:\dev\opentomb\src\engine.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
-1441640079 d:\dev\opentomb\src\world.h
+1442643760 d:\dev\opentomb\src\world.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
@@ -6806,7 +6806,7 @@
 
 1433713938 d:\dev\opentomb\src\vt\tr_versions.h
 
-1440837246 d:\dev\opentomb\src\game.h
+1441994303 d:\dev\opentomb\src\game.h
 	<stdint.h>
 
 1437244868 d:\dev\opentomb\src\bullet\linearmath\btscalar.h
@@ -7342,7 +7342,7 @@
 	"vt/tr_types.h"
 	"core/polygon.h"
 
-1441736596 d:\dev\opentomb\src\controls.h
+1441822949 d:\dev\opentomb\src\controls.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -7351,7 +7351,7 @@
 	"bullet/btBulletDynamicsCommon.h"
 	"bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
-1440847478 d:\dev\opentomb\src\mesh.h
+1442739443 d:\dev\opentomb\src\mesh.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
@@ -7377,10 +7377,10 @@
 
 1440848652 d:\dev\opentomb\src\anim_state_control.h
 
-1440613190 d:\dev\opentomb\src\character_controller.h
+1442678113 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 
-1441557258 d:\dev\opentomb\src\resource.h
+1442736920 d:\dev\opentomb\src\resource.h
 
 1437244868 d:\dev\opentomb\src\core\redblack.h
 	<stdlib.h>
@@ -9077,7 +9077,7 @@
 	<stdio.h>
 	<string.h>
 
-1441395985 source:d:\dev\opentomb\src\core\console.c
+1441734321 source:d:\dev\opentomb\src\core\console.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -9110,7 +9110,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\ftmodapi.h
 	<ft2build.h>
 
-1441397793 source:d:\dev\opentomb\src\core\gl_util.c
+1441651798 source:d:\dev\opentomb\src\core\gl_util.c
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_video.h>
 	<SDL2/SDL_opengl.h>
@@ -11024,49 +11024,9 @@
 	"engine_bullet.h"
 	"hair.h"
 
-1440847435 source:d:\dev\opentomb\src\main_sdl.cpp
-	<time.h>
-	<stdio.h>
-	<string.h>
+1441737473 source:d:\dev\opentomb\src\main_sdl.cpp
 	<SDL2/SDL.h>
-	<SDL2/SDL_platform.h>
-	<SDL2/SDL_video.h>
-	<SDL2/SDL_audio.h>
-	<SDL2/SDL_image.h>
-	<SDL2/SDL_opengl.h>
-	<SDL2/SDL_events.h>
-	<SDL2/SDL_haptic.h>
-	<lua.h>
-	<lualib.h>
-	<lauxlib.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
-	"al/AL/alext.h"
-	"core/system.h"
-	"core/console.h"
-	"core/gl_util.h"
-	"core/vmath.h"
-	"core/polygon.h"
-	"core/obb.h"
-	"render/camera.h"
-	"render/frustum.h"
-	"render/render.h"
-	"vt/vt_level.h"
-	"anim_state_control.h"
-	"character_controller.h"
-	"main_SDL.h"
-	"script.h"
 	"engine.h"
-	"controls.h"
-	"world.h"
-	"gui.h"
-	"skeletal_model.h"
-	"game.h"
-	"resource.h"
-	"entity.h"
-	"audio.h"
-	"gameflow.h"
-	"engine_string.h"
 
 1439230190 source:d:\dev\opentomb\src\mesh.cpp
 	<stdlib.h>
@@ -16256,10 +16216,10 @@
 1433713939 c:\dev\opentomb\src\vt\vt_level.h
 	"l_main.h"
 
-1441473991 d:\dev\opentomb\src\engine_physics.h
+1442143158 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
 
-1440527932 d:\dev\opentomb\src\render\render.h
+1442152734 d:\dev\opentomb\src\render\render.h
 	<stdint.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
@@ -16297,11 +16257,8 @@
 	<stdint.h>
 	"../core/vmath.h"
 
-1440851344 d:\dev\opentomb\src\skeletal_model.h
-	<SDL2/SDL_platform.h>
-	<SDL2/SDL_opengl.h>
+1442646763 d:\dev\opentomb\src\skeletal_model.h
 	<stdint.h>
-	"core/vmath.h"
 
 1441303370 source:d:\dev\opentomb\src\mesh.c
 	<stdlib.h>
@@ -16411,7 +16368,7 @@
 	"mesh.h"
 	"skeletal_model.h"
 
-1441639719 d:\dev\opentomb\src\room.h
+1442749856 d:\dev\opentomb\src\room.h
 	<stdint.h>
 
 1440791738 source:d:\dev\opentomb\src\inventory.cpp
