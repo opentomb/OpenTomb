@@ -238,7 +238,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->m_self->getRoom()) ? (ent->m_self->getRoom()->id) : (0xFFFFFFFF);
+        uint32_t room_id = (ent->m_self->getObject()->getRoom()) ? (ent->m_self->getObject()->getRoom()->id) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->id());
@@ -269,9 +269,9 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
-    if(ent->m_self->getRoom() != nullptr)
+    if(ent->m_self->getObject()->getRoom() != nullptr)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->getRoom()->id, ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->getObject()->getRoom()->id, ent->m_moveType, static_cast<int>(ent->m_moveDir));
     }
     else
     {

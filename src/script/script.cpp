@@ -223,7 +223,7 @@ bool lua_SameRoom(int id1, int id2)
 
     if(ent1 && ent2)
     {
-        return ent1->m_self->getRoom() == ent2->m_self->getRoom();
+        return ent1->m_self->getObject()->getRoom() == ent2->m_self->getObject()->getRoom();
     }
 
     return false;
@@ -855,8 +855,8 @@ bool lua_DeleteEntity(int id)
     if(!ent)
         return false;
 
-    if(ent->m_self->getRoom())
-        ent->m_self->getRoom()->removeEntity(ent.get());
+    if(ent->m_self->getObject()->getRoom())
+        ent->m_self->getObject()->getRoom()->removeEntity(ent.get());
     engine::engine_world.deleteEntity(id);
     return true;
 }
@@ -926,7 +926,7 @@ bool lua_IsInRoom(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && ent->m_self->getRoom())
+    if(ent && ent->m_self->getObject()->getRoom())
     {
         if(ent->m_currentSector)
         {
@@ -960,7 +960,7 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
             ent->m_angles[0],
             ent->m_angles[1],
             ent->m_angles[2],
-            ent->m_self->getRoom()->id
+            ent->m_self->getObject()->getRoom()->id
     );
 }
 
@@ -1012,8 +1012,8 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
 
     auto next_pos = ent->m_transform.getOrigin() + (dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2));
 
-    world::RoomSector* curr_sector = ent->m_self->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
-    world::RoomSector* next_sector = ent->m_self->getRoom()->getSectorRaw(next_pos);
+    world::RoomSector* curr_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+    world::RoomSector* next_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(next_pos);
 
     curr_sector = curr_sector->checkPortalPointer();
     next_sector = next_sector->checkPortalPointer();
@@ -1043,7 +1043,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
         position += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
 
-    world::RoomSector* curr_sector = ent->m_self->getRoom()->getSectorRaw(position);
+    world::RoomSector* curr_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(position);
     curr_sector = curr_sector->checkPortalPointer();
     btVector3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
         ? curr_sector->getCeilingPoint()
@@ -2050,13 +2050,13 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
         std::shared_ptr<world::Room> r = engine::engine_world.rooms[room];
         if(ent == engine::engine_world.character)
         {
-            ent->m_self->setRoom( r.get() );
+            ent->m_self->getObject()->setRoom( r.get() );
         }
-        else if(ent->m_self->getRoom() != r.get())
+        else if(ent->m_self->getObject()->getRoom() != r.get())
         {
-            if(ent->m_self->getRoom() != nullptr)
+            if(ent->m_self->getObject()->getRoom() != nullptr)
             {
-                ent->m_self->getRoom()->removeEntity(ent.get());
+                ent->m_self->getObject()->getRoom()->removeEntity(ent.get());
             }
             r->addEntity(ent.get());
         }

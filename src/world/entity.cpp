@@ -440,10 +440,10 @@ void Entity::fixPenetrations(const btVector3* move)
 
 void Entity::transferToRoom(Room* room)
 {
-    if(m_self->getRoom() && !m_self->getRoom()->isOverlapped(room))
+    if(m_self->getObject()->getRoom() && !m_self->getObject()->getRoom()->isOverlapped(room))
     {
-        if(m_self->getRoom())
-            m_self->getRoom()->removeEntity(this);
+        if(m_self->getObject()->getRoom())
+            m_self->getObject()->getRoom()->removeEntity(this);
         if(room)
             room->addEntity(this);
     }
@@ -556,7 +556,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 void Entity::updateRoomPos()
 {
     btVector3 pos = getRoomPos();
-    auto new_room = Room_FindPosCogerrence(pos, m_self->getRoom());
+    auto new_room = Room_FindPosCogerrence(pos, m_self->getObject()->getRoom());
     if(!new_room)
     {
         m_currentSector = nullptr;
@@ -571,7 +571,7 @@ void Entity::updateRoomPos()
 
     transferToRoom(new_room);
 
-    m_self->setRoom( new_room );
+    m_self->getObject()->setRoom( new_room );
     m_lastSector = m_currentSector;
 
     if(m_currentSector != new_sector)
@@ -1050,11 +1050,11 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-    if (m_self->getRoom() == nullptr)
+    if (m_self->getObject()->getRoom() == nullptr)
             return;
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
-    auto containers = m_self->getRoom()->containers;
+    auto containers = m_self->getObject()->getRoom()->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
         if(!cont->contains<Entity>())
@@ -1106,7 +1106,7 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>(this, nullptr))
+    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>(this))
 {
     m_transform.setIdentity();
 

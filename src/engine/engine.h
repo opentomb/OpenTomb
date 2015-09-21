@@ -69,7 +69,6 @@ enum class CollisionType
 
 struct EngineContainer
 {
-    EngineContainer() = delete;
     EngineContainer(const EngineContainer&) = delete;
     EngineContainer& operator=(const EngineContainer&) = delete;
 
@@ -105,26 +104,12 @@ struct EngineContainer
         m_collisionShape = shape;
     }
 
-    world::Room* getRoom() const noexcept
-    {
-        return m_room;
-    }
-
-    void setRoom(world::Room* room) noexcept
-    {
-        m_room = room;
-    }
-
 protected:
-    explicit EngineContainer(world::Room* room)
-        : m_room(room)
-    {
-    }
+    explicit EngineContainer() = default;
 
 private:
     CollisionType m_collisionType = CollisionType::None;
     CollisionShape m_collisionShape = CollisionShape::Box;
-    world::Room* m_room = nullptr;
 };
 
 template<class T>
@@ -132,8 +117,8 @@ class EngineContainerImpl : public EngineContainer
 {
     static_assert(std::is_base_of<world::Object,T>::value, "T must be derived from world::Object");
 public:
-    EngineContainerImpl(T* obj, world::Room* room)
-        : EngineContainer(room)
+    EngineContainerImpl(T* obj)
+        : EngineContainer()
         , m_object(obj)
     {
     }
@@ -160,11 +145,6 @@ template<>
 class EngineContainerImpl<BulletObject> : public EngineContainer
 {
 public:
-    explicit EngineContainerImpl(world::Room* room)
-        : EngineContainer(room)
-    {
-    }
-
     virtual BulletObject* getObject() override
     {
         static BulletObject obj;

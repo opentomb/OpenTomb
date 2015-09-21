@@ -1797,7 +1797,8 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
     room->ambient_lighting[0] = tr->m_rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->m_rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->m_rooms[room_index].light_colour.b * 2;
-    room->self.reset(new engine::EngineContainerImpl<Room>(room.get(), room.get()));
+    room->self.reset(new engine::EngineContainerImpl<Room>(room.get()));
+    room->setRoom(room.get());
     room->near_room_list.clear();
     room->overlapped_room_list.clear();
 
@@ -1818,7 +1819,8 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         }
         room->static_mesh.emplace_back(std::make_shared<StaticMesh>());
         std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
-        r_static->self = std::make_shared<engine::EngineContainerImpl<StaticMesh>>(room->static_mesh[i].get(), room.get());
+        r_static->self = std::make_shared<engine::EngineContainerImpl<StaticMesh>>(room->static_mesh[i].get());
+        r_static->setRoom(room.get());
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
         r_static->position[0] = tr_room->static_meshes[i].position.x;
@@ -3561,11 +3563,11 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
         entity->updateTransform();
         if((tr_item->room >= 0) && (static_cast<uint32_t>(tr_item->room) < world->rooms.size()))
         {
-            entity->m_self->setRoom( world->rooms[tr_item->room].get() );
+            entity->m_self->getObject()->setRoom( world->rooms[tr_item->room].get() );
         }
         else
         {
-            entity->m_self->setRoom( nullptr );
+            entity->m_self->getObject()->setRoom( nullptr );
         }
 
         entity->m_triggerLayout = tr_item->getActivationMask();   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
@@ -3598,10 +3600,10 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
         {
             // SPRITE LOADING
             core::Sprite* sp = world->getSpriteByID(tr_item->object_id);
-            if(sp && entity->m_self->getRoom())
+            if(sp && entity->m_self->getObject()->getRoom())
             {
-                entity->m_self->getRoom()->sprites.emplace_back();
-                RoomSprite& rsp = entity->m_self->getRoom()->sprites.back();
+                entity->m_self->getObject()->getRoom()->sprites.emplace_back();
+                RoomSprite& rsp = entity->m_self->getObject()->getRoom()->sprites.back();
                 rsp.sprite = sp;
                 rsp.pos = entity->m_transform.getOrigin();
                 rsp.was_rendered = false;
@@ -3700,7 +3702,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
         entity->rebuildBV();
         entity->genRigidBody();
 
-        entity->m_self->getRoom()->addEntity(entity.get());
+        entity->m_self->getObject()->getRoom()->addEntity(entity.get());
         world->addEntity(entity);
     }
 }

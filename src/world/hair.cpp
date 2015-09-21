@@ -19,19 +19,24 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
-    if((!parent_entity) || (!setup) ||
-       (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
-       (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))) return false;
+    if(!parent_entity || !setup ||
+       setup->m_linkBody >= parent_entity->m_bf.bone_tags.size() ||
+       !(parent_entity->m_bt.bt_body[setup->m_linkBody]))
+    {
+        return false;
+    }
 
     SkeletalModel* model = engine::engine_world.getModelByID(setup->m_model);
 
     // No model to link to - bypass function.
 
-    if((!model) || (model->mesh_count == 0)) return false;
+    if(!model || model->mesh_count == 0)
+        return false;
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    m_container.reset(new engine::EngineContainerImpl<Hair>(this, parent_entity->m_self->getRoom()));
+    m_container.reset(new engine::EngineContainerImpl<Hair>(this));
+    setRoom(parent_entity->m_self->getObject()->getRoom());
 
     // Setup initial hair parameters.
 

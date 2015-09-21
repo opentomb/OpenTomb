@@ -33,7 +33,7 @@ Room::~Room()
 
         if(mesh->self)
         {
-            mesh->self->setRoom( nullptr );
+            mesh->self->getObject()->setRoom( nullptr );
             mesh->self.reset();
         }
     }
@@ -66,7 +66,7 @@ void Room::addEntity(Entity* entity)
         }
     }
 
-    entity->m_self->setRoom( this );
+    entity->m_self->getObject()->setRoom( this );
     containers.emplace_back(entity->m_self);
 }
 
@@ -79,7 +79,7 @@ bool Room::removeEntity(Entity* entity)
     if(it != containers.end())
     {
         containers.erase(it);
-        entity->m_self->setRoom( nullptr );
+        entity->m_self->getObject()->setRoom( nullptr );
         return true;
     }
 
@@ -333,12 +333,12 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
 {
     for(std::shared_ptr<engine::EngineContainer> t : containers)
     {
-        t->setRoom( dest_room.get() );
+        t->getObject()->setRoom( dest_room.get() );
     }
 
     for(std::shared_ptr<engine::EngineContainer> t : dest_room->containers)
     {
-        t->setRoom( this );
+        t->getObject()->setRoom( this );
     }
 
     std::swap(containers, dest_room->containers);
