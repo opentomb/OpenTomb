@@ -266,7 +266,5 @@ struct SSBoneFrame
     void updateCurrentBoneFrame();
 };
 
-void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);
-
 } // namespace animation
 } // namespace world

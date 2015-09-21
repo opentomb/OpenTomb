@@ -115,7 +115,7 @@ void Entity::disableCollision()
 
 void Entity::genRigidBody()
 {
-    if((m_bf.animations.model == nullptr) || (m_self->collision_type == engine::CollisionType::None))
+    if(!m_bf.animations.model || m_self->getCollisionType() == engine::CollisionType::None)
         return;
 
     m_bt.bt_body.clear();
@@ -124,7 +124,7 @@ void Entity::genRigidBody()
     {
         std::shared_ptr<core::BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape;
-        switch(m_self->collision_shape)
+        switch(m_self->getCollisionShape())
         {
             case engine::CollisionShape::Sphere:
                 cshape = core::BT_CSfromSphere(mesh->m_radius);
@@ -149,13 +149,13 @@ void Entity::genRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            if(m_self->collision_shape != engine::CollisionShape::TriMesh)
+            if(m_self->getCollisionShape() != engine::CollisionShape::TriMesh)
                 cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
-            switch(m_self->collision_type)
+            switch(m_self->getCollisionType())
             {
                 case engine::CollisionType::Kinematic:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -231,7 +231,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
             engine::EngineContainer* cont0 = static_cast<engine::EngineContainer*>(manifold->getBody0()->getUserPointer());
             engine::EngineContainer* cont1 = static_cast<engine::EngineContainer*>(manifold->getBody1()->getUserPointer());
-            if((cont0->collision_type == engine::CollisionType::Ghost) || (cont1->collision_type == engine::CollisionType::Ghost))
+            if(cont0->getCollisionType() == engine::CollisionType::Ghost || cont1->getCollisionType() == engine::CollisionType::Ghost)
             {
                 continue;
             }
@@ -440,10 +440,10 @@ void Entity::fixPenetrations(const btVector3* move)
 
 void Entity::transferToRoom(Room* room)
 {
-    if(m_self->room && !m_self->room->isOverlapped(room))
+    if(m_self->getRoom() && !m_self->getRoom()->isOverlapped(room))
     {
-        if(m_self->room)
-            m_self->room->removeEntity(this);
+        if(m_self->getRoom())
+            m_self->getRoom()->removeEntity(this);
         if(room)
             room->addEntity(this);
     }
@@ -556,7 +556,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 void Entity::updateRoomPos()
 {
     btVector3 pos = getRoomPos();
-    auto new_room = Room_FindPosCogerrence(pos, m_self->room);
+    auto new_room = Room_FindPosCogerrence(pos, m_self->getRoom());
     if(!new_room)
     {
         m_currentSector = nullptr;
@@ -571,7 +571,7 @@ void Entity::updateRoomPos()
 
     transferToRoom(new_room);
 
-    m_self->room = new_room;
+    m_self->setRoom( new_room );
     m_lastSector = m_currentSector;
 
     if(m_currentSector != new_sector)
@@ -666,7 +666,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->collision_type != engine::CollisionType::Static)
+        if(m_self->getCollisionType() != engine::CollisionType::Static)
         {
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {
@@ -1050,11 +1050,11 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-    if (m_self->room == nullptr)
+    if (m_self->getRoom() == nullptr)
             return;
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
-    auto containers = m_self->room->containers;
+    auto containers = m_self->getRoom()->containers;
     for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
     {
         if(!cont->contains<Entity>())
@@ -1106,15 +1106,12 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>())
+    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>(this, nullptr))
 {
     m_transform.setIdentity();
 
     m_lerp_last_transform = m_lerp_curr_transform = m_transform;
 
-    m_self->setObject(this);
-    m_self->room = nullptr;
-    m_self->collision_type = engine::CollisionType::None;
     m_obb.transform = &m_transform;
     m_bt.bt_body.clear();
     m_bt.bt_joints.clear();

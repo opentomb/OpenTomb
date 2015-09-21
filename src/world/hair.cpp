@@ -31,9 +31,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    m_container.reset(new engine::EngineContainerImpl<Hair>());
-    m_container->room = parent_entity->m_self->room;
-    m_container->setObject(this);
+    m_container.reset(new engine::EngineContainerImpl<Hair>(this, parent_entity->m_self->getRoom()));
 
     // Setup initial hair parameters.
 

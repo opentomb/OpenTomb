@@ -66,7 +66,7 @@ void World::empty()
 
     if(character)
     {
-        character->m_self->room = nullptr;
+        character->m_self->setRoom( nullptr );
         character->m_currentSector = nullptr;
     }
 
@@ -96,7 +96,7 @@ void World::empty()
                     body->setCollisionShape(nullptr);
 
                     engine::bt_engine_dynamicsWorld->removeRigidBody(body);
-                    cont->room = nullptr;
+                    cont->setRoom( nullptr );
                     delete cont;
                     delete body;
                 }
@@ -155,12 +155,12 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             }
             if(room_id < rooms.size())
             {
-                ent->m_self->room = rooms[room_id].get();
-                ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
+                ent->m_self->setRoom( rooms[room_id].get() );
+                ent->m_currentSector = ent->m_self->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
             }
             else
             {
-                ent->m_self->room = nullptr;
+                ent->m_self->setRoom( nullptr );
             }
 
             return ent->id();
@@ -191,12 +191,12 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         if(room_id < rooms.size())
         {
-            ent->m_self->room = rooms[room_id].get();
-            ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
+            ent->m_self->setRoom( rooms[room_id].get() );
+            ent->m_currentSector = ent->m_self->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
         }
         else
         {
-            ent->m_self->room = nullptr;
+            ent->m_self->setRoom( nullptr );
         }
 
         ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
@@ -218,9 +218,9 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         ent->rebuildBV();
         ent->genRigidBody();
 
-        if(ent->m_self->room != nullptr)
+        if(ent->m_self->getRoom() != nullptr)
         {
-            ent->m_self->room->addEntity(ent.get());
+            ent->m_self->getRoom()->addEntity(ent.get());
         }
         addEntity(ent);
         Res_SetEntityFunction(ent);

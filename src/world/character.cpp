@@ -92,9 +92,9 @@ Character::Character(uint32_t id)
 
 Character::~Character()
 {
-    if((m_self->room != nullptr) && (this != engine::engine_world.character.get()))
+    if(m_self->getRoom() && (this != engine::engine_world.character.get()))
     {
-        m_self->room->removeEntity(this);
+        m_self->getRoom()->removeEntity(this);
     }
 }
 
@@ -271,7 +271,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    Room* r = (cb->m_container) ? (cb->m_container->room) : (nullptr);
+    Room* r = (cb->m_container) ? (cb->m_container->getRoom()) : (nullptr);
     RoomSector* rs;
 
     fc->floor_hit = false;
@@ -1180,7 +1180,7 @@ int Character::freeFalling()
 
     updateCurrentHeight();
 
-    if(m_self->room && (m_self->room->flags & TR_ROOM_FLAG_WATER))
+    if(m_self->getRoom() && (m_self->getRoom()->flags & TR_ROOM_FLAG_WATER))
     {
         if(m_speed[2] < 0.0)
         {
@@ -1474,7 +1474,7 @@ int Character::moveUnderWater()
 
     // Check current place.
 
-    if(m_self->room && !(m_self->room->flags & TR_ROOM_FLAG_WATER))
+    if(m_self->getRoom() && !(m_self->getRoom()->flags & TR_ROOM_FLAG_WATER))
     {
         m_moveType = MoveType::FreeFalling;
         return 2;
@@ -1614,7 +1614,7 @@ int Character::moveOnWater()
 int Character::findTraverse()
 {
     RoomSector* ch_s, *obj_s = nullptr;
-    ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
+    ch_s = m_self->getRoom()->getSectorRaw(m_transform.getOrigin());
 
     if(ch_s == nullptr)
     {
@@ -1672,8 +1672,8 @@ int Character::findTraverse()
  */
 int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s = m_self->room->getSectorRaw(m_transform.getOrigin());
-    RoomSector* obj_s = obj.m_self->room->getSectorRaw(obj.m_transform.getOrigin());
+    RoomSector* ch_s = m_self->getRoom()->getSectorRaw(m_transform.getOrigin());
+    RoomSector* obj_s = obj.m_self->getRoom()->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
@@ -2239,7 +2239,7 @@ void Character::updateHair()
 
         if(auto ownerChar = hair->m_ownerChar.lock())
         {
-            hair->m_container->room = ownerChar->m_self->room;
+            hair->m_container->setRoom( ownerChar->m_self->getRoom() );
         }
     }
 }
@@ -2404,7 +2404,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
 
 Substance Character::getSubstanceState() const
 {
-    if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+    if(m_self->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_height)
         {

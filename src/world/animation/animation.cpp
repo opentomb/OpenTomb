@@ -124,22 +124,6 @@ void SSBoneFrame::updateCurrentBoneFrame()
     }
 }
 
-void BoneFrame_Copy(BoneFrame *dst, BoneFrame *src)
-{
-    dst->bone_tags.resize(src->bone_tags.size());
-    dst->position = src->position;
-    dst->center = src->center;
-    dst->boundingBox = src->boundingBox;
-
-    dst->animCommands = src->animCommands;
-
-    for(uint16_t i = 0; i < dst->bone_tags.size(); i++)
-    {
-        dst->bone_tags[i].qrotate = src->bone_tags[i].qrotate;
-        dst->bone_tags[i].offset = src->bone_tags[i].offset;
-    }
-}
-
 void SSAnimation::setAnimation(int animation, int frame, int another_model)
 {
     if(!model || animation >= static_cast<int>(model->animations.size()))

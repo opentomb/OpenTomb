@@ -525,9 +525,9 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
     EngineContainer* c0, *c1;
 
     c0 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
-    world::Room* r0 = c0 ? c0->room : nullptr;
+    world::Room* r0 = c0 ? c0->getRoom() : nullptr;
     c1 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
-    world::Room* r1 = c1 ? c1->room : nullptr;
+    world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
     if(c1 && c1 == c0)
     {
@@ -685,7 +685,7 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
             if(cont && cont->contains<BulletObject>())
             {
-                cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
+                cont->setRoom( Room_FindPosCogerrence(trans.getOrigin(), cont->getRoom()) );
             }
         }
     }
@@ -1335,13 +1335,13 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 {
     const EngineContainer* c1 = static_cast<const EngineContainer*>(rayResult.m_collisionObject->getUserPointer());
 
-    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == CollisionType::Ghost))))
+    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getCollisionType() == CollisionType::Ghost)))
     {
         return 1.0;
     }
 
-    const world::Room* r0 = m_container ? m_container->room : nullptr;
-    const world::Room* r1 = c1 ? c1->room : nullptr;
+    const world::Room* r0 = m_container ? m_container->getRoom() : nullptr;
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
     if(!r0 || !r1)
     {
@@ -1365,11 +1365,11 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 
 btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
 {
-    const world::Room* r0 = m_container ? m_container->room : nullptr;
+    const world::Room* r0 = m_container ? m_container->getRoom() : nullptr;
     const EngineContainer* c1 = static_cast<const EngineContainer*>(convexResult.m_hitCollisionObject->getUserPointer());
-    const world::Room* r1 = c1 ? c1->room : nullptr;
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
-    if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == CollisionType::Ghost))))
+    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getCollisionType() == CollisionType::Ghost)))
     {
         return 1.0;
     }

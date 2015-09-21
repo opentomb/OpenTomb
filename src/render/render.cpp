@@ -429,14 +429,14 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
 const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, const util::matrix4 &modelViewMatrix, bool skin)
 {
     // Calculate lighting
-    if(!entity->m_self || !entity->m_self->room)
+    if(!entity->m_self || !entity->m_self->getRoom())
     {
         const LitShaderDescription *shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgram(shader->program);
         return shader;
     }
 
-    world::Room* room = entity->m_self->room;
+    world::Room* room = entity->m_self->getRoom();
 
     GLfloat ambient_component[4];
     ambient_component[0] = room->ambient_lighting[0];

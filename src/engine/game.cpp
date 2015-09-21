@@ -238,7 +238,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->m_self->room) ? (ent->m_self->room->id) : (0xFFFFFFFF);
+        uint32_t room_id = (ent->m_self->getRoom()) ? (ent->m_self->getRoom()->id) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->id());
@@ -253,7 +253,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->id(), static_cast<long>(ent->m_self->collision_type), static_cast<long>(ent->m_self->collision_shape));
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->id(), static_cast<long>(ent->m_self->getCollisionType()), static_cast<long>(ent->m_self->getCollisionShape()));
 
     if(ent->m_enabled)
     {
@@ -269,9 +269,9 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
-    if(ent->m_self->room != nullptr)
+    if(ent->m_self->getRoom() != nullptr)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->room->id, ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->m_self->getRoom()->id, ent->m_moveType, static_cast<int>(ent->m_moveDir));
     }
     else
     {

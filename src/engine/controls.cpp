@@ -648,8 +648,7 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    EngineContainer* cont = new EngineContainerImpl<BulletObject>();
-    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
+    EngineContainer* cont = new EngineContainerImpl<BulletObject>(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -660,8 +659,7 @@ void Controls_SecondaryMouseDown()
     btVector3 from = engine_camera.getPosition();
     btVector3 to = from + engine_camera.getViewDir() * 32768.0;
 
-    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainerImpl<BulletObject>>();
-    cam_cont->room = engine_camera.m_currentRoom;
+    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainerImpl<BulletObject>>(engine_camera.m_currentRoom);
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -696,7 +694,7 @@ void Controls_SecondaryMouseDown()
                 {
                     body->setUserPointer(nullptr);
                 }
-                c0->room = nullptr;
+                c0->setRoom( nullptr );
                 delete c0;
 
                 bt_engine_dynamicsWorld->removeCollisionObject(obj);

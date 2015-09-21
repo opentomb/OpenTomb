@@ -69,8 +69,11 @@ enum class CollisionType
 
 struct EngineContainer
 {
-    CollisionType collision_type = CollisionType::None;
-    CollisionShape collision_shape = CollisionShape::Box;
+    EngineContainer() = delete;
+    EngineContainer(const EngineContainer&) = delete;
+    EngineContainer& operator=(const EngineContainer&) = delete;
+
+    virtual ~EngineContainer() = default;
 
     virtual world::Object* getObject() = 0;
     virtual const world::Object* getObject() const = 0;
@@ -82,9 +85,46 @@ struct EngineContainer
         return dynamic_cast<const U*>(getObject()) != nullptr;
     }
 
-    world::Room* room = nullptr;
+    CollisionType getCollisionType() const noexcept
+    {
+        return m_collisionType;
+    }
 
-    virtual ~EngineContainer() = default;
+    void setCollisionType(CollisionType type) noexcept
+    {
+        m_collisionType = type;
+    }
+
+    CollisionShape getCollisionShape() const noexcept
+    {
+        return m_collisionShape;
+    }
+
+    void setCollisionShape(CollisionShape shape) noexcept
+    {
+        m_collisionShape = shape;
+    }
+
+    world::Room* getRoom() const noexcept
+    {
+        return m_room;
+    }
+
+    void setRoom(world::Room* room) noexcept
+    {
+        m_room = room;
+    }
+
+protected:
+    explicit EngineContainer(world::Room* room)
+        : m_room(room)
+    {
+    }
+
+private:
+    CollisionType m_collisionType = CollisionType::None;
+    CollisionShape m_collisionShape = CollisionShape::Box;
+    world::Room* m_room = nullptr;
 };
 
 template<class T>
@@ -92,6 +132,12 @@ class EngineContainerImpl : public EngineContainer
 {
     static_assert(std::is_base_of<world::Object,T>::value, "T must be derived from world::Object");
 public:
+    EngineContainerImpl(T* obj, world::Room* room)
+        : EngineContainer(room)
+        , m_object(obj)
+    {
+    }
+
     virtual T* getObject() override
     {
         return m_object;
@@ -100,11 +146,6 @@ public:
     virtual const T* getObject() const override
     {
         return m_object;
-    }
-
-    void setObject(T* obj)
-    {
-        m_object = obj;
     }
 
 private:
@@ -119,6 +160,11 @@ template<>
 class EngineContainerImpl<BulletObject> : public EngineContainer
 {
 public:
+    explicit EngineContainerImpl(world::Room* room)
+        : EngineContainer(room)
+    {
+    }
+
     virtual BulletObject* getObject() override
     {
         static BulletObject obj;
