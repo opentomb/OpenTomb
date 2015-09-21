@@ -1335,7 +1335,7 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 {
     const EngineContainer* c1 = static_cast<const EngineContainer*>(rayResult.m_collisionObject->getUserPointer());
 
-    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getCollisionType() == CollisionType::Ghost)))
+    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getObject()->getCollisionType() == world::CollisionType::Ghost)))
     {
         return 1.0;
     }
@@ -1369,7 +1369,7 @@ btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::
     const EngineContainer* c1 = static_cast<const EngineContainer*>(convexResult.m_hitCollisionObject->getUserPointer());
     const world::Room* r1 = c1 ? c1->getObject()->getRoom() : nullptr;
 
-    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getCollisionType() == CollisionType::Ghost)))
+    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getObject()->getCollisionType() == world::CollisionType::Ghost)))
     {
         return 1.0;
     }

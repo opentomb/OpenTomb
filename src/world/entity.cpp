@@ -115,7 +115,7 @@ void Entity::disableCollision()
 
 void Entity::genRigidBody()
 {
-    if(!m_bf.animations.model || m_self->getCollisionType() == engine::CollisionType::None)
+    if(!m_bf.animations.model || m_self->getObject()->getCollisionType() == world::CollisionType::None)
         return;
 
     m_bt.bt_body.clear();
@@ -124,21 +124,21 @@ void Entity::genRigidBody()
     {
         std::shared_ptr<core::BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape;
-        switch(m_self->getCollisionShape())
+        switch(m_self->getObject()->getCollisionShape())
         {
-            case engine::CollisionShape::Sphere:
+            case world::CollisionShape::Sphere:
                 cshape = core::BT_CSfromSphere(mesh->m_radius);
                 break;
 
-            case engine::CollisionShape::TriMeshConvex:
+            case world::CollisionShape::TriMeshConvex:
                 cshape = core::BT_CSfromMesh(mesh, true, true, false);
                 break;
 
-            case engine::CollisionShape::TriMesh:
+            case world::CollisionShape::TriMesh:
                 cshape = core::BT_CSfromMesh(mesh, true, true, true);
                 break;
 
-            case engine::CollisionShape::Box:
+            case world::CollisionShape::Box:
             default:
                 cshape = core::BT_CSfromBBox(mesh->boundingBox, true, true);
                 break;
@@ -149,28 +149,28 @@ void Entity::genRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            if(m_self->getCollisionShape() != engine::CollisionShape::TriMesh)
+            if(m_self->getObject()->getCollisionShape() != world::CollisionShape::TriMesh)
                 cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
-            switch(m_self->getCollisionType())
+            switch(m_self->getObject()->getCollisionType())
             {
-                case engine::CollisionType::Kinematic:
+                case world::CollisionType::Kinematic:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
                     break;
 
-                case engine::CollisionType::Ghost:
+                case world::CollisionType::Ghost:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
                     break;
 
-                case engine::CollisionType::Actor:
-                case engine::CollisionType::Vehicle:
+                case world::CollisionType::Actor:
+                case world::CollisionType::Vehicle:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     break;
 
-                case engine::CollisionType::Static:
+                case world::CollisionType::Static:
                 default:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
                     break;
@@ -231,7 +231,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
             engine::EngineContainer* cont0 = static_cast<engine::EngineContainer*>(manifold->getBody0()->getUserPointer());
             engine::EngineContainer* cont1 = static_cast<engine::EngineContainer*>(manifold->getBody1()->getUserPointer());
-            if(cont0->getCollisionType() == engine::CollisionType::Ghost || cont1->getCollisionType() == engine::CollisionType::Ghost)
+            if(cont0->getObject()->getCollisionType() == world::CollisionType::Ghost || cont1->getObject()->getCollisionType() == world::CollisionType::Ghost)
             {
                 continue;
             }
@@ -666,7 +666,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->getCollisionType() != engine::CollisionType::Static)
+        if(m_self->getObject()->getCollisionType() != world::CollisionType::Static)
         {
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {

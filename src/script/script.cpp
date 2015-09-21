@@ -156,7 +156,7 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
 
     if(ctype.is<lua::Integer>() && enableCollision.is<lua::Boolean>())
     {
-        ent->m_self->setCollisionType( static_cast<engine::CollisionType>(ctype.toInt()) );
+        ent->m_self->getObject()->setCollisionType( static_cast<world::CollisionType>(ctype.toInt()) );
         if(enableCollision.to<lua::Boolean>())
         {
             ent->enableCollision();
@@ -168,7 +168,7 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
     }
     if(cshape.is<lua::Integer>())
     {
-        ent->m_self->setCollisionShape( static_cast<engine::CollisionShape>(cshape.toInt()) );
+        ent->m_self->getObject()->setCollisionShape( static_cast<world::CollisionShape>(cshape.toInt()) );
     }
 }
 
@@ -2787,19 +2787,19 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(ENTITY_CALLBACK_HIT);
     EXPOSE_C(ENTITY_CALLBACK_ROOMCOLLISION);
 
-    m_state.set("COLLISION_TYPE_NONE", static_cast<int>(engine::CollisionType::None));
-    m_state.set("COLLISION_TYPE_STATIC", static_cast<int>(engine::CollisionType::Static));
-    m_state.set("COLLISION_TYPE_KINEMATIC", static_cast<int>(engine::CollisionType::Kinematic));
-    m_state.set("COLLISION_TYPE_DYNAMIC", static_cast<int>(engine::CollisionType::Dynamic));
-    m_state.set("COLLISION_TYPE_ACTOR", static_cast<int>(engine::CollisionType::Actor));
-    m_state.set("COLLISION_TYPE_VEHICLE", static_cast<int>(engine::CollisionType::Vehicle));
-    m_state.set("COLLISION_TYPE_GHOST", static_cast<int>(engine::CollisionType::Ghost));
+    m_state.set("COLLISION_TYPE_NONE", static_cast<int>(world::CollisionType::None));
+    m_state.set("COLLISION_TYPE_STATIC", static_cast<int>(world::CollisionType::Static));
+    m_state.set("COLLISION_TYPE_KINEMATIC", static_cast<int>(world::CollisionType::Kinematic));
+    m_state.set("COLLISION_TYPE_DYNAMIC", static_cast<int>(world::CollisionType::Dynamic));
+    m_state.set("COLLISION_TYPE_ACTOR", static_cast<int>(world::CollisionType::Actor));
+    m_state.set("COLLISION_TYPE_VEHICLE", static_cast<int>(world::CollisionType::Vehicle));
+    m_state.set("COLLISION_TYPE_GHOST", static_cast<int>(world::CollisionType::Ghost));
 
-    m_state.set("COLLISION_SHAPE_BOX", static_cast<int>(engine::CollisionShape::Box));
-    m_state.set("COLLISION_SHAPE_BOX_BASE", static_cast<int>(engine::CollisionShape::BoxBase));
-    m_state.set("COLLISION_SHAPE_SPHERE", static_cast<int>(engine::CollisionShape::Sphere));
-    m_state.set("COLLISION_SHAPE_TRIMESH", static_cast<int>(engine::CollisionShape::TriMesh));
-    m_state.set("COLLISION_SHAPE_TRIMESH_CONVEX", static_cast<int>(engine::CollisionShape::TriMeshConvex));
+    m_state.set("COLLISION_SHAPE_BOX", static_cast<int>(world::CollisionShape::Box));
+    m_state.set("COLLISION_SHAPE_BOX_BASE", static_cast<int>(world::CollisionShape::BoxBase));
+    m_state.set("COLLISION_SHAPE_SPHERE", static_cast<int>(world::CollisionShape::Sphere));
+    m_state.set("COLLISION_SHAPE_TRIMESH", static_cast<int>(world::CollisionShape::TriMesh));
+    m_state.set("COLLISION_SHAPE_TRIMESH_CONVEX", static_cast<int>(world::CollisionShape::TriMeshConvex));
 
     EXPOSE_C(SECTOR_MATERIAL_MUD);
     EXPOSE_C(SECTOR_MATERIAL_SNOW);
