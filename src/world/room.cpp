@@ -31,11 +31,7 @@ Room::~Room()
             mesh->bt_body = nullptr;
         }
 
-        if(mesh->self)
-        {
-            mesh->self->getObject()->setRoom( nullptr );
-            mesh->self.reset();
-        }
+        mesh->setRoom( nullptr );
     }
 
     if(bt_body)
@@ -58,16 +54,16 @@ Room::~Room()
 
 void Room::addEntity(Entity* entity)
 {
-    for(const std::shared_ptr<engine::EngineContainer>& curr : containers)
+    for(const Object* curr : containers)
     {
-        if(curr == entity->m_self)
+        if(curr == entity)
         {
             return;
         }
     }
 
-    entity->m_self->getObject()->setRoom( this );
-    containers.emplace_back(entity->m_self);
+    entity->setRoom( this );
+    containers.emplace_back(entity);
 }
 
 bool Room::removeEntity(Entity* entity)
@@ -75,11 +71,11 @@ bool Room::removeEntity(Entity* entity)
     if(!entity || containers.empty())
         return false;
 
-    auto it = std::find(containers.begin(), containers.end(), entity->m_self);
+    auto it = std::find(containers.begin(), containers.end(), entity);
     if(it != containers.end())
     {
         containers.erase(it);
-        entity->m_self->getObject()->setRoom( nullptr );
+        entity->setRoom( nullptr );
         return true;
     }
 
@@ -277,7 +273,7 @@ void Room::swapToBase()
         disable();                             //Disable current room
         base_room->disable();                  //Paranoid
         swapPortals(base_room);        //Update portals to match this room
-        swapItems(base_room);     //Update items to match this room
+        swapObjects(base_room);     //Update items to match this room
         base_room->enable();                   //Enable original room
     }
 }
@@ -290,7 +286,7 @@ void Room::swapToAlternate()
         disable();                             //Disable current room
         alternate_room->disable();             //Paranoid
         swapPortals(alternate_room);   //Update portals to match this room
-        swapItems(alternate_room);          //Update items to match this room
+        swapObjects(alternate_room);          //Update items to match this room
         alternate_room->enable();                              //Enable base room
     }
 }
@@ -329,16 +325,16 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     }
 }
 
-void Room::swapItems(std::shared_ptr<Room> dest_room)
+void Room::swapObjects(std::shared_ptr<Room> dest_room)
 {
-    for(std::shared_ptr<engine::EngineContainer> t : containers)
+    for(Object* t : containers)
     {
-        t->getObject()->setRoom( dest_room.get() );
+        t->setRoom( dest_room.get() );
     }
 
-    for(std::shared_ptr<engine::EngineContainer> t : dest_room->containers)
+    for(Object* t : dest_room->containers)
     {
-        t->getObject()->setRoom( this );
+        t->setRoom( this );
     }
 
     std::swap(containers, dest_room->containers);

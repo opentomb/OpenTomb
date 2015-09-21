@@ -90,7 +90,7 @@ btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 btVector3 light_position = { 255.0, 255.0, 8.0 };
 GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-EngineContainer* last_cont = nullptr;
+world::Object* last_cont = nullptr;
 
 void initGL()
 {
@@ -491,17 +491,17 @@ void showDebugInfo()
 
     if(last_cont != nullptr)
     {
-        if(last_cont->contains<world::Entity>())
+        if(world::Entity* e = dynamic_cast<world::Entity*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<world::Entity*>(last_cont->getObject())->id(), static_cast<world::Entity*>(last_cont->getObject())->m_bf.animations.model->id);
+            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->id(), e->m_bf.animations.model->id);
         }
-        else if(last_cont->contains<world::StaticMesh>())
+        else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_static: id = %d", static_cast<world::StaticMesh*>(last_cont->getObject())->object_id);
+            gui::drawText(30.0, 60.0, "cont_static: id = %d", sm->object_id);
         }
-        else if(last_cont->contains<world::Room>())
+        else if(world::Room* r = dynamic_cast<world::Room*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_room: id = %d", static_cast<world::Room*>(last_cont->getObject())->id);
+            gui::drawText(30.0, 60.0, "cont_room: id = %d", r->id);
         }
     }
 
@@ -522,12 +522,10 @@ void showDebugInfo()
  */
 void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
-    EngineContainer* c0, *c1;
-
-    c0 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
-    world::Room* r0 = c0 ? c0->getObject()->getRoom() : nullptr;
-    c1 = static_cast<EngineContainer*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
-    world::Room* r1 = c1 ? c1->getObject()->getRoom() : nullptr;
+    world::Object* c0 = static_cast<world::Object*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
+    world::Room* r0 = c0 ? c0->getRoom() : nullptr;
+    world::Object* c1 = static_cast<world::Object*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
+    world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
     if(c1 && c1 == c0)
     {
@@ -682,10 +680,10 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
         {
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
-            EngineContainer* cont = static_cast<EngineContainer*>(body->getUserPointer());
-            if(cont && cont->contains<BulletObject>())
+            world::Object* cont = static_cast<world::Object*>(body->getUserPointer());
+            if(dynamic_cast<world::BulletObject*>(cont))
             {
-                cont->getObject()->setRoom( Room_FindPosCogerrence(trans.getOrigin(), cont->getObject()->getRoom()) );
+                cont->setRoom( Room_FindPosCogerrence(trans.getOrigin(), cont->getRoom()) );
             }
         }
     }
@@ -781,11 +779,10 @@ void dumpRoom(world::Room* r)
         {
             Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
         }
-        for(const std::shared_ptr<EngineContainer>& cont : r->containers)
+        for(world::Object* cont : r->containers)
         {
-            if(cont->contains<world::Entity>())
+            if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
             {
-                world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
                 Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
             }
         }
@@ -1198,11 +1195,10 @@ int execCmd(const char *ch)
                     {
                         Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
                     }
-                    for(const std::shared_ptr<EngineContainer>& cont : sect->owner_room->containers)
+                    for(world::Object* cont : sect->owner_room->containers)
                     {
-                        if(cont->contains<world::Entity>())
+                        if(world::Entity* e = dynamic_cast<world::Entity*>(cont))
                         {
-                            world::Entity* e = static_cast<world::Entity*>(cont->getObject());
                             Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
                         }
                     }
@@ -1333,15 +1329,15 @@ int engine_lua_printf(const char *fmt, ...)
 
 btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 {
-    const EngineContainer* c1 = static_cast<const EngineContainer*>(rayResult.m_collisionObject->getUserPointer());
+    const world::Object* c1 = static_cast<const world::Object*>(rayResult.m_collisionObject->getUserPointer());
 
-    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getObject()->getCollisionType() == world::CollisionType::Ghost)))
+    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
     {
         return 1.0;
     }
 
-    const world::Room* r0 = m_container ? m_container->getObject()->getRoom() : nullptr;
-    const world::Room* r1 = c1 ? c1->getObject()->getRoom() : nullptr;
+    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
     if(!r0 || !r1)
     {
@@ -1365,11 +1361,11 @@ btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::Loc
 
 btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
 {
-    const world::Room* r0 = m_container ? m_container->getObject()->getRoom() : nullptr;
-    const EngineContainer* c1 = static_cast<const EngineContainer*>(convexResult.m_hitCollisionObject->getUserPointer());
-    const world::Room* r1 = c1 ? c1->getObject()->getRoom() : nullptr;
+    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
+    const world::Object* c1 = static_cast<const world::Object*>(convexResult.m_hitCollisionObject->getUserPointer());
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
 
-    if(c1 && (c1 == m_container.get() || (m_skip_ghost && c1->getObject()->getCollisionType() == world::CollisionType::Ghost)))
+    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
     {
         return 1.0;
     }

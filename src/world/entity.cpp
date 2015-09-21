@@ -54,7 +54,7 @@ void Entity::createGhosts()
 
         m_bt.ghostObjects.back()->setWorldTransform(gltr);
         m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
-        m_bt.ghostObjects.back()->setUserPointer(m_self.get());
+        m_bt.ghostObjects.back()->setUserPointer(this);
         m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
         engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
@@ -115,7 +115,7 @@ void Entity::disableCollision()
 
 void Entity::genRigidBody()
 {
-    if(!m_bf.animations.model || m_self->getObject()->getCollisionType() == world::CollisionType::None)
+    if(!m_bf.animations.model || getCollisionType() == world::CollisionType::None)
         return;
 
     m_bt.bt_body.clear();
@@ -124,7 +124,7 @@ void Entity::genRigidBody()
     {
         std::shared_ptr<core::BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape;
-        switch(m_self->getObject()->getCollisionShape())
+        switch(getCollisionShape())
         {
             case world::CollisionShape::Sphere:
                 cshape = core::BT_CSfromSphere(mesh->m_radius);
@@ -149,13 +149,13 @@ void Entity::genRigidBody()
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            if(m_self->getObject()->getCollisionShape() != world::CollisionShape::TriMesh)
+            if(getCollisionShape() != world::CollisionShape::TriMesh)
                 cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
-            switch(m_self->getObject()->getCollisionType())
+            switch(getCollisionType())
             {
                 case world::CollisionType::Kinematic:
                     m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -177,7 +177,7 @@ void Entity::genRigidBody()
             }
 
             engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-            m_bt.bt_body.back()->setUserPointer(m_self.get());
+            m_bt.bt_body.back()->setUserPointer(this);
         }
     }
 }
@@ -229,9 +229,9 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
-            engine::EngineContainer* cont0 = static_cast<engine::EngineContainer*>(manifold->getBody0()->getUserPointer());
-            engine::EngineContainer* cont1 = static_cast<engine::EngineContainer*>(manifold->getBody1()->getUserPointer());
-            if(cont0->getObject()->getCollisionType() == world::CollisionType::Ghost || cont1->getObject()->getCollisionType() == world::CollisionType::Ghost)
+            Object* cont0 = static_cast<Object*>(manifold->getBody0()->getUserPointer());
+            Object* cont1 = static_cast<Object*>(manifold->getBody1()->getUserPointer());
+            if(cont0->getCollisionType() == world::CollisionType::Ghost || cont1->getCollisionType() == world::CollisionType::Ghost)
             {
                 continue;
             }
@@ -334,7 +334,7 @@ void Entity::updateCurrentCollisions()
                     {
                         cn.obj.emplace_back();
                         cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody0());
-                        if(m_self.get() == static_cast<engine::EngineContainer*>(cn.obj.back()->getUserPointer()))
+                        if(this == static_cast<Entity*>(cn.obj.back()->getUserPointer()))
                         {
                             cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody1());
                         }
@@ -440,10 +440,10 @@ void Entity::fixPenetrations(const btVector3* move)
 
 void Entity::transferToRoom(Room* room)
 {
-    if(m_self->getObject()->getRoom() && !m_self->getObject()->getRoom()->isOverlapped(room))
+    if(getRoom() && !getRoom()->isOverlapped(room))
     {
-        if(m_self->getObject()->getRoom())
-            m_self->getObject()->getRoom()->removeEntity(this);
+        if(getRoom())
+            getRoom()->removeEntity(this);
         if(room)
             room->addEntity(this);
     }
@@ -451,7 +451,7 @@ void Entity::transferToRoom(Room* room)
 
 std::shared_ptr<engine::BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const
 {
-    auto cb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(m_self);
+    auto cb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(this);
     cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     return cb;
 }
@@ -467,12 +467,10 @@ void Entity::checkCollisionCallbacks()
     while((cobj = getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag)) != nullptr)
     {
         // do callbacks here:
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cobj->getUserPointer());
+        Object* cont = static_cast<Object*>(cobj->getUserPointer());
 
-        if(cont && cont->contains<Entity>())
+        if(Entity* activator = dynamic_cast<Entity*>(cont))
         {
-            Entity* activator = static_cast<Entity*>(cont->getObject());
-
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
@@ -480,9 +478,9 @@ void Entity::checkCollisionCallbacks()
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
-        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && cont->contains<Room>())
+        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(cont))
         {
-            Room* activator = static_cast<Room*>(cont->getObject());
+            Room* activator = static_cast<Room*>(cont);
             engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
         }
     }
@@ -556,7 +554,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 void Entity::updateRoomPos()
 {
     btVector3 pos = getRoomPos();
-    auto new_room = Room_FindPosCogerrence(pos, m_self->getObject()->getRoom());
+    auto new_room = Room_FindPosCogerrence(pos, getRoom());
     if(!new_room)
     {
         m_currentSector = nullptr;
@@ -571,7 +569,7 @@ void Entity::updateRoomPos()
 
     transferToRoom(new_room);
 
-    m_self->getObject()->setRoom( new_room );
+    setRoom( new_room );
     m_lastSector = m_currentSector;
 
     if(m_currentSector != new_sector)
@@ -666,7 +664,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->getObject()->getCollisionType() != world::CollisionType::Static)
+        if(getCollisionType() != world::CollisionType::Static)
         {
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {
@@ -1050,24 +1048,24 @@ void Entity::rebuildBV()
 
 void Entity::checkActivators()
 {
-    if (m_self->getObject()->getRoom() == nullptr)
+    if (getRoom() == nullptr)
             return;
 
     btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
-    auto containers = m_self->getObject()->getRoom()->containers;
-    for(const std::shared_ptr<engine::EngineContainer>& cont : containers)
+    auto containers = getRoom()->containers;
+    for(Object* cont : containers)
     {
-        if(!cont->contains<Entity>())
+        Entity* e = dynamic_cast<Entity*>(cont);
+        if(!e)
                 continue;
 
-        Entity* e = static_cast<Entity*>(cont->getObject());
         if (!e->m_enabled)
                 continue;
 
         if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-            if((e != this) && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
+            if(e != this && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
             }
@@ -1077,7 +1075,7 @@ void Entity::checkActivators()
             btScalar r = e->m_activationRadius;
             r *= r;
             const btVector3& v = e->m_transform.getOrigin();
-            if(    (e != this)
+            if(    e != this
                 && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
                 && (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.boundingBox.min[2])
                 && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.boundingBox.max[2]))
@@ -1106,7 +1104,6 @@ void Entity::moveVertical(btScalar dist)
 Entity::Entity(uint32_t id)
     : Object()
     , m_id(id)
-    , m_self(std::make_shared<engine::EngineContainerImpl<Entity>>(this))
 {
     m_transform.setIdentity();
 
@@ -1178,8 +1175,6 @@ Entity::~Entity()
         }
         m_bt.bt_body.clear();
     }
-
-    m_self.reset();
 
     m_bf.bone_tags.clear();
 

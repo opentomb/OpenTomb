@@ -4,12 +4,6 @@
 #include "core/orientedboundingbox.h"
 #include "object.h"
 
-namespace engine
-{
-    struct EngineContainer;
-    template<class T> class EngineContainerImpl;
-}
-
 namespace world
 {
 
@@ -28,7 +22,6 @@ struct StaticMesh : public Object
 
     btTransform transform;
     core::OrientedBoundingBox obb;
-    std::shared_ptr<engine::EngineContainerImpl<StaticMesh>> self;
 
     std::shared_ptr<core::BaseMesh> mesh;
     btRigidBody* bt_body = nullptr;

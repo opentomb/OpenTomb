@@ -17,11 +17,6 @@ class btCollisionShape;
 class btRigidBody;
 enum class MenuItemType;
 
-namespace engine
-{
-struct EngineContainer;
-} // namespace engine
-
 namespace world
 {
 struct Character;

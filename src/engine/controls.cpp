@@ -24,7 +24,7 @@ extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
-extern EngineContainer* last_cont;
+extern world::Object* last_cont;
 
 using gui::Console;
 
@@ -648,8 +648,8 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    EngineContainer* cont = new EngineContainerImpl<BulletObject>();
-    cont->getObject()->setRoom(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
+    world::BulletObject* cont = new world::BulletObject();
+    cont->setRoom(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -660,8 +660,8 @@ void Controls_SecondaryMouseDown()
     btVector3 from = engine_camera.getPosition();
     btVector3 to = from + engine_camera.getViewDir() * 32768.0;
 
-    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainerImpl<BulletObject>>();
-    cam_cont->getObject()->setRoom(engine_camera.m_currentRoom);
+    world::BulletObject* cam_cont = new world::BulletObject();
+    cam_cont->setRoom(engine_camera.m_currentRoom);
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -677,9 +677,9 @@ void Controls_SecondaryMouseDown()
         cast_ray[4] = cast_ray[1] + 100.0f * cbc.m_hitNormalWorld[1];
         cast_ray[5] = cast_ray[2] + 100.0f * cbc.m_hitNormalWorld[2];
 
-        if(EngineContainer* c0 = static_cast<EngineContainer*>(cbc.m_collisionObject->getUserPointer()))
+        if(world::Object* c0 = static_cast<world::Object*>(cbc.m_collisionObject->getUserPointer()))
         {
-            if(c0->contains<BulletObject>())
+            if(dynamic_cast<world::BulletObject*>(c0))
             {
                 btCollisionObject* obj = const_cast<btCollisionObject*>(cbc.m_collisionObject);
                 btRigidBody* body = btRigidBody::upcast(obj);
@@ -696,7 +696,6 @@ void Controls_SecondaryMouseDown()
                 {
                     body->setUserPointer(nullptr);
                 }
-                c0->getObject()->setRoom( nullptr );
                 delete c0;
 
                 bt_engine_dynamicsWorld->removeCollisionObject(obj);

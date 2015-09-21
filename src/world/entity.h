@@ -20,7 +20,6 @@ class btRigidBody;
 namespace engine
 {
 class BtEngineClosestConvexResultCallback;
-struct EngineContainer;
 } // namespace engine
 
 namespace world
@@ -173,8 +172,6 @@ public:
 
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
-
-    std::shared_ptr<engine::EngineContainerImpl<Entity>> m_self;
 
     btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;

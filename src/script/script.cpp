@@ -156,7 +156,7 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
 
     if(ctype.is<lua::Integer>() && enableCollision.is<lua::Boolean>())
     {
-        ent->m_self->getObject()->setCollisionType( static_cast<world::CollisionType>(ctype.toInt()) );
+        ent->setCollisionType( static_cast<world::CollisionType>(ctype.toInt()) );
         if(enableCollision.to<lua::Boolean>())
         {
             ent->enableCollision();
@@ -168,7 +168,7 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
     }
     if(cshape.is<lua::Integer>())
     {
-        ent->m_self->getObject()->setCollisionShape( static_cast<world::CollisionShape>(cshape.toInt()) );
+        ent->setCollisionShape( static_cast<world::CollisionShape>(cshape.toInt()) );
     }
 }
 
@@ -223,7 +223,7 @@ bool lua_SameRoom(int id1, int id2)
 
     if(ent1 && ent2)
     {
-        return ent1->m_self->getObject()->getRoom() == ent2->m_self->getObject()->getRoom();
+        return ent1->getRoom() == ent2->getRoom();
     }
 
     return false;
@@ -281,7 +281,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
 
     btVector3 move = ent->applyGravity(time);
 
-    engine::BtEngineClosestRayResultCallback cb(ent->m_self);
+    engine::BtEngineClosestRayResultCallback cb(ent.get());
     btVector3 from, to;
     from = ent->m_transform * ent->m_bf.center;
     from[2] = ent->m_transform.getOrigin()[2];
@@ -291,9 +291,9 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
 
     if(cb.hasHit())
     {
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
+        world::Object* cont = static_cast<world::Object*>(cb.m_collisionObject->getUserPointer());
 
-        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && cont->contains<world::Room>()))
+        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && dynamic_cast<world::Room*>(cont)))
         {
             move.setInterpolate3(from, to, cb.m_closestHitFraction);
             ent->m_transform.getOrigin()[2] = move[2];
@@ -855,8 +855,8 @@ bool lua_DeleteEntity(int id)
     if(!ent)
         return false;
 
-    if(ent->m_self->getObject()->getRoom())
-        ent->m_self->getObject()->getRoom()->removeEntity(ent.get());
+    if(ent->getRoom())
+        ent->getRoom()->removeEntity(ent.get());
     engine::engine_world.deleteEntity(id);
     return true;
 }
@@ -926,7 +926,7 @@ bool lua_IsInRoom(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && ent->m_self->getObject()->getRoom())
+    if(ent && ent->getRoom())
     {
         if(ent->m_currentSector)
         {
@@ -960,7 +960,7 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
             ent->m_angles[0],
             ent->m_angles[1],
             ent->m_angles[2],
-            ent->m_self->getObject()->getRoom()->id
+            ent->getRoom()->id
     );
 }
 
@@ -1012,8 +1012,8 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
 
     auto next_pos = ent->m_transform.getOrigin() + (dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2));
 
-    world::RoomSector* curr_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
-    world::RoomSector* next_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(next_pos);
+    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+    world::RoomSector* next_sector = ent->getRoom()->getSectorRaw(next_pos);
 
     curr_sector = curr_sector->checkPortalPointer();
     next_sector = next_sector->checkPortalPointer();
@@ -1043,7 +1043,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
         position += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
 
-    world::RoomSector* curr_sector = ent->m_self->getObject()->getRoom()->getSectorRaw(position);
+    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(position);
     curr_sector = curr_sector->checkPortalPointer();
     btVector3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
         ? curr_sector->getCeilingPoint()
@@ -2050,13 +2050,13 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
         std::shared_ptr<world::Room> r = engine::engine_world.rooms[room];
         if(ent == engine::engine_world.character)
         {
-            ent->m_self->getObject()->setRoom( r.get() );
+            ent->setRoom( r.get() );
         }
-        else if(ent->m_self->getObject()->getRoom() != r.get())
+        else if(ent->getRoom() != r.get())
         {
-            if(ent->m_self->getObject()->getRoom() != nullptr)
+            if(ent->getRoom() != nullptr)
             {
-                ent->m_self->getObject()->getRoom()->removeEntity(ent.get());
+                ent->getRoom()->removeEntity(ent.get());
             }
             r->addEntity(ent.get());
         }

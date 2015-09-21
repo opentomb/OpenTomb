@@ -18,7 +18,7 @@
 
 namespace engine
 {
-extern EngineContainer* last_cont;
+extern world::Object* last_cont;
 } // namespace engine
 
 using gui::Console;
@@ -66,7 +66,7 @@ void World::empty()
 
     if(character)
     {
-        character->m_self->getObject()->setRoom( nullptr );
+        character->setRoom( nullptr );
         character->m_currentSector = nullptr;
     }
 
@@ -82,10 +82,10 @@ void World::empty()
             btCollisionObject* obj = engine::bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
             if(btRigidBody* body = btRigidBody::upcast(obj))
             {
-                engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(body->getUserPointer());
+                Object* cont = static_cast<Object*>(body->getUserPointer());
                 body->setUserPointer(nullptr);
 
-                if(cont && cont->contains<engine::BulletObject>())
+                if(dynamic_cast<BulletObject*>(cont))
                 {
                     if(body->getMotionState())
                     {
@@ -96,7 +96,6 @@ void World::empty()
                     body->setCollisionShape(nullptr);
 
                     engine::bt_engine_dynamicsWorld->removeRigidBody(body);
-                    cont->getObject()->setRoom( nullptr );
                     delete cont;
                     delete body;
                 }
@@ -155,12 +154,12 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             }
             if(room_id < rooms.size())
             {
-                ent->m_self->getObject()->setRoom( rooms[room_id].get() );
-                ent->m_currentSector = ent->m_self->getObject()->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+                ent->setRoom( rooms[room_id].get() );
+                ent->m_currentSector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
             }
             else
             {
-                ent->m_self->getObject()->setRoom( nullptr );
+                ent->setRoom( nullptr );
             }
 
             return ent->id();
@@ -191,12 +190,12 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         }
         if(room_id < rooms.size())
         {
-            ent->m_self->getObject()->setRoom( rooms[room_id].get() );
-            ent->m_currentSector = ent->m_self->getObject()->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+            ent->setRoom( rooms[room_id].get() );
+            ent->m_currentSector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
         }
         else
         {
-            ent->m_self->getObject()->setRoom( nullptr );
+            ent->setRoom( nullptr );
         }
 
         ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
@@ -218,9 +217,9 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         ent->rebuildBV();
         ent->genRigidBody();
 
-        if(ent->m_self->getObject()->getRoom() != nullptr)
+        if(ent->getRoom() != nullptr)
         {
-            ent->m_self->getObject()->getRoom()->addEntity(ent.get());
+            ent->getRoom()->addEntity(ent.get());
         }
         addEntity(ent);
         Res_SetEntityFunction(ent);

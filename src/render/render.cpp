@@ -429,14 +429,14 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
 const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, const util::matrix4 &modelViewMatrix, bool skin)
 {
     // Calculate lighting
-    if(!entity->m_self || !entity->m_self->getObject()->getRoom())
+    if(!entity->getRoom())
     {
         const LitShaderDescription *shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgram(shader->program);
         return shader;
     }
 
-    world::Room* room = entity->m_self->getObject()->getRoom();
+    world::Room* room = entity->getRoom();
 
     GLfloat ambient_component[4];
     ambient_component[0] = room->ambient_lighting[0];
@@ -741,11 +741,12 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
 
     if(!room->containers.empty())
     {
-        for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
+        for(world::Object* cont : room->containers)
         {
-            if(!cont->contains<world::Entity>())
+            world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+            if(!ent)
                 continue;
-            world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
+
             if(!ent->m_wasRendered)
             {
                 if(ent->m_obb.isVisibleInRoom(*room, *m_cam))
@@ -813,13 +814,14 @@ bool Render::addRoom(world::Room* room)
         sm->was_rendered_lines = 0;
     }
 
-    for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
+    for(world::Object* cont : room->containers)
     {
-        if(!cont->contains<world::Entity>())
+        world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+        if(!ent)
             continue;
 
-        static_cast<world::Entity*>(cont->getObject())->m_wasRendered = false;
-        static_cast<world::Entity*>(cont->getObject())->m_wasRenderedLines = false;
+        ent->m_wasRendered = false;
+        ent->m_wasRenderedLines = false;
     }
 
     for(world::RoomSprite& sp : room->sprites)
@@ -909,13 +911,13 @@ void Render::drawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
+        for(world::Object* cont : room->containers)
         {
-            if(!cont->contains<world::Entity>())
+            world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+            if(!ent)
                 continue;
 
-            world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
-            if(!ent->m_bf.animations.model->has_transparency || !ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam))
+            if(!ent->m_bf.animations.model->has_transparency || (!ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam)))
                 continue;
 
             for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
@@ -1416,12 +1418,12 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         sm->was_rendered_lines = 1;
     }
 
-    for(const std::shared_ptr<engine::EngineContainer>& cont : room->containers)
+    for(world::Object* cont : room->containers)
     {
-        if(!cont->contains<world::Entity>())
+        world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+        if(!ent)
             continue;
 
-        world::Entity* ent = static_cast<world::Entity*>(cont->getObject());
         if(ent->m_wasRenderedLines)
             continue;
 

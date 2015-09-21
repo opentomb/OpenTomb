@@ -74,4 +74,8 @@ private:
     CollisionShape m_collisionShape = CollisionShape::Box;
 };
 
+struct BulletObject : public Object
+{
+};
+
 } // namespace world

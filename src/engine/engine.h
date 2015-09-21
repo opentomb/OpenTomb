@@ -47,73 +47,6 @@ namespace engine
 #define COLLISION_CAMERA_SPHERE_RADIUS          (16.0f)
 #define COLLISION_TRAVERSE_TEST_RADIUS          (0.48f)
 
-struct EngineContainer
-{
-    EngineContainer(const EngineContainer&) = delete;
-    EngineContainer& operator=(const EngineContainer&) = delete;
-
-    virtual ~EngineContainer() = default;
-
-    virtual world::Object* getObject() = 0;
-    virtual const world::Object* getObject() const = 0;
-
-    template<class U>
-    bool contains() const
-    {
-        static_assert(std::is_base_of<world::Object,U>::value, "U must be derived from world::Object");
-        return dynamic_cast<const U*>(getObject()) != nullptr;
-    }
-
-protected:
-    explicit EngineContainer() = default;
-};
-
-template<class T>
-class EngineContainerImpl : public EngineContainer
-{
-    static_assert(std::is_base_of<world::Object,T>::value, "T must be derived from world::Object");
-public:
-    EngineContainerImpl(T* obj)
-        : EngineContainer()
-        , m_object(obj)
-    {
-    }
-
-    virtual T* getObject() override
-    {
-        return m_object;
-    }
-
-    virtual const T* getObject() const override
-    {
-        return m_object;
-    }
-
-private:
-    T* m_object = nullptr;
-};
-
-struct BulletObject : public world::Object
-{
-};
-
-template<>
-class EngineContainerImpl<BulletObject> : public EngineContainer
-{
-public:
-    virtual BulletObject* getObject() override
-    {
-        static BulletObject obj;
-        return &obj;
-    }
-
-    virtual const BulletObject* getObject() const override
-    {
-        static BulletObject obj;
-        return &obj;
-    }
-};
-
 struct EngineControlState
 {
     bool     free_look = false;
@@ -172,25 +105,25 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    BtEngineClosestRayResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false)
+    BtEngineClosestRayResultCallback(const world::Object* obj, bool skipGhost = false)
         : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-        , m_container(cont)
+        , m_object(obj)
         , m_skip_ghost(skipGhost)
     {
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
 
-    const std::shared_ptr<const EngineContainer> m_container;
+    const world::Object* const m_object;
     const bool m_skip_ghost;
 };
 
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    BtEngineClosestConvexResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false)
+    BtEngineClosestConvexResultCallback(const world::Object* obj, bool skipGhost = false)
         : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-        , m_container(cont)
+        , m_object(obj)
         , m_skip_ghost(skipGhost)
     {
     }
@@ -198,7 +131,7 @@ public:
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace) override;
 
 protected:
-    const std::shared_ptr<const EngineContainer> m_container;
+    const world::Object* const m_object;
     const bool m_skip_ghost;
 };
 

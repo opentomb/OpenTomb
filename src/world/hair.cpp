@@ -35,8 +35,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    m_container.reset(new engine::EngineContainerImpl<Hair>(this));
-    setRoom(parent_entity->m_self->getObject()->getRoom());
+    setRoom(parent_entity->getRoom());
 
     // Setup initial hair parameters.
 
@@ -112,7 +111,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
 
-        m_elements[i].body->setUserPointer(m_container.get());
+        m_elements[i].body->setUserPointer(this);
         engine::bt_engine_dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         m_elements[i].body->activate();

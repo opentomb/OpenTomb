@@ -2293,7 +2293,7 @@ void StateController::jumpForwardFallBackward()
 
     if((m_character->m_response.vertical_collide & 0x01) || (m_character->m_moveType == MoveType::OnFloor))
     {
-        if(m_character->m_self->getObject()->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
+        if(m_character->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
         }
@@ -2384,7 +2384,7 @@ void StateController::freefall()
     }
     else if((m_character->m_response.vertical_collide & 0x01) || (m_character->m_moveType == MoveType::OnFloor))
     {
-        if(m_character->m_self->getObject()->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
+        if(m_character->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
             engine::engine_world.audioEngine.kill(TR_AUDIO_SOUND_LARASCREAM, audio::EmitterType::Entity, m_character->id());

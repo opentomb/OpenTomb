@@ -26,7 +26,7 @@ namespace
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<engine::EngineContainer>& container)
+int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const Object* container)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -53,8 +53,9 @@ int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<e
         v.setInterpolate3(from, to, cb.m_closestHitFraction);
         if(std::abs(v[2] - floor) < 1.1)
         {
-            engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-            if(cont && cont->contains<Entity>() && ((static_cast<Entity*>(cont->getObject()))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            Object* cont = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
+            Entity* e = dynamic_cast<Entity*>(cont);
+            if(e && (e->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -79,11 +80,11 @@ Character::Character(uint32_t id)
     m_climbSensor.reset(new btSphereShape(m_climbR));
     m_climbSensor->setMargin(COLLISION_MARGIN_DEFAULT);
 
-    m_rayCb = std::make_shared<engine::BtEngineClosestRayResultCallback>(m_self, true);
+    m_rayCb = std::make_shared<engine::BtEngineClosestRayResultCallback>(this, true);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.cb = m_rayCb;
 
-    m_convexCb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(m_self, true);
+    m_convexCb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(this, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
 
@@ -92,9 +93,9 @@ Character::Character(uint32_t id)
 
 Character::~Character()
 {
-    if(m_self->getObject()->getRoom() && (this != engine::engine_world.character.get()))
+    if(getRoom() && (this != engine::engine_world.character.get()))
     {
-        m_self->getObject()->getRoom()->removeEntity(this);
+        getRoom()->removeEntity(this);
     }
 }
 
@@ -271,7 +272,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    Room* r = (cb->m_container) ? (cb->m_container->getObject()->getRoom()) : (nullptr);
+    Room* r = (cb->m_object) ? (cb->m_object->getRoom()) : (nullptr);
     RoomSector* rs;
 
     fc->floor_hit = false;
@@ -997,10 +998,9 @@ int Character::moveOnFloor()
     updateCurrentHeight();
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform.getOrigin()[2] + m_bf.boundingBox.min[2]))
     {
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
-        if(cont && cont->contains<Entity>())
+        Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
+        if(Entity* e = dynamic_cast<Entity*>(cont))
         {
-            Entity* e = static_cast<Entity*>(cont->getObject());
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_STAND, e->id(), id());
@@ -1180,7 +1180,7 @@ int Character::freeFalling()
 
     updateCurrentHeight();
 
-    if(m_self->getObject()->getRoom() && (m_self->getObject()->getRoom()->flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && (getRoom()->flags & TR_ROOM_FLAG_WATER))
     {
         if(m_speed[2] < 0.0)
         {
@@ -1474,7 +1474,7 @@ int Character::moveUnderWater()
 
     // Check current place.
 
-    if(m_self->getObject()->getRoom() && !(m_self->getObject()->getRoom()->flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && !(getRoom()->flags & TR_ROOM_FLAG_WATER))
     {
         m_moveType = MoveType::FreeFalling;
         return 2;
@@ -1614,7 +1614,7 @@ int Character::moveOnWater()
 int Character::findTraverse()
 {
     RoomSector* ch_s, *obj_s = nullptr;
-    ch_s = m_self->getObject()->getRoom()->getSectorRaw(m_transform.getOrigin());
+    ch_s = getRoom()->getSectorRaw(m_transform.getOrigin());
 
     if(ch_s == nullptr)
     {
@@ -1645,11 +1645,10 @@ int Character::findTraverse()
     if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
-        for(std::shared_ptr<engine::EngineContainer>& cont : obj_s->owner_room->containers)
+        for(Object* cont : obj_s->owner_room->containers)
         {
-            if(cont->contains<Entity>())
+            if(Entity* e = dynamic_cast<Entity*>(cont))
             {
-                Entity* e = static_cast<Entity*>(cont->getObject());
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     m_angles[0] = std::lround(m_angles[0] / 90.0f) * 90.0f;
@@ -1672,8 +1671,8 @@ int Character::findTraverse()
  */
 int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s = m_self->getObject()->getRoom()->getSectorRaw(m_transform.getOrigin());
-    RoomSector* obj_s = obj.m_self->getObject()->getRoom()->getSectorRaw(obj.m_transform.getOrigin());
+    RoomSector* ch_s = getRoom()->getSectorRaw(m_transform.getOrigin());
+    RoomSector* obj_s = obj.getRoom()->getSectorRaw(obj.m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
@@ -1703,12 +1702,12 @@ int Character::checkTraverse(const Entity& obj)
     }
 
     btScalar floor = m_transform.getOrigin()[2];
-    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, m_self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj.m_self) == 0x00))
+    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, this) == 0x00) || (Sector_AllowTraverse(obj_s, floor, &obj) == 0x00))
     {
         return TraverseNone;
     }
 
-    engine::BtEngineClosestRayResultCallback cb(obj.m_self);
+    engine::BtEngineClosestRayResultCallback cb(&obj);
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->position[0];
     v1[1] = v0[1] = obj_s->position[1];
@@ -1717,8 +1716,9 @@ int Character::checkTraverse(const Entity& obj)
     engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
-        engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(cb.m_collisionObject->getUserPointer());
-        if(cont && cont->contains<Entity>() && ((static_cast<Entity*>(cont->getObject()))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
+        Object* cont = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
+        Entity* e = dynamic_cast<Entity*>(cont);
+        if(e && (e->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return TraverseNone;
         }
@@ -1752,7 +1752,7 @@ int Character::checkTraverse(const Entity& obj)
     if(next_s)
         next_s = next_s->checkPortalPointer();
 
-    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, this) == 0x01))
     {
         btTransform from;
         from.setIdentity();
@@ -1764,7 +1764,7 @@ int Character::checkTraverse(const Entity& obj)
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
-        engine::BtEngineClosestConvexResultCallback ccb(obj.m_self);
+        engine::BtEngineClosestConvexResultCallback ccb(&obj);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
@@ -1799,7 +1799,7 @@ int Character::checkTraverse(const Entity& obj)
     if(next_s)
         next_s = next_s->checkPortalPointer();
 
-    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
+    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, this) == 0x01))
     {
         btTransform from;
         from.setIdentity();
@@ -1811,7 +1811,7 @@ int Character::checkTraverse(const Entity& obj)
 
         btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
-        engine::BtEngineClosestConvexResultCallback ccb(m_self);
+        engine::BtEngineClosestConvexResultCallback ccb(this);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
@@ -2239,7 +2239,7 @@ void Character::updateHair()
 
         if(auto ownerChar = hair->m_ownerChar.lock())
         {
-            hair->m_container->getObject()->setRoom( ownerChar->m_self->getObject()->getRoom() );
+            hair->setRoom( ownerChar->getRoom() );
         }
     }
 }
@@ -2340,9 +2340,9 @@ void Character::processSectorImpl()
         {
             if(m_heightInfo.floor_hit)
             {
-                engine::EngineContainer* cont = static_cast<engine::EngineContainer*>(m_heightInfo.floor_obj->getUserPointer());
+                Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
 
-                if(cont && cont->contains<Room>())
+                if(dynamic_cast<Room*>(cont))
                 {
                     setParam(PARAM_HEALTH, 0.0);
                     m_response.killed = true;
@@ -2404,7 +2404,7 @@ void Character::jump(btScalar v_vertical, btScalar v_horizontal)
 
 Substance Character::getSubstanceState() const
 {
-    if(m_self->getObject()->getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
+    if(getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_height)
         {

@@ -13,12 +13,6 @@
 
 class btRigidBody;
 
-namespace engine
-{
-struct EngineContainer;
-template<class T> class EngineContainerImpl;
-}
-
 namespace loader
 {
 class Level;
@@ -105,7 +99,7 @@ struct Room : public Object
     std::vector<std::shared_ptr<StaticMesh>> static_mesh;
     std::vector<RoomSprite> sprites;
 
-    std::vector<std::shared_ptr<engine::EngineContainer>> containers;                                     // engine containers with moveables objects
+    std::vector<world::Object*> containers;                                     // engine containers with moveables objects
 
     core::BoundingBox boundingBox;
     btTransform transform;                                  // GL transformation matrix
@@ -129,8 +123,6 @@ struct Room : public Object
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
     std::unique_ptr<btRigidBody> bt_body;
 
-    std::unique_ptr<engine::EngineContainerImpl<Room>> self;
-
     ~Room();
 
     void enable();
@@ -139,7 +131,7 @@ struct Room : public Object
     void swapToBase();
     Room *checkFlip();
     void swapPortals(std::shared_ptr<Room> dest_room); //Swap room portals of input room to destination room
-    void swapItems(std::shared_ptr<Room> dest_room);   //Swap room items of input room to destination room
+    void swapObjects(std::shared_ptr<Room> dest_room);   //Swap room items of input room to destination room
     void buildNearRoomsList();
     void buildOverlappedRoomsList();
 
@@ -148,7 +140,7 @@ struct Room : public Object
     bool isInNearRoomsList(const Room &r) const;
     bool hasSector(int x, int y);//If this room contains a sector
     void addEntity(Entity *entity);
-    bool removeEntity(Entity* entity);
+    bool removeEntity(Entity *entity);
     void addToNearRoomsList(std::shared_ptr<Room> r);
 
     bool isPointIn(const btVector3& dot)
