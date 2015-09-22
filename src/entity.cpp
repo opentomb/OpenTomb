@@ -22,6 +22,7 @@ extern "C" {
 #include "engine.h"
 #include "engine_physics.h"
 #include "script.h"
+#include "trigger.h"
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"

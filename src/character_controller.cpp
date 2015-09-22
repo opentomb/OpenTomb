@@ -13,7 +13,6 @@
 #include "anim_state_control.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "engine_physics.h"
 #include "entity.h"
 #include "gui.h"

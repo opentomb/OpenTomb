@@ -12,12 +12,23 @@ struct lua_State;
 
 extern lua_State *engine_lua;
 
+
+bool Script_LuaInit();
+void Script_LuaClearTasks();
+void Script_LuaRegisterFuncs(lua_State *lua);
+
+
 char *parse_token(char *data, char *token);
 
 float SC_ParseFloat(char **ch);
 int   SC_ParseInt(char **ch);
 
 void lua_Clean(lua_State *lua);
+
+int  lua_print(lua_State * lua);
+int  lua_BindKey(lua_State *lua);
+
+
 
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);

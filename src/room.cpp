@@ -14,6 +14,7 @@
 #include "engine_physics.h"
 #include "entity.h"
 #include "mesh.h"
+#include "trigger.h"
 #include "room.h"
 
 

@@ -30,13 +30,13 @@ extern "C" {
 #include "character_controller.h"
 #include "anim_state_control.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "engine_physics.h"
 #include "script.h"
 #include "gui.h"
 #include "gameflow.h"
 #include "resource.h"
 #include "inventory.h"
+#include "trigger.h"
 
 
 void World_GenRBTrees(struct world_s *world);
@@ -230,7 +230,7 @@ void World_Clear(world_p world)
     extern engine_container_p last_cont;
 
     last_cont = NULL;
-    Engine_LuaClearTasks();
+    Script_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
 
@@ -1685,7 +1685,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
 
         sector->owner_room = room;
         sector->trigger = NULL;
-        
+
         if(tr->game_version < TR_III)
         {
             sector->box_index = tr_room->sector_list[i].box_index;

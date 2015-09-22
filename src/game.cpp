@@ -18,7 +18,6 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/render.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "engine_physics.h"
 #include "controls.h"
 #include "room.h"
@@ -167,7 +166,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Engine_LuaClearTasks();
+        Script_LuaClearTasks();
         luaL_dofile(engine_lua, token);
     }
     else
@@ -179,7 +178,7 @@ int Game_Load(const char* name)
             return 0;
         }
         fclose(f);
-        Engine_LuaClearTasks();
+        Script_LuaClearTasks();
         luaL_dofile(engine_lua, name);
     }
 

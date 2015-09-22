@@ -20,7 +20,6 @@
 #include "engine.h"
 #include "audio.h"
 #include "script.h"
-#include "engine_lua.h"
 #include "engine_string.h"
 #include "world.h"
 #include "inventory.h"

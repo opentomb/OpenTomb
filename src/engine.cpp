@@ -37,7 +37,6 @@ extern "C" {
 #include "resource.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "engine_physics.h"
 #include "controls.h"
 
@@ -225,7 +224,7 @@ void Engine_Init_Pre()
     Sys_Init();
     Con_Init();
     Con_SetExecFunction(Engine_ExecCmd);
-    Engine_LuaInit();
+    Script_LuaInit();
 
     lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
 

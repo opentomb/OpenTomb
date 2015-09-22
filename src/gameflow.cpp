@@ -18,7 +18,6 @@ extern "C" {
 #include "engine.h"
 #include "gameflow.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "script.h"
 #include "gui.h"
 #include "anim_state_control.h"

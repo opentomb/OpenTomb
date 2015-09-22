@@ -26,7 +26,6 @@ extern "C" {
 #include "gui.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_lua.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "engine_string.h"
