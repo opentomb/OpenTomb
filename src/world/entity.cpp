@@ -474,14 +474,14 @@ void Entity::checkCollisionCallbacks()
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->getId(), getId());
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(cont))
         {
             Room* activator = static_cast<Room*>(cont);
-            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, m_id, activator->id);
+            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), activator->getId());
         }
     }
 }
@@ -809,16 +809,16 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 if(command.param[0] & TR_ANIMCOMMAND_CONDITION_WATER)
                 {
                     if(getSubstanceState() == Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, m_id);
+                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
                 }
                 else if(command.param[0] & TR_ANIMCOMMAND_CONDITION_LAND)
                 {
                     if(getSubstanceState() != Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, m_id);
+                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
                 }
                 else
                 {
-                    engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, m_id);
+                    engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
                 }
             }
             break;
@@ -848,7 +848,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 }
                 else
                 {
-                    engine_lua.execEffect(effect_id, m_id);
+                    engine_lua.execEffect(effect_id, getId());
                 }
             }
             break;
@@ -884,7 +884,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), m_id);
+                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
         }
         catch (lua::RuntimeError& error)
         {
@@ -1015,7 +1015,7 @@ void Entity::frame(btScalar time)
 
     fixPenetrations(nullptr);
     processSector();    // triggers
-    engine_lua.loopEntity(id());
+    engine_lua.loopEntity(getId());
 
     if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
         checkCollisionCallbacks();
@@ -1067,7 +1067,7 @@ void Entity::checkActivators()
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
             if(e != this && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
             {
-                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
@@ -1080,7 +1080,7 @@ void Entity::checkActivators()
                 && (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.boundingBox.min[2])
                 && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.boundingBox.max[2]))
             {
-                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
+                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
     }
@@ -1102,38 +1102,9 @@ void Entity::moveVertical(btScalar dist)
 }
 
 Entity::Entity(uint32_t id)
-    : Object()
-    , m_id(id)
+    : Object(id)
 {
-    m_transform.setIdentity();
-
-    m_lerp_last_transform = m_lerp_curr_transform = m_transform;
-
     m_obb.transform = &m_transform;
-    m_bt.bt_body.clear();
-    m_bt.bt_joints.clear();
-    m_bt.no_fix_all = false;
-    m_bt.no_fix_body_parts = 0x00000000;
-    m_bt.manifoldArray = nullptr;
-    m_bt.shapes.clear();
-    m_bt.ghostObjects.clear();
-    m_bt.last_collisions.clear();
-
-    m_bf.animations.model = nullptr;
-    m_bf.animations.onFrame = nullptr;
-    m_bf.animations.frame_time = 0.0;
-    m_bf.animations.last_state = 0;
-    m_bf.animations.next_state = 0;
-    m_bf.animations.lerp = 0.0;
-    m_bf.animations.current_animation = 0;
-    m_bf.animations.current_frame = 0;
-    m_bf.animations.next = nullptr;
-    m_bf.bone_tags.clear();
-    m_bf.boundingBox.max.setZero();
-    m_bf.boundingBox.min.setZero();
-    m_bf.center.setZero();
-    m_bf.position.setZero();
-    m_speed.setZero();
 }
 
 Entity::~Entity()

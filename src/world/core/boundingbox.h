@@ -11,8 +11,8 @@ namespace core
 
 struct BoundingBox
 {
-    btVector3 min;
-    btVector3 max;
+    btVector3 min = {0,0,0};
+    btVector3 max = {0,0,0};
 
     btVector3 getCenter() const noexcept
     {

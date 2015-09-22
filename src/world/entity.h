@@ -79,10 +79,10 @@ struct EntityCollisionNode
 
 struct BtEntityData
 {
-    bool no_fix_all;
-    uint32_t no_fix_body_parts;
+    bool no_fix_all = false;
+    uint32_t no_fix_body_parts = 0;
     std::vector<std::unique_ptr<btPairCachingGhostObject>> ghostObjects;           // like Bullet character controller for penetration resolving.
-    std::unique_ptr<btManifoldArray> manifoldArray;          // keep track of the contact manifolds
+    std::unique_ptr<btManifoldArray> manifoldArray = nullptr;          // keep track of the contact manifolds
 
     std::vector<std::unique_ptr<btCollisionShape>> shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
@@ -125,14 +125,7 @@ enum class MoveDirection
 
 struct Entity : public Object
 {
-private:
-    const uint32_t m_id;                 // Unique entity ID
 public:
-    uint32_t id() const noexcept
-    {
-        return m_id;
-    }
-
     int32_t                             m_OCB = 0;                // Object code bit (since TR4)
     uint8_t                             m_triggerLayout = 0;     // Mask + once + event + sector status flags
     float                               m_timer = 0;              // Set by "timer" trigger field
@@ -150,7 +143,7 @@ public:
     bool m_wasRenderedLines; // same for debug lines
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
-    btVector3                           m_speed;              // speed of the entity XYZ
+    btVector3                           m_speed = {0,0,0};              // speed of the entity XYZ
     btScalar                            m_vspeed_override;
 
     btScalar                            m_inertiaLinear;     // linear inertia
@@ -159,11 +152,11 @@ public:
     animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
-    btTransform m_transform; // GL transformation matrix
+    btTransform m_transform = btTransform::getIdentity(); // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
-    btTransform m_lerp_last_transform; // interp
-    btTransform m_lerp_curr_transform; // interp
+    btTransform m_lerp_last_transform  = btTransform::getIdentity(); // interp
+    btTransform m_lerp_curr_transform  = btTransform::getIdentity(); // interp
     bool        m_lerp_valid = false;
     bool        m_lerp_skip = false;
     btScalar    m_lerp = 0;

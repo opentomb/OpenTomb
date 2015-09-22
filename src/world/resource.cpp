@@ -65,7 +65,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     {
         const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
         if(funcName)
-            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->id());
+            Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->getId());
     }
 }
 
@@ -88,7 +88,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     lua::Integer _collision_type, _collision_shape;
     lua::Boolean _hide;
-    lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->object_id);
+    lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->getId());
 
     if(_collision_type > 0)
     {
@@ -295,14 +295,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -312,14 +312,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -344,14 +344,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -361,14 +361,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -482,14 +482,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -499,14 +499,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -531,14 +531,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                     {
                         next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -548,14 +548,14 @@ std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                     {
                         current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
                             RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->id))
+                            if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
                             {
                                 valid = 1;
                             }
@@ -1553,9 +1553,9 @@ void TR_Sector_Calculate(World *world, const std::unique_ptr<loader::Level>& tr,
                     RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->position) : nullptr;
                     RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->position);
 
-                    if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->getId()) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
-                        sector->portal_to_room = p.dest_room->id;
+                        sector->portal_to_room = p.dest_room->getId();
                         orig_dst = dst;
                     }
                 }
@@ -1765,43 +1765,43 @@ void Res_GenRBTrees(World *world)
 void TR_GenRooms(World *world, const std::unique_ptr<loader::Level>& tr)
 {
     world->rooms.resize(tr->m_rooms.size());
-    std::generate(std::begin(world->rooms), std::end(world->rooms), std::make_shared<Room>);
+    for(uint32_t i=0; i<world->rooms.size(); ++i)
+        world->rooms[i] = std::make_shared<Room>(i);
     for(uint32_t i = 0; i < world->rooms.size(); i++)
     {
-        TR_GenRoom(i, world->rooms[i], world, tr);
+        TR_GenRoom(world->rooms[i], world, tr);
     }
 }
 
-void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr)
+void TR_GenRoom(std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr)
 {
-    loader::Room *tr_room = &tr->m_rooms[room_index];
+    loader::Room *tr_room = &tr->m_rooms[room->getId()];
     loader::StaticMesh *tr_static;
     RoomSector* sector;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
 
-    room->id = room_index;
     room->active = true;
     room->frustum.clear();
-    room->flags = tr->m_rooms[room_index].flags;
-    room->light_mode = tr->m_rooms[room_index].light_mode;
-    room->reverb_info = tr->m_rooms[room_index].reverb_info;
-    room->water_scheme = tr->m_rooms[room_index].water_scheme;
-    room->alternate_group = tr->m_rooms[room_index].alternate_group;
+    room->flags = tr->m_rooms[room->getId()].flags;
+    room->light_mode = tr->m_rooms[room->getId()].light_mode;
+    room->reverb_info = tr->m_rooms[room->getId()].reverb_info;
+    room->water_scheme = tr->m_rooms[room->getId()].water_scheme;
+    room->alternate_group = tr->m_rooms[room->getId()].alternate_group;
 
     room->transform.setIdentity();
-    room->transform.getOrigin()[0] = tr->m_rooms[room_index].offset.x;                       // x = x;
-    room->transform.getOrigin()[1] = -tr->m_rooms[room_index].offset.z;                       // y =-z;
-    room->transform.getOrigin()[2] = tr->m_rooms[room_index].offset.y;                       // z = y;
-    room->ambient_lighting[0] = tr->m_rooms[room_index].light_colour.r * 2;
-    room->ambient_lighting[1] = tr->m_rooms[room_index].light_colour.g * 2;
-    room->ambient_lighting[2] = tr->m_rooms[room_index].light_colour.b * 2;
+    room->transform.getOrigin()[0] = tr->m_rooms[room->getId()].offset.x;                       // x = x;
+    room->transform.getOrigin()[1] = -tr->m_rooms[room->getId()].offset.z;                       // y =-z;
+    room->transform.getOrigin()[2] = tr->m_rooms[room->getId()].offset.y;                       // z = y;
+    room->ambient_lighting[0] = tr->m_rooms[room->getId()].light_colour.r * 2;
+    room->ambient_lighting[1] = tr->m_rooms[room->getId()].light_colour.g * 2;
+    room->ambient_lighting[2] = tr->m_rooms[room->getId()].light_colour.b * 2;
     room->setRoom(room.get());
     room->near_room_list.clear();
     room->overlapped_room_list.clear();
 
-    room->genMesh(world, room_index, tr);
+    room->genMesh(world, room->getId(), tr);
 
     room->bt_body.reset();
     /*
@@ -1816,10 +1816,9 @@ void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, 
         {
             continue;
         }
-        room->static_mesh.emplace_back(std::make_shared<StaticMesh>());
+        room->static_mesh.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id));
         std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
         r_static->setRoom(room.get());
-        r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
         r_static->position[0] = tr_room->static_meshes[i].position.x;
         r_static->position[1] = -tr_room->static_meshes[i].position.z;
@@ -3630,7 +3629,7 @@ void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr)
             lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             SkeletalModel* LM;
 
-            engine_lua.set("player", lara->id());
+            engine_lua.set("player", lara->getId());
 
             switch(loader::gameToEngine(tr->m_gameVersion))
             {
@@ -3729,10 +3728,10 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
                 if(ent->m_bf.animations.model->id != item->world_model_id)
                     continue;
 
-                if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->id())].is<lua::Nil>())
-                    engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->id()), lua::Table());
+                if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->getId())].is<lua::Nil>())
+                    engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->getId()), lua::Table());
 
-                engine_lua["pickup_init"](ent->id(), item->id);
+                engine_lua["pickup_init"](ent->getId(), item->id);
 
                 ent->disableCollision();
             }

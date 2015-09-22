@@ -83,7 +83,6 @@ struct RoomSector
 
 struct Room : public Object
 {
-    uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
     int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
     loader::ReverbInfo          reverb_info;                                    // room reverb type
@@ -122,6 +121,11 @@ struct Room : public Object
     std::vector<std::shared_ptr<Room>> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
     std::unique_ptr<btRigidBody> bt_body;
+
+    explicit Room(uint32_t id, Room* room = nullptr)
+        : Object(id, room)
+    {
+    }
 
     ~Room();
 

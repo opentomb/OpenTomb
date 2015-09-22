@@ -960,7 +960,7 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
             ent->m_angles[0],
             ent->m_angles[1],
             ent->m_angles[2],
-            ent->getRoom()->id
+            ent->getRoom()->getId()
     );
 }
 

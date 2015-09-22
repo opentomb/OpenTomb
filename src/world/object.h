@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace world
 {
 class Room;
@@ -62,20 +64,33 @@ public:
         m_collisionShape = shape;
     }
 
+    uint32_t getId() const noexcept
+    {
+        return m_id;
+    }
+
 protected:
-    explicit Object(Room* room = nullptr)
-        : m_room(room)
+    explicit Object(uint32_t id, Room* room = nullptr)
+        : m_id(id)
+        , m_room(room)
     {
     }
 
 private:
+    const uint32_t m_id;                 // Unique entity ID
+
     world::Room* m_room = nullptr;
     CollisionType m_collisionType = CollisionType::None;
     CollisionShape m_collisionShape = CollisionShape::Box;
 };
 
-struct BulletObject : public Object
+class BulletObject : public Object
 {
+public:
+    explicit BulletObject(Room* room)
+        : Object(0, room)
+    {
+    }
 };
 
 } // namespace world

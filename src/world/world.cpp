@@ -123,7 +123,8 @@ void World::empty()
 
 bool World::deleteEntity(uint32_t id)
 {
-    if(character->id() == id) return false;
+    if(character->getId() == id)
+        return false;
 
     auto it = entity_tree.find(id);
     if(it == entity_tree.end())
@@ -162,7 +163,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 ent->setRoom( nullptr );
             }
 
-            return ent->id();
+            return ent->getId();
         }
 
         std::shared_ptr<Entity> ent;
@@ -224,7 +225,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         addEntity(ent);
         Res_SetEntityFunction(ent);
 
-        return ent->id();
+        return ent->getId();
     }
 
     return 0xFFFFFFFF;
@@ -232,7 +233,9 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
 
 std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
 {
-    if(character->id() == id) return character;
+    if(character->getId() == id)
+        return character;
+
     auto it = entity_tree.find(id);
     if(it == entity_tree.end())
         return nullptr;
@@ -320,7 +323,7 @@ std::shared_ptr<Room> World::getByID(unsigned int ID)
 {
     for(auto r : rooms)
     {
-        if(ID == r->id)
+        if(ID == r->getId())
         {
             return r;
         }
@@ -373,11 +376,12 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
 
 void World::addEntity(std::shared_ptr<Entity> entity)
 {
-    if(entity_tree.find(entity->id()) != entity_tree.end())
+    if(entity_tree.find(entity->getId()) != entity_tree.end())
         return;
-    entity_tree[entity->id()] = entity;
-    if(entity->id() + 1 > next_entity_id)
-        next_entity_id = entity->id() + 1;
+
+    entity_tree[entity->getId()] = entity;
+    if(entity->getId() + 1 > next_entity_id)
+        next_entity_id = entity->getId() + 1;
 }
 
 bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)

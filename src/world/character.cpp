@@ -87,8 +87,6 @@ Character::Character(uint32_t id)
     m_convexCb = std::make_shared<engine::BtEngineClosestConvexResultCallback>(this, true);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_heightInfo.ccb = m_convexCb;
-
-    m_moveDir = MoveDirection::Stay;
 }
 
 Character::~Character()
@@ -1003,7 +1001,7 @@ int Character::moveOnFloor()
         {
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
-                engine_lua.execEntity(ENTITY_CALLBACK_STAND, e->id(), id());
+                engine_lua.execEntity(ENTITY_CALLBACK_STAND, e->getId(), getId());
             }
         }
     }
@@ -2273,7 +2271,7 @@ void Character::frame(btScalar time)
     }
     else            // Other Character entities:
     {
-        engine_lua.loopEntity(id());
+        engine_lua.loopEntity(getId());
         if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
             checkCollisionCallbacks();
     }

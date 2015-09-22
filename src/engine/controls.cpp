@@ -648,8 +648,7 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    world::BulletObject* cont = new world::BulletObject();
-    cont->setRoom(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
+    world::BulletObject* cont = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -660,8 +659,7 @@ void Controls_SecondaryMouseDown()
     btVector3 from = engine_camera.getPosition();
     btVector3 to = from + engine_camera.getViewDir() * 32768.0;
 
-    world::BulletObject* cam_cont = new world::BulletObject();
-    cam_cont->setRoom(engine_camera.m_currentRoom);
+    world::BulletObject* cam_cont = new world::BulletObject(engine_camera.m_currentRoom);
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;

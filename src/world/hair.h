@@ -49,6 +49,11 @@ struct Hair : public Object
 
     std::shared_ptr<core::BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
 
+    explicit Hair(Room* room = nullptr)
+        : Object(0, room)
+    {
+    }
+
     ~Hair();
 
     // Creates hair into allocated hair structure, using previously defined setup and

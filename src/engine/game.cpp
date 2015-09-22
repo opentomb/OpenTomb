@@ -238,57 +238,57 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->getRoom()) ? (ent->getRoom()->id) : (0xFFFFFFFF);
+        uint32_t room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->id());
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->getId());
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id(),
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->getId(),
                 ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
                 ent->m_angles[0], ent->m_angles[1], ent->m_angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->id(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
 
     if(ent->m_enabled)
     {
-        fprintf(*f, "\nenableEntity(%d);", ent->id());
+        fprintf(*f, "\nenableEntity(%d);", ent->getId());
     }
     else
     {
-        fprintf(*f, "\ndisableEntity(%d);", ent->id());
+        fprintf(*f, "\ndisableEntity(%d);", ent->getId());
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->id(), ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
+    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->getId(), ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
 
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id(), ent->m_triggerLayout);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->getId(), ent->m_triggerLayout);
     //setEntityMeshswap()
 
     if(ent->getRoom() != nullptr)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id(), ent->getRoom()->id, ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->getId(), ent->getRoom()->getId(), ent->m_moveType, static_cast<int>(ent->m_moveDir));
     }
     else
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id(), ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->getId(), ent->m_moveType, static_cast<int>(ent->m_moveDir));
     }
 
     if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
-        fprintf(*f, "\nremoveAllItems(%d);", ent->id());
+        fprintf(*f, "\nremoveAllItems(%d);", ent->getId());
         for(const InventoryNode& i : ch->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id(), i.id, i.count);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->getId(), i.id, i.count);
         }
 
         for(int i = 0; i < world::PARAM_SENTINEL; i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->getId(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
         }
     }
 }

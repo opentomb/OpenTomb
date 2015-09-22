@@ -132,7 +132,7 @@ void TR_GenTextures(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRooms(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRoom(uint32_t room_index, std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoom(std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenBoxes(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenCameras(World *world, const std::unique_ptr<loader::Level>& tr);

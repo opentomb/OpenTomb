@@ -493,15 +493,15 @@ void showDebugInfo()
     {
         if(world::Entity* e = dynamic_cast<world::Entity*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->id(), e->m_bf.animations.model->id);
+            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_bf.animations.model->id);
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_static: id = %d", sm->object_id);
+            gui::drawText(30.0, 60.0, "cont_static: id = %d", sm->getId());
         }
         else if(world::Room* r = dynamic_cast<world::Room*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_room: id = %d", r->id);
+            gui::drawText(30.0, 60.0, "cont_room: id = %d", r->getId());
         }
     }
 
@@ -510,8 +510,8 @@ void showDebugInfo()
         world::RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
-            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
-            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->id) : (-1));
+            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->getId(), rs->index_x, rs->index_y);
+            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->getId()) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->getId()) : (-1));
         }
     }
     gui::drawText(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
@@ -769,21 +769,21 @@ void dumpRoom(world::Room* r)
 {
     if(r != nullptr)
     {
-        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->boundingBox.min[2], r->boundingBox.max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->id) : (-1), (r->base_room != nullptr) ? (r->base_room->id) : (-1));
+        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->getId(), r->sectors_x, r->sectors_y, r->boundingBox.min[2], r->boundingBox.max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->getId()) : (-1), (r->base_room != nullptr) ? (r->base_room->getId()) : (-1));
         for(const world::RoomSector& rs : r->sectors)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs.index_x, rs.index_y, rs.floor, rs.ceiling, rs.portal_to_room);
         }
         for(auto sm : r->static_mesh)
         {
-            Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
+            Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->getId());
         }
         for(world::Object* cont : r->containers)
         {
             if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
             {
-                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id(), ent->m_bf.animations.model->id);
+                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->getId(), ent->m_bf.animations.model->id);
             }
         }
     }
@@ -1183,7 +1183,7 @@ int execCmd(const char *ch)
             if(world::Room* r = render::renderer.camera()->m_currentRoom)
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->sectors_x, r->sectors_y);
                 if(sect)
                 {
                     Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
@@ -1193,13 +1193,13 @@ int execCmd(const char *ch)
                                                static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
                     for(uint32_t i = 0; i < sect->owner_room->static_mesh.size(); i++)
                     {
-                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
+                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->getId());
                     }
                     for(world::Object* cont : sect->owner_room->containers)
                     {
                         if(world::Entity* e = dynamic_cast<world::Entity*>(cont))
                         {
-                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->id());
+                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->getId());
                         }
                     }
                 }

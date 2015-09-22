@@ -84,7 +84,7 @@ bool Room::removeEntity(Entity* entity)
 
 void Room::addToNearRoomsList(std::shared_ptr<Room> r)
 {
-    if(r && !isInNearRoomsList(*r) && id != r->id && !isOverlapped(r.get()))
+    if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !isOverlapped(r.get()))
     {
         near_room_list.push_back(r);
     }
@@ -92,7 +92,7 @@ void Room::addToNearRoomsList(std::shared_ptr<Room> r)
 
 bool Room::isInNearRoomsList(const Room& r1) const
 {
-    if(id == r1.id)
+    if(getId() == r1.getId())
     {
         return true;
     }
@@ -101,7 +101,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
     {
         for(const std::shared_ptr<Room>& r : near_room_list)
         {
-            if(r->id == r1.id)
+            if(r->getId() == r1.getId())
             {
                 return true;
             }
@@ -111,7 +111,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
     {
         for(const std::shared_ptr<Room>& r : r1.near_room_list)
         {
-            if(r->id == id)
+            if(r->getId() == getId())
             {
                 return true;
             }
@@ -315,7 +315,7 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     {
         for(Portal& p : r->portals) //For every portal in this room
         {
-            if(p.dest_room && p.dest_room->id == id)//If a portal is linked to the input room
+            if(p.dest_room && p.dest_room->getId() == getId())//If a portal is linked to the input room
             {
                 p.dest_room = dest_room;//The portal destination room is the destination room!
                                         //Con_Printf("The current room %d! has room %d joined to it!", id, i);
@@ -346,7 +346,7 @@ bool Room::isJoined(Room* r2)
 {
     for(const Portal& p : portals)
     {
-        if(p.dest_room && p.dest_room->id == r2->id)
+        if(p.dest_room && p.dest_room->getId() == r2->getId())
         {
             return true;
         }
@@ -354,7 +354,7 @@ bool Room::isJoined(Room* r2)
 
     for(const Portal& p : r2->portals)
     {
-        if(p.dest_room && p.dest_room->id == id)
+        if(p.dest_room && p.dest_room->getId() == getId())
         {
             return true;
         }

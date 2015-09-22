@@ -9,7 +9,11 @@ namespace world
 
 struct StaticMesh : public Object
 {
-    uint32_t                    object_id;
+    explicit StaticMesh(uint32_t id, Room* room = nullptr)
+        : Object(id, room)
+    {
+    }
+
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
     bool hide;

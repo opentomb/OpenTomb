@@ -213,7 +213,7 @@ struct SSAnimation
     int16_t                     lerp_last_animation = 0;
     int16_t                     lerp_last_frame = 0;
 
-    void(*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state);
+    void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state) = nullptr;
 
     SkeletalModel    *model = nullptr;                                          // pointer to the base model
     SSAnimation      *next = nullptr;
@@ -247,9 +247,9 @@ struct SSBoneTag
 struct SSBoneFrame
 {
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
-    btVector3 position;                                         // position (base offset)
+    btVector3 position = {0,0,0};                                         // position (base offset)
     core::BoundingBox boundingBox;
-    btVector3 center;                                      // bounding box center
+    btVector3 center = {0,0,0};                                      // bounding box center
 
     SSAnimation       animations;                                     // animations list
 
