@@ -1,13 +1,13 @@
 #pragma once
 
 #include "world/core/boundingbox.h"
+#include "world/statecontroller.h"
 
 #include <btBulletCollisionCommon.h>
 
 #include <array>
 #include <memory>
 #include <vector>
-
 
 namespace world
 {
@@ -109,7 +109,7 @@ struct AnimDispatch
 
 struct StateChange
 {
-    uint32_t                    id;
+    LaraState                 id;
     std::vector<AnimDispatch> anim_dispatch;
 };
 
@@ -145,7 +145,7 @@ struct AnimationFrame
     int32_t                     accel_y;                // Left-right accel
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
-    uint16_t                    state_id;
+    LaraState                   state_id;
     std::vector<BoneFrame> frames;                 // Frame data
 
     std::vector<StateChange> stateChanges;           // Animation statechanges data
@@ -174,7 +174,7 @@ struct AnimationFrame
         return nullptr;
     }
 
-    const StateChange* findStateChangeByID(uint32_t id) const
+    const StateChange* findStateChangeByID(LaraState id) const
     {
         for(const StateChange& stateChange : stateChanges)
         {
@@ -198,8 +198,8 @@ enum class SSAnimationMode
 
 struct SSAnimation
 {
-    int16_t                     last_state = 0;
-    int16_t                     next_state = 0;
+    LaraState                   last_state = LaraState::WALK_FORWARD;
+    LaraState                   next_state = LaraState::WALK_FORWARD;
     int16_t                     current_animation = 0;                              //
                                                                                     //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t                     current_frame = 0;                                  //
@@ -219,7 +219,7 @@ struct SSAnimation
     SSAnimation      *next = nullptr;
 
     void setAnimation(int animation, int frame = 0, int another_model = -1);
-    bool findStateChange(uint32_t stateid, uint16_t& animid_out, uint16_t& frameid_inout);
+    bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
     AnimUpdate stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
 
     const AnimationFrame& getCurrentAnimationFrame() const;

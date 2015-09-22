@@ -831,7 +831,7 @@ int TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loade
 
                     case TR_FD_TRIGTYPE_TIGHTROPE:
                         // Check state range for triggering entity.
-                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", static_cast<int>(LaraState::TIGHTROPE_IDLE), static_cast<int>(LaraState::TIGHTROPE_EXIT));
                         condition = 1;  // Set additional condition.
                         break;
                     case TR_FD_TRIGTYPE_CRAWLDUCK:
@@ -3159,7 +3159,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
 
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
-        anim->state_id = tr_animation->state_id;
+        anim->state_id = static_cast<LaraState>(tr_animation->state_id);
 
 //        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
         // FIXME: number of frames is always (frame_end - frame_start + 1)
@@ -3388,7 +3388,7 @@ void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, c
             {
                 loader::StateChange *tr_sch;
                 tr_sch = &tr->m_stateChanges[j + tr_animation->state_change_offset];
-                sch_p->id = tr_sch->state_id;
+                sch_p->id = static_cast<LaraState>(tr_sch->state_id);
                 sch_p->anim_dispatch.clear();
                 for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
                 {

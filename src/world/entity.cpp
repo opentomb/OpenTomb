@@ -26,6 +26,8 @@
 
 #include "core/basemesh.h"
 
+constexpr float GhostVolumeCollisionCoefficient = 0.4f;
+
 namespace world
 {
 
@@ -40,7 +42,7 @@ void Entity::createGhosts()
     m_bt.last_collisions.clear();
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        btVector3 box = COLLISION_GHOST_VOLUME_COEFFICIENT * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
+        btVector3 box = GhostVolumeCollisionCoefficient * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
         m_bt.shapes.emplace_back(new btBoxShape(box));
         m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
         m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
@@ -574,7 +576,7 @@ void Entity::updateRoomPos()
 
     if(m_currentSector != new_sector)
     {
-        m_triggerLayout &= static_cast<uint8_t>((~ENTITY_TLAYOUT_SSTATUS)); // Reset sector status.
+        m_triggerLayout &= static_cast<uint8_t>(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
         m_currentSector = new_sector;
     }
 }
@@ -730,7 +732,7 @@ void Entity::addOverrideAnim(int model_id)
         m_bf.animations.next = ss_anim;
 
         ss_anim->frame_time = 0.0;
-        ss_anim->next_state = 0;
+        ss_anim->next_state = LaraState::WALK_FORWARD;
         ss_anim->lerp = 0.0;
         ss_anim->current_animation = 0;
         ss_anim->current_frame = 0;
@@ -904,7 +906,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 //    updateRigidBody(false);
 }
 
-int Entity::getAnimDispatchCase(uint32_t id)
+int Entity::getAnimDispatchCase(LaraState id)
 {
     animation::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
 

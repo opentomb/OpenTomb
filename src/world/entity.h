@@ -191,7 +191,7 @@ public:
     void updateRigidBody(bool force);
     void rebuildBV();
 
-    int  getAnimDispatchCase(uint32_t id);
+    int  getAnimDispatchCase(LaraState id);
 
     animation::AnimUpdate stepAnimation(btScalar time);
     virtual void frame(btScalar time);  // entity frame step

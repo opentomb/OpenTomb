@@ -722,7 +722,7 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
     world::animation::AnimationFrame* af = &model->animations[anim];
     for(uint16_t i = 0; i < af->stateChanges.size(); i++)
     {
-        if(af->stateChanges[i].id == static_cast<uint32_t>(state))
+        if(af->stateChanges[i].id == static_cast<world::LaraState>(state))
         {
             if(dispatch >= 0 && dispatch < static_cast<int>(af->stateChanges[i].anim_dispatch.size()))
             {
@@ -2005,7 +2005,7 @@ int16_t lua_GetEntityState(int id)
         return -1;
     }
 
-    return ent->m_bf.animations.last_state;
+    return static_cast<int16_t>(ent->m_bf.animations.last_state);
 }
 
 uint32_t lua_GetEntityModel(int id)
@@ -2031,9 +2031,9 @@ void lua_SetEntityState(int id, int16_t value, lua::Value next)
         return;
     }
 
-    ent->m_bf.animations.next_state = value;
+    ent->m_bf.animations.next_state = static_cast<world::LaraState>(value);
     if(next.is<lua::Integer>())
-        ent->m_bf.animations.last_state = next;
+        ent->m_bf.animations.last_state = static_cast<world::LaraState>(next.toInt());
 }
 
 void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag)

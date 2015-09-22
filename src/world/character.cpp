@@ -10,6 +10,8 @@
 #include "world/room.h"
 #include "world/skeletalmodel.h"
 
+constexpr float CollisionTraverseTestRadius = 0.48f;
+
 namespace engine
 {
 extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
@@ -1760,7 +1762,7 @@ int Character::checkTraverse(const Entity& obj)
         to.setIdentity();
         to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
+        btSphereShape sp(CollisionTraverseTestRadius * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(&obj);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
@@ -1807,7 +1809,7 @@ int Character::checkTraverse(const Entity& obj)
         to.setIdentity();
         to.setOrigin(btVector3(next_s->position[0], next_s->position[1], floor + 0.5f * MeteringSectorSize));
 
-        btSphereShape sp(COLLISION_TRAVERSE_TEST_RADIUS * MeteringSectorSize);
+        btSphereShape sp(CollisionTraverseTestRadius * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(this);
         engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
@@ -1911,8 +1913,8 @@ void Character::updateParams()
                 setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-            if((m_bf.animations.last_state == TR_STATE_LARA_SPRINT) ||
-               (m_bf.animations.last_state == TR_STATE_LARA_SPRINT_ROLL))
+            if((m_bf.animations.last_state == LaraState::SPRINT) ||
+               (m_bf.animations.last_state == LaraState::SPRINT_ROLL))
             {
                 changeParam(PARAM_STAMINA, -0.5);
             }

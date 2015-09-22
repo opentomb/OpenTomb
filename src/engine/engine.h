@@ -43,9 +43,6 @@ namespace engine
 
 #define COLLISION_MARGIN_DEFAULT                (2.0f)
 #define COLLISION_MARGIN_RIGIDBODY              (0.5f)
-#define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4f)
-#define COLLISION_CAMERA_SPHERE_RADIUS          (16.0f)
-#define COLLISION_TRAVERSE_TEST_RADIUS          (0.48f)
 
 struct EngineControlState
 {

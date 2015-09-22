@@ -30,6 +30,8 @@
 extern btScalar time_scale;
 extern script::MainEngine engine_lua;
 
+constexpr float CameraCollisionSphereRadius = 16.0f;
+
 namespace engine
 {
 
@@ -511,7 +513,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
 bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
-    btSphereShape cameraSphere(COLLISION_CAMERA_SPHERE_RADIUS);
+    btSphereShape cameraSphere(CameraCollisionSphereRadius);
     cameraSphere.setMargin(COLLISION_MARGIN_DEFAULT);
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = nullptr;
@@ -540,7 +542,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->m_bf.animations.last_state == TR_STATE_LARA_REACH)
+        if(ent->m_bf.animations.last_state == world::LaraState::REACH)
         {
             if(cam->m_targetDir == world::CameraTarget::Back)
             {
@@ -571,7 +573,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, bt
                 }
             }
         }
-        else if(ent->m_bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
+        else if(ent->m_bf.animations.last_state == world::LaraState::JUMP_BACK)
         {
             cam->m_targetDir = world::CameraTarget::Front;
         }

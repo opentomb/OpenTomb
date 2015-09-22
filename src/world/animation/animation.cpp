@@ -164,7 +164,7 @@ void SSAnimation::setAnimation(int animation, int frame, int another_model)
 * \param[in,out]  frameid  reference to frame id, receives found frame
 * \return  true if state is found, false otherwise
 */
-bool SSAnimation::findStateChange(uint32_t stateid, uint16_t& animid_inout, uint16_t& frameid_inout)
+bool SSAnimation::findStateChange(LaraState stateid, uint16_t& animid_inout, uint16_t& frameid_inout)
 {
     const std::vector<StateChange>& stclist = model->animations[animid_inout].stateChanges;
 
