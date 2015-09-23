@@ -2203,6 +2203,7 @@ void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
             Res_Sector_TranslateFloorData(world->rooms, world->room_count, r->sectors + j, tr);
+            Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, engine_lua);
         }
 
         // Generate links to the near rooms.

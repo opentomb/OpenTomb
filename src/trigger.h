@@ -104,11 +104,17 @@
 #define AMASK_OP_OR  0
 #define AMASK_OP_XOR 1
 
+struct lua_State;
 
 typedef struct trigger_command_s
 {
-    uint16_t                        function;
+    uint16_t                        function : 15;
+    uint16_t                        once : 1;
     uint16_t                        operands;
+    uint8_t                         cam_index;
+    uint8_t                         cam_timer;
+    uint8_t                         cam_once;
+    uint8_t                         cam_zoom;
     struct trigger_command_s       *next;
 }trigger_command_t, *trigger_command_p;
 
@@ -124,5 +130,6 @@ typedef struct trigger_header_s
 }trigger_header_t, *trigger_header_p;
 
 
+void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, struct lua_State *lua);
 
 #endif //TRIGGER_H

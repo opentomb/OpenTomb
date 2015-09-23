@@ -28,9 +28,6 @@ struct sector_tween_s;
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
 bool     Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
 
-// Check if entity index was already processed (needed to remove dublicated activation calls).
-// If entity is not processed, add its index into lookup table.
-bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index, class VT_Level *tr);
 int  Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, struct room_sector_s *sector, class VT_Level *tr);
 int  Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *s2, struct portal_s *p);
 void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32_t room_index, class VT_Level *tr);
