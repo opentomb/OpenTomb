@@ -257,7 +257,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, stru
 
                 case TR_FD_TRIGFUNC_CAMERATARGET:
                     {
-                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->cam_once, command->cam_zoom);
+                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_zoom);
                         strcat(single_events, buf);
                     }
                     break;

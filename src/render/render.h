@@ -181,11 +181,11 @@ class CRender
         class CFrustumManager      *frustumManager;
         
     public:
-        uint32_t                    r_flags;
         struct render_settings_s    settings;
         class shader_manager       *shaderManager;
         class CRenderDebugDrawer   *debugDrawer;
         class CDynamicBSP          *dynamicBSP;
+        uint32_t                    r_flags;
 };
 
 

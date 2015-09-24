@@ -108,12 +108,11 @@ struct lua_State;
 
 typedef struct trigger_command_s
 {
-    uint16_t                        function : 15;
-    uint16_t                        once : 1;
+    uint16_t                        function;
     uint16_t                        operands;
+    uint8_t                         once;
     uint8_t                         cam_index;
     uint8_t                         cam_timer;
-    uint8_t                         cam_once;
     uint8_t                         cam_zoom;
     struct trigger_command_s       *next;
 }trigger_command_t, *trigger_command_p;

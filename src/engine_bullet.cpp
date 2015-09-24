@@ -363,7 +363,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
     {
         if(physics->ghostObjects)
         {
-            for(int i=0;i<physics->objects_count;i++)
+            for(int i = 0; i < physics->objects_count; i++)
             {
                 physics->ghostObjects[i]->setUserPointer(NULL);
                 if(physics->ghostObjects[i]->getCollisionShape())
@@ -388,7 +388,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 
         if(physics->bt_body)
         {
-            for(int i=0;i<physics->objects_count;i++)
+            for(int i = 0; i < physics->objects_count; i++)
             {
                 btRigidBody *body = physics->bt_body[i];
                 if(body)
@@ -469,7 +469,7 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
  */
 void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
-    /*for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
+    /*for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
@@ -643,7 +643,7 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
 
         vec3_set_zero(correction);
         num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-        for(int i=0;i<num_pairs;i++)
+        for(int i = 0; i < num_pairs; i++)
         {
             physics->manifoldArray->clear();
             // do not use commented code: it prevents to collision skips.
@@ -662,7 +662,7 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
             }
 
             manifolds_size = physics->manifoldArray->size();
-            for(int j=0;j<manifolds_size;j++)
+            for(int j = 0; j < manifolds_size; j++)
             {
                 btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
                 btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
@@ -672,7 +672,7 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
                 {
                     continue;
                 }
-                for(int k=0;k<manifold->getNumContacts();k++)
+                for(int k = 0; k < manifold->getNumContacts(); k++)
                 {
                     const btManifoldPoint&pt = manifold->getContactPoint(k);
                     btScalar dist = pt.getDistance();
@@ -702,13 +702,13 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
     int cnt = 0;
 
     OBB_Rebuild(obb, bb_min, bb_max);
-    for(uint16_t i=0;i<6;i++,p++)
+    for(uint16_t i = 0; i < 6; i++, p++)
     {
         if(Polygon_IsBroken(p))
         {
             continue;
         }
-        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        for(uint16_t j = 1; j + 1 < p->vertex_count; j++)
         {
             vec3_copy(v0.m_floats, p->vertices[j + 1].position);
             vec3_copy(v1.m_floats, p->vertices[j].position);
@@ -742,14 +742,14 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     btVector3 v0, v1, v2;
 
     p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
     {
         if(Polygon_IsBroken(p))
         {
             continue;
         }
 
-        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        for(uint16_t j = 1; j + 1 < p->vertex_count; j++)
         {
             vec3_copy(v0.m_floats, p->vertices[j + 1].position);
             vec3_copy(v1.m_floats, p->vertices[j].position);
@@ -904,7 +904,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
         }
     }
 
-    for(int i=0; i<tweens_size; i++)
+    for(int i = 0; i < tweens_size; i++)
     {
         switch(tweens[i].ceiling_tween_type)
         {
@@ -1077,7 +1077,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
     physics->objects_count = bf->bone_tag_count;
     physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
 
-    for(uint16_t i=0;i<physics->objects_count;i++)
+    for(uint16_t i = 0; i < physics->objects_count; i++)
     {
         base_mesh_p mesh = bf->animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape = NULL;
@@ -1267,7 +1267,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
 {
     if(physics->bt_body != NULL)
     {
-        for(uint16_t i=0;i<physics->objects_count;i++)
+        for(uint16_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && !b->isInWorld())
@@ -1283,7 +1283,7 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 {
     if(physics->bt_body != NULL)
     {
-        for(uint16_t i=0;i<physics->objects_count;i++)
+        for(uint16_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && b->isInWorld())
@@ -1297,7 +1297,7 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 
 void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 {
-    for(int i=0; i<physics->objects_count; i++)
+    for(int i = 0; i < physics->objects_count; i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
             physics->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(scaling[0], scaling[1], scaling[2]));
@@ -1354,7 +1354,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
     if(physics->ghostObjects)
     {
         btTransform orig_tr;
-        for(uint16_t i=0;i<physics->objects_count;i++)
+        for(uint16_t i = 0; i < physics->objects_count; i++)
         {
             btPairCachingGhostObject *ghost = physics->ghostObjects[i];
             btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
@@ -1365,7 +1365,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
             bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
             int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-            for(int j=0;j<num_pairs;j++)
+            for(int j = 0; j < num_pairs; j++)
             {
                 physics->manifoldArray->clear();
                 btBroadphasePair *collisionPair = &pairArray[j];
@@ -1380,10 +1380,10 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                     collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
                 }
 
-                for(int k=0;k<physics->manifoldArray->size();k++)
+                for(int k = 0; k < physics->manifoldArray->size(); k++)
                 {
                     btPersistentManifold* manifold = (*physics->manifoldArray)[k];
-                    for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
+                    for(int c = 0; c < manifold->getNumContacts(); c++)               // c++ in C++
                     {
                         //const btManifoldPoint &pt = manifold->getContactPoint(c);
                         if(manifold->getContactPoint(c).getDistance() < 0.0)
@@ -1521,7 +1521,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     btScalar weight_step = ((setup->root_weight - setup->tail_weight) / hair->element_count);
     btScalar current_weight = setup->root_weight;
 
-    for(uint8_t i=0;i<hair->element_count;i++)
+    for(uint8_t i = 0; i < hair->element_count; i++)
     {
         // Point to corresponding mesh.
 
@@ -1571,7 +1571,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     // with obvious step of (SIMD_2_PI) / joint count. It means that all joints will form
     // circle-like figure.
 
-    for(uint16_t i=0; i<hair->element_count; i++)
+    for(uint16_t i = 0; i < hair->element_count; i++)
     {
         btRigidBody* prev_body;
         btScalar     body_length;
@@ -1620,7 +1620,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
 
         // CFM and ERP parameters are critical for making joint "hard" and link
         // to Lara's head. With wrong values, constraints may become "elastic".
-        for(int axis=0;axis<=5;axis++)
+        for(int axis = 0; axis <= 5; axis++)
         {
             hair->elements[i].joint->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
             hair->elements[i].joint->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
@@ -1659,7 +1659,7 @@ void Hair_Delete(struct hair_s *hair)
 {
     if(hair)
     {
-        for(int i=0; i<hair->element_count; i++)
+        for(int i = 0; i < hair->element_count; i++)
         {
             if(hair->elements[i].joint)
             {
@@ -1669,7 +1669,7 @@ void Hair_Delete(struct hair_s *hair)
             }
         }
 
-        for(int i=0; i<hair->element_count; i++)
+        for(int i = 0; i < hair->element_count; i++)
         {
             if(hair->elements[i].body)
             {
@@ -1737,7 +1737,7 @@ void Hair_Update(struct hair_s *hair, struct physics_data_s *physics)
         //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
 
         /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j=0;j<hair->element_count;j++)
+        for(int j = 0; j < hair->element_count; j++)
         {
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
@@ -1806,7 +1806,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    for(int i = 1; i <= hair_setup->vertex_map_count; i++)
+    for(uint32_t i = 1; i <= hair_setup->vertex_map_count; i++)
     {
         hair_setup->head_vertex_map[i-1] = (uint32_t)lua_GetScalarField(lua, i);
     }
@@ -1943,7 +1943,7 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
     Entity_FixPenetrations(entity, NULL);
     entity->bf->animations.model->collision_map_size = map_size;*/
 
-    for(int i=0; i < setup->body_count; i++)
+    for(uint32_t i = 0; i < setup->body_count; i++)
     {
         if(physics->bt_body[i] == NULL)
         {
@@ -1994,7 +1994,7 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
     physics->bt_joint_count = setup->joint_count;
     physics->bt_joints = (btTypedConstraint**)calloc(physics->bt_joint_count, sizeof(btTypedConstraint*));
 
-    for(int i=0; i<physics->bt_joint_count; i++)
+    for(int i = 0; i < physics->bt_joint_count; i++)
     {
         if( (setup->joint_setup[i].body_index >= setup->body_count) ||
             (physics->bt_body[setup->joint_setup[i].body_index] == NULL) )
@@ -2072,7 +2072,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
         return false;
     }
 
-    for(int i=0; i<physics->bt_joint_count; i++)
+    for(uint16_t i = 0; i < physics->bt_joint_count; i++)
     {
         if(physics->bt_joints[i])
         {
@@ -2082,7 +2082,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
         }
     }
 
-    for(int i=0; i < physics->objects_count; i++)
+    for(uint16_t i = 0; i < physics->objects_count; i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
         physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
@@ -2172,7 +2172,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
     setup->body_setup  = (rd_body_setup_p)calloc(setup->body_count, sizeof(rd_body_setup_t));
     setup->joint_setup = (rd_joint_setup_p)calloc(setup->joint_count, sizeof(rd_joint_setup_t));
 
-    for(int i=0; i<setup->body_count; i++)
+    for(uint32_t i = 0; i < setup->body_count; i++)
     {
         lua_rawgeti(lua, -1, i+1);
         if(!lua_istable(lua, -1))
@@ -2211,7 +2211,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
         return NULL;
     }
 
-    for(int i=0; i<setup->joint_count; i++)
+    for(uint32_t i = 0; i < setup->joint_count; i++)
     {
         lua_rawgeti(lua, -1, i+1);
         if(!lua_istable(lua, -1))

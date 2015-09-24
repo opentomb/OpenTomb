@@ -131,23 +131,6 @@ void Sys_Strtime(char *buf, size_t buf_size)
     snprintf(buf, buf_size, "%02d:%02d:%02d",tm_->tm_hour,tm_->tm_min,tm_->tm_sec);
 }
 
-
-void Sys_StrRunSec(char *buf, size_t buf_size)
-{
-    struct              timeval tp;
-    static long int     secbase = 0;
-
-    gettimeofday(&tp, NULL);
-
-    if(!secbase)
-    {
-        secbase = tp.tv_sec;
-    }
-
-    snprintf(buf, buf_size, "%06d.%0.3d", (int)(tp.tv_sec-secbase), (int)(tp.tv_usec/1000));
-}
-
-
 /*
 ===============================================================================
 SYS PRINT FUNCTIONS
@@ -228,7 +211,7 @@ void Sys_TakeScreenShot()
     uint32_t str_size;
 
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
-    snprintf(fname, 128, "screen_%0.5d.png", screenshot_cnt);
+    snprintf(fname, 128, "screen_%.5d.png", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);

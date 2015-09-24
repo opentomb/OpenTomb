@@ -742,20 +742,17 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
         return ret;
     }
 
-    sector->flags = 0;  // Clear sector flags before parsing.
-
-    /*
-     * PARSE FUNCTIONS
-     */
-
-    uint16_t *end_p = tr->floor_data + tr->floor_data_size - 1;
     uint16_t *entry = tr->floor_data + sector->trig_index;
-
+    size_t max_offset = tr->floor_data_size;
+    size_t current_offset = sector->trig_index;
     fd_command_t fd_command;
+
+    sector->flags = 0;  // Clear sector flags before parsing.
     do
     {
         fd_command = *((fd_command_p)entry);
         entry++;
+        current_offset++;
         switch(fd_command.function)
         {
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
@@ -768,6 +765,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                         sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
                     }
                     entry ++;
+                    current_offset++;
                 }
                 break;
 
@@ -803,6 +801,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
 
                     entry++;
+                    current_offset++;
                 }
                 break;
 
@@ -838,6 +837,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
 
                     entry++;
+                    current_offset++;
                 }
                 break;
 
@@ -861,25 +861,23 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     do
                     {
                         trigger_command_p command = (trigger_command_p)malloc(sizeof(trigger_command_t));
+                        trigger_command_p *last_command_ptr = &sector->trigger->commands;
                         command->next = NULL;
-                        if(sector->trigger->commands == NULL)
+                        while(*last_command_ptr)
                         {
-                            sector->trigger->commands = command;
+                            last_command_ptr = &((*last_command_ptr)->next);
                         }
-                        else
-                        {
-                            trigger_command_p last_command = sector->trigger->commands;
-                            while(last_command->next)
-                            {
-                                last_command = last_command->next;
-                            }
-                            last_command->next = command;
-                        }
+                        *last_command_ptr = command;
 
                         entry++;
+                        current_offset++;
                         fd_trigger_function = *((fd_trigger_function_p)entry);
                         command->function = fd_trigger_function.function;
                         command->operands = fd_trigger_function.operands;
+                        command->once = 0;
+                        command->cam_index = 0;
+                        command->cam_timer = 0;
+                        command->cam_zoom = 0;
 
                         switch(command->function)
                         {
@@ -890,10 +888,10 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 {
                                     command->cam_index = (*entry) & 0x007F;
                                     entry++;
+                                    current_offset++;
                                     command->cam_timer = ((*entry) & 0x00FF);
-                                    command->cam_once  = ((*entry) & 0x0100) >> 8;
+                                    command->once      = ((*entry) & 0x0100) >> 8;
                                     command->cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                    command->once = 0;
                                     fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
                                 }
                                 break;
@@ -931,6 +929,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             case TR_FD_TRIGFUNC_FLYBY:
                                 {
                                     entry++;
+                                    current_offset++;
                                     command->once  = ((*entry) & 0x0100) >> 8;
                                     fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;
                                 }
@@ -943,7 +942,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 break;
                         };
                     }
-                    while(!fd_trigger_function.cont_bit && entry < end_p);
+                    while(!fd_trigger_function.cont_bit && (current_offset < max_offset));
                 }
                 break;
 
@@ -994,6 +993,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     fd_slope_t fd_slope = *((fd_slope_p)entry);
                     float overall_adjustment = (float)Res_Sector_BiggestCorner(fd_slope.slope_t10, fd_slope.slope_t11, fd_slope.slope_t12, fd_slope.slope_t13) * TR_METERING_STEP;
                     entry++;
+                    current_offset++;
 
                     if( (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
                         (fd_command.function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
@@ -1100,7 +1100,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
         };
         ret++;
     }
-    while(!fd_command.end_bit && entry < end_p);
+    while(!fd_command.end_bit && (current_offset < max_offset));
 
     if(sector->floor == TR_METERING_WALLHEIGHT)
     {

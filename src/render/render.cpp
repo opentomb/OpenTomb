@@ -39,18 +39,18 @@ void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
  */
 
 CRender::CRender():
-r_flags(0x00),
-r_list(NULL),
-r_list_size(0),
-r_list_active_count(0),
 m_world(NULL),
 m_camera(NULL),
 m_active_transparency(0),
 m_active_texture(0),
+r_list_size(0),
+r_list_active_count(0),
+r_list(NULL),
 frustumManager(NULL),
+shaderManager(NULL),
 debugDrawer(NULL),
 dynamicBSP(NULL),
-shaderManager(NULL)
+r_flags(0x00)
 {
     this->InitSettings();
     frustumManager = new CFrustumManager(32768);
@@ -1243,12 +1243,12 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
  */
 CRenderDebugDrawer::CRenderDebugDrawer():
 m_drawFlags(0x00000000),
-m_lines(0),
 m_max_lines(DEBUG_DRAWER_DEFAULT_BUFFER_SIZE),
-m_gl_vbo(0),
+m_lines(0),
 m_need_realloc(false),
-m_obb(NULL),
-m_buffer(NULL)
+m_gl_vbo(0),
+m_buffer(NULL),
+m_obb(NULL)
 {
     m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
     vec3_set_zero(m_color);
