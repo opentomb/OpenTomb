@@ -18,7 +18,7 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/render.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "controls.h"
 #include "room.h"
 #include "world.h"

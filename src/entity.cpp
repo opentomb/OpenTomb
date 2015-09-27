@@ -20,7 +20,7 @@ extern "C" {
 #include "room.h"
 #include "world.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "script.h"
 #include "trigger.h"
 #include "gui.h"
@@ -1028,20 +1028,10 @@ void Entity_ProcessSector(entity_p ent)
     // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
     // we try to execute a trigger for this sector.
 
-    if((ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (ent->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
+    if(ent->type_flags & (ENTITY_TYPE_TRIGGER_ACTIVATOR | ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
-
-        int top = lua_gettop(engine_lua);
-        lua_getglobal(engine_lua, "tlist_RunTrigger");
-        if(lua_isfunction(engine_lua, -1))
-        {
-            lua_pushnumber(engine_lua, lowest_sector->trig_index);
-            lua_pushnumber(engine_lua, ((ent->bf->animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
-            lua_pushnumber(engine_lua, ent->id);
-            lua_CallAndLog(engine_lua, 3, 1, 0);
-        }
-        lua_settop(engine_lua, top);
+        Trigger_DoCommands(lowest_sector->trigger, ent);
     }
 }
 

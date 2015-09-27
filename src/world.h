@@ -122,4 +122,10 @@ void World_SwapRoomToAlternate(world_p world, struct room_s *room);
 void World_BuildNearRoomsList(world_p world, struct room_s *room);
 void World_BuildOverlappedRoomsList(world_p world, struct room_s *room);
 
+int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state);
+int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation);
+uint32_t World_GetFlipMap(world_p world, uint32_t flip_index);
+uint32_t World_GetFlipState(world_p world, uint32_t flip_index);
+
+
 #endif

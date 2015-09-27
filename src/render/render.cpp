@@ -25,7 +25,7 @@
 #include "../entity.h"
 #include "../character_controller.h"
 #include "../engine.h"
-#include "../engine_physics.h"
+#include "../physics.h"
 #include "../resource.h"
 
 CRender renderer;

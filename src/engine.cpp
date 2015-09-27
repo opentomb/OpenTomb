@@ -37,7 +37,7 @@ extern "C" {
 #include "resource.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "controls.h"
 
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_rwops.h>
 
 extern "C" {
 #include <lua.h>
@@ -30,7 +31,7 @@ extern "C" {
 #include "character_controller.h"
 #include "anim_state_control.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "script.h"
 #include "gui.h"
 #include "gameflow.h"
@@ -766,6 +767,108 @@ void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
             room->overlapped_room_list_size++;
         }
     }
+}
+
+/*
+ * WORLD  TRIGGERING  FUNCTIONS
+ */
+int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
+{
+    flip_state = (flip_state > 1)?(1):(flip_state); // State is always boolean.
+
+    if(flip_index >= world->flip_count)
+    {
+        Con_Warning("wrong flipmap index");
+        return 0;
+    }
+
+    if(world->flip_map[flip_index] == 0x1F)         // Check flipmap state.
+    {
+        room_p current_room = world->rooms;
+
+        if(world->version > TR_III)
+        {
+            for(uint32_t i = 0; i < world->room_count; i++, current_room++)
+            {
+                if(current_room->content->alternate_group == flip_index)        // Check if group is valid.
+                {
+                    if(flip_state)
+                    {
+                        World_SwapRoomToAlternate(world, current_room);
+                    }
+                    else
+                    {
+                        World_SwapRoomToBase(world, current_room);
+                    }
+                }
+            }
+
+            world->flip_state[flip_index] = flip_state;
+        }
+        else
+        {
+            for(uint32_t i = 0; i < world->room_count; i++, current_room++)
+            {
+                if(flip_state)
+                {
+                    World_SwapRoomToAlternate(world, current_room);
+                }
+                else
+                {
+                    World_SwapRoomToBase(world, current_room);
+                }
+            }
+
+            world->flip_state[0] = flip_state;    // In TR1-3, state is always global.
+        }
+    }
+
+    return 0;
+}
+
+
+int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
+{
+    flip_operation = (flip_operation > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
+
+    if(flip_index >= engine_world.flip_count)
+    {
+        Con_Warning("wrong flipmap index");
+        return 0;
+    }
+
+    if(flip_operation == AMASK_OP_XOR)
+    {
+        world->flip_map[flip_index] ^= flip_mask;
+    }
+    else
+    {
+        world->flip_map[flip_index] |= flip_mask;
+    }
+
+    return 0;
+}
+
+
+uint32_t World_GetFlipMap(world_p world, uint32_t flip_index)
+{
+    if(flip_index >= world->flip_count)
+    {
+        return 0xFFFFFFFF;
+    }
+
+    return world->flip_map[flip_index];
+}
+
+
+uint32_t World_GetFlipState(world_p world, uint32_t flip_index)
+{
+    if(flip_index >= world->flip_count)
+    {
+        return 0xFFFFFFFF;
+    }
+
+    return world->flip_state[flip_index];
 }
 
 /*
@@ -2191,7 +2294,14 @@ void World_GenSpritesBuffer(struct world_s *world)
 
 void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 {
+    const char *script_dump_name = "scripts_dump.lua";      ///@DEBUG
     room_p r = world->rooms;
+    SDL_RWops *f = SDL_RWFromFile(script_dump_name, "w");   ///@DEBUG
+    if(f)
+    {
+        SDL_RWclose(f);
+    }
+
     for(uint32_t i = 0; i < world->room_count; i++, r++)
     {
         if(r->alternate_room != NULL)
@@ -2203,7 +2313,7 @@ void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
             Res_Sector_TranslateFloorData(world->rooms, world->room_count, r->sectors + j, tr);
-            Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, engine_lua);
+            Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, script_dump_name);
         }
 
         // Generate links to the near rooms.

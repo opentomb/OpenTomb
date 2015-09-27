@@ -23,7 +23,6 @@ extern "C" {
 #include "core/console.h"
 #include "core/obb.h"
 #include "render/render.h"
-#include "engine_physics.h"
 #include "engine.h"
 #include "mesh.h"
 #include "skeletal_model.h"
@@ -33,6 +32,7 @@ extern "C" {
 #include "resource.h"
 #include "room.h"
 #include "world.h"
+#include "physics.h"
 
 /*
  * INTERNAL BHYSICS CLASSES
@@ -702,13 +702,13 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
     int cnt = 0;
 
     OBB_Rebuild(obb, bb_min, bb_max);
-    for(uint16_t i = 0; i < 6; i++, p++)
+    for(uint32_t i = 0; i < 6; i++, p++)
     {
         if(Polygon_IsBroken(p))
         {
             continue;
         }
-        for(uint16_t j = 1; j + 1 < p->vertex_count; j++)
+        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
         {
             vec3_copy(v0.m_floats, p->vertices[j + 1].position);
             vec3_copy(v1.m_floats, p->vertices[j].position);
@@ -749,7 +749,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
             continue;
         }
 
-        for(uint16_t j = 1; j + 1 < p->vertex_count; j++)
+        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
         {
             vec3_copy(v0.m_floats, p->vertices[j + 1].position);
             vec3_copy(v1.m_floats, p->vertices[j].position);
@@ -1077,7 +1077,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
     physics->objects_count = bf->bone_tag_count;
     physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
 
-    for(uint16_t i = 0; i < physics->objects_count; i++)
+    for(uint32_t i = 0; i < physics->objects_count; i++)
     {
         base_mesh_p mesh = bf->animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape = NULL;
@@ -1132,7 +1132,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 
         physics->manifoldArray = new btManifoldArray();
         physics->ghostObjects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
-        for(uint16_t i = 0; i < physics->objects_count; i++)
+        for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btVector3 box;
             box.m_floats[0] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[0] - bf->bone_tags[i].mesh_base->bb_min[0]);
@@ -1267,7 +1267,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
 {
     if(physics->bt_body != NULL)
     {
-        for(uint16_t i = 0; i < physics->objects_count; i++)
+        for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && !b->isInWorld())
@@ -1283,7 +1283,7 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 {
     if(physics->bt_body != NULL)
     {
-        for(uint16_t i = 0; i < physics->objects_count; i++)
+        for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && b->isInWorld())
@@ -1354,7 +1354,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
     if(physics->ghostObjects)
     {
         btTransform orig_tr;
-        for(uint16_t i = 0; i < physics->objects_count; i++)
+        for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btPairCachingGhostObject *ghost = physics->ghostObjects[i];
             btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
@@ -1521,7 +1521,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     btScalar weight_step = ((setup->root_weight - setup->tail_weight) / hair->element_count);
     btScalar current_weight = setup->root_weight;
 
-    for(uint8_t i = 0; i < hair->element_count; i++)
+    for(uint32_t i = 0; i < hair->element_count; i++)
     {
         // Point to corresponding mesh.
 
@@ -1571,7 +1571,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     // with obvious step of (SIMD_2_PI) / joint count. It means that all joints will form
     // circle-like figure.
 
-    for(uint16_t i = 0; i < hair->element_count; i++)
+    for(uint32_t i = 0; i < hair->element_count; i++)
     {
         btRigidBody* prev_body;
         btScalar     body_length;
@@ -1978,7 +1978,7 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
         }
     }
 
-    for(uint16_t i = 0; i < setup->body_count; i++)
+    for(uint32_t i = 0; i < setup->body_count; i++)
     {
         bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
         physics->bt_body[i]->activate();
@@ -2072,7 +2072,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
         return false;
     }
 
-    for(uint16_t i = 0; i < physics->bt_joint_count; i++)
+    for(uint32_t i = 0; i < physics->bt_joint_count; i++)
     {
         if(physics->bt_joints[i])
         {
@@ -2082,7 +2082,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
         }
     }
 
-    for(uint16_t i = 0; i < physics->objects_count; i++)
+    for(uint32_t i = 0; i < physics->objects_count; i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
         physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));

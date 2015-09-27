@@ -121,14 +121,15 @@ typedef struct trigger_command_s
 typedef struct trigger_header_s
 {
     uint16_t    function_value;
-    uint16_t    sub_function : 15;
-    uint16_t    once : 1;
+    uint16_t    sub_function : 14;
+    uint16_t    once : 2;
     uint16_t    timer;
     uint16_t    mask;
     struct trigger_command_s       *commands;
 }trigger_header_t, *trigger_header_p;
 
 
-void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, struct lua_State *lua);
+void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, const char *file_name);
+void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent);
 
 #endif //TRIGGER_H

@@ -35,7 +35,7 @@ extern "C" {
 #include "character_controller.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "inventory.h"
 #include "resource.h"
 
@@ -680,13 +680,13 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
          */
         uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(rp >= 0 && rp < rooms_count && rp != 255)
+        if(rp < rooms_count && rp != 255)
         {
             sector->sector_below = Room_GetSectorRaw(rooms + rp, sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(rp >= 0 && rp < rooms_count && rp != 255)
+        if(rp < rooms_count && rp != 255)
         {
             sector->sector_above = Room_GetSectorRaw(rooms + rp, sector->pos);
         }
@@ -881,9 +881,6 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
                         switch(command->function)
                         {
-                            case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
-                                break;
-
                             case TR_FD_TRIGFUNC_CAMERATARGET:
                                 {
                                     command->cam_index = (*entry) & 0x007F;
@@ -892,38 +889,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                     command->cam_timer = ((*entry) & 0x00FF);
                                     command->once      = ((*entry) & 0x0100) >> 8;
                                     command->cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                    fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                                    fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;
                                 }
-                                break;
-
-                            case TR_FD_TRIGFUNC_UWCURRENT:
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPMAP:
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPON:
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPOFF:
-                                break;
-
-                            case TR_FD_TRIGFUNC_LOOKAT:
-                                break;
-
-                            case TR_FD_TRIGFUNC_ENDLEVEL:
-                                break;
-
-                            case TR_FD_TRIGFUNC_PLAYTRACK:
-                                break;
-
-                            case TR_FD_TRIGFUNC_FLIPEFFECT:
-                                break;
-
-                            case TR_FD_TRIGFUNC_SECRET:
-                                break;
-
-                            case TR_FD_TRIGFUNC_CLEARBODIES:
                                 break;
 
                             case TR_FD_TRIGFUNC_FLYBY:
@@ -935,6 +902,17 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                 }
                                 break;
 
+                            case TR_FD_TRIGFUNC_OBJECT:
+                            case TR_FD_TRIGFUNC_UWCURRENT:
+                            case TR_FD_TRIGFUNC_FLIPMAP:
+                            case TR_FD_TRIGFUNC_FLIPON:
+                            case TR_FD_TRIGFUNC_FLIPOFF:
+                            case TR_FD_TRIGFUNC_LOOKAT:
+                            case TR_FD_TRIGFUNC_ENDLEVEL:
+                            case TR_FD_TRIGFUNC_PLAYTRACK:
+                            case TR_FD_TRIGFUNC_FLIPEFFECT:
+                            case TR_FD_TRIGFUNC_SECRET:
+                            case TR_FD_TRIGFUNC_CLEARBODIES:
                             case TR_FD_TRIGFUNC_CUTSCENE:
                                 break;
 
@@ -1672,7 +1650,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
      * =================    now, animation loading    ========================
      */
 
-    if(tr_moveable->animation_index < 0 || tr_moveable->animation_index >= tr->animations_count)
+    if(tr_moveable->animation_index >= tr->animations_count)
     {
         /*
          * model has no start offset and any animation
@@ -1986,7 +1964,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animation_count))
+                    if(next_anim_ind < model->animation_count)
                     {
                         sch_p->anim_dispatch_count++;
                         sch_p->anim_dispatch = (anim_dispatch_p)realloc(sch_p->anim_dispatch, sch_p->anim_dispatch_count * sizeof(anim_dispatch_t));

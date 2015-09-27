@@ -20,7 +20,7 @@ extern "C" {
 #include "anim_state_control.h"
 #include "script.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "controls.h"
 #include "gui.h"
 #include "game.h"

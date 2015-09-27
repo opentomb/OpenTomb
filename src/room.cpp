@@ -11,7 +11,7 @@
 #include "core/obb.h"
 #include "render/frustum.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "entity.h"
 #include "mesh.h"
 #include "trigger.h"

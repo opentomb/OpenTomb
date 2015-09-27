@@ -27,7 +27,7 @@ extern "C" {
 #include "entity.h"
 #include "world.h"
 #include "engine.h"
-#include "engine_physics.h"
+#include "physics.h"
 #include "controls.h"
 #include "game.h"
 #include "gameflow.h"
@@ -4495,58 +4495,9 @@ int lua_SetFlipState(lua_State *lua)
         return 0;
     }
 
-    uint32_t group = (uint32_t)lua_tointeger(lua, 1);
-    uint32_t state = (uint32_t)lua_tointeger(lua, 2);
-             state = (state > 1)?(1):(state);       // State is always boolean.
-
-    if(group >= engine_world.flip_count)
-    {
-        Con_Warning("wrong flipmap index");
-        return 0;
-    }
-
-    if(engine_world.flip_map[group] == 0x1F)         // Check flipmap state.
-    {
-        room_p current_room = engine_world.rooms;
-
-        if(engine_world.version > TR_III)
-        {
-            for(uint32_t i=0;i<engine_world.room_count;i++, current_room++)
-            {
-                if(current_room->content->alternate_group == group)             // Check if group is valid.
-                {
-                    if(state)
-                    {
-                        World_SwapRoomToAlternate(&engine_world, current_room);
-                    }
-                    else
-                    {
-                        World_SwapRoomToBase(&engine_world, current_room);
-                    }
-                }
-            }
-
-            engine_world.flip_state[group] = state;
-        }
-        else
-        {
-            for(uint32_t i=0;i<engine_world.room_count;i++,current_room++)
-            {
-                if(state)
-                {
-                    World_SwapRoomToAlternate(&engine_world, current_room);
-                }
-                else
-                {
-                    World_SwapRoomToBase(&engine_world, current_room);
-                }
-            }
-
-            engine_world.flip_state[0] = state;    // In TR1-3, state is always global.
-        }
-    }
-
-    return 0;
+    uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
+    uint32_t flip_state = (uint32_t)lua_tointeger(lua, 2);
+    return World_SetFlipState(&engine_world, flip_index, flip_state);
 }
 
 
@@ -4558,27 +4509,11 @@ int lua_SetFlipMap(lua_State *lua)
         return 0;
     }
 
-    uint32_t group = (uint32_t)lua_tointeger(lua, 1);
-    uint8_t  mask  = (uint8_t)lua_tointeger(lua, 2);
-    uint8_t  op    = (uint8_t)lua_tointeger(lua, 3);
-             op    = (mask > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
+    uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
+    uint8_t  flip_mask = (uint32_t)lua_tointeger(lua, 2);
+    uint8_t  flip_operation = (uint32_t)lua_tointeger(lua, 3);
 
-    if(group >= engine_world.flip_count)
-    {
-        Con_Warning("wrong flipmap index");
-        return 0;
-    }
-
-    if(op == AMASK_OP_XOR)
-    {
-        engine_world.flip_map[group] ^= mask;
-    }
-    else
-    {
-        engine_world.flip_map[group] |= mask;
-    }
-
-    return 0;
+    return World_SetFlipMap(&engine_world, flip_index, flip_mask, flip_operation);
 }
 
 
@@ -4586,15 +4521,16 @@ int lua_GetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) == 1)
     {
-        uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+        uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
+        uint32_t flip_map = World_GetFlipMap(&engine_world, flip_index);
 
-        if(group >= engine_world.flip_count)
+        if(flip_map == 0xFFFFFFFF)
         {
             Con_Warning("wrong flipmap index");
             return 0;
         }
 
-        lua_pushinteger(lua, engine_world.flip_map[group]);
+        lua_pushinteger(lua, flip_map);
         return 1;
     }
     else
@@ -4609,15 +4545,16 @@ int lua_GetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) == 1)
     {
-        uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+        uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
+        uint32_t flip_state = World_GetFlipState(&engine_world, flip_index);
 
-        if(group >= engine_world.flip_count)
+        if(flip_state == 0xFFFFFFFF)
         {
             Con_Warning("wrong flipmap index");
             return 0;
         }
 
-        lua_pushinteger(lua, engine_world.flip_state[group]);
+        lua_pushinteger(lua, flip_state);
         return 1;
     }
     else

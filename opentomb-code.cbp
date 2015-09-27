@@ -1666,10 +1666,6 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/engine_bullet.cpp" />
-		<Unit filename="src/engine_lua.cpp" />
-		<Unit filename="src/engine_lua.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/engine_physics.h" />
 		<Unit filename="src/engine_string.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -3248,6 +3244,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/skeletal_model.h" />
+		<Unit filename="src/trigger.cpp" />
+		<Unit filename="src/trigger.h" />
 		<Unit filename="src/vt/glmath.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
