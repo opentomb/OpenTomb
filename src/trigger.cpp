@@ -54,42 +54,158 @@ void Entity_SetLock(entity_p ent, uint16_t status)
     ent->trigger_layout = trigger_layout;
 }
 
-/// activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigger_lock, trigger_timer)
-void Entity_Activate(entity_p ent, entity_p ent_by, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
+
+void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
     int top = lua_gettop(engine_lua);
 
-    lua_getglobal(engine_lua, "activateEntity");
-    if(lua_isfunction(engine_lua, -1))
+    // Get current trigger layout.
+    ///local mask, event, lock = getEntityTriggerLayout(object_id);
+    uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
+    uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
+    uint16_t lock = (entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6;
+
+    // Ignore activation, if activity lock is set.
+    if(lock == 1)
     {
-        lua_pushinteger(engine_lua, ent->id);
-        lua_pushinteger(engine_lua, ent_by->id);
-        lua_pushinteger(engine_lua, trigger_mask);
-        lua_pushinteger(engine_lua, trigger_op);
-        lua_pushinteger(engine_lua, trigger_lock);
-        lua_pushinteger(engine_lua, trigger_timer);
-        lua_CallAndLog(engine_lua, 6, 0, 0);
+        return;                      // No action if object is locked.
+    }
+
+    lock = trigger_lock;             // Update object lock.
+
+    // Apply trigger mask to entity mask.
+
+    if(trigger_op == AMASK_OP_XOR)
+    {
+        mask ^= trigger_mask;       // Switch cases
+    }
+    else
+    {
+        mask |= trigger_mask;       // Other cases
+    }
+
+    // Full entity mask (11111) is always a reason to activate an entity.
+    // If mask is not full, entity won't activate - no exclusions.
+
+    if((mask == 0x1F) && (event == 0))
+    {
+        ///execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
+        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, entity_activator->id);
+        event = 1;
+    }
+    else if((mask != 0x1F) and (event == 1))
+    {
+        ///execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
+        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, entity_activator->id);
+        event = 0;
+    }
+
+    // Update trigger layout.
+    ///setEntityTriggerLayout(object_id, mask, event, lock);
+    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);           // mask  - 00011111
+    entity_object->trigger_layout ^= (uint8_t)mask;
+    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);          // event - 00100000
+    entity_object->trigger_layout ^= ((uint8_t)event) << 5;
+    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);           // lock  - 01000000
+    entity_object->trigger_layout ^= ((uint8_t)lock) << 6;
+
+    ///setEntityTimer(object_id, trigger_timer);                                // Engage timer.
+    entity_object->timer = trigger_timer;
+
+    lua_settop(engine_lua, top);
+}
+
+
+void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
+{
+    int top = lua_gettop(engine_lua);
+
+    // Get current trigger layout.
+    ///local mask, event, lock = getEntityTriggerLayout(object_id);
+    //uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
+    uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
+    uint16_t lock = (entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6;
+
+    // Ignore deactivation, if activity lock is set.
+    if(lock == 1)
+    {
+        return;                      // No action if object is locked.
+    }
+
+    // Execute entity deactivation function, only if activation was previously set.
+    if(event == 1)
+    {
+        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, entity_activator->id);
+
+        // Activation mask and timer are forced to zero when entity is deactivated.
+        // Activity lock is ignored, since it can't be raised by antitriggers.
+
+        // Update trigger layout.
+        entity_object->trigger_layout = 0x00U;
+
+        ///setEntityTimer(object_id, 0.0);
+        entity_object->timer = 0.0f;
     }
 
     lua_settop(engine_lua, top);
 }
 
-/// deactivateEntity(object_id, activator_id)
-void Entity_Deactivate(entity_p ent, entity_p ent_by)
-{
-    int top = lua_gettop(engine_lua);
+/*
+-- Moves desired entity to specified sink.
 
-    lua_getglobal(engine_lua, "deactivateEntity");
-    if(lua_isfunction(engine_lua, -1))
-    {
-        lua_pushinteger(engine_lua, ent->id);
-        lua_pushinteger(engine_lua, ent_by->id);
-        lua_CallAndLog(engine_lua, 2, 0, 0);
-    }
+function moveToSink(entity_index, sink_index)
+    local movetype = getEntityMoveType(entity_index);
+    if(movetype == 5) then  -- Dive, if on water.
+        if(getEntityAnim(entity_index) ~= 113) then
+            setEntityAnim(entity_index, 113);
+            setEntityMoveType(entity_index, 6);
+        end;
+    elseif(movetype == 6) then
+        moveEntityToSink(entity_index, sink_index);
+    end;
+end
 
-    lua_settop(engine_lua, top);
-}
+-- Does specified flipeffect.
 
+function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
+    if(flipeffects[effect_index] ~= nil) then
+        return flipeffects[effect_index](parameter);
+    else
+        return nil; -- Add hardcoded flipeffect routine here
+    end;
+end
+
+
+-- Sets specified secret index as found and plays audiotrack with pop-up notification.
+
+function findSecret(secret_number)
+    if(getSecretStatus(secret_number) == 0) then
+        setSecretStatus(secret_number, 1);  -- Set actual secret status
+        playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
+        --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
+    end;
+end
+
+
+-- Clear dead enemies, if they have CLEAR BODY flag specified.
+function clearBodies()
+    print("CLEAR BODIES");
+end
+
+
+-- Plays specified flyby. Only valid in TR4-5.
+function playFlyby(flyby_index, once)
+    if(getLevelVersion() < TR_IV) then return 0 end;
+    print("FLYBY: index = " .. flyby_index .. " once = " .. once);
+end
+
+
+-- Plays specified cutscene. Only valid in retail TR4-5.
+function playCutscene(cutscene_index)
+    if(getLevelVersion() < TR_IV) then return 0 end;
+    print("CUTSCENE: index = " .. cutscene_index);
+end
+ */
 
 
 bool Trigger_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
@@ -123,13 +239,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
     {
         int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
         int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
-
-        if(trigger->once)
-        {
-            trigger->once = 0x02;
-        }
-
-        int condition   = 1;                        // No condition by default.
+        int header_condition = 1;                   // No condition by default.
         int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
         //uint32_t entity_state = 0x00000000U;
         // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
@@ -150,7 +260,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                 {
                     action_type = TR_ACTIONTYPE_ANTI;
                 }
-                condition = (ent->move_type == MOVE_ON_FLOOR);                  // Set additional condition.
+                header_condition = (ent->move_type == MOVE_ON_FLOOR);           // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_SWITCH:
@@ -179,7 +289,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
             case TR_FD_TRIGTYPE_COMBAT:
                 // Check weapon status for triggering entity.
                 ///snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
-                condition = (ent->character) && (ent->character->weapon_current_state > 0);
+                header_condition = (ent->character) && (ent->character->weapon_current_state > 0);
                 break;
 
             case TR_FD_TRIGTYPE_DUMMY:
@@ -197,38 +307,43 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
                 ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
-                condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(ent->move_type == MOVE_MONKEYSWING):(ent->move_type == MOVE_CLIMBING);  // Set additional condition.
+                header_condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(ent->move_type == MOVE_MONKEYSWING):(ent->move_type == MOVE_CLIMBING);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
                 ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
-                condition = ((ent->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (ent->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                header_condition = ((ent->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (ent->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
                 break;
 
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
                 ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
-                condition = ((ent->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (ent->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                header_condition = ((ent->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (ent->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
                 break;
         }
 
-        // Now parse operand chain for trigger function!
+        if(!header_condition)
+        {
+            return;
+        }
+
+        // Now execute operand chain for trigger function!
         uint16_t argn = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
+            entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
+            int switch_state = 0;
+            int switch_sectorstatus = 0;
+            uint32_t switch_mask = 0;
+
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
                     {
-                        entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
-                        int switch_state = 0;
-                        int switch_sectorstatus = 0;
-                        uint32_t switch_mask = 0;
-
                         // If activator is specified, first item operand counts as activator index (except
                         // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                        if((argn == 0) && (activator) && trig_entity)
+                        if((argn == 0) && activator && trig_entity)
                         {
                             switch(activator)
                             {
@@ -806,13 +921,16 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             strcat(script, "return 1;\nend }\n\n");  // Finalize the entry.
         }
 
-        if((action_type != TR_ACTIONTYPE_BYPASS) && file_dump)
+        if(file_dump)
         {
-            SDL_RWwrite(file_dump, script, 1, strlen(script));
+            if(action_type != TR_ACTIONTYPE_BYPASS)
+            {
+                SDL_RWwrite(file_dump, script, 1, strlen(script));
+                //Sys_DebugLog(file_name, script);    // Debug!
+                //luaL_loadstring(engine_lua, script);
+                //lua_CallAndLog(engine_lua, 0, LUA_MULTRET, 0); // Execute compiled script.
+            }
             SDL_RWclose(file_dump);
-            //Sys_DebugLog(file_name, script);    // Debug!
-            //luaL_loadstring(engine_lua, script);
-            //lua_CallAndLog(engine_lua, 0, LUA_MULTRET, 0); // Execute compiled script.
         }
     }
 }

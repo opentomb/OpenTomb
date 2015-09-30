@@ -138,43 +138,6 @@ int SC_ParseInt(char **ch)
     return 0;
 }
 
-/**
- * get tbl[key]
- * @TODO: delete functions like lua_Get[Set]xxxField! Use only native LUA functions;
- */
-float lua_GetScalarField(lua_State *lua, const char *key)
-{
-    float ret = 0.0;
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0.0;
-    }
-
-    lua_getfield(lua, -1, key);
-    ret = lua_tonumber(lua, -1);
-    lua_settop(lua, top);
-    return ret;
-}
-
-float lua_GetScalarField(lua_State *lua, int index)
-{
-    float ret = 0.0;
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0.0;
-    }
-
-    lua_rawgeti(lua, -1, index);
-    ret = lua_tonumber(lua, -1);
-    lua_settop(lua, top);
-    return ret;
-}
-
-
 /*
  *   Specific functions to get specific parameters from script.
  */
@@ -382,33 +345,6 @@ bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *b
     return result;
 }
 
-bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char *buffer)
-{
-    bool result = false;
-
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "getSysNotify");
-
-        if(lua_isfunction(lua, -1))
-        {
-            size_t *string_length = NULL;
-
-            lua_pushinteger(lua, string_index);
-            if (lua_CallAndLog(lua, 1, 1, 0))
-            {
-                const char* lua_str = lua_tolstring(lua, -1, string_length);
-                strncpy(buffer, lua_str, string_size);
-                result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    return result;
-}
-
 
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 {
@@ -473,18 +409,18 @@ int lua_SetScalarField(lua_State *lua, const char *key, float val)
  * Gameplay functions
  */
 
-int lua_DoTasks(lua_State *lua, float time)
+int Script_DoTasks(lua_State *lua, float time)
 {
     lua_pushnumber(lua, time);
     lua_setglobal(lua, "frame_time");
 
-    lua_CallVoidFunc(lua, "doTasks");
-    lua_CallVoidFunc(lua, "clearKeys");
+    Script_CallVoidFunc(lua, "doTasks");
+    Script_CallVoidFunc(lua, "clearKeys");
 
     return 0;
 }
 
-void lua_AddKey(lua_State *lua, int keycode, int state)
+void Script_AddKey(lua_State *lua, int keycode, int state)
 {
     int top = lua_gettop(lua);
 
@@ -503,7 +439,7 @@ void lua_AddKey(lua_State *lua, int keycode, int state)
     lua_settop(lua, top);
 }
 
-bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call)
+bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call)
 {
     int top = lua_gettop(lua);
 
@@ -519,7 +455,7 @@ bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_
 
     if(destroy_after_call)
     {
-        lua_pushstring(engine_lua, "nil");
+        lua_pushnil(engine_lua);
         lua_setglobal(lua, func_name);
     }
 
@@ -527,7 +463,7 @@ bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_
     return true;
 }
 
-int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
+int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
 {
     int top = lua_gettop(lua);
 
@@ -556,7 +492,7 @@ int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activa
     return 1;
 }
 
-void lua_LoopEntity(lua_State *lua, int object_id)
+void Script_LoopEntity(lua_State *lua, int object_id)
 {
     entity_p ent = World_GetEntityByID(&engine_world, object_id);
     if((lua) && (ent->state_flags & ENTITY_STATE_ACTIVE))
@@ -582,22 +518,70 @@ int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "controls");
-        cs->mouse_sensitivity = lua_GetScalarField(lua, "mouse_sensitivity");
-        cs->use_joy = lua_GetScalarField(lua, "use_joy");
-        cs->joy_number = lua_GetScalarField(lua, "joy_number");
-        cs->joy_rumble = lua_GetScalarField(lua, "joy_rumble");
-        cs->joy_axis_map[AXIS_LOOK_X] = lua_GetScalarField(lua, "joy_look_axis_x");
-        cs->joy_axis_map[AXIS_LOOK_Y] = lua_GetScalarField(lua, "joy_look_axis_y");
-        cs->joy_look_invert_x = lua_GetScalarField(lua, "joy_look_invert_x");
-        cs->joy_look_invert_y = lua_GetScalarField(lua, "joy_look_invert_y");
-        cs->joy_look_sensitivity = lua_GetScalarField(lua, "joy_look_sensitivity");
-        cs->joy_look_deadzone = lua_GetScalarField(lua, "joy_look_deadzone");
-        cs->joy_axis_map[AXIS_MOVE_X] = lua_GetScalarField(lua, "joy_move_axis_x");
-        cs->joy_axis_map[AXIS_MOVE_Y] = lua_GetScalarField(lua, "joy_move_axis_y");
-        cs->joy_move_invert_x = lua_GetScalarField(lua, "joy_move_invert_x");
-        cs->joy_move_invert_y = lua_GetScalarField(lua, "joy_move_invert_y");
-        cs->joy_move_sensitivity = lua_GetScalarField(lua, "joy_move_sensitivity");
-        cs->joy_move_deadzone = lua_GetScalarField(lua, "joy_move_deadzone");
+        lua_getfield(lua, -1, "mouse_sensitivity");
+        cs->mouse_sensitivity = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "use_joy");
+        cs->use_joy = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_number");
+        cs->joy_number = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_rumble");
+        cs->joy_rumble = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_axis_x");
+        cs->joy_axis_map[AXIS_LOOK_X] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_axis_y");
+        cs->joy_axis_map[AXIS_LOOK_Y] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_invert_x");
+        cs->joy_look_invert_x = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_invert_y");
+        cs->joy_look_invert_y = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_sensitivity");
+        cs->joy_look_sensitivity = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_look_deadzone");
+        cs->joy_look_deadzone = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_axis_x");
+        cs->joy_axis_map[AXIS_MOVE_X] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_axis_y");
+        cs->joy_axis_map[AXIS_MOVE_Y] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_invert_x");
+        cs->joy_move_invert_x = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_invert_y");
+        cs->joy_move_invert_y = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_sensitivity");
+        cs->joy_move_sensitivity = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joy_move_deadzone");
+        cs->joy_move_deadzone = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
         lua_settop(lua, top);
         return 1;
@@ -613,15 +597,36 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "screen");
-        sc->x = (int16_t)lua_GetScalarField(lua, "x");
-        sc->y = (int16_t)lua_GetScalarField(lua, "y");
-        sc->w = (int16_t)lua_GetScalarField(lua, "width");
-        sc->h = (int16_t)lua_GetScalarField(lua, "height");
+        lua_getfield(lua, -1, "x");
+        sc->x = (int16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "y");
+        sc->y = (int16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "width");
+        sc->w = (int16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "height");
+        sc->h = (int16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         sc->w_unit = (GLfloat)sc->w / GUI_SCREEN_METERING_RESOLUTION;
         sc->h_unit = (GLfloat)sc->h / GUI_SCREEN_METERING_RESOLUTION;
-        sc->FS_flag = (int8_t)lua_GetScalarField(lua, "fullscreen");
-        sc->show_debuginfo = (int8_t)lua_GetScalarField(lua, "debug_info");
-        sc->fov = (float)lua_GetScalarField(lua, "fov");
+        lua_getfield(lua, -1, "fullscreen");
+        sc->FS_flag = (int8_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "debug_info");
+        sc->show_debuginfo = (int8_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "fov");
+        sc->fov = (float)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
         lua_settop(lua, top);
         return 1;
@@ -637,24 +642,66 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "render");
-        rs->mipmap_mode = lua_GetScalarField(lua, "mipmap_mode");
-        rs->mipmaps = lua_GetScalarField(lua, "mipmaps");
-        rs->lod_bias = lua_GetScalarField(lua, "lod_bias");
-        rs->anisotropy = lua_GetScalarField(lua, "anisotropy");
-        rs->antialias = lua_GetScalarField(lua, "antialias");
-        rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
-        rs->texture_border = lua_GetScalarField(lua, "texture_border");
-        rs->z_depth = lua_GetScalarField(lua, "z_depth");
-        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled");
-        rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
-        rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
+        lua_getfield(lua, -1, "mipmap_mode");
+        rs->mipmap_mode = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "mipmaps");
+        rs->mipmaps = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "lod_bias");
+        rs->lod_bias = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "anisotropy");
+        rs->anisotropy = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "antialias");
+        rs->antialias = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "antialias_samples");
+        rs->antialias_samples = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "texture_border");
+        rs->texture_border = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "z_depth");
+        rs->z_depth = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "fog_enabled");
+        rs->fog_enabled = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "fog_start_depth");
+        rs->fog_start_depth = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "fog_end_depth");
+        rs->fog_end_depth = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
         lua_getfield(lua, -1, "fog_color");
         if(lua_istable(lua, -1))
         {
-            rs->fog_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-            rs->fog_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-            rs->fog_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
+            lua_getfield(lua, -1, "r");
+            rs->fog_color[0] = (GLfloat)lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
+            lua_getfield(lua, -1, "g");
+            rs->fog_color[1] = (GLfloat)lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
+            lua_getfield(lua, -1, "b");
+            rs->fog_color[2] = (GLfloat)lua_tonumber(lua, -1) / 255.0;
+            lua_pop(lua, 1);
+
             rs->fog_color[3] = 1.0; // Not sure if we need this at all...
         }
 
@@ -677,11 +724,26 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "audio");
-        as->music_volume = lua_GetScalarField(lua, "music_volume");
-        as->sound_volume = lua_GetScalarField(lua, "sound_volume");
-        as->use_effects  = lua_GetScalarField(lua, "use_effects");
-        as->listener_is_player = lua_GetScalarField(lua, "listener_is_player");
-        as->stream_buffer_size = (lua_GetScalarField(lua, "stream_buffer_size")) * 1024;
+        lua_getfield(lua, -1, "music_volume");
+        as->music_volume = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "sound_volume");
+        as->sound_volume = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "use_effects");
+        as->use_effects  = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "listener_is_player");
+        as->listener_is_player = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "stream_buffer_size");
+        as->stream_buffer_size = (lua_tonumber(lua, -1)) * 1024;
+        lua_pop(lua, 1);
+
         if(as->stream_buffer_size <= 0)
         {
             as->stream_buffer_size = 128 * 1024;
@@ -1021,6 +1083,57 @@ int lua_SetModelCollisionMap(lua_State * lua)
        (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
+    }
+
+    return 0;
+}
+
+
+/*
+ * Base Entity trigger functions
+ */
+int lua_ActivateEntity(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 6)
+    {
+        Con_Warning("expecting arguments (object_id, activator_id, trigger_mask, trigger_op, trigger_lock, trigger_timer)");
+        return 0;
+    }
+
+    entity_p object             = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    entity_p activator          = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
+    uint16_t trigger_mask       = lua_tointeger(lua, 3);
+    uint16_t trigger_op         = lua_tointeger(lua, 4);
+    uint16_t trigger_lock       = lua_tointeger(lua, 5);
+    uint16_t trigger_timer      = lua_tointeger(lua, 6);
+
+    if(object && activator)
+    {
+        Entity_Activate(object, activator, trigger_mask, trigger_op, trigger_lock, trigger_timer);
+    }
+
+    return 0;
+}
+
+
+int lua_DeactivateEntity(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Warning("expecting arguments (object_id, activator_id)");
+        return 0;
+    }
+
+    entity_p object             = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    entity_p activator          = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
+
+    if(object && activator)
+    {
+        Entity_Deactivate(object, activator);
     }
 
     return 0;
@@ -4639,7 +4752,6 @@ int lua_genUVRotateAnimation(lua_State *lua)
 }
 
 
-
 // Called when something goes absolutely horribly wrong in Lua, and tries
 // to produce some debug output. Lua calls abort afterwards, so sending
 // the output to the internal console is not an option.
@@ -4685,7 +4797,7 @@ void Script_LuaClearTasks()
 {
     if(engine_lua)
     {
-        lua_CallVoidFunc(engine_lua, "clearTasks");
+        Script_CallVoidFunc(engine_lua, "clearTasks");
     }
 }
 
@@ -4754,6 +4866,9 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getSectorHeight", lua_GetSectorHeight);
+
+    lua_register(lua, "activateEntity", lua_ActivateEntity);
+    lua_register(lua, "deactivateEntity", lua_DeactivateEntity);
 
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
@@ -4866,5 +4981,3 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "addFontStyle", lua_AddFontStyle);
     lua_register(lua, "removeFontStyle", lua_RemoveFontStyle);
 }
-
-

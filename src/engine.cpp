@@ -226,7 +226,7 @@ void Engine_Init_Pre()
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
 
-    lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
+    Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
     Gameflow_Init();
     Cam_Init(&engine_camera);
@@ -237,7 +237,7 @@ void Engine_Init_Pre()
 // Second stage of initialization.
 void Engine_Init_Post()
 {
-    lua_CallVoidFunc(engine_lua, "loadscript_post", true);
+    Script_CallVoidFunc(engine_lua, "loadscript_post", true);
 
     Con_InitFont();
 

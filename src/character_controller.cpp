@@ -996,7 +996,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             entity_p e = (entity_p)cont->object;
             if(e->callback_flags & ENTITY_CALLBACK_STAND)
             {
-                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
             }
         }
     }

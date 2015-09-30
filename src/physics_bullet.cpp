@@ -1766,9 +1766,18 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
     }
 
     hair_setup = (struct hair_setup_s*)malloc(sizeof(struct hair_setup_s));
-    hair_setup->model_id            = (uint32_t)lua_GetScalarField(lua, "model");
-    hair_setup->link_body           = (uint32_t)lua_GetScalarField(lua, "link_body");
-    hair_setup->vertex_map_count    = (uint32_t)lua_GetScalarField(lua, "v_count");
+    lua_getfield(lua, -1, "model");
+    hair_setup->model_id = (uint32_t)lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "link_body");
+    hair_setup->link_body = (uint32_t)lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "v_count");
+    hair_setup->vertex_map_count = (uint32_t)lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
 
     lua_getfield(lua, -1, "props");
     if(!lua_istable(lua, -1))
@@ -1777,14 +1786,38 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    hair_setup->root_weight      = lua_GetScalarField(lua, "root_weight");
-    hair_setup->tail_weight      = lua_GetScalarField(lua, "tail_weight");
-    hair_setup->hair_inertia     = lua_GetScalarField(lua, "hair_inertia");
-    hair_setup->hair_friction    = lua_GetScalarField(lua, "hair_friction");
-    hair_setup->hair_restitution = lua_GetScalarField(lua, "hair_bouncing");
-    hair_setup->joint_overlap    = lua_GetScalarField(lua, "joint_overlap");
-    hair_setup->joint_cfm        = lua_GetScalarField(lua, "joint_cfm");
-    hair_setup->joint_erp        = lua_GetScalarField(lua, "joint_erp");
+    lua_getfield(lua, -1, "root_weight");
+    hair_setup->root_weight      = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "tail_weight");
+    hair_setup->tail_weight      = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "hair_inertia");
+    hair_setup->hair_inertia     = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "hair_friction");
+    hair_setup->hair_friction    = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "hair_bouncing");
+    hair_setup->hair_restitution = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "joint_overlap");
+    hair_setup->joint_overlap    = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "joint_cfm");
+    hair_setup->joint_cfm        = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_getfield(lua, -1, "joint_erp");
+    hair_setup->joint_erp        = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
 
     lua_getfield(lua, -1, "hair_damping");
     if(!lua_istable(lua, -1))
@@ -1793,8 +1826,13 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    hair_setup->hair_damping[0] = lua_GetScalarField(lua, 1);
-    hair_setup->hair_damping[1] = lua_GetScalarField(lua, 2);
+    lua_rawgeti(lua, -1, 1);
+    hair_setup->hair_damping[0] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_rawgeti(lua, -1, 2);
+    hair_setup->hair_damping[1] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
 
     lua_pop(lua, 1);
     lua_pop(lua, 1);
@@ -1808,7 +1846,10 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
     }
     for(uint32_t i = 1; i <= hair_setup->vertex_map_count; i++)
     {
-        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_GetScalarField(lua, i);
+        lua_rawgeti(lua, -1, i);
+        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
     }
     lua_pop(lua, 1);
 
@@ -1819,9 +1860,18 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    hair_setup->head_offset[0] = lua_GetScalarField(lua, 1);
-    hair_setup->head_offset[1] = lua_GetScalarField(lua, 2);
-    hair_setup->head_offset[2] = lua_GetScalarField(lua, 3);
+    lua_rawgeti(lua, -1, 1);
+    hair_setup->head_offset[0] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_rawgeti(lua, -1, 2);
+    hair_setup->head_offset[1] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_rawgeti(lua, -1, 3);
+    hair_setup->head_offset[2] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
     lua_pop(lua, 1);
 
     lua_getfield(lua, -1, "root_angle");
@@ -1831,9 +1881,18 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
         lua_settop(lua, top);
         return NULL;
     }
-    hair_setup->root_angle[0] = lua_GetScalarField(lua, 1);
-    hair_setup->root_angle[1] = lua_GetScalarField(lua, 2);
-    hair_setup->root_angle[2] = lua_GetScalarField(lua, 3);
+    lua_rawgeti(lua, -1, 1);
+    hair_setup->root_angle[0] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_rawgeti(lua, -1, 2);
+    hair_setup->root_angle[1] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
+    lua_rawgeti(lua, -1, 3);
+    hair_setup->root_angle[2] = lua_tonumber(lua, -1);
+    lua_pop(lua, 1);
+
 
     lua_settop(lua, top);
     return hair_setup;
@@ -2146,11 +2205,23 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
     memcpy(setup->hit_func, func_name, string_length * sizeof(char));
     lua_pop(lua, 1);
 
-    setup->joint_count = (uint32_t)lua_GetScalarField(lua, "joint_count");
-    setup->body_count  = (uint32_t)lua_GetScalarField(lua, "body_count");
+        lua_getfield(lua, -1, "joint_count");
+    setup->joint_count = (uint32_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
 
-    setup->joint_cfm   = lua_GetScalarField(lua, "joint_cfm");
-    setup->joint_erp   = lua_GetScalarField(lua, "joint_erp");
+        lua_getfield(lua, -1, "body_count");
+    setup->body_count  = (uint32_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+
+        lua_getfield(lua, -1, "joint_cfm");
+    setup->joint_cfm   = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joint_erp");
+    setup->joint_erp   = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
     if((setup->body_count <= 0) || (setup->joint_count <= 0))
     {
@@ -2182,9 +2253,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->body_setup[i].mass = lua_GetScalarField(lua, "mass");
-        setup->body_setup[i].restitution = lua_GetScalarField(lua, "restitution");
-        setup->body_setup[i].friction = lua_GetScalarField(lua, "friction");
+        lua_getfield(lua, -1, "mass");
+        setup->body_setup[i].mass = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "restitution");
+        setup->body_setup[i].restitution = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "friction");
+        setup->body_setup[i].friction = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
         lua_getfield(lua, -1, "damping");
         if(!lua_istable(lua, -1))
@@ -2195,8 +2275,14 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             return NULL;
         }
 
-        setup->body_setup[i].damping[0] = lua_GetScalarField(lua, 1);
-        setup->body_setup[i].damping[1] = lua_GetScalarField(lua, 2);
+        lua_rawgeti(lua, -1, 1);
+        setup->body_setup[i].damping[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->body_setup[i].damping[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
         lua_pop(lua, 1);
     }
@@ -2221,8 +2307,14 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].body_index = (uint16_t)lua_GetScalarField(lua, "body_index");
-        setup->joint_setup[i].joint_type = (uint16_t)lua_GetScalarField(lua, "joint_type");
+        lua_getfield(lua, -1, "body_index");
+        setup->joint_setup[i].body_index = (uint16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "joint_type");
+        setup->joint_setup[i].joint_type = (uint16_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
 
         lua_getfield(lua, -1, "body1_offset");
         if(!lua_istable(lua, -1))
@@ -2232,9 +2324,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].body1_offset[0] = lua_GetScalarField(lua, 1);
-        setup->joint_setup[i].body1_offset[1] = lua_GetScalarField(lua, 2);
-        setup->joint_setup[i].body1_offset[2] = lua_GetScalarField(lua, 3);
+        lua_rawgeti(lua, -1, 1);
+        setup->joint_setup[i].body1_offset[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->joint_setup[i].body1_offset[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 3);
+        setup->joint_setup[i].body1_offset[2] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "body2_offset");
@@ -2245,9 +2346,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].body2_offset[0] = lua_GetScalarField(lua, 1);
-        setup->joint_setup[i].body2_offset[1] = lua_GetScalarField(lua, 2);
-        setup->joint_setup[i].body2_offset[2] = lua_GetScalarField(lua, 3);
+        lua_rawgeti(lua, -1, 1);
+        setup->joint_setup[i].body2_offset[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->joint_setup[i].body2_offset[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 3);
+        setup->joint_setup[i].body2_offset[2] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "body1_angle");
@@ -2258,9 +2368,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].body1_angle[0] = lua_GetScalarField(lua, 1);
-        setup->joint_setup[i].body1_angle[1] = lua_GetScalarField(lua, 2);
-        setup->joint_setup[i].body1_angle[2] = lua_GetScalarField(lua, 3);
+        lua_rawgeti(lua, -1, 1);
+        setup->joint_setup[i].body1_angle[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->joint_setup[i].body1_angle[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 3);
+        setup->joint_setup[i].body1_angle[2] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "body2_angle");
@@ -2271,9 +2390,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].body2_angle[0] = lua_GetScalarField(lua, 1);
-        setup->joint_setup[i].body2_angle[1] = lua_GetScalarField(lua, 2);
-        setup->joint_setup[i].body2_angle[2] = lua_GetScalarField(lua, 3);
+        lua_rawgeti(lua, -1, 1);
+        setup->joint_setup[i].body2_angle[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->joint_setup[i].body2_angle[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 3);
+        setup->joint_setup[i].body2_angle[2] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "joint_limit");
@@ -2284,9 +2412,18 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
             lua_settop(lua, top);
             return NULL;
         }
-        setup->joint_setup[i].joint_limit[0] = lua_GetScalarField(lua, 1);
-        setup->joint_setup[i].joint_limit[1] = lua_GetScalarField(lua, 2);
-        setup->joint_setup[i].joint_limit[2] = lua_GetScalarField(lua, 3);
+        lua_rawgeti(lua, -1, 1);
+        setup->joint_setup[i].joint_limit[0] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 2);
+        setup->joint_setup[i].joint_limit[1] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_rawgeti(lua, -1, 3);
+        setup->joint_setup[i].joint_limit[2] = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
         lua_pop(lua, 1);
         lua_pop(lua, 1);
     }

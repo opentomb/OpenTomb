@@ -31,7 +31,7 @@ void Controls_Key(int32_t button, int state)
 {
     // Fill script-driven debug keyboard input.
 
-    lua_AddKey(engine_lua, button, state);
+    Script_AddKey(engine_lua, button, state);
 
     // Compare ALL mapped buttons.
 

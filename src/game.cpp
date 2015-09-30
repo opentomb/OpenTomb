@@ -652,7 +652,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
     if(entity->state_flags & ENTITY_STATE_ENABLED)
     {
         Entity_ProcessSector(entity);
-        lua_LoopEntity(engine_lua, entity->id);
+        Script_LoopEntity(engine_lua, entity->id);
     }
 
     if(x->left != NULL)
@@ -818,7 +818,7 @@ void Game_Frame(float time)
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         float dt = CutTimeToLogicTime(&game_logic_time);
-        lua_DoTasks(engine_lua, dt);
+        Script_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
 

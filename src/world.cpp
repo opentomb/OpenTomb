@@ -2274,7 +2274,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
 
 void World_GenBaseItems(struct world_s* world)
 {
-    lua_CallVoidFunc(engine_lua, "genBaseItems");
+    Script_CallVoidFunc(engine_lua, "genBaseItems");
 
     if(world->items_tree && world->items_tree->root)
     {

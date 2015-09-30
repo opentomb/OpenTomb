@@ -132,4 +132,8 @@ typedef struct trigger_header_s
 void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, const char *file_name);
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent);
 
+void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);
+void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator);
+
+
 #endif //TRIGGER_H
