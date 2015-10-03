@@ -26,6 +26,10 @@ extern "C" {
 #include "world.h"
 
 
+#define SWITCH_COMMAND_NONE         (0x00)
+#define SWITCH_COMMAND_ACTIVATE     (0x01)
+#define SWITCH_COMMAND_DEACTIVATE   (0x02)
+
 
 uint32_t Entity_GetSectorStatus(entity_p ent)
 {
@@ -301,7 +305,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
             case TR_FD_TRIGTYPE_COMBAT:
                 // Check weapon status for triggering entity.
-                ///snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
                 header_condition = (entity_activator->character) && (entity_activator->character->weapon_current_state > 0);
                 break;
 
@@ -319,19 +322,16 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             case TR_FD_TRIGTYPE_MONKEY:
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
-                ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
                 header_condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(entity_activator->move_type == MOVE_MONKEYSWING):(entity_activator->move_type == MOVE_CLIMBING);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
                 header_condition = ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
                 break;
 
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                 header_condition = ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
                 break;
         }
@@ -345,141 +345,146 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         {
             return;
         }
+
         // Now execute operand chain for trigger function!
-        uint16_t argn = 0;
+        int switch_command = SWITCH_COMMAND_NONE;
+        int first_command = 1;
+        int switch_anim_state = 0;
+        int switch_sectorstatus = 0;
+        uint32_t switch_mask = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
-            int switch_state = 0;
-            int switch_sectorstatus = 0;
-            uint32_t switch_mask = 0;
-
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
+                    // If activator is specified, first item operand counts as activator index (except
+                    // heavy switch case, which is ordinary heavy trigger case with certain differences).
+                    if(first_command && (activator != TR_ACTIVATOR_NORMAL) && trig_entity)
                     {
-                        // If activator is specified, first item operand counts as activator index (except
-                        // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                        if((argn == 0) && (activator != TR_ACTIVATOR_NORMAL) && trig_entity)
+                        first_command = 0;
+                        switch(activator)
                         {
-                            switch(activator)
-                            {
-                                case TR_ACTIVATOR_SWITCH:
-                                    if(action_type == TR_ACTIONTYPE_SWITCH)
-                                    {
-                                        // Switch action type case.
-                                        ///snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
-                                        switch_state = trig_entity->bf->animations.last_state;
-                                        switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                        switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                    }
-                                    else
-                                    {
-                                        // Ordinary type case (e.g. heavy switch).
-                                        ///snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
-                                        switch_state = entity_activator->bf->animations.last_state;
-                                        switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                        switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                    }
-
-                                    // Trigger activation mask is here filtered through activator's own mask.
-                                    ///snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger->mask);
-                                    switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
-
-                                    if(action_type == TR_ACTIONTYPE_SWITCH)
-                                    {
-                                        // Switch action type case.
-                                        ///snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", command->operands, command->operands, trigger->timer);
-                                        if((switch_state == 0) && (switch_sectorstatus == 1))
-                                        {
-                                            Entity_SetSectorStatus(trig_entity, 0);
-                                            trig_entity->timer = trigger->timer;
-                                            if(trigger->once)
-                                            {
-                                                // Just lock out activator, no anti-action needed.
-                                                ///snprintf(buf2, 128, " setEntityLock(%d, 1) \n", command->operands);
-                                                Entity_SetLock(trig_entity, 1);
-                                            }
-                                            else if((switch_state == 1) && (switch_sectorstatus == 1))
-                                            {
-                                                // Create statement for antitriggering a switch.
-                                                ///snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", command->operands, command->operands);
-                                                Entity_SetSectorStatus(trig_entity, 0);
-                                                trig_entity->timer = 0.0f;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        // Ordinary type case (e.g. heavy switch).
-                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
-                                        ///snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
-                                        if(!switch_sectorstatus)
-                                        {
-                                            Entity_SetSectorStatus(entity_activator, 1);
-                                        }
-                                    }
-                                    break;
-
-                                case TR_ACTIVATOR_KEY:
-                                    ///snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", command->operands, command->operands, command->operands);
-                                    if((Entity_GetLock(trig_entity) == 1) && (Entity_GetSectorStatus(trig_entity) == 0))
-                                    {
-                                        Entity_SetSectorStatus(trig_entity, 1);
-                                    }
-                                    break;
-
-                                case TR_ACTIVATOR_PICKUP:
-                                    ///snprintf(buf, 256, " if((getEntityEnability(%d)) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", command->operands, command->operands, command->operands);
-                                    if((trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
-                                    {
-                                        Entity_SetSectorStatus(trig_entity, 1);
-                                    }
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            // In many original Core Design levels, level designers left dublicated entity activation operands.
-                            // This results in setting same activation mask twice, effectively blocking entity from activation.
-                            // To prevent this, a lookup table was implemented to know if entity already had its activation
-                            // command added.
-                            if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
-                            {
-                                // Other item operands are simply parsed as activation functions. Switch case is special, because
-                                // function is fed with activation mask argument derived from activator mask filter (switch_mask),
-                                // and also we need to process deactivation in a same way as activation, excluding resetting timer
-                                // field. This is needed for two-way switch combinations (e.g. Palace Midas).
-                                if(activator == TR_ACTIVATOR_SWITCH)
+                            case TR_ACTIVATOR_SWITCH:
+                                if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
-                                    if(action_type == TR_ACTIONTYPE_ANTI)
+                                    // Switch action type case.
+                                    switch_anim_state = trig_entity->bf->animations.last_state;
+                                    switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                    switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                }
+                                else
+                                {
+                                    // Ordinary type case (e.g. heavy switch).
+                                    switch_anim_state = entity_activator->bf->animations.last_state;
+                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                }
+
+                                // Trigger activation mask is here filtered through activator's own mask.
+                                switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
+
+                                if(action_type == TR_ACTIONTYPE_SWITCH)
+                                {
+                                    // Switch action type case.
+                                    if((switch_anim_state == 0) && (switch_sectorstatus == 1))
                                     {
-                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
-                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0);
+                                        switch_command = SWITCH_COMMAND_ACTIVATE;
+                                        Entity_SetSectorStatus(trig_entity, 0);
+                                        trig_entity->timer = trigger->timer;
+                                        if(trigger->once)
+                                        {
+                                            // Just lock out activator, no anti-action needed.
+                                            Entity_SetLock(trig_entity, 1);
+                                        }
+                                    }
+                                    else if((switch_anim_state == 1) && (switch_sectorstatus == 1))
+                                    {
+                                        switch_command = SWITCH_COMMAND_DEACTIVATE;
+                                        // Create statement for antitriggering a switch.
+                                        Entity_SetSectorStatus(trig_entity, 0);
+                                        trig_entity->timer = 0.0f;
                                     }
                                     else
                                     {
-                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                        return;
                                     }
                                 }
                                 else
                                 {
-                                    if(action_type == TR_ACTIONTYPE_ANTI)
+                                    // Ordinary type case (e.g. heavy switch).
+                                    if(switch_sectorstatus == 0)
                                     {
-                                        //snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
-                                        Entity_Deactivate(trig_entity, entity_activator);
+                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                        Entity_SetSectorStatus(entity_activator, 1);
+                                        switch_sectorstatus = 1;
                                     }
                                     else
                                     {
-                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                                        Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                                        return;
                                     }
+                                }
+                                break;
+
+                            case TR_ACTIVATOR_KEY:
+                                if((Entity_GetLock(trig_entity) == 1) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                {
+                                    Entity_SetSectorStatus(trig_entity, 1);
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                                break;
+
+                            case TR_ACTIVATOR_PICKUP:
+                                if((trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                {
+                                    Entity_SetSectorStatus(trig_entity, 1);
+                                }
+                                else
+                                {
+                                    return;
+                                }
+                                break;
+                        };
+                    }
+                    else
+                    {
+                        // In many original Core Design levels, level designers left dublicated entity activation operands.
+                        // This results in setting same activation mask twice, effectively blocking entity from activation.
+                        // To prevent this, a lookup table was implemented to know if entity already had its activation
+                        // command added.
+                        if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
+                        {
+                            // Other item operands are simply parsed as activation functions. Switch case is special, because
+                            // function is fed with activation mask argument derived from activator mask filter (switch_mask),
+                            // and also we need to process deactivation in a same way as activation, excluding resetting timer
+                            // field. This is needed for two-way switch combinations (e.g. Palace Midas).
+                            if(activator == TR_ACTIVATOR_SWITCH)
+                            {
+                                if(switch_command == SWITCH_COMMAND_DEACTIVATE)
+                                //if(action_type == TR_ACTIONTYPE_ANTI)
+                                {
+                                    Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0);
+                                }
+                                else if(switch_command == SWITCH_COMMAND_ACTIVATE)
+                                {
+                                    Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                }
+                            }
+                            else
+                            {
+                                if(action_type == TR_ACTIONTYPE_ANTI)
+                                {
+                                    Entity_Deactivate(trig_entity, entity_activator);
+                                }
+                                else
+                                {
+                                    Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                                 }
                             }
                         }
-                        argn++;
                     }
                     break;
 
@@ -511,14 +516,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGFUNC_FLIPON:
                     // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                     // the switch with FLIP_ON trigger, room will remain flipped.
-                    ///snprintf(buf, 128, "   setFlipState(%d, 1); \n", command->operands);
                     World_SetFlipState(&engine_world, command->operands, 1);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
                     // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                     // the switch with FLIP_OFF trigger, room will remain unflipped.
-                    ///snprintf(buf, 128, "   setFlipState(%d, 0); \n", command->operands);
                     World_SetFlipState(&engine_world, command->operands, 0);
                     break;
 
@@ -544,6 +547,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_SECRET:
+                    Con_Printf("Secret found: %d", command->operands);
                     ///snprintf(buf, 128, "   findSecret(%d); \n", command->operands);
                     break;
 
@@ -559,7 +563,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
                     break;
 
-                default: // UNKNOWN!
+                default:
+                    Con_Printf("Unknown trigger function: 0x%X", command->function);
                     break;
             };
         }
