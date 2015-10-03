@@ -438,14 +438,13 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 }
 
 /**
- * @FIXME: MAGICK CONST!
  * @param ent - entity
+ * @param climb - returned climb information
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], struct height_info_s *nfc, float test_height)
+void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height)
 {
-    climb_info_t ret;
     float from[3], to[3], tmp[3];
     float z_min, z_step, *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
@@ -457,13 +456,13 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     nfc->floor_hit = 0x00;
     nfc->ceiling_hit = 0x00;
 
-    ret.height_info = CHARACTER_STEP_HORIZONTAL;
-    ret.can_hang = 0x00;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
-    vec3_copy(ret.point, ent->character->climb.point);
+    climb->height_info = CHARACTER_STEP_HORIZONTAL;
+    climb->can_hang = 0x00;
+    climb->edge_hit = 0x00;
+    climb->edge_obj = NULL;
+    climb->floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
+    vec3_copy(climb->point, ent->character->climb.point);
 
     /*
      * check max height
@@ -502,7 +501,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
     }
     else
     {
-        return ret;
+        return;
     }
 
     tmp[2] = to[2];
@@ -528,7 +527,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
             {
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
-                ret.edge_obj = cb.obj;
+                climb->edge_obj = cb.obj;
                 up_founded = 2;
                 break;
             }
@@ -552,7 +551,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
             }
             else
             {
-                return ret;
+                return;
             }
         }
     }
@@ -575,25 +574,25 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
 
         if(fabs(d) < 0.005)
         {
-            return ret;
+            return;
         }
 
-        ret.edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
-                            n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
-                            n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
-        ret.edge_point[0] /= d;
+        climb->edge_point[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) -
+                               n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) +
+                               n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
+        climb->edge_point[0] /= d;
 
-        ret.edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
-                            n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
-                            n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
-        ret.edge_point[1] /= d;
+        climb->edge_point[1] = n0[0] * (n1[3] * n2[2] - n1[2] * n2[3]) -
+                               n1[0] * (n0[3] * n2[2] - n0[2] * n2[3]) +
+                               n2[0] * (n0[3] * n1[2] - n0[2] * n1[3]);
+        climb->edge_point[1] /= d;
 
-        ret.edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
-                            n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
-                            n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
-        ret.edge_point[2] /= d;
-        vec3_copy(ret.point, ret.edge_point);
-        renderer.debugDrawer->DrawLine(to, ret.point, color, color);
+        climb->edge_point[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) -
+                               n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) +
+                               n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
+        climb->edge_point[2] /= d;
+        vec3_copy(climb->point, climb->edge_point);
+        renderer.debugDrawer->DrawLine(to, climb->point, color, color);
         /*
          * unclimbable edge slant %)
          */
@@ -602,13 +601,13 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
         d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
         if(n2[2] * n2[2] > d)
         {
-            return ret;
+            return;
         }
 
         /*
          * Now, let us calculate z_angle
          */
-        ret.edge_hit = 0x01;
+        climb->edge_hit = 0x01;
 
         n2[2] = n2[0];
         n2[0] = n2[1];
@@ -620,66 +619,65 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], 
             n2[1] = -n2[1];
         }
 
-        vec3_copy(ret.n, n2);
-        ret.up[0] = 0.0;
-        ret.up[1] = 0.0;
-        ret.up[2] = 1.0;
-        ret.edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
-        ret.edge_tan_xy[0] = -n2[1];
-        ret.edge_tan_xy[1] = n2[0];
+        vec3_copy(climb->n, n2);
+        climb->up[0] = 0.0;
+        climb->up[1] = 0.0;
+        climb->up[2] = 1.0;
+        climb->edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
+        climb->edge_tan_xy[0] = -n2[1];
+        climb->edge_tan_xy[1] = n2[0];
         d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
-        ret.edge_tan_xy[0] /= d;
-        ret.edge_tan_xy[1] /= d;
-        ret.t[0] = ret.edge_tan_xy[0];
-        ret.t[1] = ret.edge_tan_xy[1];
+        climb->edge_tan_xy[0] /= d;
+        climb->edge_tan_xy[1] /= d;
+        climb->t[0] = climb->edge_tan_xy[0];
+        climb->t[1] = climb->edge_tan_xy[1];
 
-        vec3_sub(tmp, ret.edge_point, ent->transform + 12);
+        vec3_sub(tmp, climb->edge_point, ent->transform + 12);
         tmp[2] += 2.0 * ent->character->climb_r;
-        ret.height_info = Character_CheckNextStep(ent, tmp, nfc);
-        if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
+        climb->height_info = Character_CheckNextStep(ent, tmp, nfc);
+        if(nfc->ceiling_hit && (nfc->ceiling_point[2] < climb->ceiling_limit))
         {
-            ret.ceiling_limit = nfc->ceiling_point[2];
+            climb->ceiling_limit = nfc->ceiling_point[2];
         }
 
-        if(!ent->character->height_info.floor_hit || (ret.edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
+        if(!ent->character->height_info.floor_hit || (climb->edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
         {
-            ret.can_hang = 0x01;
+            climb->can_hang = 0x01;
         }
 
-        ret.next_z_space = 2.0 * ent->character->Height;
+        climb->next_z_space = 2.0 * ent->character->Height;
         if(nfc->floor_hit && nfc->ceiling_hit)
         {
-            ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+            climb->next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
         }
     }
 
-    return ret;
+    return;
 }
 
 
-climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
+void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb)
 {
-    climb_info_t ret;
     float from[3], to[3];
     float wn2[2], t, *pos = ent->transform + 12;
     collision_result_t cb;
 
-    ret.can_hang = 0x00;
-    ret.wall_hit = 0x00;
-    ret.edge_hit = 0x00;
-    ret.edge_obj = NULL;
-    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
-    vec3_copy(ret.point, ent->character->climb.point);
+    climb->can_hang = 0x00;
+    climb->wall_hit = 0x00;
+    climb->edge_hit = 0x00;
+    climb->edge_obj = NULL;
+    climb->floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
+    vec3_copy(climb->point, ent->character->climb.point);
 
     if(ent->character->height_info.walls_climb == 0x00)
     {
-        return ret;
+        return;
     }
 
-    ret.up[0] = 0.0;
-    ret.up[1] = 0.0;
-    ret.up[2] = 1.0;
+    climb->up[0] = 0.0;
+    climb->up[1] = 0.0;
+    climb->up[2] = 1.0;
 
     from[0] = pos[0] + ent->transform[8 + 0] * ent->bf->bb_max[2] - ent->transform[4 + 0] * ent->character->climb_r;
     from[1] = pos[1] + ent->transform[8 + 1] * ent->bf->bb_max[2] - ent->transform[4 + 1] * ent->character->climb_r;
@@ -692,40 +690,40 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 
     if(!Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
     {
-        return ret;
+        return;
     }
 
-    vec3_copy(ret.point, cb.point);
-    vec3_copy(ret.n, cb.normale);
-    wn2[0] = ret.n[0];
-    wn2[1] = ret.n[1];
+    vec3_copy(climb->point, cb.point);
+    vec3_copy(climb->n, cb.normale);
+    wn2[0] = climb->n[0];
+    wn2[1] = climb->n[1];
     t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
     wn2[0] /= t;
     wn2[0] /= t;
 
-    ret.t[0] =-wn2[1];
-    ret.t[1] = wn2[0];
-    ret.t[2] = 0.0;
+    climb->t[0] =-wn2[1];
+    climb->t[1] = wn2[0];
+    climb->t[2] = 0.0;
     // now we have wall normale in XOY plane. Let us check all flags
 
     if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, -1, 0);
+        climb->wall_hit = 0x01;                                                    // nW = (0, -1, 0);
     }
     if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
+        climb->wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
     }
     if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (0, 1, 0);
+        climb->wall_hit = 0x01;                                                    // nW = (0, 1, 0);
     }
     if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
     {
-        ret.wall_hit = 0x01;                                                    // nW = (1, 0, 0);
+        climb->wall_hit = 0x01;                                                    // nW = (1, 0, 0);
     }
 
-    if(ret.wall_hit)
+    if(climb->wall_hit)
     {
         t = 0.67 * ent->character->Height;
         from[0] -= ent->transform[8 + 0] * t;
@@ -739,7 +737,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 
         if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self))
         {
-            ret.wall_hit = 0x02;
+            climb->wall_hit = 0x02;
         }
     }
 
@@ -754,10 +752,8 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     if(cb->hasHit())
     {
         point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        ret.ceiling_limit = (ret.ceiling_limit > point.m_floats[2])?(point.m_floats[2]):(ret.ceiling_limit);
+        climb->ceiling_limit = (climb->ceiling_limit > point.m_floats[2])?(point.m_floats[2]):(climb->ceiling_limit);
     }*/
-
-    return ret;
 }
 
 
@@ -1371,7 +1367,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    *climb = Character_CheckWallsClimbability(ent);
+    Character_CheckWallsClimbability(ent, climb);
     ent->character->climb = *climb;
     if(!(climb->wall_hit))
     {
@@ -1422,7 +1418,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
     Entity_UpdateRoomPos(ent);
 
-    *climb = Character_CheckWallsClimbability(ent);
+    Character_CheckWallsClimbability(ent, climb);
     if(pos[2] + ent->bf->bb_max[2] > climb->ceiling_limit)
     {
         pos[2] = climb->ceiling_limit - ent->bf->bb_max[2];

@@ -242,9 +242,21 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
         int header_condition = 1;                   // by default condition = true
         int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
-        //uint32_t entity_state = 0x00000000U;
+        int32_t ent_lookup_table[64];
+
+        memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
+
         // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
         // some specific entity classes.
+        // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
+        // trigger_activator_type == TR_ACTIVATORTYPE_MISC
+        if(entity_activator && (entity_activator->bf->animations.model->id == 0) &&
+           ((trigger->sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
+            (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
+            (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH)))
+        {
+            return;
+        }
 
         switch(trigger->sub_function)
         {
@@ -348,7 +360,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         // If activator is specified, first item operand counts as activator index (except
                         // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                        if((argn == 0) && activator && trig_entity)
+                        if((argn == 0) && (activator != TR_ACTIVATOR_NORMAL) && trig_entity)
                         {
                             switch(activator)
                             {
@@ -433,7 +445,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             // This results in setting same activation mask twice, effectively blocking entity from activation.
                             // To prevent this, a lookup table was implemented to know if entity already had its activation
                             // command added.
-                            //if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
+                            if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
                             {
                                 // Other item operands are simply parsed as activation functions. Switch case is special, because
                                 // function is fed with activation mask argument derived from activator mask filter (switch_mask),

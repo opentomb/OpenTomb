@@ -307,10 +307,10 @@ void Character_Create(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
-int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
-int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
-climb_info_t Character_CheckClimbability(struct entity_s *ent, float offset[3], struct height_info_s *nfc, float test_height);
-climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
+int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
+int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
+void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height);
+void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
