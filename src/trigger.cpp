@@ -19,6 +19,7 @@ extern "C" {
 #include "gameflow.h"
 #include "game.h"
 #include "audio.h"
+#include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "anim_state_control.h"
@@ -233,13 +234,13 @@ bool Trigger_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 }
 
 
-void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
+void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
 {
     if(trigger && (trigger->once != 0x02))
     {
         int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
         int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
-        int header_condition = 1;                   // No condition by default.
+        int header_condition = 1;                   // by default condition = true
         int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
         //uint32_t entity_state = 0x00000000U;
         // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
@@ -254,13 +255,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
 
             case TR_FD_TRIGTYPE_PAD:
             case TR_FD_TRIGTYPE_ANTIPAD:
-                // Check move type for triggering entity.
-                ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
                 if(trigger->sub_function == TR_FD_TRIGTYPE_ANTIPAD)
                 {
                     action_type = TR_ACTIONTYPE_ANTI;
                 }
-                header_condition = (ent->move_type == MOVE_ON_FLOOR);           // Set additional condition.
+                // Check move type for triggering entity.
+                ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
+                header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_SWITCH:
@@ -289,7 +290,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
             case TR_FD_TRIGTYPE_COMBAT:
                 // Check weapon status for triggering entity.
                 ///snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
-                header_condition = (ent->character) && (ent->character->weapon_current_state > 0);
+                header_condition = (entity_activator->character) && (entity_activator->character->weapon_current_state > 0);
                 break;
 
             case TR_FD_TRIGTYPE_DUMMY:
@@ -307,19 +308,19 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
                 ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
-                header_condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(ent->move_type == MOVE_MONKEYSWING):(ent->move_type == MOVE_CLIMBING);  // Set additional condition.
+                header_condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(entity_activator->move_type == MOVE_MONKEYSWING):(entity_activator->move_type == MOVE_CLIMBING);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
                 ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
-                header_condition = ((ent->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (ent->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                header_condition = ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
                 break;
 
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
                 ///snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
-                header_condition = ((ent->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (ent->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                header_condition = ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
                 break;
         }
 
@@ -328,6 +329,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
             return;
         }
 
+        if((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1))
+        {
+            return;
+        }
         // Now execute operand chain for trigger function!
         uint16_t argn = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
@@ -352,7 +357,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                                     {
                                         // Switch action type case.
                                         ///snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
-                                        switch_state = trig_entity->state_flags;
+                                        switch_state = trig_entity->bf->animations.last_state;
                                         switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
                                         switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
                                     }
@@ -360,9 +365,9 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                                     {
                                         // Ordinary type case (e.g. heavy switch).
                                         ///snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
-                                        switch_state = ent->state_flags;
-                                        switch_sectorstatus = (ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                        switch_mask = (ent->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                        switch_state = entity_activator->bf->animations.last_state;
+                                        switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                        switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
                                     }
 
                                     // Trigger activation mask is here filtered through activator's own mask.
@@ -377,31 +382,30 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                                         {
                                             Entity_SetSectorStatus(trig_entity, 0);
                                             trig_entity->timer = trigger->timer;
-                                        }
-                                        else if(switch_state && switch_sectorstatus)
-                                        {
-                                            // Create statement for antitriggering a switch.
-                                            ///snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", command->operands, command->operands);
-                                            Entity_SetSectorStatus(trig_entity, 0);
-                                            trig_entity->timer = 0.0f;
-                                        }
-
-                                        if(trigger->once)
-                                        {
-                                            // Just lock out activator, no anti-action needed.
-                                            ///snprintf(buf2, 128, " setEntityLock(%d, 1) \n", command->operands);
-                                            Entity_SetLock(trig_entity, 1);
+                                            if(trigger->once)
+                                            {
+                                                // Just lock out activator, no anti-action needed.
+                                                ///snprintf(buf2, 128, " setEntityLock(%d, 1) \n", command->operands);
+                                                Entity_SetLock(trig_entity, 1);
+                                            }
+                                            else if((switch_state == 1) && (switch_sectorstatus == 1))
+                                            {
+                                                // Create statement for antitriggering a switch.
+                                                ///snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", command->operands, command->operands);
+                                                Entity_SetSectorStatus(trig_entity, 0);
+                                                trig_entity->timer = 0.0f;
+                                            }
                                         }
                                     }
                                     else
                                     {
                                         // Ordinary type case (e.g. heavy switch).
                                         ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                        Entity_Activate(trig_entity, ent, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
                                         ///snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
                                         if(!switch_sectorstatus)
                                         {
-                                            Entity_SetSectorStatus(ent, 1);
+                                            Entity_SetSectorStatus(entity_activator, 1);
                                         }
                                     }
                                     break;
@@ -416,7 +420,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
 
                                 case TR_ACTIVATOR_PICKUP:
                                     ///snprintf(buf, 256, " if((getEntityEnability(%d)) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", command->operands, command->operands, command->operands);
-                                    if((ent->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                    if((trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
                                     {
                                         Entity_SetSectorStatus(trig_entity, 1);
                                     }
@@ -437,17 +441,29 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                                 // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                                 if(activator == TR_ACTIVATOR_SWITCH)
                                 {
-                                    ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                    Entity_Activate(trig_entity, ent, switch_mask, mask_mode, trigger->once, trigger->timer);
-                                    ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
-                                    Entity_Activate(trig_entity, ent, switch_mask, mask_mode, trigger->once, 0);
+                                    if(action_type == TR_ACTIONTYPE_ANTI)
+                                    {
+                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
+                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0);
+                                    }
+                                    else
+                                    {
+                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
+                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                    }
                                 }
                                 else
                                 {
-                                    ///snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                                    Entity_Activate(trig_entity, ent, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                                    //snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
-                                    Entity_Deactivate(trig_entity, ent);
+                                    if(action_type == TR_ACTIONTYPE_ANTI)
+                                    {
+                                        //snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
+                                        Entity_Deactivate(trig_entity, entity_activator);
+                                    }
+                                    else
+                                    {
+                                        ///snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                                        Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                                    }
                                 }
                             }
                         }
@@ -469,7 +485,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                     if(activator == TR_ACTIVATOR_SWITCH)
                     {
                         //snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", command->operands, command->operands);
-                        World_SetFlipMap(&engine_world, command->operands, ent->trigger_layout, 1);
+                        World_SetFlipMap(&engine_world, command->operands, entity_activator->trigger_layout, 1);
                         World_SetFlipState(&engine_world, command->operands, 1);
                     }
                     else
@@ -534,6 +550,11 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent)
                 default: // UNKNOWN!
                     break;
             };
+        }
+
+        if(activator == TR_ACTIVATOR_NORMAL)
+        {
+            Entity_SetSectorStatus(entity_activator, 1);
         }
     }
 }
