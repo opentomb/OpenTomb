@@ -1,15 +1,5 @@
 #include "gui.h"
 
-#include <cstdint>
-#include <map>
-
-#ifdef __APPLE_CC__
-#include <ImageIO/ImageIO.h>
-#else
-#include <SDL2/SDL_image.h>
-#endif
-
-#include "character_controller.h"
 #include "console.h"
 #include "engine/engine.h"
 #include "engine/system.h"
@@ -22,11 +12,13 @@
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
 #include "render/vertex_array.h"
-#include "strings.h"
-#include "util/vmath.h"
-#include "world/animation/animation.h"
 #include "world/camera.h"
 #include "world/character.h"
+
+#ifdef __APPLE_CC__
+#include <ImageIO/ImageIO.h>
+#else
+#endif
 
 namespace engine
 {

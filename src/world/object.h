@@ -4,7 +4,7 @@
 
 namespace world
 {
-class Room;
+struct Room;
 
 enum class CollisionShape
 {

@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <GL/glew.h>
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_keycode.h>
 
 #include "engine/engine.h"
@@ -15,9 +16,7 @@
 
 using namespace gui;
 
-Console::Console()
-{
-}
+Console::Console() = default;
 
 void Console::init()
 {

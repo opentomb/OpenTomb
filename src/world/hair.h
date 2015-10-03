@@ -37,17 +37,17 @@ struct HairSetup;
 struct Hair : public Object
 {
     std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
-    uint32_t m_ownerBody;         // Owner entity's body ID.
-    btTransform m_ownerBodyHairRoot; // transform from owner body to root of hair start
+    uint32_t m_ownerBody = 0;         // Owner entity's body ID.
+    btTransform m_ownerBodyHairRoot = btTransform::getIdentity(); // transform from owner body to root of hair start
 
-    uint8_t m_rootIndex;         // Index of "root" element.
-    uint8_t m_tailIndex;         // Index of "tail" element.
+    uint8_t m_rootIndex = 0;         // Index of "root" element.
+    uint8_t m_tailIndex = 0;         // Index of "tail" element.
 
     std::vector<HairElement> m_elements;           // Array of elements.
 
     std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;             // Array of joints.
 
-    std::shared_ptr<core::BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
+    std::shared_ptr<core::BaseMesh> m_mesh = nullptr;               // Mesh containing all vertices of all parts of this hair object.
 
     explicit Hair(Room* room = nullptr)
         : Object(0, room)

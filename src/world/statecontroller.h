@@ -148,7 +148,7 @@ enum class LaraState
     PICKUP_FROM_CHEST = 137
 };
 
-class Character;
+struct Character;
 struct HeightInfo;
 
 constexpr float LaraHangVerticalEpsilon = 64.0f;

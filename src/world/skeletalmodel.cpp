@@ -28,12 +28,11 @@ void SkeletalModel::interpolateFrames()
         int rate = anim->original_frame_rate;
         if(length > 1 && rate > 1)
         {
-            int destIdx = int((length - 1) / rate) * rate;
-            int srcIdx = 0;
+            int destIdx = ((length - 1) / rate) * rate;
 
             while(destIdx >= 0)
             {
-                srcIdx = destIdx / rate;
+                int srcIdx = destIdx / rate;
                 for(int j = rate - 1; j>0; j--)
                 {
                     if(destIdx + j >= length) continue;

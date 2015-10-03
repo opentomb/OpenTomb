@@ -5,6 +5,7 @@
 #include "script/script.h"
 #include "strings.h"
 #include "util/vmath.h"
+#include "engine/engine.h"
 
 InventoryManager  *main_inventory_manager = nullptr;
 

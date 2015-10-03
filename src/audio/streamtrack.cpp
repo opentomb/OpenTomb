@@ -521,7 +521,7 @@ void StreamTrack::setFX(FxManager& manager)
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    ALuint slot = 0;
+    ALuint slot;
     if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
     {
         manager.last_room_type = manager.current_room_type;

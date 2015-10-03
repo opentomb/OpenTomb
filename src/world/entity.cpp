@@ -482,8 +482,7 @@ void Entity::checkCollisionCallbacks()
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(cont))
         {
-            Room* activator = static_cast<Room*>(cont);
-            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), activator->getId());
+            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), static_cast<Room*>(cont)->getId());
         }
     }
 }
@@ -978,8 +977,6 @@ void Entity::updateInterpolation(btScalar time)
 
 animation::AnimUpdate Entity::stepAnimation(btScalar time)
 {
-    animation::AnimUpdate stepResult = animation::AnimUpdate::None;
-
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
@@ -988,7 +985,7 @@ animation::AnimUpdate Entity::stepAnimation(btScalar time)
     if(m_bf.animations.mode == animation::SSAnimationMode::Locked)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
-    stepResult = m_bf.animations.stepAnimation(time, this);
+    animation::AnimUpdate stepResult = m_bf.animations.stepAnimation(time, this);
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 

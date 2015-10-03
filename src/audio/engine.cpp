@@ -9,6 +9,7 @@
 #include "settings.h"
 #include "script/script.h"
 #include "strings.h"
+#include "world/entity.h"
 
 #include <chrono>
 
@@ -381,8 +382,6 @@ void Engine::updateAudio()
 
 StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 {
-    int    target_stream = -1;
-    bool   do_fade_in = false;
     StreamMethod load_method = StreamMethod::Any;
     StreamType stream_type = StreamType::Any;
 
@@ -431,8 +430,9 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Entry found, now process to actual track loading.
 
-    target_stream = getFreeStream();            // At first, we need to get free stream.
+    int target_stream = getFreeStream();            // At first, we need to get free stream.
 
+    bool do_fade_in;
     if(target_stream == -1)
     {
         do_fade_in = stopStreams(stream_type);  // If no free track found, hardly stop all tracks.
@@ -528,8 +528,7 @@ Error Engine::kill(int effect_ID, EmitterType entity_type, int entity_ID)
 
 bool Engine::isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
 {
-    btVector3 vec{ 0,0,0 };
-
+    btVector3 vec;
     switch(entity_type)
     {
     case EmitterType::Entity:
@@ -573,7 +572,6 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
     int32_t         source_number;
     uint16_t        random_value;
     ALfloat         random_float;
-    Effect* effect = nullptr;
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
@@ -595,10 +593,8 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
     {
         return Error::Ignored;
     }
-    else
-    {
-        effect = &m_effects[real_ID];
-    }
+
+    Effect* effect = &m_effects[real_ID];
 
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.

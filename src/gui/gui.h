@@ -3,9 +3,6 @@
 #include "fontmanager.h"
 #include "gl_font.h"
 #include "render/render.h"
-#include "world/entity.h"
-
-#include <list>
 
 namespace gui
 {

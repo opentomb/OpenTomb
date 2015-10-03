@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 #include "gui/fader.h"
-#include "gui/gui.h"
 #include "script/script.h"
 #include "world/world.h"
 

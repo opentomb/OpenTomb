@@ -139,19 +139,19 @@ public:
     MoveDirection                       m_moveDir = MoveDirection::Stay;           // (move direction)
     MoveType                            m_moveType = MoveType::OnFloor;          // on floor / free fall / swim ....
 
-    bool m_wasRendered;       // render once per frame trigger
-    bool m_wasRenderedLines; // same for debug lines
+    bool m_wasRendered = false;       // render once per frame trigger
+    bool m_wasRenderedLines = false; // same for debug lines
 
-    btScalar                            m_currentSpeed;      // current linear speed from animation info
+    btScalar                            m_currentSpeed = 0;      // current linear speed from animation info
     btVector3                           m_speed = {0,0,0};              // speed of the entity XYZ
     btScalar                            m_vspeed_override;
 
-    btScalar                            m_inertiaLinear;     // linear inertia
-    btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
+    btScalar                            m_inertiaLinear = 0;     // linear inertia
+    btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
 
     animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
-    btVector3 m_angles;
+    btVector3 m_angles = { 0,0,0 };
     btTransform m_transform = btTransform::getIdentity(); // GL transformation matrix
     btVector3 m_scaling = { 1,1,1 };
 
@@ -164,7 +164,7 @@ public:
     core::OrientedBoundingBox m_obb;
 
     RoomSector* m_currentSector = nullptr;
-    RoomSector* m_lastSector;
+    RoomSector* m_lastSector = nullptr;
 
     btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;

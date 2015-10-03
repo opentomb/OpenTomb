@@ -5,8 +5,6 @@
 
 #include <GL/glew.h>
 
-#include <string>
-
 namespace gui
 {
 

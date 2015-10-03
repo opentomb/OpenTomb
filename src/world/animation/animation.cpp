@@ -1,7 +1,6 @@
 #include "animation.h"
 
 #include "engine/engine.h"
-#include "engine/game.h"
 #include "world/entity.h"
 #include "world/skeletalmodel.h"
 

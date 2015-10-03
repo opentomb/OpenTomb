@@ -83,7 +83,7 @@ struct RoomSector
 
 struct Room : public Object
 {
-    uint32_t                    flags;                                          // room's type + water, wind info
+    uint32_t                    flags = 0;                                          // room's type + water, wind info
     int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
     loader::ReverbInfo          reverb_info;                                    // room reverb type
     uint8_t                     water_scheme;

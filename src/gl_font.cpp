@@ -318,7 +318,7 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
 
     if((glf != nullptr) && (glf->ft_face != nullptr))
     {
-        const uint8_t *ch = (uint8_t*)text;
+        const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
         uint32_t curr_utf32, next_utf32;
         int i;
 
@@ -353,7 +353,7 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
     if((glf != nullptr) && (glf->ft_face != nullptr))
     {
         const uint8_t *nch2;
-        const uint8_t *ch = (const uint8_t*)text;
+        const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
         float x = 0.0;
         float y = 0.0;
         float xx0, xx1, yy0, yy1;
@@ -392,7 +392,7 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
 void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
 {
     const uint8_t *nch;
-    const uint8_t *ch = (const uint8_t*)text;
+    const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
     FT_Vector kern;
 
     if((glf == nullptr) || (glf->ft_face == nullptr) || (text == nullptr) || (text[0] == '\0'))
@@ -548,7 +548,7 @@ void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
 
 /** Additional functions */
 
-static uint8_t* utf8_next_symbol(uint8_t *utf8)
+static const uint8_t* utf8_next_symbol(const uint8_t *utf8)
 {
     uint8_t b = *utf8;
 
@@ -571,7 +571,7 @@ static uint8_t* utf8_next_symbol(uint8_t *utf8)
 uint32_t utf8_strlen(const char *str)
 {
     uint32_t i = 0;
-    uint8_t *ch = (uint8_t*)str;
+    const uint8_t *ch = reinterpret_cast<const uint8_t*>(str);
 
     for(; *ch; i++)
     {

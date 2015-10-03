@@ -1,7 +1,6 @@
 #include "character.h"
 
 #include "character_controller.h"
-#include "gui/gui.h"
 #include "gui/itemnotifier.h"
 #include "inventory.h"
 #include "resource.h"

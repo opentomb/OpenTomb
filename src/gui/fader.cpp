@@ -1,7 +1,9 @@
 #include "fader.h"
 
 #include "console.h"
+#include "engine/engine.h"
 #include "engine/system.h"
+#include "strings.h"
 
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_image.h>

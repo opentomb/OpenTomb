@@ -50,7 +50,7 @@ private:
 
     std::list<Line> m_lines;
     size_t m_visibleLines = 40;
-    size_t m_bufferSize;
+    size_t m_bufferSize = 0;
 
     uint16_t m_lineSize = CON_MAX_LINE_SIZE;                  // Console line size
     int16_t m_lineHeight;                // Height, including spacing
