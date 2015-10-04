@@ -1101,6 +1101,42 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
     }
 }
 
+
+void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
+{
+    if(sink_index < engine_world.cameras_sinks_count)
+    {
+        stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
+
+        float sink_pos[3], *ent_pos = entity->transform + 12;
+        sink_pos[0] = sink->x;
+        sink_pos[1] = sink->y;
+        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
+
+        room_sector_p ls = Sector_GetLowest(entity->current_sector);
+        room_sector_p hs = Sector_GetHighest(entity->current_sector);
+
+        if((sink_pos[2] > hs->ceiling) ||
+           (sink_pos[2] < ls->floor) )
+        {
+            sink_pos[2] = ent_pos[2];
+        }
+
+        float speed[3];
+        vec3_sub(speed, sink_pos, ent_pos);
+        float t = vec3_abs(speed);
+        if(t == 0.0) t = 1.0; // Prevents division by zero.
+        t = ((float)(sink->room_or_strength) * 1.5) / t;
+
+        ent_pos[0] += speed[0] * t;
+        ent_pos[1] += speed[1] * t;
+        ent_pos[2] += speed[2] * t * 16.0;                                      ///@FIXME: ugly hack
+
+        Entity_UpdateRigidBody(entity, 1);
+    }
+}
+
+
 void Character_DoWeaponFrame(entity_p entity, float time);
 
 /**

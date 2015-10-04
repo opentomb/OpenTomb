@@ -128,6 +128,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
+void Entity_MoveToSink(entity_p entity, uint32_t sink_index);
 void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);
 void Entity_MoveVertical(entity_p ent, float dist);

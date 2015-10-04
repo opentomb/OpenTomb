@@ -217,10 +217,10 @@ bool Trigger_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 {
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
-    /*if(!World_GetEntityByID(&engine_world, entity_index))
+    if(!World_GetEntityByID(&engine_world, entity_index))
     {
         return true;
-    }*/
+    }
 
     int32_t *curr_table_index = lookup_table;
 
@@ -276,7 +276,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     action_type = TR_ACTIONTYPE_ANTI;
                 }
                 // Check move type for triggering entity.
-                ///snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
                 header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
                 break;
 
@@ -349,12 +348,21 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         // Now execute operand chain for trigger function!
         int switch_command = SWITCH_COMMAND_NONE;
         int first_command = 1;
-        int switch_anim_state = 0;
+        int only_continue_events = 0;
         int switch_sectorstatus = 0;
         uint32_t switch_mask = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
+
+            if(only_continue_events &&
+               !((command->function == TR_FD_TRIGFUNC_UWCURRENT) ||
+                 (command->function == TR_FD_TRIGFUNC_FLIPEFFECT) ||
+                 (command->function == TR_FD_TRIGFUNC_FLYBY)))
+            {
+                continue;
+            }
+
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
@@ -362,6 +370,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     // heavy switch case, which is ordinary heavy trigger case with certain differences).
                     if(first_command && (activator != TR_ACTIVATOR_NORMAL) && trig_entity)
                     {
+                        int switch_anim_state = 0;
                         first_command = 0;
                         switch(activator)
                         {
@@ -372,21 +381,9 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     switch_anim_state = trig_entity->bf->animations.last_state;
                                     switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
                                     switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                }
-                                else
-                                {
-                                    // Ordinary type case (e.g. heavy switch).
-                                    switch_anim_state = entity_activator->bf->animations.last_state;
-                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                }
+                                    // Trigger activation mask is here filtered through activator's own mask.
+                                    switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
 
-                                // Trigger activation mask is here filtered through activator's own mask.
-                                switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
-
-                                if(action_type == TR_ACTIONTYPE_SWITCH)
-                                {
-                                    // Switch action type case.
                                     if((switch_anim_state == 0) && (switch_sectorstatus == 1))
                                     {
                                         switch_command = SWITCH_COMMAND_ACTIVATE;
@@ -407,12 +404,18 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     }
                                     else
                                     {
-                                        return;
+                                        only_continue_events = 1;
+                                        continue;
                                     }
                                 }
-                                else
+                                else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Ordinary type case (e.g. heavy switch).
+                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                    // Trigger activation mask is here filtered through activator's own mask.
+                                    switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
+
                                     if(switch_sectorstatus == 0)
                                     {
                                         Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
@@ -421,7 +424,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     }
                                     else
                                     {
-                                        return;
+                                        only_continue_events = 1;
+                                        continue;
                                     }
                                 }
                                 break;
@@ -433,7 +437,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 }
                                 else
                                 {
-                                    return;
+                                    only_continue_events = 1;
+                                    continue;
                                 }
                                 break;
 
@@ -444,7 +449,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 }
                                 else
                                 {
-                                    return;
+                                    only_continue_events = 1;
+                                    continue;
                                 }
                                 break;
                         };
@@ -463,12 +469,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                             if(activator == TR_ACTIVATOR_SWITCH)
                             {
-                                if(switch_command == SWITCH_COMMAND_DEACTIVATE)
-                                //if(action_type == TR_ACTIONTYPE_ANTI)
+                                //if(switch_command == SWITCH_COMMAND_DEACTIVATE)
+                                if(action_type == TR_ACTIONTYPE_ANTI)
                                 {
                                     Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0);
                                 }
-                                else if(switch_command == SWITCH_COMMAND_ACTIVATE)
+                                else //if(switch_command == SWITCH_COMMAND_ACTIVATE)
                                 {
                                     Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
                                 }
@@ -493,7 +499,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    //snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", command->operands);
+                    ///snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", command->operands);
+                    Entity_MoveToSink(entity_activator, command->operands);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPMAP:
@@ -502,7 +509,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     if(activator == TR_ACTIVATOR_SWITCH)
                     {
                         //snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", command->operands, command->operands);
-                        World_SetFlipMap(&engine_world, command->operands, entity_activator->trigger_layout, 1);
+                        World_SetFlipMap(&engine_world, command->operands, switch_mask, 1);
                         World_SetFlipState(&engine_world, command->operands, 1);
                     }
                     else
@@ -536,10 +543,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_PLAYTRACK:
-                    {
-                        uint16_t mask = (trigger->mask << 1) + trigger->once;
-                        Audio_StreamPlay(command->operands, mask);
-                    }
+                    Audio_StreamPlay(command->operands, (trigger->mask << 1) + trigger->once);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPEFFECT:
@@ -695,7 +699,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
         strcat(header, buf);    // Add condition to header.
 
         // Now parse operand chain for trigger function!
-        uint16_t argn = 0;
+        int argn = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             switch(command->function)
