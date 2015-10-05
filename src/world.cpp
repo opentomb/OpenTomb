@@ -365,94 +365,94 @@ uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, f
         skeletal_model_p model = World_GetModelByID(world, model_id);
         if(model != NULL)
         {
-            entity_p ent = World_GetEntityByID(world, id);
+            entity_p entity = World_GetEntityByID(world, id);
             RedBlackNode_p node = world->entity_tree->root;
 
-            if(ent != NULL)
+            if(entity != NULL)
             {
                 if(pos != NULL)
                 {
-                    vec3_copy(ent->transform+12, pos);
+                    vec3_copy(entity->transform+12, pos);
                 }
                 if(ang != NULL)
                 {
-                    vec3_copy(ent->angles, ang);
-                    Entity_UpdateTransform(ent);
+                    vec3_copy(entity->angles, ang);
+                    Entity_UpdateTransform(entity);
                 }
                 if(room_id < world->room_count)
                 {
-                    ent->self->room = world->rooms + room_id;
-                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                    entity->self->room = world->rooms + room_id;
+                    entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform+12);
                 }
                 else
                 {
-                    ent->self->room = NULL;
+                    entity->self->room = NULL;
                 }
 
-                return ent->id;
+                return entity->id;
             }
 
-            ent = Entity_Create();
+            entity = Entity_Create();
 
             if(id < 0)
             {
-                ent->id = 0;
+                entity->id = 0;
                 while(node != NULL)
                 {
-                    ent->id = *((uint32_t*)node->key) + 1;
+                    entity->id = *((uint32_t*)node->key) + 1;
                     node = node->right;
                 }
             }
             else
             {
-                ent->id = id;
+                entity->id = id;
             }
 
             if(pos != NULL)
             {
-                vec3_copy(ent->transform+12, pos);
+                vec3_copy(entity->transform+12, pos);
             }
             if(ang != NULL)
             {
-                vec3_copy(ent->angles, ang);
-                Entity_UpdateTransform(ent);
+                vec3_copy(entity->angles, ang);
+                Entity_UpdateTransform(entity);
             }
             if(room_id < world->room_count)
             {
-                ent->self->room = world->rooms + room_id;
-                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
+                entity->self->room = world->rooms + room_id;
+                entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
             }
             else
             {
-                ent->self->room = NULL;
+                entity->self->room = NULL;
             }
 
-            ent->type_flags     = ENTITY_TYPE_SPAWNED;
-            ent->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-            ent->trigger_layout = 0x00;
-            ent->OCB            = 0x00;
-            ent->timer          = 0.0;
+            entity->type_flags     = ENTITY_TYPE_SPAWNED;
+            entity->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            entity->trigger_layout = 0x00;
+            entity->OCB            = 0x00;
+            entity->timer          = 0.0;
 
-            ent->self->collision_type = COLLISION_NONE;
-            ent->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-            ent->move_type          = 0x0000;
-            ent->inertia_linear     = 0.0;
-            ent->inertia_angular[0] = 0.0;
-            ent->inertia_angular[1] = 0.0;
-            ent->move_type          = 0;
+            entity->self->collision_type = COLLISION_NONE;
+            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+            entity->move_type          = 0x0000;
+            entity->inertia_linear     = 0.0;
+            entity->inertia_angular[0] = 0.0;
+            entity->inertia_angular[1] = 0.0;
+            entity->move_type          = 0;
 
-            SSBoneFrame_CreateFromModel(ent->bf, model);
-            Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
-            Physics_GenRigidBody(ent->physics, ent->bf, ent->transform);
+            SSBoneFrame_CreateFromModel(entity->bf, model);
+            Entity_SetAnimation(entity, 0, 0);
+            Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
 
-            Entity_RebuildBV(ent);
-            if(ent->self->room != NULL)
+            Entity_RebuildBV(entity);
+            if(entity->self->room != NULL)
             {
-                Room_AddObject(ent->self->room, ent->self);
+                Room_AddObject(entity->self->room, entity->self);
             }
-            World_AddEntity(world, ent);
+            World_AddEntity(world, entity);
 
-            return ent->id;
+            return entity->id;
         }
     }
 

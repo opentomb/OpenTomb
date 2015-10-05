@@ -1665,8 +1665,6 @@
 		<Unit filename="src/engine.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/engine_bullet.cpp" />
-		<Unit filename="src/engine_physics.h" />
 		<Unit filename="src/engine_string.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -3212,6 +3210,8 @@
 		<Unit filename="src/ogg/vorbisfile.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/physics.h" />
+		<Unit filename="src/physics_bullet.cpp" />
 		<Unit filename="src/render/bordered_texture_atlas.cpp" />
 		<Unit filename="src/render/bordered_texture_atlas.h" />
 		<Unit filename="src/render/bsp_tree.cpp" />
