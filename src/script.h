@@ -12,7 +12,7 @@ struct lua_State;
 
 extern lua_State *engine_lua;
 
-
+void Script_LoadConstants(lua_State *lua);
 bool Script_LuaInit();
 void Script_LuaClearTasks();
 void Script_LuaRegisterFuncs(lua_State *lua);

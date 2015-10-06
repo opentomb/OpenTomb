@@ -101,8 +101,8 @@
 // Activation mask operation can be either XOR (for switch triggers) or OR (for any
 // other types of triggers).
 
-#define AMASK_OP_OR  0
-#define AMASK_OP_XOR 1
+#define TRIGGER_OP_OR  0
+#define TRIGGER_OP_XOR 1
 
 struct lua_State;
 

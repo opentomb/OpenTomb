@@ -58,20 +58,21 @@ struct physics_data_s;
 
 typedef struct entity_s
 {
-    uint32_t                            id;                 // Unique entity ID
-    int32_t                             OCB;                // Object code bit (since TR4)
-    uint8_t                             trigger_layout;     // Mask + once + event + sector status flags
-    uint8_t                             dir_flag;           // (move direction)
-    uint8_t                             was_rendered;       // render once per frame trigger
-    uint8_t                             was_rendered_lines; // same for debug lines
-    uint8_t                             no_fix_all;
+    uint32_t                            id;                     // Unique entity ID
+    int32_t                             OCB;                    // Object code bit (since TR4)
+    
+    uint32_t                            trigger_layout : 8;     // Mask + once + event + sector status flags
+    uint32_t                            dir_flag : 8;           // (move direction)
+    uint32_t                            move_type : 4;          // on floor / free fall / swim ....    
+    uint32_t                            was_rendered : 1;       // render once per frame trigger
+    uint32_t                            was_rendered_lines : 1; // same for debug lines
+    uint32_t                            no_fix_all : 1;
     
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks
     uint16_t                            type_flags;
     uint16_t                            state_flags;
 
-    uint16_t                            move_type;          // on floor / free fall / swim ....    
     float                               current_speed;      // current linear speed from animation info
     float                               speed_mult;
     float                               speed[3];           // speed of the entity XYZ

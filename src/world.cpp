@@ -829,7 +829,7 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
 
 int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
 {
-    flip_operation = (flip_operation > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
+    flip_operation = (flip_operation > TRIGGER_OP_XOR)?(TRIGGER_OP_XOR):(TRIGGER_OP_OR);
 
     if(flip_index >= engine_world.flip_count)
     {
@@ -837,7 +837,7 @@ int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint
         return 0;
     }
 
-    if(flip_operation == AMASK_OP_XOR)
+    if(flip_operation == TRIGGER_OP_XOR)
     {
         world->flip_map[flip_index] ^= flip_mask;
     }

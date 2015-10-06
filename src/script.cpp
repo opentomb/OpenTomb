@@ -37,6 +37,18 @@ extern "C" {
 #include "gui.h"
 #include "engine_string.h"
 
+// Response constants
+#define RESP_KILL           (0)
+#define RESP_VERT_COLLIDE   (1)
+#define RESP_HOR_COLLIDE    (2)
+#define RESP_SLIDE          (3)
+
+// Entity timer constants
+#define TICK_IDLE           (0)
+#define TICK_STOPPED        (1)
+#define TICK_ACTIVE         (2)
+
+
 /*
  * MISK
  */
@@ -213,7 +225,7 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
 {
     bool result = false;
 
-    if (lua)
+    if(lua)
     {
         int top = lua_gettop(lua);
         lua_getglobal(lua, "getOverridedSamplesInfo");
@@ -386,24 +398,6 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
     return result;
 }
 
-
-/**
- * set tbl[key]
- */
-int lua_SetScalarField(lua_State *lua, const char *key, float val)
-{
-    int top = lua_gettop(lua);
-
-    if (!lua_istable(lua, -1))
-    {
-        return 0;
-    }
-
-    lua_pushnumber(lua, val);
-    lua_setfield(lua, -2, key);
-    lua_settop(lua, top);
-    return 1;
-}
 
 /*
  * Gameplay functions
@@ -3819,18 +3813,22 @@ int lua_SetEntityResponse(lua_State * lua)
 
         switch(lua_tointeger(lua, 2))
         {
-            case 0:
+            case RESP_KILL:
                 ent->character->resp.kill = value;
                 break;
-            case 1:
+
+            case RESP_VERT_COLLIDE:
                 ent->character->resp.vertical_collide = value;
                 break;
-            case 2:
+
+            case RESP_HOR_COLLIDE:
                 ent->character->resp.horizontal_collide = value;
                 break;
-            case 3:
+
+            case RESP_SLIDE:
                 ent->character->resp.slide = value;
                 break;
+
             default:
                 break;
         }
@@ -4745,6 +4743,134 @@ static int lua_LuaPanic(lua_State *lua)
 }
 
 
+void Script_LoadConstants(lua_State *lua)
+{
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+
+        lua_pushinteger(lua, TR_I);
+        lua_setglobal(lua, "TR_I");
+        lua_pushinteger(lua, TR_I_DEMO);
+        lua_setglobal(lua, "TR_I_DEMO");
+        lua_pushinteger(lua, TR_I_UB);
+        lua_setglobal(lua, "TR_I_UB");
+        lua_pushinteger(lua, TR_II);
+        lua_setglobal(lua, "TR_II");
+        lua_pushinteger(lua, TR_II_DEMO);
+        lua_setglobal(lua, "TR_II_DEMO");
+        lua_pushinteger(lua, TR_III);
+        lua_setglobal(lua, "TR_III");
+        lua_pushinteger(lua, TR_IV);
+        lua_setglobal(lua, "TR_IV");
+        lua_pushinteger(lua, TR_IV_DEMO);
+        lua_setglobal(lua, "TR_IV_DEMO");
+        lua_pushinteger(lua, TR_V);
+        lua_setglobal(lua, "TR_V");
+        lua_pushinteger(lua, TR_UNKNOWN);
+        lua_setglobal(lua, "TR_UNKNOWN");
+
+        lua_pushinteger(lua, ENTITY_STATE_ENABLED);
+        lua_setglobal(lua, "ENTITY_STATE_ENABLED");
+        lua_pushinteger(lua, ENTITY_STATE_ACTIVE);
+        lua_setglobal(lua, "ENTITY_STATE_ACTIVE");
+        lua_pushinteger(lua, ENTITY_STATE_VISIBLE);
+        lua_setglobal(lua, "ENTITY_STATE_VISIBLE");
+
+        lua_pushinteger(lua, ENTITY_TYPE_GENERIC);
+        lua_setglobal(lua, "ENTITY_TYPE_GENERIC");
+        lua_pushinteger(lua, ENTITY_TYPE_INTERACTIVE);
+        lua_setglobal(lua, "ENTITY_TYPE_INTERACTIVE");
+        lua_pushinteger(lua, ENTITY_TYPE_TRIGGER_ACTIVATOR);
+        lua_setglobal(lua, "ENTITY_TYPE_TRIGGER_ACTIVATOR");
+        lua_pushinteger(lua, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+        lua_setglobal(lua, "ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR");
+        lua_pushinteger(lua, ENTITY_TYPE_PICKABLE);
+        lua_setglobal(lua, "ENTITY_TYPE_PICKABLE");
+        lua_pushinteger(lua, ENTITY_TYPE_TRAVERSE);
+        lua_setglobal(lua, "ENTITY_TYPE_TRAVERSE");
+        lua_pushinteger(lua, ENTITY_TYPE_TRAVERSE_FLOOR);
+        lua_setglobal(lua, "ENTITY_TYPE_TRAVERSE_FLOOR");
+        lua_pushinteger(lua, ENTITY_TYPE_DYNAMIC);
+        lua_setglobal(lua, "ENTITY_TYPE_DYNAMIC");
+        lua_pushinteger(lua, ENTITY_TYPE_ACTOR);
+        lua_setglobal(lua, "ENTITY_TYPE_ACTOR");
+
+        lua_pushinteger(lua, ENTITY_CALLBACK_NONE);
+        lua_setglobal(lua, "ENTITY_CALLBACK_NONE");
+        lua_pushinteger(lua, ENTITY_CALLBACK_ACTIVATE);
+        lua_setglobal(lua, "ENTITY_CALLBACK_ACTIVATE");
+        lua_pushinteger(lua, ENTITY_CALLBACK_DEACTIVATE);
+        lua_setglobal(lua, "ENTITY_CALLBACK_DEACTIVATE");
+        lua_pushinteger(lua, ENTITY_CALLBACK_COLLISION);
+        lua_setglobal(lua, "ENTITY_CALLBACK_COLLISION");
+        lua_pushinteger(lua, ENTITY_CALLBACK_STAND);
+        lua_setglobal(lua, "ENTITY_CALLBACK_STAND");
+        lua_pushinteger(lua, ENTITY_CALLBACK_HIT);
+        lua_setglobal(lua, "ENTITY_CALLBACK_HIT");
+
+
+        lua_pushinteger(lua, ANIM_NORMAL_CONTROL);
+        lua_setglobal(lua, "ANIM_NORMAL_CONTROL");
+        lua_pushinteger(lua, ANIM_LOOP_LAST_FRAME);
+        lua_setglobal(lua, "ANIM_LOOP_LAST_FRAME");
+        lua_pushinteger(lua, ANIM_LOCK);
+        lua_setglobal(lua, "ANIM_LOCK");
+
+        lua_pushinteger(lua, MOVE_STATIC_POS);
+        lua_setglobal(lua, "MOVE_STATIC_POS");
+        lua_pushinteger(lua, MOVE_KINEMATIC);
+        lua_setglobal(lua, "MOVE_KINEMATIC");
+        lua_pushinteger(lua, MOVE_ON_FLOOR);
+        lua_setglobal(lua, "MOVE_ON_FLOOR");
+        lua_pushinteger(lua, MOVE_WADE);
+        lua_setglobal(lua, "MOVE_WADE");
+        lua_pushinteger(lua, MOVE_QUICKSAND);
+        lua_setglobal(lua, "MOVE_QUICKSAND");
+        lua_pushinteger(lua, MOVE_ON_WATER);
+        lua_setglobal(lua, "MOVE_ON_WATER");
+        lua_pushinteger(lua, MOVE_UNDERWATER);
+        lua_setglobal(lua, "MOVE_UNDERWATER");
+        lua_pushinteger(lua, MOVE_FREE_FALLING);
+        lua_setglobal(lua, "MOVE_FREE_FALLING");
+        lua_pushinteger(lua, MOVE_CLIMBING);
+        lua_setglobal(lua, "MOVE_CLIMBING");
+        lua_pushinteger(lua, MOVE_MONKEYSWING);
+        lua_setglobal(lua, "MOVE_MONKEYSWING");
+        lua_pushinteger(lua, MOVE_WALLS_CLIMB);
+        lua_setglobal(lua, "MOVE_WALLS_CLIMB");
+        lua_pushinteger(lua, MOVE_DOZY);
+        lua_setglobal(lua, "MOVE_DOZY");
+
+        lua_pushinteger(lua, TRIGGER_OP_OR);
+        lua_setglobal(lua, "TRIGGER_OP_OR");
+        lua_pushinteger(lua, TRIGGER_OP_XOR);
+        lua_setglobal(lua, "TRIGGER_OP_XOR");
+
+        lua_pushinteger(lua, RESP_KILL);
+        lua_setglobal(lua, "RESP_KILL");
+        lua_pushinteger(lua, RESP_VERT_COLLIDE);
+        lua_setglobal(lua, "RESP_VERT_COLLIDE");
+        lua_pushinteger(lua, RESP_HOR_COLLIDE);
+        lua_setglobal(lua, "RESP_HOR_COLLIDE");
+        lua_pushinteger(lua, RESP_SLIDE);
+        lua_setglobal(lua, "RESP_SLIDE");
+
+        lua_pushinteger(lua, TICK_IDLE);
+        lua_setglobal(lua, "TICK_IDLE");
+        lua_pushinteger(lua, TICK_STOPPED);
+        lua_setglobal(lua, "TICK_STOPPED");
+        lua_pushinteger(lua, TICK_ACTIVE);
+        lua_setglobal(lua, "TICK_ACTIVE");
+
+        lua_pushnumber(lua, 1.0f / 60.0f);
+        lua_setglobal(lua, "FRAME_TIME");
+
+        lua_settop(lua, top);
+    }
+}
+
+
 bool Script_LuaInit()
 {
     engine_lua = luaL_newstate();
@@ -4752,6 +4878,7 @@ bool Script_LuaInit()
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
+        Script_LoadConstants(engine_lua);
         Script_LuaRegisterFuncs(engine_lua);
         lua_atpanic(engine_lua, lua_LuaPanic);
 

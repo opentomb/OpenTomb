@@ -75,7 +75,7 @@ void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
     // Apply trigger mask to entity mask.
 
-    if(trigger_op == AMASK_OP_XOR)
+    if(trigger_op == TRIGGER_OP_XOR)
     {
         mask ^= trigger_mask;       // Switch cases
     }
@@ -240,7 +240,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         int activator           = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
         int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
         int header_condition    = 1;                        // by default condition = true
-        int mask_mode           = AMASK_OP_OR;              // Activation mask by default.
+        int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
         int32_t ent_lookup_table[64];
 
         memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
@@ -278,13 +278,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 // Set activator and action type for now; conditions are linked with first item in operand chain.
                 activator = TR_ACTIVATOR_SWITCH;
                 action_type = TR_ACTIONTYPE_SWITCH;
-                mask_mode = AMASK_OP_XOR;
+                mask_mode = TRIGGER_OP_XOR;
                 break;
 
             case TR_FD_TRIGTYPE_HEAVYSWITCH:
                 // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
                 activator = TR_ACTIVATOR_SWITCH;
-                mask_mode = AMASK_OP_XOR;
+                mask_mode = TRIGGER_OP_XOR;
                 break;
 
             case TR_FD_TRIGTYPE_KEY:
@@ -595,7 +595,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
         int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
         int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
         int condition   = 0;                        // No condition by default.
-        int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
+        int mask_mode   = TRIGGER_OP_XOR;           // Activation mask by default.
 
         // Processed entities lookup array initialization.
 
@@ -635,13 +635,13 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                 // Set activator and action type for now; conditions are linked with first item in operand chain.
                 activator = TR_ACTIVATOR_SWITCH;
                 action_type = TR_ACTIONTYPE_SWITCH;
-                mask_mode = AMASK_OP_XOR;
+                mask_mode = TRIGGER_OP_XOR;
                 break;
 
             case TR_FD_TRIGTYPE_HEAVYSWITCH:
                 // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
                 activator = TR_ACTIVATOR_SWITCH;
-                mask_mode = AMASK_OP_XOR;
+                mask_mode = TRIGGER_OP_XOR;
                 break;
 
             case TR_FD_TRIGTYPE_KEY:
