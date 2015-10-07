@@ -1199,35 +1199,32 @@ int lua_SetEntityCollision(lua_State * lua)
 
 int lua_SetEntityCollisionFlags(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Warning("missed argument entity_id");
+        Con_Warning("expecting arguments (entity_id, collision_type, collision_shape)");
         return 0;
     }
 
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent)
+    uint32_t id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
     {
-        if((top >= 2) && !lua_isnil(lua, 2))
-        {
-            ent->self->collision_type = lua_tointeger(lua, 2);
-        }
-        if((top >= 3) && !lua_isnil(lua, 3))
-        {
-            ent->self->collision_type = lua_tointeger(lua, 3);
-        }
-
-        if(ent->self->collision_type & 0x0001)
-        {
-            Entity_EnableCollision(ent);
-        }
-        else
-        {
-            Entity_DisableCollision(ent);
-        }
+        Con_Warning("no entity with id = %d", id);
+        return 0;
     }
+
+    uint16_t collision_type = lua_tointeger(lua, 2);
+    uint16_t collision_shape = lua_tointeger(lua, 3);
+    if((ent->self->collision_type & 0x0001) && !(collision_type & 0x0001))
+    {
+        Entity_DisableCollision(ent);
+    }
+    else if(!(ent->self->collision_type & 0x0001) && (collision_type & 0x0001))
+    {
+        Entity_EnableCollision(ent);
+    }
+    ent->self->collision_type = collision_type;
+    ent->self->collision_shape = collision_shape;
 
     return 0;
 }

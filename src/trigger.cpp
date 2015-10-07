@@ -349,14 +349,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         {
             entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
 
-            /*if(only_continue_events &&
-               !((command->function == TR_FD_TRIGFUNC_UWCURRENT) ||
-                 (command->function == TR_FD_TRIGFUNC_FLIPEFFECT) ||
-                 (command->function == TR_FD_TRIGFUNC_FLYBY)))
-            {
-                continue;
-            }*/
-
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
@@ -441,7 +433,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 break;
 
                             case TR_ACTIVATOR_PICKUP:
-                                if((trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                if(!(trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
                                 {
                                     Entity_SetSectorStatus(trig_entity, 1);
                                 }
@@ -546,6 +538,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_SECRET:
                     Con_Printf("Secret found: %d", command->operands);
+                    Entity_SetSectorStatus(entity_activator, 1);
                     ///snprintf(buf, 128, "   findSecret(%d); \n", command->operands);
                     break;
 
@@ -567,7 +560,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             };
         }
 
-        if(/*activator == TR_ACTIVATOR_NORMAL*/trigger->once)
+        if(trigger->once)
         {
             Entity_SetSectorStatus(entity_activator, 1);
         }

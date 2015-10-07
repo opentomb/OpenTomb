@@ -1161,6 +1161,11 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 {
     btCollisionShape *cshape = NULL;
 
+    if(smesh->self->collision_type == COLLISION_TYPE_NONE)
+    {
+        return;
+    }
+
     smesh->physics_body = NULL;
     switch(smesh->self->collision_shape)
     {
