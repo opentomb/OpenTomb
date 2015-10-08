@@ -40,9 +40,9 @@ struct BaseMesh
 
     std::vector<render::TransparentPolygonReference> m_transparentPolygons;
 
-    btVector3 m_center; //!< geometry center of mesh
+    glm::vec3 m_center; //!< geometry center of mesh
     BoundingBox boundingBox; //!< AABB bounding volume
-    btScalar m_radius; //!< radius of the bounding sphere
+    glm::float_t m_radius; //!< radius of the bounding sphere
 #pragma pack(push,1)
     struct MatrixIndex
     {
@@ -72,7 +72,7 @@ struct BaseMesh
     size_t addVertex(const Vertex& v);
     size_t addAnimatedVertex(const Vertex& v);
     void polySortInMesh();
-    Vertex* findVertex(const btVector3& v);
+    Vertex* findVertex(const glm::vec3& v);
 };
 
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);

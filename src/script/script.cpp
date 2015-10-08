@@ -256,11 +256,7 @@ bool lua_NewSector(int id)
 std::tuple<float, float, float> lua_GetGravity()
 {
     btVector3 g = engine::bt_engine_dynamicsWorld->getGravity();
-    return std::tuple<float, float, float>{
-        g[0],
-            g[1],
-            g[2]
-    };
+    return std::make_tuple( g[0], g[1], g[2] );
 }
 
 void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
@@ -279,15 +275,14 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
         return false;
     }
 
-    btVector3 move = ent->applyGravity(time);
+    glm::vec3 move = ent->applyGravity(time);
 
     engine::BtEngineClosestRayResultCallback cb(ent.get());
-    btVector3 from, to;
-    from = ent->m_transform * ent->m_bf.center;
-    from[2] = ent->m_transform.getOrigin()[2];
-    to = from + move;
+    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.center, 1.0f));
+    from[2] = ent->m_transform[3][2];
+    glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
-    engine::bt_engine_dynamicsWorld->rayTest(from, to, cb);
+    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
 
     if(cb.hasHit())
     {
@@ -295,8 +290,8 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
 
         if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && dynamic_cast<world::Room*>(cont)))
         {
-            move.setInterpolate3(from, to, cb.m_closestHitFraction);
-            ent->m_transform.getOrigin()[2] = move[2];
+            move = glm::mix(from, to, cb.m_closestHitFraction);
+            ent->m_transform[3][2] = move[2];
 
             ent->updateRigidBody(true);
             return true;
@@ -309,7 +304,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     }
     else
     {
-        ent->m_transform.getOrigin() += move;
+        ent->m_transform[3] += glm::vec4(move, 0);
         ent->updateRigidBody(true);
         return false;
     }
@@ -836,7 +831,7 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
 
 uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
-    btVector3 position{ x,y,z }, ang{ ax,ay,az };
+    glm::vec3 position{ x,y,z }, ang{ ax,ay,az };
 
     uint32_t id = engine::engine_world.spawnEntity(model_id, room_id, &position, &ang, ov_id.is<lua::Integer>() ? ov_id : -1);
     if(id == 0xFFFFFFFF)
@@ -880,9 +875,9 @@ std::tuple<float, float, float> lua_GetEntityVector(int id1, int id2)
 
     return std::tuple<float, float, float>
     {
-        e2->m_transform.getOrigin()[0] - e1->m_transform.getOrigin()[0],
-            e2->m_transform.getOrigin()[1] - e1->m_transform.getOrigin()[1],
-            e2->m_transform.getOrigin()[2] - e1->m_transform.getOrigin()[2]
+        e2->m_transform[3][0] - e1->m_transform[3][0],
+            e2->m_transform[3][1] - e1->m_transform[3][1],
+            e2->m_transform[3][2] - e1->m_transform[3][2]
     };
 }
 
@@ -919,7 +914,7 @@ float lua_GetEntityDirDot(int id1, int id2)
         return std::numeric_limits<float>::max();
     }
 
-    return e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1));
+    return glm::dot(e1->m_transform[1], e2->m_transform[1]);
 }
 
 bool lua_IsInRoom(int id)
@@ -954,9 +949,9 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
 
     return std::make_tuple
     (
-        ent->m_transform.getOrigin()[0],
-            ent->m_transform.getOrigin()[1],
-            ent->m_transform.getOrigin()[2],
+        ent->m_transform[3][0],
+            ent->m_transform[3][1],
+            ent->m_transform[3][2],
             ent->m_angles[0],
             ent->m_angles[1],
             ent->m_angles[2],
@@ -1010,9 +1005,9 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
         return{};
     }
 
-    auto next_pos = ent->m_transform.getOrigin() + (dx * ent->m_transform.getBasis().getColumn(0) + dy * ent->m_transform.getBasis().getColumn(1) + dz * ent->m_transform.getBasis().getColumn(2));
+    glm::vec3 next_pos = glm::vec3(ent->m_transform[3] + (dx * ent->m_transform[0] + dy * ent->m_transform[1] + dz * ent->m_transform[2]));
 
-    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
     world::RoomSector* next_sector = ent->getRoom()->getSectorRaw(next_pos);
 
     curr_sector = curr_sector->checkPortalPointer();
@@ -1038,14 +1033,14 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
         return 0;
     }
 
-    auto position = ent->m_transform.getOrigin();
+    auto position = ent->m_transform[3];
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        position += dx.to<btScalar>() * ent->m_transform.getBasis().getColumn(0) + dy.to<btScalar>() * ent->m_transform.getBasis().getColumn(1) + dz.to<btScalar>() * ent->m_transform.getBasis().getColumn(2);
+        position += dx.to<btScalar>() * ent->m_transform[0] + dy.to<btScalar>() * ent->m_transform[1] + dz.to<btScalar>() * ent->m_transform[2];
 
-    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(position);
+    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
     curr_sector = curr_sector->checkPortalPointer();
-    btVector3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
+    glm::vec3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
         ? curr_sector->getCeilingPoint()
         : curr_sector->getFloorPoint();
 
@@ -1060,7 +1055,7 @@ void lua_SetEntityPosition(int id, float x, float y, float z, lua::Value ax, lua
         Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
-    ent->m_transform.getOrigin() = { x,y,z };
+    ent->m_transform[3] = { x,y,z,0 };
     if(ax.is<lua::Number>() && ay.is<lua::Number>() && az.is<lua::Number>())
         ent->m_angles = { ax,ay,az };
     ent->updateTransform();
@@ -1104,7 +1099,7 @@ void lua_SetEntityScaling(int id, float x, float y, float z)
                 if(ent->m_bt.bt_body[i])
                 {
                     engine::bt_engine_dynamicsWorld->removeRigidBody(ent->m_bt.bt_body[i].get());
-                    ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(ent->m_scaling);
+                    ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
                     engine::bt_engine_dynamicsWorld->addRigidBody(ent->m_bt.bt_body[i].get());
 
                     ent->m_bt.bt_body[i]->activate();
@@ -1124,9 +1119,9 @@ void lua_MoveEntityGlobal(int id, float x, float y, float z)
         Console::instance().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
-    ent->m_transform.getOrigin()[0] += x;
-    ent->m_transform.getOrigin()[1] += y;
-    ent->m_transform.getOrigin()[2] += z;
+    ent->m_transform[3][0] += x;
+    ent->m_transform[3][1] += y;
+    ent->m_transform[3][2] += z;
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1142,7 +1137,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
         return;
     }
 
-    ent->m_transform.getOrigin() += ent->m_transform.getBasis() * btVector3(dx, dy, dz);
+    ent->m_transform[3] += ent->m_transform[3] * glm::vec4(dx, dy, dz, 0);
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1156,11 +1151,11 @@ void lua_MoveEntityToSink(int id, int sink_index)
         return;
     world::StatCameraSink* sink = &engine::engine_world.cameras_sinks[sink_index];
 
-    btVector3 ent_pos;  ent_pos[0] = ent->m_transform.getOrigin()[0];
-    ent_pos[1] = ent->m_transform.getOrigin()[1];
-    ent_pos[2] = ent->m_transform.getOrigin()[2];
+    glm::vec3 ent_pos;  ent_pos[0] = ent->m_transform[3][0];
+    ent_pos[1] = ent->m_transform[3][1];
+    ent_pos[2] = ent->m_transform[3][2];
 
-    btVector3 sink_pos; sink_pos[0] = sink->x;
+    glm::vec3 sink_pos; sink_pos[0] = sink->x;
     sink_pos[1] = sink->y;
     sink_pos[2] = sink->z + 256.0f;
 
@@ -1175,14 +1170,15 @@ void lua_MoveEntityToSink(int id, int sink_index)
         sink_pos[2] = ent_pos[2];
     }
 
-    btScalar dist = btDistance(ent_pos, sink_pos);
-    if(dist == 0.0) dist = 1.0; // Prevents division by zero.
+    glm::float_t dist = glm::distance(ent_pos, sink_pos);
+    if(dist == 0.0)
+        dist = 1.0; // Prevents division by zero.
 
-    btVector3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
+    glm::vec3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
 
-    ent->m_transform.getOrigin()[0] += speed[0];
-    ent->m_transform.getOrigin()[1] += speed[1];
-    ent->m_transform.getOrigin()[2] += speed[2] * 16.0f;
+    ent->m_transform[3][0] += speed[0];
+    ent->m_transform[3][1] += speed[1];
+    ent->m_transform[3][2] += speed[2] * 16.0f;
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1193,23 +1189,24 @@ void lua_MoveEntityToEntity(int id1, int id2, float speed_mult, lua::Value ignor
     std::shared_ptr<world::Entity> ent1 = engine::engine_world.getEntityByID(id1);
     std::shared_ptr<world::Entity> ent2 = engine::engine_world.getEntityByID(id2);
 
-    btVector3 ent1_pos; ent1_pos[0] = ent1->m_transform.getOrigin()[0];
-    ent1_pos[1] = ent1->m_transform.getOrigin()[1];
-    ent1_pos[2] = ent1->m_transform.getOrigin()[2];
+    glm::vec3 ent1_pos; ent1_pos[0] = ent1->m_transform[3][0];
+    ent1_pos[1] = ent1->m_transform[3][1];
+    ent1_pos[2] = ent1->m_transform[3][2];
 
-    btVector3 ent2_pos; ent2_pos[0] = ent2->m_transform.getOrigin()[0];
-    ent2_pos[1] = ent2->m_transform.getOrigin()[1];
-    ent2_pos[2] = ent2->m_transform.getOrigin()[2];
+    glm::vec3 ent2_pos; ent2_pos[0] = ent2->m_transform[3][0];
+    ent2_pos[1] = ent2->m_transform[3][1];
+    ent2_pos[2] = ent2->m_transform[3][2];
 
-    btScalar dist = btDistance(ent1_pos, ent2_pos);
-    if(dist == 0.0) dist = 1.0; // Prevents division by zero.
+    glm::float_t dist = glm::distance(ent1_pos, ent2_pos);
+    if(dist == 0.0)
+        dist = 1.0; // Prevents division by zero.
 
-    btVector3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
+    glm::vec3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
 
-    ent1->m_transform.getOrigin()[0] += speed[0];
-    ent1->m_transform.getOrigin()[1] += speed[1];
+    ent1->m_transform[3][0] += speed[0];
+    ent1->m_transform[3][1] += speed[1];
     if(!ignore_z.is<lua::Boolean>() || !static_cast<bool>(ignore_z))
-        ent1->m_transform.getOrigin()[2] += speed[2];
+        ent1->m_transform[3][2] += speed[2];
     ent1->updatePlatformPreStep();
     ent1->updateRigidBody(true);
 }
@@ -1225,9 +1222,9 @@ void lua_RotateEntity(int id, float rx, lua::Value ry, lua::Value rz)
     else
     {
         if(!ry.is<lua::Number>() || !rz.is<lua::Number>())
-            ent->m_angles += {rx, 0, 0};
+            ent->m_angles += glm::vec3{rx, 0, 0};
         else
-            ent->m_angles += {rx, ry, rz};
+            ent->m_angles += glm::vec3{rx, ry.toFloat(), rz.toFloat()};
 
         ent->updateTransform();
         ent->updateRigidBody(true);
@@ -1249,31 +1246,32 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
     }
     else
     {
-        btVector3 ent1_pos = ent1->m_transform.getOrigin();
-        btVector3 ent2_pos = ent2->m_transform.getOrigin();
-        btVector3 facing   = (ent1_pos - ent2_pos);
+        glm::vec3 ent1_pos( ent1->m_transform[3] );
+        glm::vec3 ent2_pos( ent2->m_transform[3] );
+        glm::vec3 facing(ent1_pos - ent2_pos);
 
-        btScalar *targ_angle = nullptr;
-        btScalar  theta = 0;
+        glm::float_t *targ_angle = nullptr;
+        glm::float_t  theta = 0;
 
         switch(axis)
         {
             case 0:
-                targ_angle = ent1->m_angles + 0;
-                theta      = btAtan2(-facing.x(), facing.y());
+                targ_angle = &ent1->m_angles.x;
+                theta      = std::atan2(-facing.x, facing.y);
                 break;
             case 1:
-                targ_angle = ent1->m_angles + 1;
-                theta      = btAtan2(facing.z(), facing.y());
+                targ_angle = &ent1->m_angles.y;
+                theta      = std::atan2(facing.z, facing.y);
                 break;
             case 2:
-                targ_angle = ent1->m_angles + 2;
-                theta      = btAtan2(facing.x(), facing.z());
+                targ_angle = &ent1->m_angles.z;
+                theta      = std::atan2(facing.x, facing.z);
                 break;
         }
 
-        theta = btDegrees(theta);
-        if(add_angle_.is<lua::Number>()) theta += static_cast<btScalar>(add_angle_);
+        theta = theta * util::DegPerRad;
+        if(add_angle_.is<lua::Number>())
+            theta += static_cast<btScalar>(add_angle_);
 
         btScalar delta = *targ_angle - theta;
 
@@ -1334,22 +1332,21 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
     std::shared_ptr<world::Entity> ent1 = engine::engine_world.getEntityByID(id1);
     std::shared_ptr<world::Entity> ent2 = engine::engine_world.getEntityByID(id2);
 
-    if((!ent1) || (!ent2))
+    if(!ent1 || !ent2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
         return 0;
     }
-    else
-    {
-        btVector3 ent1_pos = ent1->m_transform.getOrigin();
-        btVector3 ent2_pos = ent2->m_transform.getOrigin();
-        btVector3 facing   = (ent2_pos - ent1_pos);
 
-        btScalar theta = btDegrees(btAtan2(-facing.x(), facing.y()));
-        if(add_angle_.is<lua::Number>()) theta += static_cast<btScalar>(add_angle_);
+    glm::vec3 ent1_pos(ent1->m_transform[3]);
+    glm::vec3 ent2_pos(ent2->m_transform[3]);
+    glm::vec3 facing(ent2_pos - ent1_pos);
 
-        return util::wrapAngle(ent2->m_angles[0] - theta);
-    }
+    btScalar theta = std::atan2(-facing.x, facing.y)*util::DegPerRad;
+    if(add_angle_.is<lua::Number>())
+        theta += static_cast<btScalar>(add_angle_);
+
+    return util::wrapAngle(ent2->m_angles[0] - theta);
 }
 
 
@@ -1381,7 +1378,7 @@ float lua_GetEntitySpeedLinear(int id)
         return 0;
     }
 
-    return ent->m_speed.length();
+    return glm::length(ent->m_speed);
 }
 
 void lua_SetEntitySpeed(int id, float vx, lua::Value vy, lua::Value vz)
@@ -1503,22 +1500,21 @@ bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua:
         return false;
     }
 
-    float r;
+    glm::float_t r;
     if(!rv.is<lua::Number>() || rv<0)
         r = e2->m_activationRadius;
     else
         r = rv;
-    r *= r;
 
-    btVector3 offset;
+    glm::vec3 offset;
     if(ofsX.is<lua::Number>() && ofsY.is<lua::Number>() && ofsZ.is<lua::Number>())
         offset = { ofsX,ofsY,ofsZ };
     else
         offset = e2->m_activationOffset;
 
-    auto position = e2->m_transform * offset;
-    if((e1->m_transform.getBasis().getColumn(1).dot(e2->m_transform.getBasis().getColumn(1)) > 0.75) &&
-       ((e1->m_transform.getOrigin() - position).length2() < r))
+    glm::vec3 position = glm::vec3(e2->m_transform * glm::vec4(offset, 1.0f));
+    if(glm::dot(e1->m_transform[1], e2->m_transform[1]) > 0.75 &&
+       (glm::distance(glm::vec3(e1->m_transform[3]), position) < r))
     {
         return true;
     }
@@ -1597,12 +1593,11 @@ std::tuple<int, bool, bool> lua_GetEntityTriggerLayout(int id)
     if(ent == nullptr)
         return{};   // No entity found - return.
 
-    return std::tuple<int, bool, bool>
-    {
+    return std::make_tuple(
         ent->m_triggerLayout & ENTITY_TLAYOUT_MASK,   // mask
-            (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT), // event
-            (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK)   // lock
-    };
+        (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) != 0, // event
+        (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) != 0   // lock
+    );
 }
 
 void lua_SetEntityTriggerLayout(int id, int mask, lua::Value eventOrLayout, lua::Value lock)
@@ -2239,9 +2234,9 @@ int lua_SetEntityBodyMass(lua_State *lua)
                 ent->m_bt.bt_body[i]->updateInertiaTensor();
                 ent->m_bt.bt_body[i]->clearForces();
 
-                ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(ent->m_scaling);
+                ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
 
-                btVector3 factor = (mass > 0.0) ? (btVector3(1.0, 1.0, 1.0)) : (btVector3(0.0, 0.0, 0.0));
+                btVector3 factor = (mass > 0.0) ? btVector3(1.0, 1.0, 1.0) : btVector3(0.0, 0.0, 0.0);
                 ent->m_bt.bt_body[i]->setLinearFactor(factor);
                 ent->m_bt.bt_body[i]->setAngularFactor(factor);
 
@@ -2359,9 +2354,9 @@ void lua_CamShake(float power, float time, lua::Value id)
     {
         std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-        btVector3 cam_pos = render::renderer.camera()->getPosition();
+        glm::vec3 cam_pos = render::renderer.camera()->getPosition();
 
-        btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
+        glm::float_t dist = glm::distance(glm::vec3(ent->m_transform[3]), cam_pos);
         dist = (dist > world::MaxShakeDistance) ? (0) : (1.0f - (dist / world::MaxShakeDistance));
 
         power *= dist;

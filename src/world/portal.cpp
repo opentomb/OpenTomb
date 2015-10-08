@@ -3,8 +3,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <LinearMath/btVector3.h>
-
 #include "util/vmath.h"
 #include "world/core/polygon.h"
 
@@ -15,10 +13,10 @@
 namespace world
 {
 
-void Portal::move(const btVector3& mv)
+void Portal::move(const glm::vec3& mv)
 {
     centre += mv;
-    for(btVector3& v : vertices)
+    for(glm::vec3& v : vertices)
         v += mv;
     normal.moveTo(vertices[0]);
 }
@@ -28,9 +26,9 @@ void Portal::move(const btVector3& mv)
  * @param ray ray directionа
  * @param dot point of ray-plane intersection
  */
-bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
+bool Portal::rayIntersect(const glm::vec3& ray, const glm::vec3& rayStart)
 {
-    if(std::abs(normal.normal.dot(ray)) < core::SplitEpsilon)
+    if(std::abs(glm::dot(normal.normal, ray)) < core::SplitEpsilon)
     {
         // the plane is nearly parallel to the ray
         return false;
@@ -42,22 +40,22 @@ bool Portal::rayIntersect(const btVector3& ray, const btVector3& rayStart)
     }
 
     // The vector that does not change for the entire polygon
-    const btVector3 T = rayStart - vertices[0];
+    const glm::vec3 T = rayStart - vertices[0];
 
-    btVector3 edge = vertices[1] - vertices[0];
+    glm::vec3 edge = vertices[1] - vertices[0];
     // Bypass polygon fan, one of the vectors remains unchanged
     for(size_t i = 2; i < vertices.size(); i++)
     {
         // PREV
-        btVector3 prevEdge = edge;
+        glm::vec3 prevEdge = edge;
         edge = vertices[i] - vertices[0];
 
-        btVector3 P = ray.cross(edge);
-        btVector3 Q = T.cross(prevEdge);
+        glm::vec3 P = glm::cross(ray, edge);
+        glm::vec3 Q = glm::cross(T, prevEdge);
 
-        btScalar t = P.dot(prevEdge);
-        btScalar u = P.dot(T) / t;
-        btScalar v = Q.dot(ray) / t;
+        glm::float_t t = glm::dot(P, prevEdge);
+        glm::float_t u = glm::dot(P, T) / t;
+        glm::float_t v = glm::dot(Q, ray) / t;
         t = 1.0f - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (t <= 1.0) && (t >= 0.0))
         {

@@ -3,166 +3,84 @@
 #include "util/vmath.h"
 #include "world/core/frustum.h"
 
-#include <cassert>
 #include <cmath>
+
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace world
 {
-
 void Camera::apply()
 {
-    m_glProjMat[0][0] = m_f / m_aspect;
-    m_glProjMat[0][1] = 0.0;
-    m_glProjMat[0][2] = 0.0;
-    m_glProjMat[0][3] = 0.0;
+    m_glProjMat = glm::perspectiveFov(m_fov * util::RadPerDeg, m_width, m_height, m_distNear, m_distFar);
 
-    m_glProjMat[1][0] = 0.0;
-    m_glProjMat[1][1] = m_f;
-    m_glProjMat[1][2] = 0.0;
-    m_glProjMat[1][3] = 0.0;
-
-    m_glProjMat[2][0] = 0.0;
-    m_glProjMat[2][1] = 0.0;
-    m_glProjMat[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
-    m_glProjMat[2][3] = -1.0;
-
-    m_glProjMat[3][0] = 0.0;
-    m_glProjMat[3][1] = 0.0;
-    m_glProjMat[3][2] = 2.0f * m_distNear * m_distFar / (m_distNear - m_distFar);
-    m_glProjMat[3][3] = 0.0;
-
-    m_glViewMat[0][0] = m_rightDir[0];
-    m_glViewMat[1][0] = m_rightDir[1];
-    m_glViewMat[2][0] = m_rightDir[2];
-
-    m_glViewMat[0][1] = m_upDir[0];
-    m_glViewMat[1][1] = m_upDir[1];
-    m_glViewMat[2][1] = m_upDir[2];
-
-    m_glViewMat[0][2] = -m_viewDir[0];
-    m_glViewMat[1][2] = -m_viewDir[1];
-    m_glViewMat[2][2] = -m_viewDir[2];
-
-    m_glViewMat[3][0] = -(m_glViewMat[0][0] * m_pos[0] + m_glViewMat[1][0] * m_pos[1] + m_glViewMat[2][0] * m_pos[2]);
-    m_glViewMat[3][1] = -(m_glViewMat[0][1] * m_pos[0] + m_glViewMat[1][1] * m_pos[1] + m_glViewMat[2][1] * m_pos[2]);
-    m_glViewMat[3][2] = -(m_glViewMat[0][2] * m_pos[0] + m_glViewMat[1][2] * m_pos[1] + m_glViewMat[2][2] * m_pos[2]);
-
-    m_glViewMat[0][3] = 0.0;
-    m_glViewMat[1][3] = 0.0;
-    m_glViewMat[2][3] = 0.0;
-    m_glViewMat[3][3] = 1.0;
+    m_glViewMat = glm::lookAt(m_pos, m_pos+getViewDir(), getUpDir());
 
     m_glViewProjMat = m_glProjMat * m_glViewMat;
 }
 
-void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
+void Camera::setFovAspect(glm::float_t fov, glm::float_t aspect)
 {
     m_fov = fov;
-    m_aspect = aspect;
-    m_f = std::tan(m_fov * util::RadPerDeg / 2);
-    m_height = 2.0f * m_distNear * m_f;
+    m_height = 2.0f * m_distNear * std::tan(m_fov * util::RadPerDeg / 2);
     m_width = m_height * aspect;
-    m_f = 1.0f / m_f;
 }
 
-void Camera::moveAlong(GLfloat dist)
+void Camera::moveAlong(glm::float_t dist)
 {
-    m_pos += m_viewDir * dist;
+    m_pos += getViewDir() * dist;
 }
 
-void Camera::moveStrafe(GLfloat dist)
+void Camera::moveStrafe(glm::float_t dist)
 {
-    m_pos += m_rightDir * dist;
+    m_pos += getRightDir() * dist;
 }
 
-void Camera::moveVertical(GLfloat dist)
+void Camera::moveVertical(glm::float_t dist)
 {
-    m_pos += m_upDir * dist;
+    m_pos += getUpDir() * dist;
 }
 
-void Camera::shake(GLfloat power, GLfloat time)
+void Camera::shake(glm::float_t power, glm::float_t time)
 {
     m_shakeValue = power;
     m_shakeTime = time;
 }
 
-void Camera::deltaRotation(const btVector3& angles) //angles = {OX, OY, OZ}
+void Camera::setRotation(const glm::vec3& angles) //angles = {OX, OY, OZ}
 {
-    m_ang += angles;
-
-    // Roll
-    m_upDir = m_upDir.rotate(m_viewDir, angles.z());
-    // Pitch
-    m_viewDir = m_viewDir.rotate(m_upDir, angles.x());
-    // Yaw
-    m_viewDir = m_viewDir.rotate(m_rightDir, angles.y());
-    m_upDir = m_viewDir.rotate(m_rightDir, angles.y());
-}
-
-void Camera::setRotation(const btVector3& angles) //angles = {OX, OY, OZ}
-{
-    m_ang = angles;
-
-    m_upDir = { 0,0,1 };
-
-    m_viewDir = btVector3(0, 1, 0).rotate(m_upDir, angles.x());
-    m_rightDir = btVector3(1, 0, 0).rotate(m_upDir, angles.x());
-
-    m_upDir = m_upDir.rotate(m_rightDir, angles.y());
-    m_viewDir = m_viewDir.rotate(m_rightDir, angles.y());
-
-    m_rightDir = m_rightDir.rotate(m_viewDir, angles.z());
-    m_upDir = m_upDir.rotate(m_viewDir, angles.z());
+    glm::quat q = glm::rotate(glm::quat(1, 0, 0, 0), angles.z, { 0,1,0 });
+    q *= glm::rotate(glm::quat(1, 0, 0, 0), angles.x, { 0,0,1 });
+    q *= glm::rotate(glm::quat(1, 0, 0, 0), angles.y, { 1,0,0 });
+    m_axes = glm::mat3_cast(q);
 }
 
 void Camera::recalcClipPlanes()
 {
-    const btVector3 nearViewPoint = m_viewDir * m_distNear;
+    frustum.planes.resize(6);
 
-    //==========================================================================
+    // Extract frustum planes from matrix
+    // Planes are in format: normal(xyz), offset(w)
 
-    frustum.norm.assign(m_viewDir, m_pos); // Main clipping plane (we don't draw things beyond us).
+    auto matr = glm::transpose(m_glViewProjMat);
 
-    //==========================================================================
-
-    //   Lower clipping plane vector
-    btVector3 LU;
-    LU = nearViewPoint - m_height / 2.0f * m_upDir;
-    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
-
-    //   Upper clipping plane vector
-    LU = nearViewPoint + m_height / 2.0f * m_upDir;
-    m_clipPlanes[2].assign(m_rightDir, LU, m_pos);
-
-    //==========================================================================
-
-    //   Left clipping plane vector
-    LU = nearViewPoint - m_width / 2.0f * m_rightDir;
-    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
-
-    //   Right clipping plane vector
-    LU = nearViewPoint + m_width / 2.0f * m_rightDir;
-    m_clipPlanes[2].assign(m_upDir, LU, m_pos);
-
-    auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
-
-    // Ensure that normals point outside
-    for(int i = 0; i < 4; ++i)
-        if(m_clipPlanes[i].distance(worldNearViewPoint) < 0.0)
-            m_clipPlanes[i].mirrorNormal();
-
-    assert(!frustum.vertices.empty());
-    frustum.vertices[0] = m_pos + m_viewDir;
+    // right
+    frustum.planes[0].assign(matr[3] - matr[0]);
+    // left
+    frustum.planes[1].assign(matr[3] + matr[0]);
+    // bottom
+    frustum.planes[2].assign(matr[3] + matr[1]);
+    // top
+    frustum.planes[3].assign(matr[3] - matr[1]);
+    // far
+    frustum.planes[4].assign(matr[3] - matr[2]);
+    // near
+    frustum.planes[5].assign(matr[3] + matr[2]);
 }
 
 Camera::Camera()
 {
-    m_f = 1.0f / std::tan(m_fov * util::RadPerDeg / 2);
-    m_height = 2.0f * m_distNear / m_f;
-    m_width = m_height * m_aspect;
+    m_width = m_height = 2.0f * m_distNear * std::tan(m_fov * util::RadPerDeg / 2);
 
-    frustum.vertices.resize(3, { 0,0,0 });
-    frustum.planes.assign(m_clipPlanes + 0, m_clipPlanes + 4);
+    recalcClipPlanes();
 }
-
 } // namespace world

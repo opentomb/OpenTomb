@@ -168,7 +168,7 @@ void initConfig(const char *filename);
 // Core system routines - display and tick.
 
 void display();
-void frame(btScalar time);
+void frame(float time);
 
 // Resize event.
 // Nominal values are used e.g. to set the size for the console.

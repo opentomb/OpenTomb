@@ -247,10 +247,10 @@ enum class TweenType
 
 struct SectorTween
 {
-    btVector3                   floor_corners[4];
+    glm::vec3                   floor_corners[4];
     TweenType                   floor_tween_type = TweenType::None;
 
-    btVector3                   ceiling_corners[4];
+    glm::vec3                   ceiling_corners[4];
     TweenType                   ceiling_tween_type = TweenType::None;
 };
 
@@ -258,7 +258,7 @@ struct SectorTween
 struct RoomSprite
 {
     core::Sprite* sprite;
-    btVector3 pos;
+    glm::vec3 pos;
     bool was_rendered;
 };
 
@@ -318,17 +318,17 @@ struct World
     void prepare();
     void empty();
 
-    uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
+    uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3 *pos, const glm::vec3 *ang, int32_t id);
     bool     deleteEntity(uint32_t id);
 
     std::shared_ptr<Entity>    getEntityByID(uint32_t id);
     std::shared_ptr<Character> getCharacterByID(uint32_t id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
-    std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
+    std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos);
     std::shared_ptr<Room> getByID(unsigned int ID);
 };
 
-Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
+Room *Room_FindPosCogerrence(const glm::vec3& new_pos, Room *room);
 
 } // namespace world

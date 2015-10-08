@@ -2,14 +2,10 @@
 
 #include <cmath>
 
-#include <LinearMath/btScalar.h>
-
 #include "engine/engine.h"
-#include "frustum.h"
 #include "util/vmath.h"
 #include "world/core/polygon.h"
 #include "world/entity.h"
-#include "world/room.h"
 
 namespace world
 {
@@ -18,9 +14,9 @@ namespace core
 
 void OrientedBoundingBox::rebuild(const BoundingBox& boundingBox)
 {
-    extent = boundingBox.getDiameter() / 2;
+    extent = boundingBox.getDiameter() * 0.5f;
     base_centre = boundingBox.getCenter();
-    radius = extent.length();
+    radius = glm::length(extent);
 
     Polygon *p = base_polygons.data();
     // UP
@@ -145,7 +141,7 @@ void OrientedBoundingBox::doTransform()
         {
             polygons[i].copyTransformed(base_polygons[i], *transform);
         }
-        center = *transform * base_centre;
+        center = glm::vec3(*transform * glm::vec4(base_centre, 1.0f));
     }
     else
     {
@@ -160,28 +156,28 @@ void OrientedBoundingBox::doTransform()
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-bool testOverlap(const Entity& e1, const Entity& e2, btScalar overlap)
+bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
 {
     //translation, in parent frame
     auto v = e2.m_obb.center - e1.m_obb.center;
     //translation, in A's frame
-    btVector3 T = e1.m_transform.getBasis() * v;
+    glm::vec3 T = glm::vec3(e1.m_transform * glm::vec4(v, 1.0f));
 
-    btVector3 a = e1.m_obb.extent * overlap;
-    btVector3 b = e2.m_obb.extent * overlap;
+    glm::vec3 a = e1.m_obb.extent * overlap;
+    glm::vec3 b = e2.m_obb.extent * overlap;
 
     //B's basis with respect to A's local frame
-    btScalar R[3][3];
-    btScalar ra, rb, t;
+    glm::float_t R[3][3];
+    glm::float_t ra, rb, t;
 
     //calculate rotation matrix
     for(int i = 0; i < 3; i++)
     {
         for(int k = 0; k < 3; k++)
         {
-            const btVector3 e1b = e1.m_transform.getBasis().getColumn(i);
-            const btVector3 e2b = e2.m_transform.getBasis().getColumn(k);
-            R[i][k] = e1b.dot(e2b);
+            const glm::vec4 e1b = e1.m_transform[i];
+            const glm::vec4 e2b = e2.m_transform[k];
+            R[i][k] = glm::dot(e1b, e2b);
         }
     }
 
@@ -305,44 +301,8 @@ bool testOverlap(const Entity& e1, const Entity& e2, btScalar overlap)
         return false;
     }
 
-    /*no separating axis found,
-    the two boxes overlap */
+    /*no separating axis found, the two boxes overlap */
     return true;
-}
-
-bool OrientedBoundingBox::isVisibleInRoom(const Room& room, const Camera& cam) const
-{
-    if(room.frustum.empty())                                                    // There's no active frustum in room, using camera frustum instead.
-    {
-        bool ins = true;                                                        // Let's assume camera is inside OBB.
-        for(const Polygon& p : polygons)
-        {
-            auto t = p.plane.distance(engine::engine_camera.getPosition());
-            if((t > 0.0) && engine::engine_camera.frustum.isPolyVisible(p, cam))
-            {
-                return true;
-            }
-            if(ins && (t > 0.0))                                                // Testing if POV is inside OBB or not.
-            {
-                ins = false;                                                    // Even single failed test means that camera is outside OBB.
-            }
-        }
-        return ins;                                                             // If camera is inside object's OBB, then object is visible.
-    }
-
-    for(const auto& frustum : room.frustum)
-    {
-        for(const Polygon& p : polygons)
-        {
-            auto t = p.plane.distance(cam.getPosition());
-            if((t > 0.0) && frustum->isPolyVisible(p, cam))
-            {
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 } // namespace core

@@ -141,6 +141,6 @@ void drawInventory();
 bool update();
 void resize();  // Called every resize event.
 
-extern util::matrix4 guiProjectionMatrix;
+extern glm::mat4 guiProjectionMatrix;
 
 } // namespace gui

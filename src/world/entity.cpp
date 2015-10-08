@@ -7,6 +7,10 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+#include <glm/gtx/matrix_interpolation.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
 #include "LuaState.h"
 
 #include "character_controller.h"
@@ -42,19 +46,19 @@ void Entity::createGhosts()
     m_bt.last_collisions.clear();
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
-        btVector3 box = GhostVolumeCollisionCoefficient * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
-        m_bt.shapes.emplace_back(new btBoxShape(box));
+        glm::vec3 box = GhostVolumeCollisionCoefficient * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
+        m_bt.shapes.emplace_back(new btBoxShape(util::convert(box)));
         m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
-        m_bf.bone_tags[i].mesh_base->m_radius = btMin(btMin(box.x(), box.y()), box.z());
+        m_bf.bone_tags[i].mesh_base->m_radius = std::min(std::min(box.x, box.y), box.z);
 
         m_bt.ghostObjects.emplace_back(new btPairCachingGhostObject());
 
         m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.bt_body[i].get(), true);
 
-        btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;
-        gltr.setOrigin(gltr * m_bf.bone_tags[i].mesh_base->m_center);
+        glm::mat4 gltr = m_transform * m_bf.bone_tags[i].full_transform;
+        gltr[3] = glm::vec4( glm::mat3(gltr) * m_bf.bone_tags[i].mesh_base->m_center, 1.0f );
 
-        m_bt.ghostObjects.back()->setWorldTransform(gltr);
+        m_bt.ghostObjects.back()->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
         m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
         m_bt.ghostObjects.back()->setUserPointer(this);
         m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
@@ -154,7 +158,8 @@ void Entity::genRigidBody()
             if(getCollisionShape() != world::CollisionShape::TriMesh)
                 cshape->calculateLocalInertia(0.0, localInertia);
 
-            btTransform startTransform = m_transform * m_bf.bone_tags[i].full_transform;
+            btTransform startTransform;
+            startTransform.setFromOpenGLMatrix(glm::value_ptr( m_transform * m_bf.bone_tags[i].full_transform ));
             m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
             switch(getCollisionType())
@@ -187,7 +192,7 @@ void Entity::genRigidBody()
 /**
  * It is from bullet_character_controller
  */
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3* correction)
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, glm::vec3* correction)
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -200,13 +205,13 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
     int ret = 0;
     int num_pairs, manifolds_size;
     btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-    btVector3 aabb_min, aabb_max, t;
+    btVector3 aabb_min, aabb_max;
 
     ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
     engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
     engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
 
-    correction->setZero();
+    *correction = {0,0,0};
     num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
     for(int i = 0; i < num_pairs; i++)
     {
@@ -244,7 +249,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
                 if(dist < 0.0)
                 {
-                    t = pt.m_normalWorldOnB * dist * directionSign;
+                    glm::vec3 t = util::convert(pt.m_normalWorldOnB) * dist * directionSign;
                     *correction += t;
                     ret++;
                 }
@@ -268,9 +273,9 @@ void Entity::ghostUpdate()
         {
             auto tr = m_transform * m_bf.bone_tags[i].full_transform;
             auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
-            m_bt.ghostObjects[i]->getWorldTransform() = tr;
-            auto pos = tr * v;
-            m_bt.ghostObjects[i]->getWorldTransform().setOrigin(pos);
+            m_bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
+            auto pos = tr * glm::vec4(v, 1);
+            m_bt.ghostObjects[i]->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
         }
     }
     else
@@ -278,7 +283,7 @@ void Entity::ghostUpdate()
         for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
         {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
-            tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->m_center);
+            tr.setOrigin(tr * util::convert(m_bf.bone_tags[i].mesh_base->m_center));
             m_bt.ghostObjects[i]->getWorldTransform() = tr;
         }
     }
@@ -300,9 +305,9 @@ void Entity::updateCurrentCollisions()
         auto tr = m_transform * m_bf.bone_tags[i].full_transform;
         auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
         auto orig_tr = ghost->getWorldTransform();
-        ghost->getWorldTransform() = tr;
-        auto pos = tr * v;
-        ghost->getWorldTransform().setOrigin(pos);
+        ghost->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
+        auto pos = glm::vec3(tr * glm::vec4(v, 1.0f));
+        ghost->getWorldTransform().setOrigin(util::convert(pos));
 
         btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
         btVector3 aabb_min, aabb_max;
@@ -350,15 +355,15 @@ void Entity::updateCurrentCollisions()
 }
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
+int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
 {
-    reaction->setZero();
+    *reaction = { 0,0,0 };
     if(m_bt.ghostObjects.empty() || m_bt.no_fix_all)
         return 0;
 
     assert(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
 
-    auto orig_pos = m_transform.getOrigin();
+    auto orig_pos = m_transform[3];
     int ret = 0;
     for(size_t i = 0; i < m_bf.animations.model->collision_map.size(); i++)
     {
@@ -371,20 +376,20 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
         }
 
         // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
-        btVector3 from;
+        glm::vec3 from;
         if((btag->parent == nullptr) || (hasMove && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
         {
-            from = m_bt.ghostObjects[m]->getWorldTransform().getOrigin();
-            from += m_transform.getOrigin() - orig_pos;
+            from = util::convert( m_bt.ghostObjects[m]->getWorldTransform().getOrigin() );
+            from += glm::vec3(m_transform[3] - orig_pos);
         }
         else
         {
-            auto parent_from = btag->parent->full_transform * btag->parent->mesh_base->m_center;
-            from = m_transform * parent_from;
+            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh_base->m_center,1);
+            from = glm::vec3(m_transform * parent_from);
         }
 
         auto tr = m_transform * btag->full_transform;
-        auto to = tr * btag->mesh_base->m_center;
+        auto to = glm::vec3(tr * glm::vec4(btag->mesh_base->m_center, 1.0f));
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
@@ -397,13 +402,13 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
 
         for(int j = 0; j <= iter; j++)
         {
-            tr.setOrigin(curr);
+            tr[3] = glm::vec4(curr, 1.0f);
             auto tr_current = tr;
-            m_bt.ghostObjects[m]->setWorldTransform(tr_current);
-            btVector3 tmp;
+            m_bt.ghostObjects[m]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr_current));
+            glm::vec3 tmp;
             if(Ghost_GetPenetrationFixVector(m_bt.ghostObjects[m].get(), m_bt.manifoldArray.get(), &tmp))
             {
-                m_transform.getOrigin() += tmp;
+                m_transform[3] += glm::vec4(tmp,0);
                 curr += tmp;
                 from += tmp;
                 ret++;
@@ -411,13 +416,13 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
             curr += move;
         }
     }
-    *reaction = m_transform.getOrigin() - orig_pos;
-    m_transform.setOrigin(orig_pos);
+    *reaction = glm::vec3(m_transform[3] - orig_pos);
+    m_transform[3] = orig_pos;
 
     return ret;
 }
 
-void Entity::fixPenetrations(const btVector3* move)
+void Entity::fixPenetrations(const glm::vec3* move)
 {
     if(m_bt.ghostObjects.empty())
         return;
@@ -433,9 +438,9 @@ void Entity::fixPenetrations(const btVector3* move)
         return;
     }
 
-    btVector3 reaction;
+    glm::vec3 reaction;
     getPenetrationFixVector(&reaction, move != nullptr);
-    m_transform.getOrigin() += reaction;
+    m_transform[3] += glm::vec4(reaction, 0);
 
     ghostUpdate();
 }
@@ -554,7 +559,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 
 void Entity::updateRoomPos()
 {
-    btVector3 pos = getRoomPos();
+    glm::vec3 pos = getRoomPos();
     auto new_room = Room_FindPosCogerrence(pos, getRoom());
     if(!new_room)
     {
@@ -562,7 +567,7 @@ void Entity::updateRoomPos()
         return;
     }
 
-    auto new_sector = new_room->getSectorXYZ(pos);
+    RoomSector* new_sector = new_room->getSectorXYZ(pos);
     if(new_room != new_sector->owner_room.get())
     {
         new_room = new_sector->owner_room.get();
@@ -584,14 +589,15 @@ void Entity::updateRigidBody(bool force)
 {
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        //btVector3 pos = bt.bt_body[0]->getWorldTransform().getOrigin();
+        //glm::vec3 pos = bt.bt_body[0]->getWorldTransform()[3];
         //vec3_copy(transform+12, pos);
-        m_transform = m_bt.bt_body[0]->getWorldTransform();
+        m_bt.bt_body[0]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(m_transform));
         updateRoomPos();
         for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
         {
-            auto tr = m_bt.bt_body[i]->getWorldTransform();
-            m_bf.bone_tags[i].full_transform = m_transform.inverse() * tr;
+            glm::mat4 tr;
+            m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
+            m_bf.bone_tags[i].full_transform = glm::inverse(m_transform) * tr;
         }
 
         // that cycle is necessary only for skinning models;
@@ -599,7 +605,7 @@ void Entity::updateRigidBody(bool force)
         {
             if(m_bf.bone_tags[i].parent != nullptr)
             {
-                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].parent->full_transform.inverse() * m_bf.bone_tags[i].full_transform;
+                m_bf.bone_tags[i].transform = glm::inverse(m_bf.bone_tags[i].parent->full_transform) * m_bf.bone_tags[i].full_transform;
             }
             else
             {
@@ -618,7 +624,7 @@ void Entity::updateRigidBody(bool force)
             m_bf.boundingBox = m_bf.bone_tags[0].mesh_base->boundingBox;
             for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
             {
-                auto& pos = m_bf.bone_tags[i].full_transform.getOrigin();
+                auto& pos = m_bf.bone_tags[i].full_transform[3];
                 auto& boundingBox = m_bf.bone_tags[i].mesh_base->boundingBox;
                 btScalar r = boundingBox.max[0] - boundingBox.min[0];
                 btScalar t = boundingBox.max[1] - boundingBox.min[1];
@@ -671,7 +677,7 @@ void Entity::updateRigidBody(bool force)
             {
                 if(m_bt.bt_body[i])
                 {
-                    m_bt.bt_body[i]->getWorldTransform() = m_transform * m_bf.bone_tags[i].full_transform;
+                    m_bt.bt_body[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(m_transform * m_bf.bone_tags[i].full_transform));
                 }
             }
         }
@@ -685,7 +691,11 @@ void Entity::updateTransform()
     m_angles[1] = util::wrapAngle(m_angles[1]);
     m_angles[2] = util::wrapAngle(m_angles[2]);
 
-    m_transform.getBasis().setEulerZYX(m_angles[1] * util::RadPerDeg, m_angles[2] * util::RadPerDeg, m_angles[0] * util::RadPerDeg);
+    auto ang = m_angles * util::RadPerDeg;
+
+    auto pos = m_transform[3];
+    m_transform = glm::yawPitchRoll(ang[2], ang[1], ang[0]);
+    m_transform[3] = pos;
 }
 
 void Entity::updateCurrentSpeed(bool zeroVz)
@@ -695,23 +705,23 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
     if(m_moveDir == MoveDirection::Forward)
     {
-        m_speed = m_transform.getBasis().getColumn(1) * t;
+        m_speed = glm::vec3(m_transform[1]) * t;
     }
     else if(m_moveDir == MoveDirection::Backward)
     {
-        m_speed = m_transform.getBasis().getColumn(1) * -t;
+        m_speed = glm::vec3(m_transform[1]) * -t;
     }
     else if(m_moveDir == MoveDirection::Left)
     {
-        m_speed = m_transform.getBasis().getColumn(0) * -t;
+        m_speed = glm::vec3(m_transform[0]) * -t;
     }
     else if(m_moveDir == MoveDirection::Right)
     {
-        m_speed = m_transform.getBasis().getColumn(0) * t;
+        m_speed = glm::vec3(m_transform[0]) * t;
     }
     else
     {
-        m_speed.setZero();
+        m_speed = {0,0,0};
     }
 
     m_speed[2] = vz;
@@ -740,7 +750,7 @@ void Entity::addOverrideAnim(int model_id)
 
 btScalar Entity::findDistance(const Entity& other)
 {
-    return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
+    return glm::distance(m_transform[3], other.m_transform[3]);
 }
 
 
@@ -755,11 +765,11 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
         case TR_ANIMCOMMAND_SETPOSITION:    // (tr_x, tr_y, tr_z)
             {
                 // x=x, y=z, z=-y
-                const btScalar x = btScalar(command.param[0]);
-                const btScalar y = btScalar(command.param[2]);
-                const btScalar z = -btScalar(command.param[1]);
-                btVector3 ofs(x, y, z);
-                m_transform.getOrigin() += m_transform.getBasis() * ofs;
+                const glm::float_t x = glm::float_t(command.param[0]);
+                const glm::float_t y = glm::float_t(command.param[2]);
+                const glm::float_t z = -glm::float_t(command.param[1]);
+                glm::vec3 ofs(x, y, z);
+                m_transform[3] += glm::vec4(glm::mat3(m_transform) * ofs, 0);
                 m_lerp_skip = true;
             }
             break;
@@ -946,8 +956,7 @@ void Entity::lerpTransform(btScalar lerp)
     if(!m_lerp_valid)
         return;
 
-    m_transform.setRotation( util::Quat_Slerp(m_lerp_last_transform.getRotation(), m_lerp_curr_transform.getRotation(), lerp) );
-    m_transform.getOrigin() = m_lerp_last_transform.getOrigin().lerp( m_lerp_curr_transform.getOrigin(), lerp);
+    m_transform = glm::interpolate(m_lerp_last_transform, m_lerp_curr_transform, lerp);
 }
 
 void Entity::updateInterpolation(btScalar time)
@@ -1050,7 +1059,7 @@ void Entity::checkActivators()
     if (getRoom() == nullptr)
             return;
 
-    btVector3 ppos = m_transform.getOrigin() + m_transform.getBasis().getColumn(1) * m_bf.boundingBox.max[1];
+    glm::vec4 ppos = m_transform[3] + m_transform[1] * m_bf.boundingBox.max[1];
     auto containers = getRoom()->containers;
     for(Object* cont : containers)
     {
@@ -1073,11 +1082,11 @@ void Entity::checkActivators()
         {
             btScalar r = e->m_activationRadius;
             r *= r;
-            const btVector3& v = e->m_transform.getOrigin();
+            const glm::vec4& v = e->m_transform[3];
             if(    e != this
                 && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
-                && (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.boundingBox.min[2])
-                && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.boundingBox.max[2]))
+                && (v[2] + 32.0 > m_transform[3][2] + m_bf.boundingBox.min[2])
+                && (v[2] - 32.0 < m_transform[3][2] + m_bf.boundingBox.max[2]))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
@@ -1087,17 +1096,17 @@ void Entity::checkActivators()
 
 void Entity::moveForward(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis().getColumn(1) * dist;
+    m_transform[3] += m_transform[1] * dist;
 }
 
 void Entity::moveStrafe(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis().getColumn(0) * dist;
+    m_transform[3] += m_transform[0] * dist;
 }
 
 void Entity::moveVertical(btScalar dist)
 {
-    m_transform.getOrigin() += m_transform.getBasis().getColumn(2) * dist;
+    m_transform[3] += m_transform[2] * dist;
 }
 
 Entity::Entity(uint32_t id)
@@ -1182,14 +1191,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     m_bf.updateCurrentBoneFrame();
     m_bt.no_fix_all = false;
     m_bt.no_fix_body_parts = 0x00000000;
-#if 0
-    int map_size = m_bf.animations.model->collision_map.size();             // does not works, strange...
-    m_bf.animations.model->collision_map.size() = m_bf.animations.model->mesh_count;
     fixPenetrations(nullptr);
-    m_bf.animations.model->collision_map.size() = map_size;
-#else
-    fixPenetrations(nullptr);
-#endif
 
     for(size_t i = 0; i < setup->body_setup.size(); i++)
     {
@@ -1232,7 +1234,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     {
         engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->activate();
-        m_bt.bt_body[i]->setLinearVelocity(m_speed);
+        m_bt.bt_body[i]->setLinearVelocity(util::convert(m_speed));
         if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
         {
             engine::bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
@@ -1251,7 +1253,6 @@ bool Entity::createRagdoll(RDSetup* setup)
             break;       // If body 1 or body 2 are absent, return false and bypass this joint.
         }
 
-        btTransform localA, localB;
         animation::SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
         animation::SSBoneTag* btA = btB->parent;
         if(!btA)
@@ -1259,18 +1260,13 @@ bool Entity::createRagdoll(RDSetup* setup)
             result = false;
             break;
         }
-#if 0
-        localA.setFromOpenGLMatrix(btB->transform);
-        localB.setIdentity();
-#else
+        btTransform localA;
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
-        //localA.setOrigin(setup->joint_setup[i].body1_offset);
-        localA.setOrigin(btB->transform.getOrigin());
+        localA.setOrigin(util::convert(glm::vec3(btB->transform[3])));
 
+        btTransform localB;
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
-        //localB.setOrigin(setup->joint_setup[i].body2_offset);
-        localB.setOrigin(btVector3(0.0, 0.0, 0.0));
-#endif
+        localB.setOrigin({ 0, 0, 0 });
 
         switch(setup->joint_setup[i].joint_type)
         {
@@ -1351,11 +1347,11 @@ bool Entity::deleteRagdoll()
     // To make them static again, additionally call setEntityBodyMass script function.
 }
 
-btVector3 Entity::applyGravity(btScalar time)
+glm::vec3 Entity::applyGravity(btScalar time)
 {
-    const btVector3 gravityAccelleration = engine::bt_engine_dynamicsWorld->getGravity();
-    const btVector3 gravitySpeed = gravityAccelleration * time;
-    btVector3 move = (m_speed + gravitySpeed/2) * time;
+    const glm::vec3 gravityAccelleration = util::convert(engine::bt_engine_dynamicsWorld->getGravity());
+    const glm::vec3 gravitySpeed = gravityAccelleration * time;
+    glm::vec3 move = (m_speed + gravitySpeed*0.5f) * time;
     m_speed += gravitySpeed;
     return move;
 }

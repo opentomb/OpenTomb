@@ -1,6 +1,7 @@
 #pragma once
 
-#include <LinearMath/btVector3.h>
+#include <glm/glm.hpp>
+#include <algorithm>
 
 class btCollisionShape;
 
@@ -11,20 +12,20 @@ namespace core
 
 struct BoundingBox
 {
-    btVector3 min = {0,0,0};
-    btVector3 max = {0,0,0};
+    glm::vec3 min = {0,0,0};
+    glm::vec3 max = {0,0,0};
 
-    btVector3 getCenter() const noexcept
+    glm::vec3 getCenter() const noexcept
     {
-        return (min+max)/2;
+        return (min+max) * 0.5f;
     }
 
-    btVector3 getDiameter() const noexcept
+    glm::vec3 getDiameter() const noexcept
     {
         return max-min;
     }
 
-    void adjust(const btVector3& v) noexcept
+    void adjust(const glm::vec3& v) noexcept
     {
         for(int i = 0; i < 3; ++i)
         {
@@ -35,7 +36,7 @@ struct BoundingBox
         }
     }
 
-    bool contains(const btVector3& v) const
+    bool contains(const glm::vec3& v) const
     {
         return (v[0] >= min[0]) && (v[0] < max[0]) &&
                (v[1] >= min[1]) && (v[1] < max[1]) &&
@@ -54,10 +55,10 @@ struct BoundingBox
         return true;
     }
 
-    btScalar getInnerRadius() const
+    glm::float_t getInnerRadius() const
     {
-        btVector3 d = getDiameter();
-        return btMin(d[0], btMin(d[1], d[2]));
+        glm::vec3 d = getDiameter();
+        return std::min(d[0], std::min(d[1], d[2]));
     }
 };
 

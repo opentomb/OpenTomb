@@ -30,7 +30,7 @@ namespace gui
 
 std::unique_ptr<FontManager> fontManager = nullptr;
 
-util::matrix4 guiProjectionMatrix = util::matrix4();
+glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
 
 void init()
 {
@@ -141,7 +141,7 @@ void switchGLMode(bool is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        guiProjectionMatrix = util::matrix4{};                                        // identity matrix
+        guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
         guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(engine::screen_info.w);
         guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(engine::screen_info.h);
         guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);

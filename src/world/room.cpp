@@ -139,15 +139,15 @@ bool Room::isOverlapped(Room* r1)
     return !isJoined(r1);
 }
 
-RoomSector* Room::getSectorRaw(const btVector3& pos)
+RoomSector* Room::getSectorRaw(const glm::vec3& pos)
 {
     if(!active)
     {
         return nullptr;
     }
 
-    int x = static_cast<int>(pos[0] - transform.getOrigin()[0]) / 1024;
-    int y = static_cast<int>(pos[1] - transform.getOrigin()[1]) / 1024;
+    int x = static_cast<int>(pos[0] - transform[3][0]) / 1024;
+    int y = static_cast<int>(pos[1] - transform[3][1]) / 1024;
     if(x < 0 || x >= sectors_x || y < 0 || y >= sectors_y)
     {
         return nullptr;
@@ -159,7 +159,7 @@ RoomSector* Room::getSectorRaw(const btVector3& pos)
     return &sectors[x * sectors_y + y];
 }
 
-RoomSector* Room::getSectorXYZ(const btVector3& pos)
+RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
 {
     Room* room = checkFlip();
 
@@ -168,8 +168,8 @@ RoomSector* Room::getSectorXYZ(const btVector3& pos)
         return nullptr;
     }
 
-    int x = static_cast<int>(pos[0] - room->transform.getOrigin()[0]) / 1024;
-    int y = static_cast<int>(pos[1] - room->transform.getOrigin()[1]) / 1024;
+    int x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
+    int y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return nullptr;
@@ -419,8 +419,8 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     auto vertex = mesh->m_vertices.data();
     for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
     {
-        TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
-        vertex->normal.setZero();                                          // paranoid
+        vertex->position = TR_vertex_to_arr(tr_room->vertices[i].vertex);
+        vertex->normal = { 0,0,0 };                                          // paranoid
     }
 
     mesh->updateBoundingBox();
@@ -451,7 +451,7 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     */
     for(world::core::Vertex& v : mesh->m_vertices)
     {
-        v.normal.safeNormalize();
+        v.normal = glm::normalize(v.normal);
     }
 
     /*
@@ -481,8 +481,8 @@ RoomSector* RoomSector::checkPortalPointerRaw()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -505,8 +505,8 @@ RoomSector* RoomSector::checkPortalPointer()
         {
             r = r->base_room;
         }
-        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -521,8 +521,8 @@ RoomSector* RoomSector::checkBaseRoom()
     if(owner_room->base_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->base_room;
-        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -537,8 +537,8 @@ RoomSector* RoomSector::checkAlternateRoom()
     if(owner_room->alternate_room != nullptr)
     {
         std::shared_ptr<Room> r = owner_room->alternate_room;
-        int ind_x = static_cast<int>((position[0] - r->transform.getOrigin()[0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform.getOrigin()[1]) / MeteringSectorSize);
+        int ind_x = static_cast<int>((position[0] - r->transform[3][1]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             return &r->sectors[(ind_x * r->sectors_y + ind_y)];
@@ -590,8 +590,10 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
 
 bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
 {
-    if(!s2) return false;
-    if(this == s2) return true;
+    if(!s2)
+        return false;
+    if(this == s2)
+        return true;
 
     if((ceiling != s2->ceiling) ||
        (ceiling_penetration_config == PenetrationConfig::Wall) ||
@@ -601,7 +603,8 @@ bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
 
     for(int i = 0; i < 4; i++)
     {
-        if(ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+        if(ceiling_corners[i].z != s2->ceiling_corners[i].z)
+            return false;
     }
 
     return true;
@@ -620,7 +623,8 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
 
     for(int i = 0; i < 4; i++)
     {
-        if(floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
+        if(floor_corners[i].z != s2->floor_corners[i].z)
+            return false;
     }
 
     return true;
@@ -628,31 +632,31 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
 
 namespace
 {
-    btVector3 Sector_HighestFloorCorner(RoomSector* rs)
+    glm::vec3 Sector_HighestFloorCorner(RoomSector* rs)
     {
         assert(rs != nullptr);
-        btVector3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2]) ? (rs->floor_corners[0]) : (rs->floor_corners[1]);
-        btVector3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2]) ? (rs->floor_corners[2]) : (rs->floor_corners[3]);
+        glm::vec3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2]) ? (rs->floor_corners[0]) : (rs->floor_corners[1]);
+        glm::vec3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2]) ? (rs->floor_corners[2]) : (rs->floor_corners[3]);
 
         return (r1[2] > r2[2]) ? (r1) : (r2);
     }
 
-    btVector3 Sector_LowestCeilingCorner(RoomSector* rs)
+    glm::vec3 Sector_LowestCeilingCorner(RoomSector* rs)
     {
         assert(rs != nullptr);
-        btVector3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2]) ? (rs->ceiling_corners[1]) : (rs->ceiling_corners[0]);
-        btVector3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2]) ? (rs->ceiling_corners[3]) : (rs->ceiling_corners[2]);
+        glm::vec3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2]) ? (rs->ceiling_corners[1]) : (rs->ceiling_corners[0]);
+        glm::vec3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2]) ? (rs->ceiling_corners[3]) : (rs->ceiling_corners[2]);
 
         return (r1[2] > r2[2]) ? (r2) : (r1);
     }
 } // anonymous namespace
 
-btVector3 RoomSector::getFloorPoint()
+glm::vec3 RoomSector::getFloorPoint()
 {
     return Sector_HighestFloorCorner(getLowestSector());
 }
 
-btVector3 RoomSector::getCeilingPoint()
+glm::vec3 RoomSector::getCeilingPoint()
 {
     return Sector_LowestCeilingCorner(getHighestSector());
 }
@@ -725,18 +729,18 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
             {
                 if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalA)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[0],
+                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
+                                         util::convert(heightmap[i].floor_corners[2]),
+                                         util::convert(heightmap[i].floor_corners[0]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalB)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
+                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[2]),
+                                         util::convert(heightmap[i].floor_corners[1]),
+                                         util::convert(heightmap[i].floor_corners[0]),
                                          true);
                     cnt++;
                 }
@@ -745,18 +749,18 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
             {
                 if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalA)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
+                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
+                                         util::convert(heightmap[i].floor_corners[2]),
+                                         util::convert(heightmap[i].floor_corners[1]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalB)
                 {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
+                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
+                                         util::convert(heightmap[i].floor_corners[1]),
+                                         util::convert(heightmap[i].floor_corners[0]),
                                          true);
                     cnt++;
                 }
@@ -771,18 +775,18 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
             {
                 if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
+                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
+                                         util::convert(heightmap[i].ceiling_corners[2]),
+                                         util::convert(heightmap[i].ceiling_corners[3]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
+                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
+                                         util::convert(heightmap[i].ceiling_corners[1]),
+                                         util::convert(heightmap[i].ceiling_corners[2]),
                                          true);
                     cnt++;
                 }
@@ -791,18 +795,18 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
             {
                 if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[3],
+                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
+                                         util::convert(heightmap[i].ceiling_corners[1]),
+                                         util::convert(heightmap[i].ceiling_corners[3]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
                 {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
+                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[1]),
+                                         util::convert(heightmap[i].ceiling_corners[2]),
+                                         util::convert(heightmap[i].ceiling_corners[3]),
                                          true);
                     cnt++;
                 }
@@ -820,41 +824,41 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
                                       (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;
-                o.setInterpolate3(tween.ceiling_corners[0], tween.ceiling_corners[2], t);
-                trimesh->addTriangle(tween.ceiling_corners[0],
-                                     tween.ceiling_corners[1],
+                o.setInterpolate3(util::convert(tween.ceiling_corners[0]), util::convert(tween.ceiling_corners[2]), t);
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[0]),
+                                     util::convert(tween.ceiling_corners[1]),
                                      o, true);
-                trimesh->addTriangle(tween.ceiling_corners[3],
-                                     tween.ceiling_corners[2],
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[3]),
+                                     util::convert(tween.ceiling_corners[2]),
                                      o, true);
                 cnt += 2;
             }
             break;
 
             case TweenType::TriangleLeft:
-                trimesh->addTriangle(tween.ceiling_corners[0],
-                                     tween.ceiling_corners[1],
-                                     tween.ceiling_corners[3],
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[0]),
+                                     util::convert(tween.ceiling_corners[1]),
+                                     util::convert(tween.ceiling_corners[3]),
                                      true);
                 cnt++;
                 break;
 
             case TweenType::TriangleRight:
-                trimesh->addTriangle(tween.ceiling_corners[2],
-                                     tween.ceiling_corners[1],
-                                     tween.ceiling_corners[3],
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[2]),
+                                     util::convert(tween.ceiling_corners[1]),
+                                     util::convert(tween.ceiling_corners[3]),
                                      true);
                 cnt++;
                 break;
 
             case TweenType::Quad:
-                trimesh->addTriangle(tween.ceiling_corners[0],
-                                     tween.ceiling_corners[1],
-                                     tween.ceiling_corners[3],
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[0]),
+                                     util::convert(tween.ceiling_corners[1]),
+                                     util::convert(tween.ceiling_corners[3]),
                                      true);
-                trimesh->addTriangle(tween.ceiling_corners[2],
-                                     tween.ceiling_corners[1],
-                                     tween.ceiling_corners[3],
+                trimesh->addTriangle(util::convert(tween.ceiling_corners[2]),
+                                     util::convert(tween.ceiling_corners[1]),
+                                     util::convert(tween.ceiling_corners[3]),
                                      true);
                 cnt += 2;
                 break;
@@ -868,41 +872,41 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
                                       (tween.floor_corners[0][2] - tween.floor_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;
-                o.setInterpolate3(tween.floor_corners[0], tween.floor_corners[2], t);
-                trimesh->addTriangle(tween.floor_corners[0],
-                                     tween.floor_corners[1],
+                o.setInterpolate3(util::convert(tween.floor_corners[0]), util::convert(tween.floor_corners[2]), t);
+                trimesh->addTriangle(util::convert(tween.floor_corners[0]),
+                                     util::convert(tween.floor_corners[1]),
                                      o, true);
-                trimesh->addTriangle(tween.floor_corners[3],
-                                     tween.floor_corners[2],
+                trimesh->addTriangle(util::convert(tween.floor_corners[3]),
+                                     util::convert(tween.floor_corners[2]),
                                      o, true);
                 cnt += 2;
             }
             break;
 
             case TweenType::TriangleLeft:
-                trimesh->addTriangle(tween.floor_corners[0],
-                                     tween.floor_corners[1],
-                                     tween.floor_corners[3],
+                trimesh->addTriangle(util::convert(tween.floor_corners[0]),
+                                     util::convert(tween.floor_corners[1]),
+                                     util::convert(tween.floor_corners[3]),
                                      true);
                 cnt++;
                 break;
 
             case TweenType::TriangleRight:
-                trimesh->addTriangle(tween.floor_corners[2],
-                                     tween.floor_corners[1],
-                                     tween.floor_corners[3],
+                trimesh->addTriangle(util::convert(tween.floor_corners[2]),
+                                     util::convert(tween.floor_corners[1]),
+                                     util::convert(tween.floor_corners[3]),
                                      true);
                 cnt++;
                 break;
 
             case TweenType::Quad:
-                trimesh->addTriangle(tween.floor_corners[0],
-                                     tween.floor_corners[1],
-                                     tween.floor_corners[3],
+                trimesh->addTriangle(util::convert(tween.floor_corners[0]),
+                                     util::convert(tween.floor_corners[1]),
+                                     util::convert(tween.floor_corners[3]),
                                      true);
-                trimesh->addTriangle(tween.floor_corners[2],
-                                     tween.floor_corners[1],
-                                     tween.floor_corners[3],
+                trimesh->addTriangle(util::convert(tween.floor_corners[2]),
+                                     util::convert(tween.floor_corners[1]),
+                                     util::convert(tween.floor_corners[3]),
                                      true);
                 cnt += 2;
                 break;

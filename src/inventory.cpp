@@ -7,6 +7,8 @@
 #include "util/vmath.h"
 #include "engine/engine.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 InventoryManager  *main_inventory_manager = nullptr;
 
 /*
@@ -431,16 +433,15 @@ void InventoryManager::render()
                 continue;
             }
 
-            btTransform matrix;
-            matrix.setIdentity();
-            util::Mat4_Translate(matrix, 0.0f, 0.0f, - m_baseRingRadius * 2.0f);
+            glm::mat4 matrix(1.0f);
+            matrix = glm::translate(matrix, {0, 0, -m_baseRingRadius * 2.0f});
             //Mat4_RotateX(matrix, 25.0);
-            util::Mat4_RotateX(matrix, 25.0f + m_ringVerticalAngle);
-            btScalar ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
-            util::Mat4_RotateY(matrix, ang);
-            util::Mat4_Translate(matrix, 0.0f, m_verticalOffset, m_ringRadius);
-            util::Mat4_RotateX(matrix, -90.0f);
-            util::Mat4_RotateZ(matrix, 90.0f);
+            matrix = glm::rotate(matrix, 25.0f * util::RadPerDeg, {1,0,0});
+            glm::float_t ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
+            matrix = glm::rotate(matrix, ang * util::RadPerDeg, { 0,1,0 });
+            matrix = glm::translate(matrix, { 0, m_verticalOffset, m_ringRadius });
+            matrix = glm::rotate(matrix, -util::Rad90, { 1,0,0 });
+            matrix = glm::rotate(matrix, util::Rad90, { 0,0,1 });
             if(num == m_itemsOffset)
             {
                 if(bi->name[0])
@@ -456,16 +457,16 @@ void InventoryManager::render()
                         mLabel_ItemName.text = tmp;
                     }
                 }
-                util::Mat4_RotateZ(matrix, 90.0f + m_itemAngle - ang);
+                matrix = glm::rotate(matrix, (90.0f + m_itemAngle - ang) * util::RadPerDeg, { 0,0,1 });
                 bi->bf->itemFrame(0.0f);                            // here will be time != 0 for using items animation
             }
             else
             {
-                util::Mat4_RotateZ(matrix, 90.0f - ang);
+                matrix = glm::rotate(matrix, (90.0f - ang) * util::RadPerDeg, { 0,0,1 });
                 bi->bf->itemFrame(0.0f);
             }
-            util::Mat4_Translate(matrix, -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2]);
-            util::Mat4_Scale(matrix, 0.7f, 0.7f, 0.7f);
+            matrix = glm::translate(matrix, { -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2] });
+            matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
             render::renderItem(bi->bf.get(), 0.0f, matrix, gui::guiProjectionMatrix);
 
             num++;

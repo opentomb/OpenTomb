@@ -230,7 +230,7 @@ private:
     std::vector<StreamTrack> m_tracks;      //!< Stream tracks.
     std::vector<uint8_t> m_trackMap;        //!< Stream track flag map.
 
-    btVector3 m_listenerPosition = {0,0,0};
+    glm::vec3 m_listenerPosition = {0,0,0};
 
     Settings m_settings;
 

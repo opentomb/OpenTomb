@@ -143,7 +143,7 @@ public:
     bool m_wasRenderedLines = false; // same for debug lines
 
     btScalar                            m_currentSpeed = 0;      // current linear speed from animation info
-    btVector3                           m_speed = {0,0,0};              // speed of the entity XYZ
+    glm::vec3                           m_speed = {0,0,0};              // speed of the entity XYZ
     btScalar                            m_vspeed_override;
 
     btScalar                            m_inertiaLinear = 0;     // linear inertia
@@ -151,12 +151,12 @@ public:
 
     animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
-    btVector3 m_angles = { 0,0,0 };
-    btTransform m_transform = btTransform::getIdentity(); // GL transformation matrix
-    btVector3 m_scaling = { 1,1,1 };
+    glm::vec3 m_angles = { 0,0,0 };
+    glm::mat4 m_transform{ 1.0f }; // GL transformation matrix
+    glm::vec3 m_scaling = { 1,1,1 };
 
-    btTransform m_lerp_last_transform  = btTransform::getIdentity(); // interp
-    btTransform m_lerp_curr_transform  = btTransform::getIdentity(); // interp
+    glm::mat4 m_lerp_last_transform{ 1.0f }; // interp
+    glm::mat4 m_lerp_curr_transform{ 1.0f }; // interp
     bool        m_lerp_valid = false;
     bool        m_lerp_skip = false;
     btScalar    m_lerp = 0;
@@ -166,7 +166,7 @@ public:
     RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector = nullptr;
 
-    btVector3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
+    glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
 
     Entity(uint32_t id);
@@ -181,7 +181,7 @@ public:
 
     void ghostUpdate();
     void updateCurrentCollisions();
-    int getPenetrationFixVector(btVector3 *reaction, bool hasMove);
+    int getPenetrationFixVector(glm::vec3 *reaction, bool hasMove);
     void checkCollisionCallbacks();
     bool wasCollisionBodyParts(uint32_t parts_flags);
     void cleanCollisionAllBodyParts();
@@ -231,10 +231,10 @@ public:
     bool createRagdoll(RDSetup* setup);
     bool deleteRagdoll();
 
-    virtual void fixPenetrations(const btVector3* move);
-    virtual btVector3 getRoomPos() const
+    virtual void fixPenetrations(const glm::vec3* move);
+    virtual glm::vec3 getRoomPos() const
     {
-        return m_transform * m_bf.boundingBox.getCenter();
+        return glm::vec3(m_transform * glm::vec4(m_bf.boundingBox.getCenter(), 1.0f));
     }
     virtual void transferToRoom(Room *room);
 
@@ -252,31 +252,31 @@ public:
     }
     virtual std::shared_ptr<engine::BtEngineClosestConvexResultCallback> callbackForCamera() const;
 
-    virtual btVector3 camPosForFollowing(btScalar dz)
+    virtual glm::vec3 camPosForFollowing(btScalar dz)
     {
-        auto cam_pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        glm::vec4 cam_pos = m_transform * m_bf.bone_tags.front().full_transform[3];
         cam_pos[2] += dz;
-        return cam_pos;
+        return glm::vec3(cam_pos);
     }
 
     virtual void updatePlatformPreStep()
     {
     }
 
-    btVector3 applyGravity(btScalar time);
+    glm::vec3 applyGravity(btScalar time);
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);
     void slerpBones(btScalar lerp);
     void lerpTransform(btScalar lerp);
 
-    static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
+    static btScalar getInnerBBRadius(const core::BoundingBox& bb)
     {
-        btVector3 d = bb_max - bb_min;
-        return btMin(d[0], btMin(d[1], d[2]));
+        auto d = bb.max - bb.min;
+        return std::min(d[0], std::min(d[1], d[2]));
     }
 };
 
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, glm::vec3 *correction);
 
 } // namespace world

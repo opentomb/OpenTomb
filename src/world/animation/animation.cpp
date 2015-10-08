@@ -4,6 +4,9 @@
 #include "world/entity.h"
 #include "world/skeletalmodel.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+
 namespace world
 {
 namespace animation
@@ -12,10 +15,10 @@ namespace animation
 void SSBoneFrame::fromModel(SkeletalModel* model)
 {
     hasSkin = false;
-    boundingBox.min.setZero();
-    boundingBox.max.setZero();
-    center.setZero();
-    position.setZero();
+    boundingBox.min = { 0,0,0 };
+    boundingBox.max = { 0,0,0 };
+    center = { 0,0,0 };
+    position = { 0,0,0 };
     animations = SSAnimation();
 
     animations.next = nullptr;
@@ -39,8 +42,8 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
 
         bone_tags[i].offset = model->mesh_tree[i].offset;
         bone_tags[i].qrotate = { 0,0,0,0 };
-        bone_tags[i].transform.setIdentity();
-        bone_tags[i].full_transform.setIdentity();
+        bone_tags[i].transform = glm::mat4(1.0f);
+        bone_tags[i].full_transform = glm::mat4(1.0f);
 
         if(i > 0)
         {
@@ -76,20 +79,19 @@ void SSBoneFrame::updateCurrentBoneFrame()
     animation::BoneFrame* next_bf = &animations.model->animations[animations.current_animation].frames[animations.current_frame];
     animation::BoneFrame* last_bf = &animations.model->animations[animations.lerp_last_animation].frames[animations.lerp_last_frame];
 
-    boundingBox.max = last_bf->boundingBox.max.lerp(next_bf->boundingBox.max, animations.lerp);
-    boundingBox.min = last_bf->boundingBox.min.lerp(next_bf->boundingBox.min, animations.lerp);
-    center = last_bf->center.lerp(next_bf->center, animations.lerp);
-    position = last_bf->position.lerp(next_bf->position, animations.lerp);
+    boundingBox.max = glm::mix(last_bf->boundingBox.max, next_bf->boundingBox.max, animations.lerp);
+    boundingBox.min = glm::mix(last_bf->boundingBox.min, next_bf->boundingBox.min, animations.lerp);
+    center = glm::mix(last_bf->center, next_bf->center, animations.lerp);
+    position = glm::mix(last_bf->position, next_bf->position, animations.lerp);
 
     for(uint16_t k = 0; k < last_bf->bone_tags.size(); k++)
     {
-        bone_tags[k].offset = last_bf->bone_tags[k].offset.lerp(next_bf->bone_tags[k].offset, animations.lerp);
-        bone_tags[k].transform.getOrigin() = bone_tags[k].offset;
-        bone_tags[k].transform.getOrigin()[3] = 1.0;
+        bone_tags[k].offset = glm::mix(last_bf->bone_tags[k].offset, next_bf->bone_tags[k].offset, animations.lerp);
+        bone_tags[k].transform = glm::translate(glm::mat4(1.0f), bone_tags[k].offset);
         if(k == 0)
         {
-            bone_tags[k].transform.getOrigin() += position;
-            bone_tags[k].qrotate = util::Quat_Slerp(last_bf->bone_tags[k].qrotate, next_bf->bone_tags[k].qrotate, animations.lerp);
+            bone_tags[k].transform = glm::translate(bone_tags[k].transform, position);
+            bone_tags[k].qrotate = glm::slerp(last_bf->bone_tags[k].qrotate, next_bf->bone_tags[k].qrotate, animations.lerp);
         }
         else
         {
@@ -108,9 +110,9 @@ void SSBoneFrame::updateCurrentBoneFrame()
                 ov_lerp = ov_anim->lerp;
                 break;
             }
-            bone_tags[k].qrotate = util::Quat_Slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
+            bone_tags[k].qrotate = glm::slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
         }
-        bone_tags[k].transform.setRotation(bone_tags[k].qrotate);
+        bone_tags[k].transform *= glm::mat4_cast(bone_tags[k].qrotate);
     }
 
     /*

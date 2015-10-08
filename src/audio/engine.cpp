@@ -12,6 +12,7 @@
 #include "world/entity.h"
 
 #include <chrono>
+#include <glm/gtc/type_ptr.hpp>
 
 using gui::Console;
 
@@ -352,7 +353,7 @@ void Engine::updateSources()
         return;
     }
 
-    alGetListenerfv(AL_POSITION, m_listenerPosition);
+    alGetListenerfv(AL_POSITION, glm::value_ptr(m_listenerPosition));
 
     for(uint32_t i = 0; i < m_emitters.size(); i++)
     {
@@ -528,13 +529,13 @@ Error Engine::kill(int effect_ID, EmitterType entity_type, int entity_ID)
 
 bool Engine::isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
 {
-    btVector3 vec;
+    glm::vec3 vec;
     switch(entity_type)
     {
     case EmitterType::Entity:
         if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(entity_ID))
         {
-            vec = ent->m_transform.getOrigin();
+            vec = glm::vec3(ent->m_transform[3]);
         }
         else
         {
@@ -557,7 +558,8 @@ bool Engine::isInRange(EmitterType entity_type, int entity_ID, float range, floa
         return false;
     }
 
-    auto dist = (m_listenerPosition - vec).length2();
+    glm::float_t dist = glm::distance(m_listenerPosition, vec);
+    dist *= dist;
 
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
@@ -906,7 +908,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
     {
         m_emitters[i].emitter_index = static_cast<ALuint>(i);
         m_emitters[i].sound_index = tr->m_soundSources[i].sound_id;
-        m_emitters[i].position = btVector3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
+        m_emitters[i].position = glm::vec3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
         m_emitters[i].flags = tr->m_soundSources[i].flags;
     }
 }

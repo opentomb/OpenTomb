@@ -65,7 +65,7 @@ SDL_GLContext           sdl_gl_context = nullptr;
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
 
-btScalar           engine_frame_time = 0.0;
+float            engine_frame_time = 0.0;
 
 world::Camera             engine_camera;
 world::World              engine_world;
@@ -87,7 +87,7 @@ btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 
 // Debug globals.
 
-btVector3 light_position = { 255.0, 255.0, 8.0 };
+glm::vec3 light_position = { 255.0, 255.0, 8.0 };
 GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 world::Object* last_cont = nullptr;
@@ -273,10 +273,6 @@ void initSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render::renderer.settings().z_depth);
 
-#if STENCIL_FRUSTUM
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-#endif
-
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
@@ -439,7 +435,7 @@ namespace
     }
 }
 
-void frame(btScalar time)
+void frame(float time)
 {
     engine_frame_time = time;
     fpsCycle(time);
@@ -478,15 +474,15 @@ void showDebugInfo()
                 ent->m_bf.animations.lerp_last_frame,
                 ent->m_bf.animations.frame_time,
                 ent->m_bf.animations.lerp,
-                ent->m_lerp_last_transform.getOrigin().x(),
-                ent->m_lerp_last_transform.getOrigin().y(),
-                ent->m_lerp_last_transform.getOrigin().z(),
-                ent->m_lerp_curr_transform.getOrigin().x(),
-                ent->m_lerp_curr_transform.getOrigin().y(),
-                ent->m_lerp_curr_transform.getOrigin().z()
+                ent->m_lerp_last_transform[3].x,
+                ent->m_lerp_last_transform[3].y,
+                ent->m_lerp_last_transform[3].z,
+                ent->m_lerp_curr_transform[3].x,
+                ent->m_lerp_curr_transform[3].y,
+                ent->m_lerp_curr_transform[3].z
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f, entlerp = %f", ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2], ent->m_angles[0], ent->m_lerp);
+        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f, entlerp = %f", ent->m_transform[3][0], ent->m_transform[3][1], ent->m_transform[3][2], ent->m_angles[0], ent->m_lerp);
     }
 
     if(last_cont != nullptr)
@@ -683,7 +679,7 @@ void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
             world::Object* cont = static_cast<world::Object*>(body->getUserPointer());
             if(dynamic_cast<world::BulletObject*>(cont))
             {
-                cont->setRoom( Room_FindPosCogerrence(trans.getOrigin(), cont->getRoom()) );
+                cont->setRoom( Room_FindPosCogerrence(util::convert(trans.getOrigin()), cont->getRoom()) );
             }
         }
     }
@@ -769,7 +765,7 @@ void dumpRoom(world::Room* r)
 {
     if(r != nullptr)
     {
-        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->getId(), r->sectors_x, r->sectors_y, r->boundingBox.min[2], r->boundingBox.max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
+        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->getId(), r->sectors_x, r->sectors_y, r->boundingBox.min[2], r->boundingBox.max[2], r->transform[3][0], r->transform[3][1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->getId()) : (-1), (r->base_room != nullptr) ? (r->base_room->getId()) : (-1));
         for(const world::RoomSector& rs : r->sectors)
         {
@@ -1143,11 +1139,6 @@ int execCmd(const char *ch)
             render::renderer.toggleDrawPortals();
             return 1;
         }
-        else if(!strcmp(token.data(), "r_frustums"))
-        {
-            render::renderer.toggleDrawFrustums();
-            return 1;
-        }
         else if(!strcmp(token.data(), "r_room_boxes"))
         {
             render::renderer.toggleDrawRoomBoxes();
@@ -1199,7 +1190,7 @@ int execCmd(const char *ch)
                     {
                         if(world::Entity* e = dynamic_cast<world::Entity*>(cont))
                         {
-                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform.getOrigin()[0]), static_cast<int>(e->m_transform.getOrigin()[1]), static_cast<int>(e->m_transform.getOrigin()[2]), e->getId());
+                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform[3][0]), static_cast<int>(e->m_transform[3][1]), static_cast<int>(e->m_transform[3][2]), e->getId());
                         }
                     }
                 }

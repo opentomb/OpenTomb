@@ -11,7 +11,8 @@
 #include <LinearMath/btIDebugDraw.h>
 #include <LinearMath/btScalar.h>
 
-#include "util/matrix4.h"
+#include <glm/glm.hpp>
+
 #include "vertex_array.h"
 #include "loader/datatypes.h"
 #include "world/core/orientedboundingbox.h"
@@ -61,8 +62,6 @@ constexpr int DebugDrawerDefaultBufferSize = 128 * 1024;
 constexpr int InitFrameVertexBufferSize = 1024 * 1024;
 } // anonymous namespace
 
-#define STENCIL_FRUSTUM 1
-
 struct LitShaderDescription;
 class Render;
 
@@ -98,13 +97,12 @@ public:
         m_color[1] = g;
         m_color[2] = b;
     }
-    void drawAxis(btScalar r, const btTransform& transform);
+    void drawAxis(glm::float_t r, const glm::mat4& transform);
     void drawPortal(const world::Portal &p);
-    void drawFrustum(const world::core::Frustum &f);
-    void drawBBox(const world::core::BoundingBox &boundingBox, const btTransform *transform);
+    void drawBBox(const world::core::BoundingBox &boundingBox, const glm::mat4 *transform);
     void drawOBB(const world::core::OrientedBoundingBox& obb);
-    void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
-    void drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const btTransform& transform, Render *render);
+    void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, const std::vector<glm::vec3> &overrideVertices, const std::vector<glm::vec3> &overrideNormals, Render* render);
+    void drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const glm::mat4& transform, Render *render);
     void drawEntityDebugLines(world::Entity *entity, Render *render);
     void drawSectorDebugLines(world::RoomSector *rs);
     void drawRoomDebugLines(const world::Room *room, Render *render, const world::Camera& cam);
@@ -163,7 +161,6 @@ private:
     bool m_drawRoomBoxes = false;
     bool m_drawBoxes = false;
     bool m_drawPortals = false;
-    bool m_drawFrustums = false;
     bool m_drawNormals = false;
     bool m_drawAxis = false;
     bool m_skipRoom = false;
@@ -241,10 +238,6 @@ public:
     {
         m_drawPortals = !m_drawPortals;
     }
-    void toggleDrawFrustums()
-    {
-        m_drawFrustums = !m_drawFrustums;
-    }
     void toggleDrawRoomBoxes()
     {
         m_drawRoomBoxes = !m_drawRoomBoxes;
@@ -270,30 +263,30 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
-    void renderDynamicEntity(const LitShaderDescription *shader, world::Entity *entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame* bframe, const util::matrix4 &mvMatrix, const util::matrix4 &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const util::matrix4 &mvMatrix, const util::matrix4 &pMatrix);
-    void renderHair(std::shared_ptr<world::Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 & modelViewProjectionMatrix);
-    void renderSkyBox(const util::matrix4& matrix);
+    void renderEntity(world::Entity *entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection);
+    void renderDynamicEntity(const LitShaderDescription *shader, world::Entity *entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent, const glm::mat4 &mvMatrix, const glm::mat4 &pMatrix);
+    void renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame* bframe, const glm::mat4 &mvMatrix, const glm::mat4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const glm::mat4 &mvMatrix, const glm::mat4 &pMatrix);
+    void renderHair(std::shared_ptr<world::Character> entity, const glm::mat4 &modelViewMatrix, const glm::mat4 & modelViewProjectionMatrix);
+    void renderSkyBox(const glm::mat4& matrix);
     void renderMesh(const std::shared_ptr<world::core::BaseMesh> &mesh);
     void renderPolygonTransparency(loader::BlendingMode& currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader);
     void renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
     void renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderRoom(const world::Room *room, const util::matrix4 &matrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection);
-    void renderRoomSprites(const world::Room *room, const util::matrix4 &modelViewMatrix, const util::matrix4 &projectionMatrix);
+    void renderRoom(const world::Room *room, const glm::mat4 &matrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection);
+    void renderRoomSprites(const world::Room *room, const glm::mat4 &modelViewMatrix, const glm::mat4 &projectionMatrix);
 
-    int processRoom(world::Portal* portal, const world::core::Frustum& frus);
+    void processRoom(world::Room* room);
 
 private:
-    const LitShaderDescription *setupEntityLight(world::Entity *entity, const util::matrix4 &modelViewMatrix, bool skin);
+    const LitShaderDescription *setupEntityLight(world::Entity *entity, const glm::mat4 &modelViewMatrix, bool skin);
 };
 
 extern Render renderer;
 
-void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix, const util::matrix4 &guiProjectionMatrix);
 void fillCrosshairBuffer();
 void drawCrosshair();
+void renderItem(world::animation::SSBoneFrame *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
 
 } // namespace render

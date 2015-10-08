@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "util/vmath.h"
+#include "BoundingBox.h"
 
 namespace world
 {
@@ -20,7 +21,7 @@ bool Polygon::isBroken() const
         return true;
     }
 
-    btScalar dif0 = plane.normal.length2();
+    glm::float_t dif0 = glm::dot(plane.normal, plane.normal);
     if(dif0 < 0.999 || dif0 > 1.001)
     {
         return true;
@@ -29,8 +30,8 @@ bool Polygon::isBroken() const
     auto curr_v = &vertices.back();
     for(const auto& v : vertices)
     {
-        btVector3 dif = v.position - curr_v->position;
-        if(dif.length2() < 0.0001)
+        glm::vec3 dif = v.position - curr_v->position;
+        if(glm::dot(dif,dif) < 0.0001)
         {
             return true;
         }
@@ -48,7 +49,7 @@ void Polygon::updateNormal()
     plane.assign(v1, v2, { 0,0,0 });
 }
 
-void Polygon::move(const btVector3& move)
+void Polygon::move(const glm::vec3& move)
 {
     for(auto& v : vertices)
     {
@@ -57,7 +58,7 @@ void Polygon::move(const btVector3& move)
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::copyMoved(const Polygon& src, const btVector3& move)
+void Polygon::copyMoved(const Polygon& src, const glm::vec3& move)
 {
     for(size_t i = 0; i < src.vertices.size(); i++)
     {
@@ -68,34 +69,34 @@ void Polygon::copyMoved(const Polygon& src, const btVector3& move)
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::transform(const btTransform& tr)
+void Polygon::transform(const glm::mat4& tr)
 {
-    plane.normal = tr.getBasis() * plane.normal;
+    plane.normal = glm::mat3(tr) * plane.normal;
     for(Vertex& vp : vertices)
     {
-        vp.position = tr*vp.position;
-        vp.normal = tr.getBasis() * vp.normal;
+        vp.position = glm::vec3( tr * glm::vec4(vp.position, 1.0f) );
+        vp.normal = glm::mat3(tr) * vp.normal;
     }
 
     plane.moveTo(vertices[0].position);
 }
 
-void Polygon::copyTransformed(const Polygon& src, const btTransform& tr, bool copyNormals)
+void Polygon::copyTransformed(const Polygon& src, const glm::mat4& tr, bool copyNormals)
 {
-    plane.normal = tr.getBasis() * src.plane.normal;
+    plane.normal = glm::mat3(tr) * src.plane.normal;
     for(size_t i = 0; i < src.vertices.size(); i++)
     {
-        vertices[i].position = tr * src.vertices[i].position;
+        vertices[i].position = glm::vec3( tr * glm::vec4(src.vertices[i].position, 1) );
         if(copyNormals)
-            vertices[i].normal = tr.getBasis() * src.vertices[i].normal;
+            vertices[i].normal = glm::mat3(tr) * src.vertices[i].normal;
     }
 
     plane.moveTo(vertices[0].position);
 }
 
-bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScalar* lambda) const
+bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::float_t* lambda) const
 {
-    btScalar u = plane.normal.dot(rayDir);
+    glm::float_t u = glm::dot(plane.normal, rayDir);
     if(std::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
         return false;    // plane is parallel to the ray - no intersection
@@ -103,21 +104,21 @@ bool Polygon::rayIntersect(const btVector3& rayDir, const btVector3& dot, btScal
     *lambda = -plane.distance(dot) / u;
 
     auto vp = &vertices.front();           // current polygon pointer
-    btVector3 T = dot - vp[0].position;
+    glm::vec3 T = dot - vp[0].position;
 
-    btVector3 E2 = vp[1].position - vp[0].position;
+    glm::vec3 E2 = vp[1].position - vp[0].position;
     for(size_t i = 0; i < vertices.size() - 2; i++, vp++)
     {
-        btVector3 E1 = E2;                           // PREV
+        glm::vec3 E1 = E2;                           // PREV
         E2 = vp[2].position - vertices[0].position;  // NEXT
 
-        btVector3 P = rayDir.cross(E2);
-        btVector3 Q = T.cross(E1);
+        glm::vec3 P = glm::cross(rayDir, E2);
+        glm::vec3 Q = glm::cross(T, E1);
 
-        btScalar tt = P.dot(E1);
-        u = P.dot(T);
+        glm::float_t tt = glm::dot(P, E1);
+        u = glm::dot(P, T);
         u /= tt;
-        btScalar v = Q.dot(rayDir);
+        glm::float_t v = glm::dot(Q, rayDir);
         v /= tt;
         tt = 1.0f - u - v;
         if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (tt <= 1.0) && (tt >= 0.0))
@@ -135,17 +136,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
         return false;  // quick check
     }
 
-    std::vector<btVector3> result_buf;
+    std::vector<glm::vec3> result_buf;
 
     /*
      * intersection of polygon p1 and plane p2
      */
     auto prev_v = &vertices.back();
     auto curr_v = &vertices.front();
-    btScalar dist0 = p2->plane.distance(prev_v->position);
+    glm::float_t dist0 = p2->plane.distance(prev_v->position);
     for(size_t i = 0; i < vertices.size(); i++)
     {
-        btScalar dist1 = p2->plane.distance(curr_v->position);
+        glm::float_t dist1 = p2->plane.distance(curr_v->position);
         if(dist1 > SplitEpsilon)
         {
             if(dist0 < -SplitEpsilon)
@@ -184,7 +185,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
     dist0 = plane.distance(prev_v->position);
     for(size_t i = 0; i < p2->vertices.size(); i++)
     {
-        btScalar dist1 = plane.distance(curr_v->position);
+        glm::float_t dist1 = plane.distance(curr_v->position);
         if(dist1 > SplitEpsilon)
         {
             if(dist0 < -SplitEpsilon)
@@ -215,11 +216,11 @@ bool Polygon::intersectPolygon(Polygon* p2)
         curr_v++;
     }
 
-    auto dir = plane.normal.cross(p2->plane.normal);  // vector of two planes intersection line
-    btScalar t = std::abs(dir[0]);
+    auto dir = glm::cross(plane.normal, p2->plane.normal);  // vector of two planes intersection line
+    glm::float_t t = std::abs(dir[0]);
     dist0 = std::abs(dir[1]);
-    btScalar dist1 = std::abs(dir[2]);
-    btScalar dist2 = 0;
+    glm::float_t dist1 = std::abs(dir[2]);
+    glm::float_t dist2 = 0;
     int pn = PLANE_X;
     if(t < dist0)
     {
@@ -323,10 +324,10 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
             if(dist0 < -SplitEpsilon)
             {
                 auto dir = curr_v->position - prev_v->position;
-                btScalar t;
+                glm::float_t t;
                 Vertex tv;
                 tv.position = n.rayIntersect(prev_v->position, dir, t);
-                tv.normal = prev_v->normal.lerp(curr_v->normal, t).normalized();
+                tv.normal = glm::normalize(glm::mix(prev_v->normal, curr_v->normal, t));
 
                 tv.color[0] = prev_v->color[0] + t * (curr_v->color[0] - prev_v->color[0]);
                 tv.color[1] = prev_v->color[1] + t * (curr_v->color[1] - prev_v->color[1]);
@@ -346,10 +347,10 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
             if(dist0 > SplitEpsilon)
             {
                 auto dir = curr_v->position - prev_v->position;
-                btScalar t;
+                glm::float_t t;
                 Vertex tv;
                 tv.position = n.rayIntersect(prev_v->position, dir, t);
-                tv.normal = prev_v->normal.lerp(curr_v->normal, t).normalized();
+                tv.normal = glm::normalize(glm::mix(prev_v->normal, curr_v->normal, t));
 
                 tv.color[0] = prev_v->color[0] + t * (curr_v->color[0] - prev_v->color[0]);
                 tv.color[1] = prev_v->color[1] + t * (curr_v->color[1] - prev_v->color[1]);
@@ -376,13 +377,13 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
     }
 }
 
-bool Polygon::isInsideBBox(const btVector3& bb_min, const btVector3& bb_max)
+bool Polygon::isInsideBBox(const BoundingBox& bb) const
 {
     for(const auto& v : vertices)
     {
-        if((v.position[0] < bb_min[0]) || (v.position[0] > bb_max[0]) ||
-           (v.position[1] < bb_min[1]) || (v.position[1] > bb_max[1]) ||
-           (v.position[2] < bb_min[2]) || (v.position[2] > bb_max[2]))
+        if((v.position[0] < bb.min[0]) || (v.position[0] > bb.max[0]) ||
+           (v.position[1] < bb.min[1]) || (v.position[1] > bb.max[1]) ||
+           (v.position[2] < bb.min[2]) || (v.position[2] > bb.max[2]))
         {
             return 0;
         }
@@ -391,12 +392,12 @@ bool Polygon::isInsideBBox(const btVector3& bb_min, const btVector3& bb_max)
     return 1;
 }
 
-bool Polygon::isInsideBQuad(const btVector3& bb_min, const btVector3& bb_max)
+bool Polygon::isInsideBQuad(const BoundingBox& bb) const
 {
     for(const auto& v : vertices)
     {
-        if((v.position[0] < bb_min[0]) || (v.position[0] > bb_max[0]) ||
-           (v.position[1] < bb_min[1]) || (v.position[1] > bb_max[1]))
+        if((v.position[0] < bb.min[0]) || (v.position[0] > bb.max[0]) ||
+           (v.position[1] < bb.min[1]) || (v.position[1] > bb.max[1]))
         {
             return false;
         }

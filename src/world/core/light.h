@@ -2,8 +2,6 @@
 
 #include "loader/datatypes.h"
 
-#include <LinearMath/btVector3.h>
-
 namespace world
 {
 namespace core
@@ -11,7 +9,7 @@ namespace core
 
 struct Light
 {
-    btVector3 position;
+    glm::vec3 position;
     float                       colour[4];
 
     float                       inner;

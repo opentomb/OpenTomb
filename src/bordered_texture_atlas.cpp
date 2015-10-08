@@ -18,6 +18,7 @@
 #include "world/core/polygon.h"
 
 #ifndef __APPLE__
+
 /*!
  * Fills an area of memory with a four-byte pattern pointed to.
  * This is a standard library function on Mac OS X, but sadly not anywhere else, so I'm redefining it here. Because I know where it will be called, I can add additional requirements: len must be a multiple of four, and pattern and b both must be four-byte aligned.
@@ -33,7 +34,7 @@ static void memset_pattern4(void *b, const void *pattern, const size_t len)
 
 namespace
 {
-    inline GLuint NextPowerOf2(GLuint in)
+    inline uint32_t NextPowerOf2(uint32_t in)
     {
         in -= 1;
 
@@ -165,7 +166,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     , m_canonicalTexturesForSpriteTextures()
     , m_canonicalObjectTextures()
 {
-    GLint max_texture_edge_length = 0;
+    int max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if(max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
@@ -375,12 +376,12 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
 
         size_t index = reverse ? (poly->vertices.size() - i - 1) : i;
 
-        poly->vertices[index].tex_coord[0] = static_cast<GLfloat>(x_coord) / static_cast<GLfloat>(m_resultPageWidth);
-        poly->vertices[index].tex_coord[1] = static_cast<GLfloat>(y_coord) / static_cast<GLfloat>(m_resultPageHeights[canonical.new_page]);
+        poly->vertices[index].tex_coord[0] = static_cast<glm::float_t>(x_coord) / static_cast<glm::float_t>(m_resultPageWidth);
+        poly->vertices[index].tex_coord[1] = static_cast<glm::float_t>(y_coord) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, GLfloat *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, glm::float_t *coordinates) const
 {
     assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
@@ -409,8 +410,8 @@ void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &o
 
     for(int i = 0; i < 4; i++)
     {
-        coordinates[i * 2 + 0] = static_cast<GLfloat>(pixel_coordinates[i * 2 + 0]) / static_cast<GLfloat>(m_resultPageWidth);
-        coordinates[i * 2 + 1] = static_cast<GLfloat>(pixel_coordinates[i * 2 + 1]) / static_cast<GLfloat>(m_resultPageHeights[canonical.new_page]);
+        coordinates[i * 2 + 0] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 0]) / static_cast<glm::float_t>(m_resultPageWidth);
+        coordinates[i * 2 + 1] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 1]) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 

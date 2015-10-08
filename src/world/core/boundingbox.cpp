@@ -30,7 +30,7 @@ btCollisionShape *BT_CSfromBBox(const BoundingBox &boundingBox, bool /*useCompre
             const auto& v0 = p.vertices[j + 1].position;
             const auto& v1 = p.vertices[j].position;
             const auto& v2 = p.vertices[0].position;
-            trimesh->addTriangle(v0, v1, v2, true);
+            trimesh->addTriangle(util::convert(v0), util::convert(v1), util::convert(v2), true);
         }
         cnt++;
     }

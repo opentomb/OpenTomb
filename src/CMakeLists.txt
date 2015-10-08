@@ -201,6 +201,7 @@ target_link_libraries(
     Lua
     Freetype
     OpenAL
+    GLM
     ${OGG_LIBRARIES}
     ${VORBIS_LIBRARIES}
     ${VORBISFILE_LIBRARIES}

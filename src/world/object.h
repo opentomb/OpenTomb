@@ -34,12 +34,12 @@ class Object
 public:
     virtual ~Object() = default;
 
-    world::Room* getRoom() const noexcept
+    Room* getRoom() const noexcept
     {
         return m_room;
     }
 
-    void setRoom(world::Room* room) noexcept
+    void setRoom(Room* room) noexcept
     {
         m_room = room;
     }

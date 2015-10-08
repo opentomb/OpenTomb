@@ -7,6 +7,8 @@
 #include "util/helpers.h"
 #include "world/entity.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace audio
 {
 
@@ -299,13 +301,13 @@ void Source::linkEmitter()
         case EmitterType::Entity:
             if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(m_emitterID))
             {
-                setPosition(ent->m_transform.getOrigin());
-                setVelocity(ent->m_speed);
+                setPosition(glm::value_ptr(ent->m_transform[3]));
+                setVelocity(glm::value_ptr(ent->m_speed));
             }
             break;
 
         case EmitterType::SoundSource:
-            setPosition(engine::engine_world.audioEngine.getEmitter(m_emitterID).position);
+            setPosition(glm::value_ptr(engine::engine_world.audioEngine.getEmitter(m_emitterID).position));
             break;
     }
 }

@@ -65,11 +65,20 @@ struct World;
 struct Room;
 struct RoomSector;
 struct SkeletalModel;
+struct Entity;
+struct StaticMesh;
+struct BaseItem;
 
 namespace core
 {
 struct BaseMesh;
+struct Polygon;
 } // namespace core
+
+namespace animation
+{
+struct BoneFrame;
+} // namespace animation
 
 // NOTE: Functions which take native TR level structures as argument will have
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
@@ -140,7 +149,7 @@ void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
-void TR_vertex_to_arr(btVector3 &v, const loader::Vertex &tr_v);
+glm::vec3 TR_vertex_to_arr(const loader::Vertex& tr_v);
 void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.

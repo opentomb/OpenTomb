@@ -12,6 +12,8 @@
 #include "world/core/basemesh.h"
 #include "world/skeletalmodel.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace world
 {
 
@@ -44,7 +46,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup initial position / angles.
 
-    btTransform owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[m_ownerBody].full_transform;
+    glm::mat4 owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[m_ownerBody].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     m_elements.clear();
@@ -73,7 +75,6 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         // Begin creating ACTUAL physical hair mesh.
 
         btVector3   localInertia(0, 0, 0);
-        btTransform startTransform;
 
         // Make collision shape out of mesh.
 
@@ -86,7 +87,8 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Initialize motion state for body.
 
-        startTransform = owner_body_transform;
+        btTransform startTransform;
+        startTransform.setFromOpenGLMatrix(glm::value_ptr(owner_body_transform));
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
         // Make rigid body.
@@ -145,10 +147,10 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to parent body.
 
-            localA.setOrigin(setup->m_headOffset + btVector3(joint_x, 0.0, joint_y));
+            localA.setOrigin(util::convert(setup->m_headOffset + glm::vec3(joint_x, 0.0, joint_y)));
             localA.getBasis().setEulerZYX(setup->m_rootAngle[0], setup->m_rootAngle[1], setup->m_rootAngle[2]);
             // Stealing this calculation because I need it for drawing
-            m_ownerBodyHairRoot = localA;
+            localA.getOpenGLMatrix(glm::value_ptr(m_ownerBodyHairRoot));
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0, -SIMD_HALF_PI, 0);
@@ -324,7 +326,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
             if(m_mesh->m_vertices[verticesStart + j].normal[0] != 0 || m_mesh->m_vertices[verticesStart + j].normal[2] != 0)
             {
                 m_mesh->m_vertices[verticesStart + j].normal[1] = 0;
-                m_mesh->m_vertices[verticesStart + j].normal.normalize();
+                m_mesh->m_vertices[verticesStart + j].normal = glm::normalize(m_mesh->m_vertices[verticesStart + j].normal);
             }
         }
     }

@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <btBulletCollisionCommon.h>
-#include <LinearMath/btScalar.h>
+#include <glm/glm.hpp>
 
 // Max. number of game steps that are caught-up between
 // rendering: This limits escalation if the system is too
@@ -34,15 +34,15 @@ namespace engine
 
 class BtEngineClosestConvexResultCallback;
 
-extern btVector3 cam_angles;
+extern glm::vec3 cam_angles;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 
-btScalar Game_Tick(btScalar *game_logic_time);
-void     Game_Frame(btScalar time);
+float    Game_Tick(float *game_logic_time);
+void     Game_Frame(float time);
 
 void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);
@@ -51,7 +51,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent);
 
 void Game_UpdateAI();
 
-void Cam_FollowEntity(world::Camera *cam, world::Entity *ent, btScalar dx, btScalar dz);
+void Cam_FollowEntity(world::Camera *cam, world::Entity *ent, glm::float_t dx, glm::float_t dz);
 bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
 
 } // namespace engine

@@ -141,11 +141,11 @@ void BaseMesh::genVBO(const render::Render* /*renderer*/)
     }
 }
 
-Vertex* BaseMesh::findVertex(const btVector3& v)
+Vertex* BaseMesh::findVertex(const glm::vec3& v)
 {
     for(Vertex& mv : m_vertices)
     {
-        if((v - mv.position).length2() < 4.0)
+        if(glm::distance(v, mv.position) < 2.0)
         {
             return &mv;
         }
@@ -406,7 +406,7 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
             const auto& v0 = p.vertices[j + 1].position;
             const auto& v1 = p.vertices[j].position;
             const auto& v2 = p.vertices[0].position;
-            trimesh->addTriangle(v0, v1, v2, true);
+            trimesh->addTriangle(util::convert(v0), util::convert(v1), util::convert(v2), true);
         }
         cnt++;
     }

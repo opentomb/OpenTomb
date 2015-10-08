@@ -4,6 +4,8 @@
 #include "engine/system.h"
 #include "gui.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace gui
 {
 namespace
@@ -106,11 +108,10 @@ void ItemNotifier::Draw()
     item->bf->animations.frame_time = 0.0;
 
     item->bf->itemFrame(0.0);
-    btTransform matrix;
-    matrix.setIdentity();
-    util::Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
-    util::Mat4_RotateY(matrix, mCurrRotX + mRotX);
-    util::Mat4_RotateX(matrix, mCurrRotY + mRotY);
+    glm::mat4 matrix(1.0f);
+    matrix = glm::translate(matrix, { mCurrPosX, mPosY, -2048.0 });
+    matrix = glm::rotate(matrix, (mCurrRotX + mRotX) * util::RadPerDeg, { 0,1,0 });
+    matrix = glm::rotate(matrix, (mCurrRotY + mRotY) * util::RadPerDeg, { 1,0,0 });
     render::renderItem(item->bf.get(), mSize, matrix, gui::guiProjectionMatrix);
 
     item->bf->animations.current_animation = anim;

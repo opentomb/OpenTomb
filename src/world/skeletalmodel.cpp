@@ -39,17 +39,15 @@ void SkeletalModel::interpolateFrames()
 
                     btScalar lerp = static_cast<btScalar>(j) / static_cast<btScalar>(rate);
 
-                    anim->frames[destIdx + j].center = anim->frames[srcIdx].center.lerp(anim->frames[srcIdx + 1].center, lerp);
-                    anim->frames[destIdx + j].position = anim->frames[srcIdx].position.lerp(anim->frames[srcIdx + 1].position, lerp);
-                    anim->frames[destIdx + j].boundingBox.max = anim->frames[srcIdx].boundingBox.max.lerp(anim->frames[srcIdx + 1].boundingBox.max, lerp);
-                    anim->frames[destIdx + j].boundingBox.min = anim->frames[srcIdx].boundingBox.min.lerp(anim->frames[srcIdx + 1].boundingBox.min, lerp);
+                    anim->frames[destIdx + j].center = glm::mix(anim->frames[srcIdx].center, anim->frames[srcIdx + 1].center, lerp);
+                    anim->frames[destIdx + j].position = glm::mix(anim->frames[srcIdx].position, anim->frames[srcIdx + 1].position, lerp);
+                    anim->frames[destIdx + j].boundingBox.max = glm::mix(anim->frames[srcIdx].boundingBox.max, anim->frames[srcIdx + 1].boundingBox.max, lerp);
+                    anim->frames[destIdx + j].boundingBox.min = glm::mix(anim->frames[srcIdx].boundingBox.min, anim->frames[srcIdx + 1].boundingBox.min, lerp);
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
-                        anim->frames[destIdx + j].bone_tags[k].offset = anim->frames[srcIdx].bone_tags[k].offset.lerp(
-                            anim->frames[srcIdx + 1].bone_tags[k].offset, lerp);
-                        anim->frames[destIdx + j].bone_tags[k].qrotate = util::Quat_Slerp(anim->frames[srcIdx].bone_tags[k].qrotate,
-                                                                                          anim->frames[srcIdx + 1].bone_tags[k].qrotate, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].offset = glm::mix(anim->frames[srcIdx].bone_tags[k].offset, anim->frames[srcIdx + 1].bone_tags[k].offset, lerp);
+                        anim->frames[destIdx + j].bone_tags[k].qrotate = glm::slerp(anim->frames[srcIdx].bone_tags[k].qrotate, anim->frames[srcIdx + 1].bone_tags[k].qrotate, lerp);
                     }
                 }
                 if(destIdx > 0)

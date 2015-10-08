@@ -45,7 +45,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
     else //((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
     {
-        if(transformed.plane.normal.dot(root->plane.normal) > 0.9)
+        if(glm::dot(transformed.plane.normal, root->plane.normal) > 0.9)
         {
             root->polygons_front.insert(root->polygons_front.end(), face);
         }
@@ -56,7 +56,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
 }
 
-void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const world::core::Frustum& frustum, const world::Camera& cam)
+void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const glm::mat4& transform, const world::core::Frustum& frustum, const world::Camera& cam)
 {
     for(const render::TransparentPolygonReference& pp : p)
     {

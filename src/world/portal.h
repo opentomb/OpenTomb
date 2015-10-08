@@ -15,9 +15,9 @@ struct Room;
  */
 struct Portal
 {
-    std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
+    std::vector<glm::vec3> vertices;                                                           // Оригинальные вершины портала
     util::Plane normal;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btVector3 centre = { 0,0,0 };                                                         // центр портала
+    glm::vec3 centre = { 0,0,0 };                                                         // центр портала
     std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
 
@@ -28,8 +28,8 @@ struct Portal
 
     ~Portal() = default;
 
-    void move(const btVector3 &mv);
-    bool rayIntersect(const btVector3 &dir, const btVector3 &point);              // check the intersection of the beam and portal
+    void move(const glm::vec3 &mv);
+    bool rayIntersect(const glm::vec3 &dir, const glm::vec3 &point);              // check the intersection of the beam and portal
 
     void updateNormal();
 };

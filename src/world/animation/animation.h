@@ -3,7 +3,8 @@
 #include "world/core/boundingbox.h"
 #include "world/statecontroller.h"
 
-#include <btBulletCollisionCommon.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include <array>
 #include <memory>
@@ -50,9 +51,9 @@ struct AnimCommand
  */
 struct AnimatedVertex
 {
-    btVector3 position;
+    glm::vec3 position;
     std::array<float, 4> color;
-    btVector3 normal;
+    glm::vec3 normal;
 };
 
 // Animated texture types
@@ -68,8 +69,8 @@ enum class AnimTextureType
  */
 struct TexFrame
 {
-    btScalar    mat[4];
-    btScalar    move[2];
+    glm::float_t    mat[4];
+    glm::float_t    move[2];
     uint16_t    tex_ind;
 };
 
@@ -79,18 +80,18 @@ struct AnimSeq
     bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
 
     bool        blend;                  // Blend flag.  Reserved for future use!
-    btScalar    blend_rate;             // Blend rate.  Reserved for future use!
-    btScalar    blend_time;             // Blend value. Reserved for future use!
+    glm::float_t    blend_rate;             // Blend rate.  Reserved for future use!
+    glm::float_t    blend_time;             // Blend value. Reserved for future use!
 
     AnimTextureType anim_type;          // 0 = normal, 1 = back, 2 = reverse.
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
-    btScalar    frame_time;             // Time passed since last frame update.
+    glm::float_t    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
-    btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    glm::float_t    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
-    btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
-    btScalar    uvrotate_max;           // Reference value used to restart rotation.
-    btScalar    current_uvrotate;       // Current coordinate window position.
+    glm::float_t    uvrotate_speed;         // Speed of UVRotation, in seconds.
+    glm::float_t    uvrotate_max;           // Reference value used to restart rotation.
+    glm::float_t    current_uvrotate;       // Current coordinate window position.
 
     std::vector<TexFrame> frames;
     std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
@@ -115,8 +116,8 @@ struct StateChange
 
 struct BoneTag
 {
-    btVector3 offset;                                            // bone vector
-    btQuaternion qrotate;                                           // rotation quaternion
+    glm::vec3 offset;                                            // bone vector
+    glm::quat qrotate;                                           // rotation quaternion
 };
 
 /*
@@ -125,9 +126,9 @@ struct BoneTag
 struct BoneFrame
 {
     std::vector<BoneTag> bone_tags;                 // bones data
-    btVector3            position;                       // position (base offset)
+    glm::vec3            position;                       // position (base offset)
     core::BoundingBox    boundingBox;
-    btVector3            center;                    // bounding box centre
+    glm::vec3            center;                    // bounding box centre
 
     std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
@@ -206,10 +207,10 @@ struct SSAnimation
 
     SSAnimationMode mode = SSAnimationMode::NormalControl;
 
-    btScalar                    frame_time = 0;                                     // time in current frame
+    glm::float_t                frame_time = 0;                                     // time in current frame
 
                                                                                     // lerp:
-    btScalar                    lerp = 0;
+    glm::float_t                lerp = 0;
     int16_t                     lerp_last_animation = 0;
     int16_t                     lerp_last_frame = 0;
 
@@ -220,7 +221,7 @@ struct SSAnimation
 
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
-    AnimUpdate stepAnimation(btScalar time, Entity *cmdEntity = nullptr);
+    AnimUpdate stepAnimation(glm::float_t time, Entity *cmdEntity = nullptr);
 
     const AnimationFrame& getCurrentAnimationFrame() const;
 };
@@ -232,11 +233,11 @@ struct SSBoneTag
     std::shared_ptr<core::BaseMesh> mesh_base;                                          // base mesh - pointer to the first mesh in array
     std::shared_ptr<core::BaseMesh> mesh_skin;                                          // base skinned mesh for ТР4+
     std::shared_ptr<core::BaseMesh> mesh_slot;
-    btVector3 offset;                                          // model position offset
+    glm::vec3 offset;                                          // model position offset
 
-    btQuaternion qrotate;                                         // quaternion rotation
-    btTransform transform;    // 4x4 OpenGL matrix for stack usage
-    btTransform full_transform;    // 4x4 OpenGL matrix for global usage
+    glm::quat qrotate;                                         // quaternion rotation
+    glm::mat4 transform;    // 4x4 OpenGL matrix for stack usage
+    glm::mat4 full_transform;    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 };
@@ -247,9 +248,9 @@ struct SSBoneTag
 struct SSBoneFrame
 {
     std::vector<SSBoneTag> bone_tags;                                      // array of bones
-    btVector3 position = {0,0,0};                                         // position (base offset)
+    glm::vec3 position = {0,0,0};                                         // position (base offset)
     core::BoundingBox boundingBox;
-    btVector3 center = {0,0,0};                                      // bounding box center
+    glm::vec3 center = {0,0,0};                                      // bounding box center
 
     SSAnimation       animations;                                     // animations list
 
@@ -261,7 +262,7 @@ struct SSBoneFrame
      * That function updates item animation and rebuilds skeletal matrices;
      * @param bf - extended bone frame of the item;
      */
-    void itemFrame(btScalar time);
+    void itemFrame(glm::float_t time);
 
     void updateCurrentBoneFrame();
 };

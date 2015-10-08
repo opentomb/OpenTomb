@@ -25,10 +25,12 @@
  * </ol>
  */
 
-#include <cstdint>
-
 #include "loader/datatypes.h"
 #include "world/core/polygon.h"
+
+#include <GL/glew.h>
+
+#include <cstdint>
 
 class BorderedTextureAtlas
 {
@@ -145,7 +147,7 @@ public:
      */
     void getSpriteCoordinates(size_t sprite_texture,
                               size_t &outPage,
-                              GLfloat *coordinates) const;
+                              glm::float_t *coordinates) const;
 
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a

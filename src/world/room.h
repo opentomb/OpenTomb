@@ -54,13 +54,13 @@ struct RoomSector
 
     int16_t                     index_x;
     int16_t                     index_y;
-    btVector3 position;
+    glm::vec3 position;
 
-    btVector3                   ceiling_corners[4];
+    glm::vec3                   ceiling_corners[4];
     DiagonalType                ceiling_diagonal_type;
     PenetrationConfig           ceiling_penetration_config;
 
-    btVector3                   floor_corners[4];
+    glm::vec3                   floor_corners[4];
     DiagonalType                floor_diagonal_type;
     PenetrationConfig           floor_penetration_config;
 
@@ -77,8 +77,8 @@ struct RoomSector
     bool is2SidePortals(RoomSector* s2);
     bool similarCeiling(RoomSector* s2, bool ignore_doors);
     bool similarFloor(RoomSector* s2, bool ignore_doors);
-    btVector3 getFloorPoint();
-    btVector3 getCeilingPoint();
+    glm::vec3 getFloorPoint();
+    glm::vec3 getCeilingPoint();
 };
 
 struct Room : public Object
@@ -101,7 +101,7 @@ struct Room : public Object
     std::vector<world::Object*> containers;                                     // engine containers with moveables objects
 
     core::BoundingBox boundingBox;
-    btTransform transform;                                  // GL transformation matrix
+    glm::mat4 transform;                                  // GL transformation matrix
 
     GLfloat ambient_lighting[3];
 
@@ -114,9 +114,6 @@ struct Room : public Object
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
-
-    std::vector<std::unique_ptr<core::Frustum>> frustum;
-    uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     std::vector<std::shared_ptr<Room>> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
@@ -147,13 +144,13 @@ struct Room : public Object
     bool removeEntity(Entity *entity);
     void addToNearRoomsList(std::shared_ptr<Room> r);
 
-    bool isPointIn(const btVector3& dot)
+    bool isPointIn(const glm::vec3& dot)
     {
         return boundingBox.contains(dot);
     }
 
-    RoomSector* getSectorRaw(const btVector3 &pos);
-    RoomSector* getSectorXYZ(const btVector3 &pos);
+    RoomSector* getSectorRaw(const glm::vec3 &pos);
+    RoomSector* getSectorXYZ(const glm::vec3 &pos);
 
     void genMesh(World *world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr);
 };

@@ -41,7 +41,7 @@ constexpr float DEFAULT_CHARACTER_SWIM_DEPTH = 100.0f;
 
 struct CharacterCommand
 {
-    btVector3 rot = { 0,0,0 };
+    glm::vec3 rot = { 0,0,0 };
     std::array<int8_t, 3> move{ { 0,0,0 } };
 
     bool        roll = false;
@@ -95,17 +95,17 @@ struct HeightInfo
     bool                                        walls_climb = false;
     int8_t                                      walls_climb_dir = 0;
 
-    btVector3                                   floor_normale = { 0,0,1 };
-    btVector3                                   floor_point = { 0,0,0 };
+    glm::vec3                                   floor_normale = { 0,0,1 };
+    glm::vec3                                   floor_point = { 0,0,0 };
     bool                                        floor_hit = false;
     const btCollisionObject                    *floor_obj = nullptr;
 
-    btVector3                                   ceiling_normale = { 0,0,-1 };
-    btVector3                                   ceiling_point = { 0,0,0 };
+    glm::vec3                                   ceiling_normale = { 0,0,-1 };
+    glm::vec3                                   ceiling_point = { 0,0,0 };
     bool                                        ceiling_hit = false;
     const btCollisionObject                    *ceiling_obj = nullptr;
 
-    btScalar                                    transition_level = 0;
+    glm::float_t                                transition_level = 0;
     bool                                        water = false;
     QuicksandPosition                           quicksand = QuicksandPosition::None;
 };
@@ -187,20 +187,20 @@ struct ClimbInfo
     StepType                       height_info = StepType::Horizontal;
     bool                           can_hang = false;
 
-    btVector3 point;
-    btVector3 n;
-    btVector3 right;
-    btVector3 up;
-    btScalar                       floor_limit;
-    btScalar                       ceiling_limit;
-    btScalar                       next_z_space = 0;
+    glm::vec3 point;
+    glm::vec3 n;
+    glm::vec3 right;
+    glm::vec3 up;
+    glm::float_t                       floor_limit;
+    glm::float_t                       ceiling_limit;
+    glm::float_t                       next_z_space = 0;
 
     ClimbType                      wall_hit = ClimbType::None;
     bool                           edge_hit = false;
-    btVector3                      edge_point;
-    btVector3                      edge_normale;
-    btVector3                      edge_tan_xy;
-    btScalar                       edge_z_ang;
+    glm::vec3                      edge_point;
+    glm::vec3                      edge_normale;
+    glm::vec3                      edge_tan_xy;
+    glm::float_t                       edge_z_ang;
     btCollisionObject             *edge_obj = nullptr;
 };
 
@@ -230,18 +230,18 @@ struct Character : public Entity
     WeaponState m_weaponCurrentState = WeaponState::Hide;
 
     int8_t                       m_camFollowCenter = 0;
-    btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
-    btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
-    btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
-    btScalar                     m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
-    btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
-    btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
+    glm::float_t                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
+    glm::float_t                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
+    glm::float_t                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
+    glm::float_t                     m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
+    glm::float_t                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+    glm::float_t                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
-    btScalar                     m_forwardSize = 48;           // offset for climbing calculation
-    btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
-    btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
-    btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
+    glm::float_t                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    glm::float_t                     m_forwardSize = 48;           // offset for climbing calculation
+    glm::float_t                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
+    glm::float_t                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
+    glm::float_t                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
 
     std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
     std::unique_ptr<btSphereShape> m_climbSensor;
@@ -257,27 +257,27 @@ struct Character : public Entity
     Character(uint32_t id);
     ~Character();
 
-    int checkNextPenetration(const btVector3& move);
+    int checkNextPenetration(const glm::vec3& move);
 
-    void doWeaponFrame(btScalar time);
+    void doWeaponFrame(float time);
 
-    void fixPenetrations(const btVector3* move) override;
-    btVector3 getRoomPos() const override
+    void fixPenetrations(const glm::vec3* move) override;
+    glm::vec3 getRoomPos() const override
     {
-        btVector3 pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
-        pos[0] = m_transform.getOrigin()[0];
-        pos[1] = m_transform.getOrigin()[1];
-        return pos;
+        glm::vec4 pos = m_transform * m_bf.bone_tags.front().full_transform[3];
+        pos[0] = m_transform[3][0];
+        pos[1] = m_transform[3][1];
+        return glm::vec3(pos);
     }
     void transferToRoom(Room* /*room*/) override
     {
     }
 
     void updateHair() override;
-    void frame(btScalar time) override;
+    void frame(float time) override;
 
     void processSectorImpl() override;
-    void jump(btScalar vert, btScalar v_horizontal) override;
+    void jump(glm::float_t vert, glm::float_t v_horizontal) override;
     void kill() override
     {
         m_response.killed = true;
@@ -293,26 +293,26 @@ struct Character : public Entity
     {
         return m_convexCb;
     }
-    btVector3 camPosForFollowing(btScalar dz) override;
+    glm::vec3 camPosForFollowing(glm::float_t dz) override;
 
     int32_t addItem(uint32_t item_id, int32_t count);       // returns items count after in the function's end
     int32_t removeItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
     int32_t removeAllItems();
     int32_t getItemsCount(uint32_t item_id);                // returns items count
 
-    static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-    StepType checkNextStep(const btVector3 &offset, HeightInfo *nfc) const;
+    static void getHeightInfo(const glm::vec3& pos, HeightInfo *fc, glm::float_t v_offset = 0.0);
+    StepType checkNextStep(const glm::vec3 &offset, HeightInfo *nfc) const;
     bool hasStopSlant(const HeightInfo &next_fc);
-    ClimbInfo checkClimbability(const btVector3& offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkClimbability(const glm::vec3& offset, HeightInfo *nfc, glm::float_t test_height);
     ClimbInfo checkWallsClimbability();
 
     void updateCurrentHeight();
     void updatePlatformPreStep() override;
     void updatePlatformPostStep();
 
-    void lean(btScalar max_lean);
-    btScalar inertiaLinear(btScalar max_speed, btScalar accel, bool command);
-    btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
+    void lean(glm::float_t max_lean);
+    glm::float_t inertiaLinear(glm::float_t max_speed, glm::float_t accel, bool command);
+    glm::float_t inertiaAngular(glm::float_t max_angle, glm::float_t accel, uint8_t axis);
 
     int moveOnFloor();
     int freeFalling();

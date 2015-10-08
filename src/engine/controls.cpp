@@ -14,6 +14,8 @@
 #include "inventory.h"
 #include "script/script.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 extern bool done;
 
 namespace engine
@@ -632,8 +634,8 @@ void Controls_DebugKeys(int button, int state)
 void Controls_PrimaryMouseDown()
 {
     btScalar dbgR = 128.0;
-    btVector3 v = engine_camera.getPosition();
-    btVector3 dir = engine_camera.getViewDir();
+    glm::vec3 v = engine_camera.getPosition();
+    glm::vec3 dir = engine_camera.getViewDir();
     btVector3 localInertia(0, 0, 0);
 
     btCollisionShape* cshape = new btSphereShape(dbgR);
@@ -641,13 +643,13 @@ void Controls_PrimaryMouseDown()
     //cshape = new btCapsuleShapeZ(50.0, 100.0);
     btTransform startTransform;
     startTransform.setIdentity();
-    btVector3 new_pos = v;
-    startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
+    glm::vec3 new_pos = v;
+    startTransform.setOrigin(util::convert(new_pos));
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
-    body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
+    body->setLinearVelocity(util::convert(dir) * 6000);
     world::BulletObject* cont = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom));
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
@@ -656,21 +658,20 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    btVector3 from = engine_camera.getPosition();
-    btVector3 to = from + engine_camera.getViewDir() * 32768.0;
+    glm::vec3 from = engine_camera.getPosition();
+    glm::vec3 to = from + engine_camera.getViewDir() * 32768.0f;
 
     world::BulletObject* cam_cont = new world::BulletObject(engine_camera.m_currentRoom);
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    bt_engine_dynamicsWorld->rayTest(from, to, cbc);
+    bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
     if(cbc.hasHit())
     {
         extern GLfloat cast_ray[6];
 
-        btVector3 place;
-        place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        std::copy(place+0, place+3, cast_ray);
+        glm::vec3 place = glm::mix(from, to, cbc.m_closestHitFraction);
+        std::copy_n(glm::value_ptr(place), 3, cast_ray);
         cast_ray[3] = cast_ray[0] + 100.0f * cbc.m_hitNormalWorld[0];
         cast_ray[4] = cast_ray[1] + 100.0f * cbc.m_hitNormalWorld[1];
         cast_ray[5] = cast_ray[2] + 100.0f * cbc.m_hitNormalWorld[2];

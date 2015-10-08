@@ -82,12 +82,16 @@ find_package(SDL2 REQUIRED)
 add_library(SDL2 INTERFACE)
 target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
-        
+
 find_package(SDL2Image REQUIRED)
 add_library(SDL2_IMAGE INTERFACE)
 target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
 target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
 target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
+
+find_package(GLM REQUIRED)
+add_library(GLM INTERFACE)
+target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 

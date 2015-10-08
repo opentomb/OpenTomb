@@ -7,6 +7,8 @@
 #include "world/camera.h"
 #include "world/room.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace audio
 {
 
@@ -104,10 +106,10 @@ void FxManager::updateListener(world::Camera *cam)
 
     alListenerfv(AL_ORIENTATION, v);
 
-    alListenerfv(AL_POSITION, cam->getPosition());
+    alListenerfv(AL_POSITION, glm::value_ptr(cam->getPosition()));
 
-    btVector3 v2 = (cam->getPosition() - cam->m_prevPos) / engine::engine_frame_time;
-    alListenerfv(AL_VELOCITY, v2);
+    glm::vec3 v2 = (cam->getPosition() - cam->m_prevPos) / engine::engine_frame_time;
+    alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
     cam->m_prevPos = cam->getPosition();
 
     if(cam->m_currentRoom)

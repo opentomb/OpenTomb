@@ -3,7 +3,6 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-#include "camera.h"
 #include "engine/engine.h"
 #include "entity.h"
 #include "gui/console.h"
@@ -12,7 +11,6 @@
 #include "script/script.h"
 #include "util/vmath.h"
 #include "world/character.h"
-#include "world/core/polygon.h"
 #include "world/core/sprite.h"
 #include "world/room.h"
 
@@ -138,7 +136,7 @@ bool World::deleteEntity(uint32_t id)
     }
 }
 
-uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
+uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3* pos, const glm::vec3* ang, int32_t id)
 {
     if(SkeletalModel* model = getModelByID(model_id))
     {
@@ -146,7 +144,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         {
             if(pos != nullptr)
             {
-                ent->m_transform.getOrigin() = *pos;
+                ent->m_transform[3] = glm::vec4(*pos,1.0f);
             }
             if(ang != nullptr)
             {
@@ -156,7 +154,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             if(room_id < rooms.size())
             {
                 ent->setRoom( rooms[room_id].get() );
-                ent->m_currentSector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+                ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
             }
             else
             {
@@ -182,7 +180,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
 
         if(pos != nullptr)
         {
-            ent->m_transform.getOrigin() = *pos;
+            ent->m_transform[3] = glm::vec4(*pos,1.0f);
         }
         if(ang != nullptr)
         {
@@ -192,7 +190,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
         if(room_id < rooms.size())
         {
             ent->setRoom( rooms[room_id].get() );
-            ent->m_currentSector = ent->getRoom()->getSectorRaw(ent->m_transform.getOrigin());
+            ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
         }
         else
         {
@@ -257,7 +255,7 @@ std::shared_ptr<BaseItem> World::getBaseItemByID(uint32_t id)
         return it->second;
 }
 
-std::shared_ptr<Room> World::findRoomByPosition(const btVector3& pos)
+std::shared_ptr<Room> World::findRoomByPosition(const glm::vec3& pos)
 {
     for(auto r : rooms)
     {
@@ -269,7 +267,7 @@ std::shared_ptr<Room> World::findRoomByPosition(const btVector3& pos)
     return nullptr;
 }
 
-Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
+Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
 {
     if(room == nullptr)
     {
@@ -360,8 +358,8 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
         return nullptr;
     }
 
-    x = static_cast<int>(pos[0] - room->transform.getOrigin()[0]) / 1024;
-    y = static_cast<int>(pos[1] - room->transform.getOrigin()[1]) / 1024;
+    x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
+    y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return nullptr;

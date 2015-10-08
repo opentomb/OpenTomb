@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include <BulletDynamics/Dynamics/btRigidBody.h>
-#include <LinearMath/btVector3.h>
 
 #include "engine/engine.h"
 #include "world/entity.h"
@@ -27,7 +26,7 @@ struct HairElement
     std::shared_ptr<core::BaseMesh> mesh;           // Pointer to rendered mesh.
     std::unique_ptr<btCollisionShape> shape;          // Pointer to collision shape.
     std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
-    btVector3 position;     // Position of this hair element
+    glm::vec3 position;     // Position of this hair element
     // relative to the model (NOT the parent!). Should be a matrix in theory,
     // but since this never has a rotation part, we can save a few bytes here.
 };
@@ -38,7 +37,7 @@ struct Hair : public Object
 {
     std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
     uint32_t m_ownerBody = 0;         // Owner entity's body ID.
-    btTransform m_ownerBodyHairRoot = btTransform::getIdentity(); // transform from owner body to root of hair start
+    glm::mat4 m_ownerBodyHairRoot{ 1.0f }; // transform from owner body to root of hair start
 
     uint8_t m_rootIndex = 0;         // Index of "root" element.
     uint8_t m_tailIndex = 0;         // Index of "tail" element.
@@ -69,21 +68,21 @@ struct HairSetup
     uint32_t     m_model;              // Hair model ID
     uint32_t     m_linkBody;          // Lara's head mesh index
 
-    btScalar     m_rootWeight;        // Root and tail hair body weight. Intermediate body
-    btScalar     m_tailWeight;        // weights are calculated from these two parameters
+    glm::float_t     m_rootWeight;        // Root and tail hair body weight. Intermediate body
+    glm::float_t     m_tailWeight;        // weights are calculated from these two parameters
 
-    btScalar     m_hairDamping[2];    // Damping affects hair "plasticity"
-    btScalar     m_hairInertia;       // Inertia affects hair "responsiveness"
-    btScalar     m_hairRestitution;   // "Bounciness" of the hair
-    btScalar     m_hairFriction;      // How much other bodies will affect hair trajectory
+    glm::float_t     m_hairDamping[2];    // Damping affects hair "plasticity"
+    glm::float_t     m_hairInertia;       // Inertia affects hair "responsiveness"
+    glm::float_t     m_hairRestitution;   // "Bounciness" of the hair
+    glm::float_t     m_hairFriction;      // How much other bodies will affect hair trajectory
 
-    btScalar     m_jointOverlap;      // How much two hair bodies overlap each other
+    glm::float_t     m_jointOverlap;      // How much two hair bodies overlap each other
 
-    btScalar     m_jointCfm;          // Constraint force mixing (joint softness)
-    btScalar     m_jointErp;          // Error reduction parameter (joint "inertia")
+    glm::float_t     m_jointCfm;          // Constraint force mixing (joint softness)
+    glm::float_t     m_jointErp;          // Error reduction parameter (joint "inertia")
 
-    btVector3    m_headOffset;        // Linear offset to place hair to
-    btVector3    m_rootAngle;      // First constraint set angle (to align hair angle)
+    glm::vec3    m_headOffset;        // Linear offset to place hair to
+    glm::vec3    m_rootAngle;      // First constraint set angle (to align hair angle)
 
     // Gets scripted hair set-up to specified hair set-up structure.
     void getSetup(uint32_t hair_entry_index);

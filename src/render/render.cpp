@@ -2,8 +2,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <set>
 
 #include <LinearMath/btScalar.h>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "bsp_tree.h"
 #include "engine/engine.h"
@@ -62,7 +66,6 @@ void Render::init()
     m_drawRoomBoxes = false;
     m_drawBoxes = false;
     m_drawPortals = false;
-    m_drawFrustums = false;
     m_drawNormals = false;
     m_drawAxis = false;
     m_skipRoom = false;
@@ -84,19 +87,19 @@ void Render::empty()
     m_shaderManager.reset();
 }
 
-void Render::renderSkyBox(const util::matrix4& modelViewProjectionMatrix)
+void Render::renderSkyBox(const glm::mat4& modelViewProjectionMatrix)
 {
     if(m_drawSkybox && (m_world != nullptr) && (m_world->sky_box != nullptr))
     {
         glDepthMask(GL_FALSE);
-        btTransform tr;
-        tr.getOrigin() = m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset;
-        tr.setRotation(m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
-        util::matrix4 fullView = modelViewProjectionMatrix * tr;
+        glm::mat4 tr(1.0f);
+        tr = glm::translate(tr, m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset);
+        tr *= glm::mat4_cast( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
+        glm::mat4 fullView = modelViewProjectionMatrix * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
         glUseProgram(shader->program);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, fullView.c_ptr());
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(fullView));
         glUniform1i(shader->sampler, 0);
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fv(shader->tint_mult, 1, tint);
@@ -215,9 +218,9 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
         };
     }
 
-    util::matrix4 mvp = m_cam->m_glViewProjMat * bsp_ref.transform;
+    glm::mat4 mvp = m_cam->m_glViewProjMat * bsp_ref.transform;
 
-    glUniformMatrix4fv(shader->model_view_projection, 1, false, mvp.c_ptr());
+    glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvp));
 
     ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
@@ -227,7 +230,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
 
 void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = root->plane.distance(engine::engine_camera.getPosition());
+    glm::float_t d = root->plane.distance(engine::engine_camera.getPosition());
 
     if(d >= 0)
     {
@@ -275,7 +278,7 @@ void Render::renderBSPFrontToBack(loader::BlendingMode& currentTransparency, con
 
 void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
 {
-    btScalar d = root->plane.distance(engine::engine_camera.getPosition());
+    glm::float_t d = root->plane.distance(engine::engine_camera.getPosition());
 
     if(d >= 0)
     {
@@ -324,15 +327,15 @@ void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, con
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame *bframe, const util::matrix4& mvMatrix, const util::matrix4& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame *bframe, const glm::mat4& mvMatrix, const glm::mat4& mvpMatrix)
 {
     for(const world::animation::SSBoneTag& btag : bframe->bone_tags)
     {
-        util::matrix4 mvTransform = mvMatrix * btag.full_transform;
-        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
+        glm::mat4 mvTransform = mvMatrix * btag.full_transform;
+        glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvTransform));
 
-        util::matrix4 mvpTransform = mvpMatrix * btag.full_transform;
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform.c_ptr());
+        glm::mat4 mvpTransform = mvpMatrix * btag.full_transform;
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
         renderMesh(btag.mesh_base);
         if(btag.mesh_slot)
@@ -342,29 +345,27 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, world::anim
     }
 }
 
-void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity* ent, const util::matrix4& mvMatrix, const util::matrix4& pMatrix)
+void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity* ent, const glm::mat4& mvMatrix, const glm::mat4& pMatrix)
 {
     world::animation::SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
-    glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
+    glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
     for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++, btag++)
     {
         GLfloat transforms[32];
-        util::matrix4 mvTransforms = mvMatrix * btag->full_transform;
-        std::copy_n(mvTransforms.c_ptr(), 16, &transforms[0]);
+        glm::mat4 mvTransforms = mvMatrix * btag->full_transform;
+        std::copy_n(glm::value_ptr(mvTransforms), 16, &transforms[0]);
 
         // Calculate parent transform
-        const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
+        const glm::mat4* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
 
-        btTransform translate;
-        translate.setIdentity();
-        translate.getOrigin() += btag->offset;
+        glm::mat4 translate = glm::translate(glm::mat4(1.0f), btag->offset);
 
-        btTransform secondTransform = *parentTransform * translate;
+        glm::mat4 secondTransform = *parentTransform * translate;
 
-        util::matrix4 mvTransforms2 = mvMatrix * secondTransform;
-        std::copy_n(mvTransforms2.c_ptr(), 16, &transforms[16]);
+        glm::mat4 mvTransforms2 = mvMatrix * secondTransform;
+        std::copy_n(glm::value_ptr(mvTransforms2), 16, &transforms[16]);
         glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
         if(btag->mesh_skin)
@@ -374,44 +375,37 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::
     }
 }
 
-void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity* ent, const util::matrix4& mvMatrix, const util::matrix4& pMatrix)
+void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity* ent, const glm::mat4& mvMatrix, const glm::mat4& pMatrix)
 {
-    glUniformMatrix4fv(shader->projection, 1, false, pMatrix.c_ptr());
+    glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
     for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++)
     {
-        util::matrix4 mvTransforms[2];
+        glm::mat4 mvTransforms[2];
 
-        util::matrix4 tr0(ent->m_bt.bt_body[i]->getWorldTransform());
-        util::matrix4 tr1;
+        glm::mat4 tr0(1.0f);
+        ent->m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr0));
+        glm::mat4 tr1 = ent->m_transform;
 
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
         world::animation::SSBoneTag &btag = ent->m_bf.bone_tags[i];
-        bool foundParentTransform = false;
         for(size_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
         {
             if(&(ent->m_bf.bone_tags[j]) == btag.parent)
             {
-                tr1 = util::matrix4(ent->m_bt.bt_body[j]->getWorldTransform());
-                foundParentTransform = true;
+                ent->m_bt.bt_body[j]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr1));
                 break;
             }
         }
-        if(!foundParentTransform)
-            tr1 = util::matrix4(ent->m_transform);
 
-        btTransform translate;
-        translate.setIdentity();
-        translate.getOrigin() += btag.offset;
-
-        util::matrix4 secondTransform = tr1 * translate;
+        glm::mat4 secondTransform = glm::translate(tr1, btag.offset);
         mvTransforms[1] = mvMatrix * secondTransform;
 
         GLfloat transforms[32];
-        std::copy_n(mvTransforms[0].c_ptr(), 16, &transforms[0]);
-        std::copy_n(mvTransforms[1].c_ptr(), 16, &transforms[16]);
+        std::copy_n(glm::value_ptr(mvTransforms[0]), 16, &transforms[0]);
+        std::copy_n(glm::value_ptr(mvTransforms[1]), 16, &transforms[16]);
 
         glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
@@ -426,7 +420,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, const util::matrix4 &modelViewMatrix, bool skin)
+const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, const glm::mat4 &modelViewMatrix, bool skin)
 {
     // Calculate lighting
     if(!entity->getRoom())
@@ -463,8 +457,8 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
     {
         world::core::Light *current_light = &room->lights[i];
 
-        btVector3 xyz = entity->m_transform.getOrigin() - current_light->position;
-        btScalar distance = xyz.length();
+        glm::vec3 xyz = glm::vec3(entity->m_transform[3]) - current_light->position;
+        glm::float_t distance = glm::length(xyz);
 
         // Find color
         colors[current_light_number*4 + 0] = std::min(std::max(current_light->colour[0], 0.0f), 1.0f);
@@ -478,7 +472,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
         }
 
         // Find position
-        util::float4 tmpPos = modelViewMatrix * current_light->position;
+        glm::vec3 tmpPos = glm::vec3(modelViewMatrix * glm::vec4(current_light->position, 1.0f));
         positions[current_light_number * 3 + 0] = tmpPos[0];
         positions[current_light_number * 3 + 1] = tmpPos[1];
         positions[current_light_number * 3 + 2] = tmpPos[2];
@@ -508,7 +502,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
     return shader;
 }
 
-void Render::renderEntity(world::Entity* entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection)
+void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection)
 {
     if(!m_drawAllModels && (entity->m_wasRendered || !entity->m_visible)) return;
 
@@ -530,10 +524,9 @@ void Render::renderEntity(world::Entity* entity, const util::matrix4 &modelViewM
         }
         else
         {
-            util::matrix4 scaledTransform(entity->m_transform);
-            scaledTransform *= util::matrix4::diagonal(util::float4(entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z()));
-            util::matrix4 subModelView = modelViewMatrix * scaledTransform;
-            util::matrix4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
+            glm::mat4 scaledTransform = glm::scale(entity->m_transform, entity->m_scaling);
+            glm::mat4 subModelView = modelViewMatrix * scaledTransform;
+            glm::mat4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
             if(entity->m_bf.bone_tags[0].mesh_skin)
             {
@@ -544,19 +537,20 @@ void Render::renderEntity(world::Entity* entity, const util::matrix4 &modelViewM
     }
 }
 
-void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity, const util::matrix4& modelViewMatrix, const util::matrix4& modelViewProjectionMatrix)
+void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity, const glm::mat4& modelViewMatrix, const glm::mat4& modelViewProjectionMatrix)
 {
     world::animation::SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
     for(uint16_t i = 0; i < entity->m_bf.bone_tags.size(); i++, btag++)
     {
-        util::matrix4 tr(entity->m_bt.bt_body[i]->getWorldTransform());
-        util::matrix4 mvTransform = modelViewMatrix * tr;
+        glm::mat4 tr(1.0f);
+        entity->m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
+        glm::mat4 mvTransform = modelViewMatrix * tr;
 
-        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform.c_ptr());
+        glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvTransform));
 
-        util::matrix4 mvpTransform = modelViewProjectionMatrix * tr;
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform.c_ptr());
+        glm::mat4 mvpTransform = modelViewProjectionMatrix * tr;
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
         renderMesh(btag->mesh_base);
         if(btag->mesh_slot)
@@ -567,7 +561,7 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Enti
 }
 
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
-void Render::renderHair(std::shared_ptr<world::Character> entity, const util::matrix4 &modelViewMatrix, const util::matrix4 &projection)
+void Render::renderHair(std::shared_ptr<world::Character> entity, const glm::mat4 &modelViewMatrix, const glm::mat4 &projection)
 {
     if(!entity || entity->m_hairs.empty())
         return;
@@ -578,13 +572,13 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const util::ma
     for(size_t h = 0; h < entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        util::matrix4 globalHead(entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform);
-        util::matrix4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
+        glm::mat4 globalHead(entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform);
+        glm::mat4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
 
         GLfloat hairModelToGlobalMatrices[MatrixCount][16];
-        std::copy_n((modelViewMatrix * globalAttachment).c_ptr(), 16, &hairModelToGlobalMatrices[0][0]);
+        std::copy_n(glm::value_ptr(modelViewMatrix * globalAttachment), 16, &hairModelToGlobalMatrices[0][0]);
 
         // Then: Individual hair pieces
         for(size_t i = 0; i < entity->m_hairs[h]->m_elements.size(); i++)
@@ -608,21 +602,21 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const util::ma
              * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
              */
 
-            btTransform invOriginToHairModel;
-            invOriginToHairModel.setIdentity();
+            btTransform invOriginToHairModel = btTransform::getIdentity();
             // Simplification: Always translation matrix, no invert needed
-            invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
+            invOriginToHairModel.getOrigin() -= util::convert(entity->m_hairs[h]->m_elements[i].position);
 
             btTransform hairWorldTransform;
             entity->m_hairs[h]->m_elements[i].body->getMotionState()->getWorldTransform(hairWorldTransform);
-            util::matrix4 globalFromHair(hairWorldTransform * invOriginToHairModel);
+            glm::mat4 globalFromHair(1.0f);
+            (hairWorldTransform * invOriginToHairModel).getOpenGLMatrix(glm::value_ptr(globalFromHair));
 
-            std::copy_n((modelViewMatrix * globalFromHair).c_ptr(), 16, &hairModelToGlobalMatrices[i + 1][0]);
+            std::copy_n(glm::value_ptr(modelViewMatrix * globalFromHair), 16, &hairModelToGlobalMatrices[i + 1][0]);
         }
 
         glUniformMatrix4fv(shader->model_view, static_cast<GLsizei>(entity->m_hairs[h]->m_elements.size() + 1), GL_FALSE, &hairModelToGlobalMatrices[0][0]);
 
-        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projection.c_ptr());
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glm::value_ptr(projection));
 
         renderMesh(entity->m_hairs[h]->m_mesh);
     }
@@ -631,69 +625,11 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const util::ma
 /**
  * drawing world models.
  */
-void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewMatrix, const util::matrix4 &modelViewProjectionMatrix, const util::matrix4 &projection)
+void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection)
 {
-#if STENCIL_FRUSTUM
-    ////start test stencil test code
-    bool need_stencil = false;
-    if(!room->frustum.empty())
-    {
-        for(const std::shared_ptr<world::Room>& r : room->overlapped_room_list)
-        {
-            if(std::find(m_renderList.begin(), m_renderList.end(), r.get()) != m_renderList.end())
-            {
-                need_stencil = true;
-                break;
-            }
-        }
-
-        if(need_stencil)
-        {
-            UnlitShaderDescription *shader = m_shaderManager->getStencilShader();
-            glUseProgram(shader->program);
-            glUniformMatrix4fv(shader->model_view_projection, 1, false, engine::engine_camera.m_glViewProjMat.c_ptr());
-            glEnable(GL_STENCIL_TEST);
-            glClear(GL_STENCIL_BUFFER_BIT);
-            glStencilFunc(GL_NEVER, 1, 0x00);
-            glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
-
-            GLuint stencilVBO;
-            glGenBuffers(1, &stencilVBO);
-
-            VertexArrayAttribute attribs[] = {
-                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat[3]), 0)
-            };
-
-            std::unique_ptr<VertexArray> array(new VertexArray(0, 1, attribs));
-            array->bind();
-
-            for(const auto& f : room->frustum)
-            {
-                glBindBuffer(GL_ARRAY_BUFFER, stencilVBO);
-                glBufferData(GL_ARRAY_BUFFER, f->vertices.size() * sizeof(GLfloat[3]), nullptr, GL_STREAM_DRAW);
-
-                GLfloat *v = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
-
-                for(auto it = f->vertices.rbegin(); it != f->vertices.rend(); ++it)
-                {
-                    *v++ = it->x();
-                    *v++ = it->y();
-                    *v++ = it->z();
-                }
-
-                glUnmapBuffer(GL_ARRAY_BUFFER);
-
-                glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(f->vertices.size()));
-            }
-            glStencilFunc(GL_EQUAL, 1, 0xFF);
-            glDeleteBuffers(1, &stencilVBO);
-        }
-    }
-#endif
-
     if(!m_skipRoom && room->mesh)
     {
-        util::matrix4 modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
+        glm::mat4 modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
@@ -704,7 +640,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
         glUniform4fv(shader->tint_mult, 1, tint);
         glUniform1f(shader->current_tick, static_cast<GLfloat>(SDL_GetTicks()));
         glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform.c_ptr());
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(modelViewProjectionTransform));
         renderMesh(room->mesh);
     }
 
@@ -713,7 +649,7 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
-            if(sm->was_rendered || !sm->obb.isVisibleInRoom(*room, *m_cam))
+            if(sm->was_rendered)
             {
                 continue;
             }
@@ -723,8 +659,8 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
                 continue;
             }
 
-            util::matrix4 transform = modelViewProjectionMatrix * sm->transform;
-            glUniformMatrix4fv(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform.c_ptr());
+            glm::mat4 transform = modelViewProjectionMatrix * sm->transform;
+            glUniformMatrix4fv(m_shaderManager->getStaticMeshShader()->model_view_projection, 1, false, glm::value_ptr(transform));
 
             auto tint = sm->tint;
 
@@ -749,30 +685,21 @@ void Render::renderRoom(const world::Room* room, const util::matrix4 &modelViewM
 
             if(!ent->m_wasRendered)
             {
-                if(ent->m_obb.isVisibleInRoom(*room, *m_cam))
-                {
-                    renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
-                }
+                renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                 ent->m_wasRendered = true;
             }
         }
     }
-#if STENCIL_FRUSTUM
-    if(need_stencil)
-    {
-        glDisable(GL_STENCIL_TEST);
-    }
-#endif
 }
 
-void Render::renderRoomSprites(const world::Room* room, const util::matrix4 &modelViewMatrix, const util::matrix4 &projectionMatrix)
+void Render::renderRoomSprites(const world::Room* room, const glm::mat4 &modelViewMatrix, const glm::mat4 &projectionMatrix)
 {
     if(!room->sprites.empty() && room->sprite_buffer)
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
-        glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, modelViewMatrix.c_ptr());
-        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, projectionMatrix.c_ptr());
+        glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, glm::value_ptr(modelViewMatrix));
+        glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
         glUniform1i(shader->sampler, 0);
 
         room->sprite_buffer->data->bind();
@@ -798,7 +725,7 @@ void Render::renderRoomSprites(const world::Room* room, const util::matrix4 &mod
  */
 bool Render::addRoom(world::Room* room)
 {
-    if(std::find(m_renderList.begin(), m_renderList.end(), room) != m_renderList.end() || !room->active)
+    if(!room->active || std::find(m_renderList.begin(), m_renderList.end(), room) != m_renderList.end())
     {
         return false;
     }
@@ -838,11 +765,6 @@ void Render::cleanList()
     {
         m_world->character->m_wasRendered = false;
         m_world->character->m_wasRenderedLines = false;
-    }
-
-    for(world::Room* room : m_renderList)
-    {
-        room->frustum.clear();
     }
 
     m_drawSkybox = false;
@@ -904,7 +826,7 @@ void Render::drawList()
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : room->static_mesh)
         {
-            if(!sm->mesh->m_transparentPolygons.empty() && sm->obb.isVisibleInRoom(*room, *m_cam))
+            if(!sm->mesh->m_transparentPolygons.empty())
             {
                 render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum }, *m_cam);
             }
@@ -917,7 +839,7 @@ void Render::drawList()
             if(!ent)
                 continue;
 
-            if(!ent->m_bf.animations.model->has_transparency || (!ent->m_visible && ent->m_obb.isVisibleInRoom(*room, *m_cam)))
+            if(!ent->m_bf.animations.model->has_transparency || !ent->m_visible)
                 continue;
 
             for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
@@ -949,7 +871,7 @@ void Render::drawList()
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(false, false);
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->m_glViewProjMat));
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -962,7 +884,7 @@ void Render::drawList()
 
 void Render::drawListDebugLines()
 {
-    if(!m_world || !(m_drawBoxes || m_drawRoomBoxes || m_drawPortals || m_drawFrustums || m_drawAxis || m_drawNormals || m_drawColl))
+    if(!m_world || !(m_drawBoxes || m_drawRoomBoxes || m_drawPortals || m_drawAxis || m_drawNormals || m_drawColl))
     {
         return;
     }
@@ -977,10 +899,8 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->sky_box)
     {
-        btTransform tr;
-        tr.setIdentity();
-        tr.getOrigin() = m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset;
-        tr.setRotation(m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset);
+        tr *= glm::mat4_cast(m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
         debugDrawer.drawMeshDebugLines(m_world->sky_box->mesh_tree.front().mesh_base, tr, {}, {}, this);
     }
 
@@ -999,7 +919,7 @@ void Render::drawListDebugLines()
         UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, m_cam->m_glViewProjMat.c_ptr());
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->m_glViewProjMat));
         glBindTexture(GL_TEXTURE_2D, engine::engine_world.textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
@@ -1010,36 +930,40 @@ void Render::drawListDebugLines()
 /**
  * The recursion algorithm: go through the rooms with portal-frustum occlusion test.
  * @param portal we entered to the room through that portal
- * @param frus frustum that intersects the portal
  * @return number of added rooms
  */
 
-int Render::processRoom(world::Portal* portal, const world::core::Frustum& frus)
+void Render::processRoom(world::Room* room)
 {
-    std::shared_ptr<world::Room> destination = portal->dest_room;
-    std::shared_ptr<world::Room> current = portal->current_room;
+    std::set<const world::Portal*> visited;
+    std::queue<const world::Portal*> toVisit;
 
-    if(!current || !current->active || !destination || !destination->active)
-    {
-        return 0;
-    }
+    for(const world::Portal& p : room->portals)
+        toVisit.push(&p);
 
-    int ret = 0;
-    for(world::Portal& p : destination->portals)
+    while(!toVisit.empty())
     {
-        if(p.dest_room && p.dest_room->active && p.dest_room != current)
+        auto currentPortal = toVisit.front();
+        toVisit.pop();
+
+        if(!visited.insert(currentPortal).second)
+            continue;
+
+        std::shared_ptr<world::Room> destination = currentPortal->dest_room;
+        std::shared_ptr<world::Room> current = currentPortal->current_room;
+
+        if(!current || !current->active || !destination || !destination->active)
         {
-            // The main function of portal renderer. Here comes the check.
-            auto gen_frus = world::core::Frustum::portalFrustumIntersect(p, frus, *m_cam);
-            if(gen_frus)
-            {
-                ret++;
-                addRoom(p.dest_room.get());
-                processRoom(&p, *gen_frus);
-            }
+            continue;
+        }
+
+        if(m_cam->frustum.portalFrustumIntersect(*currentPortal))
+        {
+            addRoom(destination.get());
+            for(const world::Portal& p : destination->portals)
+                toVisit.push(&p);
         }
     }
-    return ret;
 }
 
 // Renderer list generation by current world and camera
@@ -1061,25 +985,13 @@ void Render::genWorldList()
     m_cam->m_currentRoom = curr_room;         // set camera's cuttent room pointer
     if(curr_room != nullptr)                  // camera located in some room
     {
-        curr_room->frustum.clear();           // room with camera inside has no frustums!
-        curr_room->max_path = 0;
-        addRoom(curr_room);                   // room with camera inside adds to the render list immediately
-        for(world::Portal& p : curr_room->portals)   // go through all start room portals
-        {
-            auto last_frus = world::core::Frustum::portalFrustumIntersect(p, m_cam->frustum, *m_cam);
-            if(last_frus)
-            {
-                addRoom(p.dest_room.get());   // portal destination room
-                last_frus->parents_count = 1; // created by camera
-                processRoom(&p, *last_frus);  // next start reccursion algorithm
-            }
-        }
+        processRoom(curr_room);  // next start reccursion algorithm
     }
     else if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum.isAABBVisible(r->boundingBox.min, r->boundingBox.max, *m_cam))
+            if(m_cam->frustum.isAABBVisible(r->boundingBox, *m_cam))
             {
                 addRoom(r.get());
             }
@@ -1202,53 +1114,43 @@ void RenderDebugDrawer::render()
     m_buffer.clear();
 }
 
-void RenderDebugDrawer::drawAxis(btScalar r, const btTransform &transform)
+void RenderDebugDrawer::drawAxis(glm::float_t r, const glm::mat4 &transform)
 {
-    std::array<GLfloat, 3> origin{ { transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z() } };
+    std::array<GLfloat, 3> origin{ { transform[3].x, transform[3].y, transform[3].z } };
 
-    btVector3 v = transform.getBasis().getColumn(0) * r;
-    v += transform.getOrigin();
+    glm::vec4 v = transform[0] * r;
+    v += transform[3];
     m_buffer.push_back(origin);
     m_buffer.push_back({ {1.0, 0.0, 0.0} });
-    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {v.x, v.y, v.z} });
     m_buffer.push_back({ {1.0, 0.0, 0.0} });
 
-    v = transform.getBasis().getColumn(1) * r;
-    v += transform.getOrigin();
+    v = transform[1] * r;
+    v += transform[3];
     m_buffer.push_back(origin);
     m_buffer.push_back({ {0.0, 1.0, 0.0} });
-    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {v.x, v.y, v.z} });
     m_buffer.push_back({ {0.0, 1.0, 0.0} });
 
-    v = transform.getBasis().getColumn(2) * r;
-    v += transform.getOrigin();
+    v = transform[2] * r;
+    v += transform[3];
     m_buffer.push_back(origin);
     m_buffer.push_back({ {0.0, 0.0, 1.0} });
-    m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+    m_buffer.push_back({ {v.x, v.y, v.z} });
     m_buffer.push_back({ {0.0, 0.0, 1.0} });
-}
-
-void RenderDebugDrawer::drawFrustum(const world::core::Frustum& f)
-{
-    for(size_t i = 0; i < f.vertices.size() - 1; i++)
-    {
-        addLine(f.vertices[i], f.vertices[i + 1]);
-    }
-
-    addLine(f.vertices.back(), f.vertices.front());
 }
 
 void RenderDebugDrawer::drawPortal(const world::Portal& p)
 {
     for(size_t i = 0; i < p.vertices.size() - 1; i++)
     {
-        addLine(p.vertices[i], p.vertices[i + 1]);
+        addLine(util::convert(p.vertices[i]), util::convert(p.vertices[i + 1]));
     }
 
-    addLine(p.vertices.back(), p.vertices.front());
+    addLine(util::convert(p.vertices.back()), util::convert(p.vertices.front()));
 }
 
-void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, const btTransform *transform)
+void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, const glm::mat4 *transform)
 {
     m_obb.rebuild(boundingBox);
     m_obb.transform = transform;
@@ -1259,64 +1161,61 @@ void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, co
 void RenderDebugDrawer::drawOBB(const world::core::OrientedBoundingBox& obb)
 {
     const world::core::Polygon *p = obb.polygons.data();
-    addLine(p->vertices[0].position, (p + 1)->vertices[0].position);
-    addLine(p->vertices[1].position, (p + 1)->vertices[3].position);
-    addLine(p->vertices[2].position, (p + 1)->vertices[2].position);
-    addLine(p->vertices[3].position, (p + 1)->vertices[1].position);
+    addLine(util::convert(p->vertices[0].position), util::convert((p + 1)->vertices[0].position));
+    addLine(util::convert(p->vertices[1].position), util::convert((p + 1)->vertices[3].position));
+    addLine(util::convert(p->vertices[2].position), util::convert((p + 1)->vertices[2].position));
+    addLine(util::convert(p->vertices[3].position), util::convert((p + 1)->vertices[1].position));
 
     for(uint16_t i = 0; i < 2; i++, p++)
     {
         for(size_t j = 0; j < p->vertices.size() - 1; j++)
         {
-            addLine(p->vertices[j].position, p->vertices[j + 1].position);
+            addLine(util::convert(p->vertices[j].position), util::convert(p->vertices[j + 1].position));
         }
-        addLine(p->vertices.back().position, p->vertices.front().position);
+        addLine(util::convert(p->vertices.back().position), util::convert(p->vertices.front().position));
     }
 }
 
-void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render)
+void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, const std::vector<glm::vec3> &overrideVertices, const std::vector<glm::vec3> &overrideNormals, Render* render)
 {
     if(render->m_drawNormals)
     {
         setColor(0.8f, 0.0f, 0.9f);
         if(!overrideVertices.empty())
         {
-            const btVector3* ov = &overrideVertices.front();
-            const btVector3* on = &overrideNormals.front();
-            for(uint32_t i = 0; i < mesh->m_vertices.size(); i++, ov++, on++)
+            for(size_t i = 0; i < mesh->m_vertices.size(); i++)
             {
-                btVector3 v = transform * *ov;
-                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                glm::vec4 v = transform * glm::vec4(overrideVertices[i], 1.0f);
+                m_buffer.push_back({ {v.x, v.y, v.z} });
                 m_buffer.emplace_back(m_color);
-                v += transform.getBasis() * *on * 128;
-                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                v += glm::vec4(glm::mat3(transform) * overrideNormals[i] * 128.0f, 0);
+                m_buffer.push_back({ {v.x, v.y, v.z} });
                 m_buffer.emplace_back(m_color);
             }
         }
         else
         {
-            world::core::Vertex* mv = mesh->m_vertices.data();
-            for(uint32_t i = 0; i < mesh->m_vertices.size(); i++, mv++)
+            for(size_t i = 0; i < mesh->m_vertices.size(); i++)
             {
-                btVector3 v = transform * mv->position;
-                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                glm::vec4 v = transform * glm::vec4(mesh->m_vertices[i].position, 1.0f);
+                m_buffer.push_back({ {v.x, v.y, v.z} });
                 m_buffer.emplace_back(m_color);
-                v += transform.getBasis() * mv->normal * 128;
-                m_buffer.push_back({ {v.x(), v.y(), v.z()} });
+                v += glm::vec4(glm::mat3(transform) * mesh->m_vertices[i].normal * 128.0f, 0);
+                m_buffer.push_back({ {v.x, v.y, v.z} });
                 m_buffer.emplace_back(m_color);
             }
         }
     }
 }
 
-void RenderDebugDrawer::drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const btTransform& transform, Render *render)
+void RenderDebugDrawer::drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const glm::mat4& transform, Render *render)
 {
     if(render->m_drawNormals)
     {
         world::animation::SSBoneTag* btag = bframe->bone_tags.data();
         for(uint16_t i = 0; i < bframe->bone_tags.size(); i++, btag++)
         {
-            btTransform tr = transform * btag->full_transform;
+            glm::mat4 tr = transform * btag->full_transform;
             drawMeshDebugLines(btag->mesh_base, tr, {}, {}, render);
         }
     }
@@ -1353,8 +1252,8 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
 void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
 {
     world::core::BoundingBox bb;
-    bb.min = { static_cast<btScalar>(rs->position[0] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->position[1] - world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->floor) };
-    bb.max = { static_cast<btScalar>(rs->position[0] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->position[1] + world::MeteringSectorSize / 2.0), static_cast<btScalar>(rs->ceiling) };
+    bb.min = { static_cast<glm::float_t>(rs->position[0] - world::MeteringSectorSize / 2.0), static_cast<glm::float_t>(rs->position[1] - world::MeteringSectorSize / 2.0), static_cast<glm::float_t>(rs->floor) };
+    bb.max = { static_cast<glm::float_t>(rs->position[0] + world::MeteringSectorSize / 2.0), static_cast<glm::float_t>(rs->position[1] + world::MeteringSectorSize / 2.0), static_cast<glm::float_t>(rs->ceiling) };
 
     drawBBox(bb, nullptr);
 }
@@ -1380,15 +1279,6 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         }
     }
 
-    if(render->m_drawFrustums)
-    {
-        debugDrawer.setColor(1.0, 0.0, 0.0);
-        for(const auto& frus : room->frustum)
-        {
-            debugDrawer.drawFrustum(*frus);
-        }
-    }
-
     if(!render->m_skipRoom && (room->mesh != nullptr))
     {
         debugDrawer.drawMeshDebugLines(room->mesh, room->transform, {}, {}, render);
@@ -1396,8 +1286,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
 
     for(auto sm : room->static_mesh)
     {
-        if(sm->was_rendered_lines || sm->obb.isVisibleInRoom(*room, cam) ||
-           (sm->hide && !render->m_drawDummyStatics))
+        if(sm->was_rendered_lines || (sm->hide && !render->m_drawDummyStatics))
         {
             continue;
         }
@@ -1427,10 +1316,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         if(ent->m_wasRenderedLines)
             continue;
 
-        if(ent->m_obb.isVisibleInRoom(*room, cam))
-        {
-            debugDrawer.drawEntityDebugLines(ent, render);
-        }
+        debugDrawer.drawEntityDebugLines(ent, render);
         ent->m_wasRenderedLines = true;
     }
 }
@@ -1442,7 +1328,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix, const util::matrix4& guiProjectionMatrix)
+void renderItem(world::animation::SSBoneFrame *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
 {
     const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
@@ -1462,23 +1348,22 @@ void renderItem(world::animation::SSBoneFrame *bf, btScalar size, const btTransf
         }
         size *= 0.8f;
 
-        btTransform scaledMatrix;
-        scaledMatrix.setIdentity();
+        glm::mat4 scaledMatrix = glm::mat4(1.0f);
         if(size < 1.0)          // only reduce items size...
         {
-            util::Mat4_Scale(scaledMatrix, size, size, size);
+            scaledMatrix = glm::scale(scaledMatrix, { size, size, size });
         }
-        util::matrix4 scaledMvMatrix(mvMatrix * scaledMatrix);
-        util::matrix4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
+        glm::mat4 scaledMvMatrix(mvMatrix * scaledMatrix);
+        glm::mat4 mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, glm::mat4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
-        util::matrix4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, util::matrix4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
+        glm::mat4 mvpMatrix = guiProjectionMatrix * mvMatrix;
+        renderer.renderSkeletalModel(shader, bf, glm::mat4(mvMatrix), mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 

@@ -2,10 +2,8 @@
 
 #include <memory>
 
-#include <GL/glew.h>
+#include <glm/glm.hpp>
 
-#include "util/matrix4.h"
-#include "util/vmath.h"
 #include "world/core/frustum.h"
 
 /*
@@ -50,57 +48,51 @@ constexpr float DefaultShakePower = 100;
 
 class Camera
 {
-    btVector3 m_pos{ 0,0,0 };                 // camera position
-    btVector3 m_viewDir{ 0,0,1 };            // view cameradirection
-    btVector3 m_upDir{ 0,1,0 };              // up vector
-    btVector3 m_rightDir{ 1,0,0 };           // strafe vector
+    glm::vec3 m_pos{ 0,0,0 };                 // camera position
+    glm::mat3 m_axes = glm::mat3(1.0f);       // coordinate system axes
 public:
-    const btVector3& getPosition() const
+    const glm::vec3& getPosition() const
     {
         return m_pos;
     }
 
-    void setPosition(const btVector3& pos)
+    void setPosition(const glm::vec3& pos)
     {
         m_pos = pos;
     }
 
-    const btVector3& getViewDir() const
+    const glm::vec3& getViewDir() const
     {
-        return m_viewDir;
+        return m_axes[1];
     }
 
-    const btVector3& getRightDir() const
+    const glm::vec3& getRightDir() const
     {
-        return m_rightDir;
+        return m_axes[0];
     }
 
-    const btVector3& getUpDir() const
+    const glm::vec3& getUpDir() const
     {
-        return m_upDir;
+        return m_axes[2];
     }
 
-    btVector3 m_prevPos{ 0,0,0 };            // previous camera position
-    btVector3 m_ang;                 // camera orientation
+    glm::vec3 m_prevPos{ 0,0,0 };            // previous camera position
 
-    util::matrix4 m_glViewMat = util::matrix4();
-    util::matrix4 m_glProjMat = util::matrix4();
-    util::matrix4 m_glViewProjMat = util::matrix4();
+    glm::mat4 m_glViewMat = glm::mat4(1.0f);
+    glm::mat4 m_glProjMat = glm::mat4(1.0f);
+    glm::mat4 m_glViewProjMat = glm::mat4(1.0f);
 
-    util::Plane m_clipPlanes[4];        // frustum side clip planes
-    world::core::Frustum frustum;               // camera frustum structure
+    core::Frustum frustum;               // camera frustum structure
 
-    GLfloat m_distNear = 1;
-    GLfloat m_distFar = 65536;
+    glm::float_t m_distNear = 1;
+    glm::float_t m_distFar = 65536;
 
-    GLfloat m_fov = 75;
-    GLfloat m_aspect = 1;
-    GLfloat m_f;
-    GLfloat m_height;
-    GLfloat m_width;
+    glm::float_t m_fov = 75;
+    glm::float_t m_width;
+    glm::float_t m_height;
 
-    GLfloat m_shakeValue = 0;
-    GLfloat m_shakeTime = 0;
+    glm::float_t m_shakeValue = 0;
+    glm::float_t m_shakeTime = 0;
 
     CameraTarget m_targetDir = CameraTarget::Front;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
@@ -111,13 +103,12 @@ public:
     Camera& operator=(const Camera&) = delete;
 
     void apply();
-    void setFovAspect(GLfloat fov, GLfloat aspect);
-    void moveAlong(GLfloat dist);
-    void moveStrafe(GLfloat dist);
-    void moveVertical(GLfloat dist);
-    void shake(GLfloat power, GLfloat time);
-    void deltaRotation(const btVector3 &angles);
-    void setRotation(const btVector3& angles);
+    void setFovAspect(glm::float_t fov, glm::float_t aspect);
+    void moveAlong(glm::float_t dist);
+    void moveStrafe(glm::float_t dist);
+    void moveVertical(glm::float_t dist);
+    void shake(glm::float_t power, glm::float_t time);
+    void setRotation(const glm::vec3& angles);
     void recalcClipPlanes();
 };
 
@@ -130,9 +121,9 @@ public:
 
 struct StatCameraSink
 {
-    GLfloat                     x;
-    GLfloat                     y;
-    GLfloat                     z;
+    glm::float_t                     x;
+    glm::float_t                     y;
+    glm::float_t                     z;
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
 };
@@ -141,17 +132,17 @@ struct StatCameraSink
 
 struct FlybyCamera
 {
-    GLfloat     cam_x;      // Camera position vector
-    GLfloat     cam_y;
-    GLfloat     cam_z;
+    glm::float_t     cam_x;      // Camera position vector
+    glm::float_t     cam_y;
+    glm::float_t     cam_z;
 
-    GLfloat     target_x;   // Target orientation vector
-    GLfloat     target_y;
-    GLfloat     target_z;
+    glm::float_t     target_x;   // Target orientation vector
+    glm::float_t     target_y;
+    glm::float_t     target_z;
 
-    GLfloat     fov;
-    GLfloat     roll;
-    GLfloat     speed;
+    glm::float_t     fov;
+    glm::float_t     roll;
+    glm::float_t     speed;
 
     uint32_t    sequence;   // Sequence number to which camera belongs
     uint32_t    index;      // Index in sequence
