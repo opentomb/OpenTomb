@@ -2389,7 +2389,7 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    world->stream_track_map_count = lua_GetNumTracks(engine_lua);
+    world->stream_track_map_count = Script_GetNumTracks(engine_lua);
     if(world->stream_track_map_count == 0) world->stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
     world->stream_track_map = (uint8_t*)malloc(world->stream_track_map_count * sizeof(uint8_t));
     memset(world->stream_track_map, 0, sizeof(uint8_t) * world->stream_track_map_count);

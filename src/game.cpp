@@ -226,7 +226,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf->animations.next_state, ent->bf->animations.last_state);
-    
+
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
@@ -898,7 +898,7 @@ void Game_Prepare()
 void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];
-    lua_GetLoadingScreen(engine_lua, level_index, file_path);
+    Script_GetLoadingScreen(engine_lua, level_index, file_path);
     if(!Gui_LoadScreenAssignPic(file_path))
     {
         Gui_LoadScreenAssignPic("resource/graphics/legal.png");

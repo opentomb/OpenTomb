@@ -52,7 +52,7 @@ extern "C" {
 /*
  * MISK
  */
-char *parse_token(char *data, char *token)
+char *SC_ParseToken(char *data, char *token)
 {
     ///@FIXME: token may be overflowed
     int c;
@@ -131,7 +131,7 @@ char *parse_token(char *data, char *token)
 float SC_ParseFloat(char **ch)
 {
     char token[64];
-    (*ch) = parse_token(*ch, token);
+    (*ch) = SC_ParseToken(*ch, token);
     if(token[0])
     {
         return atof(token);
@@ -142,7 +142,7 @@ float SC_ParseFloat(char **ch)
 int SC_ParseInt(char **ch)
 {
     char token[64];
-    (*ch) = parse_token(*ch, token);
+    (*ch) = SC_ParseToken(*ch, token);
     if(token[0])
     {
         return atoi(token);
@@ -153,7 +153,7 @@ int SC_ParseInt(char **ch)
 /*
  *   Specific functions to get specific parameters from script.
  */
- int lua_GetGlobalSound(lua_State *lua, int global_sound_id)
+ int Script_GetGlobalSound(lua_State *lua, int global_sound_id)
 {
     lua_Integer sound_id = 0;
 
@@ -177,7 +177,7 @@ int SC_ParseInt(char **ch)
     return (int)sound_id;
 }
 
-int lua_GetSecretTrackNumber(lua_State *lua)
+int Script_GetSecretTrackNumber(lua_State *lua)
 {
     lua_Integer track_number = 0;
 
@@ -189,9 +189,10 @@ int lua_GetSecretTrackNumber(lua_State *lua)
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, engine_world.version);
-            track_number = lua_tointeger(lua, -1);
-            if(lua_CallAndLog(lua, 2, 1, 0))
+            if(lua_CallAndLog(lua, 1, 1, 0))
+            {
                 track_number = lua_tointeger(lua, -1);
+            }
         }
         lua_settop(lua, top);
     }
@@ -199,7 +200,7 @@ int lua_GetSecretTrackNumber(lua_State *lua)
     return (int)track_number;
 }
 
-int lua_GetNumTracks(lua_State *lua)
+int Script_GetNumTracks(lua_State *lua)
 {
     lua_Integer num_tracks = 0;
 
@@ -221,7 +222,7 @@ int lua_GetNumTracks(lua_State *lua)
 }
 
 
-bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask)
+bool Script_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask)
 {
     bool result = false;
 
@@ -257,7 +258,7 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
 }
 
 
-bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count)
+bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count)
 {
     bool result = false;
 
@@ -287,7 +288,7 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
 }
 
 
-bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     bool result = false;
 
@@ -329,7 +330,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 }
 
 
-bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer)
+bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer)
 {
     bool result = false;
 
@@ -358,7 +359,7 @@ bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *b
 }
 
 
-bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
+bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 {
     bool result = false;
     size_t  string_length  = 0;
@@ -505,7 +506,7 @@ void Script_LoopEntity(lua_State *lua, int object_id)
 /*
  * Game structures parse
  */
-int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
+int Script_ParseControls(lua_State *lua, struct control_settings_s *cs)
 {
     if(lua)
     {
@@ -584,7 +585,7 @@ int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
     return -1;
 }
 
-int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
+int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 {
     if(lua)
     {
@@ -629,7 +630,7 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     return -1;
 }
 
-int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
+int Script_ParseRender(lua_State *lua, struct render_settings_s *rs)
 {
     if(lua)
     {
@@ -711,7 +712,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     return -1;
 }
 
-int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
+int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
 {
     if(lua)
     {
@@ -750,7 +751,7 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     return -1;
 }
 
-int lua_ParseConsole(lua_State *lua)
+int Script_ParseConsole(lua_State *lua)
 {
     if(lua)
     {
@@ -815,29 +816,10 @@ int lua_ParseConsole(lua_State *lua)
     return -1;
 }
 
-void lua_Clean(lua_State *lua)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-        lua_getglobal(lua, "tlist_Clear");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_CallAndLog(lua, 0, 1, 0);
-        }
-
-        lua_getglobal(lua, "entfuncs_Clear");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_CallAndLog(lua, 0, 1, 0);
-        }
-        lua_settop(lua, top);
-    }
-}
 
 bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline)
 {
-    if (lua_pcall(lua, nargs, nresults, errfunc) != LUA_OK)
+    if(lua_pcall(lua, nargs, nresults, errfunc) != LUA_OK)
     {
         char errormessage[4096];
         if (lua_gettop(lua) > 0 && lua_isstring(lua, -1))
@@ -850,7 +832,6 @@ bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, con
         {
             snprintf(errormessage, sizeof(errormessage), "Lua error without message (called from %s:%d)", cfile, cline);
         }
-        //fprintf(stderr, "%s\n", errormessage);
         Con_AddLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
         return false;
     }
@@ -865,12 +846,6 @@ bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, con
 /*
  * debug functions
  */
-
- int lua_CheckStack(lua_State *lua)
- {
-     Con_Printf("Current Lua stack index: %d", lua_gettop(lua));
-     return 0;
- }
 
 int lua_print(lua_State * lua)
 {
@@ -4554,7 +4529,7 @@ int lua_LoadMap(lua_State *lua)
                 gameflow_manager.CurrentLevelID = lua_tointeger(lua, 3);
             }
             char file_path[MAX_ENGINE_PATH];
-            lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
+            Script_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
             if(!Gui_LoadScreenAssignPic(file_path))
             {
                 Gui_LoadScreenAssignPic("resource/graphics/legal.png");
@@ -4896,7 +4871,23 @@ void Script_LuaClearTasks()
 {
     if(engine_lua)
     {
+        int top = lua_gettop(engine_lua);
+
         Script_CallVoidFunc(engine_lua, "clearTasks");
+
+        lua_getglobal(engine_lua, "tlist_Clear");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
+        lua_getglobal(engine_lua, "entfuncs_Clear");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
+        lua_settop(engine_lua, top);
     }
 }
 
@@ -4915,7 +4906,6 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     // Register script functions
 
     lua_register(lua, "print", lua_print);
-    lua_register(lua, "checkStack", lua_CheckStack);
     lua_register(lua, "dumpModel", lua_DumpModel);
     lua_register(lua, "dumpRoom", lua_DumpRoom);
     lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);

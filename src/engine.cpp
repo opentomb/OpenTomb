@@ -141,7 +141,6 @@ void Engine_Start(const char *config_name)
 void Engine_Shutdown(int val)
 {
     renderer.SetWorld(NULL);
-    lua_Clean(engine_lua);
     World_Clear(&engine_world);
 
     if(engine_lua)
@@ -490,11 +489,11 @@ void Engine_LoadConfig(const char *filename)
             lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
             luaL_dofile(lua, filename);
 
-            lua_ParseScreen(lua, &screen_info);
-            lua_ParseRender(lua, &renderer.settings);
-            lua_ParseAudio(lua, &audio_settings);
-            lua_ParseConsole(lua);
-            lua_ParseControls(lua, &control_mapper);
+            Script_ParseScreen(lua, &screen_info);
+            Script_ParseRender(lua, &renderer.settings);
+            Script_ParseAudio(lua, &audio_settings);
+            Script_ParseConsole(lua);
+            Script_ParseControls(lua, &control_mapper);
             lua_close(lua);
         }
     }
@@ -1084,9 +1083,6 @@ int Engine_LoadMap(const char *name)
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
-    Gui_DrawLoadScreen(50);
-
-    lua_Clean(engine_lua);
     Gui_DrawLoadScreen(100);
 
 
@@ -1140,7 +1136,7 @@ int Engine_ExecCmd(char *ch)
     while(ch != NULL)
     {
         char *pch = ch;
-        ch = parse_token(ch, token);
+        ch = SC_ParseToken(ch, token);
         if(!strcmp(token, "help"))
         {
             Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1170,7 +1166,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "save"))
         {
-            ch = parse_token(ch, token);
+            ch = SC_ParseToken(ch, token);
             if(NULL != ch)
             {
                 Game_Save(token);
@@ -1179,7 +1175,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "load"))
         {
-            ch = parse_token(ch, token);
+            ch = SC_ParseToken(ch, token);
             if(NULL != ch)
             {
                 Game_Load(token);
@@ -1198,7 +1194,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "spacing"))
         {
-            ch = parse_token(ch, token);
+            ch = SC_ParseToken(ch, token);
             if(NULL == ch)
             {
                 Con_Notify("spacing = %d", Con_GetLineInterval());
@@ -1209,7 +1205,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "showing_lines"))
         {
-            ch = parse_token(ch, token);
+            ch = SC_ParseToken(ch, token);
             if(NULL == ch)
             {
                 Con_Notify("showing lines = %d", Con_GetShowingLines());

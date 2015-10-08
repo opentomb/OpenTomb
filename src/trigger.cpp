@@ -26,13 +26,13 @@ extern "C" {
 #include "world.h"
 
 
-uint32_t Entity_GetSectorStatus(entity_p ent)
+inline uint32_t Entity_GetSectorStatus(entity_p ent)
 {
     return ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7);
 }
 
 
-void Entity_SetSectorStatus(entity_p ent, uint16_t status)
+inline void Entity_SetSectorStatus(entity_p ent, uint16_t status)
 {
     uint8_t trigger_layout = ent->trigger_layout;
     trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
@@ -41,13 +41,13 @@ void Entity_SetSectorStatus(entity_p ent, uint16_t status)
 }
 
 
-uint32_t Entity_GetLock(entity_p ent)
+inline uint32_t Entity_GetLock(entity_p ent)
 {
     return ((ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);      // lock
 }
 
 
-void Entity_SetLock(entity_p ent, uint16_t status)
+inline void Entity_SetLock(entity_p ent, uint16_t status)
 {
     uint8_t trigger_layout = ent->trigger_layout;
     trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)status) << 6;   // lock  - 01000000
@@ -172,17 +172,6 @@ function doEffect(effect_index, extra_parameter) -- extra parameter is usually t
         return flipeffects[effect_index](parameter);
     else
         return nil; -- Add hardcoded flipeffect routine here
-    end;
-end
-
-
--- Sets specified secret index as found and plays audiotrack with pop-up notification.
-
-function findSecret(secret_number)
-    if(getSecretStatus(secret_number) == 0) then
-        setSecretStatus(secret_number, 1);  -- Set actual secret status
-        playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
-        --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
     end;
 end
 
@@ -485,7 +474,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    ///snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", command->operands);
                     Entity_MoveToSink(entity_activator, command->operands);
                     break;
 
@@ -494,13 +482,11 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     // anti-events array.
                     if(activator == TR_ACTIVATOR_SWITCH)
                     {
-                        //snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", command->operands, command->operands);
                         World_SetFlipMap(&engine_world, command->operands, switch_mask, 1);
                         World_SetFlipState(&engine_world, command->operands, 1);
                     }
                     else
                     {
-                        //snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", command->operands, trigger->mask, command->operands);
                         World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
                         World_SetFlipState(&engine_world, command->operands, 1);
                     }
@@ -529,6 +515,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_PLAYTRACK:
+                    Entity_SetSectorStatus(entity_activator, 1);
                     Audio_StreamPlay(command->operands, (trigger->mask << 1) + trigger->once);
                     break;
 
@@ -537,9 +524,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_SECRET:
-                    Con_Printf("Secret found: %d", command->operands);
+                    //Con_Printf("Secret found: %d", command->operands);
                     Entity_SetSectorStatus(entity_activator, 1);
-                    ///snprintf(buf, 128, "   findSecret(%d); \n", command->operands);
+                    if((command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
+                    {
+                        gameflow_manager.SecretsTriggerMap[command->operands] = 1;
+                        Audio_StreamPlay(Script_GetSecretTrackNumber(engine_lua));
+                    }
                     break;
 
                 case TR_FD_TRIGFUNC_CLEARBODIES:
@@ -749,32 +740,29 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
                         strcat(script, buf);
                     }
-                    else
+                    else if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
                     {
                         // In many original Core Design levels, level designers left dublicated entity activation operands.
                         // This results in setting same activation mask twice, effectively blocking entity from activation.
                         // To prevent this, a lookup table was implemented to know if entity already had its activation
                         // command added.
-                        if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
+                        // Other item operands are simply parsed as activation functions. Switch case is special, because
+                        // function is fed with activation mask argument derived from activator mask filter (switch_mask),
+                        // and also we need to process deactivation in a same way as activation, excluding resetting timer
+                        // field. This is needed for two-way switch combinations (e.g. Palace Midas).
+                        if(activator == TR_ACTIVATOR_SWITCH)
                         {
-                            // Other item operands are simply parsed as activation functions. Switch case is special, because
-                            // function is fed with activation mask argument derived from activator mask filter (switch_mask),
-                            // and also we need to process deactivation in a same way as activation, excluding resetting timer
-                            // field. This is needed for two-way switch combinations (e.g. Palace Midas).
-                            if(activator == TR_ACTIVATOR_SWITCH)
-                            {
-                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                strcat(item_events, buf);
-                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
-                                strcat(anti_events, buf);
-                            }
-                            else
-                            {
-                                snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                                strcat(item_events, buf);
-                                snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
-                                strcat(anti_events, buf);
-                            }
+                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
+                            strcat(item_events, buf);
+                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
+                            strcat(anti_events, buf);
+                        }
+                        else
+                        {
+                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                            strcat(item_events, buf);
+                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
+                            strcat(anti_events, buf);
                         }
                     }
                     argn++;
