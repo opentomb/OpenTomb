@@ -85,12 +85,13 @@ struct Plane
     }
 };
 
-inline void vec4_SetTRRotations(glm::quat& v, const btVector3& rotation)
+inline glm::quat vec4_SetTRRotations(const glm::vec3& rotation)
 {
-    v = glm::quat(1, 0, 0, 0);
+    glm::quat v = glm::quat(1, 0, 0, 0);
     v = glm::rotate(v, glm::radians(rotation[2]), { 0,0,1 });
     v = glm::rotate(v, glm::radians(rotation[0]), { 1,0,0 });
     v = glm::rotate(v, glm::radians(rotation[1]), { 0,1,0 });
+    return v;
 }
 
 inline glm::vec3 convert(const btVector3& v)

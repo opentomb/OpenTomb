@@ -3106,7 +3106,7 @@ namespace world
                 tree_tag = &model->mesh_tree[k];
                 bone_tag = &bone_frame->bone_tags[k];
 
-                util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+                bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                 bone_tag->offset = tree_tag->offset;
             }
             return;
@@ -3245,7 +3245,7 @@ namespace world
                     {
                         tree_tag = &model->mesh_tree[k];
                         bone_tag = &bone_frame->bone_tags[k];
-                        util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
                     }
                 }
@@ -3259,7 +3259,7 @@ namespace world
                     {
                         tree_tag = &model->mesh_tree[k];
                         bone_tag = &bone_frame->bone_tags[k];
-                        util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,0 });
+                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
 
                         switch(tr->m_gameVersion)
@@ -3272,12 +3272,12 @@ namespace world
                                 l++;
                                 temp1 = tr->m_frameData[frame_offset + l];
                                 l++;
-                                btVector3 rot;
+                                glm::vec3 rot;
                                 rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
                                 rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                 rot[1] = static_cast<float>(temp2 & 0x03ff);
                                 rot *= 360.0 / 1024.0;
-                                util::vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                bone_tag->qrotate = util::vec4_SetTRRotations(rot);
                                 break;
                             }
 
@@ -3298,26 +3298,26 @@ namespace world
                                 switch(temp1 & 0xc000)
                                 {
                                     case 0x4000:    // x only
-                                        util::vec4_SetTRRotations(bone_tag->qrotate, { ang,0,0 });
+                                        bone_tag->qrotate = util::vec4_SetTRRotations({ ang,0,0 });
                                         break;
 
                                     case 0x8000:    // y only
-                                        util::vec4_SetTRRotations(bone_tag->qrotate, { 0,0,-ang });
+                                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,-ang });
                                         break;
 
                                     case 0xc000:    // z only
-                                        util::vec4_SetTRRotations(bone_tag->qrotate, { 0,ang,0 });
+                                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,ang,0 });
                                         break;
 
                                     default:
                                     {        // all three
                                         temp2 = tr->m_frameData[frame_offset + l];
-                                        btVector3 rot;
+                                        glm::vec3 rot;
                                         rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
                                         rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                         rot[1] = static_cast<float>(temp2 & 0x03ff);
                                         rot *= 360.0 / 1024.0;
-                                        util::vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                        bone_tag->qrotate = util::vec4_SetTRRotations(rot);
                                         l++;
                                         break;
                                     }

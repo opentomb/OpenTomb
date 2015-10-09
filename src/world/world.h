@@ -5,8 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include <LinearMath/btVector3.h>
-
 #include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
