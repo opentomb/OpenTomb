@@ -284,9 +284,9 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
         {
             while(rs->sector_above)
             {
-                assert(rs->sector_above != nullptr);
+                BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
-                assert(rs != nullptr && rs->owner_room != nullptr);
+                BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
@@ -299,9 +299,9 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
         {
             while(rs->sector_above)
             {
-                assert(rs->sector_above != nullptr);
+                BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
-                assert(rs != nullptr && rs->owner_room != nullptr);
+                BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
@@ -321,9 +321,9 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
         {
             while(rs->sector_below)
             {
-                assert(rs->sector_below != nullptr);
+                BOOST_ASSERT(rs->sector_below != nullptr);
                 rs = rs->sector_below->checkFlip();
-                assert(rs != nullptr && rs->owner_room != nullptr);
+                BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
@@ -2240,11 +2240,11 @@ void Character::frame(float time)
 
 void Character::processSectorImpl()
 {
-    assert(m_currentSector != nullptr);
+    BOOST_ASSERT(m_currentSector != nullptr);
     RoomSector* highest_sector = m_currentSector->getHighestSector();
-    assert(highest_sector != nullptr);
+    BOOST_ASSERT(highest_sector != nullptr);
     RoomSector* lowest_sector = m_currentSector->getLowestSector();
-    assert(lowest_sector != nullptr);
+    BOOST_ASSERT(lowest_sector != nullptr);
 
     m_heightInfo.walls_climb_dir = 0;
     m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST |
@@ -2367,7 +2367,7 @@ void Character::updateGhostRigidBody()
 {
     if(!m_bt.ghostObjects.empty())
     {
-        assert(m_bf.bone_tags.size() == m_bt.ghostObjects.size());
+        BOOST_ASSERT(m_bf.bone_tags.size() == m_bt.ghostObjects.size());
         for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
         {
             auto tr = m_bt.bt_body[i]->getWorldTransform();

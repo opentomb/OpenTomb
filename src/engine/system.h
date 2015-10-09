@@ -38,18 +38,6 @@ void Sys_Init();
 void Sys_InitGlobals();
 void Sys_Destroy();
 
-void Sys_Printf(char *fmt, ...);
 void Sys_Init(void);
-#ifdef __GNUC__
-void Sys_Error(const char *error, ...) __attribute__((noreturn));
-#else
-void Sys_Error(const char *error, ...);
-#endif
-void Sys_Warn(const char *warning, ...);
-void Sys_DebugLog(const char *file, const char *fmt, ...);
-
-#define SYS_LOG_CURR_PLACE Sys_DebugLog(LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
-#define SYS_EXT_ERROR(...) {SYS_LOG_CURR_PLACE Sys_Error(__VA_ARGS__);}
-#define SYS_EXT_WARN(...) {SYS_LOG_CURR_PLACE Sys_Warn(__VA_ARGS__);}
 
 } // namespace engine

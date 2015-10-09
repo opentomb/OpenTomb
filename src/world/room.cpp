@@ -127,7 +127,7 @@ bool Room::hasSector(int x, int y)
 
 bool Room::isOverlapped(Room* r1)
 {
-    assert(r1 != nullptr);
+    BOOST_ASSERT(r1 != nullptr);
     if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
     {
         return false;
@@ -630,35 +630,14 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
     return true;
 }
 
-namespace
-{
-    glm::vec3 Sector_HighestFloorCorner(RoomSector* rs)
-    {
-        assert(rs != nullptr);
-        glm::vec3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2]) ? (rs->floor_corners[0]) : (rs->floor_corners[1]);
-        glm::vec3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2]) ? (rs->floor_corners[2]) : (rs->floor_corners[3]);
-
-        return (r1[2] > r2[2]) ? (r1) : (r2);
-    }
-
-    glm::vec3 Sector_LowestCeilingCorner(RoomSector* rs)
-    {
-        assert(rs != nullptr);
-        glm::vec3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2]) ? (rs->ceiling_corners[1]) : (rs->ceiling_corners[0]);
-        glm::vec3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2]) ? (rs->ceiling_corners[3]) : (rs->ceiling_corners[2]);
-
-        return (r1[2] > r2[2]) ? (r2) : (r1);
-    }
-} // anonymous namespace
-
 glm::vec3 RoomSector::getFloorPoint()
 {
-    return Sector_HighestFloorCorner(getLowestSector());
+    return getLowestSector()->getHighestFloorCorner();
 }
 
 glm::vec3 RoomSector::getCeilingPoint()
 {
-    return Sector_LowestCeilingCorner(getHighestSector());
+    return getHighestSector()->getLowestCeilingCorner();
 }
 
 RoomSector* RoomSector::checkFlip()
@@ -818,6 +797,9 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
     {
         switch(tween.ceiling_tween_type)
         {
+            case TweenType::None:
+                break;
+
             case TweenType::TwoTriangles:
             {
                 glm::float_t t = glm::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
@@ -866,6 +848,9 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
 
         switch(tween.floor_tween_type)
         {
+            case TweenType::None:
+                break;
+
             case TweenType::TwoTriangles:
             {
                 glm::float_t t = glm::abs((tween.floor_corners[2][2] - tween.floor_corners[3][2]) /

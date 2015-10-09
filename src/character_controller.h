@@ -59,46 +59,6 @@
 #define LEFT_HAND                   (13)
 #define RIGHT_HAND                  (10)
 
-#define CHARACTER_USE_COMPLEX_COLLISION         (1)
-
-namespace
-{
-// Speed limits
-constexpr float FREE_FALL_SPEED_1        = 2000.0f;
-constexpr float FREE_FALL_SPEED_2        = 4500.0f;
-constexpr float FREE_FALL_SPEED_MAXSAFE  = 5500.0f;
-constexpr float FREE_FALL_SPEED_CRITICAL = 7500.0f;
-constexpr float FREE_FALL_SPEED_MAXIMUM  = 7800.0f;
-
-constexpr float MAX_SPEED_UNDERWATER     = 64.0f;
-constexpr float MAX_SPEED_ONWATER        = 24.0f;
-constexpr float MAX_SPEED_QUICKSAND      = 5.0f;
-
-constexpr float ROT_SPEED_UNDERWATER     = 2.0f;
-constexpr float ROT_SPEED_ONWATER        = 3.0f;
-constexpr float ROT_SPEED_LAND           = 4.5f;
-constexpr float ROT_SPEED_FREEFALL       = 0.5f;
-constexpr float ROT_SPEED_MONKEYSWING    = 3.5f;
-
-constexpr float INERTIA_SPEED_UNDERWATER = 1.0f;
-constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
-
-// Lara's character behavior constants
-constexpr int   DEFAULT_MAX_MOVE_ITERATIONS             = 3;                              //!< @fixme magic
-constexpr float DEFAULT_MIN_STEP_UP_HEIGHT              = 128.0f;                         //!< @fixme check original
-constexpr float DEFAULT_MAX_STEP_UP_HEIGHT              = 256.0f + 32.0f;                 //!< @fixme check original
-constexpr float DEFAULT_FALL_DOWN_HEIGHT                = 320.0f;                         //!< @fixme check original
-constexpr float DEFAULT_CLIMB_UP_HEIGHT                 = 1920.0f;                        //!< @fixme check original
-constexpr float DEFAULT_CRITICAL_SLANT_Z_COMPONENT      = 0.810f;                         //!< @fixme cos(alpha = 30 deg)
-constexpr float DEFAULT_CRITICAL_WALL_COMPONENT         = -0.707f;                        //!< @fixme cos(alpha = 45 deg)
-constexpr float DEFAULT_CHARACTER_SLIDE_SPEED_MULT      = 75.0f;                          //!< @fixme magic - not like in original
-constexpr float DEFAULT_CHARACTER_CLIMB_R               = 32.0f;
-constexpr float DEFAULT_CHARACTER_WADE_DEPTH            = 256.0f;
-
-//! If less than this much of Lara is looking out of the water, she goes from wading to swimming.
-//! @fixme Guess
-constexpr float DEFAULT_CHARACTER_SWIM_DEPTH            = 100.0f;
-
 // CHARACTER PARAMETERS DEFAULTS
 constexpr float PARAM_ABSOLUTE_MAX                = -1;
 
@@ -107,8 +67,3 @@ constexpr float LARA_PARAM_AIR_MAX                = 3600.0f;      //!< 60 secs o
 constexpr float LARA_PARAM_STAMINA_MAX            = 120.0f;       //!< 4  secs of sprint
 constexpr float LARA_PARAM_WARMTH_MAX             = 240.0f;       //!< 8  secs of freeze
 constexpr float LARA_PARAM_POISON_MAX             = 5.0f;
-
-constexpr float CHARACTER_BOX_HALF_SIZE = 128.0f;
-constexpr float CHARACTER_BASE_RADIUS   = 128.0f;
-constexpr float CHARACTER_BASE_HEIGHT   = 512.0f;
-}

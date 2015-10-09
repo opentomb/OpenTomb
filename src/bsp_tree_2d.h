@@ -43,7 +43,7 @@ struct BSPTree2DNode
      */
     void splitHorizontally(uint32_t splitLocation)
     {
-        assert(splitLocation < width);
+        BOOST_ASSERT(splitLocation < width);
         left.reset(new BSPTree2DNode(x, y, splitLocation, height));
         right.reset(new BSPTree2DNode(x + splitLocation, y, width - splitLocation, height));
     }
@@ -54,7 +54,7 @@ struct BSPTree2DNode
      */
     void splitVertically(uint32_t splitLocation)
     {
-        assert(splitLocation < height);
+        BOOST_ASSERT(splitLocation < height);
         left.reset(new BSPTree2DNode(x, y, width, splitLocation));
         right.reset(new BSPTree2DNode(x, y + splitLocation, width, height - splitLocation));
     }

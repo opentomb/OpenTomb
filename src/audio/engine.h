@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <memory>
 
 #include "effect.h"
@@ -92,7 +91,7 @@ public:
 
     ALuint getBuffer(size_t index) const
     {
-        assert( index < m_buffers.size() );
+        BOOST_ASSERT( index < m_buffers.size() );
         return m_buffers[index];
     }
 
@@ -103,7 +102,7 @@ public:
 
     const Emitter& getEmitter(size_t index) const
     {
-        assert( index < m_emitters.size() );
+        BOOST_ASSERT( index < m_emitters.size() );
         return m_emitters[index];
     }
 
@@ -157,13 +156,13 @@ public:
 
     bool isBufferMapped(size_t index) const
     {
-        assert( index < m_effectMap.size() );
+        BOOST_ASSERT( index < m_effectMap.size() );
         return m_effectMap[index]>=0 && static_cast<size_t>(m_effectMap[index])<m_effects.size();
     }
 
     size_t getMappedSampleCount(size_t index) const
     {
-        assert( isBufferMapped(index) );
+        BOOST_ASSERT( isBufferMapped(index) );
         return m_effects[m_effectMap[index]].sample_count;
     }
 
@@ -189,7 +188,7 @@ public:
     FxManager& fxManager()
     {
         if(!m_fxManager)
-            throw std::runtime_error("FX Manager not initialized");
+            BOOST_THROW_EXCEPTION( std::runtime_error("FX Manager not initialized") );
         return *m_fxManager;
     }
 

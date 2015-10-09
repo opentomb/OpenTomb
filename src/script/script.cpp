@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "LuaState.h"
 
@@ -1137,7 +1138,7 @@ void lua_MoveEntityLocal(int id, float dx, float dy, float dz)
         return;
     }
 
-    ent->m_transform[3] += ent->m_transform[3] * glm::vec4(dx, dy, dz, 0);
+    ent->m_transform = glm::translate(ent->m_transform, glm::vec3(dx, dy, dz));
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
@@ -1159,11 +1160,11 @@ void lua_MoveEntityToSink(int id, int sink_index)
     sink_pos[1] = sink->y;
     sink_pos[2] = sink->z + 256.0f;
 
-    assert(ent->m_currentSector != nullptr);
+    BOOST_ASSERT(ent->m_currentSector != nullptr);
     world::RoomSector* ls = ent->m_currentSector->getLowestSector();
-    assert(ls != nullptr);
+    BOOST_ASSERT(ls != nullptr);
     world::RoomSector* hs = ent->m_currentSector->getHighestSector();
-    assert(hs != nullptr);
+    BOOST_ASSERT(hs != nullptr);
     if((sink_pos[2] > hs->ceiling) ||
        (sink_pos[2] < ls->floor))
     {
@@ -1231,7 +1232,7 @@ void lua_RotateEntity(int id, float rx, lua::Value ry, lua::Value rz)
     }
 }
 
-void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua::Value smooth_, lua::Value add_angle_)
+void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua::Value /*smooth_*/, lua::Value add_angle_)
 {
     std::shared_ptr<world::Entity> ent1 = engine::engine_world.getEntityByID(id1);
     std::shared_ptr<world::Entity> ent2 = engine::engine_world.getEntityByID(id2);

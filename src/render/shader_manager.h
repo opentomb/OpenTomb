@@ -2,7 +2,7 @@
 
 #include "shader_description.h"
 
-#include <cassert>
+#include <boost/assert.hpp>
 
 namespace render
 {
@@ -44,7 +44,7 @@ public:
 
     LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const
     {
-        assert(numberOfLights < EntityShaderLightsLimit);
+        BOOST_ASSERT(numberOfLights < EntityShaderLightsLimit);
 
         return m_entityShader[numberOfLights][skin ? 1 : 0];
     }

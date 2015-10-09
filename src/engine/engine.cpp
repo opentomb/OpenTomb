@@ -12,6 +12,8 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+#include <boost/exception/all.hpp>
+
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
 #endif
@@ -45,6 +47,9 @@
 #include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
+
+#include <boost/log/trivial.hpp>
+#include <boost/format.hpp>
 
 using gui::Console;
 
@@ -136,7 +141,7 @@ void initSDLControls()
 
         if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
         {
-            Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
+            BOOST_LOG_TRIVIAL(error) << "There is no joystick #" << control_mapper.joy_number << " present";
             return;
         }
 
@@ -147,7 +152,7 @@ void initSDLControls()
 
             if(!sdl_controller)
             {
-                Sys_DebugLog(LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
+                BOOST_LOG_TRIVIAL(error) << "Can't open game controller #d" << control_mapper.joy_number;
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
                 control_mapper.use_joy = false;
             }
@@ -156,7 +161,7 @@ void initSDLControls()
                 sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
                 if(!sdl_haptic)
                 {
-                    Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from game controller #" << control_mapper.joy_number;
                 }
             }
         }
@@ -167,7 +172,7 @@ void initSDLControls()
 
             if(!sdl_joystick)
             {
-                Sys_DebugLog(LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
+                BOOST_LOG_TRIVIAL(error) << "Can't open joystick #" << control_mapper.joy_number;
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
                 control_mapper.use_joy = false;
             }
@@ -176,7 +181,7 @@ void initSDLControls()
                 sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
                 if(!sdl_haptic)
                 {
-                    Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
+                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from joystick #" << control_mapper.joy_number;
                 }
             }
         }
@@ -210,7 +215,7 @@ void initSDLVideo()
 
     if(SDL_GL_LoadLibrary(nullptr) < 0)
     {
-        Sys_Error("Could not init OpenGL driver");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not init OpenGL driver"));
     }
 
     if(render::renderer.settings().use_gl3)
@@ -228,9 +233,9 @@ void initSDLVideo()
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
 
     if(!sdl_gl_context)
-        Sys_Error("Can't create OpenGL context - shutting down. Try to disable use_gl3 option in config.");
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can't create OpenGL context - shutting down. Try to disable use_gl3 option in config."));
 
-    assert(sdl_gl_context);
+    BOOST_ASSERT(sdl_gl_context);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
     // Check for correct number of antialias samples.
@@ -247,12 +252,12 @@ void initSDLVideo()
             {
                 render::renderer.settings().antialias = 0;
                 render::renderer.settings().antialias_samples = 0;
-                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
+                BOOST_LOG_TRIVIAL(error) << "InitSDLVideo: can't use antialiasing";
             }
             else
             {
                 render::renderer.settings().antialias_samples = maxSamples;   // Limit to max.
-                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+                BOOST_LOG_TRIVIAL(error) << "InitSDLVideo: wrong AA sample number, using " << maxSamples;
             }
         }
 
@@ -278,7 +283,7 @@ void initSDLVideo()
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
     if(SDL_GL_SetSwapInterval(screen_info.vsync))
-        Sys_DebugLog(LOG_FILENAME, "Cannot set VSYNC: %s\n", SDL_GetError());
+        BOOST_LOG_TRIVIAL(error) << "Cannot set VSYNC: " << SDL_GetError();
 
     Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), gui::FontStyle::ConsoleInfo);
     Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), gui::FontStyle::ConsoleInfo);
@@ -296,7 +301,7 @@ void initSDLImage()
 
     if((init & flags) != flags)
     {
-        Sys_DebugLog(LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
+        BOOST_LOG_TRIVIAL(error) << "SDL_Image: failed to initialize JPG and/or PNG support.";
     }
 }
 #endif
@@ -637,13 +642,13 @@ void storeEntityLerpTransforms()
 /**
  * Pre-physics step callback
  */
-void internalPreTickCallback(btDynamicsWorld * world, float timeStep)
+void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 {
     float engine_frame_time_backup = engine_frame_time;
     engine_frame_time = timeStep;
     restoreEntityLerpTransforms();
 
-    engine_lua.doTasks(timeStep);
+    engine_lua.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
     engine::engine_world.audioEngine.updateAudio();
 
@@ -669,7 +674,7 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
     // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        assert(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
+        BOOST_ASSERT(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
         if(body && !body->isStaticObject() && body->getMotionState())
@@ -765,21 +770,36 @@ void dumpRoom(world::Room* r)
 {
     if(r != nullptr)
     {
-        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->getId(), r->sectors_x, r->sectors_y, r->boundingBox.min[2], r->boundingBox.max[2], r->transform[3][0], r->transform[3][1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != nullptr) ? (r->alternate_room->getId()) : (-1), (r->base_room != nullptr) ? (r->base_room->getId()) : (-1));
+        BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
+                                    % r->getId()
+                                    % r->sectors_x
+                                    % r->sectors_y
+                                    % r->boundingBox.min[2]
+                                    % r->boundingBox.max[2]
+                                    % r->transform[3][0]
+                                    % r->transform[3][1];
+        BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
+                                    % r->flags
+                                    % (r->alternate_room != nullptr ? r->alternate_room->getId() : -1)
+                                    % (r->base_room != nullptr ? r->base_room->getId() : -1);
         for(const world::RoomSector& rs : r->sectors)
         {
-            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs.index_x, rs.index_y, rs.floor, rs.ceiling, rs.portal_to_room);
+            BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
+                                        % rs.index_x
+                                        % rs.index_y
+                                        % rs.floor
+                                        % rs.ceiling
+                                        % rs.portal_to_room;
         }
         for(auto sm : r->static_mesh)
         {
-            Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->getId());
+            BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
         }
         for(world::Object* cont : r->containers)
         {
             if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
             {
-                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->getId(), ent->m_bf.animations.model->id);
+                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_bf.animations.model->id;
             }
         }
     }
@@ -890,7 +910,7 @@ std::string getLevelName(const std::string& path)
     }
 
     size_t ext = path.find_last_of(".");
-    assert(ext != std::string::npos);
+    BOOST_ASSERT(ext != std::string::npos);
 
     size_t start = path.find_last_of("\\/");
     if(start == std::string::npos)
@@ -1255,12 +1275,12 @@ void initConfig(const char *filename)
         }
         catch(lua::RuntimeError& error)
         {
-            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            BOOST_LOG_TRIVIAL(error) << error.what();
             return;
         }
         catch(lua::LoadError& error)
         {
-            Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            BOOST_LOG_TRIVIAL(error) << error.what();
             return;
         }
 
@@ -1273,7 +1293,7 @@ void initConfig(const char *filename)
     }
     else
     {
-        Sys_Warn("Could not find \"%s\"", filename);
+        BOOST_LOG_TRIVIAL(error) << "Could not find " << filename;
     }
 }
 

@@ -298,6 +298,13 @@ void Source::linkEmitter()
 {
     switch(m_emitterType)
     {
+        case EmitterType::Any:
+            BOOST_ASSERT(false);
+            break;
+
+        case EmitterType::Global:
+            break;
+
         case EmitterType::Entity:
             if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(m_emitterID))
             {

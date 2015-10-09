@@ -189,6 +189,9 @@ void InventoryManager::frame(float time)
 
     switch(m_currentState)
     {
+        case InventoryState::Activate:
+            break;
+
         case InventoryState::RLeft:
             m_ringTime += time;
             m_ringAngle = m_ringAngleStep * m_ringTime / m_ringRotatePeriod;

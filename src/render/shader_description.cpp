@@ -7,8 +7,9 @@
 //
 #include "shader_description.h"
 
-#include <cassert>
 #include <cstdlib>
+
+#include <boost/assert.hpp>
 
 namespace render
 {
@@ -33,7 +34,7 @@ ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStag
     glLinkProgram(program);
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    assert(isLinked == GL_TRUE);
+    BOOST_ASSERT(isLinked == GL_TRUE);
 
     CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
@@ -56,7 +57,7 @@ GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const Shad
     glLinkProgram(program);
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    assert(isLinked == GL_TRUE);
+    BOOST_ASSERT(isLinked == GL_TRUE);
 
     CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
@@ -71,7 +72,7 @@ TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const Sh
     glLinkProgram(program);
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    assert(isLinked == GL_TRUE);
+    BOOST_ASSERT(isLinked == GL_TRUE);
 
     CHECK_OPENGL_ERROR();
 
@@ -91,7 +92,7 @@ SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, cons
     glLinkProgram(program);
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    assert(isLinked == GL_TRUE);
+    BOOST_ASSERT(isLinked == GL_TRUE);
 
     CHECK_OPENGL_ERROR();
     printShaderInfoLog(program);
@@ -108,7 +109,7 @@ UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const 
     glLinkProgram(program);
     GLint isLinked;
     glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
-    assert(isLinked == GL_TRUE);
+    BOOST_ASSERT(isLinked == GL_TRUE);
 
     CHECK_OPENGL_ERROR();
 

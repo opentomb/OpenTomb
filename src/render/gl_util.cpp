@@ -1,10 +1,12 @@
 #include "gl_util.h"
 
+#include "engine/system.h"
+
 #include <cstdio>
 #include <cstring>
 #include <vector>
 
-#include "engine/system.h"
+#include <boost/log/trivial.hpp>
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
@@ -14,41 +16,41 @@ namespace render
 /*
  * Shaders generation section
  */
-int checkOpenGLErrorDetailed(const char *file, int line)
+bool checkOpenGLErrorDetailed(const char *file, int line)
 {
-    for(; ; )
+    while(true)
     {
         GLenum  glErr = glGetError();
         if(glErr == GL_NO_ERROR)
         {
-            return 0;
+            return false;
         }
 
         switch(glErr)
         {
             case GL_INVALID_VALUE:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_INVALID_VALUE in " << file << ":" << line;
+                return true;
 
             case GL_INVALID_ENUM:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_INVALID_ENUM in " << file << ":" << line;
+                return true;
 
             case GL_INVALID_OPERATION:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_INVALID_OPERATION in " << file << ":" << line;
+                return true;
 
             case GL_STACK_OVERFLOW:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_STACK_OVERFLOW in " << file << ":" << line;
+                return true;
 
             case GL_STACK_UNDERFLOW:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_STACK_UNDERFLOW in " << file << ":" << line;
+                return true;
 
             case GL_OUT_OF_MEMORY:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY in %s:%d", file, line);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: GL_OUT_OF_MEMORY in " << file << ":" << line;
+                return true;
 
                 /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
                    GL_LOSE_CONTEXT_ON_RESET_ARB
@@ -59,8 +61,8 @@ int checkOpenGLErrorDetailed(const char *file, int line)
                    GL_NO_RESET_NOTIFICATION_ARB*/
 
             default:
-                engine::Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X in %s:%d", file, line, glErr);
-                return 1;
+                BOOST_LOG_TRIVIAL(error) << "glError: unknown error 0x" << std::hex << glErr << std::dec << " in " << file << ":" << line;
+                return true;
         };
     }
 }
@@ -72,7 +74,7 @@ void printShaderInfoLog(GLuint object)
 
     if(!(isProgram^isShader))
     {
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "Object %d is neither a shader nor a program", object);
+        BOOST_LOG_TRIVIAL(error) << "Object " << object << " is neither a shader nor a program";
         return;
     }
 
@@ -93,8 +95,7 @@ void printShaderInfoLog(GLuint object)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog.data());
         else
             glGetShaderInfoLog(object, logLength, &charsWritten, infoLog.data());
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "%s", static_cast<const char*>(infoLog.data()));
+        BOOST_LOG_TRIVIAL(info) << "GL_InfoLog[" << charsWritten << "]:" << static_cast<const char*>(infoLog.data());
     }
 }
 
@@ -103,21 +104,21 @@ int loadShaderFromBuff(GLuint ShaderObj, char * source)
     GLint compileStatus = 0;
     GLint size = strlen(source);
     glShaderSource(ShaderObj, 1, const_cast<const char **>(&source), &size);
-    engine::Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
+    BOOST_LOG_TRIVIAL(debug) << "source loaded";                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
-    engine::Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+    BOOST_LOG_TRIVIAL(debug) << "trying to compile";
     if(CHECK_OPENGL_ERROR())                          // check for OpenGL errors
     {
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+        BOOST_LOG_TRIVIAL(error) << "compilation failed";
         return 0;
     }
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 
-    if(!compileStatus)
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+    if(compileStatus != GL_TRUE)
+        BOOST_LOG_TRIVIAL(error) << "compilation failed";
 
-    return compileStatus != 0;
+    return compileStatus == GL_TRUE;
 }
 
 int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *additionalDefines)
@@ -125,11 +126,11 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     GLint   compileStatus;
     int size;
     FILE * file;
-    engine::Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
+    BOOST_LOG_TRIVIAL(error) << "GL_Loading " << fileName;
     file = fopen(fileName, "rb");
     if(file == nullptr)
     {
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
+        BOOST_LOG_TRIVIAL(error) << "Error opening " << fileName;
         return 0;
     }
 
@@ -139,7 +140,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     if(size < 1)
     {
         fclose(file);
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s: size < 1", fileName);
+        BOOST_LOG_TRIVIAL(error) << "Error loading file " << fileName << ": size < 1";
         return 0;
     }
 
@@ -163,19 +164,19 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
         const GLint lengths[2] = { versionLen, size };
         glShaderSource(ShaderObj, 2, bufs, lengths);
     }
-    engine::Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
+    BOOST_LOG_TRIVIAL(debug) << "source loaded";
     buf.clear();                                   // compile the particle vertex shader, and print out
     glCompileShader(ShaderObj);
-    engine::Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+    BOOST_LOG_TRIVIAL(debug) << "trying to compile";
     glGetShaderiv(ShaderObj, GL_COMPILE_STATUS, &compileStatus);
     printShaderInfoLog(ShaderObj);
 
     if(compileStatus != GL_TRUE)
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation failed");
+        BOOST_LOG_TRIVIAL(warning) << "compilation failed";
     else
-        engine::Sys_DebugLog(GL_LOG_FILENAME, "compilation succeeded");
+        BOOST_LOG_TRIVIAL(debug) << "compilation succeeded";
 
-    return compileStatus != 0;
+    return compileStatus == GL_TRUE;
 }
 
 } // namespace render

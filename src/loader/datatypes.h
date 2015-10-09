@@ -453,7 +453,7 @@ struct Light
         light.intensity = 1.0f;
         /*
         if ((temp != 0) && (temp != 0xCDCDCDCD))
-        throw TR_ReadError("read_tr5_room_light: seperator1 has wrong value");
+        BOOST_THROW_EXCEPTION( TR_ReadError("read_tr5_room_light: seperator1 has wrong value") );
         */
         light.r_inner = reader.readF();
         light.r_outer = reader.readF();
@@ -1314,7 +1314,7 @@ struct Room
         /*light_size = */reader.readU32();
         auto numL2 = reader.readU32();
         if(numL2 != room.lights.size())
-            throw std::runtime_error("read_tr5_room: room.num_lights2 != room.num_lights");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: room.num_lights2 != room.num_lights") );
 
         room.unknown_r6 = reader.readU32();
         room.room_y_top = -reader.readF();
@@ -1327,11 +1327,11 @@ struct Room
         auto poly_offset = reader.readU32();
         auto poly_offset2 = reader.readU32();
         if(poly_offset != poly_offset2)
-            throw std::runtime_error("read_tr5_room: poly_offset != poly_offset2");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: poly_offset != poly_offset2") );
 
         auto vertices_size = reader.readU32();
         if((vertices_size % 28) != 0)
-            throw std::runtime_error("read_tr5_room: vertices_size has wrong value");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: vertices_size has wrong value") );
 
         if(reader.readU32() != 0xCDCDCDCD)
         {

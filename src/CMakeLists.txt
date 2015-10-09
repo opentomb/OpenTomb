@@ -200,6 +200,7 @@ target_link_libraries(
     Freetype
     OpenAL
     GLM
+    Boost
     ${OGG_LIBRARIES}
     ${VORBIS_LIBRARIES}
     ${VORBISFILE_LIBRARIES}

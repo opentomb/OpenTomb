@@ -33,7 +33,7 @@ void TR4Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0x00345254 /*&& file_version != 0x63345254*/)           // +TRLE
-        throw std::runtime_error("Wrong level version");
+        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
 
     std::vector<WordTexture> texture16;
     {
@@ -45,7 +45,7 @@ void TR4Level::load()
 
         uint32_t uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            throw std::runtime_error("read_tr4_level: textiles32 uncomp_size == 0");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: textiles32 uncomp_size == 0") );
 
         uint32_t comp_size = m_reader.readU32();
         if(comp_size > 0)
@@ -59,7 +59,7 @@ void TR4Level::load()
 
         uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            throw std::runtime_error("read_tr4_level: textiles16 uncomp_size == 0");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: textiles16 uncomp_size == 0") );
 
         comp_size = m_reader.readU32();
         if(comp_size > 0)
@@ -80,7 +80,7 @@ void TR4Level::load()
 
         uncomp_size = m_reader.readU32();
         if(uncomp_size == 0)
-            throw std::runtime_error("read_tr4_level: textiles32d uncomp_size == 0");
+            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: textiles32d uncomp_size == 0") );
 
         comp_size = m_reader.readU32();
         if(comp_size > 0)
@@ -110,19 +110,19 @@ void TR4Level::load()
 
     auto uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        throw std::runtime_error("read_tr4_level: packed geometry uncomp_size == 0");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: packed geometry uncomp_size == 0") );
 
     auto comp_size = m_reader.readU32();
 
     if(!comp_size)
-        throw std::runtime_error("read_tr4_level: packed geometry");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: packed geometry") );
 
     std::vector<uint8_t> comp_buffer(comp_size);
     m_reader.readBytes(comp_buffer.data(), comp_size);
 
     io::SDLReader newsrc = io::SDLReader::decompress(comp_buffer, uncomp_size);
     if(!newsrc.isOpen())
-        throw std::runtime_error("read_tr4_level: SDL_RWFromMem");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: SDL_RWFromMem") );
 
     // Unused
     if(newsrc.readU32() != 0)
@@ -149,13 +149,13 @@ void TR4Level::load()
     newsrc.readVector(m_staticMeshes, newsrc.readU32(), &StaticMesh::read);
 
     if(newsrc.readI8() != 'S')
-        throw std::runtime_error("read_tr4_level: 'SPR' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: 'SPR' not found") );
 
     if(newsrc.readI8() != 'P')
-        throw std::runtime_error("read_tr4_level: 'SPR' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: 'SPR' not found") );
 
     if(newsrc.readI8() != 'R')
-        throw std::runtime_error("read_tr4_level: 'SPR' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: 'SPR' not found") );
 
     newsrc.readVector(m_spriteTextures, newsrc.readU32(), &SpriteTexture::readTr4);
 
@@ -180,13 +180,13 @@ void TR4Level::load()
     m_animatedTexturesUvCount = newsrc.readU8();
 
     if(newsrc.readI8() != 'T')
-        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: '\\0TEX' not found") );
 
     if(newsrc.readI8() != 'E')
-        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: '\\0TEX' not found") );
 
     if(newsrc.readI8() != 'X')
-        throw std::runtime_error("read_tr4_level: '\\0TEX' not found");
+        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: '\\0TEX' not found") );
 
     newsrc.readVector(m_objectTextures, newsrc.readU32(), &ObjectTexture::readTr4);
 

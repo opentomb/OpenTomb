@@ -34,8 +34,6 @@ namespace engine
 
 class BtEngineClosestConvexResultCallback;
 
-extern glm::vec3 cam_angles;
-
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 int  Game_Load(const char* name);

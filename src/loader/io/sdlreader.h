@@ -9,6 +9,8 @@
 
 #include <zlib.h>
 
+#include <boost/exception/all.hpp>
+
 namespace loader
 {
 
@@ -64,14 +66,14 @@ namespace io
 
             uLongf size = static_cast<uLongf>(uncompressedSize);
             if(uncompress(uncomp_buffer.data(), &size, compressed.data(), static_cast<uLong>(compressed.size())) != Z_OK)
-                throw std::runtime_error("read_tr4_level: uncompress");
+                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: uncompress") );
 
             if(size != uncompressedSize)
-                throw std::runtime_error("read_tr4_level: uncompress size mismatch");
+                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: uncompress size mismatch") );
 
             io::SDLReader reader(std::move(uncomp_buffer));
             if(!reader.isOpen())
-                throw std::runtime_error("read_tr4_level: SDL_RWFromMem");
+                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: SDL_RWFromMem") );
 
             return reader;
         }
@@ -107,7 +109,7 @@ namespace io
             static_assert(std::is_integral<T>::value && sizeof(T) == 1, "readBytes() only allowed for byte-compatible data");
             if(SDL_RWread(m_rwOps, dest, 1, n) != n)
             {
-                throw std::runtime_error("EOF unexpectedly reached");
+                BOOST_THROW_EXCEPTION( std::runtime_error("EOF unexpectedly reached") );
             }
         }
 
@@ -159,7 +161,7 @@ namespace io
             T result;
             if(SDL_RWread(m_rwOps, &result, sizeof(T), 1) != 1)
             {
-                throw std::runtime_error("EOF unexpectedly reached");
+                BOOST_THROW_EXCEPTION( std::runtime_error("EOF unexpectedly reached") );
             }
 
             SwapTraits<T, sizeof(T), std::is_integral<T>::value || std::is_floating_point<T>::value>::doSwap(result);

@@ -9,7 +9,6 @@
 #include "bordered_texture_atlas.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -315,7 +314,7 @@ void BorderedTextureAtlas::addSpriteTexture(const loader::SpriteTexture &texture
 
 size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 {
-    assert(texture < m_fileObjectTextures.size());
+    BOOST_ASSERT(texture < m_fileObjectTextures.size());
 
     const FileObjectTexture &file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
@@ -330,9 +329,9 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
                                           int shift,
                                           bool split)  const
 {
-    assert(poly->vertices.size() <= 4);
+    BOOST_ASSERT(poly->vertices.size() <= 4);
 
-    assert(texture < m_fileObjectTextures.size());
+    BOOST_ASSERT(texture < m_fileObjectTextures.size());
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
@@ -371,7 +370,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
                 y_coord = canonical.new_y_with_border + m_borderWidth + canonical.height - shift;
                 break;
             default:
-                assert(false);
+                BOOST_ASSERT(false);
         }
 
         size_t index = reverse ? (poly->vertices.size() - i - 1) : i;
@@ -383,7 +382,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
 
 void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, glm::float_t *coordinates) const
 {
-    assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
+    BOOST_ASSERT(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
     const size_t canonical_index = m_canonicalTexturesForSpriteTextures[sprite_texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
@@ -515,7 +514,7 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             int h = m_resultPageHeights[page] / 2;
             std::vector<GLubyte> mip_data(4 * w * h);
 
-            assert(w > 0 && h > 0);
+            BOOST_ASSERT(w > 0 && h > 0);
             for(int i = 0; i < h; i++)
             {
                 for(int j = 0; j < w; j++)

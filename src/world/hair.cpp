@@ -57,7 +57,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // last element of the hair, as it indicates absence of "child" constraint.
 
     m_rootIndex = 0;
-    assert( m_elements.size() <= 256 );
+    BOOST_ASSERT( m_elements.size() <= 256 );
     m_tailIndex = static_cast<uint8_t>( m_elements.size() - 1 );
 
     // Weight step is needed to determine the weight of each hair body.
@@ -272,11 +272,11 @@ void Hair::createHairMesh(const SkeletalModel *model)
             if (original->m_elementsPerTexture[page] == 0)
                     continue;
 
-            assert(originalElementsStart < original->m_elements.size());
-            assert(originalElementsStart+original->m_elementsPerTexture[page] <= original->m_elements.size());
+            BOOST_ASSERT(originalElementsStart < original->m_elements.size());
+            BOOST_ASSERT(originalElementsStart+original->m_elementsPerTexture[page] <= original->m_elements.size());
 
-            assert(elementsStartPerTexture[page] < m_mesh->m_elements.size());
-            assert(elementsStartPerTexture[page] + original->m_elementsPerTexture[page] <= m_mesh->m_elements.size());
+            BOOST_ASSERT(elementsStartPerTexture[page] < m_mesh->m_elements.size());
+            BOOST_ASSERT(elementsStartPerTexture[page] + original->m_elementsPerTexture[page] <= m_mesh->m_elements.size());
 
             std::copy_n(&original->m_elements[originalElementsStart], original->m_elementsPerTexture[page], &m_mesh->m_elements[elementsStartPerTexture[page]]);
 
@@ -306,7 +306,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
         for(size_t j = 0; j < original->m_vertices.size(); j++)
         {
             m_mesh->m_matrixIndices.emplace_back();
-            assert(m_mesh->m_matrixIndices.size() > verticesStart + j);
+            BOOST_ASSERT(m_mesh->m_matrixIndices.size() > verticesStart + j);
             if(original->m_vertices[j].position[1] <= 0)
             {
                 m_mesh->m_matrixIndices[verticesStart + j].i = i;

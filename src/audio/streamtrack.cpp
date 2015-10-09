@@ -10,6 +10,8 @@
 #include "strings.h"
 #include "util/helpers.h"
 
+#include <boost/log/trivial.hpp>
+
 using gui::Console;
 
 namespace audio
@@ -146,7 +148,7 @@ bool StreamTrack::loadTrack(const char *path)
     memset(&m_sfInfo, 0, sizeof(m_sfInfo));
     if(!(m_sndFile = sf_open(path, SFM_READ, &m_sfInfo)))
     {
-        engine::Sys_DebugLog(LOG_FILENAME, "Load_Track: Couldn't open file: %s.", path);
+        BOOST_LOG_TRIVIAL(debug) << "Load_Track: Couldn't open file: " << path;
         m_method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
         return false;
     }
@@ -249,7 +251,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
         {
             if(!i)
             {
-                engine::Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
+                BOOST_LOG_TRIVIAL(debug) << "StreamTrack: error preparing buffers";
                 return false;
             }
             else
@@ -351,6 +353,10 @@ bool StreamTrack::update()
     {
         switch(m_streamType)
         {
+            case StreamType::Any:
+                BOOST_ASSERT(false);
+                break;
+
             case StreamType::Background:
                 m_currentVolume -= CrossfadeBackground;
                 break;
@@ -382,6 +388,10 @@ bool StreamTrack::update()
         {
             switch(m_streamType)
             {
+                case StreamType::Any:
+                    BOOST_ASSERT(false);
+                    break;
+
                 case StreamType::Background:
                     m_currentVolume += CrossfadeBackground;
                     break;
@@ -462,7 +472,7 @@ bool StreamTrack::isPlaying() const                       // Check if track is p
 
 bool StreamTrack::stream(ALuint buffer)
 {
-    assert(engine::engine_world.audioEngine.getSettings().stream_buffer_size >= m_sfInfo.channels - 1);
+    BOOST_ASSERT(engine::engine_world.audioEngine.getSettings().stream_buffer_size >= m_sfInfo.channels - 1);
 #ifdef AUDIO_OPENAL_FLOAT
     std::vector<ALfloat> pcm(engine::engine_world.audioEngine.getSettings().stream_buffer_size);
 #else

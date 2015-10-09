@@ -30,7 +30,6 @@
 #include "world/world.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <numeric>
@@ -40,6 +39,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <boost/log/trivial.hpp>
 
 using gui::Console;
 
@@ -866,6 +867,10 @@ namespace world
                                 {
                                     switch(activator)
                                     {
+                                        case ActivatorType::Normal:
+                                            BOOST_ASSERT(false);
+                                            break;
+
                                         case ActivatorType::Switch:
                                             if(action_type == ActionType::Switch)
                                             {
@@ -1370,7 +1375,7 @@ namespace world
             if(af->num_anim_commands == 0)
                 continue;
 
-            assert(af->anim_command < engine::engine_world.anim_commands.size());
+            BOOST_ASSERT(af->anim_command < engine::engine_world.anim_commands.size());
             int16_t *pointer = &engine::engine_world.anim_commands[af->anim_command];
 
             for(uint32_t i = 0; i < af->num_anim_commands; i++)
@@ -1408,7 +1413,7 @@ namespace world
                          * Per frame commands:
                          */
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        if(pointer[0] < af->frames.size())
+                        if(pointer[0] < static_cast<int>(af->frames.size()))
                         {
                             af->frames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
                         }
@@ -1417,7 +1422,7 @@ namespace world
                         break;
 
                     case TR_ANIMCOMMAND_PLAYEFFECT:
-                        if(pointer[0] < af->frames.size())
+                        if(pointer[0] < static_cast<int>(af->frames.size()))
                         {
                             af->frames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
                         }
@@ -1674,11 +1679,11 @@ namespace world
             }
             catch(lua::RuntimeError& error)
             {
-                engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+                BOOST_LOG_TRIVIAL(error) << error.what();
             }
             catch(lua::LoadError& error)
             {
-                engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+                BOOST_LOG_TRIVIAL(error) << error.what();
             }
         }
     }
@@ -2901,7 +2906,7 @@ namespace world
             {
                 continue;
             }
-            assert(elements_for_texture[i].size() >= room->sprite_buffer->element_count_per_texture[i]);
+            BOOST_ASSERT(elements_for_texture[i].size() >= room->sprite_buffer->element_count_per_texture[i]);
             std::copy_n(elements_for_texture[i].begin(), room->sprite_buffer->element_count_per_texture[i], std::back_inserter(elements));
             elements_for_texture[i].clear();
         }
@@ -3182,7 +3187,7 @@ namespace world
             if((anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255))
             {
                 // Calculate current animation anim command block offset.
-                assert(anim->anim_command < world->anim_commands.size());
+                BOOST_ASSERT(anim->anim_command < world->anim_commands.size());
                 int16_t *pointer = &world->anim_commands[anim->anim_command];
 
                 for(uint32_t count = 0; count < anim->num_anim_commands; count++)
@@ -3350,7 +3355,7 @@ namespace world
             tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
             int16_t animId = tr_animation->next_animation - tr_moveable->animation_index;
             animId &= 0x7fff; // this masks out the sign bit
-            assert(animId >= 0);
+            BOOST_ASSERT(animId >= 0);
             if(static_cast<size_t>(animId) < model->animations.size())
             {
                 anim->next_anim = &model->animations[animId];
@@ -3616,7 +3621,7 @@ namespace world
             if(0 == tr_item->object_id)                                             // Lara is unical model
             {
                 std::shared_ptr<Character> lara = std::dynamic_pointer_cast<Character>(entity);
-                assert(lara != nullptr);
+                BOOST_ASSERT(lara != nullptr);
 
                 lara->m_moveType = MoveType::OnFloor;
                 world->character = lara;
@@ -3640,6 +3645,9 @@ namespace world
                                 SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count - 1);
                             }
                         }
+                        break;
+
+                    case loader::Engine::TR2:
                         break;
 
                     case loader::Engine::TR3:

@@ -8,6 +8,7 @@
 #include "world/room.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace audio
 {
@@ -29,7 +30,7 @@ FxManager::~FxManager()
 
 bool FxManager::loadReverb(loader::ReverbInfo effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    assert(effect_index>=loader::ReverbInfo::Outside && effect_index < loader::ReverbInfo::Sentinel);
+    BOOST_ASSERT(effect_index>=loader::ReverbInfo::Outside && effect_index < loader::ReverbInfo::Sentinel);
     ALuint effect = al_effect[static_cast<int>(effect_index)];
 
     if(alIsEffect(effect))
@@ -54,7 +55,7 @@ bool FxManager::loadReverb(loader::ReverbInfo effect_index, const EFXEAXREVERBPR
     }
     else
     {
-        engine::Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
+        BOOST_LOG_TRIVIAL(error) << "OpenAL error: no effect " << effect;
         return false;
     }
 }

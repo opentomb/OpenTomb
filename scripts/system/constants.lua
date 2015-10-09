@@ -28,4 +28,4 @@ TRIGGER_OP_XOR = 1;
 
 -- Global frame time variable, in seconds
 
-FRAME_TIME = 1.0 / 60.0;
+-- FRAME_TIME = 1.0 / 60.0;

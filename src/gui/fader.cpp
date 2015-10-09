@@ -154,7 +154,7 @@ bool Fader::SetTexture(const char *texture_path)
     CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
     CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width * 4, deviceRgb, kCGImageAlphaPremultipliedFirst);
     CGColorSpaceRelease(deviceRgb);
-    assert(context);
+    BOOST_ASSERT(context);
 
     CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
 

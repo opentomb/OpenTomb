@@ -1,6 +1,5 @@
 #include "portal.h"
 
-#include <cassert>
 #include <cmath>
 
 #include "util/vmath.h"
@@ -71,7 +70,7 @@ bool Portal::rayIntersect(const glm::vec3& ray, const glm::vec3& rayStart)
  */
 void Portal::updateNormal()
 {
-    assert(vertices.size() > 3);
+    BOOST_ASSERT(vertices.size() > 3);
     auto v1 = vertices[1] - vertices[0];
     auto v2 = vertices[2] - vertices[1];
     normal.assign(v1, v2, vertices[0]);

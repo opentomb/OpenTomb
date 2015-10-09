@@ -103,7 +103,7 @@ public:
     void drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const glm::mat4& transform, Render *render);
     void drawEntityDebugLines(world::Entity *entity, Render *render);
     void drawSectorDebugLines(world::RoomSector *rs);
-    void drawRoomDebugLines(const world::Room *room, Render *render, const world::Camera& cam);
+    void drawRoomDebugLines(const world::Room *room, Render *render);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;

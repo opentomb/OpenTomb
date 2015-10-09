@@ -34,7 +34,7 @@ void TR3Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
-        throw std::runtime_error("Wrong level version");
+        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
 
     m_palette = Palette::readTr1(m_reader);
     /*Palette palette16 =*/ Palette::readTr2(m_reader);

@@ -581,7 +581,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const glm::mat
         // Then: Individual hair pieces
         for(size_t i = 0; i < entity->m_hairs[h]->m_elements.size(); i++)
         {
-            assert(i + 1 < MatrixCount);
+            BOOST_ASSERT(i + 1 < MatrixCount);
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
              * (translated)
@@ -904,7 +904,7 @@ void Render::drawListDebugLines()
 
     for(const world::Room* room : m_renderList)
     {
-        debugDrawer.drawRoomDebugLines(room, this, *m_cam);
+        debugDrawer.drawRoomDebugLines(room, this);
     }
 
     if(m_drawColl)
@@ -1256,7 +1256,7 @@ void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
     drawBBox(bb, nullptr);
 }
 
-void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* render, const world::Camera& cam)
+void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {

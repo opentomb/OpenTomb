@@ -1,16 +1,5 @@
 #include "entity.h"
 
-#include <cmath>
-
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-#include <glm/gtx/matrix_interpolation.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
 #include "LuaState.h"
 
 #include "character_controller.h"
@@ -29,6 +18,20 @@
 #include "world/skeletalmodel.h"
 
 #include "core/basemesh.h"
+
+#include <cmath>
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include <glm/gtx/matrix_interpolation.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <boost/log/trivial.hpp>
 
 constexpr float GhostVolumeCollisionCoefficient = 0.4f;
 
@@ -265,7 +268,7 @@ void Entity::ghostUpdate()
     if(m_bt.ghostObjects.empty())
         return;
 
-    assert(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
@@ -294,7 +297,7 @@ void Entity::updateCurrentCollisions()
     if(m_bt.ghostObjects.empty())
         return;
 
-    assert(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
 
     for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
     {
@@ -361,7 +364,7 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
     if(m_bt.ghostObjects.empty() || m_bt.no_fix_all)
         return 0;
 
-    assert(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
 
     auto orig_pos = m_transform[3];
     int ret = 0;
@@ -880,9 +883,9 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    assert(m_currentSector != nullptr);
+    BOOST_ASSERT(m_currentSector != nullptr);
     RoomSector* lowest_sector = m_currentSector->getLowestSector();
-    assert(lowest_sector != nullptr);
+    BOOST_ASSERT(lowest_sector != nullptr);
 
     processSectorImpl();
 
@@ -899,7 +902,7 @@ void Entity::processSector()
         }
         catch (lua::RuntimeError& error)
         {
-            engine::Sys_DebugLog(LUA_LOG_FILENAME, "%s", error.what());
+            BOOST_LOG_TRIVIAL(error) << error.what();
         }
     }
 }

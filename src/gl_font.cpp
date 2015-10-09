@@ -154,8 +154,6 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         const GLint padding = 2;
         GLint chars_in_row, chars_in_column;
         size_t buffer_size;
-        int x, y;
-        int i, ii, i0 = 0;
 
         // clear old atlas, if exists
         if(!glf->gl_tex_indexes.empty())
@@ -187,7 +185,9 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         buffer_size = glf->gl_tex_width * glf->gl_tex_width * sizeof(GLubyte);
         std::vector<GLubyte> buffer(buffer_size, 0);
 
-        for(i = 0, x = 0, y = 0; i < glf->glyphs.size(); i++)
+        size_t y = 0;
+        size_t i0 = 0;
+        for(size_t i = 0, x = 0; i < glf->glyphs.size(); i++)
         {
             FT_GlyphSlot g;
             glf->glyphs[i].tex_index = 0;
@@ -220,7 +220,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
             {
                 x = 0;
                 y += glf->font_size + padding;
-                if(y + glf->font_size > glf->gl_tex_width)
+                if(static_cast<GLint>(y + glf->font_size) > glf->gl_tex_width)
                 {
                     glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -228,7 +228,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, glf->gl_tex_width, 0, GL_R8, GL_UNSIGNED_BYTE, buffer.data());
-                    for(int ii2 = i0; ii2 < i; ii2++)
+                    for(size_t ii2 = i0; ii2 < i; ii2++)
                     {
                         glf->glyphs[ii2].tex_x0 /= static_cast<GLfloat>(glf->gl_tex_width);
                         glf->glyphs[ii2].tex_x1 /= static_cast<GLfloat>(glf->gl_tex_width);
@@ -267,7 +267,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         chars_in_column = NextPowerOf2(y + font_size + padding);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, glf->gl_tex_width, chars_in_column, 0, GL_RED, GL_UNSIGNED_BYTE, buffer.data());
 
-        for(ii = i0; ii < glf->glyphs.size(); ii++)
+        for(size_t ii = i0; ii < glf->glyphs.size(); ii++)
         {
             glf->glyphs[ii].tex_x0 /= static_cast<GLfloat>(glf->gl_tex_width);
             glf->glyphs[ii].tex_x1 /= static_cast<GLfloat>(glf->gl_tex_width);

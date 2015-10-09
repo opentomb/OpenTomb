@@ -94,6 +94,12 @@ add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
+find_package(Boost COMPONENTS system log REQUIRED)
+add_library(Boost INTERFACE)
+target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
+target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
+target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK)
+
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 
 if(USE_OPENAL_FLOAT)

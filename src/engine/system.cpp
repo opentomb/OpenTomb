@@ -17,19 +17,6 @@ gui::TextLine system_fps;
 // General routines
 // =======================================================================
 
-void Sys_Printf(char *fmt, ...)
-{
-    va_list     argptr;
-    char        text[4096];
-
-    va_start(argptr, fmt);
-    vsnprintf(text, 4096, fmt, argptr);
-    va_end(argptr);
-    fprintf(stderr, "%s", text);
-
-    //Con_Print (text);
-}
-
 void Sys_Init()
 {
     system_fps.text.clear();
@@ -64,55 +51,6 @@ void Sys_Destroy()
 {
     system_fps.show = false;
     system_fps.text.clear();
-}
-
-void Sys_Error(const char *error, ...)
-{
-    va_list     argptr;
-    char        string[4096];
-
-    va_start(argptr, error);
-    vsnprintf(string, 4096, error, argptr);
-    va_end(argptr);
-
-    Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
-    shutdown(1);
-}
-
-void Sys_Warn(const char *warning, ...)
-{
-    va_list     argptr;
-    char        string[4096];
-
-    va_start(argptr, warning);
-    vsnprintf(string, 4096, warning, argptr);
-    va_end(argptr);
-    Sys_DebugLog(LOG_FILENAME, "Warning: %s", string);
-}
-
-void Sys_DebugLog(const char *file, const char *fmt, ...)
-{
-    if(!system_settings.logging) return;
-
-    va_list argptr;
-    static char data[4096];
-    FILE *fp;
-
-    va_start(argptr, fmt);
-    sprintf(data, "\n");
-    vsnprintf(&data[1], 4095, fmt, argptr);
-    va_end(argptr);
-    fp = fopen(file, "a");
-    if(fp == nullptr)
-    {
-        fp = fopen(file, "w");
-    }
-    if(fp != nullptr)
-    {
-        fwrite(data, strlen(data), 1, fp);
-        fclose(fp);
-    }
-    fwrite(data, strlen(data), 1, stderr);
 }
 
 } // namespace engine

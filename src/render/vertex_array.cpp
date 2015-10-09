@@ -1,6 +1,6 @@
 #include "vertex_array.h"
 
-#include <cassert>
+#include <boost/assert.hpp>
 
 namespace render
 {
@@ -9,15 +9,15 @@ VertexArray::VertexArray(GLuint element_vbo, size_t numAttributes, const VertexA
 {
     glGenVertexArrays(1, &m_vertexArrayObject);
 
-    assert(m_vertexArrayObject && "Incorrect OpenGL function setup");
+    BOOST_ASSERT(m_vertexArrayObject && "Incorrect OpenGL function setup");
     glBindVertexArray(m_vertexArrayObject);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_vbo);
 
     for(size_t i = 0; i < numAttributes; i++)
     {
-        assert(attributes[i].m_vbo != 0);
-        assert(attributes[i].m_stride != 0);
+        BOOST_ASSERT(attributes[i].m_vbo != 0);
+        BOOST_ASSERT(attributes[i].m_stride != 0);
 
         glBindBuffer(GL_ARRAY_BUFFER, attributes[i].m_vbo);
         glEnableVertexAttribArray(attributes[i].m_index);

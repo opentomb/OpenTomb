@@ -10,7 +10,7 @@
 #include "resource.h"
 #include "room.h"
 
-#include <cassert>
+#include <boost/log/trivial.hpp>
 
 namespace world
 {
@@ -199,7 +199,7 @@ void onFrameCrawlToClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUp
 StateController::StateController(Character *c)
     : m_character(c)
 {
-    assert( c != nullptr );
+    BOOST_ASSERT( c != nullptr );
 
     on(LaraState::STOP, &StateController::stop);
     on(LaraState::JUMP_PREPARE, &StateController::jumpPrepare);
@@ -340,7 +340,7 @@ void StateController::on(LaraState state, StateController::Handler handler)
 {
     auto it = m_handlers.find(state);
     if(it != m_handlers.end())
-        throw std::runtime_error("State handler already assigned");
+        BOOST_THROW_EXCEPTION( std::runtime_error("State handler already assigned") );
 
     m_handlers[state] = handler;
 }
@@ -1949,7 +1949,7 @@ void StateController::hang()
             }
             else if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon))
             {
-                engine::Sys_DebugLog(LOG_FILENAME, "Zspace = %f", m_character->m_climb.next_z_space);
+                BOOST_LOG_TRIVIAL(debug) << "Zspace = " << m_character->m_climb.next_z_space;
                 m_character->m_climb.point = m_character->m_climb.edge_point;
                 setNextState((m_character->m_command.shift) ? (LaraState::HANDSTAND) : (LaraState::CLIMBING));               // climb up
             }
@@ -3235,7 +3235,9 @@ void StateController::tightropeBalancingLeft()
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(-256.0, 192.0, -640.0, 0);
     }
-    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_character->m_command.move[1] == 1))
+    else if(   m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
+            && m_character->m_bf.animations.current_frame >= static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2)
+            && m_character->m_command.move[1] == 1)
     {
         // MAGIC: mirroring animation offset.
         m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
@@ -3252,7 +3254,9 @@ void StateController::tightropeBalancingRight()
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(256.0, 192.0, -640.0, 0);
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
     }
-    else if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (m_character->m_bf.animations.current_frame >= m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2) && (m_character->m_command.move[1] == -1))
+    else if(   m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
+            && m_character->m_bf.animations.current_frame >= static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2)
+            && m_character->m_command.move[1] == -1)
     {
         // MAGIC: mirroring animation offset.
         m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
@@ -3296,7 +3300,7 @@ bool StateController::isLastFrame() const
 void StateController::setNextState(LaraState state)
 {
     if(m_handlers.find(state) == m_handlers.end())
-        throw std::runtime_error("Invalid state");
+        BOOST_THROW_EXCEPTION( std::runtime_error("Invalid state") );
     m_character->m_bf.animations.next_state = state;
 }
 

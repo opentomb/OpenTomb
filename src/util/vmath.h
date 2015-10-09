@@ -104,9 +104,4 @@ inline btVector3 convert(const glm::vec3& v)
     return btVector3(v[0], v[1], v[2]);
 }
 
-inline glm::quat convert(const btQuaternion& v)
-{
-    return glm::quat(v.w(), v.x(), v.y(), v.z());
-}
-
 } // namespace util

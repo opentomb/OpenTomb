@@ -14,6 +14,8 @@
 #include "render/shader_manager.h"
 #include "script/script.h"
 
+#include <boost/log/trivial.hpp>
+
 using namespace gui;
 
 Console::Console() = default;
@@ -360,7 +362,7 @@ void Console::addLine(const std::string &text, FontStyle style)
 {
     if(inited && !text.empty())
     {
-        std::cout << "CON: " << text << std::endl;
+        BOOST_LOG_TRIVIAL(info) << "CON: " << text;
         m_lines.emplace_front(text, style);
         m_historyPos = 0;
     }

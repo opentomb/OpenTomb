@@ -197,7 +197,7 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
             result.reset(new TR5Level(game_version, std::move(reader)));
             break;
         default:
-            throw std::runtime_error("Invalid game version");
+            BOOST_THROW_EXCEPTION( std::runtime_error("Invalid game version") );
     }
 
     result->m_sfxPath = sfxPath;

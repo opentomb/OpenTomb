@@ -48,17 +48,18 @@ constexpr float DefaultShakePower = 100;
 
 class Camera
 {
-    glm::vec3 m_pos{ 0,0,0 };                 // camera position
+    glm::vec3 m_position{ 0,0,0 };
     glm::mat3 m_axes = glm::mat3(1.0f);       // coordinate system axes
 public:
+    glm::vec3 m_angles{ 0,0,0 };
     const glm::vec3& getPosition() const
     {
-        return m_pos;
+        return m_position;
     }
 
     void setPosition(const glm::vec3& pos)
     {
-        m_pos = pos;
+        m_position = pos;
     }
 
     const glm::vec3& getViewDir() const
@@ -108,7 +109,12 @@ public:
     void moveStrafe(glm::float_t dist);
     void moveVertical(glm::float_t dist);
     void shake(glm::float_t power, glm::float_t time);
-    void setRotation(const glm::vec3& angles);
+    void applyRotation();
+    void rotate(const glm::vec3& v)
+    {
+        m_angles += v;
+    }
+
     void recalcClipPlanes();
 };
 

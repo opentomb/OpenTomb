@@ -12,7 +12,9 @@
 #include "world/entity.h"
 
 #include <chrono>
+
 #include <glm/gtc/type_ptr.hpp>
+#include <boost/log/trivial.hpp>
 
 using gui::Console;
 
@@ -29,7 +31,7 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 frameCount, SF_INF
 {
     if(sfInfo->channels > 1)   // We can't use non-mono samples.
     {
-        engine::Sys_DebugLog(LOG_FILENAME, "Error: sample %03d is not mono!", buf_number);
+        BOOST_LOG_TRIVIAL(error) << "Sample " << buf_number << " is not mono";
         return false;
     }
 
@@ -57,7 +59,7 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
             , m_data(data)
             , m_dataSize(dataSize)
         {
-            assert(data != nullptr);
+            BOOST_ASSERT(data != nullptr);
 
             get_filelen = &MemBufferFileIo::getFileLength;
             seek = &MemBufferFileIo::doSeek;
@@ -78,19 +80,19 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
             switch(whence)
             {
                 case SEEK_SET:
-                    assert(offset >= 0 && offset <= self->m_dataSize);
+                    BOOST_ASSERT(offset >= 0 && offset <= self->m_dataSize);
                     self->m_where = offset;
                     break;
                 case SEEK_CUR:
-                    assert(self->m_where + offset <= self->m_dataSize && self->m_where + offset >= 0);
+                    BOOST_ASSERT(self->m_where + offset <= self->m_dataSize && self->m_where + offset >= 0);
                     self->m_where += offset;
                     break;
                 case SEEK_END:
-                    assert(offset >= 0 && offset <= self->m_dataSize);
+                    BOOST_ASSERT(offset >= 0 && offset <= self->m_dataSize);
                     self->m_where = self->m_dataSize - offset;
                     break;
                 default:
-                    assert(false);
+                    BOOST_ASSERT(false);
             }
             return self->m_where;
         }
@@ -101,7 +103,7 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
             if(self->m_where + count > self->m_dataSize)
                 count = self->m_dataSize - self->m_where;
 
-            assert(self->m_where + count <= self->m_dataSize);
+            BOOST_ASSERT(self->m_where + count <= self->m_dataSize);
 
             uint8_t* buf = static_cast<uint8_t*>(ptr);
             std::copy(self->m_data + self->m_where, self->m_data + self->m_where + count, buf);
@@ -133,7 +135,7 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
 
     if(!sample)
     {
-        engine::Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        BOOST_LOG_TRIVIAL(error) << "Can't load sample #" << buf_number << " from sample block";
         return false;
     }
 
@@ -484,7 +486,7 @@ bool Engine::deInitDelay()
 
         if(curr_time > AudioDeinitDelay)
         {
-            engine::Sys_DebugLog(LOG_FILENAME, "Audio deinit timeout reached! Something is wrong with audio driver.");
+            BOOST_LOG_TRIVIAL(error) << "Audio deinit timeout reached! Something is wrong with audio driver.";
             break;
         }
     }
@@ -979,26 +981,26 @@ void Engine::initDevice()
         ALC_MONO_SOURCES,   (MaxChannels - StreamSourceCount),
         ALC_FREQUENCY,       44100, 0 };
 
-    engine::Sys_DebugLog(LOG_FILENAME, "Probing OpenAL devices...");
+    BOOST_LOG_TRIVIAL(info) << "Probing OpenAL devices...";
 
     const char *devlist = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
 
     if(!devlist)
     {
-        engine::Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
+        BOOST_LOG_TRIVIAL(warning) << "InitAL: No AL audio devices";
         return;
     }
 
     while(*devlist)
     {
-        engine::Sys_DebugLog(LOG_FILENAME, " Device: %s", devlist);
+        BOOST_LOG_TRIVIAL(info) << " Device: " << devlist;
         ALCdevice* dev = alcOpenDevice(devlist);
 
         if(m_settings.use_effects)
         {
             if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
-                engine::Sys_DebugLog(LOG_FILENAME, " EFX supported!");
+                BOOST_LOG_TRIVIAL(info) << " EFX supported!";
                 m_device = dev;
                 m_context = alcCreateContext(m_device, paramList);
                 // fails e.g. with Rapture3D, where EFX is supported
@@ -1020,7 +1022,7 @@ void Engine::initDevice()
 
     if(!m_context)
     {
-        engine::Sys_DebugLog(LOG_FILENAME, " Failed to create OpenAL context.");
+        BOOST_LOG_TRIVIAL(warning) << " Failed to create OpenAL context.";
         alcCloseDevice(m_device);
         m_device = nullptr;
         return;

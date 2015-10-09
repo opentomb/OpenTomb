@@ -2,8 +2,9 @@
 
 #ifndef AL_ALEXT_PROTOTYPES
 
-#include <cassert>
 #include <iostream>
+
+#include <boost/log/trivial.hpp>
 
 // Effect objects
 LPALGENEFFECTS alGenEffects = nullptr;
@@ -50,8 +51,8 @@ void audio::loadALExtFunctions(ALCdevice* device)
     if(isLoaded)
         return;
 
-    std::cout << "\nOpenAL device extensions: " << alcGetString(device, ALC_EXTENSIONS) << "\n";
-    assert(alcIsExtensionPresent(device, ALC_EXT_EFX_NAME) == ALC_TRUE);
+    BOOST_LOG_TRIVIAL(info) << "OpenAL device extensions: " << alcGetString(device, ALC_EXTENSIONS);
+    BOOST_ASSERT(alcIsExtensionPresent(device, ALC_EXT_EFX_NAME) == ALC_TRUE);
 
     alGenEffects = (LPALGENEFFECTS)alGetProcAddress("alGenEffects");
     alDeleteEffects = (LPALDELETEEFFECTS)alGetProcAddress("alDeleteEffects");

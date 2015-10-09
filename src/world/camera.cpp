@@ -13,7 +13,7 @@ void Camera::apply()
 {
     m_glProjMat = glm::perspectiveFov(glm::radians(m_fov), m_width, m_height, m_distNear, m_distFar);
 
-    m_glViewMat = glm::lookAt(m_pos, m_pos+getViewDir(), getUpDir());
+    m_glViewMat = glm::lookAt(m_position, m_position+getViewDir(), getUpDir());
 
     m_glViewProjMat = m_glProjMat * m_glViewMat;
 }
@@ -27,17 +27,17 @@ void Camera::setFovAspect(glm::float_t fov, glm::float_t aspect)
 
 void Camera::moveAlong(glm::float_t dist)
 {
-    m_pos += getViewDir() * dist;
+    m_position += getViewDir() * dist;
 }
 
 void Camera::moveStrafe(glm::float_t dist)
 {
-    m_pos += getRightDir() * dist;
+    m_position += getRightDir() * dist;
 }
 
 void Camera::moveVertical(glm::float_t dist)
 {
-    m_pos += getUpDir() * dist;
+    m_position += getUpDir() * dist;
 }
 
 void Camera::shake(glm::float_t power, glm::float_t time)
@@ -46,11 +46,11 @@ void Camera::shake(glm::float_t power, glm::float_t time)
     m_shakeTime = time;
 }
 
-void Camera::setRotation(const glm::vec3& angles) //angles = {OX, OY, OZ}
+void Camera::applyRotation()
 {
-    glm::quat q = glm::rotate(glm::quat(1, 0, 0, 0), angles.z, { 0,1,0 });
-    q *= glm::rotate(glm::quat(1, 0, 0, 0), angles.x, { 0,0,1 });
-    q *= glm::rotate(glm::quat(1, 0, 0, 0), angles.y, { 1,0,0 });
+    glm::quat q = glm::rotate(glm::quat(1, 0, 0, 0), m_angles.z, { 0,1,0 });
+    q *= glm::rotate(glm::quat(1, 0, 0, 0), m_angles.x, { 0,0,1 });
+    q *= glm::rotate(glm::quat(1, 0, 0, 0), m_angles.y, { 1,0,0 });
     m_axes = glm::mat3_cast(q);
 }
 

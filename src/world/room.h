@@ -79,6 +79,22 @@ struct RoomSector
     bool similarFloor(RoomSector* s2, bool ignore_doors);
     glm::vec3 getFloorPoint();
     glm::vec3 getCeilingPoint();
+
+    glm::vec3 getHighestFloorCorner() const
+    {
+        glm::vec3 r1 = floor_corners[0][2] > floor_corners[1][2] ? floor_corners[0] : floor_corners[1];
+        glm::vec3 r2 = floor_corners[2][2] > floor_corners[3][2] ? floor_corners[2] : floor_corners[3];
+
+        return r1[2] > r2[2] ? r1 : r2;
+    }
+
+    glm::vec3 getLowestCeilingCorner() const
+    {
+        glm::vec3 r1 = ceiling_corners[0][2] > ceiling_corners[1][2] ? ceiling_corners[1] : ceiling_corners[0];
+        glm::vec3 r2 = ceiling_corners[2][2] > ceiling_corners[3][2] ? ceiling_corners[3] : ceiling_corners[2];
+
+        return r1[2] > r2[2] ? r2 : r1;
+    }
 };
 
 struct Room : public Object

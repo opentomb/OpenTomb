@@ -33,7 +33,7 @@ void TR1Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if (file_version != 0x00000020)
-        throw std::runtime_error("Wrong level version");
+        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
 
     std::vector<ByteTexture> texture8;
     m_reader.readVector(texture8, m_reader.readU32(), &ByteTexture::read);
