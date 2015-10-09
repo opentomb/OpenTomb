@@ -92,6 +92,7 @@ target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 find_package(GLM REQUIRED)
 add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
+target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 

@@ -19,7 +19,7 @@ struct StaticMesh : public Object
     bool hide = true;
     glm::vec3 position = { 0,0,0 };
     glm::vec3 rotation = { 0,0,0 };
-    std::array<float, 4> tint = { 0,0,0,0 };
+    std::array<float, 4> tint{{ 0,0,0,0 }};
 
     core::BoundingBox visibleBoundingBox;
     core::BoundingBox collisionBoundingBox;

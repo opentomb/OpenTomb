@@ -3,7 +3,7 @@
 #include <cmath>
 
 #include "util/vmath.h"
-#include "BoundingBox.h"
+#include "boundingbox.h"
 
 namespace world
 {

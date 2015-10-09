@@ -817,7 +817,7 @@ void Render::drawList()
     {
         if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, { m_cam->frustum }, *m_cam);
+            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, m_cam->frustum, *m_cam);
         }
     }
 
@@ -828,7 +828,7 @@ void Render::drawList()
         {
             if(!sm->mesh->m_transparentPolygons.empty())
             {
-                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, { m_cam->frustum }, *m_cam);
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, m_cam->frustum, *m_cam);
             }
         }
 
@@ -847,7 +847,7 @@ void Render::drawList()
                 if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                 {
                     auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                    render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
+                    render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
                 }
             }
         }
@@ -861,7 +861,7 @@ void Render::drawList()
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
             {
                 auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, { m_cam->frustum }, *m_cam);
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
             }
         }
     }
