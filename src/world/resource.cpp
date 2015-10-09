@@ -665,24 +665,24 @@ namespace world
 
                         if(raw_x_slant > 0)
                         {
-                            sector->floor_corners[2][2] -= (static_cast<btScalar>(raw_x_slant) * MeteringStep);
-                            sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_x_slant) * MeteringStep);
+                            sector->floor_corners[2][2] -= (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
+                            sector->floor_corners[3][2] -= (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
                         }
                         else if(raw_x_slant < 0)
                         {
-                            sector->floor_corners[0][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
-                            sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
+                            sector->floor_corners[0][2] -= (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
+                            sector->floor_corners[1][2] -= (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
                         }
 
                         if(raw_y_slant > 0)
                         {
-                            sector->floor_corners[0][2] -= (static_cast<btScalar>(raw_y_slant) * MeteringStep);
-                            sector->floor_corners[3][2] -= (static_cast<btScalar>(raw_y_slant) * MeteringStep);
+                            sector->floor_corners[0][2] -= (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
+                            sector->floor_corners[3][2] -= (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
                         }
                         else if(raw_y_slant < 0)
                         {
-                            sector->floor_corners[1][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
-                            sector->floor_corners[2][2] -= (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
+                            sector->floor_corners[1][2] -= (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
+                            sector->floor_corners[2][2] -= (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
                         }
 
                         entry++;
@@ -700,24 +700,24 @@ namespace world
 
                         if(raw_x_slant > 0)
                         {
-                            sector->ceiling_corners[3][2] += (static_cast<btScalar>(raw_x_slant) * MeteringStep);
-                            sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_x_slant) * MeteringStep);
+                            sector->ceiling_corners[3][2] += (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
+                            sector->ceiling_corners[2][2] += (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
                         }
                         else if(raw_x_slant < 0)
                         {
-                            sector->ceiling_corners[1][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
-                            sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_x_slant)) * MeteringStep);
+                            sector->ceiling_corners[1][2] += (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
+                            sector->ceiling_corners[0][2] += (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
                         }
 
                         if(raw_y_slant > 0)
                         {
-                            sector->ceiling_corners[1][2] += (static_cast<btScalar>(raw_y_slant) * MeteringStep);
-                            sector->ceiling_corners[2][2] += (static_cast<btScalar>(raw_y_slant) * MeteringStep);
+                            sector->ceiling_corners[1][2] += (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
+                            sector->ceiling_corners[2][2] += (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
                         }
                         else if(raw_y_slant < 0)
                         {
-                            sector->ceiling_corners[0][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
-                            sector->ceiling_corners[3][2] += (std::abs(static_cast<btScalar>(raw_y_slant)) * MeteringStep);
+                            sector->ceiling_corners[0][2] += (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
+                            sector->ceiling_corners[3][2] += (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
                         }
 
                         entry++;
@@ -1229,10 +1229,10 @@ namespace world
                         {
                             sector->floor_diagonal_type = DiagonalType::NW;
 
-                            sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * MeteringStep);
-                            sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * MeteringStep);
-                            sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * MeteringStep);
-                            sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * MeteringStep);
+                            sector->floor_corners[0][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t12) * MeteringStep);
+                            sector->floor_corners[1][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t13) * MeteringStep);
+                            sector->floor_corners[2][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t10) * MeteringStep);
+                            sector->floor_corners[3][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t11) * MeteringStep);
 
                             if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                             {
@@ -1253,10 +1253,10 @@ namespace world
                         {
                             sector->floor_diagonal_type = DiagonalType::NE;
 
-                            sector->floor_corners[0][2] -= overall_adjustment - (static_cast<btScalar>(slope_t12) * MeteringStep);
-                            sector->floor_corners[1][2] -= overall_adjustment - (static_cast<btScalar>(slope_t13) * MeteringStep);
-                            sector->floor_corners[2][2] -= overall_adjustment - (static_cast<btScalar>(slope_t10) * MeteringStep);
-                            sector->floor_corners[3][2] -= overall_adjustment - (static_cast<btScalar>(slope_t11) * MeteringStep);
+                            sector->floor_corners[0][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t12) * MeteringStep);
+                            sector->floor_corners[1][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t13) * MeteringStep);
+                            sector->floor_corners[2][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t10) * MeteringStep);
+                            sector->floor_corners[3][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t11) * MeteringStep);
 
                             if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                             {
@@ -1277,10 +1277,10 @@ namespace world
                         {
                             sector->ceiling_diagonal_type = DiagonalType::NW;
 
-                            sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * MeteringStep);
-                            sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * MeteringStep);
-                            sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * MeteringStep);
-                            sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * MeteringStep);
+                            sector->ceiling_corners[0][2] += overall_adjustment - static_cast<glm::float_t>(slope_t11 * MeteringStep);
+                            sector->ceiling_corners[1][2] += overall_adjustment - static_cast<glm::float_t>(slope_t10 * MeteringStep);
+                            sector->ceiling_corners[2][2] += overall_adjustment - static_cast<glm::float_t>(slope_t13 * MeteringStep);
+                            sector->ceiling_corners[3][2] += overall_adjustment - static_cast<glm::float_t>(slope_t12 * MeteringStep);
 
                             if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                             {
@@ -1301,10 +1301,10 @@ namespace world
                         {
                             sector->ceiling_diagonal_type = DiagonalType::NE;
 
-                            sector->ceiling_corners[0][2] += overall_adjustment - static_cast<btScalar>(slope_t11 * MeteringStep);
-                            sector->ceiling_corners[1][2] += overall_adjustment - static_cast<btScalar>(slope_t10 * MeteringStep);
-                            sector->ceiling_corners[2][2] += overall_adjustment - static_cast<btScalar>(slope_t13 * MeteringStep);
-                            sector->ceiling_corners[3][2] += overall_adjustment - static_cast<btScalar>(slope_t12 * MeteringStep);
+                            sector->ceiling_corners[0][2] += overall_adjustment - static_cast<glm::float_t>(slope_t11 * MeteringStep);
+                            sector->ceiling_corners[1][2] += overall_adjustment - static_cast<glm::float_t>(slope_t10 * MeteringStep);
+                            sector->ceiling_corners[2][2] += overall_adjustment - static_cast<glm::float_t>(slope_t13 * MeteringStep);
+                            sector->ceiling_corners[3][2] += overall_adjustment - static_cast<glm::float_t>(slope_t12 * MeteringStep);
 
                             if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                             {
@@ -1431,9 +1431,9 @@ namespace world
 
     bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
     {
-        if((s1->position[0] == s2->position[0]) && (s1->position[1] != s2->position[1]) && (std::abs(p.normal.normal[1]) > 0.99))
+        if(s1->position[0] == s2->position[0] && s1->position[1] != s2->position[1] && glm::abs(p.normal.normal[1]) > 0.99)
         {
-            btScalar min_x, max_x, min_y, max_y;
+            glm::float_t min_x, max_x, min_y, max_y;
             max_x = min_x = p.vertices.front().x;
             for(const auto& v : p.vertices)
             {
@@ -1462,9 +1462,9 @@ namespace world
                 return true;
             }
         }
-        else if((s1->position[0] != s2->position[0]) && (s1->position[1] == s2->position[1]) && (std::abs(p.normal.normal[0]) > 0.99))
+        else if(s1->position[0] != s2->position[0] && s1->position[1] == s2->position[1] && glm::abs(p.normal.normal[0]) > 0.99)
         {
-            btScalar min_x, max_x, min_y, max_y;
+            glm::float_t min_x, max_x, min_y, max_y;
             max_y = min_y = p.vertices.front().y;
             for(const auto& v : p.vertices)
             {
@@ -1559,7 +1559,6 @@ namespace world
                         if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->getId()) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                         {
                             sector->portal_to_room = p.dest_room->getId();
-                            orig_dst = dst;
                         }
                     }
                 }
@@ -1844,7 +1843,7 @@ namespace world
 
             r_static->obb.transform = &room->static_mesh[i]->transform;
             r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
-            r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), r_static->rotation[0] * util::RadPerDeg, { 0,0,1 });
+            r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), glm::radians(r_static->rotation[0]), { 0,0,1 });
             r_static->was_rendered = 0;
             r_static->obb.rebuild(r_static->visibleBoundingBox);
             r_static->obb.doTransform();
@@ -2435,7 +2434,7 @@ namespace world
                 // if scrolling is completed or not.
                 seq->frames.resize(8);
                 seq->uvrotate_max = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-                seq->uvrotate_speed = seq->uvrotate_max / static_cast<btScalar>(seq->frames.size());
+                seq->uvrotate_speed = seq->uvrotate_max / static_cast<glm::float_t>(seq->frames.size());
                 seq->frame_list.resize(8);
 
                 if(uvrotate_script > 0)
@@ -3131,10 +3130,9 @@ namespace world
          * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
          *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
          */
-        anim = model->animations.data();
-
-        for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
+        for(size_t i = 0; i < model->animations.size(); i++)
         {
+            animation::AnimationFrame* anim = &model->animations[i];
             tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
 
             uint32_t frame_offset = tr_animation->frame_offset / 2;
@@ -3243,7 +3241,7 @@ namespace world
 
                 if(frame_offset >= tr->m_frameData.size())
                 {
-                    for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
+                    for(size_t k = 0; k < bone_frame->bone_tags.size(); k++)
                     {
                         tree_tag = &model->mesh_tree[k];
                         bone_tag = &bone_frame->bone_tags[k];

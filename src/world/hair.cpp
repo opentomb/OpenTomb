@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include <LinearMath/btScalar.h>
+#include "hair.h"
 
 #include "LuaState.h"
 
@@ -63,8 +63,8 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
 
-    btScalar weight_step = ((setup->m_rootWeight - setup->m_tailWeight) / m_elements.size());
-    btScalar current_weight = setup->m_rootWeight;
+    glm::float_t weight_step = (setup->m_rootWeight - setup->m_tailWeight) / m_elements.size();
+    glm::float_t current_weight = setup->m_rootWeight;
 
     for(size_t i = 0; i < m_elements.size(); i++)
     {
@@ -135,12 +135,12 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     for(size_t i = 0; i < m_elements.size(); i++)
     {
-        btScalar     body_length;
+        glm::float_t body_length;
         btTransform localA; localA.setIdentity();
         btTransform localB; localB.setIdentity();
 
-        btScalar joint_x = 0.0;
-        btScalar joint_y = 0.0;
+        glm::float_t joint_x = 0.0;
+        glm::float_t joint_y = 0.0;
 
         std::shared_ptr<btRigidBody> prev_body;
         if(i == 0)  // First joint group
@@ -161,7 +161,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = std::abs(m_elements[i - 1].mesh->boundingBox.max[1] - m_elements[i - 1].mesh->boundingBox.min[1]) * setup->m_jointOverlap;
+            body_length = glm::abs(m_elements[i - 1].mesh->boundingBox.max[1] - m_elements[i - 1].mesh->boundingBox.min[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
             localA.getBasis().setEulerZYX(0, SIMD_HALF_PI, 0);
@@ -211,7 +211,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
             m_joints[curr_joint]->setAngularUpperLimit(btVector3(SIMD_HALF_PI*0.5, 0., SIMD_HALF_PI*0.5));
         }
 
-        m_joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
+        m_joints[curr_joint]->setDbgDrawSize(glm::float_t(5.0f));    // Draw constraint axes.
 
         // Add constraint to the world.
 

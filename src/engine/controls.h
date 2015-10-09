@@ -1,7 +1,5 @@
 #pragma once
 
-#include <LinearMath/btScalar.h>
-
 #include <SDL2/SDL.h>
 
 namespace engine
@@ -101,19 +99,19 @@ struct ControlSettings
     bool   joy_rumble = false;
 
     // Look axis settings.
-    btScalar joy_look_x = 0;                        // Raw look axis data!
-    btScalar joy_look_y = 0;                        // Raw look axis data!
+    float    joy_look_x = 0;                        // Raw look axis data!
+    float    joy_look_y = 0;                        // Raw look axis data!
     bool     joy_look_invert_x = false;
     bool     joy_look_invert_y = false;
-    btScalar joy_look_sensitivity = 0;
+    float    joy_look_sensitivity = 0;
     int16_t  joy_look_deadzone = 0;
 
     // Move axis settings.
-    btScalar joy_move_x = 0;                        // Raw move axis data!
-    btScalar joy_move_y = 0;                        // Raw move axis data!
+    float    joy_move_x = 0;                        // Raw move axis data!
+    float    joy_move_y = 0;                        // Raw move axis data!
     bool     joy_move_invert_x = false;
     bool     joy_move_invert_y = false;
-    btScalar joy_move_sensitivity = 0;
+    float    joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 
     int      joy_axis_map[AXIS_LASTINDEX+1] = {0};      // Axis array for action mapper.

@@ -436,9 +436,9 @@ void InventoryManager::render()
             glm::mat4 matrix(1.0f);
             matrix = glm::translate(matrix, {0, 0, -m_baseRingRadius * 2.0f});
             //Mat4_RotateX(matrix, 25.0);
-            matrix = glm::rotate(matrix, 25.0f * util::RadPerDeg, {1,0,0});
+            matrix = glm::rotate(matrix, glm::radians(25.0f), {1,0,0});
             glm::float_t ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
-            matrix = glm::rotate(matrix, ang * util::RadPerDeg, { 0,1,0 });
+            matrix = glm::rotate(matrix, glm::radians(ang), { 0,1,0 });
             matrix = glm::translate(matrix, { 0, m_verticalOffset, m_ringRadius });
             matrix = glm::rotate(matrix, -util::Rad90, { 1,0,0 });
             matrix = glm::rotate(matrix, util::Rad90, { 0,0,1 });
@@ -457,12 +457,12 @@ void InventoryManager::render()
                         mLabel_ItemName.text = tmp;
                     }
                 }
-                matrix = glm::rotate(matrix, (90.0f + m_itemAngle - ang) * util::RadPerDeg, { 0,0,1 });
+                matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
                 bi->bf->itemFrame(0.0f);                            // here will be time != 0 for using items animation
             }
             else
             {
-                matrix = glm::rotate(matrix, (90.0f - ang) * util::RadPerDeg, { 0,0,1 });
+                matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
                 bi->bf->itemFrame(0.0f);
             }
             matrix = glm::translate(matrix, { -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2] });

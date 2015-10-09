@@ -101,7 +101,7 @@ void ItemNotifier::Draw()
 
     int anim = item->bf->animations.current_animation;
     int frame = item->bf->animations.current_frame;
-    btScalar time = item->bf->animations.frame_time;
+    float time = item->bf->animations.frame_time;
 
     item->bf->animations.current_animation = 0;
     item->bf->animations.current_frame = 0;
@@ -110,8 +110,8 @@ void ItemNotifier::Draw()
     item->bf->itemFrame(0.0);
     glm::mat4 matrix(1.0f);
     matrix = glm::translate(matrix, { mCurrPosX, mPosY, -2048.0 });
-    matrix = glm::rotate(matrix, (mCurrRotX + mRotX) * util::RadPerDeg, { 0,1,0 });
-    matrix = glm::rotate(matrix, (mCurrRotY + mRotY) * util::RadPerDeg, { 1,0,0 });
+    matrix = glm::rotate(matrix, glm::radians(mCurrRotX + mRotX), { 0,1,0 });
+    matrix = glm::rotate(matrix, glm::radians(mCurrRotY + mRotY), { 1,0,0 });
     render::renderItem(item->bf.get(), mSize, matrix, gui::guiProjectionMatrix);
 
     item->bf->animations.current_animation = anim;

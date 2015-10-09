@@ -9,8 +9,6 @@
 #include <GL/glew.h>
 
 #include <LinearMath/btIDebugDraw.h>
-#include <LinearMath/btScalar.h>
-
 #include <glm/glm.hpp>
 
 #include "vertex_array.h"

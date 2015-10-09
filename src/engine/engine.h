@@ -47,14 +47,14 @@ namespace engine
 struct EngineControlState
 {
     bool     free_look = false;
-    btScalar free_look_speed = 0;
+    float    free_look_speed = 0;
 
     bool     mouse_look = false;
-    btScalar cam_distance = 800;
+    glm::float_t cam_distance = 800;
     bool     noclip = false;
 
-    btScalar look_axis_x = 0;                       // Unified look axis data.
-    btScalar look_axis_y = 0;
+    float    look_axis_x = 0;                       // Unified look axis data.
+    float    look_axis_y = 0;
 
     bool     move_forward = false;                      // Directional movement keys.
     bool     move_backward = false;
@@ -89,7 +89,7 @@ extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
 
 
-extern btScalar                                 engine_frame_time;
+extern float                                    engine_frame_time;
 extern world::Camera                            engine_camera;
 extern world::World                             engine_world;
 
@@ -204,7 +204,7 @@ int  execCmd(const char *ch);
 // Bullet global methods.
 
 void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void internalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-void internalPreTickCallback(btDynamicsWorld *world, btScalar timeStep);
+void internalTickCallback(btDynamicsWorld *world, float timeStep);
+void internalPreTickCallback(btDynamicsWorld *world, float timeStep);
 
 } // namespace engine

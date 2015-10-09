@@ -2,8 +2,6 @@
 
 #include <cctype>
 
-#include <LinearMath/btScalar.h>
-
 #include "LuaState.h"
 
 #define CVAR_NAME_SIZE 32
@@ -171,7 +169,7 @@ namespace script
             call("clearAutoexec");
         }
 
-        void doTasks(btScalar time)
+        void doTasks(float time)
         {
             set("FRAME_TIME", time);
 

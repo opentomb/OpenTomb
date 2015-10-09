@@ -207,7 +207,7 @@ struct SSAnimation
 
     SSAnimationMode mode = SSAnimationMode::NormalControl;
 
-    glm::float_t                frame_time = 0;                                     // time in current frame
+    float                       frame_time = 0;                                     // time in current frame
 
                                                                                     // lerp:
     glm::float_t                lerp = 0;

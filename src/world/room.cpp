@@ -820,7 +820,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
         {
             case TweenType::TwoTriangles:
             {
-                btScalar t = std::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
+                glm::float_t t = glm::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
                                       (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;
@@ -868,7 +868,7 @@ btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, c
         {
             case TweenType::TwoTriangles:
             {
-                btScalar t = std::abs((tween.floor_corners[2][2] - tween.floor_corners[3][2]) /
+                glm::float_t t = glm::abs((tween.floor_corners[2][2] - tween.floor_corners[3][2]) /
                                       (tween.floor_corners[0][2] - tween.floor_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;

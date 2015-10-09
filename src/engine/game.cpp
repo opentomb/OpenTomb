@@ -441,7 +441,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         render::renderer.camera()->moveVertical(dist * move_logic[2]);
         render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
 
-        ent->m_angles[0] = cam_angles[0] * util::DegPerRad;
+        ent->m_angles[0] = glm::degrees(cam_angles[0]);
         glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
         position[2] -= 512.0;
         ent->m_transform[3] = glm::vec4(position, 1.0f);
@@ -490,20 +490,20 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         if(control_mapper.use_joy && (control_mapper.joy_move_x != 0))
         {
-            ch->m_command.rot[0] += -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_x;
+            ch->m_command.rot[0] += glm::degrees(-2 * engine_frame_time * control_mapper.joy_move_x);
         }
         else
         {
-            ch->m_command.rot[0] += -2 * util::DegPerRad * engine_frame_time * static_cast<glm::float_t>(move_logic[1]);
+            ch->m_command.rot[0] += glm::degrees(-2 * engine_frame_time * static_cast<glm::float_t>(move_logic[1]));
         }
 
         if(control_mapper.use_joy && (control_mapper.joy_move_y != 0))
         {
-            ch->m_command.rot[1] += -2 * util::DegPerRad * engine_frame_time * control_mapper.joy_move_y;
+            ch->m_command.rot[1] += glm::degrees(-2 * engine_frame_time * control_mapper.joy_move_y);
         }
         else
         {
-            ch->m_command.rot[1] += 2 * util::DegPerRad * engine_frame_time * static_cast<glm::float_t>(move_logic[0]);
+            ch->m_command.rot[1] += glm::degrees(2 * engine_frame_time * static_cast<glm::float_t>(move_logic[0]));
         }
 
         ch->m_command.move = move_logic;
@@ -535,8 +535,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(!control_states.mouse_look)//If mouse look is off
     {
-        float currentAngle = cam_angles[0] * util::RadPerDeg;  //Current is the current cam angle
-        float targetAngle = ent->m_angles[0] * util::RadPerDeg; //Target is the target angle which is the entity's angle itself
+        glm::float_t currentAngle = glm::radians(cam_angles[0]);  //Current is the current cam angle
+        glm::float_t targetAngle = glm::radians(ent->m_angles[0]); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
 
         ///@FIXME
@@ -547,8 +547,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
             {
                 glm::vec3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(util::convert(cam_pos2));
-                cam_pos2[0] += std::sin((ent->m_angles[0] - 90.0f) * util::RadPerDeg) * control_states.cam_distance;
-                cam_pos2[1] -= std::cos((ent->m_angles[0] - 90.0f) * util::RadPerDeg) * control_states.cam_distance;
+                cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] - 90.0f)) * control_states.cam_distance;
+                cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] - 90.0f)) * control_states.cam_distance;
                 cameraTo.setOrigin(util::convert(cam_pos2));
 
                 //If collided we want to go right otherwise stay left
@@ -556,8 +556,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(util::convert(cam_pos2));
-                    cam_pos2[0] += std::sin((ent->m_angles[0] + 90.0f) * util::RadPerDeg) * control_states.cam_distance;
-                    cam_pos2[1] -= std::cos((ent->m_angles[0] + 90.0f) * util::RadPerDeg) * control_states.cam_distance;
+                    cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] + 90.0f)) * control_states.cam_distance;
+                    cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] + 90.0f)) * control_states.cam_distance;
                     cameraTo.setOrigin(util::convert(cam_pos2));
 
                     //If collided we want to go to back else right
@@ -587,32 +587,32 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
             switch(cam->m_targetDir)
             {
                 case world::CameraTarget::Back:
-                    targetAngle = (ent->m_angles[0]) * util::RadPerDeg;
+                    targetAngle = glm::radians(ent->m_angles[0]);
                     break;
                 case world::CameraTarget::Front:
-                    targetAngle = (ent->m_angles[0] - 180.0f) * util::RadPerDeg;
+                    targetAngle = glm::radians(ent->m_angles[0] - 180.0f);
                     break;
                 case world::CameraTarget::Left:
-                    targetAngle = (ent->m_angles[0] - 75.0f) * util::RadPerDeg;
+                    targetAngle = glm::radians(ent->m_angles[0] - 75.0f);
                     break;
                 case world::CameraTarget::Right:
-                    targetAngle = (ent->m_angles[0] + 75.0f) * util::RadPerDeg;
+                    targetAngle = glm::radians(ent->m_angles[0] + 75.0f);
                     break;
                 default:
-                    targetAngle = (ent->m_angles[0]) * util::RadPerDeg;//Same as TR_CAM_TARG_BACK (default pos)
+                    targetAngle = glm::radians(ent->m_angles[0]);//Same as TR_CAM_TARG_BACK (default pos)
                     break;
             }
 
             float d_angle = cam_angles[0] - targetAngle;
             if(d_angle > util::Rad90)
             {
-                d_angle -= 1 * util::RadPerDeg;
+                d_angle -= glm::radians(1.0f);
             }
             if(d_angle < -util::Rad90)
             {
-                d_angle += 1 * util::RadPerDeg;
+                d_angle += glm::radians(1.0f);
             }
-            cam_angles[0] = std::fmod(cam_angles[0] + std::atan2(std::sin(currentAngle - d_angle), std::cos(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), util::Rad360); //Update camera's angle
+            cam_angles[0] = glm::mod(cam_angles[0] + glm::atan(glm::sin(currentAngle - d_angle), glm::cos(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), util::Rad360); //Update camera's angle
         }
     }
 
@@ -621,10 +621,12 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     //Code to manage screen shaking effects
     if((render::renderer.camera()->m_shakeTime > 0.0) && (render::renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
-        cam_pos[1] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
-        cam_pos[2] += (std::fmod(rand(), std::abs(render::renderer.camera()->m_shakeValue)) - (render::renderer.camera()->m_shakeValue / 2.0f)) * render::renderer.camera()->m_shakeTime;
-        render::renderer.camera()->m_shakeTime  = (render::renderer.camera()->m_shakeTime < 0.0)?(0.0f):(render::renderer.camera()->m_shakeTime)-engine_frame_time;
+        cam_pos[0] += (glm::mod(glm::float_t(rand()), glm::abs(render::renderer.camera()->m_shakeValue)) - render::renderer.camera()->m_shakeValue / 2.0f) * render::renderer.camera()->m_shakeTime;
+        cam_pos[1] += (glm::mod(glm::float_t(rand()), glm::abs(render::renderer.camera()->m_shakeValue)) - render::renderer.camera()->m_shakeValue / 2.0f) * render::renderer.camera()->m_shakeTime;
+        cam_pos[2] += (glm::mod(glm::float_t(rand()), glm::abs(render::renderer.camera()->m_shakeValue)) - render::renderer.camera()->m_shakeValue / 2.0f) * render::renderer.camera()->m_shakeTime;
+        render::renderer.camera()->m_shakeTime = render::renderer.camera()->m_shakeTime < 0.0
+                ? 0.0f
+                : render::renderer.camera()->m_shakeTime - engine_frame_time;
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -650,10 +652,10 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
         cameraFrom.setOrigin(util::convert(cam_pos));
 
         {
-            float cos_ay =  std::cos(cam_angles[1]);
-            float cam_dx =  std::sin(cam_angles[0]) * cos_ay;
-            float cam_dy = -std::cos(cam_angles[0]) * cos_ay;
-            float cam_dz = -std::sin(cam_angles[1]);
+            glm::float_t cos_ay =  glm::cos(cam_angles[1]);
+            glm::float_t cam_dx =  glm::sin(cam_angles[0]) * cos_ay;
+            glm::float_t cam_dy = -glm::cos(cam_angles[0]) * cos_ay;
+            glm::float_t cam_dz = -glm::sin(cam_angles[1]);
             cam_pos[0] += cam_dx * control_states.cam_distance;
             cam_pos[1] += cam_dy * control_states.cam_distance;
             cam_pos[2] += cam_dz * control_states.cam_distance;

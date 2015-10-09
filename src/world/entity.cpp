@@ -235,7 +235,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         for(int j = 0; j < manifolds_size; j++)
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
-            btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+            glm::float_t directionSign = manifold->getBody0() == ghost ? glm::float_t(-1.0) : glm::float_t(1.0);
             Object* cont0 = static_cast<Object*>(manifold->getBody0()->getUserPointer());
             Object* cont1 = static_cast<Object*>(manifold->getBody1()->getUserPointer());
             if(cont0->getCollisionType() == world::CollisionType::Ghost || cont1->getCollisionType() == world::CollisionType::Ghost)
@@ -245,7 +245,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
             for(int k = 0; k < manifold->getNumContacts(); k++)
             {
                 const btManifoldPoint&pt = manifold->getContactPoint(k);
-                btScalar dist = pt.getDistance();
+                glm::float_t dist = pt.getDistance();
 
                 if(dist < 0.0)
                 {
@@ -398,7 +398,7 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
             break;
         }
         int iter = static_cast<int>((4.0 * move_len / btag->mesh_base->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
-        move /= static_cast<btScalar>(iter);
+        move /= static_cast<glm::float_t>(iter);
 
         for(int j = 0; j <= iter; j++)
         {
@@ -626,8 +626,8 @@ void Entity::updateRigidBody(bool force)
             {
                 auto& pos = m_bf.bone_tags[i].full_transform[3];
                 auto& boundingBox = m_bf.bone_tags[i].mesh_base->boundingBox;
-                btScalar r = boundingBox.max[0] - boundingBox.min[0];
-                btScalar t = boundingBox.max[1] - boundingBox.min[1];
+                glm::float_t r = boundingBox.max[0] - boundingBox.min[0];
+                glm::float_t t = boundingBox.max[1] - boundingBox.min[1];
                 r = (t > r) ? (t) : (r);
                 t = boundingBox.max[2] - boundingBox.min[2];
                 r = (t > r) ? (t) : (r);
@@ -691,7 +691,7 @@ void Entity::updateTransform()
     m_angles[1] = util::wrapAngle(m_angles[1]);
     m_angles[2] = util::wrapAngle(m_angles[2]);
 
-    auto ang = m_angles * util::RadPerDeg;
+    glm::vec3 ang = glm::radians(m_angles);
 
     auto pos = m_transform[3];
     m_transform = glm::yawPitchRoll(ang[2], ang[1], ang[0]);
@@ -700,8 +700,8 @@ void Entity::updateTransform()
 
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
-    btScalar t = m_currentSpeed * animation::FrameRate;
-    btScalar vz = (zeroVz) ? (0.0f) : (m_speed[2]);
+    glm::float_t t = m_currentSpeed * animation::FrameRate;
+    glm::float_t vz = (zeroVz) ? (0.0f) : (m_speed[2]);
 
     if(m_moveDir == MoveDirection::Forward)
     {
@@ -748,7 +748,7 @@ void Entity::addOverrideAnim(int model_id)
     }
 }
 
-btScalar Entity::findDistance(const Entity& other)
+glm::float_t Entity::findDistance(const Entity& other)
 {
     return glm::distance(m_transform[3], other.m_transform[3]);
 }
@@ -776,11 +776,11 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
 
         case TR_ANIMCOMMAND_SETVELOCITY:    // (float vertical, float horizontal)
             {
-                btScalar vert;
-                const btScalar horiz = btScalar(command.param[1]);
+                glm::float_t vert;
+                const glm::float_t horiz = glm::float_t(command.param[1]);
                 if(btFuzzyZero(m_vspeed_override))
                 {
-                    vert  = -btScalar(command.param[0]);
+                    vert  = -glm::float_t(command.param[0]);
                 }
                 else
                 {
@@ -939,7 +939,7 @@ int Entity::getAnimDispatchCase(LaraState id)
 
 
 // ----------------------------------------
-void Entity::slerpBones(btScalar lerp)
+void Entity::slerpBones(glm::float_t lerp)
 {
     for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
     {
@@ -951,7 +951,7 @@ void Entity::slerpBones(btScalar lerp)
     m_bf.updateCurrentBoneFrame();
 }
 
-void Entity::lerpTransform(btScalar lerp)
+void Entity::lerpTransform(glm::float_t lerp)
 {
     if(!m_lerp_valid)
         return;
@@ -959,13 +959,12 @@ void Entity::lerpTransform(btScalar lerp)
     m_transform = glm::interpolate(m_lerp_last_transform, m_lerp_curr_transform, lerp);
 }
 
-void Entity::updateInterpolation(btScalar time)
+void Entity::updateInterpolation(float time)
 {
     if(!(m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         // Bone animation interp:
-        btScalar lerp;
-        lerp = m_bf.animations.lerp;
+        glm::float_t lerp = m_bf.animations.lerp;
         slerpBones(lerp);
         lerp += time * animation::FrameRate;
         if( lerp > 1.0 )
@@ -984,7 +983,7 @@ void Entity::updateInterpolation(btScalar time)
     }
 }
 
-animation::AnimUpdate Entity::stepAnimation(btScalar time)
+animation::AnimUpdate Entity::stepAnimation(float time)
 {
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
        (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
@@ -1008,7 +1007,7 @@ animation::AnimUpdate Entity::stepAnimation(btScalar time)
  * Entity framestep actions
  * @param time      frame time
  */
-void Entity::frame(btScalar time)
+void Entity::frame(float time)
 {
     if(!m_enabled )
     {
@@ -1080,7 +1079,7 @@ void Entity::checkActivators()
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
         {
-            btScalar r = e->m_activationRadius;
+            glm::float_t r = e->m_activationRadius;
             r *= r;
             const glm::vec4& v = e->m_transform[3];
             if(    e != this
@@ -1094,17 +1093,17 @@ void Entity::checkActivators()
     }
 }
 
-void Entity::moveForward(btScalar dist)
+void Entity::moveForward(glm::float_t dist)
 {
     m_transform[3] += m_transform[1] * dist;
 }
 
-void Entity::moveStrafe(btScalar dist)
+void Entity::moveStrafe(glm::float_t dist)
 {
     m_transform[3] += m_transform[0] * dist;
 }
 
-void Entity::moveVertical(btScalar dist)
+void Entity::moveVertical(glm::float_t dist)
 {
     m_transform[3] += m_transform[2] * dist;
 }
@@ -1223,7 +1222,7 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         if(!m_bf.bone_tags[i].parent)
         {
-            btScalar r = m_bf.bone_tags[i].mesh_base->boundingBox.getInnerRadius();
+            glm::float_t r = m_bf.bone_tags[i].mesh_base->boundingBox.getInnerRadius();
             m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
         }
@@ -1347,7 +1346,7 @@ bool Entity::deleteRagdoll()
     // To make them static again, additionally call setEntityBodyMass script function.
 }
 
-glm::vec3 Entity::applyGravity(btScalar time)
+glm::vec3 Entity::applyGravity(float time)
 {
     const glm::vec3 gravityAccelleration = util::convert(engine::bt_engine_dynamicsWorld->getGravity());
     const glm::vec3 gravitySpeed = gravityAccelleration * time;

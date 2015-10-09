@@ -142,9 +142,9 @@ public:
     bool m_wasRendered = false;       // render once per frame trigger
     bool m_wasRenderedLines = false; // same for debug lines
 
-    btScalar                            m_currentSpeed = 0;      // current linear speed from animation info
+    glm::float_t                        m_currentSpeed = 0;      // current linear speed from animation info
     glm::vec3                           m_speed = {0,0,0};              // speed of the entity XYZ
-    btScalar                            m_vspeed_override;
+    glm::float_t                        m_vspeed_override;
 
     btScalar                            m_inertiaLinear = 0;     // linear inertia
     btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
@@ -159,7 +159,7 @@ public:
     glm::mat4 m_lerp_curr_transform{ 1.0f }; // interp
     bool        m_lerp_valid = false;
     bool        m_lerp_skip = false;
-    btScalar    m_lerp = 0;
+    glm::float_t m_lerp = 0;
 
     core::OrientedBoundingBox m_obb;
 
@@ -167,7 +167,7 @@ public:
     RoomSector* m_lastSector = nullptr;
 
     glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
-    btScalar m_activationRadius = 128;
+    glm::float_t m_activationRadius = 128;
 
     Entity(uint32_t id);
     ~Entity();
@@ -193,8 +193,8 @@ public:
 
     int  getAnimDispatchCase(LaraState id);
 
-    animation::AnimUpdate stepAnimation(btScalar time);
-    virtual void frame(btScalar time);  // entity frame step
+    animation::AnimUpdate stepAnimation(float time);
+    virtual void frame(float time);  // entity frame step
 
     bool isPlayer()
     {
@@ -202,7 +202,7 @@ public:
         return reinterpret_cast<Entity*>(engine::engine_world.character.get()) == this;
     }
 
-    void updateInterpolation(btScalar time);
+    void updateInterpolation(float time);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -217,11 +217,11 @@ public:
     void doAnimCommand(const animation::AnimCommand& command);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
-    void moveForward(btScalar dist);
-    void moveStrafe(btScalar dist);
-    void moveVertical(btScalar dist);
+    void moveForward(glm::float_t dist);
+    void moveStrafe(glm::float_t dist);
+    void moveVertical(glm::float_t dist);
 
-    btScalar findDistance(const Entity& entity_2);
+    glm::float_t findDistance(const Entity& entity_2);
 
     // Constantly updates some specific parameters to keep hair aligned to entity.
     virtual void updateHair()
@@ -241,7 +241,7 @@ public:
     virtual void processSectorImpl()
     {
     }
-    virtual void jump(btScalar /*vert*/, btScalar /*hor*/)
+    virtual void jump(glm::float_t /*vert*/, glm::float_t /*hor*/)
     {
     }
     virtual void kill()
@@ -252,7 +252,7 @@ public:
     }
     virtual std::shared_ptr<engine::BtEngineClosestConvexResultCallback> callbackForCamera() const;
 
-    virtual glm::vec3 camPosForFollowing(btScalar dz)
+    virtual glm::vec3 camPosForFollowing(glm::float_t dz)
     {
         glm::vec4 cam_pos = m_transform * m_bf.bone_tags.front().full_transform[3];
         cam_pos[2] += dz;
@@ -263,17 +263,17 @@ public:
     {
     }
 
-    glm::vec3 applyGravity(btScalar time);
+    glm::vec3 applyGravity(float time);
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);
-    void slerpBones(btScalar lerp);
-    void lerpTransform(btScalar lerp);
+    void slerpBones(glm::float_t lerp);
+    void lerpTransform(glm::float_t lerp);
 
-    static btScalar getInnerBBRadius(const core::BoundingBox& bb)
+    static glm::float_t getInnerBBRadius(const core::BoundingBox& bb)
     {
         auto d = bb.max - bb.min;
-        return std::min(d[0], std::min(d[1], d[2]));
+        return glm::min(d[0], glm::min(d[1], d[2]));
     }
 };
 

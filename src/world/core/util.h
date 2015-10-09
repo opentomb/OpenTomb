@@ -7,7 +7,7 @@ namespace world
 namespace core
 {
 
-inline btCollisionShape *BT_CSfromSphere(const btScalar& radius)
+inline btCollisionShape *BT_CSfromSphere(glm::float_t radius)
 {
     if(radius == 0.0)
         return nullptr;

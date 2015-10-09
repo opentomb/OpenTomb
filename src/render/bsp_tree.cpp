@@ -65,7 +65,7 @@ void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference
         transformed.copyTransformed(*pp.polygon, transform, true);
         transformed.double_side = pp.polygon->double_side;
 
-        if(frustum.isPolyVisible(transformed, cam))
+        if(frustum.isVisible(transformed, cam))
         {
             this->addPolygon(m_root, BSPFaceRef(transform, &pp), transformed);
         }

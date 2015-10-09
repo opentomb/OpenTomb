@@ -68,7 +68,7 @@ void SSBoneFrame::fromModel(SkeletalModel* model)
     }
 }
 
-void SSBoneFrame::itemFrame(btScalar time)
+void SSBoneFrame::itemFrame(float time)
 {
     animations.stepAnimation(time);
     updateCurrentBoneFrame();
@@ -97,7 +97,7 @@ void SSBoneFrame::updateCurrentBoneFrame()
         {
             animation::BoneTag* ov_src_btag = &last_bf->bone_tags[k];
             animation::BoneTag* ov_next_btag = &next_bf->bone_tags[k];
-            btScalar ov_lerp = animations.lerp;
+            glm::float_t ov_lerp = animations.lerp;
             for(animation::SSAnimation* ov_anim = animations.next; ov_anim != nullptr; ov_anim = ov_anim->next)
             {
                 if(ov_anim->model == nullptr || !ov_anim->model->mesh_tree[k].replace_anim)
@@ -194,8 +194,7 @@ bool SSAnimation::findStateChange(LaraState stateid, uint16_t& animid_inout, uin
 * @param cmdEntity     optional entity for which doAnimCommand is called
 * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
 */
-AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
-{
+AnimUpdate SSAnimation::stepAnimation(float time, Entity* cmdEntity) {
     AnimUpdate stepResult = AnimUpdate::NewFrame;
 
     // --------
@@ -261,7 +260,6 @@ AnimUpdate SSAnimation::stepAnimation(btScalar time, Entity* cmdEntity)
     {
         if(frame_id >= getCurrentAnimationFrame().frames.size())
         {
-            frame_id = 0;
             return AnimUpdate::NewAnim;
         }
         else

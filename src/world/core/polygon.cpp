@@ -97,7 +97,7 @@ void Polygon::copyTransformed(const Polygon& src, const glm::mat4& tr, bool copy
 bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::float_t* lambda) const
 {
     glm::float_t u = glm::dot(plane.normal, rayDir);
-    if(std::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
+    if(glm::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
         return false;    // plane is parallel to the ray - no intersection
     }
@@ -217,9 +217,9 @@ bool Polygon::intersectPolygon(Polygon* p2)
     }
 
     auto dir = glm::cross(plane.normal, p2->plane.normal);  // vector of two planes intersection line
-    glm::float_t t = std::abs(dir[0]);
-    dist0 = std::abs(dir[1]);
-    glm::float_t dist1 = std::abs(dir[2]);
+    glm::float_t t = glm::abs(dir[0]);
+    dist0 = glm::abs(dir[1]);
+    glm::float_t dist1 = glm::abs(dir[2]);
     glm::float_t dist2 = 0;
     int pn = PLANE_X;
     if(t < dist0)

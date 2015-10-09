@@ -633,7 +633,7 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown()
 {
-    btScalar dbgR = 128.0;
+    glm::float_t dbgR = 128.0;
     glm::vec3 v = engine_camera.getPosition();
     glm::vec3 dir = engine_camera.getViewDir();
     btVector3 localInertia(0, 0, 0);

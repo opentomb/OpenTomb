@@ -28,7 +28,7 @@ void Portal::move(const glm::vec3& mv)
  */
 bool Portal::rayIntersect(const glm::vec3& ray, const glm::vec3& rayStart)
 {
-    if(std::abs(glm::dot(normal.normal, ray)) < core::SplitEpsilon)
+    if(glm::abs(glm::dot(normal.normal, ray)) < core::SplitEpsilon)
     {
         // the plane is nearly parallel to the ray
         return false;

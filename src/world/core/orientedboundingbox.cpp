@@ -189,8 +189,8 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     for(int i = 0; i < 3; i++)
     {
         ra = a[i];
-        rb = b[0] * std::abs(R[i][0]) + b[1] * std::abs(R[i][1]) + b[2] * std::abs(R[i][2]);
-        t = std::abs(T[i]);
+        rb = b[0] * glm::abs(R[i][0]) + b[1] * glm::abs(R[i][1]) + b[2] * glm::abs(R[i][2]);
+        t = glm::abs(T[i]);
 
         if(t > ra + rb)
         {
@@ -201,9 +201,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     //B's basis vectors
     for(int k = 0; k < 3; k++)
     {
-        ra = a[0] * std::abs(R[0][k]) + a[1] * std::abs(R[1][k]) + a[2] * std::abs(R[2][k]);
+        ra = a[0] * glm::abs(R[0][k]) + a[1] * glm::abs(R[1][k]) + a[2] * glm::abs(R[2][k]);
         rb = b[k];
-        t = std::abs(T[0] * R[0][k] + T[1] * R[1][k] + T[2] * R[2][k]);
+        t = glm::abs(T[0] * R[0][k] + T[1] * R[1][k] + T[2] * R[2][k]);
         if(t > ra + rb)
         {
             return false;
@@ -212,9 +212,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
 
     //9 cross products
     //L = A0 x B0
-    ra = a[1] * std::abs(R[2][0]) + a[2] * std::abs(R[1][0]);
-    rb = b[1] * std::abs(R[0][2]) + b[2] * std::abs(R[0][1]);
-    t = std::abs(T[2] * R[1][0] - T[1] * R[2][0]);
+    ra = a[1] * glm::abs(R[2][0]) + a[2] * glm::abs(R[1][0]);
+    rb = b[1] * glm::abs(R[0][2]) + b[2] * glm::abs(R[0][1]);
+    t = glm::abs(T[2] * R[1][0] - T[1] * R[2][0]);
 
     if(t > ra + rb)
     {
@@ -222,9 +222,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A0 x B1
-    ra = a[1] * std::abs(R[2][1]) + a[2] * std::abs(R[1][1]);
-    rb = b[0] * std::abs(R[0][2]) + b[2] * std::abs(R[0][0]);
-    t = std::abs(T[2] * R[1][1] - T[1] * R[2][1]);
+    ra = a[1] * glm::abs(R[2][1]) + a[2] * glm::abs(R[1][1]);
+    rb = b[0] * glm::abs(R[0][2]) + b[2] * glm::abs(R[0][0]);
+    t = glm::abs(T[2] * R[1][1] - T[1] * R[2][1]);
 
     if(t > ra + rb)
     {
@@ -232,9 +232,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A0 x B2
-    ra = a[1] * std::abs(R[2][2]) + a[2] * std::abs(R[1][2]);
-    rb = b[0] * std::abs(R[0][1]) + b[1] * std::abs(R[0][0]);
-    t = std::abs(T[2] * R[1][2] - T[1] * R[2][2]);
+    ra = a[1] * glm::abs(R[2][2]) + a[2] * glm::abs(R[1][2]);
+    rb = b[0] * glm::abs(R[0][1]) + b[1] * glm::abs(R[0][0]);
+    t = glm::abs(T[2] * R[1][2] - T[1] * R[2][2]);
 
     if(t > ra + rb)
     {
@@ -242,9 +242,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A1 x B0
-    ra = a[0] * std::abs(R[2][0]) + a[2] * std::abs(R[0][0]);
-    rb = b[1] * std::abs(R[1][2]) + b[2] * std::abs(R[1][1]);
-    t = std::abs(T[0] * R[2][0] - T[2] * R[0][0]);
+    ra = a[0] * glm::abs(R[2][0]) + a[2] * glm::abs(R[0][0]);
+    rb = b[1] * glm::abs(R[1][2]) + b[2] * glm::abs(R[1][1]);
+    t = glm::abs(T[0] * R[2][0] - T[2] * R[0][0]);
 
     if(t > ra + rb)
     {
@@ -252,9 +252,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A1 x B1
-    ra = a[0] * std::abs(R[2][1]) + a[2] * std::abs(R[0][1]);
-    rb = b[0] * std::abs(R[1][2]) + b[2] * std::abs(R[1][0]);
-    t = std::abs(T[0] * R[2][1] - T[2] * R[0][1]);
+    ra = a[0] * glm::abs(R[2][1]) + a[2] * glm::abs(R[0][1]);
+    rb = b[0] * glm::abs(R[1][2]) + b[2] * glm::abs(R[1][0]);
+    t = glm::abs(T[0] * R[2][1] - T[2] * R[0][1]);
 
     if(t > ra + rb)
     {
@@ -262,9 +262,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A1 x B2
-    ra = a[0] * std::abs(R[2][2]) + a[2] * std::abs(R[0][2]);
-    rb = b[0] * std::abs(R[1][1]) + b[1] * std::abs(R[1][0]);
-    t = std::abs(T[0] * R[2][2] - T[2] * R[0][2]);
+    ra = a[0] * glm::abs(R[2][2]) + a[2] * glm::abs(R[0][2]);
+    rb = b[0] * glm::abs(R[1][1]) + b[1] * glm::abs(R[1][0]);
+    t = glm::abs(T[0] * R[2][2] - T[2] * R[0][2]);
 
     if(t > ra + rb)
     {
@@ -272,9 +272,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A2 x B0
-    ra = a[0] * std::abs(R[1][0]) + a[1] * std::abs(R[0][0]);
-    rb = b[1] * std::abs(R[2][2]) + b[2] * std::abs(R[2][1]);
-    t = std::abs(T[1] * R[0][0] - T[0] * R[1][0]);
+    ra = a[0] * glm::abs(R[1][0]) + a[1] * glm::abs(R[0][0]);
+    rb = b[1] * glm::abs(R[2][2]) + b[2] * glm::abs(R[2][1]);
+    t = glm::abs(T[1] * R[0][0] - T[0] * R[1][0]);
 
     if(t > ra + rb)
     {
@@ -282,9 +282,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A2 x B1
-    ra = a[0] * std::abs(R[1][1]) + a[1] * std::abs(R[0][1]);
-    rb = b[0] * std::abs(R[2][2]) + b[2] * std::abs(R[2][0]);
-    t = std::abs(T[1] * R[0][1] - T[0] * R[1][1]);
+    ra = a[0] * glm::abs(R[1][1]) + a[1] * glm::abs(R[0][1]);
+    rb = b[0] * glm::abs(R[2][2]) + b[2] * glm::abs(R[2][0]);
+    t = glm::abs(T[1] * R[0][1] - T[0] * R[1][1]);
 
     if(t > ra + rb)
     {
@@ -292,9 +292,9 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     }
 
     //L = A2 x B2
-    ra = a[0] * std::abs(R[1][2]) + a[1] * std::abs(R[0][2]);
-    rb = b[0] * std::abs(R[2][1]) + b[1] * std::abs(R[2][0]);
-    t = std::abs(T[1] * R[0][2] - T[0] * R[1][2]);
+    ra = a[0] * glm::abs(R[1][2]) + a[1] * glm::abs(R[0][2]);
+    rb = b[0] * glm::abs(R[2][1]) + b[1] * glm::abs(R[2][0]);
+    t = glm::abs(T[1] * R[0][2] - T[0] * R[1][2]);
 
     if(t > ra + rb)
     {

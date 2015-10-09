@@ -11,7 +11,7 @@ namespace world
 {
 void Camera::apply()
 {
-    m_glProjMat = glm::perspectiveFov(m_fov * util::RadPerDeg, m_width, m_height, m_distNear, m_distFar);
+    m_glProjMat = glm::perspectiveFov(glm::radians(m_fov), m_width, m_height, m_distNear, m_distFar);
 
     m_glViewMat = glm::lookAt(m_pos, m_pos+getViewDir(), getUpDir());
 
@@ -21,7 +21,7 @@ void Camera::apply()
 void Camera::setFovAspect(glm::float_t fov, glm::float_t aspect)
 {
     m_fov = fov;
-    m_height = 2.0f * m_distNear * std::tan(m_fov * util::RadPerDeg / 2);
+    m_height = 2.0f * m_distNear * glm::tan(glm::radians(m_fov) / 2);
     m_width = m_height * aspect;
 }
 
@@ -79,7 +79,7 @@ void Camera::recalcClipPlanes()
 
 Camera::Camera()
 {
-    m_width = m_height = 2.0f * m_distNear * std::tan(m_fov * util::RadPerDeg / 2);
+    m_width = m_height = 2.0f * m_distNear * glm::tan(glm::radians(m_fov) / 2);
 
     recalcClipPlanes();
 }

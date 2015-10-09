@@ -12,23 +12,19 @@ namespace world
 namespace core
 {
 
-/*
- * receiver - points to the base room frustum, which portal leads to - it's taken from the portal!
- * returns a pointer to newly generated frustum.
- */
-bool Frustum::portalFrustumIntersect(const Portal& portal) const
+bool Frustum::isVisible(const Portal& portal) const
 {
     if(!portal.dest_room)
         return false;
 
-    return isPolyVisible(portal.vertices);
+    return isVisible(portal.vertices);
 }
 
 /**
  * Check polygon visibility through the portal.
  * This method is not for realtime since check is generally more expensive than rendering ...
  */
-bool Frustum::isPolyVisible(const Polygon& p, const Camera& cam) const
+bool Frustum::isVisible(const Polygon& p, const Camera& cam) const
 {
     if(!p.double_side && p.plane.distance(cam.getPosition()) < 0.0)
     {
@@ -48,7 +44,7 @@ bool Frustum::isPolyVisible(const Polygon& p, const Camera& cam) const
     return false;
 }
 
-bool Frustum::isPolyVisible(const std::vector<glm::vec3>& p) const
+bool Frustum::isVisible(const std::vector<glm::vec3>& p) const
 {
     // iterate through all the planes of this frustum
     for(const util::Plane& plane : planes)
@@ -69,7 +65,7 @@ bool Frustum::isPolyVisible(const std::vector<glm::vec3>& p) const
  * @param bbmax - aabb corner (x_max, y_max, z_max)
  * @return true if aabb is in frustum.
  */
-bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
+bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
 {
     Polygon poly;
     poly.vertices.resize(4);
@@ -88,7 +84,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
         poly.vertices[3].position = { bb.min[0], bb.max[1], bb.min[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -103,7 +99,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.max[0], bb.min[1], bb.min[2] };
         poly.vertices[3].position = { bb.max[0], bb.max[1], bb.min[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -123,7 +119,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
         poly.vertices[3].position = { bb.max[0], bb.min[1], bb.min[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -138,7 +134,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.min[0], bb.max[1], bb.min[2] };
         poly.vertices[3].position = { bb.max[0], bb.max[1], bb.min[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -158,7 +154,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
         poly.vertices[3].position = { bb.max[0], bb.min[1], bb.min[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -173,7 +169,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
         poly.vertices[2].position = { bb.min[0], bb.min[1], bb.max[2] };
         poly.vertices[3].position = { bb.max[0], bb.min[1], bb.max[2] };
 
-        if(isPolyVisible(poly, cam))
+        if(isVisible(poly, cam))
         {
             return true;
         }
@@ -183,7 +179,7 @@ bool Frustum::isAABBVisible(const BoundingBox& bb, const Camera& cam) const
     return ins;
 }
 
-bool Frustum::isOBBVisible(const OrientedBoundingBox& obb, const Camera& cam) const
+bool Frustum::isVisible(const OrientedBoundingBox& obb, const Camera& cam) const
 {
     bool ins = true;
     for(const Polygon& p : obb.polygons)
@@ -192,7 +188,7 @@ bool Frustum::isOBBVisible(const OrientedBoundingBox& obb, const Camera& cam) co
         if(t <= 0)
             continue;
 
-        if(isPolyVisible(p, cam))
+        if(isVisible(p, cam))
             return true;
 
         ins = false;

@@ -72,8 +72,8 @@ world::World              engine_world;
 
 namespace
 {
-std::vector<btScalar> frame_vertex_buffer;
-size_t                frame_vertex_buffer_size_left = 0;
+std::vector<glm::float_t> frame_vertex_buffer;
+size_t frame_vertex_buffer_size_left = 0;
 }
 
 btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
@@ -403,7 +403,7 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     gui::resize();
 
-    engine_camera.setFovAspect(screen_info.fov, static_cast<btScalar>(nominalW) / static_cast<btScalar>(nominalH));
+    engine_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
     engine_camera.recalcClipPlanes();
 
     glViewport(0, 0, pixelsW, pixelsH);
@@ -414,9 +414,9 @@ extern gui::TextLine system_fps;
 namespace
 {
     int fpsCycles = 0;
-    btScalar fpsTime = 0;
+    float fpsTime = 0;
 
-    void fpsCycle(btScalar time)
+    void fpsCycle(float time)
     {
         if(fpsCycles < 20)
         {
@@ -593,7 +593,7 @@ void storeEntityLerpTransforms()
             }
 
             // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-            btScalar tmp = engine_world.character->m_bf.animations.lerp;
+            glm::float_t tmp = engine_world.character->m_bf.animations.lerp;
             engine_world.character->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
             engine_world.character->m_bf.updateCurrentBoneFrame();
             engine_world.character->updateRigidBody(false);
@@ -621,7 +621,7 @@ void storeEntityLerpTransforms()
                     entity->m_lerp_skip = false;
                 }
 
-                btScalar tmp = entity->m_bf.animations.lerp;
+                glm::float_t tmp = entity->m_bf.animations.lerp;
                 entity->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
                 entity->m_bf.updateCurrentBoneFrame();
                 entity->updateRigidBody(false);
@@ -637,9 +637,9 @@ void storeEntityLerpTransforms()
 /**
  * Pre-physics step callback
  */
-void internalPreTickCallback(btDynamicsWorld * world, btScalar timeStep)
+void internalPreTickCallback(btDynamicsWorld * world, float timeStep)
 {
-    btScalar engine_frame_time_backup = engine_frame_time;
+    float engine_frame_time_backup = engine_frame_time;
     engine_frame_time = timeStep;
     restoreEntityLerpTransforms();
 
@@ -664,7 +664,7 @@ void internalPreTickCallback(btDynamicsWorld * world, btScalar timeStep)
 /**
  * Post-physics step callback
  */
-void internalTickCallback(btDynamicsWorld *world, btScalar /*timeStep*/)
+void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
 {
     // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)

@@ -37,7 +37,7 @@ void SkeletalModel::interpolateFrames()
                 {
                     if(destIdx + j >= length) continue;
 
-                    btScalar lerp = static_cast<btScalar>(j) / static_cast<btScalar>(rate);
+                    glm::float_t lerp = static_cast<glm::float_t>(j) / static_cast<glm::float_t>(rate);
 
                     anim->frames[destIdx + j].center = glm::mix(anim->frames[srcIdx].center, anim->frames[srcIdx + 1].center, lerp);
                     anim->frames[destIdx + j].position = glm::mix(anim->frames[srcIdx].position, anim->frames[srcIdx + 1].position, lerp);

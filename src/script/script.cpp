@@ -1036,7 +1036,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     auto position = ent->m_transform[3];
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        position += dx.to<btScalar>() * ent->m_transform[0] + dy.to<btScalar>() * ent->m_transform[1] + dz.to<btScalar>() * ent->m_transform[2];
+        position += dx.to<float>() * ent->m_transform[0] + dy.to<float>() * ent->m_transform[1] + dz.to<float>() * ent->m_transform[2];
 
     world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
     curr_sector = curr_sector->checkPortalPointer();
@@ -1257,31 +1257,31 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
         {
             case 0:
                 targ_angle = &ent1->m_angles.x;
-                theta      = std::atan2(-facing.x, facing.y);
+                theta      = glm::atan(-facing.x, facing.y);
                 break;
             case 1:
                 targ_angle = &ent1->m_angles.y;
-                theta      = std::atan2(facing.z, facing.y);
+                theta      = glm::atan(facing.z, facing.y);
                 break;
             case 2:
                 targ_angle = &ent1->m_angles.z;
-                theta      = std::atan2(facing.x, facing.z);
+                theta      = glm::atan(facing.x, facing.z);
                 break;
         }
 
-        theta = theta * util::DegPerRad;
+        theta = glm::degrees(theta);
         if(add_angle_.is<lua::Number>())
-            theta += static_cast<btScalar>(add_angle_);
+            theta += static_cast<glm::float_t>(add_angle_);
 
-        btScalar delta = *targ_angle - theta;
+        glm::float_t delta = *targ_angle - theta;
 
         if(ceil(delta) != 180.0)
         {
             if(speed_.is<lua::Number>())
             {
-                btScalar speed = static_cast<btScalar>(speed_);
+                glm::float_t speed = static_cast<glm::float_t>(speed_);
 
-                if(fabs(delta) > speed)
+                if(glm::abs(delta) > speed)
                 {
                     // Solve ~0-360 rotation cases.
 
@@ -1311,7 +1311,7 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
                     }
                 }
 
-                if(fabs(delta) + speed >= 180.0)
+                if(glm::abs(delta) + speed >= 180.0)
                     *targ_angle = floor(theta) + 180.0f;
             }
             else
@@ -1342,9 +1342,9 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
     glm::vec3 ent2_pos(ent2->m_transform[3]);
     glm::vec3 facing(ent2_pos - ent1_pos);
 
-    btScalar theta = std::atan2(-facing.x, facing.y)*util::DegPerRad;
+    glm::float_t theta = glm::degrees(glm::atan(-facing.x, facing.y));
     if(add_angle_.is<lua::Number>())
-        theta += static_cast<btScalar>(add_angle_);
+        theta += static_cast<glm::float_t>(add_angle_);
 
     return util::wrapAngle(ent2->m_angles[0] - theta);
 }
@@ -2174,10 +2174,10 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
 
     if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t = ent->m_angles[0] * util::RadPerDeg;
+        glm::float_t t = glm::radians(ent->m_angles[0]);
 
-        btScalar ang1 = std::sin(t);
-        btScalar ang2 = std::cos(t);
+        glm::float_t ang1 = glm::sin(t);
+        glm::float_t ang2 = glm::cos(t);
 
         btVector3 angle(-ang1 * h_force, ang2 * h_force, v_force);
 
@@ -2218,9 +2218,9 @@ int lua_SetEntityBodyMass(lua_State *lua)
         {
             btVector3 inertia(0.0, 0.0, 0.0);
 
-            btScalar mass = 0;
+            glm::float_t mass = 0;
             if(top >= argn)
-                mass = static_cast<btScalar>( lua_tonumber(lua, argn) );
+                mass = static_cast<glm::float_t>( lua_tonumber(lua, argn) );
             argn++;
 
             if(ent->m_bt.bt_body[i])
@@ -2284,18 +2284,17 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 
     if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t = ent->m_angles[0] * util::RadPerDeg;
-        btScalar ang1 = std::sin(t);
-        btScalar ang2 = std::cos(t);
-        btScalar ang3 = 1.0;
+        glm::float_t t = glm::float_t(ent->m_angles[0]);
+        glm::float_t ang1 = glm::sin(t);
+        glm::float_t ang2 = glm::cos(t);
+        glm::float_t ang3 = 1.0;
 
         if(vfactor.is<lua::Number>())
         {
-            ang3 = std::abs(vfactor.to<float>());
-            ang3 = (ang3 > 1.0f) ? (1.0f) : (ang3);
+            ang3 = glm::min(glm::abs(vfactor.to<float>()), 1.0f);
         }
 
-        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(std::abs(ang1), std::abs(ang2), ang3));
+        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(glm::abs(ang1), glm::abs(ang2), ang3));
     }
     else
     {
@@ -2660,7 +2659,7 @@ void lua_genUVRotateAnimation(int id)
     seq->current_frame     = 0;           // Reset current frame to zero.
     seq->frame_list[0] = 0;
 
-    btScalar v_min, v_max;
+    glm::float_t v_min, v_max;
     v_min = v_max = firstPolygon.vertices[0].tex_coord[1];
 
     for(size_t j = 1; j<firstPolygon.vertices.size(); j++)
@@ -2676,7 +2675,7 @@ void lua_genUVRotateAnimation(int id)
     }
 
     seq->uvrotate_max = 0.5f * (v_max - v_min);
-    seq->uvrotate_speed = seq->uvrotate_max / static_cast<btScalar>(seq->frames.size());
+    seq->uvrotate_speed = seq->uvrotate_max / static_cast<glm::float_t>(seq->frames.size());
 
     for(uint16_t j = 0; j < seq->frames.size(); j++)
     {
@@ -2686,7 +2685,7 @@ void lua_genUVRotateAnimation(int id)
         seq->frames[j].mat[2] = 0.0;
         seq->frames[j].mat[3] = 1.0;
         seq->frames[j].move[0] = 0.0;
-        seq->frames[j].move[1] = -(static_cast<btScalar>(j) * seq->uvrotate_speed);
+        seq->frames[j].move[1] = -(static_cast<glm::float_t>(j) * seq->uvrotate_speed);
     }
 
     for(world::core::Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons)

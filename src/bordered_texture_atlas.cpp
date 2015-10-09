@@ -178,7 +178,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         for(const loader::ObjectTexture& t : object_textures)
             areaSum += t.x_size * t.y_size;
         for(const loader::SpriteTexture& t : sprite_textures)
-            areaSum += std::abs((t.x1 - t.x0) * (t.y1 - t.y0));
+            areaSum += glm::abs((t.x1 - t.x0) * (t.y1 - t.y0));
 
         m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
     }

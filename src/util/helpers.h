@@ -1,8 +1,7 @@
 #pragma once
 
-#include <LinearMath/btScalar.h>
-
 #include <cstdint>
+#include <glm/glm.hpp>
 
 namespace util
 {
@@ -18,7 +17,7 @@ inline T clamp(T v, T l, T h)
         return v;
 }
 
-inline btScalar wrapAngle(const btScalar value)
+inline glm::float_t wrapAngle(const glm::float_t value)
 {
     int i = static_cast<int>(value / 360.0);
     i = (value < 0.0)?(i-1):(i);

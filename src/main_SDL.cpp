@@ -5,7 +5,7 @@
 #define NO_AUDIO  0
 
 bool done = false;
-btScalar time_scale = 1.0;
+float time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {

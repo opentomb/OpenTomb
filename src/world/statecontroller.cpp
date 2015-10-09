@@ -18,15 +18,15 @@ namespace world
 namespace
 {
 
-constexpr float PenetrationTestOffset = 48.0f;        ///@TODO: tune it!
-constexpr float WalkForwardOffset = 96.0f;        ///@FIXME: find real offset
-constexpr float WalkBackOffset = 16.0f;
-constexpr float RunForwardOffset = 128.0f;       ///@FIXME: find real offset
-constexpr float CrawlForwardOffset = 256.0f;
-constexpr float LaraHangWallDistance = 128.0f - 24.0f;
-constexpr float LaraHangVerticalOffset = 12.0f;        // in original is 0, in real life hands are little more higher than edge
-constexpr float LaraTryHangWallOffset = 72.0f;        // It works more stable than 32 or 128
-constexpr float LaraHangSensorZ = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
+constexpr glm::float_t PenetrationTestOffset = 48.0f;        ///@TODO: tune it!
+constexpr glm::float_t WalkForwardOffset = 96.0f;        ///@FIXME: find real offset
+constexpr glm::float_t WalkBackOffset = 16.0f;
+constexpr glm::float_t RunForwardOffset = 128.0f;       ///@FIXME: find real offset
+constexpr glm::float_t CrawlForwardOffset = 256.0f;
+constexpr glm::float_t LaraHangWallDistance = 128.0f - 24.0f;
+constexpr glm::float_t LaraHangVerticalOffset = 12.0f;        // in original is 0, in real life hands are little more higher than edge
+constexpr glm::float_t LaraTryHangWallOffset = 72.0f;        // It works more stable than 32 or 128
+constexpr glm::float_t LaraHangSensorZ = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
 
 using animation::SSAnimation;
 
@@ -431,7 +431,7 @@ void StateController::stop()
     else if(m_character->m_command.action && m_character->findTraverse())
     {
         setNextState(LaraState::PUSHABLE_GRAB);
-        btScalar t;
+        glm::float_t t;
         if(m_character->m_transform[1].x > 0.9)
         {
             t = -m_character->m_traversedObject->m_bf.boundingBox.min[0] + 72.0f;
@@ -509,7 +509,7 @@ void StateController::stop()
                  (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT) ||
                  (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)))
         {
-            btScalar t = m_character->m_forwardSize + LaraTryHangWallOffset;
+            glm::float_t t = m_character->m_forwardSize + LaraTryHangWallOffset;
             glm::vec3 global_offset( m_character->m_transform[1] * t );
 
             global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
@@ -553,9 +553,9 @@ void StateController::stop()
                 if(m_character->m_transform[3][2] + 1920.0 >= next_fc.floor_point[2])
                 {
                     // Fixme: grabheight/gravity values
-                    const btScalar grabheight = 800.0f;  // Lara arms-up...estimated
-                    const btScalar distance = next_fc.floor_point[2] - m_character->m_transform[3][2] - grabheight;
-                    const btScalar gravity = 6;          // based on tr gravity accel (6 units / tick^2)
+                    const glm::float_t grabheight = 800.0f;  // Lara arms-up...estimated
+                    const glm::float_t distance = next_fc.floor_point[2] - m_character->m_transform[3][2] - grabheight;
+                    const glm::float_t gravity = 6;          // based on tr gravity accel (6 units / tick^2)
                     m_character->m_vspeed_override = 3.0f + sqrt(gravity * 2.0f * distance);
                     setNextState(LaraState::JUMP_UP);
                     return;
@@ -1530,7 +1530,7 @@ void StateController::pushablePush()
 
         if(m_character->m_transform[1][0] > 0.9)
         {
-            btScalar t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1539,7 +1539,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][0] < -0.9)
         {
-            btScalar t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1548,7 +1548,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][1] > 0.9)
         {
-            btScalar t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1557,7 +1557,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][1] < -0.9)
         {
-            btScalar t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1618,7 +1618,7 @@ void StateController::pushablePull()
 
         if(m_character->m_transform[1][0] > 0.9)
         {
-            btScalar t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1627,7 +1627,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][0] < -0.9)
         {
-            btScalar t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1636,7 +1636,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][1] > 0.9)
         {
-            btScalar t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1645,7 +1645,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][1] < -0.9)
         {
-            btScalar t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1719,7 +1719,7 @@ void StateController::jumpUp()
     m_character->m_command.rot[0] = 0.0;
     if(m_character->m_command.action && (m_character->m_moveType != MoveType::WallsClimb) && (m_character->m_moveType != MoveType::Climbing))
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
@@ -1818,7 +1818,7 @@ void StateController::reach()
 
     if(m_character->m_command.action && (m_character->m_moveType == MoveType::FreeFalling))
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
@@ -1918,7 +1918,7 @@ void StateController::hang()
 
     if(!m_character->m_response.killed && m_character->m_command.action)  // We have to update climb point every time so entity can move
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
@@ -2042,7 +2042,7 @@ void StateController::ladderIdle()
     }
     else if(m_character->m_command.move[0] == 1)
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
@@ -2108,7 +2108,7 @@ void StateController::ladderUp()
 
     if(m_character->m_command.action && m_character->m_climb.wall_hit != ClimbType::None)
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
@@ -2175,7 +2175,7 @@ void StateController::shimmyLeft()
     }
     else
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
@@ -2237,7 +2237,7 @@ void StateController::shimmyRight()
     }
     else
     {
-        btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+        glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
         global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
@@ -2621,7 +2621,7 @@ void StateController::onwaterForward()
     }
     else if(m_character->m_command.jump)
     {
-        btScalar t = m_character->m_transform[3][2];
+        glm::float_t t = m_character->m_transform[3][2];
         HeightInfo next_fc = initHeightInfo();
         Character::getHeightInfo(glm::vec3(m_character->m_transform[3]), &next_fc);
         m_character->m_transform[3][2] = t;
@@ -2636,7 +2636,7 @@ void StateController::onwaterForward()
 
             if(m_character->m_moveType != MoveType::Climbing)
             {
-                btScalar t = LaraTryHangWallOffset + LaraHangWallDistance;
+                glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
                 glm::vec3 global_offset( m_character->m_transform[1] * t );
                 global_offset[2] += LaraHangVerticalEpsilon;                        // inc for water_surf.z
                 HeightInfo next_fc = initHeightInfo();

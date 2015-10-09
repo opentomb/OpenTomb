@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <GL/glew.h>
-#include <LinearMath/btScalar.h>
+#include <glm/glm.hpp>
 
 #include "render/vertex_array.h"
 
@@ -27,10 +27,10 @@ struct Sprite
     size_t              texture;
     GLfloat             tex_coord[8];
     uint32_t            flag;
-    btScalar            left;
-    btScalar            right;
-    btScalar            top;
-    btScalar            bottom;
+    glm::float_t        left;
+    glm::float_t        right;
+    glm::float_t        top;
+    glm::float_t        bottom;
 };
 
 /*

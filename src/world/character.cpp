@@ -39,7 +39,7 @@ int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* conta
         return 0x00;
     }
 
-    if((std::abs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= MeteringSectorSize))
+    if(glm::abs(floor - f0) < 1.1 && rs->ceiling - rs->floor >= MeteringSectorSize)
     {
         return 0x01;
     }
@@ -51,7 +51,7 @@ int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* conta
     if(cb.hasHit())
     {
         glm::vec3 v = glm::mix(from, to, cb.m_closestHitFraction);
-        if(std::abs(v[2] - floor) < 1.1)
+        if(glm::abs(v[2] - floor) < 1.1)
         {
             Object* cont = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
             Entity* e = dynamic_cast<Entity*>(cont);
@@ -395,7 +395,7 @@ StepType Character::checkNextStep(const glm::vec3& offset, struct HeightInfo *nf
     if(m_heightInfo.floor_hit && nfc->floor_hit)
     {
         glm::float_t delta = nfc->floor_point[2] - m_heightInfo.floor_point[2];
-        if(std::abs(delta) < core::SplitEpsilon)
+        if(glm::abs(delta) < core::SplitEpsilon)
         {
             from[2] = m_heightInfo.floor_point[2];
             ret = StepType::Horizontal;                                    // horizontal
@@ -625,7 +625,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
         n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
         n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-    if(std::abs(d) < 0.005)
+    if(glm::abs(d) < 0.005)
     {
         return ret;
     }
@@ -676,7 +676,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     ret.up[0] = 0.0;
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
-    ret.edge_z_ang = std::atan2(n2[0], -n2[1]) * util::DegPerRad;
+    ret.edge_z_ang = glm::degrees(glm::atan(n2[0], -n2[1]));
     ret.edge_tan_xy[0] = -n2[1];
     ret.edge_tan_xy[1] = n2[0];
     ret.edge_tan_xy[2] = 0.0;
@@ -803,13 +803,13 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += ((360 - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360 - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
@@ -821,19 +821,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < max_lean)   // Approaching from center
             {
-                m_angles[2] += ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine::engine_frame_time);
+                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine::engine_frame_time);
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
@@ -845,19 +845,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((std::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine::engine_frame_time;
                 if(m_angles[2] < 0.0)
                     m_angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0f - std::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
                 if(m_angles[2] > 360.0)
                     m_angles[2] -= 360.0f;
             }
@@ -957,7 +957,7 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
         }
     }
 
-    return std::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
+    return glm::abs(m_inertiaAngular[axis]) * m_command.rot[axis];
 }
 
 /*
@@ -1007,7 +1007,7 @@ int Character::moveOnFloor()
         {
             floorNormal[2] = -floorNormal[2];
             speed = floorNormal * animation::FrameRate * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            const glm::float_t zAngle = std::atan2(floorNormal[0], -floorNormal[1]) * util::DegPerRad;       // from -180 deg to +180 deg
+            const glm::float_t zAngle = glm::degrees(glm::atan(floorNormal[0], -floorNormal[1]));       // from -180 deg to +180 deg
                                                                                                    //ang = (ang < 0.0)?(ang + 360.0):(ang);
             glm::float_t t = floorNormal[0] * m_transform[1][0]
                 + floorNormal[1] * m_transform[1][1];
@@ -1149,7 +1149,7 @@ int Character::freeFalling()
 
     glm::vec3 move = applyGravity(engine::engine_frame_time);
     m_speed[2] = (m_speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (m_speed[2]);
-    m_speed = glm::rotate(m_speed, rot * util::RadPerDeg, {0,0,1});
+    m_speed = glm::rotate(m_speed, glm::radians(rot), {0,0,1});
 
     updateCurrentHeight();
 
@@ -1329,7 +1329,7 @@ int Character::wallsClimbing()
         return 2;
     }
 
-    m_angles[0] = std::atan2(climb->n[0], -climb->n[1]) * util::DegPerRad;
+    m_angles[0] = glm::degrees(glm::atan(climb->n[0], -climb->n[1]));
     updateTransform();
     m_transform[3][0] = climb->point[0] - m_transform[1][0] * m_bf.boundingBox.max[1];
     m_transform[3][1] = climb->point[1] - m_transform[1][1] * m_bf.boundingBox.max[1];
@@ -1521,7 +1521,7 @@ int Character::moveOnWater()
 
                            // Calculate current speed.
 
-    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, std::abs(m_command.move[0]) != 0 || std::abs(m_command.move[1]) != 0);
+    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, glm::abs(m_command.move[0]) != 0 || glm::abs(m_command.move[1]) != 0);
 
     if((m_moveDir == MoveDirection::Forward) && (m_command.move[0] == 1))
     {
@@ -1616,7 +1616,7 @@ int Character::findTraverse()
         {
             if(Entity* e = dynamic_cast<Entity*>(cont))
             {
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (std::abs(e->m_transform[3][2] - m_transform[3][2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (glm::abs(e->m_transform[3][2] - m_transform[3][2]) < 1.1)))
                 {
                     m_angles[0] = std::lround(m_angles[0] / 90.0f) * 90.0f;
                     m_traversedObject = e;

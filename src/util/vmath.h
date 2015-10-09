@@ -13,9 +13,6 @@
 
 namespace util
 {
-
-constexpr const float DegPerRad = static_cast<float>(180 / SIMD_PI);
-constexpr const float RadPerDeg = static_cast<float>(SIMD_PI / 180);
 constexpr const float Rad90 = static_cast<float>(0.5*SIMD_PI);
 constexpr const float Rad180 = static_cast<float>(SIMD_PI);
 constexpr const float Rad360 = static_cast<float>(2 * SIMD_PI);
@@ -91,9 +88,9 @@ struct Plane
 inline void vec4_SetTRRotations(glm::quat& v, const btVector3& rotation)
 {
     v = glm::quat(1, 0, 0, 0);
-    v = glm::rotate(v, rotation[2] * RadPerDeg, { 0,0,1 });
-    v = glm::rotate(v, rotation[0] * RadPerDeg, { 1,0,0 });
-    v = glm::rotate(v, rotation[1] * RadPerDeg, { 0,1,0 });
+    v = glm::rotate(v, glm::radians(rotation[2]), { 0,0,1 });
+    v = glm::rotate(v, glm::radians(rotation[0]), { 1,0,0 });
+    v = glm::rotate(v, glm::radians(rotation[1]), { 0,1,0 });
 }
 
 inline glm::vec3 convert(const btVector3& v)

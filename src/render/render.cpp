@@ -4,8 +4,6 @@
 #include <cmath>
 #include <set>
 
-#include <LinearMath/btScalar.h>
-
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -486,8 +484,8 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
         }
         else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == loader::LightType::Point || current_light->light_type == loader::LightType::Shadow))
         {
-            innerRadiuses[current_light_number] = std::abs(current_light->inner);
-            outerRadiuses[current_light_number] = std::abs(current_light->outer);
+            innerRadiuses[current_light_number] = glm::abs(current_light->inner);
+            outerRadiuses[current_light_number] = glm::abs(current_light->outer);
             current_light_number++;
         }
     }
@@ -957,7 +955,7 @@ void Render::processRoom(world::Room* room)
             continue;
         }
 
-        if(m_cam->frustum.portalFrustumIntersect(*currentPortal))
+        if(m_cam->frustum.isVisible(*currentPortal))
         {
             addRoom(destination.get());
             for(const world::Portal& p : destination->portals)
@@ -991,7 +989,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum.isAABBVisible(r->boundingBox, *m_cam))
+            if(m_cam->frustum.isVisible(r->boundingBox, *m_cam))
             {
                 addRoom(r.get());
             }

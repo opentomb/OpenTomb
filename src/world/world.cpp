@@ -329,7 +329,7 @@ std::shared_ptr<Room> World::getByID(unsigned int ID)
     return nullptr;
 }
 
-RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
+RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3& pos)
 {
     int x, y;
     RoomSector* ret;
@@ -477,7 +477,7 @@ void World::updateAnimTextures()                                                
         if(seq.frame_time >= seq.frame_rate)
         {
             int j = static_cast<int>(seq.frame_time / seq.frame_rate);
-            seq.frame_time -= static_cast<btScalar>(j) * seq.frame_rate;
+            seq.frame_time -= static_cast<glm::float_t>(j) * seq.frame_rate;
 
             switch(seq.anim_type)
             {
