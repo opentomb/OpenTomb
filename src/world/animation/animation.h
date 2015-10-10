@@ -6,7 +6,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <boost/assert.hpp>
+
 #include <array>
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -15,6 +18,7 @@ namespace world
 struct Character;
 struct SkeletalModel;
 struct Entity;
+struct BtEntityData;
 
 namespace core
 {
@@ -83,9 +87,9 @@ struct AnimSeq
     glm::float_t    blend_rate;             // Blend rate.  Reserved for future use!
     glm::float_t    blend_time;             // Blend value. Reserved for future use!
 
-    AnimTextureType anim_type;          // 0 = normal, 1 = back, 2 = reverse.
+    AnimTextureType anim_type;
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
-    glm::float_t    frame_time;             // Time passed since last frame update.
+    float       frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
     glm::float_t    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
@@ -114,28 +118,22 @@ struct StateChange
     std::vector<AnimDispatch> anim_dispatch;
 };
 
-struct BoneTag
+struct BoneKeyFrame
 {
     glm::vec3 offset;                                            // bone vector
     glm::quat qrotate;                                           // rotation quaternion
 };
 
-/*
- * base frame of animated skeletal model
- */
-struct BoneFrame
+struct SkeletonKeyFrame
 {
-    std::vector<BoneTag> bone_tags;                 // bones data
-    glm::vec3            position;                       // position (base offset)
+    std::vector<BoneKeyFrame> boneKeyFrames;
+    glm::vec3            position;
     core::BoundingBox    boundingBox;
-    glm::vec3            center;                    // bounding box centre
+    glm::vec3            center;                    // bounding box center
 
     std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
 
-/*
- * one animation frame structure
- */
 struct AnimationFrame
 {
     uint32_t                    id;
@@ -147,7 +145,7 @@ struct AnimationFrame
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     LaraState                   state_id;
-    std::vector<BoneFrame> frames;                 // Frame data
+    std::vector<SkeletonKeyFrame> keyFrames;
 
     std::vector<StateChange> stateChanges;           // Animation statechanges data
 
@@ -189,7 +187,7 @@ struct AnimationFrame
     }
 };
 
-enum class SSAnimationMode
+enum class AnimationMode
 {
     NormalControl,
     LoopLastFrame,
@@ -197,74 +195,208 @@ enum class SSAnimationMode
     Locked
 };
 
-struct SSAnimation
+/**
+ * @brief A single bone in a @c Skeleton
+ */
+struct Bone
 {
-    LaraState                   last_state = LaraState::WALK_FORWARD;
-    LaraState                   next_state = LaraState::WALK_FORWARD;
-    int16_t                     current_animation = 0;                              //
-                                                                                    //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
-    int16_t                     current_frame = 0;                                  //
+    Bone *parent;
+    uint16_t index;
+    std::shared_ptr<core::BaseMesh> mesh_base;
+    std::shared_ptr<core::BaseMesh> mesh_skin;
+    std::shared_ptr<core::BaseMesh> mesh_slot;
+    glm::vec3 offset;
 
-    SSAnimationMode mode = SSAnimationMode::NormalControl;
+    glm::quat qrotate;
+    glm::mat4 transform; //!< Local transformation matrix
+    glm::mat4 full_transform; //!< Global transformation matrix
 
-    float                       frame_time = 0;                                     // time in current frame
+    uint32_t body_part; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+};
 
-                                                                                    // lerp:
-    glm::float_t                lerp = 0;
-    int16_t                     lerp_last_animation = 0;
-    int16_t                     lerp_last_frame = 0;
+class Skeleton
+{
+    std::vector<Bone> m_bones{};
+    glm::vec3 m_position = {0,0,0};
+    core::BoundingBox m_boundingBox{};
+    glm::vec3 m_center = {0,0,0}; //!< bounding box center
 
-    void (*onFrame)(Character* ent, SSAnimation *ss_anim, AnimUpdate state) = nullptr;
+    bool m_hasSkin = false; //!< whether any skinned meshes need rendering
 
-    SkeletalModel    *model = nullptr;                                          // pointer to the base model
-    SSAnimation      *next = nullptr;
+    SkeletalModel* m_model = nullptr;
+    float m_frameTime = 0; //!< time in current frame
 
-    void setAnimation(int animation, int frame = 0, int another_model = -1);
-    bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
-    AnimUpdate stepAnimation(glm::float_t time, Entity *cmdEntity = nullptr);
+    int16_t m_currentAnimation = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+    int16_t m_currentFrame = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+
+    glm::float_t m_lerp = 0;
+    int16_t m_lerpLastAnimation = 0;
+    int16_t m_lerpLastFrame = 0;
+
+    LaraState m_lastState = LaraState::WALK_FORWARD;
+    LaraState m_nextState = LaraState::WALK_FORWARD;
+
+    AnimationMode m_mode = AnimationMode::NormalControl;
+
+public:
+    void (*onFrame)(Character* ent, AnimUpdate state) = nullptr;
 
     const AnimationFrame& getCurrentAnimationFrame() const;
-};
+    AnimUpdate stepAnimation(glm::float_t time, Entity *cmdEntity = nullptr);
+    void setAnimation(int animation, int frame = 0);
 
-struct SSBoneTag
-{
-    SSBoneTag   *parent;
-    uint16_t                index;
-    std::shared_ptr<core::BaseMesh> mesh_base;                                          // base mesh - pointer to the first mesh in array
-    std::shared_ptr<core::BaseMesh> mesh_skin;                                          // base skinned mesh for ТР4+
-    std::shared_ptr<core::BaseMesh> mesh_slot;
-    glm::vec3 offset;                                          // model position offset
 
-    glm::quat qrotate;                                         // quaternion rotation
-    glm::mat4 transform;    // 4x4 OpenGL matrix for stack usage
-    glm::mat4 full_transform;    // 4x4 OpenGL matrix for global usage
+    int16_t getCurrentAnimation() const noexcept
+    {
+        return m_currentAnimation;
+    }
+    void setCurrentAnimation(int16_t value) noexcept
+    {
+        m_currentAnimation = value;
+    }
 
-    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-};
+    int16_t getLerpLastAnimation() const noexcept
+    {
+        return m_lerpLastAnimation;
+    }
+    void setLerpLastAnimation(int16_t value) noexcept
+    {
+        m_lerpLastAnimation = value;
+    }
 
-/*
- * base frame of animated skeletal model
- */
-struct SSBoneFrame
-{
-    std::vector<SSBoneTag> bone_tags;                                      // array of bones
-    glm::vec3 position = {0,0,0};                                         // position (base offset)
-    core::BoundingBox boundingBox;
-    glm::vec3 center = {0,0,0};                                      // bounding box center
+    int16_t getCurrentFrame() const noexcept
+    {
+        return m_currentFrame;
+    }
+    void setCurrentFrame(int16_t value) noexcept
+    {
+        m_currentFrame = value;
+    }
 
-    SSAnimation       animations;                                     // animations list
+    int16_t getLerpLastFrame() const noexcept
+    {
+        return m_lerpLastFrame;
+    }
+    void setLerpLastFrame(int16_t value) noexcept
+    {
+        m_lerpLastFrame = value;
+    }
 
-    bool hasSkin;                                       // whether any skinned meshes need rendering
+    float getFrameTime() const noexcept
+    {
+        return m_frameTime;
+    }
+    void setFrameTime(float time) noexcept
+    {
+        m_frameTime = time;
+    }
 
-    void fromModel(SkeletalModel* model);
+    const SkeletalModel* getModel() const noexcept
+    {
+        return m_model;
+    }
+    SkeletalModel* model() const noexcept
+    {
+        return m_model;
+    }
+    void setModel(SkeletalModel* model) noexcept
+    {
+        m_model = model;
+    }
+
+    LaraState getNextState() const noexcept
+    {
+        return m_nextState;
+    }
+    LaraState getLastState() const noexcept
+    {
+        return m_lastState;
+    }
+
+
+    void fromModel(SkeletalModel* m_model);
 
     /**
      * That function updates item animation and rebuilds skeletal matrices;
      * @param bf - extended bone frame of the item;
      */
-    void itemFrame(glm::float_t time);
+    void itemFrame(float time);
 
     void updateCurrentBoneFrame();
+
+    const core::BoundingBox& getBoundingBox() const noexcept
+    {
+        return m_boundingBox;
+    }
+
+    const glm::mat4& getRootTransform() const
+    {
+        BOOST_ASSERT( !m_bones.empty() );
+        return m_bones.front().full_transform;
+    }
+
+    const glm::vec3& getCenter() const noexcept
+    {
+        return m_center;
+    }
+
+    size_t getBoneCount() const noexcept
+    {
+        return m_bones.size();
+    }
+
+    const std::vector<Bone>& getBones() const noexcept
+    {
+        return m_bones;
+    }
+
+    Bone& bone(size_t i)
+    {
+        BOOST_ASSERT(i < m_bones.size());
+        return m_bones[i];
+    }
+
+    void setBodyPartFlag(size_t boneId, uint32_t flag)
+    {
+        if(boneId >= m_bones.size())
+            return;
+
+        m_bones[boneId].body_part = flag;
+    }
+
+    void copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot = false);
+
+    void setAnimationMode(AnimationMode mode) noexcept
+    {
+        m_mode = mode;
+    }
+    AnimationMode getAnimationMode() const noexcept
+    {
+        return m_mode;
+    }
+
+    void setNextState(LaraState state) noexcept
+    {
+        m_nextState = state;
+    }
+
+    void setLastState(LaraState state) noexcept
+    {
+        m_lastState = state;
+    }
+
+    void setLerp(glm::float_t lerp)
+    {
+        m_lerp = lerp;
+    }
+    glm::float_t getLerp() const noexcept
+    {
+        return m_lerp;
+    }
+
+    void updateTransform(const world::BtEntityData &bt, const glm::mat4 &transform);
+
+    void updateBoundingBox();
 };
 
 } // namespace animation

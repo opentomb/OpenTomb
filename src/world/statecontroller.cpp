@@ -28,9 +28,9 @@ constexpr glm::float_t LaraHangVerticalOffset = 12.0f;        // in original is 
 constexpr glm::float_t LaraTryHangWallOffset = 72.0f;        // It works more stable than 32 or 128
 constexpr glm::float_t LaraHangSensorZ = 800.0f;       // It works more stable than 1024 (after collision critical fix, of course)
 
-using animation::SSAnimation;
+using animation::Skeleton;
 
-void onFrameStopTraverse(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameStopTraverse(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
@@ -41,25 +41,25 @@ void onFrameStopTraverse(Character* ent, SSAnimation* ss_anim, animation::AnimUp
         v[1] = i * MeteringSectorSize + 512.0f;
         ent->m_traversedObject->updateRigidBody(true);
         ent->m_traversedObject = nullptr;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameSetOnFloor(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameSetOnFloor(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::OnFloor;
         ent->m_transform[3][2] = ent->m_heightInfo.floor_point[2];
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameSetOnFloorAfterClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate /*state*/)
+void onFrameSetOnFloorAfterClimb(Character* ent, animation::AnimUpdate /*state*/)
 {
     // FIXME: this is more like an end-of-anim operation
-    if(ss_anim->current_animation != ss_anim->lerp_last_animation)
+    if(ent->m_bf.getCurrentAnimation() != ent->m_bf.getLerpLastAnimation())
     {
         ent->m_transform[3] = glm::vec4(ent->m_climb.point,1);
 
@@ -68,113 +68,113 @@ void onFrameSetOnFloorAfterClimb(Character* ent, SSAnimation* ss_anim, animation
         ent->m_transform[3] = glm::vec4(ent->m_climb.point + glm::mat3(ent->m_transform) * climbfix, 1.0f);
 
         ent->m_moveType = MoveType::OnFloor;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameSetUnderwater(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameSetUnderwater(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::Underwater;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameSetFreeFalling(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameSetFreeFalling(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::FreeFalling;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameSetCmdSlide(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameSetCmdSlide(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_response.slide = SlideType::Back;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameCorrectDivingAngle(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameCorrectDivingAngle(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_angles[1] = -45.0;
         ent->updateTransform();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameToOnWater(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameToOnWater(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_transform[3][2] = ent->m_heightInfo.transition_level;
         ent->ghostUpdate();
         ent->m_moveType = MoveType::OnWater;
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameClimbOutOfWater(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameClimbOutOfWater(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_transform[3] = glm::vec4(ent->m_climb.point,0) + ent->m_transform[1] * 48.0f;             // temporary stick
         ent->m_transform[3][2] = ent->m_climb.point[2];
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameToEdgeClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameToEdgeClimb(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_transform[3][0] = ent->m_climb.point[0] - ent->m_transform[1][0] * ent->m_bf.boundingBox.max[1];
-        ent->m_transform[3][1] = ent->m_climb.point[1] - ent->m_transform[1][1] * ent->m_bf.boundingBox.max[1];
-        ent->m_transform[3][2] = ent->m_climb.point[2] - ent->m_bf.boundingBox.max[2];
+        ent->m_transform[3][0] = ent->m_climb.point[0] - ent->m_transform[1][0] * ent->m_bf.getBoundingBox().max[1];
+        ent->m_transform[3][1] = ent->m_climb.point[1] - ent->m_transform[1][1] * ent->m_bf.getBoundingBox().max[1];
+        ent->m_transform[3][2] = ent->m_climb.point[2] - ent->m_bf.getBoundingBox().max[2];
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameToMonkeyswing(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameToMonkeyswing(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::Monkeyswing;
-        ent->m_transform[3][2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.boundingBox.max[2];
+        ent->m_transform[3][2] = ent->m_heightInfo.ceiling_point[2] - ent->m_bf.getBoundingBox().max[2];
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameToTightrope(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameToTightrope(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::Climbing;
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameFromTightrope(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameFromTightrope(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
         ent->m_moveType = MoveType::OnFloor;
         ent->ghostUpdate();
-        ss_anim->onFrame = nullptr;
+        ent->m_bf.onFrame = nullptr;
     }
 }
 
-void onFrameCrawlToClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUpdate state)
+void onFrameCrawlToClimb(Character* ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
@@ -190,8 +190,8 @@ void onFrameCrawlToClimb(Character* ent, SSAnimation* ss_anim, animation::AnimUp
         }
 
         ent->m_bt.no_fix_all = false;
-        onFrameToEdgeClimb(ent, ss_anim, state);
-        ss_anim->onFrame = nullptr;
+        onFrameToEdgeClimb(ent, state);
+        ent->m_bf.onFrame = nullptr;
     }
 }
 } // anonymous namespace
@@ -280,7 +280,7 @@ StateController::StateController(Character *c)
 
 void StateController::handle(LaraState state)
 {
-    m_character->m_bf.animations.mode = animation::SSAnimationMode::NormalControl;
+    m_character->m_bf.setAnimationMode( animation::AnimationMode::NormalControl );
     m_character->updateCurrentHeight();
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
@@ -310,7 +310,7 @@ void StateController::handle(LaraState state)
 
     // Extra animation control.
 
-    switch(m_character->m_bf.animations.current_animation)
+    switch(m_character->m_bf.getCurrentAnimation())
     {
     case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
         m_character->m_bt.no_fix_body_parts |= BODY_PART_HEAD;
@@ -330,7 +330,7 @@ void StateController::handle(LaraState state)
     case TR_ANIMATION_LARA_AH_FORWARD:
     case TR_ANIMATION_LARA_AH_LEFT:
     case TR_ANIMATION_LARA_AH_RIGHT:
-        if(m_character->m_bf.animations.current_frame > 12)
+        if(m_character->m_bf.getCurrentFrame() > 12)
             m_character->setAnimation(TR_ANIMATION_LARA_STAY_SOLID, 0);
         break;
     };
@@ -349,7 +349,7 @@ void StateController::stop()
 {
     // Reset directional flag only on intermediate animation!
 
-    if(m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID)
+    if(m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_STAY_SOLID)
     {
         m_character->m_moveDir = MoveDirection::Stay;
     }
@@ -364,7 +364,7 @@ void StateController::stop()
     if((m_character->m_climb.can_hang &&
         (m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon) &&
         (m_character->m_moveType == MoveType::Climbing)) ||
-            (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID))
+            (m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_STAY_SOLID))
     {
         m_character->m_moveType = MoveType::OnFloor;
     }
@@ -417,7 +417,7 @@ void StateController::stop()
     }
     else if(m_character->m_command.roll)
     {
-        if(m_character->m_heightInfo.quicksand == QuicksandPosition::None && m_character->m_bf.animations.current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
+        if(m_character->m_heightInfo.quicksand == QuicksandPosition::None && m_character->m_bf.getCurrentAnimation() != TR_ANIMATION_LARA_CLIMB_2CLICK)
         {
             m_character->m_moveDir = MoveDirection::Forward;
             m_character->setAnimation(TR_ANIMATION_LARA_ROLL_BEGIN, 0);
@@ -434,19 +434,19 @@ void StateController::stop()
         glm::float_t t;
         if(m_character->m_transform[1].x > 0.9)
         {
-            t = -m_character->m_traversedObject->m_bf.boundingBox.min[0] + 72.0f;
+            t = -m_character->m_traversedObject->m_bf.getBoundingBox().min[0] + 72.0f;
         }
         else if(m_character->m_transform[1].x < -0.9)
         {
-            t = m_character->m_traversedObject->m_bf.boundingBox.max[0] + 72.0f;
+            t = m_character->m_traversedObject->m_bf.getBoundingBox().max[0] + 72.0f;
         }
         else if(m_character->m_transform[1].y > 0.9)
         {
-            t = -m_character->m_traversedObject->m_bf.boundingBox.min[1] + 72.0f;
+            t = -m_character->m_traversedObject->m_bf.getBoundingBox().min[1] + 72.0f;
         }
         else if(m_character->m_transform[1].y < -0.9)
         {
-            t = m_character->m_traversedObject->m_bf.boundingBox.max[1] + 72.0f;
+            t = m_character->m_traversedObject->m_bf.getBoundingBox().max[1] + 72.0f;
         }
         else
         {
@@ -462,7 +462,7 @@ void StateController::stop()
         {
             glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
             glm::vec3 global_offset( m_character->m_transform[1] * WalkForwardOffset );
-            global_offset[2] += m_character->m_bf.boundingBox.max[2];
+            global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
@@ -485,7 +485,7 @@ void StateController::stop()
         {
             glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
             glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
-            global_offset[2] += m_character->m_bf.boundingBox.max[2];
+            global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
             HeightInfo next_fc = initHeightInfo();
             m_character->checkNextStep(global_offset, &next_fc);
             if(((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00)) && !m_character->hasStopSlant(next_fc))
@@ -504,10 +504,10 @@ void StateController::stop()
         }
 
         if(m_character->m_command.action &&
-                ((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_IDLE) ||
-                 (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_SOLID) ||
-                 (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT) ||
-                 (m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)))
+                ((m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_STAY_IDLE) ||
+                 (m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_STAY_SOLID) ||
+                 (m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_WALL_SMASH_LEFT) ||
+                 (m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)))
         {
             glm::float_t t = m_character->m_forwardSize + LaraTryHangWallOffset;
             glm::vec3 global_offset( m_character->m_transform[1] * t );
@@ -528,7 +528,7 @@ void StateController::stop()
                     m_character->m_climb.point = next_fc.floor_point;
                     m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
                     m_character->m_bt.no_fix_all = true;
-                    m_character->m_bf.animations.onFrame = onFrameSetOnFloorAfterClimb;
+                    m_character->m_bf.onFrame = onFrameSetOnFloorAfterClimb;
                     return;
                 }
                 else if(m_character->m_transform[3][2] + 896.0 >= next_fc.floor_point[2])
@@ -538,7 +538,7 @@ void StateController::stop()
                     m_character->m_climb.point = next_fc.floor_point;
                     m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
                     m_character->m_bt.no_fix_all = true;
-                    m_character->m_bf.animations.onFrame = onFrameSetOnFloorAfterClimb;
+                    m_character->m_bf.onFrame = onFrameSetOnFloorAfterClimb;
                     return;
                 }
             }   // end IF MOVE_LITTLE_CLIMBING
@@ -578,7 +578,7 @@ void StateController::stop()
             if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
             {
                 glm::vec3 global_offset( m_character->m_transform[1] * -WalkBackOffset );
-                global_offset[2] += m_character->m_bf.boundingBox.max[2];
+                global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
                 global_offset += glm::vec3(m_character->m_transform[3]);
                 HeightInfo next_fc = initHeightInfo();
                 Character::getHeightInfo(global_offset, &next_fc);
@@ -614,7 +614,7 @@ void StateController::stop()
             if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
             {
                 glm::vec3 global_offset( m_character->m_transform[0] * RunForwardOffset );
-                global_offset[2] += m_character->m_bf.boundingBox.max[2];
+                global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
                 HeightInfo next_fc = initHeightInfo();
                 if((m_character->m_response.horizontal_collide == 0) && isLittleStep(m_character->checkNextStep(global_offset, &next_fc)))
                 {
@@ -637,7 +637,7 @@ void StateController::stop()
             if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
             {
                 glm::vec3 global_offset( m_character->m_transform[0] * -RunForwardOffset );
-                global_offset[2] += m_character->m_bf.boundingBox.max[2];
+                global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
                 HeightInfo next_fc = initHeightInfo();
                 if((m_character->m_response.horizontal_collide == 0) && isLittleStep(m_character->checkNextStep(global_offset, &next_fc)))
                 {
@@ -848,8 +848,8 @@ void StateController::turnSlow()
             m_character->m_moveDir = MoveDirection::Forward;
         }
     }
-    else if(((m_character->m_bf.animations.last_state == LaraState::TURN_LEFT_SLOW) && (m_character->m_command.move[1] == -1)) ||
-            ((m_character->m_bf.animations.last_state == LaraState::TURN_RIGHT_SLOW) && (m_character->m_command.move[1] == 1)))
+    else if((m_character->m_bf.getLastState() == LaraState::TURN_LEFT_SLOW && m_character->m_command.move[1] == -1) ||
+            (m_character->m_bf.getLastState() == LaraState::TURN_RIGHT_SLOW && m_character->m_command.move[1] == 1))
     {
         Substance substance_state = m_character->getSubstanceState();
         if(isLastFrame() &&
@@ -896,7 +896,7 @@ void StateController::turnFast()
 void StateController::runForward()
 {
     glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
-    global_offset[2] += m_character->m_bf.boundingBox.max[2];
+    global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
     m_character->m_moveDir = MoveDirection::Forward;
@@ -954,7 +954,7 @@ void StateController::runForward()
     {
         global_offset = glm::vec3(m_character->m_transform[1] * RunForwardOffset);
         global_offset[2] += 1024.0;
-        if(m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_STAY_TO_RUN)
+        if(m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_STAY_TO_RUN)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
         }
@@ -1015,7 +1015,7 @@ void StateController::sprint()
 {
     glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
     m_character->lean(12.0);
-    global_offset[2] += m_character->m_bf.boundingBox.max[2];
+    global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
     m_character->m_command.crouch |= isLowVerticalSpace();
@@ -1108,7 +1108,7 @@ void StateController::walkForward()
     m_character->lean(0.0);
 
     glm::vec3 global_offset( m_character->m_transform[1] * WalkForwardOffset );
-    global_offset[2] += m_character->m_bf.boundingBox.max[2];
+    global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
     m_character->m_moveDir = MoveDirection::Forward;
@@ -1279,7 +1279,7 @@ void StateController::walkBack()
     }
 
     glm::vec3 global_offset( m_character->m_transform[1] * -WalkBackOffset );
-    global_offset[2] += m_character->m_bf.boundingBox.max[2];
+    global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
     if(m_character->m_moveType == MoveType::FreeFalling)
@@ -1301,18 +1301,18 @@ void StateController::walkBack()
     {
         if(!m_character->m_bt.no_fix_all)
         {
-            int frames_count = static_cast<int>(m_character->m_bf.animations.model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size());
+            int frames_count = static_cast<int>(m_character->m_bf.getModel()->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].keyFrames.size());
             int frames_count2 = (frames_count + 1) / 2;
-            if((m_character->m_bf.animations.current_frame >= 0) && (m_character->m_bf.animations.current_frame <= frames_count2))
+            if((m_character->m_bf.getCurrentFrame() >= 0) && (m_character->m_bf.getCurrentFrame() <= frames_count2))
             {
-                m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_character->m_bf.animations.current_frame);
+                m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_character->m_bf.getCurrentFrame());
                 m_character->m_moveDir = MoveDirection::Backward;
                 m_character->m_transform[3][2] -= (m_character->m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
                 m_character->m_bt.no_fix_all = true;
             }
-            else if((m_character->m_bf.animations.current_frame >= frames_count) && (m_character->m_bf.animations.current_frame <= frames_count + frames_count2))
+            else if((m_character->m_bf.getCurrentFrame() >= frames_count) && (m_character->m_bf.getCurrentFrame() <= frames_count + frames_count2))
             {
-                m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_character->m_bf.animations.current_frame - frames_count);
+                m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_character->m_bf.getCurrentFrame() - frames_count);
                 m_character->m_moveDir = MoveDirection::Backward;
                 m_character->m_transform[3][2] -= (m_character->m_heightInfo.floor_point[2] - next_fc.floor_point[2]);
                 m_character->m_bt.no_fix_all = true;
@@ -1345,7 +1345,7 @@ void StateController::walkLeft()
     else if(m_character->m_command.move[1] == -1 && m_character->m_command.shift)
     {
         glm::vec3 global_offset( m_character->m_transform[0] * -RunForwardOffset );  // not an error - RUN_... more correct here
-        global_offset[2] += m_character->m_bf.boundingBox.max[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
         Character::getHeightInfo(global_offset, &next_fc);
@@ -1358,7 +1358,7 @@ void StateController::walkLeft()
             else
             {
                 setNextState(LaraState::ONWATER_LEFT);
-                m_character->m_bf.animations.onFrame = onFrameToOnWater;
+                m_character->m_bf.onFrame = onFrameToOnWater;
             }
         }
         else
@@ -1385,7 +1385,7 @@ void StateController::walkRight()
     {
         // Not a error - RUN_... constant is more correct here
         glm::vec3 global_offset( m_character->m_transform[0] * RunForwardOffset );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
         Character::getHeightInfo(global_offset, &next_fc);
@@ -1398,7 +1398,7 @@ void StateController::walkRight()
             else
             {
                 setNextState(LaraState::ONWATER_RIGHT);
-                m_character->m_bf.animations.onFrame = onFrameToOnWater;
+                m_character->m_bf.onFrame = onFrameToOnWater;
             }
         }
         else
@@ -1488,25 +1488,25 @@ void StateController::pushableGrab()
     {
         int tf = m_character->checkTraverse(*m_character->m_traversedObject);
         m_character->m_moveDir = MoveDirection::Stay;
-        m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  //We hold it (loop last frame)
+        m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  //We hold it (loop last frame)
 
         if((m_character->m_command.move[0] == 1) && (tf & Character::TraverseForward))  // If player presses up, then push
         {
             m_character->m_moveDir = MoveDirection::Forward;
-            m_character->m_bf.animations.mode = animation::SSAnimationMode::NormalControl;
+            m_character->m_bf.setAnimationMode( animation::AnimationMode::NormalControl );
             setNextState(LaraState::PUSHABLE_PUSH);
         }
         else if((m_character->m_command.move[0] == -1) && (tf & Character::TraverseBackward))  //If player presses down, then pull
         {
             m_character->m_moveDir = MoveDirection::Backward;
-            m_character->m_bf.animations.mode = animation::SSAnimationMode::NormalControl;
+            m_character->m_bf.setAnimationMode( animation::AnimationMode::NormalControl );
             setNextState(LaraState::PUSHABLE_PULL);
         }
     }
     else  //Lara has let go of the block
     {
         m_character->m_moveDir = MoveDirection::Stay;
-        m_character->m_bf.animations.mode = animation::SSAnimationMode::NormalControl;  // We're no longer looping last frame
+        m_character->m_bf.setAnimationMode( animation::AnimationMode::NormalControl );  // We're no longer looping last frame
         setNextState(LaraState::STOP);   // Switch to next Lara state
     }
 }
@@ -1514,23 +1514,23 @@ void StateController::pushableGrab()
 void StateController::pushablePush()
 {
     m_character->m_bt.no_fix_all = true;
-    m_character->m_bf.animations.onFrame = onFrameStopTraverse;
+    m_character->m_bf.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size());
+    int i = static_cast<int>(m_character->m_bf.getCurrentAnimationFrame().keyFrames.size());
 
     if(!m_character->m_command.action || !(Character::TraverseForward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
     {
         setNextState(LaraState::STOP);
     }
 
-    if((m_character->m_traversedObject != nullptr) && (m_character->m_bf.animations.current_frame > 16) && (m_character->m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 16
+    if((m_character->m_traversedObject != nullptr) && (m_character->m_bf.getCurrentFrame() > 16) && (m_character->m_bf.getCurrentFrame() < i - 16)) ///@FIXME: magick 16
     {
         bool was_traversed = false;
 
         if(m_character->m_transform[1][0] > 0.9)
         {
-            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.getBoundingBox().max[1] - m_character->m_traversedObject->m_bf.getBoundingBox().min[0] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1539,7 +1539,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][0] < -0.9)
         {
-            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.getBoundingBox().max[1] + m_character->m_traversedObject->m_bf.getBoundingBox().max[0] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1548,7 +1548,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][1] > 0.9)
         {
-            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.getBoundingBox().max[1] - m_character->m_traversedObject->m_bf.getBoundingBox().min[1] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1557,7 +1557,7 @@ void StateController::pushablePush()
         }
         else if(m_character->m_transform[1][1] < -0.9)
         {
-            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.getBoundingBox().max[1] + m_character->m_traversedObject->m_bf.getBoundingBox().max[1] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1579,9 +1579,9 @@ void StateController::pushablePush()
         }
         else
         {
-            if((m_character->m_bf.animations.current_frame == 49) ||
-                    (m_character->m_bf.animations.current_frame == 110) ||
-                    (m_character->m_bf.animations.current_frame == 142))
+            if(   m_character->m_bf.getCurrentFrame() == 49
+               || m_character->m_bf.getCurrentFrame() == 110
+               || m_character->m_bf.getCurrentFrame() == 142)
             {
                 if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
@@ -1602,23 +1602,23 @@ void StateController::pushablePush()
 void StateController::pushablePull()
 {
     m_character->m_bt.no_fix_all = true;
-    m_character->m_bf.animations.onFrame = onFrameStopTraverse;
+    m_character->m_bf.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size());
+    int i = static_cast<int>(m_character->m_bf.getCurrentAnimationFrame().keyFrames.size());
 
     if(!m_character->m_command.action || !(Character::TraverseBackward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
     {
         setNextState(LaraState::STOP);
     }
 
-    if((m_character->m_traversedObject != nullptr) && (m_character->m_bf.animations.current_frame > 20) && (m_character->m_bf.animations.current_frame < i - 16)) ///@FIXME: magick 20
+    if((m_character->m_traversedObject != nullptr) && (m_character->m_bf.getCurrentFrame() > 20) && (m_character->m_bf.getCurrentFrame() < i - 16)) ///@FIXME: magick 20
     {
         bool was_traversed = false;
 
         if(m_character->m_transform[1][0] > 0.9)
         {
-            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] + (m_character->m_bf.getBoundingBox().max[1] - m_character->m_traversedObject->m_bf.getBoundingBox().min[0] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1627,7 +1627,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][0] < -0.9)
         {
-            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[0] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][0] - (m_character->m_bf.getBoundingBox().max[1] + m_character->m_traversedObject->m_bf.getBoundingBox().max[0] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][0])
             {
                 m_character->m_traversedObject->m_transform[3][0] = t;
@@ -1636,7 +1636,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][1] > 0.9)
         {
-            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.boundingBox.max[1] - m_character->m_traversedObject->m_bf.boundingBox.min[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] + (m_character->m_bf.getBoundingBox().max[1] - m_character->m_traversedObject->m_bf.getBoundingBox().min[1] - 32.0f);
             if(t < m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1645,7 +1645,7 @@ void StateController::pushablePull()
         }
         else if(m_character->m_transform[1][1] < -0.9)
         {
-            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.boundingBox.max[1] + m_character->m_traversedObject->m_bf.boundingBox.max[1] - 32.0f);
+            glm::float_t t = m_character->m_transform[3][1] - (m_character->m_bf.getBoundingBox().max[1] + m_character->m_traversedObject->m_bf.getBoundingBox().max[1] - 32.0f);
             if(t > m_character->m_traversedObject->m_transform[3][1])
             {
                 m_character->m_traversedObject->m_transform[3][1] = t;
@@ -1667,10 +1667,10 @@ void StateController::pushablePull()
         }
         else
         {
-            if((m_character->m_bf.animations.current_frame == 40) ||
-                    (m_character->m_bf.animations.current_frame == 92) ||
-                    (m_character->m_bf.animations.current_frame == 124) ||
-                    (m_character->m_bf.animations.current_frame == 156))
+            if(   m_character->m_bf.getCurrentFrame() == 40
+               || m_character->m_bf.getCurrentFrame() == 92
+               || m_character->m_bf.getCurrentFrame() == 124
+               || m_character->m_bf.getCurrentFrame() == 156)
             {
                 if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
@@ -1721,7 +1721,7 @@ void StateController::jumpUp()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit)
@@ -1734,7 +1734,7 @@ void StateController::jumpUp()
 
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
-            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.boundingBox.max[2] + LaraHangVerticalOffset;
+            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalOffset;
         }
         else
         {
@@ -1779,10 +1779,10 @@ void StateController::jumpUp()
         m_character->updateTransform();
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
     }
-    else if(m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
+    else if(m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
     {
         setNextState(LaraState::MONKEYSWING_IDLE);
-        m_character->m_bf.animations.onFrame = onFrameToMonkeyswing;
+        m_character->m_bf.onFrame = onFrameToMonkeyswing;
     }
     else if(m_character->m_command.action && (m_character->m_moveType == MoveType::Climbing))
     {
@@ -1820,7 +1820,7 @@ void StateController::reach()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && m_character->m_climb.can_hang)
@@ -1841,10 +1841,10 @@ void StateController::reach()
         }
     }
 
-    if(((m_character->m_moveType != MoveType::OnFloor)) && m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
+    if(((m_character->m_moveType != MoveType::OnFloor)) && m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
     {
         setNextState(LaraState::MONKEYSWING_IDLE);
-        m_character->m_bf.animations.onFrame = onFrameToMonkeyswing;
+        m_character->m_bf.onFrame = onFrameToMonkeyswing;
         return;
     }
     if(((m_character->m_response.vertical_collide & 0x01) || (m_character->m_moveType == MoveType::OnFloor)) && (!m_character->m_command.action || !m_character->m_climb.can_hang))
@@ -1864,7 +1864,7 @@ void StateController::reach()
     {
         m_character->m_speed = {0,0,0};
         setNextState(LaraState::HANG);
-        m_character->m_bf.animations.onFrame = onFrameToEdgeClimb;
+        m_character->m_bf.onFrame = onFrameToEdgeClimb;
     }
 }
 
@@ -1905,7 +1905,7 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+                m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
         else
@@ -1920,7 +1920,7 @@ void StateController::hang()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.can_hang)
@@ -1957,9 +1957,9 @@ void StateController::hang()
             {
                 m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
                 m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
-                m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.boundingBox.max[2] + LaraHangVerticalOffset;
+                m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalOffset;
                 m_character->m_speed = {0,0,0};
-                m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+                m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
         else if(m_character->m_command.move[0] == -1)  // Check walls climbing
@@ -1969,7 +1969,7 @@ void StateController::hang()
             {
                 m_character->m_moveType = MoveType::WallsClimb;
             }
-            m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+            m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
         }
         else if(m_character->m_command.move[1] == -1)
         {
@@ -1981,7 +1981,7 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+                m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
         else if(m_character->m_command.move[1] == 1)
@@ -1994,22 +1994,22 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+                m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
         else
         {
-            m_character->m_bf.animations.mode = animation::SSAnimationMode::LoopLastFrame;  // Disable shake
+            m_character->m_bf.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
-            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.boundingBox.max[2] + LaraHangVerticalOffset;
+            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalOffset;
             m_character->m_speed = {0,0,0};
         }
     }
-    else if(m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
+    else if(m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling_point[2] - 64.0))
     {
         setNextState(LaraState::MONKEYSWING_IDLE);
-        m_character->m_bf.animations.onFrame = onFrameToMonkeyswing;
+        m_character->m_bf.onFrame = onFrameToMonkeyswing;
     }
     else
     {
@@ -2044,7 +2044,7 @@ void StateController::ladderIdle()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= 512.0))
@@ -2052,7 +2052,7 @@ void StateController::ladderIdle()
             m_character->m_moveType = MoveType::Climbing;
             setNextState(LaraState::CLIMBING);
         }
-        else if((!m_character->m_heightInfo.ceiling_hit) || (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] < m_character->m_heightInfo.ceiling_point[2]))
+        else if((!m_character->m_heightInfo.ceiling_hit) || (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] < m_character->m_heightInfo.ceiling_point[2]))
         {
             setNextState(LaraState::LADDER_UP);
         }
@@ -2110,7 +2110,7 @@ void StateController::ladderUp()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.boundingBox.max[2] + LaraHangVerticalEpsilon;
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= 512.0))
@@ -2118,14 +2118,14 @@ void StateController::ladderUp()
             m_character->m_moveType = MoveType::Climbing;
             setNextState(LaraState::LADDER_IDLE);
         }
-        else if((m_character->m_command.move[0] <= 0) && (m_character->m_heightInfo.ceiling_hit || (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] >= m_character->m_heightInfo.ceiling_point[2])))
+        else if((m_character->m_command.move[0] <= 0) && (m_character->m_heightInfo.ceiling_hit || (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] >= m_character->m_heightInfo.ceiling_point[2])))
         {
             setNextState(LaraState::LADDER_IDLE);
         }
 
-        if(m_character->m_heightInfo.ceiling_hit && (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] > m_character->m_heightInfo.ceiling_point[2]))
+        if(m_character->m_heightInfo.ceiling_hit && (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling_point[2]))
         {
-            m_character->m_transform[3][2] = m_character->m_heightInfo.ceiling_point[2] - m_character->m_bf.boundingBox.max[2];
+            m_character->m_transform[3][2] = m_character->m_heightInfo.ceiling_point[2] - m_character->m_bf.getBoundingBox().max[2];
         }
     }
     else
@@ -2188,7 +2188,7 @@ void StateController::shimmyLeft()
             m_character->m_moveType = MoveType::Climbing;                             // hang on
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
-            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.boundingBox.max[2] + LaraHangVerticalOffset;
+            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalOffset;
             m_character->m_speed = {0,0,0};
         }
         else
@@ -2250,7 +2250,7 @@ void StateController::shimmyRight()
             m_character->m_moveType = MoveType::Climbing;                             // hang on
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
-            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.boundingBox.max[2] + LaraHangVerticalOffset;
+            m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalOffset;
             m_character->m_speed = {0,0,0};
         }
         else
@@ -2279,7 +2279,7 @@ void StateController::onwaterExit()
 {
     m_character->m_command.rot[0] *= 0.0;
     m_character->m_bt.no_fix_all = true;
-    m_character->m_bf.animations.onFrame = onFrameSetOnFloorAfterClimb;
+    m_character->m_bf.onFrame = onFrameSetOnFloorAfterClimb;
 }
 
 void StateController::jumpForwardFallBackward()
@@ -2343,7 +2343,7 @@ void StateController::underwaterDiving()
     m_character->m_angles[1] = -45.0;
     m_character->m_command.rot[1] = 0.0;
     m_character->updateTransform();
-    m_character->m_bf.animations.onFrame = onFrameCorrectDivingAngle;
+    m_character->m_bf.onFrame = onFrameCorrectDivingAngle;
 }
 
 void StateController::freefall()
@@ -2626,7 +2626,7 @@ void StateController::onwaterForward()
         Character::getHeightInfo(glm::vec3(m_character->m_transform[3]), &next_fc);
         m_character->m_transform[3][2] = t;
         setNextState(LaraState::UNDERWATER_FORWARD);
-        m_character->m_bf.animations.onFrame = onFrameSetUnderwater;                          // dive
+        m_character->m_bf.onFrame = onFrameSetUnderwater;                          // dive
     }
     else if(m_character->m_command.move[0] == 1)
     {
@@ -2676,7 +2676,7 @@ void StateController::onwaterForward()
                 {
                     m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
                 }
-                onFrameClimbOutOfWater(m_character, &m_character->m_bf.animations, world::animation::AnimUpdate::NewAnim);
+                onFrameClimbOutOfWater(m_character, world::animation::AnimUpdate::NewAnim);
             }
         }
         else if(!m_character->m_heightInfo.floor_hit || (m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor_point[2] - m_character->m_swimDepth))
@@ -2686,7 +2686,7 @@ void StateController::onwaterForward()
         else
         {
             setNextState(LaraState::WADE_FORWARD);
-            m_character->m_bf.animations.onFrame = onFrameSetOnFloor;                        // to wade
+            m_character->m_bf.onFrame = onFrameSetOnFloor;                        // to wade
         }
     }
     else
@@ -2730,7 +2730,7 @@ void StateController::onwaterLeft()
             {
                 // walk left
                 setNextState(LaraState::WALK_LEFT);
-                m_character->m_bf.animations.onFrame = onFrameSetOnFloor;
+                m_character->m_bf.onFrame = onFrameSetOnFloor;
             }
         }
         else
@@ -2747,30 +2747,28 @@ void StateController::onwaterLeft()
 void StateController::onwaterRight()
 {
     m_character->m_command.rot[0] = 0.0;
-    if(!m_character->m_command.jump)
+    if(m_character->m_command.jump)
     {
-        if(m_character->m_command.move[1] == 1 && m_character->m_command.shift)
-        {
-            if(!m_character->m_heightInfo.floor_hit || (m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor_point[2]))
-            {
-                // swim RIGHT
-                setNextState(LaraState::ONWATER_RIGHT);
-            }
-            else
-            {
-                // walk left
-                setNextState(LaraState::WALK_RIGHT);
-                m_character->m_bf.animations.onFrame = onFrameSetOnFloor;
-            }
-        }
-        else
-        {
-            setNextState(LaraState::ONWATER_STOP);
-        }
+        setNextState(LaraState::UNDERWATER_DIVING);
+        return;
+    }
+
+    if(m_character->m_command.move[1] != 1 || m_character->m_command.shift)
+    {
+        setNextState(LaraState::ONWATER_STOP);
+        return;
+    }
+
+    if(!m_character->m_heightInfo.floor_hit || (m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor_point[2]))
+    {
+        // swim RIGHT
+        setNextState(LaraState::ONWATER_RIGHT);
     }
     else
     {
-        setNextState(LaraState::UNDERWATER_DIVING);
+        // walk left
+        setNextState(LaraState::WALK_RIGHT);
+        m_character->m_bf.onFrame = onFrameSetOnFloor;
     }
 }
 
@@ -2779,7 +2777,7 @@ void StateController::crouchIdle()
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     glm::vec3 move( m_character->m_transform[3] );
-    move[2] += 0.5f * (m_character->m_bf.boundingBox.max[2] - m_character->m_bf.boundingBox.min[2]);
+    move[2] += 0.5f * (m_character->m_bf.getBoundingBox().max[2] - m_character->m_bf.getBoundingBox().min[2]);
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(move, &next_fc);
 
@@ -2860,7 +2858,7 @@ void StateController::crawlIdle()
         if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
         {
             glm::vec3 global_offset( m_character->m_transform[1] * CrawlForwardOffset );
-            global_offset[2] += 0.5f * (m_character->m_bf.boundingBox.max[2] + m_character->m_bf.boundingBox.min[2]);
+            global_offset[2] += 0.5f * (m_character->m_bf.getBoundingBox().max[2] + m_character->m_bf.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
@@ -2877,7 +2875,7 @@ void StateController::crawlIdle()
         if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
         {
             glm::vec3 global_offset( m_character->m_transform[1] * -CrawlForwardOffset );
-            global_offset[2] += 0.5f * (m_character->m_bf.boundingBox.max[2] + m_character->m_bf.boundingBox.min[2]);
+            global_offset[2] += 0.5f * (m_character->m_bf.getBoundingBox().max[2] + m_character->m_bf.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
@@ -2904,7 +2902,7 @@ void StateController::crawlIdle()
                 m_character->m_heightInfo.ceiling_normale = next_fc.ceiling_normale;
                 m_character->m_heightInfo.ceiling_obj = next_fc.ceiling_obj;
 
-                m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 1.5f * m_character->m_bf.boundingBox.max[2]);
+                m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 1.5f * m_character->m_bf.getBoundingBox().max[2]);
                 m_character->m_transform[3] = temp;                                       // restore entity position
                 if(m_character->m_climb.can_hang)
                 {
@@ -2926,7 +2924,7 @@ void StateController::crawlIdle()
 void StateController::crawlToClimb()
 {
     m_character->m_bt.no_fix_all = true;
-    m_character->m_bf.animations.onFrame = onFrameCrawlToClimb;
+    m_character->m_bf.onFrame = onFrameCrawlToClimb;
 }
 
 void StateController::crawlForward()
@@ -2942,7 +2940,7 @@ void StateController::crawlForward()
         return;
     }
     glm::vec3 global_offset( m_character->m_transform[1] * CrawlForwardOffset );
-    global_offset[2] += 0.5f * (m_character->m_bf.boundingBox.max[2] + m_character->m_bf.boundingBox.min[2]);
+    global_offset[2] += 0.5f * (m_character->m_bf.getBoundingBox().max[2] + m_character->m_bf.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(global_offset, &next_fc);
@@ -2972,7 +2970,7 @@ void StateController::crawlBack()
         return;
     }
     glm::vec3 global_offset( m_character->m_transform[1] * -CrawlForwardOffset );
-    global_offset[2] += 0.5f * (m_character->m_bf.boundingBox.max[2] + m_character->m_bf.boundingBox.min[2]);
+    global_offset[2] += 0.5f * (m_character->m_bf.getBoundingBox().max[2] + m_character->m_bf.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(global_offset, &next_fc);
@@ -2992,7 +2990,7 @@ void StateController::crawlTurnLeft()
 {
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-    m_character->m_command.rot[0] *= ((m_character->m_bf.animations.current_frame > 3) && (m_character->m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
+    m_character->m_command.rot[0] *= ((m_character->m_bf.getCurrentFrame() > 3) && (m_character->m_bf.getCurrentFrame() < 14)) ? (1.0f) : (0.0f);
 
     if((m_character->m_command.move[1] != -1) || m_character->m_response.killed)
     {
@@ -3004,7 +3002,7 @@ void StateController::crawlTurnRight()
 {
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-    m_character->m_command.rot[0] *= ((m_character->m_bf.animations.current_frame > 3) && (m_character->m_bf.animations.current_frame < 14)) ? (1.0f) : (0.0f);
+    m_character->m_command.rot[0] *= ((m_character->m_bf.getCurrentFrame() > 3) && (m_character->m_bf.getCurrentFrame() < 14)) ? (1.0f) : (0.0f);
 
     if((m_character->m_command.move[1] != 1) || m_character->m_response.killed)
     {
@@ -3015,7 +3013,7 @@ void StateController::crawlTurnRight()
 void StateController::crouchTurnLeftRight()
 {
     m_character->m_bt.no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-    m_character->m_command.rot[0] *= ((m_character->m_bf.animations.current_frame > 3) && (m_character->m_bf.animations.current_frame < 23)) ? (0.6f) : (0.0f);
+    m_character->m_command.rot[0] *= ((m_character->m_bf.getCurrentFrame() > 3) && (m_character->m_bf.getCurrentFrame() < 23)) ? (0.6f) : (0.0f);
 
     if((m_character->m_command.move[1] == 0) || m_character->m_response.killed)
     {
@@ -3028,12 +3026,12 @@ void StateController::monkeyswingIdle()
     m_character->m_command.rot[0] = 0.0;
     m_character->m_moveDir = MoveDirection::Stay;
     ///@FIXME: stick for TR3+ monkey swing fix... something wrong with anim 150
-    if(m_character->m_command.action && (m_character->m_moveType != MoveType::Monkeyswing) && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.boundingBox.max[2] > m_character->m_heightInfo.ceiling_point[2] - 96.0))
+    if(m_character->m_command.action && (m_character->m_moveType != MoveType::Monkeyswing) && m_character->m_heightInfo.ceiling_climb && (m_character->m_heightInfo.ceiling_hit) && (m_character->m_transform[3][2] + m_character->m_bf.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling_point[2] - 96.0))
     {
         m_character->m_moveType = MoveType::Monkeyswing;
         m_character->setAnimation(TR_ANIMATION_LARA_MONKEY_IDLE, 0);
         setNextState(LaraState::MONKEYSWING_IDLE);
-        m_character->m_transform[3][2] = m_character->m_heightInfo.ceiling_point[2] - m_character->m_bf.boundingBox.max[2];
+        m_character->m_transform[3][2] = m_character->m_heightInfo.ceiling_point[2] - m_character->m_bf.getBoundingBox().max[2];
     }
 
     if((m_character->m_moveType != MoveType::Monkeyswing) || !m_character->m_command.action)
@@ -3148,7 +3146,7 @@ void StateController::tightropeEnter()
     m_character->m_command.rot[0] = 0.0;
     m_character->m_bt.no_fix_all = true;
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_bf.animations.onFrame = onFrameToTightrope;
+    m_character->m_bf.onFrame = onFrameToTightrope;
     setNextState(LaraState::TIGHTROPE_IDLE);
 }
 
@@ -3157,7 +3155,7 @@ void StateController::tightropeExit()
     m_character->m_command.rot[0] = 0.0;
     m_character->m_bt.no_fix_all = true;
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_bf.animations.onFrame = onFrameFromTightrope;
+    m_character->m_bf.onFrame = onFrameFromTightrope;
     setNextState(LaraState::STOP);
 }
 
@@ -3165,7 +3163,7 @@ void StateController::tightropeIdle()
 {
     m_character->m_command.rot[0] = 0.0;
 
-    if(m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_STAND)
+    if(m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_STAND)
     {
         if(m_character->m_response.lean == LeanType::Left)
         {
@@ -3229,18 +3227,18 @@ void StateController::tightropeBalancingLeft()
 {
     m_character->m_command.rot[0] = 0.0;
 
-    if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_LEFT) && isLastFrame())
+    if((m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_FALL_LEFT) && isLastFrame())
     {
         m_character->m_moveType = MoveType::FreeFalling;
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(-256.0, 192.0, -640.0, 0);
     }
-    else if(   m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
-            && m_character->m_bf.animations.current_frame >= static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2)
+    else if(   m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
+            && m_character->m_bf.getCurrentFrame() >= static_cast<int>(m_character->m_bf.getCurrentAnimationFrame().keyFrames.size() / 2)
             && m_character->m_command.move[1] == 1)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_bf.getCurrentAnimationFrame().keyFrames.size()-m_character->m_bf.getCurrentFrame());
     }
 }
 
@@ -3248,18 +3246,18 @@ void StateController::tightropeBalancingRight()
 {
     m_character->m_command.rot[0] = 0.0;
 
-    if((m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_RIGHT) && isLastFrame())
+    if((m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_FALL_RIGHT) && isLastFrame())
     {
         m_character->m_moveType = MoveType::FreeFalling;
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(256.0, 192.0, -640.0, 0);
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
     }
-    else if(   m_character->m_bf.animations.current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
-            && m_character->m_bf.animations.current_frame >= static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size() / 2)
+    else if(   m_character->m_bf.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
+            && m_character->m_bf.getCurrentFrame() >= static_cast<int>(m_character->m_bf.getCurrentAnimationFrame().keyFrames.size() / 2)
             && m_character->m_command.move[1] == -1)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()-m_character->m_bf.animations.current_frame);
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_bf.getCurrentAnimationFrame().keyFrames.size()-m_character->m_bf.getCurrentFrame());
     }
 }
 
@@ -3294,14 +3292,18 @@ bool StateController::isLowVerticalSpace() const
 
 bool StateController::isLastFrame() const
 {
-    return static_cast<int>(m_character->m_bf.animations.getCurrentAnimationFrame().frames.size()) <= m_character->m_bf.animations.current_frame + 1;
+    return static_cast<int>(m_character->m_bf.getCurrentAnimationFrame().keyFrames.size()) <= m_character->m_bf.getCurrentFrame() + 1;
 }
 
 void StateController::setNextState(LaraState state)
 {
     if(m_handlers.find(state) == m_handlers.end())
-        BOOST_THROW_EXCEPTION( std::runtime_error("Invalid state") );
-    m_character->m_bf.animations.next_state = state;
+    {
+        BOOST_LOG_TRIVIAL(error) << "Invalid state: " << static_cast<int>(state);
+        return;
+    }
+
+    m_character->m_bf.setNextState( state );
 }
 
 } // namespace world

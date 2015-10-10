@@ -25,14 +25,14 @@ struct BoundingBox
         return max-min;
     }
 
-    void adjust(const glm::vec3& v) noexcept
+    void adjust(const glm::vec3& v, glm::float_t r = 0) noexcept
     {
         for(int i = 0; i < 3; ++i)
         {
-            if(min[i] > v[i])
-                min[i] = v[i];
-            if(max[i] < v[i])
-                max[i] = v[i];
+            if(min[i] > v[i]-r)
+                min[i] = v[i]-r;
+            if(max[i] < v[i]+r)
+                max[i] = v[i]+r;
         }
     }
 
@@ -55,10 +55,16 @@ struct BoundingBox
         return true;
     }
 
-    glm::float_t getInnerRadius() const
+    glm::float_t getInnerDiameter() const
     {
         glm::vec3 d = getDiameter();
         return std::min(d[0], std::min(d[1], d[2]));
+    }
+
+    glm::float_t getOuterDiameter() const
+    {
+        glm::vec3 d = getDiameter();
+        return std::max(d[0], std::max(d[1], d[2]));
     }
 };
 

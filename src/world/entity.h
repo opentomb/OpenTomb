@@ -149,7 +149,7 @@ public:
     btScalar                            m_inertiaLinear = 0;     // linear inertia
     btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
 
-    animation::SSBoneFrame m_bf;                 // current boneframe with full frame information
+    animation::Skeleton m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     glm::vec3 m_angles = { 0,0,0 };
     glm::mat4 m_transform{ 1.0f }; // GL transformation matrix
@@ -216,7 +216,7 @@ public:
 
     void doAnimCommand(const animation::AnimCommand& command);
     void processSector();
-    void setAnimation(int animation, int frame = 0, int another_model = -1);
+    void setAnimation(int animation, int frame = 0);
     void moveForward(glm::float_t dist);
     void moveStrafe(glm::float_t dist);
     void moveVertical(glm::float_t dist);
@@ -234,7 +234,7 @@ public:
     virtual void fixPenetrations(const glm::vec3* move);
     virtual glm::vec3 getRoomPos() const
     {
-        return glm::vec3(m_transform * glm::vec4(m_bf.boundingBox.getCenter(), 1.0f));
+        return glm::vec3(m_transform * glm::vec4(m_bf.getBoundingBox().getCenter(), 1.0f));
     }
     virtual void transferToRoom(Room *room);
 
@@ -254,7 +254,7 @@ public:
 
     virtual glm::vec3 camPosForFollowing(glm::float_t dz)
     {
-        glm::vec4 cam_pos = m_transform * m_bf.bone_tags.front().full_transform[3];
+        glm::vec4 cam_pos = m_transform * m_bf.getRootTransform()[3];
         cam_pos[2] += dz;
         return glm::vec3(cam_pos);
     }
@@ -267,7 +267,6 @@ public:
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);
-    void slerpBones(glm::float_t lerp);
     void lerpTransform(glm::float_t lerp);
 
     static glm::float_t getInnerBBRadius(const core::BoundingBox& bb)

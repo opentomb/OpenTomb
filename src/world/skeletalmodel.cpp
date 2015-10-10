@@ -24,7 +24,7 @@ void SkeletalModel::interpolateFrames()
 
     for(uint16_t i = 0; i < animations.size(); i++, anim++)
     {
-        int length = anim->frames.size();
+        int length = anim->keyFrames.size();
         int rate = anim->original_frame_rate;
         if(length > 1 && rate > 1)
         {
@@ -39,20 +39,20 @@ void SkeletalModel::interpolateFrames()
 
                     glm::float_t lerp = static_cast<glm::float_t>(j) / static_cast<glm::float_t>(rate);
 
-                    anim->frames[destIdx + j].center = glm::mix(anim->frames[srcIdx].center, anim->frames[srcIdx + 1].center, lerp);
-                    anim->frames[destIdx + j].position = glm::mix(anim->frames[srcIdx].position, anim->frames[srcIdx + 1].position, lerp);
-                    anim->frames[destIdx + j].boundingBox.max = glm::mix(anim->frames[srcIdx].boundingBox.max, anim->frames[srcIdx + 1].boundingBox.max, lerp);
-                    anim->frames[destIdx + j].boundingBox.min = glm::mix(anim->frames[srcIdx].boundingBox.min, anim->frames[srcIdx + 1].boundingBox.min, lerp);
+                    anim->keyFrames[destIdx + j].center = glm::mix(anim->keyFrames[srcIdx].center, anim->keyFrames[srcIdx + 1].center, lerp);
+                    anim->keyFrames[destIdx + j].position = glm::mix(anim->keyFrames[srcIdx].position, anim->keyFrames[srcIdx + 1].position, lerp);
+                    anim->keyFrames[destIdx + j].boundingBox.max = glm::mix(anim->keyFrames[srcIdx].boundingBox.max, anim->keyFrames[srcIdx + 1].boundingBox.max, lerp);
+                    anim->keyFrames[destIdx + j].boundingBox.min = glm::mix(anim->keyFrames[srcIdx].boundingBox.min, anim->keyFrames[srcIdx + 1].boundingBox.min, lerp);
 
                     for(uint16_t k = 0; k < mesh_count; k++)
                     {
-                        anim->frames[destIdx + j].bone_tags[k].offset = glm::mix(anim->frames[srcIdx].bone_tags[k].offset, anim->frames[srcIdx + 1].bone_tags[k].offset, lerp);
-                        anim->frames[destIdx + j].bone_tags[k].qrotate = glm::slerp(anim->frames[srcIdx].bone_tags[k].qrotate, anim->frames[srcIdx + 1].bone_tags[k].qrotate, lerp);
+                        anim->keyFrames[destIdx + j].boneKeyFrames[k].offset = glm::mix(anim->keyFrames[srcIdx].boneKeyFrames[k].offset, anim->keyFrames[srcIdx + 1].boneKeyFrames[k].offset, lerp);
+                        anim->keyFrames[destIdx + j].boneKeyFrames[k].qrotate = glm::slerp(anim->keyFrames[srcIdx].boneKeyFrames[k].qrotate, anim->keyFrames[srcIdx + 1].boneKeyFrames[k].qrotate, lerp);
                     }
                 }
                 if(destIdx > 0)
                 {
-                    anim->frames[destIdx] = anim->frames[srcIdx];
+                    anim->keyFrames[destIdx] = anim->keyFrames[srcIdx];
                 }
 
                 destIdx -= rate;
@@ -155,5 +155,32 @@ void SkeletonCopyMeshes2(SkeletalModel::MeshTreeTag *dst, SkeletalModel::MeshTre
     }
 }
 
+/**
+* Find a possible state change to \c stateid
+* \param[in]      stateid  the desired target state
+* \param[in,out]  animid   reference to anim id, receives found anim
+* \param[in,out]  frameid  reference to frame id, receives found frame
+* \return  true if state is found, false otherwise
+*/
+bool SkeletalModel::findStateChange(LaraState stateid, uint16_t& animid_inout, uint16_t& frameid_inout)
+{
+    for(const animation::StateChange& stc : animations[animid_inout].stateChanges)
+    {
+        if(stc.id == stateid)
+        {
+            for(const animation::AnimDispatch& dispatch : stc.anim_dispatch)
+            {
+                if(   frameid_inout >= dispatch.frame_low
+                   && frameid_inout <= dispatch.frame_high)
+                {
+                    animid_inout = dispatch.next_anim;
+                    frameid_inout = dispatch.next_frame;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 } // namespace world

@@ -40,22 +40,18 @@ void ItemNotifier::Animate()
         return;
     }
 
-    if(mRotateTime)
+    if(!util::fuzzyZero(m_rotationSpeed))
     {
-        mCurrRotX += (engine::engine_frame_time * mRotateTime);
-        //mCurrRotY += (engine_frame_time * mRotateTime);
-
-        mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0f) : (mCurrRotX);
-        //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
+        m_currentRotation.x = glm::mod(m_currentRotation.x + engine::engine_frame_time * m_rotationSpeed, glm::radians(360.0f));
     }
 
-    if(mCurrTime == 0)
+    if(util::fuzzyZero(mCurrTime))
     {
         float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
         step = std::max(0.5f, step);
 
         mCurrPosX -= step;
-        mCurrPosX = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
+        mCurrPosX = glm::min(mCurrPosX, mEndPosX);
 
         if(mCurrPosX == mEndPosX)
             mCurrTime += engine::engine_frame_time;
@@ -70,7 +66,7 @@ void ItemNotifier::Animate()
         step = std::max(0.5f, step);
 
         mCurrPosX += step;
-        mCurrPosX = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);
+        mCurrPosX = glm::min(mCurrPosX, mStartPosX);
 
         if(mCurrPosX == mStartPosX)
             Reset();
@@ -81,8 +77,7 @@ void ItemNotifier::Reset()
 {
     mActive = false;
     mCurrTime = 0.0;
-    mCurrRotX = 0.0;
-    mCurrRotY = 0.0;
+    m_currentRotation = {0,0};
 
     mEndPosX = (static_cast<float>(engine::screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
     mPosY = (static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
@@ -99,24 +94,24 @@ void ItemNotifier::Draw()
     if(!item)
         return;
 
-    int anim = item->bf->animations.current_animation;
-    int frame = item->bf->animations.current_frame;
-    float time = item->bf->animations.frame_time;
+    const auto anim = item->bf->getCurrentAnimation();
+    const auto frame = item->bf->getCurrentFrame();
+    const auto time = item->bf->getFrameTime();
 
-    item->bf->animations.current_animation = 0;
-    item->bf->animations.current_frame = 0;
-    item->bf->animations.frame_time = 0.0;
+    item->bf->setCurrentAnimation(0);
+    item->bf->setCurrentFrame(0);
+    item->bf->setFrameTime(0);
 
     item->bf->itemFrame(0.0);
     glm::mat4 matrix(1.0f);
     matrix = glm::translate(matrix, { mCurrPosX, mPosY, -2048.0 });
-    matrix = glm::rotate(matrix, glm::radians(mCurrRotX + mRotX), { 0,1,0 });
-    matrix = glm::rotate(matrix, glm::radians(mCurrRotY + mRotY), { 1,0,0 });
+    matrix = glm::rotate(matrix, m_currentRotation.x + m_rotation.x, { 0,1,0 });
+    matrix = glm::rotate(matrix, m_currentRotation.y + m_rotation.y, { 1,0,0 });
     render::renderItem(item->bf.get(), mSize, matrix, gui::guiProjectionMatrix);
 
-    item->bf->animations.current_animation = anim;
-    item->bf->animations.current_frame = frame;
-    item->bf->animations.frame_time = time;
+    item->bf->setCurrentAnimation(anim);
+    item->bf->setCurrentFrame(frame);
+    item->bf->setFrameTime(time);
 }
 
 void ItemNotifier::SetPos(float X, float Y)
@@ -125,10 +120,9 @@ void ItemNotifier::SetPos(float X, float Y)
     mAbsPosY = 1000.0f - Y;
 }
 
-void ItemNotifier::SetRot(float X, float Y)
+void ItemNotifier::SetRot(glm::float_t X, glm::float_t Y)
 {
-    mRotX = X;
-    mRotY = Y;
+    m_rotation = {X,Y};
 }
 
 void ItemNotifier::SetSize(float size)
@@ -138,13 +132,13 @@ void ItemNotifier::SetSize(float size)
 
 void ItemNotifier::SetRotateTime(float time)
 {
-    mRotateTime = (1000.0f / time) * 360.0f;
+    m_rotationSpeed = (1000.0f / time) * glm::radians(360.0f);
 }
 
 void initNotifier()
 {
     g_notifier.SetPos(850.0, 850.0);
-    g_notifier.SetRot(180.0, 270.0);
+    g_notifier.SetRot(glm::radians(180.0f), glm::radians(270.0f));
     g_notifier.SetSize(128.0);
     g_notifier.SetRotateTime(2500.0);
 }

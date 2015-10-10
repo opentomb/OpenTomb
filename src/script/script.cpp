@@ -51,9 +51,9 @@ void lua_DumpModel(int id)
         return;
     }
 
-    for(int i = 0; i < sm->mesh_count; i++)
+    for(size_t i = 0; i < sm->mesh_count; i++)
     {
-        Console::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->m_id);
+        Console::instance().printf("mesh[%d] = %d", static_cast<int>(i), sm->mesh_tree[i].mesh_base->m_id);
     }
 }
 
@@ -100,7 +100,7 @@ void lua_SetModelCollisionMapSize(int id, int size)
         return;
     }
 
-    if(size >= 0 && size < model->mesh_count)
+    if(size >= 0 && static_cast<size_t>(size) < model->mesh_count)
     {
         model->collision_map.resize(size);
     }
@@ -116,8 +116,10 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
         return;
     }
 
-    if((arg >= 0) && (static_cast<size_t>(arg) < model->collision_map.size()) &&
-       (val >= 0) && (val < model->mesh_count))
+    if(   arg >= 0
+       && static_cast<size_t>(arg) < model->collision_map.size()
+       && val >= 0
+       && static_cast<size_t>(val) < model->mesh_count)
     {
         model->collision_map[arg] = val;
     }
@@ -279,7 +281,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     glm::vec3 move = ent->applyGravity(time);
 
     engine::BtEngineClosestRayResultCallback cb(ent.get());
-    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.center, 1.0f));
+    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.getCenter(), 1.0f));
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
@@ -317,9 +319,9 @@ int lua_GetEntityModelID(int id)
     if(ent == nullptr)
         return -1;
 
-    if(ent->m_bf.animations.model)
+    if(ent->m_bf.getModel())
     {
-        return ent->m_bf.animations.model->id;
+        return ent->m_bf.getModel()->id;
     }
     return -1;
 }
@@ -796,10 +798,10 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
 
     if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
     {
-        frame = static_cast<int>(model->animations[anim].frames.size()) + frame;
+        frame = static_cast<int>(model->animations[anim].keyFrames.size()) + frame;
     }
 
-    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].frames.size()))
+    if(frame < 0 || frame + 1 > static_cast<int>(model->animations[anim].keyFrames.size()))
     {
         Console::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return;
@@ -811,7 +813,7 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
         return;
     }
 
-    model->animations[anim].frames[frame].animCommands.clear();
+    model->animations[anim].keyFrames[frame].animCommands.clear();
 
     for(int i = 1; table[i].is<lua::Table>(); i++)
     {
@@ -820,7 +822,7 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
            && table[i][3].is<lua::Integer>()
            && table[i][4].is<lua::Integer>())
         {
-            model->animations[anim].frames[frame].animCommands.push_back({ table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt() });
+            model->animations[anim].keyFrames[frame].animCommands.push_back({ table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt() });
         }
         else
         {
@@ -1093,9 +1095,9 @@ void lua_SetEntityScaling(int id, float x, float y, float z)
     {
         ent->m_scaling = { x,y,z };
 
-        if(!ent->m_bf.bone_tags.empty() && !ent->m_bt.bt_body.empty())
+        if(ent->m_bf.getBoneCount()>0 && !ent->m_bt.bt_body.empty())
         {
-            for(size_t i = 0; i < ent->m_bf.bone_tags.size(); i++)
+            for(size_t i = 0; i < ent->m_bf.getBoneCount(); i++)
             {
                 if(ent->m_bt.bt_body[i])
                 {
@@ -1172,7 +1174,7 @@ void lua_MoveEntityToSink(int id, int sink_index)
     }
 
     glm::float_t dist = glm::distance(ent_pos, sink_pos);
-    if(dist == 0.0)
+    if(util::fuzzyZero(dist))
         dist = 1.0; // Prevents division by zero.
 
     glm::vec3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
@@ -1199,7 +1201,7 @@ void lua_MoveEntityToEntity(int id1, int id2, float speed_mult, lua::Value ignor
     ent2_pos[2] = ent2->m_transform[3][2];
 
     glm::float_t dist = glm::distance(ent1_pos, ent2_pos);
-    if(dist == 0.0)
+    if(util::fuzzyZero(dist))
         dist = 1.0; // Prevents division by zero.
 
     glm::vec3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
@@ -1269,6 +1271,8 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
                 theta      = glm::atan(facing.x, facing.z);
                 break;
         }
+
+        BOOST_ASSERT(targ_angle != nullptr);
 
         theta = glm::degrees(theta);
         if(add_angle_.is<lua::Number>())
@@ -1400,7 +1404,7 @@ void lua_SetEntitySpeed(int id, float vx, lua::Value vy, lua::Value vz)
     }
 }
 
-void lua_SetEntityAnim(int id, int anim, lua::Value frame, lua::Value otherModel)
+void lua_SetEntityAnim(int id, int anim, lua::Value frame)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1410,9 +1414,7 @@ void lua_SetEntityAnim(int id, int anim, lua::Value frame, lua::Value otherModel
         return;
     }
 
-    if(frame.is<lua::Number>() && otherModel.is<lua::Number>())
-        ent->setAnimation(anim, frame, otherModel);
-    else if(frame.is<lua::Number>())
+    if(frame.is<lua::Number>())
         ent->setAnimation(anim, frame);
     else
         ent->setAnimation(anim);
@@ -1428,7 +1430,7 @@ void lua_SetEntityAnimFlag(int id, uint16_t mode)
         return;
     }
 
-    ent->m_bf.animations.mode = static_cast<world::animation::SSAnimationMode>(mode);
+    ent->m_bf.setAnimationMode(static_cast<world::animation::AnimationMode>(mode));
 }
 
 void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
@@ -1441,13 +1443,13 @@ void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
         return;
     }
 
-    if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_bf.bone_tags.size()))
+    if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_bf.getBoneCount()))
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
-    ent->m_bf.bone_tags[bone_id].body_part = body_part_flag;
+    ent->m_bf.setBodyPartFlag(bone_id, body_part_flag);
 }
 
 void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
@@ -1460,7 +1462,7 @@ void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
         return;
     }
 
-    if((bone_id < 0) || (bone_id >= model->mesh_count))
+    if((bone_id < 0) || (static_cast<size_t>(bone_id) >= model->mesh_count))
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
@@ -1479,12 +1481,11 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
         return{};
     }
 
-    return std::tuple<int16_t, int16_t, uint32_t>
-    {
-        ent->m_bf.animations.current_animation,
-            ent->m_bf.animations.current_frame,
-            static_cast<uint32_t>(ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size())
-    };
+    return std::make_tuple(
+                ent->m_bf.getCurrentAnimation(),
+                ent->m_bf.getCurrentFrame(),
+                static_cast<uint32_t>(ent->m_bf.getModel()->animations[ent->m_bf.getCurrentAnimation()].keyFrames.size())
+            );
 }
 
 bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
@@ -1991,7 +1992,7 @@ void lua_SetEntityResponse(int id, int response, int value)
     }
 }
 
-int16_t lua_GetEntityState(int id)
+int lua_GetEntityState(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -2001,7 +2002,7 @@ int16_t lua_GetEntityState(int id)
         return -1;
     }
 
-    return static_cast<int16_t>(ent->m_bf.animations.last_state);
+    return static_cast<int>(ent->m_bf.getLastState());
 }
 
 uint32_t lua_GetEntityModel(int id)
@@ -2014,7 +2015,7 @@ uint32_t lua_GetEntityModel(int id)
         return -1;
     }
 
-    return ent->m_bf.animations.model->id;
+    return ent->m_bf.getModel()->id;
 }
 
 void lua_SetEntityState(int id, int16_t value, lua::Value next)
@@ -2027,9 +2028,9 @@ void lua_SetEntityState(int id, int16_t value, lua::Value next)
         return;
     }
 
-    ent->m_bf.animations.next_state = static_cast<world::LaraState>(value);
+    ent->m_bf.setNextState( static_cast<world::LaraState>(value) );
     if(next.is<lua::Integer>())
-        ent->m_bf.animations.last_state = static_cast<world::LaraState>(next.toInt());
+        ent->m_bf.setLastState( static_cast<world::LaraState>(next.toInt()) );
 }
 
 void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag)
@@ -2073,24 +2074,15 @@ uint32_t lua_GetEntityMeshCount(int id)
         return 0;
     }
 
-    return static_cast<uint32_t>( ent->m_bf.bone_tags.size() );
+    return static_cast<uint32_t>( ent->m_bf.getBoneCount() );
 }
 
 void lua_SetEntityMeshswap(int id_dest, int id_src)
 {
-    std::shared_ptr<world::Entity> ent_dest;
-    world::SkeletalModel* model_src;
+    std::shared_ptr<world::Entity>  ent_dest = engine::engine_world.getEntityByID(id_dest);
+    world::SkeletalModel* model_src = engine::engine_world.getModelByID(id_src);
 
-    ent_dest = engine::engine_world.getEntityByID(id_dest);
-    model_src = engine::engine_world.getModelByID(id_src);
-
-    size_t meshes_to_copy = (ent_dest->m_bf.bone_tags.size() > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->m_bf.bone_tags.size());
-
-    for(size_t i = 0; i < meshes_to_copy; i++)
-    {
-        ent_dest->m_bf.bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
-        ent_dest->m_bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
-    }
+    ent_dest->m_bf.copyMeshBinding(model_src);
 }
 
 void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
@@ -2098,7 +2090,7 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
     world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if((bone >= 0) && (bone < sm->mesh_count))
+        if(bone >= 0 && static_cast<size_t>(bone) < sm->mesh_count)
         {
             sm->mesh_tree[bone].replace_mesh = flag;
         }
@@ -2118,7 +2110,7 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, bool flag)
     world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if((bone >= 0) && (bone < sm->mesh_count))
+        if((bone >= 0) && (static_cast<size_t>(bone) < sm->mesh_count))
         {
             sm->mesh_tree[bone].replace_anim = flag;
         }
@@ -2149,7 +2141,7 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
         return;
     }
 
-    if((bone1 >= 0) && (bone1 < sm1->mesh_count) && (bone2 >= 0) && (bone2 < sm2->mesh_count))
+    if((bone1 >= 0) && (static_cast<size_t>(bone1) < sm1->mesh_count) && (bone2 >= 0) && (static_cast<size_t>(bone2) < sm2->mesh_count))
     {
         sm1->mesh_tree[bone1].mesh_base = sm2->mesh_tree[bone2].mesh_base;
     }
@@ -2163,7 +2155,7 @@ void lua_CreateEntityGhosts(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (ent->m_bf.bone_tags.size() > 0))
+    if(ent && (ent->m_bf.getBoneCount() > 0))
     {
         ent->createGhosts();
     }
@@ -2173,7 +2165,7 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->m_bf.getBoneCount()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         glm::float_t t = glm::radians(ent->m_angles[0]);
 
@@ -2213,7 +2205,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     uint16_t argn = 3;
     bool dynamic = false;
 
-    if(ent && ent->m_bf.bone_tags.size() >= body_number)
+    if(ent && ent->m_bf.getBoneCount() >= body_number)
     {
         for(lua_Unsigned i = 0; i < body_number; i++)
         {
@@ -2283,7 +2275,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(ent && (body_number < ent->m_bf.getBoneCount()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         glm::float_t t = glm::float_t(ent->m_angles[0]);
         glm::float_t ang1 = glm::sin(t);
@@ -2812,10 +2804,10 @@ void ScriptEngine::exposeConstants()
     EXPOSE_C(SECTOR_MATERIAL_OLDMETAL);
 
     m_state.set("AnimMode", lua::Table());
-    m_state["AnimMode"].set("NormalControl", static_cast<int>(world::animation::SSAnimationMode::NormalControl));
-    m_state["AnimMode"].set("LoopLastFrame", static_cast<int>(world::animation::SSAnimationMode::LoopLastFrame));
-    m_state["AnimMode"].set("WeaponCompat", static_cast<int>(world::animation::SSAnimationMode::WeaponCompat));
-    m_state["AnimMode"].set("Locked", static_cast<int>(world::animation::SSAnimationMode::Locked));
+    m_state["AnimMode"].set("NormalControl", static_cast<int>(world::animation::AnimationMode::NormalControl));
+    m_state["AnimMode"].set("LoopLastFrame", static_cast<int>(world::animation::AnimationMode::LoopLastFrame));
+    m_state["AnimMode"].set("WeaponCompat", static_cast<int>(world::animation::AnimationMode::WeaponCompat));
+    m_state["AnimMode"].set("Locked", static_cast<int>(world::animation::AnimationMode::Locked));
 
     using engine::ACT_ACTION;
     EXPOSE_CC(ACT_ACTION);

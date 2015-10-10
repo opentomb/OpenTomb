@@ -22,7 +22,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // No setup or parent to link to - bypass function.
 
     if(!parent_entity || !setup ||
-       setup->m_linkBody >= parent_entity->m_bf.bone_tags.size() ||
+       setup->m_linkBody >= parent_entity->m_bf.getBoneCount() ||
        !(parent_entity->m_bt.bt_body[setup->m_linkBody]))
     {
         return false;
@@ -46,7 +46,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup initial position / angles.
 
-    glm::mat4 owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[m_ownerBody].full_transform;
+    glm::mat4 owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.getBones()[m_ownerBody].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     m_elements.clear();
@@ -235,7 +235,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
     size_t totalElements = 0;
 
     // Gather size information
-    for(int i = 0; i < model->mesh_count; i++)
+    for(size_t i = 0; i < model->mesh_count; i++)
     {
         const std::shared_ptr<core::BaseMesh> original = model->mesh_tree[i].mesh_base;
 
@@ -257,7 +257,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
     // Copy information
     std::vector<uint32_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
     m_mesh->m_vertices.clear();
-    for(int i = 0; i < model->mesh_count; i++)
+    for(size_t i = 0; i < model->mesh_count; i++)
     {
         const std::shared_ptr<core::BaseMesh> original = model->mesh_tree[i].mesh_base;
 

@@ -91,8 +91,8 @@ void Render::renderSkyBox(const glm::mat4& modelViewProjectionMatrix)
     {
         glDepthMask(GL_FALSE);
         glm::mat4 tr(1.0f);
-        tr = glm::translate(tr, m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset);
-        tr *= glm::mat4_cast( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
+        tr = glm::translate(tr, m_cam->getPosition() + m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().offset);
+        tr *= glm::mat4_cast( m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().qrotate );
         glm::mat4 fullView = modelViewProjectionMatrix * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -325,9 +325,9 @@ void Render::renderBSPBackToFront(loader::BlendingMode& currentTransparency, con
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::SSBoneFrame *bframe, const glm::mat4& mvMatrix, const glm::mat4& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::Skeleton *bframe, const glm::mat4& mvMatrix, const glm::mat4& mvpMatrix)
 {
-    for(const world::animation::SSBoneTag& btag : bframe->bone_tags)
+    for(const world::animation::Bone& btag : bframe->getBones())
     {
         glm::mat4 mvTransform = mvMatrix * btag.full_transform;
         glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvTransform));
@@ -345,30 +345,28 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, world::anim
 
 void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity* ent, const glm::mat4& mvMatrix, const glm::mat4& pMatrix)
 {
-    world::animation::SSBoneTag* btag = ent->m_bf.bone_tags.data();
-
     glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
-    for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++, btag++)
+    for(const world::animation::Bone& btag : ent->m_bf.getBones())
     {
         GLfloat transforms[32];
-        glm::mat4 mvTransforms = mvMatrix * btag->full_transform;
+        glm::mat4 mvTransforms = mvMatrix * btag.full_transform;
         std::copy_n(glm::value_ptr(mvTransforms), 16, &transforms[0]);
 
         // Calculate parent transform
-        const glm::mat4* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
+        const glm::mat4& parentTransform = btag.parent ? btag.parent->full_transform : ent->m_transform;
 
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), btag->offset);
+        glm::mat4 translate = glm::translate(glm::mat4(1.0f), btag.offset);
 
-        glm::mat4 secondTransform = *parentTransform * translate;
+        glm::mat4 secondTransform = parentTransform * translate;
 
         glm::mat4 mvTransforms2 = mvMatrix * secondTransform;
         std::copy_n(glm::value_ptr(mvTransforms2), 16, &transforms[16]);
         glUniformMatrix4fv(shader->model_view, 2, false, transforms);
 
-        if(btag->mesh_skin)
+        if(btag.mesh_skin)
         {
-            renderMesh(btag->mesh_skin);
+            renderMesh(btag.mesh_skin);
         }
     }
 }
@@ -377,7 +375,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
 {
     glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
-    for(uint16_t i = 0; i < ent->m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < ent->m_bf.getBoneCount(); i++)
     {
         glm::mat4 mvTransforms[2];
 
@@ -388,10 +386,10 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
-        world::animation::SSBoneTag &btag = ent->m_bf.bone_tags[i];
-        for(size_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
+        const world::animation::Bone &btag = ent->m_bf.getBones()[i];
+        for(size_t j = 0; j < ent->m_bf.getBoneCount(); j++)
         {
-            if(&(ent->m_bf.bone_tags[j]) == btag.parent)
+            if(&ent->m_bf.getBones()[j] == btag.parent)
             {
                 ent->m_bt.bt_body[j]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr1));
                 break;
@@ -507,14 +505,14 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity, modelViewMatrix, false);
 
-    if(entity->m_bf.animations.model && !entity->m_bf.animations.model->animations.empty())
+    if(entity->m_bf.getModel() && !entity->m_bf.getModel()->animations.empty())
     {
         // base frame offset
         if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
             renderDynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
-            if(entity->m_bf.bone_tags[0].mesh_skin)
+            if(entity->m_bf.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderDynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
@@ -526,7 +524,7 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
             glm::mat4 subModelView = modelViewMatrix * scaledTransform;
             glm::mat4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
-            if(entity->m_bf.bone_tags[0].mesh_skin)
+            if(entity->m_bf.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderSkeletalModelSkin(skinShader, entity, subModelView, projection);
@@ -537,9 +535,8 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
 
 void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity, const glm::mat4& modelViewMatrix, const glm::mat4& modelViewProjectionMatrix)
 {
-    world::animation::SSBoneTag* btag = entity->m_bf.bone_tags.data();
-
-    for(uint16_t i = 0; i < entity->m_bf.bone_tags.size(); i++, btag++)
+    size_t i=0;
+    for(const world::animation::Bone& btag : entity->m_bf.getBones())
     {
         glm::mat4 tr(1.0f);
         entity->m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
@@ -550,11 +547,13 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Enti
         glm::mat4 mvpTransform = modelViewProjectionMatrix * tr;
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
-        renderMesh(btag->mesh_base);
-        if(btag->mesh_slot)
+        renderMesh(btag.mesh_base);
+        if(btag.mesh_slot)
         {
-            renderMesh(btag->mesh_slot);
+            renderMesh(btag.mesh_slot);
         }
+
+        ++i;
     }
 }
 
@@ -570,7 +569,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const glm::mat
     for(size_t h = 0; h < entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        glm::mat4 globalHead(entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform);
+        glm::mat4 globalHead(entity->m_transform * entity->m_bf.getBones()[entity->m_hairs[h]->m_ownerBody].full_transform);
         glm::mat4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
@@ -837,29 +836,29 @@ void Render::drawList()
             if(!ent)
                 continue;
 
-            if(!ent->m_bf.animations.model->has_transparency || !ent->m_visible)
+            if(!ent->m_bf.getModel()->has_transparency || !ent->m_visible)
                 continue;
 
-            for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
+            for(const world::animation::Bone& bone : ent->m_bf.getBones())
             {
-                if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
+                if(!bone.mesh_base->m_transparencyPolygons.empty())
                 {
-                    auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                    render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
+                    auto tr = ent->m_transform * bone.full_transform;
+                    render_dBSP.addNewPolygonList(bone.mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
                 }
             }
         }
     }
 
-    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_bf.animations.model->has_transparency)
+    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_bf.getModel()->has_transparency)
     {
         world::Entity *ent = engine::engine_world.character.get();
-        for(uint16_t j = 0; j < ent->m_bf.bone_tags.size(); j++)
+        for(const world::animation::Bone& bone : ent->m_bf.getBones())
         {
-            if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
+            if(!bone.mesh_base->m_transparencyPolygons.empty())
             {
-                auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
+                auto tr = ent->m_transform * bone.full_transform;
+                render_dBSP.addNewPolygonList(bone.mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
             }
         }
     }
@@ -897,8 +896,8 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->sky_box)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().frames.front().bone_tags.front().offset);
-        tr *= glm::mat4_cast(m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().offset);
+        tr *= glm::mat4_cast(m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().qrotate);
         debugDrawer.drawMeshDebugLines(m_world->sky_box->mesh_tree.front().mesh_base, tr, {}, {}, this);
     }
 
@@ -1206,17 +1205,13 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
     }
 }
 
-void RenderDebugDrawer::drawSkeletalModelDebugLines(world::animation::SSBoneFrame *bframe, const glm::mat4& transform, Render *render)
+void RenderDebugDrawer::drawSkeletalModelDebugLines(const world::animation::Skeleton& skeleton, const glm::mat4& transform, Render *render)
 {
-    if(render->m_drawNormals)
-    {
-        world::animation::SSBoneTag* btag = bframe->bone_tags.data();
-        for(uint16_t i = 0; i < bframe->bone_tags.size(); i++, btag++)
-        {
-            glm::mat4 tr = transform * btag->full_transform;
-            drawMeshDebugLines(btag->mesh_base, tr, {}, {}, render);
-        }
-    }
+    if(!render->m_drawNormals)
+        return;
+
+    for(const world::animation::Bone& bone : skeleton.getBones())
+        drawMeshDebugLines(bone.mesh_base, transform * bone.full_transform, {}, {}, render);
 }
 
 void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* render)
@@ -1239,9 +1234,9 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
         debugDrawer.drawAxis(1000.0, entity->m_transform);
     }
 
-    if(entity->m_bf.animations.model && !entity->m_bf.animations.model->animations.empty())
+    if(entity->m_bf.getModel() && !entity->m_bf.getModel()->animations.empty())
     {
-        debugDrawer.drawSkeletalModelDebugLines(&entity->m_bf, entity->m_transform, render);
+        debugDrawer.drawSkeletalModelDebugLines(entity->m_bf, entity->m_transform, render);
     }
 
     entity->m_wasRenderedLines = true;
@@ -1326,7 +1321,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(world::animation::SSBoneFrame *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
+void renderItem(world::animation::Skeleton *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
 {
     const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
@@ -1335,15 +1330,8 @@ void renderItem(world::animation::SSBoneFrame *bf, glm::float_t size, const glm:
 
     if(size != 0.0)
     {
-        auto bb = bf->boundingBox.getDiameter();
-        if(bb[0] >= bb[1])
-        {
-            size /= ((bb[0] >= bb[2]) ? (bb[0]) : (bb[2]));
-        }
-        else
-        {
-            size /= ((bb[1] >= bb[2]) ? (bb[1]) : (bb[2]));
-        }
+        auto bb = bf->getBoundingBox().getDiameter();
+        size /= glm::max(glm::max(bb[0], bb[1]), bb[2]);
         size *= 0.8f;
 
         glm::mat4 scaledMatrix = glm::mat4(1.0f);

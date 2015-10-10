@@ -390,7 +390,7 @@ bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model
         return false;
     }
 
-    std::unique_ptr<animation::SSBoneFrame> bf(new animation::SSBoneFrame());
+    std::unique_ptr<animation::Skeleton> bf(new animation::Skeleton());
     bf->fromModel(model);
 
     auto item = std::make_shared<BaseItem>();
@@ -459,10 +459,7 @@ core::Sprite* World::getSpriteByID(unsigned int ID)
     return nullptr;
 }
 
-BaseItem::~BaseItem()
-{
-    bf->bone_tags.clear();
-}
+BaseItem::~BaseItem() = default;
 
 void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
 {

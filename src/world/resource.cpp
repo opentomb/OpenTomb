@@ -48,11 +48,11 @@ namespace world
 {
     void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
     {
-        if(ent->m_bf.animations.model != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
+        if(ent->m_bf.getModel() != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
         {
             uint16_t flg;
             int collisionType, collisionShape;
-            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
+            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.getModel()->id);
             ent->setCollisionType(static_cast<world::CollisionType>(collisionType));
             ent->setCollisionShape(static_cast<world::CollisionShape>(collisionShape));
 
@@ -63,9 +63,9 @@ namespace world
 
     void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     {
-        if(ent->m_bf.animations.model)
+        if(ent->m_bf.getModel())
         {
-            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.animations.model->id);
+            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.getModel()->id);
             if(funcName)
                 Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->getId());
         }
@@ -1413,18 +1413,18 @@ namespace world
                          * Per frame commands:
                          */
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        if(pointer[0] < static_cast<int>(af->frames.size()))
+                        if(pointer[0] < static_cast<int>(af->keyFrames.size()))
                         {
-                            af->frames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
+                            af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
                         }
                         // ConsoleInfo::instance().printf("ACmd PLAYSOUND: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                         pointer += 2;
                         break;
 
                     case TR_ANIMCOMMAND_PLAYEFFECT:
-                        if(pointer[0] < static_cast<int>(af->frames.size()))
+                        if(pointer[0] < static_cast<int>(af->keyFrames.size()))
                         {
-                            af->frames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
+                            af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
                         }
                         //                    ConsoleInfo::instance().printf("ACmd FLIPEFFECT: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                         pointer += 2;
@@ -2383,24 +2383,24 @@ namespace world
       */
     void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr)
     {
-        uint16_t *pointer;
-        uint16_t  num_sequences, num_uvrotates;
-        int32_t   uvrotate_script = 0;
-        core::Polygon p0, p;
+        int32_t uvrotate_script = 0;
 
+        core::Polygon p0;
         p0.vertices.resize(3);
+
+        core::Polygon p;
         p.vertices.resize(3);
 
-        pointer = tr->m_animatedTextures.data();
-        num_uvrotates = tr->m_animatedTexturesUvCount;
+        const uint16_t* pointer = tr->m_animatedTextures.data();
+        const uint16_t num_uvrotates = tr->m_animatedTexturesUvCount;
 
-        num_sequences = *(pointer++);   // First word in a stream is sequence count.
+        const uint16_t num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
         world->anim_sequences.resize(num_sequences);
 
-        animation::AnimSeq* seq = world->anim_sequences.data();
-        for(uint16_t i = 0; i < num_sequences; i++, seq++)
+        for(size_t i = 0; i < world->anim_sequences.size(); i++)
         {
+            animation::AnimSeq* seq = &world->anim_sequences[i];
             seq->frames.resize(*(pointer++) + 1);
             seq->frame_list.resize(seq->frames.size());
 
@@ -2413,7 +2413,7 @@ namespace world
             seq->frame_time = 0.0;   // Reset frame time to initial state.
             seq->current_frame = 0;     // Reset current frame to zero.
 
-            for(uint16_t j = 0; j < seq->frames.size(); j++)
+            for(size_t j = 0; j < seq->frames.size(); j++)
             {
                 seq->frame_list[j] = *(pointer++);  // Add one frame.
             }
@@ -3042,9 +3042,8 @@ namespace world
     {
         loader::Animation *tr_animation;
 
-        animation::BoneTag* bone_tag;
-        animation::BoneFrame* bone_frame;
-        SkeletalModel::MeshTreeTag* tree_tag;
+        animation::BoneKeyFrame* bone_tag;
+        animation::SkeletonKeyFrame* bone_frame;
         animation::AnimationFrame* anim;
 
         loader::Moveable *tr_moveable = &tr->m_moveables[model_num];  // original tr structure
@@ -3056,20 +3055,13 @@ namespace world
         }
 
         model->mesh_tree.resize(model->mesh_count);
-        tree_tag = model->mesh_tree.data();
 
-        uint32_t *mesh_index = tr->m_meshIndices.data() + tr_moveable->starting_mesh;
+        const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
 
-        for(uint16_t k = 0; k < model->mesh_count; k++, tree_tag++)
+        for(size_t k = 0; k < model->mesh_count; k++)
         {
+            SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
             tree_tag->mesh_base = world->meshes[mesh_index[k]];
-            tree_tag->mesh_skin = nullptr;  ///@PARANOID: I use calloc for tree_tag's
-            tree_tag->replace_anim = false;
-            tree_tag->replace_mesh = 0x00;
-            tree_tag->body_part = 0x00;
-            tree_tag->offset[0] = 0.0;
-            tree_tag->offset[1] = 0.0;
-            tree_tag->offset[2] = 0.0;
             if(k == 0)
             {
                 tree_tag->flag = 0x02;
@@ -3094,8 +3086,8 @@ namespace world
              * model has no start offset and any animation
              */
             model->animations.resize(1);
-            model->animations.front().frames.resize(1);
-            bone_frame = model->animations.front().frames.data();
+            model->animations.front().keyFrames.resize(1);
+            bone_frame = model->animations.front().keyFrames.data();
 
             model->animations.front().id = 0;
             model->animations.front().next_anim = nullptr;
@@ -3103,13 +3095,13 @@ namespace world
             model->animations.front().stateChanges.clear();
             model->animations.front().original_frame_rate = 1;
 
-            bone_frame->bone_tags.resize(model->mesh_count);
+            bone_frame->boneKeyFrames.resize(model->mesh_count);
 
             bone_frame->position = {0,0,0};
-            for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
+            for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
             {
-                tree_tag = &model->mesh_tree[k];
-                bone_tag = &bone_frame->bone_tags[k];
+                SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
+                bone_tag = &bone_frame->boneKeyFrames[k];
 
                 bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                 bone_tag->offset = tree_tag->offset;
@@ -3169,12 +3161,12 @@ namespace world
                     // but due to the amount of currFrame-indexing, waste dummy frames for now:
                     // (I haven't seen this for framerate==1 animation, but it would be possible,
                     //  also, resizing now saves re-allocations in interpolateFrames later)
-            anim->frames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
+            anim->keyFrames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
 
             size_t numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
-            if(numFrameData > anim->frames.size())
+            if(numFrameData > anim->keyFrames.size())
             {
-                numFrameData = anim->frames.size();
+                numFrameData = anim->keyFrames.size();
             }
 
             //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
@@ -3220,23 +3212,23 @@ namespace world
                 }
             }
 
-            if(anim->frames.empty())
+            if(anim->keyFrames.empty())
             {
                 /*
                  * number of animations must be >= 1, because frame contains base model offset
                  */
-                anim->frames.resize(1);
+                anim->keyFrames.resize(1);
             }
 
             /*
              * let us begin to load animations
              */
-            bone_frame = anim->frames.data();
-            for(uint16_t j = 0; j < anim->frames.size(); j++, bone_frame++, frame_offset += frame_step)
+            bone_frame = anim->keyFrames.data();
+            for(uint16_t j = 0; j < anim->keyFrames.size(); j++, bone_frame++, frame_offset += frame_step)
                 //        for(uint16_t j = 0; j < numFrameData; j++, bone_frame++, frame_offset += frame_step)
             {
                 // !Need bonetags in empty frames:
-                bone_frame->bone_tags.resize(model->mesh_count);
+                bone_frame->boneKeyFrames.resize(model->mesh_count);
 
                 if(j >= numFrameData)
                     continue; // only create bone_tags for rate>1 fill-frames
@@ -3246,10 +3238,10 @@ namespace world
 
                 if(frame_offset >= tr->m_frameData.size())
                 {
-                    for(size_t k = 0; k < bone_frame->bone_tags.size(); k++)
+                    for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
                     {
-                        tree_tag = &model->mesh_tree[k];
-                        bone_tag = &bone_frame->bone_tags[k];
+                        SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
+                        bone_tag = &bone_frame->boneKeyFrames[k];
                         bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
                     }
@@ -3260,10 +3252,10 @@ namespace world
                     uint16_t temp1, temp2;
                     float ang;
 
-                    for(uint16_t k = 0; k < bone_frame->bone_tags.size(); k++)
+                    for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
                     {
-                        tree_tag = &model->mesh_tree[k];
-                        bone_tag = &bone_frame->bone_tags[k];
+                        SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
+                        bone_tag = &bone_frame->boneKeyFrames[k];
                         bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
 
@@ -3360,7 +3352,7 @@ namespace world
             {
                 anim->next_anim = &model->animations[animId];
                 anim->next_frame = tr_animation->next_frame - tr->m_animations[tr_animation->next_animation].frame_start;
-                anim->next_frame %= anim->next_anim->frames.size();
+                anim->next_frame %= anim->next_anim->keyFrames.size();
                 if(anim->next_frame < 0)
                 {
                     anim->next_frame = 0;
@@ -3402,7 +3394,7 @@ namespace world
                             sch_p->anim_dispatch.emplace_back();
 
                             animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
-                            size_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
+                            size_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].keyFrames.size();
                             uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
 
                             uint16_t low = tr_adisp->low - tr_animation->frame_start;
@@ -3413,7 +3405,7 @@ namespace world
                             // And: if theses values are > framesize, then they're probably faulty and won't be fixed by modulo anyway:
     //                        adsp->frame_low = low  % anim->frames.size();
     //                        adsp->frame_high = (high - 1) % anim->frames.size();
-                            if(low > anim->frames.size() || high > anim->frames.size())
+                            if(low > anim->keyFrames.size() || high > anim->keyFrames.size())
                             {
                                 //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
                                 Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
@@ -3495,40 +3487,32 @@ namespace world
         return ret;
     }
 
-    void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::BoneFrame *bone_frame)
+    void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::SkeletonKeyFrame *keyFrame)
     {
         if(frame_offset < tr->m_frameData.size())
         {
             unsigned short int *frame = &tr->m_frameData[frame_offset];
 
-            bone_frame->boundingBox.min[0] = (short int)frame[0];   // x_min
-            bone_frame->boundingBox.min[1] = (short int)frame[4];   // y_min
-            bone_frame->boundingBox.min[2] = -(short int)frame[3];  // z_min
+            keyFrame->boundingBox.min[0] = (short int)frame[0];   // x_min
+            keyFrame->boundingBox.min[1] = (short int)frame[4];   // y_min
+            keyFrame->boundingBox.min[2] = -(short int)frame[3];  // z_min
 
-            bone_frame->boundingBox.max[0] = (short int)frame[1];   // x_max
-            bone_frame->boundingBox.max[1] = (short int)frame[5];   // y_max
-            bone_frame->boundingBox.max[2] = -(short int)frame[2];  // z_max
+            keyFrame->boundingBox.max[0] = (short int)frame[1];   // x_max
+            keyFrame->boundingBox.max[1] = (short int)frame[5];   // y_max
+            keyFrame->boundingBox.max[2] = -(short int)frame[2];  // z_max
 
-            bone_frame->position[0] = (short int)frame[6];
-            bone_frame->position[1] = (short int)frame[8];
-            bone_frame->position[2] = -(short int)frame[7];
+            keyFrame->position[0] = (short int)frame[6];
+            keyFrame->position[1] = (short int)frame[8];
+            keyFrame->position[2] = -(short int)frame[7];
         }
         else
         {
-            bone_frame->boundingBox.min[0] = 0.0;
-            bone_frame->boundingBox.min[1] = 0.0;
-            bone_frame->boundingBox.min[2] = 0.0;
-
-            bone_frame->boundingBox.max[0] = 0.0;
-            bone_frame->boundingBox.max[1] = 0.0;
-            bone_frame->boundingBox.max[2] = 0.0;
-
-            bone_frame->position[0] = 0.0;
-            bone_frame->position[1] = 0.0;
-            bone_frame->position[2] = 0.0;
+            keyFrame->boundingBox.min = {0,0,0};
+            keyFrame->boundingBox.max = {0,0,0};
+            keyFrame->position = {0,0,0};
         }
 
-        bone_frame->center = (bone_frame->boundingBox.min + bone_frame->boundingBox.max) / 2.0f;
+        keyFrame->center = keyFrame->boundingBox.getCenter();
     }
 
     void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr)
@@ -3579,22 +3563,22 @@ namespace world
             entity->m_inertiaAngular[0] = 0.0;
             entity->m_inertiaAngular[1] = 0.0;
 
-            entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
+            entity->m_bf.setModel( world->getModelByID(tr_item->object_id) );
 
-            if(entity->m_bf.animations.model == nullptr)
+            if(entity->m_bf.getModel() == nullptr)
             {
                 int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
-                entity->m_bf.animations.model = world->getModelByID(id);
+                entity->m_bf.setModel( world->getModelByID(id) );
             }
 
             int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
             if(replace_anim_id > 0)
             {
                 SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
-                std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
+                std::swap(entity->m_bf.model()->animations, replace_anim_model->animations);
             }
 
-            if(entity->m_bf.animations.model == nullptr)
+            if(entity->m_bf.getModel() == nullptr)
             {
                 // SPRITE LOADING
                 core::Sprite* sp = world->getSpriteByID(tr_item->object_id);
@@ -3616,7 +3600,7 @@ namespace world
                 continue;
             }
 
-            entity->m_bf.fromModel(entity->m_bf.animations.model);
+            entity->m_bf.fromModel(entity->m_bf.model());
 
             if(0 == tr_item->object_id)                                             // Lara is unical model
             {
@@ -3682,12 +3666,7 @@ namespace world
                         break;
                 };
 
-                for(uint16_t j = 0; j < lara->m_bf.bone_tags.size(); j++)
-                {
-                    lara->m_bf.bone_tags[j].mesh_base = lara->m_bf.animations.model->mesh_tree[j].mesh_base;
-                    lara->m_bf.bone_tags[j].mesh_skin = lara->m_bf.animations.model->mesh_tree[j].mesh_skin;
-                    lara->m_bf.bone_tags[j].mesh_slot = nullptr;
-                }
+                lara->m_bf.copyMeshBinding(lara->m_bf.getModel(), true);
 
                 world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
                 lara->genRigidBody();
@@ -3729,7 +3708,7 @@ namespace world
                     if(!ent)
                         continue;
 
-                    if(ent->m_bf.animations.model->id != item->world_model_id)
+                    if(ent->m_bf.getModel()->id != item->world_model_id)
                         continue;
 
                     if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->getId())].is<lua::Nil>())

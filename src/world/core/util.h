@@ -9,15 +9,13 @@ namespace core
 
 inline btCollisionShape *BT_CSfromSphere(glm::float_t radius)
 {
-    if(radius == 0.0)
+    if(util::fuzzyZero(radius))
         return nullptr;
 
-    btCollisionShape* ret;
+    btCollisionShape* shape = new btSphereShape(radius);
+    shape->setMargin(COLLISION_MARGIN_RIGIDBODY);
 
-    ret = new btSphereShape(radius);
-    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
-
-    return ret;
+    return shape;
 }
 
 } // namespace core

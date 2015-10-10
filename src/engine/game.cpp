@@ -118,7 +118,7 @@ void lua_timescale(lua::Value scale)
 {
     if(!scale.is<lua::Number>())
     {
-        if(time_scale == 1.0)
+        if(util::fuzzyOne(time_scale))
         {
             time_scale = 0.033f;
         }
@@ -247,20 +247,32 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
         uint32_t room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
-        fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);", ent->m_bf.animations.model->id,
-                ent->m_transform[3][0], ent->m_transform[3][1], ent->m_transform[3][2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], room_id, ent->getId());
+        fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);",
+                ent->m_bf.getModel()->id,
+                ent->m_transform[3][0],
+                ent->m_transform[3][1],
+                ent->m_transform[3][2],
+                ent->m_angles[0],
+                ent->m_angles[1],
+                ent->m_angles[2],
+                room_id,
+                ent->getId());
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->getId(),
-                ent->m_transform[3][0], ent->m_transform[3][1], ent->m_transform[3][2],
-                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2]);
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);",
+                ent->getId(),
+                ent->m_transform[3][0],
+                ent->m_transform[3][1],
+                ent->m_transform[3][2],
+                ent->m_angles[0],
+                ent->m_angles[1],
+                ent->m_angles[2]);
     }
 
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_bf.getCurrentAnimation(), ent->m_bf.getCurrentFrame());
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_bf.getNextState(), ent->m_bf.getLastState());
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
 
     if(ent->m_enabled)
@@ -539,7 +551,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->m_bf.animations.last_state == world::LaraState::REACH)
+        if(ent->m_bf.getLastState() == world::LaraState::REACH)
         {
             if(cam->m_targetDir == world::CameraTarget::Back)
             {
@@ -570,7 +582,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                 }
             }
         }
-        else if(ent->m_bf.animations.last_state == world::LaraState::JUMP_BACK)
+        else if(ent->m_bf.getLastState() == world::LaraState::JUMP_BACK)
         {
             cam->m_targetDir = world::CameraTarget::Front;
         }

@@ -40,26 +40,26 @@ namespace world
 
 void Entity::createGhosts()
 {
-    if(!m_bf.animations.model || m_bf.animations.model->mesh_count <= 0)
+    if(!m_bf.getModel() || m_bf.getModel()->mesh_count <= 0)
         return;
 
     m_bt.manifoldArray.reset(new btManifoldArray());
     m_bt.shapes.clear();
     m_bt.ghostObjects.clear();
     m_bt.last_collisions.clear();
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
-        glm::vec3 box = GhostVolumeCollisionCoefficient * m_bf.bone_tags[i].mesh_base->boundingBox.getDiameter();
+        glm::vec3 box = GhostVolumeCollisionCoefficient * m_bf.getBones()[i].mesh_base->boundingBox.getDiameter();
         m_bt.shapes.emplace_back(new btBoxShape(util::convert(box)));
         m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
-        m_bf.bone_tags[i].mesh_base->m_radius = std::min(std::min(box.x, box.y), box.z);
+        m_bf.getBones()[i].mesh_base->m_radius = std::min(std::min(box.x, box.y), box.z);
 
         m_bt.ghostObjects.emplace_back(new btPairCachingGhostObject());
 
         m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.bt_body[i].get(), true);
 
-        glm::mat4 gltr = m_transform * m_bf.bone_tags[i].full_transform;
-        gltr[3] = glm::vec4( glm::mat3(gltr) * m_bf.bone_tags[i].mesh_base->m_center, 1.0f );
+        glm::mat4 gltr = m_transform * m_bf.getBones()[i].full_transform;
+        gltr[3] = glm::vec4( glm::mat3(gltr) * m_bf.getBones()[i].mesh_base->m_center, 1.0f );
 
         m_bt.ghostObjects.back()->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
         m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
@@ -124,14 +124,14 @@ void Entity::disableCollision()
 
 void Entity::genRigidBody()
 {
-    if(!m_bf.animations.model || getCollisionType() == world::CollisionType::None)
+    if(!m_bf.getModel() || getCollisionType() == world::CollisionType::None)
         return;
 
     m_bt.bt_body.clear();
 
-    for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
-        std::shared_ptr<core::BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
+        std::shared_ptr<core::BaseMesh> mesh = m_bf.getModel()->mesh_tree[i].mesh_base;
         btCollisionShape *cshape;
         switch(getCollisionShape())
         {
@@ -162,7 +162,7 @@ void Entity::genRigidBody()
                 cshape->calculateLocalInertia(0.0, localInertia);
 
             btTransform startTransform;
-            startTransform.setFromOpenGLMatrix(glm::value_ptr( m_transform * m_bf.bone_tags[i].full_transform ));
+            startTransform.setFromOpenGLMatrix(glm::value_ptr( m_transform * m_bf.getBones()[i].full_transform ));
             m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
 
             switch(getCollisionType())
@@ -268,14 +268,14 @@ void Entity::ghostUpdate()
     if(m_bt.ghostObjects.empty())
         return;
 
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
         {
-            auto tr = m_transform * m_bf.bone_tags[i].full_transform;
-            auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
+            auto tr = m_transform * m_bf.getBones()[i].full_transform;
+            auto v = m_bf.getModel()->mesh_tree[i].mesh_base->m_center;
             m_bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
             auto pos = tr * glm::vec4(v, 1);
             m_bt.ghostObjects[i]->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
@@ -283,10 +283,10 @@ void Entity::ghostUpdate()
     }
     else
     {
-        for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
+        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
         {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
-            tr.setOrigin(tr * util::convert(m_bf.bone_tags[i].mesh_base->m_center));
+            tr.setOrigin(tr * util::convert(m_bf.getBones()[i].mesh_base->m_center));
             m_bt.ghostObjects[i]->getWorldTransform() = tr;
         }
     }
@@ -297,16 +297,16 @@ void Entity::updateCurrentCollisions()
     if(m_bt.ghostObjects.empty())
         return;
 
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
 
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
         const std::unique_ptr<btPairCachingGhostObject>& ghost = m_bt.ghostObjects[i];
         EntityCollisionNode& cn = m_bt.last_collisions[i];
 
         cn.obj.clear();
-        auto tr = m_transform * m_bf.bone_tags[i].full_transform;
-        auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
+        auto tr = m_transform * m_bf.getBones()[i].full_transform;
+        auto v = m_bf.getModel()->mesh_tree[i].mesh_base->m_center;
         auto orig_tr = ghost->getWorldTransform();
         ghost->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
         auto pos = glm::vec3(tr * glm::vec4(v, 1.0f));
@@ -364,14 +364,14 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
     if(m_bt.ghostObjects.empty() || m_bt.no_fix_all)
         return 0;
 
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.bone_tags.size());
+    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
 
     auto orig_pos = m_transform[3];
     int ret = 0;
-    for(size_t i = 0; i < m_bf.animations.model->collision_map.size(); i++)
+    for(size_t i = 0; i < m_bf.getModel()->collision_map.size(); i++)
     {
-        uint16_t m = m_bf.animations.model->collision_map[i];
-        animation::SSBoneTag* btag = &m_bf.bone_tags[m];
+        size_t m = m_bf.getModel()->collision_map[i];
+        const animation::Bone* btag = &m_bf.getBones()[m];
 
         if(btag->body_part & m_bt.no_fix_body_parts)
         {
@@ -500,9 +500,9 @@ bool Entity::wasCollisionBodyParts(uint32_t parts_flags)
     if(m_bt.last_collisions.empty())
         return false;
 
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
-        if((m_bf.bone_tags[i].body_part & parts_flags) && !m_bt.last_collisions[i].obj.empty())
+        if((m_bf.getBones()[i].body_part & parts_flags) && !m_bt.last_collisions[i].obj.empty())
         {
             return true;
         }
@@ -527,9 +527,9 @@ void Entity::cleanCollisionBodyParts(uint32_t parts_flags)
     if(m_bt.last_collisions.empty())
         return;
 
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
-        if(m_bf.bone_tags[i].body_part & parts_flags)
+        if(m_bf.getBones()[i].body_part & parts_flags)
         {
             m_bt.last_collisions[i].obj.clear();
         }
@@ -542,14 +542,14 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
     if(m_bt.last_collisions.empty())
         return nullptr;
 
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
-        if(m_bf.bone_tags[i].body_part & parts_flags)
+        if(m_bf.getBones()[i].body_part & parts_flags)
         {
             EntityCollisionNode& cn = m_bt.last_collisions[i];
             if(!cn.obj.empty())
             {
-                *curr_flag = m_bf.bone_tags[i].body_part;
+                *curr_flag = m_bf.getBones()[i].body_part;
                 auto res = cn.obj.back();
                 cn.obj.pop_back();
                 return res;
@@ -592,83 +592,17 @@ void Entity::updateRigidBody(bool force)
 {
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        //glm::vec3 pos = bt.bt_body[0]->getWorldTransform()[3];
-        //vec3_copy(transform+12, pos);
         m_bt.bt_body[0]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(m_transform));
         updateRoomPos();
-        for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
-        {
-            glm::mat4 tr;
-            m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
-            m_bf.bone_tags[i].full_transform = glm::inverse(m_transform) * tr;
-        }
-
-        // that cycle is necessary only for skinning models;
-        for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
-        {
-            if(m_bf.bone_tags[i].parent != nullptr)
-            {
-                m_bf.bone_tags[i].transform = glm::inverse(m_bf.bone_tags[i].parent->full_transform) * m_bf.bone_tags[i].full_transform;
-            }
-            else
-            {
-                m_bf.bone_tags[i].transform = m_bf.bone_tags[i].full_transform;
-            }
-        }
-
+        m_bf.updateTransform(m_bt, m_transform);
         updateGhostRigidBody();
-
-        if(m_bf.bone_tags.size() == 1)
-        {
-            m_bf.boundingBox = m_bf.bone_tags[0].mesh_base->boundingBox;
-        }
-        else
-        {
-            m_bf.boundingBox = m_bf.bone_tags[0].mesh_base->boundingBox;
-            for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
-            {
-                auto& pos = m_bf.bone_tags[i].full_transform[3];
-                auto& boundingBox = m_bf.bone_tags[i].mesh_base->boundingBox;
-                glm::float_t r = boundingBox.max[0] - boundingBox.min[0];
-                glm::float_t t = boundingBox.max[1] - boundingBox.min[1];
-                r = (t > r) ? (t) : (r);
-                t = boundingBox.max[2] - boundingBox.min[2];
-                r = (t > r) ? (t) : (r);
-                r *= 0.5;
-
-                if(m_bf.boundingBox.min[0] > pos[0] - r)
-                {
-                    m_bf.boundingBox.min[0] = pos[0] - r;
-                }
-                if(m_bf.boundingBox.min[1] > pos[1] - r)
-                {
-                    m_bf.boundingBox.min[1] = pos[1] - r;
-                }
-                if(m_bf.boundingBox.min[2] > pos[2] - r)
-                {
-                    m_bf.boundingBox.min[2] = pos[2] - r;
-                }
-
-                if(m_bf.boundingBox.max[0] < pos[0] + r)
-                {
-                    m_bf.boundingBox.max[0] = pos[0] + r;
-                }
-                if(m_bf.boundingBox.max[1] < pos[1] + r)
-                {
-                    m_bf.boundingBox.max[1] = pos[1] + r;
-                }
-                if(m_bf.boundingBox.max[2] < pos[2] + r)
-                {
-                    m_bf.boundingBox.max[2] = pos[2] + r;
-                }
-            }
-        }
+        m_bf.updateBoundingBox();
     }
     else
     {
-        if((m_bf.animations.model == nullptr) ||
-           m_bt.bt_body.empty() ||
-           (!force && (m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
+        if(   m_bf.getModel() == nullptr
+           || m_bt.bt_body.empty()
+           || (!force && m_bf.getModel()->animations.size() == 1 && m_bf.getModel()->animations.front().keyFrames.size() == 1))
         {
             return;
         }
@@ -676,11 +610,11 @@ void Entity::updateRigidBody(bool force)
         updateRoomPos();
         if(getCollisionType() != world::CollisionType::Static)
         {
-            for(uint16_t i = 0; i < m_bf.bone_tags.size(); i++)
+            for(size_t i = 0; i < m_bf.getBoneCount(); i++)
             {
                 if(m_bt.bt_body[i])
                 {
-                    m_bt.bt_body[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(m_transform * m_bf.bone_tags[i].full_transform));
+                    m_bt.bt_body[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(m_transform * m_bf.getBones()[i].full_transform));
                 }
             }
         }
@@ -734,21 +668,10 @@ void Entity::addOverrideAnim(int model_id)
 {
     SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 
-    if((sm != nullptr) && (sm->mesh_count == m_bf.bone_tags.size()))
-    {
-        animation::SSAnimation* ss_anim = new animation::SSAnimation();
+    if(!sm || sm->mesh_count != m_bf.getBoneCount())
+        return;
 
-        ss_anim->model = sm;
-        ss_anim->onFrame = nullptr;
-        ss_anim->next = m_bf.animations.next;
-        m_bf.animations.next = ss_anim;
-
-        ss_anim->frame_time = 0.0;
-        ss_anim->next_state = LaraState::WALK_FORWARD;
-        ss_anim->lerp = 0.0;
-        ss_anim->current_animation = 0;
-        ss_anim->current_frame = 0;
-    }
+    m_bf.setModel(sm);
 }
 
 glm::float_t Entity::findDistance(const Entity& other)
@@ -898,7 +821,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
+                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
         }
         catch (lua::RuntimeError& error)
         {
@@ -907,9 +830,9 @@ void Entity::processSector()
     }
 }
 
-void Entity::setAnimation(int animation, int frame, int another_model)
+void Entity::setAnimation(int animation, int frame)
 {
-    m_bf.animations.setAnimation(animation, frame, another_model);
+    m_bf.setAnimation(animation, frame);
 
     m_bt.no_fix_all = false;
 
@@ -920,7 +843,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
 int Entity::getAnimDispatchCase(LaraState id)
 {
-    animation::AnimationFrame* anim = &m_bf.animations.model->animations[m_bf.animations.current_animation];
+    const animation::AnimationFrame* anim = &m_bf.getModel()->animations[m_bf.getCurrentAnimation()];
 
     for(const animation::StateChange& stc : anim->stateChanges)
     {
@@ -930,7 +853,10 @@ int Entity::getAnimDispatchCase(LaraState id)
         for(size_t j = 0; j < stc.anim_dispatch.size(); j++)
         {
             const animation::AnimDispatch& disp = stc.anim_dispatch[j];
-            if((disp.frame_high >= disp.frame_low) && (m_bf.animations.current_frame >= disp.frame_low) && (m_bf.animations.current_frame <= disp.frame_high))
+
+            if(   disp.frame_high >= disp.frame_low
+               && m_bf.getCurrentFrame() >= disp.frame_low
+               && m_bf.getCurrentFrame() <= disp.frame_high)
             {
                 return static_cast<int>(j);
             }
@@ -940,19 +866,6 @@ int Entity::getAnimDispatchCase(LaraState id)
     return -1;
 }
 
-
-// ----------------------------------------
-void Entity::slerpBones(glm::float_t lerp)
-{
-    for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
-    {
-        // TODO: should we have independent timing for overlay animations?
-        ss_anim->lerp = lerp;
-        ss_anim->frame_time = m_bf.animations.frame_time;
-    }
-    m_bf.animations.lerp = lerp;
-    m_bf.updateCurrentBoneFrame();
-}
 
 void Entity::lerpTransform(glm::float_t lerp)
 {
@@ -964,39 +877,37 @@ void Entity::lerpTransform(glm::float_t lerp)
 
 void Entity::updateInterpolation(float time)
 {
-    if(!(m_typeFlags & ENTITY_TYPE_DYNAMIC))
-    {
-        // Bone animation interp:
-        glm::float_t lerp = m_bf.animations.lerp;
-        slerpBones(lerp);
-        lerp += time * animation::FrameRate;
-        if( lerp > 1.0 )
-        {
-            lerp = 1.0;
-        }
-        m_bf.animations.lerp = lerp;
+    if((m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0)
+        return;
 
-        // Entity transform interp:
-        lerpTransform(m_lerp);
-        m_lerp += time * animation::GameLogicFrameRate;
-        if( m_lerp > 1.0 )
-        {
-            m_lerp = 1.0;
-        }
+    // Bone animation interp:
+    const glm::float_t lerp = glm::min(1.0f, m_bf.getLerp() + time * animation::FrameRate);
+    m_bf.updateCurrentBoneFrame();
+    m_bf.setLerp( lerp );
+
+    // Entity transform interp:
+    lerpTransform(m_lerp);
+    m_lerp += time * animation::GameLogicFrameRate;
+    if( m_lerp > 1.0 )
+    {
+        m_lerp = 1.0;
     }
 }
 
 animation::AnimUpdate Entity::stepAnimation(float time)
 {
-    if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !m_active || !m_enabled ||
-       (m_bf.animations.model == nullptr) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
+    if(   (m_typeFlags & ENTITY_TYPE_DYNAMIC)
+       || !m_active
+       || !m_enabled
+       || m_bf.getModel() == nullptr
+       || (m_bf.getModel()->animations.size() == 1 && m_bf.getModel()->animations.front().keyFrames.size() == 1))
     {
         return animation::AnimUpdate::None;
     }
-    if(m_bf.animations.mode == animation::SSAnimationMode::Locked)
+    if(m_bf.getAnimationMode() == animation::AnimationMode::Locked)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
-    animation::AnimUpdate stepResult = m_bf.animations.stepAnimation(time, this);
+    animation::AnimUpdate stepResult = m_bf.stepAnimation(time, this);
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
@@ -1046,14 +957,11 @@ void Entity::frame(float time)
  */
 void Entity::rebuildBV()
 {
-    if(m_bf.animations.model)
-    {
-        /*
-         * get current BB from animation
-         */
-        m_obb.rebuild(m_bf.boundingBox);
-        m_obb.doTransform();
-    }
+    if(!m_bf.getModel())
+        return;
+
+    m_obb.rebuild(m_bf.getBoundingBox());
+    m_obb.doTransform();
 }
 
 void Entity::checkActivators()
@@ -1061,7 +969,7 @@ void Entity::checkActivators()
     if (getRoom() == nullptr)
             return;
 
-    glm::vec4 ppos = m_transform[3] + m_transform[1] * m_bf.boundingBox.max[1];
+    glm::vec4 ppos = m_transform[3] + m_transform[1] * m_bf.getBoundingBox().max[1];
     auto containers = getRoom()->containers;
     for(Object* cont : containers)
     {
@@ -1087,8 +995,8 @@ void Entity::checkActivators()
             const glm::vec4& v = e->m_transform[3];
             if(    e != this
                 && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
-                && (v[2] + 32.0 > m_transform[3][2] + m_bf.boundingBox.min[2])
-                && (v[2] - 32.0 < m_transform[3][2] + m_bf.boundingBox.max[2]))
+                && (v[2] + 32.0 > m_transform[3][2] + m_bf.getBoundingBox().min[2])
+                && (v[2] - 32.0 < m_transform[3][2] + m_bf.getBoundingBox().max[2]))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
@@ -1156,24 +1064,13 @@ Entity::~Entity()
         }
         m_bt.bt_body.clear();
     }
-
-    m_bf.bone_tags.clear();
-
-    for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr;)
-    {
-        animation::SSAnimation* ss_anim_next = ss_anim->next;
-        ss_anim->next = nullptr;
-        delete ss_anim;
-        ss_anim = ss_anim_next;
-    }
-    m_bf.animations.next = nullptr;
 }
 
 bool Entity::createRagdoll(RDSetup* setup)
 {
     // No entity, setup or body count overflow - bypass function.
 
-    if(!setup || setup->body_setup.size() > m_bf.bone_tags.size())
+    if(!setup || setup->body_setup.size() > m_bf.getBoneCount())
     {
         return false;
     }
@@ -1197,7 +1094,7 @@ bool Entity::createRagdoll(RDSetup* setup)
 
     for(size_t i = 0; i < setup->body_setup.size(); i++)
     {
-        if(i >= m_bf.bone_tags.size() || !m_bt.bt_body[i])
+        if(i >= m_bf.getBoneCount() || !m_bt.bt_body[i])
         {
             result = false;
             continue;   // If body is absent, return false and bypass this body setup.
@@ -1223,16 +1120,16 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
-        if(!m_bf.bone_tags[i].parent)
+        if(!m_bf.getBones()[i].parent)
         {
-            glm::float_t r = m_bf.bone_tags[i].mesh_base->boundingBox.getInnerRadius();
+            glm::float_t r = m_bf.getBones()[i].mesh_base->boundingBox.getInnerDiameter();
             m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
             m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
         }
     }
 
     updateRigidBody(true);
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
         engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->activate();
@@ -1249,14 +1146,14 @@ bool Entity::createRagdoll(RDSetup* setup)
 
     for(size_t i = 0; i < setup->joint_setup.size(); i++)
     {
-        if(setup->joint_setup[i].body_index >= m_bf.bone_tags.size() || !m_bt.bt_body[setup->joint_setup[i].body_index])
+        if(setup->joint_setup[i].body_index >= m_bf.getBoneCount() || !m_bt.bt_body[setup->joint_setup[i].body_index])
         {
             result = false;
             break;       // If body 1 or body 2 are absent, return false and bypass this joint.
         }
 
-        animation::SSBoneTag* btB = &m_bf.bone_tags[setup->joint_setup[i].body_index];
-        animation::SSBoneTag* btA = btB->parent;
+        const animation::Bone* btB = &m_bf.getBones()[setup->joint_setup[i].body_index];
+        const animation::Bone* btA = btB->parent;
         if(!btA)
         {
             result = false;
@@ -1327,7 +1224,7 @@ bool Entity::deleteRagdoll()
         }
     }
 
-    for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
     {
         engine::bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));

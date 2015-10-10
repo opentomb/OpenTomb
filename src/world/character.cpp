@@ -185,7 +185,7 @@ int32_t Character::getItemsCount(uint32_t item_id)         // returns items coun
  */
 void Character::updateCurrentHeight()
 {
-    glm::vec4 t{0, 0, m_bf.bone_tags[0].transform[3][2], 1};
+    glm::vec4 t{0, 0, m_bf.getRootTransform()[3][2], 1};
     auto pos = glm::vec3(m_transform * t);
     Character::getHeightInfo(pos, &m_heightInfo, m_height);
 }
@@ -545,7 +545,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     btTransform t2 = btTransform::getIdentity();
     uint8_t up_founded = 0;
     test_height = (test_height >= m_maxStepUpHeight) ? (test_height) : (m_maxStepUpHeight);
-    glm::float_t d = pos[2] + m_bf.boundingBox.max[2] - test_height;
+    glm::float_t d = pos[2] + m_bf.getBoundingBox().max[2] - test_height;
     std::copy_n(glm::value_ptr(to), 3, &engine::cast_ray[0]);
     std::copy_n(glm::value_ptr(from), 3, &engine::cast_ray[3]);
     engine::cast_ray[5] -= d;
@@ -716,9 +716,9 @@ ClimbInfo Character::checkWallsClimbability()
     ret.up = { 0,0,1 };
 
     const glm::vec4& pos = m_transform[3];
-    glm::vec3 from = glm::vec3(pos + m_transform[2] * m_bf.boundingBox.max[2] - m_transform[1] * m_climbR);
+    glm::vec3 from = glm::vec3(pos + m_transform[2] * m_bf.getBoundingBox().max[2] - m_transform[1] * m_climbR);
     glm::vec3 to = from;
-    glm::float_t t = m_forwardSize + m_bf.boundingBox.max[1];
+    glm::float_t t = m_forwardSize + m_bf.getBoundingBox().max[1];
     to += glm::vec3(m_transform[1] * t);
 
     auto ccb = m_convexCb;
@@ -771,7 +771,7 @@ ClimbInfo Character::checkWallsClimbability()
         t = 0.67f * m_height;
         from -= glm::vec3(m_transform[2] * t);
         to = from;
-        t = m_forwardSize + m_bf.boundingBox.max[1];
+        t = m_forwardSize + m_bf.getBoundingBox().max[1];
         to += glm::vec3(m_transform[1] * t);
 
         ccb->m_closestHitFraction = 1.0;
@@ -793,11 +793,11 @@ ClimbInfo Character::checkWallsClimbability()
 void Character::lean(glm::float_t max_lean)
 {
     glm::float_t neg_lean = 360.0f - max_lean;
-    glm::float_t lean_coeff = (max_lean == 0.0) ? (48.0f) : (max_lean * 3);
+    glm::float_t lean_coeff = util::fuzzyZero(max_lean) ? 48.0f : max_lean * 3;
 
     // Continously lean character, according to current left/right direction.
 
-    if((m_command.move[1] == 0) || (max_lean == 0.0))       // No direction - restore straight vertical position!
+    if((m_command.move[1] == 0) || util::fuzzyZero(max_lean))       // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -871,7 +871,7 @@ void Character::lean(glm::float_t max_lean)
  */
 glm::float_t Character::inertiaLinear(glm::float_t max_speed, glm::float_t accel, bool command)
 {
-    if((accel == 0.0) || (accel >= max_speed))
+    if(util::fuzzyZero(accel) || (accel >= max_speed))
     {
         if(command)
         {
@@ -922,7 +922,7 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
         curr_rot_dir = 2;
     }
 
-    if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
+    if(!curr_rot_dir || util::fuzzyZero(max_angle) || util::fuzzyZero(accel))
     {
         m_inertiaAngular[axis] = 0.0;
     }
@@ -972,7 +972,7 @@ int Character::moveOnFloor()
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
-    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_bf.boundingBox.min[2]))
+    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_bf.getBoundingBox().min[2]))
     {
         Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
         if(Entity* e = dynamic_cast<Entity*>(cont))
@@ -1184,9 +1184,9 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
@@ -1195,7 +1195,7 @@ int Character::freeFalling()
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.boundingBox.min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.getBoundingBox().min[2] + move[2])
         {
             m_transform[3][2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1212,16 +1212,16 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.boundingBox.max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling_point[2] < m_bf.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.boundingBox.min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.getBoundingBox().min[2] + move[2])
         {
             m_transform[3][2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1291,9 +1291,9 @@ int Character::monkeyClimbing()
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move);                              // get horizontal collide
                                                          ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (m_transform[3][2] + m_bf.boundingBox.max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling_hit && (m_transform[3][2] + m_bf.getBoundingBox().max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
-        m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.boundingBox.max[2];
+        m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
     }
     else
     {
@@ -1331,8 +1331,8 @@ int Character::wallsClimbing()
 
     m_angles[0] = glm::degrees(glm::atan(climb->n[0], -climb->n[1]));
     updateTransform();
-    m_transform[3][0] = climb->point[0] - m_transform[1][0] * m_bf.boundingBox.max[1];
-    m_transform[3][1] = climb->point[1] - m_transform[1][1] * m_bf.boundingBox.max[1];
+    m_transform[3][0] = climb->point[0] - m_transform[1][0] * m_bf.getBoundingBox().max[1];
+    m_transform[3][1] = climb->point[1] - m_transform[1][1] * m_bf.getBoundingBox().max[1];
 
     if(m_moveDir == MoveDirection::Forward)
     {
@@ -1365,9 +1365,9 @@ int Character::wallsClimbing()
     updateRoomPos();
 
     *climb = checkWallsClimbability();
-    if(m_transform[3][2] + m_bf.boundingBox.max[2] > climb->ceiling_limit)
+    if(m_transform[3][2] + m_bf.getBoundingBox().max[2] > climb->ceiling_limit)
     {
-        m_transform[3][2] = climb->ceiling_limit - m_bf.boundingBox.max[2];
+        m_transform[3][2] = climb->ceiling_limit - m_bf.getBoundingBox().max[2];
     }
 
     return 1;
@@ -1487,7 +1487,7 @@ int Character::moveUnderWater()
     fixPenetrations(&move);                              // get horizontal collide
 
     updateRoomPos();
-    if(m_heightInfo.water && (m_transform[3][2] + m_bf.boundingBox.max[2] >= m_heightInfo.transition_level))
+    if(m_heightInfo.water && (m_transform[3][2] + m_bf.getBoundingBox().max[2] >= m_heightInfo.transition_level))
     {
         if(/*(spd[2] > 0.0)*/m_transform[1][2] > 0.67)             ///@FIXME: magick!
         {
@@ -1497,7 +1497,7 @@ int Character::moveUnderWater()
         }
         if(!m_heightInfo.floor_hit || (m_heightInfo.transition_level - m_heightInfo.floor_point[2] >= m_height))
         {
-            m_transform[3][2] = m_heightInfo.transition_level - m_bf.boundingBox.max[2];
+            m_transform[3][2] = m_heightInfo.transition_level - m_bf.getBoundingBox().max[2];
         }
     }
 
@@ -1802,7 +1802,7 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    m_stateController.handle( m_bf.animations.last_state );
+    m_stateController.handle( m_bf.getLastState() );
 
     switch(m_moveType)
     {
@@ -1880,8 +1880,7 @@ void Character::updateParams()
                 setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-            if((m_bf.animations.last_state == LaraState::SPRINT) ||
-               (m_bf.animations.last_state == LaraState::SPRINT_ROLL))
+            if(m_bf.getLastState() == LaraState::SPRINT || m_bf.getLastState() == LaraState::SPRINT_ROLL)
             {
                 changeParam(PARAM_STAMINA, -0.5);
             }
@@ -1985,52 +1984,44 @@ int Character::setWeaponModel(int weapon_model, int armed)
 {
     SkeletalModel* sm = engine::engine_world.getModelByID(weapon_model);
 
-    if((sm != nullptr) && (m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
+    if(sm != nullptr && m_bf.getBoneCount() == sm->mesh_count && sm->animations.size() >= 4)
     {
-        SkeletalModel* bm = m_bf.animations.model;
-        if(m_bf.animations.next == nullptr)
-        {
-            addOverrideAnim(weapon_model);
-        }
-        else
-        {
-            m_bf.animations.next->model = sm;
-        }
+        const SkeletalModel* bm = m_bf.getModel();
+        addOverrideAnim(weapon_model);
 
-        for(int i = 0; i < bm->mesh_count; i++)
+        for(size_t i = 0; i < bm->mesh_count; i++)
         {
-            m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone_tags[i].mesh_slot = nullptr;
+            m_bf.bone(i).mesh_base = bm->mesh_tree[i].mesh_base;
+            m_bf.bone(i).mesh_slot = nullptr;
         }
 
         if(armed != 0)
         {
-            for(int i = 0; i < bm->mesh_count; i++)
+            for(size_t i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
-                    m_bf.bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    m_bf.bone(i).mesh_base = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x02)
                 {
-                    m_bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
+                    m_bf.bone(i).mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
         }
         else
         {
-            for(int i = 0; i < bm->mesh_count; i++)
+            for(size_t i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
-                    m_bf.bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    m_bf.bone(i).mesh_base = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x04)
                 {
-                    m_bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
+                    m_bf.bone(i).mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
-            m_bf.animations.next->model = nullptr;
         }
 
         return 1;
@@ -2038,15 +2029,11 @@ int Character::setWeaponModel(int weapon_model, int armed)
     else
     {
         // do unarmed default model
-        SkeletalModel* bm = m_bf.animations.model;
-        for(int i = 0; i < bm->mesh_count; i++)
+        const SkeletalModel* bm = m_bf.getModel();
+        for(size_t i = 0; i < bm->mesh_count; i++)
         {
-            m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone_tags[i].mesh_slot = nullptr;
-        }
-        if(m_bf.animations.next != nullptr)
-        {
-            m_bf.animations.next->model = nullptr;
+            m_bf.bone(i).mesh_base = bm->mesh_tree[i].mesh_base;
+            m_bf.bone(i).mesh_slot = nullptr;
         }
     }
 
@@ -2207,9 +2194,9 @@ void Character::frame(float time)
     }
 
     animation::AnimUpdate animStepResult = stepAnimation(time);
-    if(m_bf.animations.onFrame != nullptr)
+    if(m_bf.onFrame != nullptr)
     {
-        m_bf.animations.onFrame(this, &m_bf.animations, animStepResult);
+        m_bf.onFrame(this, animStepResult);
     }
 
     applyCommands();    // state_func()
@@ -2227,8 +2214,8 @@ void Character::frame(float time)
     doWeaponFrame(time);
 
     // Update acceleration/speed, it is calculated per anim frame index
-    auto af = &m_bf.animations.model->animations[m_bf.animations.current_animation];
-    m_currentSpeed = (af->speed_x + m_bf.animations.current_frame * af->accel_x) / float(1 << 16); //Decompiled from TOMB5.EXE
+    const animation::AnimationFrame* af = &m_bf.getModel()->animations[m_bf.getCurrentAnimation()];
+    m_currentSpeed = (af->speed_x + m_bf.getCurrentFrame() * af->accel_x) / float(1 << 16); //Decompiled from TOMB5.EXE
 
 
                                                                                               // TODO: check rigidbody update requirements.
@@ -2367,11 +2354,11 @@ void Character::updateGhostRigidBody()
 {
     if(!m_bt.ghostObjects.empty())
     {
-        BOOST_ASSERT(m_bf.bone_tags.size() == m_bt.ghostObjects.size());
-        for(size_t i = 0; i < m_bf.bone_tags.size(); i++)
+        BOOST_ASSERT(m_bf.getBoneCount() == m_bt.ghostObjects.size());
+        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
         {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
-            tr.setOrigin(tr * util::convert(m_bf.bone_tags[i].mesh_base->m_center));
+            tr.setOrigin(tr * util::convert(m_bf.getBones()[i].mesh_base->m_center));
             m_bt.ghostObjects[i]->getWorldTransform() = tr;
         }
     }
@@ -2411,192 +2398,189 @@ void Character::doWeaponFrame(float time)
         setWeaponModel(m_currentWeapon, 1);
     }
 
-    for(animation::SSAnimation* ss_anim = m_bf.animations.next; ss_anim != nullptr; ss_anim = ss_anim->next)
+    if(m_bf.getModel() != nullptr && m_bf.getModel()->animations.size() > 4)
     {
-        if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() > 4))
+        // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+        m_bf.setAnimationMode( animation::AnimationMode::NormalControl );
+        switch(m_weaponCurrentState)
         {
-            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
-            ss_anim->mode = animation::SSAnimationMode::NormalControl;
-            switch(m_weaponCurrentState)
-            {
-                case WeaponState::Hide:
-                    if(m_command.ready_weapon)   // ready weapon
-                    {
-                        ss_anim->setAnimation(1);  // draw from holster
-                                                   // fixme: reset lerp:
-                        ss_anim->lerp_last_animation = ss_anim->current_animation;
-                        ss_anim->lerp_last_frame = ss_anim->current_frame;
-                        m_weaponCurrentState = WeaponState::HideToReady;
-                    }
-                    break;
+            case WeaponState::Hide:
+                if(m_command.ready_weapon)   // ready weapon
+                {
+                    m_bf.setAnimation(1);  // draw from holster
+                                               // fixme: reset lerp:
+                    m_bf.setLerpLastAnimation(m_bf.getCurrentAnimation());
+                    m_bf.setLerpLastFrame(m_bf.getCurrentFrame());
+                    m_weaponCurrentState = WeaponState::HideToReady;
+                }
+                break;
 
-                case WeaponState::HideToReady:
-                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
+            case WeaponState::HideToReady:
+                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::Idle;
+                }
+                break;
 
-                case WeaponState::Idle:
-                    if(m_command.ready_weapon)
-                    {
-                        ss_anim->setAnimation(3);  // holster weapon
-                        m_weaponCurrentState = WeaponState::IdleToHide;
-                    }
-                    else if(m_command.action)
-                    {
-                        m_weaponCurrentState = WeaponState::IdleToFire;
-                    }
-                    else
-                    {
-                        // stay at frame 0
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                    }
-                    break;
+            case WeaponState::Idle:
+                if(m_command.ready_weapon)
+                {
+                    m_bf.setAnimation(3);  // holster weapon
+                    m_weaponCurrentState = WeaponState::IdleToHide;
+                }
+                else if(m_command.action)
+                {
+                    m_weaponCurrentState = WeaponState::IdleToFire;
+                }
+                else
+                {
+                    // stay at frame 0
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                }
+                break;
 
-                case WeaponState::FireToIdle:
-                    // reverse stepping:
-                    // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
-                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
+            case WeaponState::FireToIdle:
+                // reverse stepping:
+                // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
+                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::Idle;
+                }
+                break;
 
-                case WeaponState::IdleToFire:
-                    if(m_command.action)
+            case WeaponState::IdleToFire:
+                if(m_command.action)
+                {
+                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                        {
-                            ss_anim->setAnimation(2);  // shooting cycle
-                            m_weaponCurrentState = WeaponState::Fire;
-                        }
+                        m_bf.setAnimation(2);  // shooting cycle
+                        m_weaponCurrentState = WeaponState::Fire;
                     }
-                    else
-                    {
-                        m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
+                }
+                else
+                {
+                    m_weaponCurrentState = WeaponState::FireToIdle;
+                }
+                break;
 
-                case WeaponState::Fire:
-                    if(m_command.action)
+            case WeaponState::Fire:
+                if(m_command.action)
+                {
+                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                        {
-                            ss_anim->setAnimation(2);  // shooting cycle
-                                                       // bang
-                        }
+                        m_bf.setAnimation(2);  // shooting cycle
+                                                   // bang
                     }
-                    else
-                    {
-                        ss_anim->setAnimation(0, -1);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
+                }
+                else
+                {
+                    m_bf.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::FireToIdle;
+                }
+                break;
 
-                case WeaponState::IdleToHide:
-                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        m_weaponCurrentState = WeaponState::Hide;
-                        setWeaponModel(m_currentWeapon, 0);
-                    }
-                    break;
-            };
-        }
-        else if((ss_anim->model != nullptr) && (ss_anim->model->animations.size() == 4))
+            case WeaponState::IdleToHide:
+                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_weaponCurrentState = WeaponState::Hide;
+                    setWeaponModel(m_currentWeapon, 0);
+                }
+                break;
+        };
+    }
+    else if(m_bf.getModel() != nullptr && m_bf.getModel()->animations.size() == 4)
+    {
+        // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
+        m_bf.setAnimationMode( animation::AnimationMode::WeaponCompat );
+        switch(m_weaponCurrentState)
         {
-            // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
-            ss_anim->mode = animation::SSAnimationMode::WeaponCompat;
-            switch(m_weaponCurrentState)
-            {
-                case WeaponState::Hide:
-                    if(m_command.ready_weapon)   // ready weapon
-                    {
-                        ss_anim->setAnimation(2);  // draw from holster
-                                                   // fixme: reset lerp:
-                        ss_anim->lerp_last_animation = ss_anim->current_animation;
-                        ss_anim->lerp_last_frame = ss_anim->current_frame;
-                        m_weaponCurrentState = WeaponState::HideToReady;
-                    }
-                    break;
+            case WeaponState::Hide:
+                if(m_command.ready_weapon)   // ready weapon
+                {
+                    m_bf.setAnimation(2);  // draw from holster
+                                               // fixme: reset lerp:
+                    m_bf.setLerpLastAnimation(m_bf.getCurrentAnimation());
+                    m_bf.setLerpLastFrame(m_bf.getCurrentFrame());
+                    m_weaponCurrentState = WeaponState::HideToReady;
+                }
+                break;
 
-                case WeaponState::HideToReady:
-                    if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
+            case WeaponState::HideToReady:
+                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::Idle;
+                }
+                break;
 
-                case WeaponState::Idle:
-                    if(m_command.ready_weapon)
-                    {
-                        ss_anim->setAnimation(2, -1);  // draw weapon, end for reverse
-                        m_weaponCurrentState = WeaponState::IdleToHide;
-                    }
-                    else if(m_command.action)
-                    {
-                        m_weaponCurrentState = WeaponState::IdleToFire;
-                    }
-                    else
-                    {
-                        // stay
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                    }
-                    break;
+            case WeaponState::Idle:
+                if(m_command.ready_weapon)
+                {
+                    m_bf.setAnimation(2, -1);  // draw weapon, end for reverse
+                    m_weaponCurrentState = WeaponState::IdleToHide;
+                }
+                else if(m_command.action)
+                {
+                    m_weaponCurrentState = WeaponState::IdleToFire;
+                }
+                else
+                {
+                    // stay
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                }
+                break;
 
-                case WeaponState::FireToIdle:
-                    // reverse stepping:
-                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        ss_anim->setAnimation(0);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
+            case WeaponState::FireToIdle:
+                // reverse stepping:
+                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::Idle;
+                }
+                break;
 
-                case WeaponState::IdleToFire:
-                    if(m_command.action)
+            case WeaponState::IdleToFire:
+                if(m_command.action)
+                {
+                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                        {
-                            ss_anim->setAnimation(3);  // shooting cycle
-                            m_weaponCurrentState = WeaponState::Fire;
-                        }
+                        m_bf.setAnimation(3);  // shooting cycle
+                        m_weaponCurrentState = WeaponState::Fire;
                     }
-                    else
-                    {
-                        m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
+                }
+                else
+                {
+                    m_weaponCurrentState = WeaponState::FireToIdle;
+                }
+                break;
 
-                case WeaponState::Fire:
-                    if(m_command.action)
+            case WeaponState::Fire:
+                if(m_command.action)
+                {
+                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        if(ss_anim->stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
-                        {
-                            ss_anim->setAnimation(3);  // shooting cycle
-                                                       // bang
-                        }
+                        m_bf.setAnimation(3);  // shooting cycle
+                                                   // bang
                     }
-                    else
-                    {
-                        ss_anim->setAnimation(0, -1);  // hold drawn weapon to aim at target transition
-                        m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
+                }
+                else
+                {
+                    m_bf.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
+                    m_weaponCurrentState = WeaponState::FireToIdle;
+                }
+                break;
 
-                case WeaponState::IdleToHide:
-                    // reverse stepping:
-                    if(ss_anim->stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
-                    {
-                        m_weaponCurrentState = WeaponState::Hide;
-                        setWeaponModel(m_currentWeapon, 0);
-                    }
-                    break;
-            };
-        }
+            case WeaponState::IdleToHide:
+                // reverse stepping:
+                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                {
+                    m_weaponCurrentState = WeaponState::Hide;
+                    setWeaponModel(m_currentWeapon, 0);
+                }
+                break;
+        };
     }
 }
 

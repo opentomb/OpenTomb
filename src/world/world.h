@@ -203,7 +203,7 @@ struct Polygon;
 
 namespace animation
 {
-struct SSBoneFrame;
+struct Skeleton;
 } // namespace animation
 
 struct BaseItem
@@ -213,7 +213,7 @@ struct BaseItem
     MenuItemType                type;
     uint16_t                    count;
     char                        name[64];
-    std::unique_ptr<animation::SSBoneFrame> bf;
+    std::unique_ptr<animation::Skeleton> bf;
 
     ~BaseItem();
 };

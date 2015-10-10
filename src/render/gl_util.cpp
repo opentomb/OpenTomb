@@ -8,8 +8,6 @@
 
 #include <boost/log/trivial.hpp>
 
-#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
-
 namespace render
 {
 
@@ -126,7 +124,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     GLint   compileStatus;
     int size;
     FILE * file;
-    BOOST_LOG_TRIVIAL(error) << "GL_Loading " << fileName;
+    BOOST_LOG_TRIVIAL(debug) << "GL_Loading " << fileName;
     file = fopen(fileName, "rb");
     if(file == nullptr)
     {
@@ -172,7 +170,7 @@ int loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *addi
     printShaderInfoLog(ShaderObj);
 
     if(compileStatus != GL_TRUE)
-        BOOST_LOG_TRIVIAL(warning) << "compilation failed";
+        BOOST_LOG_TRIVIAL(error) << "compilation failed";
     else
         BOOST_LOG_TRIVIAL(debug) << "compilation succeeded";
 

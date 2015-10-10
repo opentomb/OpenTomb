@@ -468,7 +468,7 @@ void InventoryManager::render()
                 matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
                 bi->bf->itemFrame(0.0f);
             }
-            matrix = glm::translate(matrix, { -0.5f * bi->bf->center[0], -0.5f * bi->bf->center[1], -0.5f * bi->bf->center[2] });
+            matrix = glm::translate(matrix, -0.5f * bi->bf->getCenter());
             matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
             render::renderItem(bi->bf.get(), 0.0f, matrix, gui::guiProjectionMatrix);
 

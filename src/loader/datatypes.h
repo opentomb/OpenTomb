@@ -7,6 +7,7 @@
 
 #include "game.h"
 #include "io/sdlreader.h"
+#include "util/helpers.h"
 
 namespace loader
 {
@@ -254,17 +255,17 @@ struct Portal
         portal.vertices[1] = Vertex::read16(reader);
         portal.vertices[2] = Vertex::read16(reader);
         portal.vertices[3] = Vertex::read16(reader);
-        if((portal.normal.x == 1.0f) && (portal.normal.y == 0.0f) && (portal.normal.z == 0.0f))
+        if(util::fuzzyOne(portal.normal.x) && util::fuzzyZero(portal.normal.y) && util::fuzzyZero(portal.normal.z))
             return portal;
-        if((portal.normal.x == -1.0f) && (portal.normal.y == 0.0f) && (portal.normal.z == 0.0f))
+        if(util::fuzzyOne(-portal.normal.x) && util::fuzzyZero(portal.normal.y) && util::fuzzyZero(portal.normal.z))
             return portal;
-        if((portal.normal.x == 0.0f) && (portal.normal.y == 1.0f) && (portal.normal.z == 0.0f))
+        if(util::fuzzyZero(portal.normal.x) && util::fuzzyOne(portal.normal.y) && util::fuzzyZero(portal.normal.z))
             return portal;
-        if((portal.normal.x == 0.0f) && (portal.normal.y == -1.0f) && (portal.normal.z == 0.0f))
+        if(util::fuzzyZero(portal.normal.x) && util::fuzzyOne(-portal.normal.y) && util::fuzzyZero(portal.normal.z))
             return portal;
-        if((portal.normal.x == 0.0f) && (portal.normal.y == 0.0f) && (portal.normal.z == 1.0f))
+        if(util::fuzzyZero(portal.normal.x) && util::fuzzyZero(portal.normal.y) && util::fuzzyOne(portal.normal.z))
             return portal;
-        if((portal.normal.x == 0.0f) && (portal.normal.y == 0.0f) && (portal.normal.z == -1.0f))
+        if(util::fuzzyZero(portal.normal.x) && util::fuzzyZero(portal.normal.y) && util::fuzzyOne(-portal.normal.z))
             return portal;
         // std::cerr << "read_tr_room_portal: normal not on world axis");
         return portal;

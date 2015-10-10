@@ -468,17 +468,17 @@ void showDebugInfo()
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
         gui::drawText(30.0, 30.0, "curr_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
-                      ent->m_bf.animations.current_animation,
-                      ent->m_bf.animations.last_state,
-                      ent->m_bf.animations.next_state,
+                      ent->m_bf.getCurrentAnimation(),
+                      ent->m_bf.getLastState(),
+                      ent->m_bf.getNextState(),
                       ent->m_currentSpeed,
-                      ent->m_bf.animations.current_frame
+                      ent->m_bf.getCurrentFrame()
                       );
         gui::drawText(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
-                ent->m_bf.animations.lerp_last_animation,
-                ent->m_bf.animations.lerp_last_frame,
-                ent->m_bf.animations.frame_time,
-                ent->m_bf.animations.lerp,
+                ent->m_bf.getLerpLastAnimation(),
+                ent->m_bf.getLerpLastFrame(),
+                ent->m_bf.getFrameTime(),
+                ent->m_bf.getLerp(),
                 ent->m_lerp_last_transform[3].x,
                 ent->m_lerp_last_transform[3].y,
                 ent->m_lerp_last_transform[3].z,
@@ -494,7 +494,7 @@ void showDebugInfo()
     {
         if(world::Entity* e = dynamic_cast<world::Entity*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_bf.animations.model->id);
+            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_bf.getModel()->id);
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_cont))
         {
@@ -579,6 +579,7 @@ void restoreEntityLerpTransforms()
     }
     return;
 }
+
 void storeEntityLerpTransforms()
 {
     if(engine_world.character)
@@ -591,19 +592,19 @@ void storeEntityLerpTransforms()
 
             if(engine_world.character->m_lerp_skip)
             {
-                engine_world.character->m_bf.animations.lerp_last_animation = engine_world.character->m_bf.animations.current_animation;
-                engine_world.character->m_bf.animations.lerp_last_frame = engine_world.character->m_bf.animations.current_frame;
+                engine_world.character->m_bf.setLerpLastAnimation(engine_world.character->m_bf.getCurrentAnimation());
+                engine_world.character->m_bf.setLerpLastFrame(engine_world.character->m_bf.getCurrentFrame());
                 engine_world.character->m_lerp_last_transform = engine_world.character->m_lerp_curr_transform;
                 engine_world.character->m_lerp_skip = false;
             }
 
             // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-            glm::float_t tmp = engine_world.character->m_bf.animations.lerp;
-            engine_world.character->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
+            glm::float_t tmp = engine_world.character->m_bf.getLerp();
+            engine_world.character->m_bf.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
             engine_world.character->m_bf.updateCurrentBoneFrame();
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
-            engine_world.character->m_bf.animations.lerp = tmp;
+            engine_world.character->m_bf.setLerp( tmp );
 
         }
     }
@@ -620,18 +621,18 @@ void storeEntityLerpTransforms()
 
                 if(entity->m_lerp_skip)
                 {
-                    entity->m_bf.animations.lerp_last_animation = entity->m_bf.animations.current_animation;
-                    entity->m_bf.animations.lerp_last_frame = entity->m_bf.animations.current_frame;
+                    entity->m_bf.setLerpLastAnimation(entity->m_bf.getCurrentAnimation());
+                    entity->m_bf.setLerpLastFrame(entity->m_bf.getCurrentFrame());
                     entity->m_lerp_last_transform = entity->m_lerp_curr_transform;
                     entity->m_lerp_skip = false;
                 }
 
-                glm::float_t tmp = entity->m_bf.animations.lerp;
-                entity->m_bf.animations.lerp += world::animation::FrameRate / world::animation::GameLogicFrameRate;
+                glm::float_t tmp = entity->m_bf.getLerp();
+                entity->m_bf.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
                 entity->m_bf.updateCurrentBoneFrame();
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
-                entity->m_bf.animations.lerp = tmp;
+                entity->m_bf.setLerp( tmp );
             }
         }
     }
@@ -799,7 +800,7 @@ void dumpRoom(world::Room* r)
         {
             if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
             {
-                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_bf.animations.model->id;
+                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_bf.getModel()->id;
             }
         }
     }
