@@ -737,7 +737,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 {
     int ret = 0;
 
-    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
+    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size))
     {
         return ret;
     }
@@ -848,6 +848,10 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     if(sector->trigger == NULL)
                     {
                         sector->trigger = (trigger_header_p)malloc(sizeof(trigger_header_t));
+                    }
+                    else
+                    {
+                        Con_AddLine("SECTOR HAS TWO OR MORE TRIGGERS!!!", FONTSTYLE_CONSOLE_WARNING);
                     }
                     sector->trigger->commands = NULL;
                     sector->trigger->function_value = fd_command.function_value;

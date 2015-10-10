@@ -34,10 +34,8 @@ inline uint32_t Entity_GetSectorStatus(entity_p ent)
 
 inline void Entity_SetSectorStatus(entity_p ent, uint16_t status)
 {
-    uint8_t trigger_layout = ent->trigger_layout;
-    trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
-    trigger_layout ^=  ((uint8_t)status) << 7;   // sector_status  - 10000000
-    ent->trigger_layout = trigger_layout;
+    ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
+    ent->trigger_layout ^=  ((uint8_t)status) << 7;   // sector_status  - 10000000
 }
 
 
@@ -49,122 +47,11 @@ inline uint32_t Entity_GetLock(entity_p ent)
 
 inline void Entity_SetLock(entity_p ent, uint16_t status)
 {
-    uint8_t trigger_layout = ent->trigger_layout;
-    trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)status) << 6;   // lock  - 01000000
-    ent->trigger_layout = trigger_layout;
-}
-
-
-void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
-{
-    int top = lua_gettop(engine_lua);
-
-    // Get current trigger layout.
-    ///local mask, event, lock = getEntityTriggerLayout(object_id);
-    uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
-    uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
-    uint16_t lock = (entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6;
-
-    // Ignore activation, if activity lock is set.
-    if(lock == 1)
-    {
-        return;                      // No action if object is locked.
-    }
-
-    lock = trigger_lock;             // Update object lock.
-
-    // Apply trigger mask to entity mask.
-
-    if(trigger_op == TRIGGER_OP_XOR)
-    {
-        mask ^= trigger_mask;       // Switch cases
-    }
-    else
-    {
-        mask |= trigger_mask;       // Other cases
-    }
-
-    // Full entity mask (11111) is always a reason to activate an entity.
-    // If mask is not full, entity won't activate - no exclusions.
-
-    if((mask == 0x1F) && (event == 0))
-    {
-        ///execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
-        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, entity_activator->id);
-        event = 1;
-    }
-    else if((mask != 0x1F) and (event == 1))
-    {
-        ///execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
-        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, entity_activator->id);
-        event = 0;
-    }
-
-    // Update trigger layout.
-    ///setEntityTriggerLayout(object_id, mask, event, lock);
-    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);           // mask  - 00011111
-    entity_object->trigger_layout ^= (uint8_t)mask;
-    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);          // event - 00100000
-    entity_object->trigger_layout ^= ((uint8_t)event) << 5;
-    entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);           // lock  - 01000000
-    entity_object->trigger_layout ^= ((uint8_t)lock) << 6;
-
-    ///setEntityTimer(object_id, trigger_timer);                                // Engage timer.
-    entity_object->timer = trigger_timer;
-
-    lua_settop(engine_lua, top);
-}
-
-
-void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
-{
-    int top = lua_gettop(engine_lua);
-
-    // Get current trigger layout.
-    ///local mask, event, lock = getEntityTriggerLayout(object_id);
-    //uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
-    uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
-    uint16_t lock = (entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6;
-
-    // Ignore deactivation, if activity lock is set.
-    if(lock == 1)
-    {
-        return;                      // No action if object is locked.
-    }
-
-    // Execute entity deactivation function, only if activation was previously set.
-    if(event == 1)
-    {
-        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, entity_activator->id);
-
-        // Activation mask and timer are forced to zero when entity is deactivated.
-        // Activity lock is ignored, since it can't be raised by antitriggers.
-
-        // Update trigger layout.
-        entity_object->trigger_layout = 0x00U;
-
-        ///setEntityTimer(object_id, 0.0);
-        entity_object->timer = 0.0f;
-    }
-
-    lua_settop(engine_lua, top);
+    ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
+    ent->trigger_layout ^= ((uint8_t)status) << 6;   // lock  - 01000000
 }
 
 /*
--- Moves desired entity to specified sink.
-
-function moveToSink(entity_index, sink_index)
-    local movetype = getEntityMoveType(entity_index);
-    if(movetype == 5) then  -- Dive, if on water.
-        if(getEntityAnim(entity_index) ~= 113) then
-            setEntityAnim(entity_index, 113);
-            setEntityMoveType(entity_index, 6);
-        end;
-    elseif(movetype == 6) then
-        moveEntityToSink(entity_index, sink_index);
-    end;
-end
-
 -- Does specified flipeffect.
 
 function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
@@ -474,7 +361,18 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    Entity_MoveToSink(entity_activator, command->operands);
+                    if(entity_activator->move_type == MOVE_ON_WATER)
+                    {
+                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
+                        {
+                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0, -1);
+                            entity_activator->move_type = MOVE_UNDERWATER;
+                        }
+                    }
+                    else if(entity_activator->move_type == MOVE_UNDERWATER)
+                    {
+                        Entity_MoveToSink(entity_activator, command->operands);
+                    }
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPMAP:

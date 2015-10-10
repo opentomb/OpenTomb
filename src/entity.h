@@ -115,6 +115,8 @@ void Entity_UpdateTransform(entity_p entity);
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
 void Entity_CheckActivators(struct entity_s *ent);
+void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);
+void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator);
 
 int  Entity_GetSubstanceState(entity_p entity);
 

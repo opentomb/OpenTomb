@@ -5,6 +5,12 @@
 -- Here we'll place any debug routines probably needed for testing in game.
 --------------------------------------------------------------------------------
 
+function goToEntity(id)
+    if(player ~= nil) then
+        setEntityPos(player, getEntityPos(id));
+    end;
+end;
+
 function checkDebugKeys()
     if(checkKey(KEY_R, true)) then
         print("Ragdoll activated!");

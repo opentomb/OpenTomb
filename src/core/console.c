@@ -42,12 +42,18 @@ static struct
     float                       cursor_time;                // Current cursor draw time
     float                       show_cursor_period;
     
+    FT_Library                  font_library;               // GLF font library unit.
+    uint16_t                    max_styles;
+    struct gl_fontstyle_s      *styles;
+
+    uint16_t                    max_fonts;
+    struct gl_font_cont_s      *fonts;
+    
     int8_t                      show_cursor;                // Cursor visibility flag
     int8_t                      show_console;               // Visibility flag
 } con_base;
 
 
-static gl_font_manager_p        con_font_manager = NULL;
 static GLuint                   backgroundBuffer = 0;
 static GLuint                   cursorBuffer = 0;
 
@@ -128,7 +134,34 @@ void Con_Init()
         con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
     }
 
-    con_font_manager = glf_create_manager(GUI_MAX_FONTS, GUI_MAX_FONTSTYLES);
+    con_base.font_library   = NULL;
+    FT_Init_FreeType(&con_base.font_library);
+
+    con_base.max_styles     = GUI_MAX_FONTSTYLES;
+    con_base.max_fonts      = GUI_MAX_FONTS;
+    con_base.styles         = (gl_fontstyle_p)malloc(con_base.max_styles * sizeof(gl_fontstyle_t));
+    for(i = 0; i < con_base.max_styles; i++)
+    {
+        con_base.styles[i].rect_color[0] = 1.0;
+        con_base.styles[i].rect_color[1] = 1.0;
+        con_base.styles[i].rect_color[2] = 1.0;
+        con_base.styles[i].rect_color[3] = 0.0;
+
+        con_base.styles[i].font_color[0] = 0.0;
+        con_base.styles[i].font_color[1] = 0.0;
+        con_base.styles[i].font_color[2] = 0.0;
+        con_base.styles[i].font_color[3] = 1.0;
+
+        con_base.styles[i].shadowed = 0x00;
+        con_base.styles[i].rect     = 0x00;
+    }
+
+    con_base.fonts          = (gl_font_cont_p)malloc(con_base.max_fonts * sizeof(gl_font_cont_t));;
+    for(i = 0; i < con_base.max_fonts; i++)
+    {
+        con_base.fonts[i].font_size = 0;
+        con_base.fonts[i].gl_font   = NULL;
+    }
 }
 
 
@@ -142,11 +175,11 @@ void Con_InitFont()
 {
     qglGenBuffersARB(1, &backgroundBuffer);
     qglGenBuffersARB(1, &cursorBuffer);
-    if(con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL)
+    if(con_base.fonts[FONT_CONSOLE].gl_font == NULL)
     {
-        glf_manager_add_font(con_font_manager, 0, 12, "resource/fonts/DroidSansMono.ttf");
+        Con_AddFont(0, 12, "resource/fonts/DroidSansMono.ttf");
     }
-    if(con_font_manager->fonts[FONT_CONSOLE].gl_font)
+    if(con_base.fonts[FONT_CONSOLE].gl_font)
     {
         Con_SetLineInterval(con_base.spacing);
     }
@@ -181,25 +214,37 @@ void Con_Destroy()
 {
     uint16_t i;
 
-    for(i=0;i<con_base.line_count;i++)
+    for(i = 0; i < con_base.line_count; i++)
     {
         free(con_base.line_text[i]);
     }
     free(con_base.line_text);
     free(con_base.line_style_id);
 
-    for(i=0;i<con_base.log_lines_count;i++)
+    for(i = 0; i < con_base.log_lines_count; i++)
     {
         free(con_base.log_lines[i]);
     }
     free(con_base.log_lines);
     con_base.log_lines = NULL;
 
-    if(con_font_manager)
+    for(i = 0; i < con_base.max_fonts; i++)
     {
-        glf_free_manager(con_font_manager);
-        con_font_manager = NULL;
+        glf_free_font(con_base.fonts[i].gl_font);
+        con_base.fonts[i].font_size = 0;
+        con_base.fonts[i].gl_font   = NULL;
     }
+    free(con_base.fonts);
+    con_base.fonts = NULL;
+
+    free(con_base.styles);
+    con_base.styles = NULL;
+
+    con_base.max_fonts = 0;
+    con_base.max_styles = 0;
+
+    FT_Done_FreeType(con_base.font_library);
+    con_base.font_library = NULL;
     
     qglDeleteBuffersARB(1, &backgroundBuffer);
     qglDeleteBuffersARB(1, &cursorBuffer);
@@ -223,13 +268,13 @@ void Con_SetLineInterval(float interval)
 
     con_base.spacing = interval;
     
-    if(!con_font_manager || (con_font_manager->fonts[FONT_CONSOLE].gl_font == NULL))
+    if(!con_base.fonts || con_base.fonts[FONT_CONSOLE].gl_font == NULL)
     {
         return;
     }
     
     // con_base.font->font_size has absolute size (after scaling)
-    con_base.line_height = (1.0 + con_base.spacing) * con_font_manager->fonts[FONT_CONSOLE].gl_font->font_size;
+    con_base.line_height = (1.0 + con_base.spacing) * con_base.fonts[FONT_CONSOLE].gl_font->font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -432,13 +477,13 @@ void Con_Edit(int key)
 
 void Con_CalcCursorPosition()
 {
-    if(con_font_manager && (con_font_manager->fonts[FONT_CONSOLE].gl_font))
+    if(con_base.fonts[FONT_CONSOLE].gl_font)
     {
         GLfloat *v, cursor_array[16];
         GLint y = con_base.cursor_y + con_base.line_height;
         
         v = cursor_array;
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_font_manager->fonts[FONT_CONSOLE].gl_font, con_base.line_text[0], con_base.cursor_pos);
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_base.fonts[FONT_CONSOLE].gl_font, con_base.line_text[0], con_base.cursor_pos);
         
        *v++ = (GLfloat)con_base.cursor_x;                      
        *v++ = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
@@ -592,20 +637,34 @@ void Con_Notify(const char *fmt, ...)
 
 int Con_AddFont(uint16_t index, uint16_t size, const char* path)
 {
-    if(con_font_manager)
+    if(index < con_base.max_fonts)
     {
-        return glf_manager_add_font(con_font_manager, index, size, path);
+        gl_tex_font_p new_font = glf_create_font(con_base.font_library, path, size);
+        if(new_font)
+        {
+            if(con_base.fonts[index].gl_font)
+            {
+                glf_free_font(con_base.fonts[index].gl_font);
+            }
+            con_base.fonts[index].font_size = size;
+            con_base.fonts[index].gl_font = new_font;
+            return 1;
+        }
     }
+    
     return 0;
 }
 
 
 int Con_RemoveFont(uint16_t index)
 {
-    if(con_font_manager)
+    if((index < con_base.max_fonts) && (con_base.fonts[index].gl_font))
     {
-        return glf_manager_remove_font(con_font_manager, index);
+        glf_free_font(con_base.fonts[index].gl_font);
+        con_base.fonts[index].gl_font = NULL;
+        return 1;
     }
+
     return 0;
 }
 
@@ -615,51 +674,87 @@ int Con_AddFontStyle(uint16_t index,
                      uint8_t shadow, uint8_t rect, uint8_t rect_border,
                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A)
 {
-    if(con_font_manager)
+    if(index < con_base.max_styles)
     {
-        return glf_manager_add_fontstyle(con_font_manager, index, R, G, B, A,
-                                         shadow, rect, rect_border,
-                                         rect_R, rect_G, rect_B, rect_A);
+        gl_fontstyle_p desired_style = con_base.styles + index;
+                
+        desired_style->rect_border   = rect_border;
+        desired_style->rect_color[0] = rect_R;
+        desired_style->rect_color[1] = rect_G;
+        desired_style->rect_color[2] = rect_B;
+        desired_style->rect_color[3] = rect_A;
+
+        desired_style->font_color[0]  = R;
+        desired_style->font_color[1]  = G;
+        desired_style->font_color[2]  = B;
+        desired_style->font_color[3]  = A;
+
+        desired_style->shadowed  = shadow;
+        desired_style->rect      = rect;
+        return 1;
     }
+    
     return 0;
 }
 
 
 int Con_RemoveFontStyle(uint16_t index)
 {
-    if(con_font_manager)
+    if(index < con_base.max_styles)
     {
-        return glf_manager_remove_fontstyle(con_font_manager, index);
+        con_base.styles[index].rect_color[0] = 1.0;
+        con_base.styles[index].rect_color[1] = 1.0;
+        con_base.styles[index].rect_color[2] = 1.0;
+        con_base.styles[index].rect_color[3] = 0.0;
+
+        con_base.styles[index].font_color[0] = 0.0;
+        con_base.styles[index].font_color[1] = 0.0;
+        con_base.styles[index].font_color[2] = 0.0;
+        con_base.styles[index].font_color[3] = 1.0;
+
+        con_base.styles[index].shadowed = 0x00;
+        con_base.styles[index].rect     = 0x00;
+        return 1;
     }
+    
     return 0;
 }
 
 
 gl_tex_font_p Con_GetFont(uint16_t index)
 {
-    if(con_font_manager)
+    if(index < con_base.max_fonts)
     {
-        return glf_manager_get_font(con_font_manager, index);
+        return con_base.fonts[index].gl_font;
     }
+    
     return NULL;
 }
 
 
 gl_fontstyle_p Con_GetFontStyle(uint16_t index)
 {
-    if(con_font_manager)
+    if(index < con_base.max_styles)
     {
-        return glf_manager_get_style(con_font_manager, index);
+        return con_base.styles + index;
     }
+    
     return NULL;
 }
 
 
 void Con_SetScaleFonts(float scale)
 {
-    if(con_font_manager)
+    if(con_base.max_fonts > 0)
     {
-        glf_manager_resize(con_font_manager, scale);
+        uint16_t i;
+        for(i = 0; i < con_base.max_fonts; i++)
+        {
+            if(con_base.fonts[i].gl_font)
+            {
+                glf_resize(con_base.fonts[i].gl_font, (uint16_t)(((float)con_base.fonts[i].font_size) * scale));
+            }
+        }
         Con_SetLineInterval(con_base.spacing);
     }
     Con_FillBackgroundBuffer();

@@ -84,18 +84,6 @@ typedef struct gl_fontstyle_s
 #define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
 
 
-typedef struct gl_font_manager_s
-{
-    uint16_t                max_styles;
-    struct gl_fontstyle_s  *styles;
-
-    uint16_t                max_fonts;
-    struct gl_font_cont_s  *fonts;
-
-    FT_Library              font_library;  // GLF font library unit.
-}gl_font_manager_t, *gl_font_manager_p;
-
-
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);
 void glf_free_font(gl_tex_font_p glf);
@@ -111,25 +99,6 @@ void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *tex
 
 uint32_t utf8_strlen(const char *str);
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
-
-
-// Font manager is a structure which is used to manage all fonts
-// and font styles. Every time you want to change font or style, font manager
-// functions should be used.
-
-gl_font_manager_p glf_create_manager(uint16_t max_fonts, uint16_t max_styles);
-void glf_free_manager(gl_font_manager_p p);
-
-gl_tex_font_p glf_manager_get_font(gl_font_manager_p manager, uint16_t index);
-gl_fontstyle_p glf_manager_get_style(gl_font_manager_p manager, uint16_t index);
-int glf_manager_add_font(gl_font_manager_p manager, uint16_t index, uint16_t size, const char* path);
-int glf_manager_add_fontstyle(gl_font_manager_p manager, uint16_t index,
-                              GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                              uint8_t shadow, uint8_t rect, uint8_t rect_border,
-                              GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
-int glf_manager_remove_font(gl_font_manager_p manager, uint16_t index);
-int glf_manager_remove_fontstyle(gl_font_manager_p manager, uint16_t index);
-void glf_manager_resize(gl_font_manager_p manager, float scale);
 
 
 #ifdef	__cplusplus
