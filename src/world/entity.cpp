@@ -875,26 +875,26 @@ void Entity::lerpTransform(glm::float_t lerp)
     m_transform = glm::interpolate(m_lerp_last_transform, m_lerp_curr_transform, lerp);
 }
 
-void Entity::updateInterpolation(float time)
+void Entity::updateInterpolation(util::Duration time)
 {
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0)
         return;
 
     // Bone animation interp:
-    const glm::float_t lerp = glm::min(1.0f, m_bf.getLerp() + time * animation::FrameRate);
+    const glm::float_t lerp = glm::min(1.0f, m_bf.getLerp() + time / animation::FrameTime);
     m_bf.updateCurrentBoneFrame();
     m_bf.setLerp( lerp );
 
     // Entity transform interp:
     lerpTransform(m_lerp);
-    m_lerp += time * animation::GameLogicFrameRate;
+    m_lerp += time / animation::GameLogicFrameTime;
     if( m_lerp > 1.0 )
     {
         m_lerp = 1.0;
     }
 }
 
-animation::AnimUpdate Entity::stepAnimation(float time)
+animation::AnimUpdate Entity::stepAnimation(util::Duration time)
 {
     if(   (m_typeFlags & ENTITY_TYPE_DYNAMIC)
        || !m_active
@@ -921,7 +921,7 @@ animation::AnimUpdate Entity::stepAnimation(float time)
  * Entity framestep actions
  * @param time      frame time
  */
-void Entity::frame(float time)
+void Entity::frame(util::Duration time)
 {
     if(!m_enabled )
     {
@@ -1246,11 +1246,11 @@ bool Entity::deleteRagdoll()
     // To make them static again, additionally call setEntityBodyMass script function.
 }
 
-glm::vec3 Entity::applyGravity(float time)
+glm::vec3 Entity::applyGravity(util::Duration time)
 {
     const glm::vec3 gravityAccelleration = util::convert(engine::bt_engine_dynamicsWorld->getGravity());
-    const glm::vec3 gravitySpeed = gravityAccelleration * time;
-    glm::vec3 move = (m_speed + gravitySpeed*0.5f) * time;
+    const glm::vec3 gravitySpeed = gravityAccelleration * util::toSeconds(time);
+    glm::vec3 move = (m_speed + gravitySpeed*0.5f) * util::toSeconds(time);
     m_speed += gravitySpeed;
     return move;
 }

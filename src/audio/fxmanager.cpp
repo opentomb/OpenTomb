@@ -109,7 +109,7 @@ void FxManager::updateListener(world::Camera *cam)
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam->getPosition()));
 
-    glm::vec3 v2 = (cam->getPosition() - cam->m_prevPos) / engine::engine_frame_time;
+    glm::vec3 v2 = (cam->getPosition() - cam->m_prevPos) / util::toSeconds(engine::engine_frame_time);
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
     cam->m_prevPos = cam->getPosition();
 

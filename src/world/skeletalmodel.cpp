@@ -39,7 +39,6 @@ void SkeletalModel::interpolateFrames()
 
                     glm::float_t lerp = static_cast<glm::float_t>(j) / static_cast<glm::float_t>(rate);
 
-                    anim->keyFrames[destIdx + j].center = glm::mix(anim->keyFrames[srcIdx].center, anim->keyFrames[srcIdx + 1].center, lerp);
                     anim->keyFrames[destIdx + j].position = glm::mix(anim->keyFrames[srcIdx].position, anim->keyFrames[srcIdx + 1].position, lerp);
                     anim->keyFrames[destIdx + j].boundingBox.max = glm::mix(anim->keyFrames[srcIdx].boundingBox.max, anim->keyFrames[srcIdx + 1].boundingBox.max, lerp);
                     anim->keyFrames[destIdx + j].boundingBox.min = glm::mix(anim->keyFrames[srcIdx].boundingBox.min, anim->keyFrames[srcIdx + 1].boundingBox.min, lerp);

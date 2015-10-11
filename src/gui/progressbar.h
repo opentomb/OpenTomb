@@ -44,9 +44,9 @@ public:
     void SetSize(float width, float height, float borderSize);
     void SetPosition(HorizontalAnchor anchor_X, float offset_X, VerticalAnchor anchor_Y, float offset_Y);
     void SetValues(float maxValue, float warnValue);
-    void SetBlink(int interval);
+    void SetBlink(util::Duration interval);
     void SetExtrude(bool enabled, uint8_t depth);
-    void SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay);
+    void SetAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay);
 
     bool          Forced;               // Forced flag is set when bar is strictly drawn.
     bool          Visible;              // Is it visible or not.
@@ -95,15 +95,15 @@ private:
     float         mLastValue;           // Last value back-up for autoshow on change event.
 
     bool          mBlink;               // Warning state (blink) flag.
-    float         mBlinkInterval;       // Blink interval (speed).
-    float         mBlinkCnt;            // Blink counter.
+    util::Duration mBlinkInterval;       // Blink interval (speed).
+    util::Duration mBlinkCnt;            // Blink counter.
 
     bool          mAutoShow;            // Autoshow on change flag.
-    float         mAutoShowDelay;       // How long bar will stay on-screen in AutoShow mode.
-    float         mAutoShowCnt;         // Auto-show counter.
+    util::Duration mAutoShowDelay;       // How long bar will stay on-screen in AutoShow mode.
+    util::Duration mAutoShowCnt;         // Auto-show counter.
     bool          mAutoShowFade;        // Fade flag.
-    float         mAutoShowFadeDelay;   // Fade length.
-    float         mAutoShowFadeCnt;     // Fade progress counter.
+    util::Duration mAutoShowFadeDelay;   // Fade length.
+    util::Duration mAutoShowFadeLength;     // Fade progress counter.
 
     float         mRangeUnit;           // Range unit used to set base bar size.
     float         mBaseSize;            // Base bar size.

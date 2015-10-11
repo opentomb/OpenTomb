@@ -2313,7 +2313,7 @@ namespace world
 
     void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
     {
-        int border_size = util::clamp(render::renderer.settings().texture_border, 0, 64);
+        int border_size = glm::clamp(render::renderer.settings().texture_border, 0, 64);
 
         world->tex_atlas.reset(new BorderedTextureAtlas(border_size,
                                                         render::renderer.settings().save_texture_memory,
@@ -2409,8 +2409,8 @@ namespace world
             seq->frame_lock = false; // by default anim is playing
             seq->uvrotate = false; // by default uvrotate
             seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate = 0.05f;  // Should be passed as 1 / FPS.
-            seq->frame_time = 0.0;   // Reset frame time to initial state.
+            seq->frame_rate = util::MilliSeconds(50);  // Should be passed as 1 / FPS.
+            seq->frame_time = util::Duration(0);   // Reset frame time to initial state.
             seq->current_frame = 0;     // Reset current frame to zero.
 
             for(size_t j = 0; j < seq->frames.size(); j++)
@@ -3511,8 +3511,6 @@ namespace world
             keyFrame->boundingBox.max = {0,0,0};
             keyFrame->position = {0,0,0};
         }
-
-        keyFrame->center = keyFrame->boundingBox.getCenter();
     }
 
     void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr)

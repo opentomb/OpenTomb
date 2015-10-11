@@ -60,9 +60,9 @@ private:
     int16_t m_cursorPos;                 // Current cursor position, in symbols
     int16_t m_cursorX;                   // Cursor position in pixels
     int16_t m_cursorY;
-    float m_blinkTime;                // Current cursor draw time
-    float m_blinkPeriod;
-    int8_t m_showCursor;                // Cursor visibility flag
+    util::Duration m_blinkTime;                // Current cursor draw time
+    util::Duration m_blinkPeriod;
+    bool m_showCursor;                // Cursor visibility flag
 
     bool inited = false;                     // Ready-to-use flag
     bool m_isVisible;                       // Visibility flag
@@ -143,7 +143,7 @@ public:
         m_isVisible = val;
     }
 
-    void setShowCursorPeriod(float val)
+    void setShowCursorPeriod(util::Duration val)
     {
         m_blinkPeriod = val;
     }

@@ -2,6 +2,7 @@
 
 #include <cctype>
 
+#include "util/helpers.h"
 #include "LuaState.h"
 
 #define CVAR_NAME_SIZE 32
@@ -169,9 +170,9 @@ namespace script
             call("clearAutoexec");
         }
 
-        void doTasks(float time)
+        void doTasks(util::Duration time)
         {
-            set("FRAME_TIME", time);
+            set("FRAME_TIME", util::toSeconds(time));
 
             call("doTasks");
             call("clearKeys");

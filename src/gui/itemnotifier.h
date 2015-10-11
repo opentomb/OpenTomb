@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <glm/glm.hpp>
 
 namespace gui
@@ -10,7 +12,7 @@ class ItemNotifier
 public:
     ItemNotifier();
 
-    void    Start(int item, float time);
+    void    Start(int item, util::Duration time);
     void    Reset();
     void    Animate();
     void    Draw();
@@ -38,8 +40,8 @@ private:
 
     float   mSize;
 
-    float   mShowTime;
-    float   mCurrTime;
+    util::Duration mShowTime;
+    util::Duration mCurrTime;
 };
 
 void initNotifier();

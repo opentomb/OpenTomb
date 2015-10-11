@@ -803,13 +803,13 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += ((360 - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360 - glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
@@ -821,19 +821,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < max_lean)   // Approaching from center
             {
-                m_angles[2] += ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine::engine_frame_time);
+                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + (lean_coeff * 2) / 2) * util::toSeconds(engine::engine_frame_time));
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
@@ -845,19 +845,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] > neg_lean)   // Reduce previous lean
             {
-                m_angles[2] -= ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= ((glm::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * engine::engine_frame_time;
+                m_angles[2] -= ((glm::abs(m_angles[2]) + (lean_coeff * 2)) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] < 0.0)
                     m_angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * engine::engine_frame_time;
+                m_angles[2] += ((360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2) * util::toSeconds(engine::engine_frame_time);
                 if(m_angles[2] > 360.0)
                     m_angles[2] -= 360.0f;
             }
@@ -888,7 +888,7 @@ glm::float_t Character::inertiaLinear(glm::float_t max_speed, glm::float_t accel
         {
             if(m_inertiaLinear < max_speed)
             {
-                m_inertiaLinear += max_speed * accel * engine::engine_frame_time;
+                m_inertiaLinear += max_speed * accel * util::toSeconds(engine::engine_frame_time);
                 if(m_inertiaLinear > max_speed) m_inertiaLinear = max_speed;
             }
         }
@@ -896,7 +896,7 @@ glm::float_t Character::inertiaLinear(glm::float_t max_speed, glm::float_t accel
         {
             if(m_inertiaLinear > 0.0)
             {
-                m_inertiaLinear -= max_speed * accel * engine::engine_frame_time;
+                m_inertiaLinear -= max_speed * accel * util::toSeconds(engine::engine_frame_time);
                 if(m_inertiaLinear < 0.0) m_inertiaLinear = 0.0;
             }
         }
@@ -938,8 +938,9 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
                 }
                 else
                 {
-                    m_inertiaAngular[axis] += max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] > max_angle) m_inertiaAngular[axis] = max_angle;
+                    m_inertiaAngular[axis] += max_angle * accel * util::toSeconds(engine::engine_frame_time);
+                    if(m_inertiaAngular[axis] > max_angle)
+                        m_inertiaAngular[axis] = max_angle;
                 }
             }
             else
@@ -950,8 +951,9 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
                 }
                 else
                 {
-                    m_inertiaAngular[axis] -= max_angle * accel * engine::engine_frame_time;
-                    if(m_inertiaAngular[axis] < -max_angle) m_inertiaAngular[axis] = -max_angle;
+                    m_inertiaAngular[axis] -= max_angle * accel * util::toSeconds(engine::engine_frame_time);
+                    if(m_inertiaAngular[axis] < -max_angle)
+                        m_inertiaAngular[axis] = -max_angle;
                 }
             }
         }
@@ -1071,7 +1073,7 @@ int Character::moveOnFloor()
     * now move normally
     */
     m_speed = speed;
-    glm::vec3 positionDelta = speed * engine::engine_frame_time;
+    glm::vec3 positionDelta = speed * util::toSeconds(engine::engine_frame_time);
     const glm::float_t distance = glm::length(positionDelta);
 
     glm::vec3 norm_move_xy(positionDelta[0], positionDelta[1], 0.0);
@@ -1092,7 +1094,7 @@ int Character::moveOnFloor()
     {
         if(m_heightInfo.floor_point[2] + m_fallDownHeight > m_transform[3][2])
         {
-            glm::float_t dz_to_land = engine::engine_frame_time * 2400.0f;                   ///@FIXME: magick
+            glm::float_t dz_to_land = util::toSeconds(engine::engine_frame_time) * 2400.0f;                   ///@FIXME: magick
             if(m_transform[3][2] > m_heightInfo.floor_point[2] + dz_to_land)
             {
                 m_transform[3][2] -= dz_to_land;
@@ -1283,7 +1285,7 @@ int Character::monkeyClimbing()
         //dir_flag = DirFlag::Forward;
     }
 
-    move = m_speed * engine::engine_frame_time;
+    move = m_speed * util::toSeconds(engine::engine_frame_time);
     move[2] = 0.0;
 
     ghostUpdate();
@@ -1356,7 +1358,7 @@ int Character::wallsClimbing()
         spd /= t;
     }
     m_speed = spd * m_currentSpeed * animation::FrameRate;
-    move = m_speed * engine::engine_frame_time;
+    move = m_speed * util::toSeconds(engine::engine_frame_time);
 
     ghostUpdate();
     updateCurrentHeight();
@@ -1417,7 +1419,7 @@ int Character::climbing()
 
     m_response.slide = SlideType::None;
 
-    glm::vec3 move = m_speed * engine::engine_frame_time;
+    glm::vec3 move = m_speed * util::toSeconds(engine::engine_frame_time);
 
     ghostUpdate();
     m_transform[3] += glm::vec4(move, 0);
@@ -1474,7 +1476,7 @@ int Character::moveUnderWater()
         updateTransform();                                             // apply rotations
 
         m_speed = glm::vec3(m_transform[1] * t);                     // OY move only!
-        move = m_speed * engine::engine_frame_time;
+        move = m_speed * util::toSeconds(engine::engine_frame_time);
     }
     else
     {
@@ -1559,7 +1561,7 @@ int Character::moveOnWater()
     /*
     * Prepare to moving
     */
-    move = m_speed * engine::engine_frame_time;
+    move = m_speed * util::toSeconds(engine::engine_frame_time);
     ghostUpdate();
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move);  // get horizontal collide
@@ -2159,7 +2161,7 @@ void Character::updateHair()
     }
 }
 
-void Character::frame(float time)
+void Character::frame(util::Duration time)
 {
     if(!m_enabled && !isPlayer())
     {
@@ -2377,7 +2379,7 @@ glm::vec3 Character::camPosForFollowing(glm::float_t dz)
 /* There are stick code for multianimation (weapon mode) testing
  * Model replacing will be upgraded too, I have to add override
  * flags to model manually in the script*/
-void Character::doWeaponFrame(float time)
+void Character::doWeaponFrame(util::Duration time)
 {
     /* anims (TR1 - TR5):
     * pistols:

@@ -193,8 +193,8 @@ public:
 
     int  getAnimDispatchCase(LaraState id);
 
-    animation::AnimUpdate stepAnimation(float time);
-    virtual void frame(float time);  // entity frame step
+    animation::AnimUpdate stepAnimation(util::Duration time);
+    virtual void frame(util::Duration time);  // entity frame step
 
     bool isPlayer()
     {
@@ -202,7 +202,7 @@ public:
         return reinterpret_cast<Entity*>(engine::engine_world.character.get()) == this;
     }
 
-    void updateInterpolation(float time);
+    void updateInterpolation(util::Duration time);
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -263,7 +263,7 @@ public:
     {
     }
 
-    glm::vec3 applyGravity(float time);
+    glm::vec3 applyGravity(util::Duration time);
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);

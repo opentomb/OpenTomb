@@ -211,13 +211,13 @@ void Source::setLooping(ALboolean is_looping)
 
 void Source::setGain(ALfloat gain_value)
 {
-    alSourcef(m_sourceIndex, AL_GAIN, util::clamp(gain_value, 0.0f, 1.0f) * engine::engine_world.audioEngine.getSettings().sound_volume);
+    alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * engine::engine_world.audioEngine.getSettings().sound_volume);
 }
 
 void Source::setPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
-    alSourcef(m_sourceIndex, AL_PITCH, util::clamp(pitch_value, 0.1f, 2.0f));
+    alSourcef(m_sourceIndex, AL_PITCH, glm::clamp(pitch_value, 0.1f, 2.0f));
 }
 
 void Source::setRange(ALfloat range_value)

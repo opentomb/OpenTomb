@@ -24,7 +24,7 @@ ItemNotifier::ItemNotifier()
     mActive = false;
 }
 
-void ItemNotifier::Start(int item, float time)
+void ItemNotifier::Start(int item, util::Duration time)
 {
     Reset();
 
@@ -42,12 +42,12 @@ void ItemNotifier::Animate()
 
     if(!util::fuzzyZero(m_rotationSpeed))
     {
-        m_currentRotation.x = glm::mod(m_currentRotation.x + engine::engine_frame_time * m_rotationSpeed, glm::radians(360.0f));
+        m_currentRotation.x = glm::mod(m_currentRotation.x + util::toSeconds(engine::engine_frame_time) * m_rotationSpeed, glm::radians(360.0f));
     }
 
     if(util::fuzzyZero(mCurrTime))
     {
-        float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+        float step = (mCurrPosX - mEndPosX) * util::toSeconds(engine::engine_frame_time) * 4.0f;
         step = std::max(0.5f, step);
 
         mCurrPosX -= step;
@@ -62,7 +62,7 @@ void ItemNotifier::Animate()
     }
     else
     {
-        float step = (mCurrPosX - mEndPosX) * (engine::engine_frame_time * 4.0f);
+        float step = (mCurrPosX - mEndPosX) * util::toSeconds(engine::engine_frame_time * 4);
         step = std::max(0.5f, step);
 
         mCurrPosX += step;
@@ -76,7 +76,7 @@ void ItemNotifier::Animate()
 void ItemNotifier::Reset()
 {
     mActive = false;
-    mCurrTime = 0.0;
+    mCurrTime = util::Duration(0);
     m_currentRotation = {0,0};
 
     mEndPosX = (static_cast<float>(engine::screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
@@ -100,9 +100,9 @@ void ItemNotifier::Draw()
 
     item->bf->setCurrentAnimation(0);
     item->bf->setCurrentFrame(0);
-    item->bf->setFrameTime(0);
+    item->bf->setFrameTime(util::Duration(0));
 
-    item->bf->itemFrame(0.0);
+    item->bf->itemFrame(util::Duration(0));
     glm::mat4 matrix(1.0f);
     matrix = glm::translate(matrix, { mCurrPosX, mPosY, -2048.0 });
     matrix = glm::rotate(matrix, m_currentRotation.x + m_rotation.x, { 0,1,0 });

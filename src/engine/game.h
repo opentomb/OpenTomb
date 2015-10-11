@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <cstdint>
 #include <memory>
 
@@ -39,8 +41,8 @@ void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 
-float    Game_Tick(float *game_logic_time);
-void     Game_Frame(float time);
+util::Duration Game_Tick(util::Duration* game_logic_time);
+void     Game_Frame(util::Duration time);
 
 void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util/helpers.h"
 #include "world/core/boundingbox.h"
 #include "world/statecontroller.h"
 
@@ -30,12 +31,14 @@ namespace animation
 
 //! Default fixed TR framerate needed for animation calculation
 constexpr float FrameRate = 30;
+constexpr util::Duration FrameTime = util::fromSeconds(1.0/FrameRate);
 
 // This is the global game logic refresh interval (physics timestep)
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
 // This should be a multiple of animation::FrameRate (1/30,60,90,120,...)
 constexpr float GameLogicFrameRate = 2*FrameRate;
+constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0/GameLogicFrameRate);
 
 enum class AnimUpdate
 {
@@ -89,9 +92,9 @@ struct AnimSeq
 
     AnimTextureType anim_type;
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
-    float       frame_time;             // Time passed since last frame update.
+    util::Duration frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
-    glm::float_t    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    util::Duration frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
     glm::float_t    uvrotate_speed;         // Speed of UVRotation, in seconds.
     glm::float_t    uvrotate_max;           // Reference value used to restart rotation.
@@ -106,10 +109,10 @@ struct AnimSeq
  */
 struct AnimDispatch
 {
-    uint16_t    next_anim;                                                      // "switch to" animation
-    uint16_t    next_frame;                                                     // "switch to" frame
-    uint16_t    frame_low;                                                      // low border of state change condition
-    uint16_t    frame_high;                                                     // high border of state change condition
+    uint16_t    next_anim;  //!< "switch to" animation
+    uint16_t    next_frame; //!< "switch to" frame
+    uint16_t    frame_low;  //!< low border of state change condition
+    uint16_t    frame_high; //!< high border of state change condition
 };
 
 struct StateChange
@@ -118,18 +121,23 @@ struct StateChange
     std::vector<AnimDispatch> anim_dispatch;
 };
 
+/**
+ * Defines position and rotation in the parent's coordinate system
+ */
 struct BoneKeyFrame
 {
-    glm::vec3 offset;                                            // bone vector
-    glm::quat qrotate;                                           // rotation quaternion
+    glm::vec3 offset;
+    glm::quat qrotate;
 };
 
+/**
+ * Collection of @c BoneKeyFrame and @c AnimCommand
+ */
 struct SkeletonKeyFrame
 {
     std::vector<BoneKeyFrame> boneKeyFrames;
     glm::vec3            position;
     core::BoundingBox    boundingBox;
-    glm::vec3            center;                    // bounding box center
 
     std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
 };
@@ -154,7 +162,7 @@ struct AnimationFrame
 
     std::vector<AnimCommand> animCommands; // cmds for end-of-anim
 
-    const StateChange* findStateChangeByAnim(int state_change_anim) const
+    const StateChange* findStateChangeByAnim(int state_change_anim) const noexcept
     {
         if(state_change_anim < 0)
             return nullptr;
@@ -173,7 +181,7 @@ struct AnimationFrame
         return nullptr;
     }
 
-    const StateChange* findStateChangeByID(LaraState id) const
+    const StateChange* findStateChangeByID(LaraState id) const noexcept
     {
         for(const StateChange& stateChange : stateChanges)
         {
@@ -219,12 +227,11 @@ class Skeleton
     std::vector<Bone> m_bones{};
     glm::vec3 m_position = {0,0,0};
     core::BoundingBox m_boundingBox{};
-    glm::vec3 m_center = {0,0,0}; //!< bounding box center
 
     bool m_hasSkin = false; //!< whether any skinned meshes need rendering
 
     SkeletalModel* m_model = nullptr;
-    float m_frameTime = 0; //!< time in current frame
+    util::Duration m_frameTime{0}; //!< time in current frame
 
     int16_t m_currentAnimation = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
     int16_t m_currentFrame = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
@@ -242,7 +249,7 @@ public:
     void (*onFrame)(Character* ent, AnimUpdate state) = nullptr;
 
     const AnimationFrame& getCurrentAnimationFrame() const;
-    AnimUpdate stepAnimation(glm::float_t time, Entity *cmdEntity = nullptr);
+    AnimUpdate stepAnimation(util::Duration time, Entity *cmdEntity = nullptr);
     void setAnimation(int animation, int frame = 0);
 
 
@@ -282,11 +289,11 @@ public:
         m_lerpLastFrame = value;
     }
 
-    float getFrameTime() const noexcept
+    util::Duration getFrameTime() const noexcept
     {
         return m_frameTime;
     }
-    void setFrameTime(float time) noexcept
+    void setFrameTime(util::Duration time) noexcept
     {
         m_frameTime = time;
     }
@@ -320,7 +327,7 @@ public:
      * That function updates item animation and rebuilds skeletal matrices;
      * @param bf - extended bone frame of the item;
      */
-    void itemFrame(float time);
+    void itemFrame(util::Duration time);
 
     void updateCurrentBoneFrame();
 
@@ -333,11 +340,6 @@ public:
     {
         BOOST_ASSERT( !m_bones.empty() );
         return m_bones.front().full_transform;
-    }
-
-    const glm::vec3& getCenter() const noexcept
-    {
-        return m_center;
     }
 
     size_t getBoneCount() const noexcept

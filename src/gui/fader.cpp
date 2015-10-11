@@ -22,8 +22,8 @@ Fader::Fader()
     SetColor(0, 0, 0);
     SetBlendingMode(loader::BlendingMode::Opaque);
     SetAlpha(255);
-    SetSpeed(500);
-    SetDelay(0);
+    SetSpeed(util::MilliSeconds(500));
+    SetDelay(util::Duration(0));
 
     mActive = false;
     mComplete = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
@@ -94,15 +94,15 @@ void Fader::SetBlendingMode(loader::BlendingMode mode)
     mBlendingMode = mode;
 }
 
-void Fader::SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary)
+void Fader::SetSpeed(util::Duration fade_speed, util::Duration fade_speed_secondary)
 {
-    mSpeed = 1000.0f / fade_speed;
-    mSpeedSecondary = 1000.0f / fade_speed_secondary;
+    mSpeed = fade_speed;
+    mSpeedSecondary = fade_speed_secondary;
 }
 
-void Fader::SetDelay(uint32_t delay_msec)
+void Fader::SetDelay(util::Duration delay_msec)
 {
-    mMaxTime = delay_msec / 1000.0f;
+    mMaxTime = delay_msec;
 }
 
 void Fader::SetAspect()
@@ -301,7 +301,7 @@ void Fader::Engage(FaderDir fade_dir)
     mDirection = fade_dir;
     mActive = true;
     mComplete = false;
-    mCurrentTime = 0.0;
+    mCurrentTime = util::Duration(0);
 
     if(mDirection == FaderDir::In)
     {
@@ -318,7 +318,7 @@ void Fader::Cut()
     mActive = false;
     mComplete = false;
     mCurrentAlpha = 0.0;
-    mCurrentTime = 0.0;
+    mCurrentTime = util::Duration(0);
 
     DropTexture();
 }
@@ -331,11 +331,13 @@ void Fader::Show()
         return;                                 // If fader is not active, don't render it.
     }
 
+    const auto alphaDelta = engine::engine_frame_time / mSpeed;
+
     if(mDirection == FaderDir::In)          // Fade in case
     {
         if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
         {
-            mCurrentAlpha -= engine::engine_frame_time * mSpeed;
+            mCurrentAlpha -= alphaDelta;
         }
         else
         {
@@ -349,7 +351,7 @@ void Fader::Show()
     {
         if(mCurrentAlpha < mMaxAlpha)   // If alpha is less than maximum, continue to fade.
         {
-            mCurrentAlpha += engine::engine_frame_time * mSpeed;
+            mCurrentAlpha += alphaDelta;
         }
         else
         {
@@ -371,7 +373,7 @@ void Fader::Show()
             }
             else if(mCurrentAlpha < mMaxAlpha)
             {
-                mCurrentAlpha += engine::engine_frame_time * mSpeed;
+                mCurrentAlpha += alphaDelta;
             }
             else
             {
@@ -382,14 +384,14 @@ void Fader::Show()
         {
             if(mCurrentAlpha > 0.0)
             {
-                mCurrentAlpha -= engine::engine_frame_time * mSpeedSecondary;
+                mCurrentAlpha -= engine::engine_frame_time / mSpeedSecondary;
             }
             else
             {
                 mComplete = true;          // We've reached zero alpha, complete and disable fader.
                 mActive = false;
                 mCurrentAlpha = 0.0;
-                mCurrentTime = 0.0;
+                mCurrentTime = util::Duration(0);
                 DropTexture();
             }
         }
@@ -614,7 +616,7 @@ bool fadeAssignPic(FaderType fader, const std::string& pic_name)
 
 void fadeSetup(FaderType fader,
                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-                   uint16_t fadein_speed, uint16_t fadeout_speed)
+                   util::Duration fadein_speed, util::Duration fadeout_speed)
 {
     if(fader >= FaderType::Sentinel) return;
 
@@ -643,7 +645,7 @@ void initFaders()
         faderType[i].SetAlpha(255);
         faderType[i].SetColor(0, 0, 0);
         faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
-        faderType[i].SetSpeed(500);
+        faderType[i].SetSpeed(util::MilliSeconds(500));
         faderType[i].SetScaleMode(FaderScale::Zoom);
     }
 
@@ -652,7 +654,7 @@ void initFaders()
         faderType[i].SetAlpha(255);
         faderType[i].SetColor(255, 180, 0);
         faderType[i].SetBlendingMode(loader::BlendingMode::Multiply);
-        faderType[i].SetSpeed(10, 800);
+        faderType[i].SetSpeed(util::MilliSeconds(10), util::MilliSeconds(800));
     }
 
     {
@@ -660,7 +662,7 @@ void initFaders()
         faderType[i].SetAlpha(255);
         faderType[i].SetColor(0, 0, 0);
         faderType[i].SetBlendingMode(loader::BlendingMode::Opaque);
-        faderType[i].SetSpeed(500);
+        faderType[i].SetSpeed(util::MilliSeconds(500));
         faderType[i].SetScaleMode(FaderScale::Zoom);
     }
 }

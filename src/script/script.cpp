@@ -278,10 +278,10 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
         return false;
     }
 
-    glm::vec3 move = ent->applyGravity(time);
+    glm::vec3 move = ent->applyGravity(util::MilliSeconds(static_cast<int>(time*1000)));
 
     engine::BtEngineClosestRayResultCallback cb(ent.get());
-    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.getCenter(), 1.0f));
+    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.getBoundingBox().getCenter(), 1.0f));
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
@@ -2355,16 +2355,16 @@ void lua_CamShake(float power, float time, lua::Value id)
     }
 
     if(power > 0.0)
-        render::renderer.camera()->shake(power, time);
+        render::renderer.camera()->shake(power, util::fromSeconds(time));
 }
 
-void lua_FlashSetup(int alpha, int R, int G, int B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
+void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeoutSpeed)
 {
     gui::fadeSetup(gui::FaderType::Effect,
                    alpha,
                    R, G, B,
                    loader::BlendingMode::Multiply,
-                   fadeinSpeed, fadeoutSpeed);
+                   util::fromSeconds(fadeinSpeed/1000.0f), util::fromSeconds(fadeoutSpeed/1000.0f));
 }
 
 void lua_FlashStart()
@@ -2647,8 +2647,8 @@ void lua_genUVRotateAnimation(int id)
     seq->frames.resize(16);
     seq->frame_list.resize(16);
     seq->reverse_direction = false;       // Needed for proper reverse-type start-up.
-    seq->frame_rate        = 0.025f;      // Should be passed as 1 / FPS.
-    seq->frame_time        = 0.0;         // Reset frame time to initial state.
+    seq->frame_rate = util::MilliSeconds(25);      // Should be passed as 1 / FPS.
+    seq->frame_time = util::Duration(0);         // Reset frame time to initial state.
     seq->current_frame     = 0;           // Reset current frame to zero.
     seq->frame_list[0] = 0;
 
@@ -3747,8 +3747,8 @@ void script::ScriptEngine::parseConsole(Console *cn)
     bool tmpB = (*this)["console"]["show"];
     cn->setVisible(tmpB);
 
-    tmpF = (*this)["console"]["show_cursor_period"];
-    cn->setShowCursorPeriod(tmpF);
+    tmpI = (*this)["console"]["show_cursor_period"];
+    cn->setShowCursorPeriod(util::MilliSeconds(tmpI));
 }
 
 void script::ScriptEngine::parseSystem(engine::SystemSettings *ss)

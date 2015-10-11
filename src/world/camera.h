@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 
+#include "util/helpers.h"
 #include "world/core/frustum.h"
 
 /*
@@ -93,7 +94,7 @@ public:
     glm::float_t m_height;
 
     glm::float_t m_shakeValue = 0;
-    glm::float_t m_shakeTime = 0;
+    util::Duration m_shakeTime{0};
 
     CameraTarget m_targetDir = CameraTarget::Front;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
@@ -108,7 +109,7 @@ public:
     void moveAlong(glm::float_t dist);
     void moveStrafe(glm::float_t dist);
     void moveVertical(glm::float_t dist);
-    void shake(glm::float_t power, glm::float_t time);
+    void shake(glm::float_t power, util::Duration time);
     void applyRotation();
     void rotate(const glm::vec3& v)
     {

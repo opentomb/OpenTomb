@@ -118,8 +118,8 @@ private:
     int                         m_currentItemsCount;
     int                         m_itemsOffset;
 
-    float                       m_ringRotatePeriod;
-    float                       m_ringTime;
+    util::Duration              m_ringRotatePeriod;
+    util::Duration              m_ringTime;
     float                       m_ringAngle;
     float                       m_ringVerticalAngle;
     float                       m_ringAngleStep;
@@ -127,12 +127,12 @@ private:
     float                       m_ringRadius;
     float                       m_verticalOffset;
 
-    float                       m_itemRotatePeriod;
-    float                       m_itemTime;
+    util::Duration              m_itemRotatePeriod;
+    util::Duration              m_itemTime;
     float                       m_itemAngle;
 
     int getItemsTypeCount(MenuItemType type);
-    void restoreItemAngle(float time);
+    void restoreItemAngle(util::Duration time);
 
 public:
     gui::TextLine             mLabel_Title;
@@ -164,7 +164,7 @@ public:
     MenuItemType setItemsType(MenuItemType type);
     void setInventory(std::list<InventoryNode> *i);
     void setTitle(MenuItemType items_type);
-    void frame(float time);
+    void frame(util::Duration time);
     void render();
 };
 

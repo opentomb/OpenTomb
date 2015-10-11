@@ -23,8 +23,8 @@ InventoryManager::InventoryManager()
     m_itemsOffset = 0;
     m_nextItemsCount = 0;
 
-    m_ringRotatePeriod = 0.5f;
-    m_ringTime = 0.0f;
+    m_ringRotatePeriod = util::MilliSeconds(500);
+    m_ringTime = util::Duration(0);
     m_ringAngle = 0.0f;
     m_ringVerticalAngle = 0.0f;
     m_ringAngleStep = 0.0f;
@@ -32,8 +32,8 @@ InventoryManager::InventoryManager()
     m_ringRadius = 600.0f;
     m_verticalOffset = 0.0f;
 
-    m_itemRotatePeriod = 4.0f;
-    m_itemTime = 0.0f;
+    m_itemRotatePeriod = util::Seconds(4);
+    m_itemTime = util::Duration(0);
     m_itemAngle = 0.0f;
 
     m_inventory = nullptr;
@@ -87,7 +87,7 @@ int InventoryManager::getItemsTypeCount(MenuItemType type)
     return ret;
 }
 
-void InventoryManager::restoreItemAngle(float time)
+void InventoryManager::restoreItemAngle(util::Duration time)
 {
     if(m_itemAngle > 0.0f)
     {
@@ -170,7 +170,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
         m_currentItemsType = type;
         m_ringAngleStep = 360.0f / m_currentItemsCount;
         m_itemsOffset %= count;
-        m_ringTime = 0.0f;
+        m_ringTime = util::Duration();
         m_ringAngle = 0.0f;
         return type;
     }
@@ -178,7 +178,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     return MenuItemType::Invalid;
 }
 
-void InventoryManager::frame(float time)
+void InventoryManager::frame(util::Duration time)
 {
     if(!m_inventory || m_inventory->empty())
     {
@@ -198,7 +198,7 @@ void InventoryManager::frame(float time)
             m_nextState = InventoryState::RLeft;
             if(m_ringTime >= m_ringRotatePeriod)
             {
-                m_ringTime = 0.0f;
+                m_ringTime = util::Duration(0);
                 m_ringAngle = 0.0f;
                 m_nextState = InventoryState::Idle;
                 m_currentState = InventoryState::Idle;
@@ -217,7 +217,7 @@ void InventoryManager::frame(float time)
             m_nextState = InventoryState::RRight;
             if(m_ringTime >= m_ringRotatePeriod)
             {
-                m_ringTime = 0.0f;
+                m_ringTime = util::Duration(0);
                 m_ringAngle = 0.0f;
                 m_nextState = InventoryState::Idle;
                 m_currentState = InventoryState::Idle;
@@ -231,7 +231,7 @@ void InventoryManager::frame(float time)
             break;
 
         case InventoryState::Idle:
-            m_ringTime = 0.0f;
+            m_ringTime = util::Duration(0);
             switch(m_nextState)
             {
                 default:
@@ -240,7 +240,7 @@ void InventoryManager::frame(float time)
                     m_itemAngle = 360.0f * m_itemTime / m_itemRotatePeriod;
                     if(m_itemTime >= m_itemRotatePeriod)
                     {
-                        m_itemTime = 0.0f;
+                        m_itemTime = util::Duration(0);
                         m_itemAngle = 0.0f;
                     }
                     mLabel_ItemName.show = true;
@@ -259,7 +259,7 @@ void InventoryManager::frame(float time)
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MENUROTATE);
                     mLabel_ItemName.show = false;
                     m_currentState = m_nextState;
-                    m_itemTime = 0.0f;
+                    m_itemTime = util::Duration(0);
                     break;
 
                 case InventoryState::Up:
@@ -268,7 +268,7 @@ void InventoryManager::frame(float time)
                     {
                         //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         m_currentState = m_nextState;
-                        m_ringTime = 0.0f;
+                        m_ringTime = util::Duration(0);
                     }
                     else
                     {
@@ -284,7 +284,7 @@ void InventoryManager::frame(float time)
                     {
                         //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         m_currentState = m_nextState;
-                        m_ringTime = 0.0f;
+                        m_ringTime = util::Duration(0);
                     }
                     else
                     {
@@ -397,7 +397,7 @@ void InventoryManager::frame(float time)
                 m_ringVerticalAngle = 0.0f;
 
                 m_ringRadius = m_baseRingRadius;
-                m_ringTime = 0.0f;
+                m_ringTime = util::Duration(0);
                 m_ringAngle = 0.0f;
                 m_verticalOffset = 0.0f;
                 setTitle(MenuItemType::Supply);
@@ -414,7 +414,7 @@ void InventoryManager::frame(float time)
                 m_currentState = InventoryState::Disabled;
                 m_nextState = InventoryState::Disabled;
                 m_ringVerticalAngle = 180.0f;
-                m_ringTime = 0.0f;
+                m_ringTime = util::Duration(0);
                 mLabel_Title.show = false;
                 m_ringRadius = m_baseRingRadius;
                 m_currentItemsType = MenuItemType::Supply;
@@ -461,14 +461,14 @@ void InventoryManager::render()
                     }
                 }
                 matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
-                bi->bf->itemFrame(0.0f);                            // here will be time != 0 for using items animation
+                bi->bf->itemFrame(util::Duration(0));                            // here will be time != 0 for using items animation
             }
             else
             {
                 matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
-                bi->bf->itemFrame(0.0f);
+                bi->bf->itemFrame(util::Duration(0));
             }
-            matrix = glm::translate(matrix, -0.5f * bi->bf->getCenter());
+            matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
             matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
             render::renderItem(bi->bf.get(), 0.0f, matrix, gui::guiProjectionMatrix);
 

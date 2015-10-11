@@ -40,7 +40,7 @@ void Camera::moveVertical(glm::float_t dist)
     m_position += getUpDir() * dist;
 }
 
-void Camera::shake(glm::float_t power, glm::float_t time)
+void Camera::shake(glm::float_t power, util::Duration time)
 {
     m_shakeValue = power;
     m_shakeTime = time;

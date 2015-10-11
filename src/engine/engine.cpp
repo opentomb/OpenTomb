@@ -12,6 +12,8 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+#include <glm/gtx/string_cast.hpp>
+
 #include <boost/exception/all.hpp>
 
 #if !defined(__MACOSX__)
@@ -70,7 +72,7 @@ SDL_GLContext           sdl_gl_context = nullptr;
 EngineControlState control_states{};
 ControlSettings    control_mapper{};
 
-float            engine_frame_time = 0.0;
+util::Duration engine_frame_time = util::Duration(0);
 
 world::Camera             engine_camera;
 world::World              engine_world;
@@ -419,9 +421,9 @@ extern gui::TextLine system_fps;
 namespace
 {
     int fpsCycles = 0;
-    float fpsTime = 0;
+    util::Duration fpsTime = util::Duration(0);
 
-    void fpsCycle(float time)
+    void fpsCycle(util::Duration time)
     {
         if(fpsCycles < 20)
         {
@@ -430,17 +432,17 @@ namespace
         }
         else
         {
-            screen_info.fps = (20.0f / fpsTime);
+            screen_info.fps = (20.0f / util::toSeconds(fpsTime));
             char tmp[16];
             snprintf(tmp, 16, "%.1f", screen_info.fps);
             system_fps.text = tmp;
             fpsCycles = 0;
-            fpsTime = 0.0;
+            fpsTime = util::Duration(0);
         }
     }
 }
 
-void frame(float time)
+void frame(util::Duration time)
 {
     engine_frame_time = time;
     fpsCycle(time);
@@ -474,20 +476,16 @@ void showDebugInfo()
                       ent->m_currentSpeed,
                       ent->m_bf.getCurrentFrame()
                       );
-        gui::drawText(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %.1f,%.1f,%.1f, curpos: %.1f,%.1f,%.1f",
+        gui::drawText(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %s, curpos: %s",
                 ent->m_bf.getLerpLastAnimation(),
                 ent->m_bf.getLerpLastFrame(),
                 ent->m_bf.getFrameTime(),
                 ent->m_bf.getLerp(),
-                ent->m_lerp_last_transform[3].x,
-                ent->m_lerp_last_transform[3].y,
-                ent->m_lerp_last_transform[3].z,
-                ent->m_lerp_curr_transform[3].x,
-                ent->m_lerp_curr_transform[3].y,
-                ent->m_lerp_curr_transform[3].z
+                glm::to_string(ent->m_lerp_last_transform[3]).c_str(),
+                glm::to_string(ent->m_lerp_curr_transform[3]).c_str()
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        gui::drawText(20, 8, "posX = %f, posY = %f, posZ = %f, yaw = %f, entlerp = %f", ent->m_transform[3][0], ent->m_transform[3][1], ent->m_transform[3][2], ent->m_angles[0], ent->m_lerp);
+        gui::drawText(20, 8, "pos = %s, yaw = %f, entlerp = %f", glm::to_string(ent->m_transform[3]).c_str(), ent->m_angles[0], ent->m_lerp);
     }
 
     if(last_cont != nullptr)
@@ -515,7 +513,7 @@ void showDebugInfo()
             gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->getId()) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->getId()) : (-1));
         }
     }
-    gui::drawText(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.getPosition()[0], engine_camera.getPosition()[1], engine_camera.getPosition()[2]);
+    gui::drawText(30.0, 150.0, "cam_pos = %s", glm::to_string(engine_camera.getPosition()).c_str());
 }
 
 /**
@@ -636,7 +634,6 @@ void storeEntityLerpTransforms()
             }
         }
     }
-    return;
 }
 
 
@@ -645,8 +642,8 @@ void storeEntityLerpTransforms()
  */
 void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 {
-    float engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = timeStep;
+    util::Duration engine_frame_time_backup = engine_frame_time;
+    engine_frame_time = util::fromSeconds(timeStep);
     restoreEntityLerpTransforms();
 
     engine_lua.doTasks(engine_frame_time_backup);
@@ -655,11 +652,11 @@ void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 
     if(engine_world.character)
     {
-        engine_world.character->frame(timeStep);
+        engine_world.character->frame(util::fromSeconds(timeStep));
     }
     for(const auto& entPair : engine_world.entity_tree)
     {
-        entPair.second->frame(timeStep);
+        entPair.second->frame(util::fromSeconds(timeStep));
     }
 
     storeEntityLerpTransforms();

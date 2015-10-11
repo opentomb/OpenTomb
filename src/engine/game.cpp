@@ -384,7 +384,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     // APPLY CONTROLS
 
-    engine::engine_camera.rotate( glm::vec3{look_logic[0], look_logic[1], look_logic[2]} * glm::radians(2.2f) * engine_frame_time );
+    engine::engine_camera.rotate( glm::vec3{look_logic[0], look_logic[1], look_logic[2]} * glm::radians(2.2f) * util::toSeconds(engine_frame_time) );
 
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
@@ -393,11 +393,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                engine::engine_camera.rotate( {-CameraRotationSpeed * engine_frame_time * control_mapper.joy_look_x, 0, 0} );
+                engine::engine_camera.rotate( {-CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0} );
             }
             if(control_mapper.joy_look_y != 0)
             {
-                engine::engine_camera.rotate( {0, -CameraRotationSpeed * engine_frame_time * control_mapper.joy_look_y, 0} );
+                engine::engine_camera.rotate( {0, -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0} );
             }
         }
 
@@ -409,7 +409,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
 
         render::renderer.camera()->applyRotation();
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
         render::renderer.camera()->moveVertical(dist * move_logic[2]);
@@ -421,11 +421,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     {
         if(control_mapper.joy_look_x != 0)
         {
-            engine::engine_camera.rotate({ -CameraRotationSpeed * engine_frame_time * control_mapper.joy_look_x, 0, 0 });
+            engine::engine_camera.rotate({ -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0 });
         }
         if(control_mapper.joy_look_y != 0)
         {
-            engine::engine_camera.rotate({ 0, -CameraRotationSpeed * engine_frame_time * control_mapper.joy_look_y, 0 });
+            engine::engine_camera.rotate({ 0, -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0 });
         }
     }
 
@@ -438,7 +438,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     if(control_states.free_look || !std::dynamic_pointer_cast<world::Character>(ent))
     {
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -447,7 +447,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     }
     else if(control_states.noclip)
     {
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
@@ -503,20 +503,20 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         if(control_mapper.use_joy && (control_mapper.joy_move_x != 0))
         {
-            ch->m_command.rot[0] += glm::degrees(-2 * engine_frame_time * control_mapper.joy_move_x);
+            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_x);
         }
         else
         {
-            ch->m_command.rot[0] += glm::degrees(-2 * engine_frame_time * static_cast<glm::float_t>(move_logic[1]));
+            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * static_cast<glm::float_t>(move_logic[1]));
         }
 
         if(control_mapper.use_joy && (control_mapper.joy_move_y != 0))
         {
-            ch->m_command.rot[1] += glm::degrees(-2 * engine_frame_time * control_mapper.joy_move_y);
+            ch->m_command.rot[1] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_y);
         }
         else
         {
-            ch->m_command.rot[1] += glm::degrees(2 * engine_frame_time * static_cast<glm::float_t>(move_logic[0]));
+            ch->m_command.rot[1] += glm::degrees(2 * util::toSeconds(engine_frame_time) * static_cast<glm::float_t>(move_logic[0]));
         }
 
         ch->m_command.move = move_logic;
@@ -622,17 +622,17 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
             {
                 d_angle += CameraRotationSpeed;
             }
-            engine::engine_camera.m_angles[0] = glm::mod(engine::engine_camera.m_angles[0] + glm::atan(glm::sin(currentAngle - d_angle), glm::cos(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), util::Rad360); //Update camera's angle
+            engine::engine_camera.m_angles[0] = glm::mod(engine::engine_camera.m_angles[0] + glm::atan(glm::sin(currentAngle - d_angle), glm::cos(currentAngle + d_angle)) * (util::toSeconds(engine_frame_time) * rotSpeed), util::Rad360); //Update camera's angle
         }
     }
 
     cam_pos = ent->camPosForFollowing(dz);
 
     //Code to manage screen shaking effects
-    if(render::renderer.camera()->m_shakeTime > 0.0 && render::renderer.camera()->m_shakeValue > 0.0)
+    if(render::renderer.camera()->m_shakeTime.count()>0 && render::renderer.camera()->m_shakeValue > 0.0)
     {
-        cam_pos += glm::ballRand(render::renderer.camera()->m_shakeValue/2.0f) * render::renderer.camera()->m_shakeTime;
-        render::renderer.camera()->m_shakeTime = glm::max(0.0f, render::renderer.camera()->m_shakeTime - engine_frame_time);
+        cam_pos += glm::ballRand(render::renderer.camera()->m_shakeValue/2.0f) * util::toSeconds(render::renderer.camera()->m_shakeTime);
+        render::renderer.camera()->m_shakeTime = std::max(util::Duration(0), render::renderer.camera()->m_shakeTime - engine_frame_time);
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -699,23 +699,24 @@ void Game_UpdateAI()
     }
 }
 
-inline float Game_Tick(float *game_logic_time)
+inline util::Duration Game_Tick(util::Duration *game_logic_time)
 {
-    int t = static_cast<int>(*game_logic_time * world::animation::GameLogicFrameRate);
-    float dt = static_cast<float>(t) / world::animation::GameLogicFrameRate;
+    int t = static_cast<int>(*game_logic_time / world::animation::GameLogicFrameTime);
+    util::Duration dt = t * world::animation::GameLogicFrameTime;
     *game_logic_time -= dt;
     return dt;
 }
 
 
-void Game_Frame(float time)
+void Game_Frame(util::Duration time)
 {
-    static float game_logic_time = 0.0;
+    static util::Duration game_logic_time = util::Duration(0);
+    static const util::Duration SimulationTime = MAX_SIM_SUBSTEPS * world::animation::GameLogicFrameTime;
 
     // clamp frameskip at max substeps - if more frames are dropped, slow everything down:
-    if(time > float(MAX_SIM_SUBSTEPS) / world::animation::GameLogicFrameRate)
+    if(time > SimulationTime)
     {
-        time = float(MAX_SIM_SUBSTEPS) / world::animation::GameLogicFrameRate;
+        time = SimulationTime;
         engine_frame_time = time;   // FIXME
     }
     game_logic_time += time;
@@ -727,7 +728,7 @@ void Game_Frame(float time)
     // TODO: implement pause mechanism
     if(gui::update())
     {
-        if(game_logic_time >= 1/world::animation::GameLogicFrameRate)
+        if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
             engine::engine_world.audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
@@ -739,7 +740,7 @@ void Game_Frame(float time)
     // TODO: decouple cam movement
     Game_ApplyControls(engine_world.character);
 
-    bt_engine_dynamicsWorld->stepSimulation(time, MAX_SIM_SUBSTEPS, 1/world::animation::GameLogicFrameRate);
+    bt_engine_dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
     if(engine_world.character) {
         engine_world.character->updateInterpolation(time);

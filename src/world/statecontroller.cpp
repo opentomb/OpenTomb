@@ -1721,7 +1721,7 @@ void StateController::jumpUp()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::engine_frame_time) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit)
@@ -1820,7 +1820,7 @@ void StateController::reach()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::engine_frame_time * m_character->m_speed[2];
+        global_offset[2] += m_character->m_bf.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::engine_frame_time) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && m_character->m_climb.can_hang)
@@ -2500,7 +2500,7 @@ void StateController::waterDeath()
 {
     if(m_character->m_moveType != MoveType::OnWater)
     {
-        m_character->m_transform[3][2] += (MeteringSectorSize / 4) * engine::engine_frame_time;     // go to the air
+        m_character->m_transform[3][2] += (MeteringSectorSize / 4) * util::toSeconds(engine::engine_frame_time);     // go to the air
     }
 }
 

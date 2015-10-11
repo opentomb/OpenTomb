@@ -89,7 +89,7 @@ extern EngineControlState            control_states;
 extern ControlSettings                control_mapper;
 
 
-extern float                                    engine_frame_time;
+extern util::Duration                           engine_frame_time;
 extern world::Camera                            engine_camera;
 extern world::World                             engine_world;
 
@@ -168,7 +168,7 @@ void initConfig(const char *filename);
 // Core system routines - display and tick.
 
 void display();
-void frame(float time);
+void frame(util::Duration time);
 
 // Resize event.
 // Nominal values are used e.g. to set the size for the console.

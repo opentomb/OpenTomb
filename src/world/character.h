@@ -277,7 +277,7 @@ struct Character : public Entity
 
     int checkNextPenetration(const glm::vec3& move);
 
-    void doWeaponFrame(float time);
+    void doWeaponFrame(util::Duration time);
 
     void fixPenetrations(const glm::vec3* move) override;
     glm::vec3 getRoomPos() const override
@@ -292,7 +292,7 @@ struct Character : public Entity
     }
 
     void updateHair() override;
-    void frame(float time) override;
+    void frame(util::Duration time) override;
 
     void processSectorImpl() override;
     void jump(glm::float_t vert, glm::float_t v_horizontal) override;

@@ -75,7 +75,7 @@ constexpr float NotifierOffscreenDivider = 8.0f;
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
 
-constexpr float NotifierShowtime = 2.0f;
+constexpr util::Duration NotifierShowtime = util::Seconds(2);
 } // anonymous namespace
 
 void initFontManager();

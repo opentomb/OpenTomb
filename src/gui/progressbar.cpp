@@ -33,9 +33,9 @@ ProgressBar::ProgressBar()
     SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
     SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
     SetValues(1000, 300);
-    SetBlink(300);
+    SetBlink(util::MilliSeconds(300));
     SetExtrude(true, 100);
-    SetAutoshow(true, 5000, true, 1000);
+    SetAutoshow(true, util::MilliSeconds(5000), true, util::MilliSeconds(1000));
 }
 
 // Resize bar.
@@ -195,10 +195,10 @@ void ProgressBar::SetValues(float maxValue, float warnValue)
 }
 
 // Set warning state blinking interval.
-void ProgressBar::SetBlink(int interval)
+void ProgressBar::SetBlink(util::Duration interval)
 {
-    mBlinkInterval = static_cast<float>(interval) / 1000;
-    mBlinkCnt = static_cast<float>(interval) / 1000;  // Also reset blink counter.
+    mBlinkInterval = interval;
+    mBlinkCnt = interval;  // Also reset blink counter.
 }
 
 // Set extrude overlay effect parameters.
@@ -212,16 +212,16 @@ void ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 
 // Set autoshow and fade parameters.
 // Please note that fade parameters are actually independent of autoshow.
-void ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
+void ProgressBar::SetAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay)
 {
     mAutoShow = enabled;
 
-    mAutoShowDelay = static_cast<float>(delay) / 1000;
-    mAutoShowCnt = static_cast<float>(delay) / 1000;     // Also reset autoshow counter.
+    mAutoShowDelay = delay;
+    mAutoShowCnt = delay;     // Also reset autoshow counter.
 
     mAutoShowFade = fade;
-    mAutoShowFadeDelay = 1000 / static_cast<float>(fadeDelay);
-    mAutoShowFadeCnt = 0; // Initially, it's 0.
+    mAutoShowFadeDelay = fadeDelay;
+    mAutoShowFadeLength = util::Duration(0); // Initially, it's 0.
 }
 
 // Main bar show procedure.
@@ -267,14 +267,14 @@ void ProgressBar::Show(float value)
 
         // 3. If autoshow time is up, then we hide bar,
         //    otherwise decrease delay counter.
-        if(mAutoShowCnt > 0)
+        if(mAutoShowCnt.count() > 0)
         {
             Visible = true;
             mAutoShowCnt -= engine::engine_frame_time;
 
-            if(mAutoShowCnt <= 0)
+            if(mAutoShowCnt.count() <= 0)
             {
-                mAutoShowCnt = 0;
+                mAutoShowCnt = util::Duration(0);
                 Visible = false;
             }
         }
@@ -286,39 +286,39 @@ void ProgressBar::Show(float value)
         {
             // If visibility flag is off and bar is still on-screen, gradually decrease
             // fade counter, else simply don't draw anything and exit.
-            if(mAutoShowFadeCnt == 0)
+            if(mAutoShowFadeLength.count() == 0)
             {
                 return;
             }
             else
             {
-                mAutoShowFadeCnt -= engine::engine_frame_time * mAutoShowFadeDelay;
-                if(mAutoShowFadeCnt < 0)
-                    mAutoShowFadeCnt = 0;
+                mAutoShowFadeLength -= engine::engine_frame_time;
+                if(mAutoShowFadeLength.count() < 0)
+                    mAutoShowFadeLength = util::Duration(0);
             }
         }
         else
         {
             // If visibility flag is on, and bar is not yet fully visible, gradually
             // increase fade counter, until it's 1 (i. e. fully opaque).
-            if(mAutoShowFadeCnt < 1)
+            if(mAutoShowFadeLength < mAutoShowFadeDelay)
             {
-                mAutoShowFadeCnt += engine::engine_frame_time * mAutoShowFadeDelay;
-                if(mAutoShowFadeCnt > 1)
-                    mAutoShowFadeCnt = 1;
+                mAutoShowFadeLength += engine::engine_frame_time;
+                if(mAutoShowFadeLength > mAutoShowFadeDelay)
+                    mAutoShowFadeLength = mAutoShowFadeDelay;
             }
         } // end if(!Visible)
 
         // Multiply all layers' alpha by current fade counter.
-        mBaseMainColor[3] = mBaseMainColor[4] * mAutoShowFadeCnt;
-        mBaseFadeColor[3] = mBaseFadeColor[4] * mAutoShowFadeCnt;
-        mAltMainColor[3] = mAltMainColor[4] * mAutoShowFadeCnt;
-        mAltFadeColor[3] = mAltFadeColor[4] * mAutoShowFadeCnt;
-        mBackMainColor[3] = mBackMainColor[4] * mAutoShowFadeCnt;
-        mBackFadeColor[3] = mBackFadeColor[4] * mAutoShowFadeCnt;
-        mBorderMainColor[3] = mBorderMainColor[4] * mAutoShowFadeCnt;
-        mBorderFadeColor[3] = mBorderFadeColor[4] * mAutoShowFadeCnt;
-        mExtrudeDepth[3] = mExtrudeDepth[4] * mAutoShowFadeCnt;
+        mBaseMainColor[3] = mBaseMainColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mBaseFadeColor[3] = mBaseFadeColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mAltMainColor[3] = mAltMainColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mAltFadeColor[3] = mAltFadeColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mBackMainColor[3] = mBackMainColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mBackFadeColor[3] = mBackFadeColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mBorderMainColor[3] = mBorderMainColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mBorderFadeColor[3] = mBorderFadeColor[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
+        mExtrudeDepth[3] = mExtrudeDepth[4] * mAutoShowFadeLength / mAutoShowFadeDelay;
     }
     else
     {
@@ -344,7 +344,7 @@ void ProgressBar::Show(float value)
         {
             value = 0; // Force zero value, which results in empty bar.
         }
-        else if(mBlinkCnt <= 0)
+        else if(mBlinkCnt.count() <= 0)
         {
             mBlinkCnt = mBlinkInterval * 2;
         }
@@ -492,9 +492,9 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
         g_bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
         g_bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
-        g_bar[i].SetBlink(300);
+        g_bar[i].SetBlink(util::MilliSeconds(300));
         g_bar[i].SetExtrude(true, 100);
-        g_bar[i].SetAutoshow(true, 2000, true, 400);
+        g_bar[i].SetAutoshow(true, util::MilliSeconds(2000), true, util::MilliSeconds(400));
     }
     {
         const auto i = BarType::Air;
@@ -512,9 +512,9 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
         g_bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
         g_bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
-        g_bar[i].SetBlink(300);
+        g_bar[i].SetBlink(util::MilliSeconds(300));
         g_bar[i].SetExtrude(true, 100);
-        g_bar[i].SetAutoshow(true, 2000, true, 400);
+        g_bar[i].SetAutoshow(true, util::MilliSeconds(2000), true, util::MilliSeconds(400));
     }
     {
         const auto i = BarType::Stamina;
@@ -533,7 +533,7 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BorderFade, 60, 60, 60, 180);
         g_bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
         g_bar[i].SetExtrude(true, 100);
-        g_bar[i].SetAutoshow(true, 500, true, 300);
+        g_bar[i].SetAutoshow(true, util::MilliSeconds(500), true, util::MilliSeconds(300));
     }
     {
         const auto i = BarType::Warmth;
@@ -551,9 +551,9 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
         g_bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
         g_bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
-        g_bar[i].SetBlink(200);
+        g_bar[i].SetBlink(util::MilliSeconds(200));
         g_bar[i].SetExtrude(true, 60);
-        g_bar[i].SetAutoshow(true, 500, true, 300);
+        g_bar[i].SetAutoshow(true, util::MilliSeconds(500), true, util::MilliSeconds(300));
     }
     {
         const auto i = BarType::Loading;
@@ -572,7 +572,7 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 80);
         g_bar[i].SetValues(1000, 0);
         g_bar[i].SetExtrude(true, 70);
-        g_bar[i].SetAutoshow(false, 500, false, 300);
+        g_bar[i].SetAutoshow(false, util::MilliSeconds(500), false, util::MilliSeconds(300));
     }
 }
 

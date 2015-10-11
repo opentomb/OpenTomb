@@ -56,7 +56,7 @@ void Console::initGlobals() {
     m_spacing = CON_MIN_LINE_INTERVAL;
     m_lineSize = CON_MIN_LINE_SIZE;
 
-    m_blinkPeriod = 0.5;
+    m_blinkPeriod = util::MilliSeconds(500);
 }
 
 void Console::setLineInterval(float interval)
@@ -135,12 +135,12 @@ void Console::drawCursor()
 {
     GLint y = m_cursorY;
 
-    if(m_blinkPeriod)
+    if(m_blinkPeriod.count() > 0)
     {
         m_blinkTime += engine::engine_frame_time;
         if(m_blinkTime > m_blinkPeriod)
         {
-            m_blinkTime = 0.0;
+            m_blinkTime = util::Duration(0);
             m_showCursor = !m_showCursor;
         }
     }
@@ -198,8 +198,8 @@ void Console::edit(int key, int mod)
         return;
     }
 
-    m_blinkTime = 0.0;
-    m_showCursor = 1;
+    m_blinkTime = util::Duration(0);
+    m_showCursor = true;
 
     int16_t oldLength = utf8_strlen(m_editingLine.c_str());    // int16_t is absolutly enough
 

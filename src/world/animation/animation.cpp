@@ -23,7 +23,6 @@ void Skeleton::fromModel(SkeletalModel* model)
     m_hasSkin = false;
     m_boundingBox.min = { 0,0,0 };
     m_boundingBox.max = { 0,0,0 };
-    m_center = { 0,0,0 };
     m_position = { 0,0,0 };
 
     m_model = model;
@@ -70,7 +69,7 @@ void Skeleton::fromModel(SkeletalModel* model)
     }
 }
 
-void Skeleton::itemFrame(float time)
+void Skeleton::itemFrame(util::Duration time)
 {
     stepAnimation(time, nullptr);
     updateCurrentBoneFrame();
@@ -83,7 +82,6 @@ void Skeleton::updateCurrentBoneFrame()
 
     m_boundingBox.max = glm::mix(lastKeyFrame.boundingBox.max, currentKeyFrame.boundingBox.max, m_lerp);
     m_boundingBox.min = glm::mix(lastKeyFrame.boundingBox.min, currentKeyFrame.boundingBox.min, m_lerp);
-    m_center = glm::mix(lastKeyFrame.center, currentKeyFrame.center, m_lerp);
     m_position = glm::mix(lastKeyFrame.position, currentKeyFrame.position, m_lerp);
 
     for(size_t k = 0; k < lastKeyFrame.boneKeyFrames.size(); k++)
@@ -149,24 +147,24 @@ void Skeleton::setAnimation(int animation, int frame)
 * @param cmdEntity     optional entity for which doAnimCommand is called
 * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
 */
-AnimUpdate Skeleton::stepAnimation(float time, Entity* cmdEntity) {
+AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
     AnimUpdate stepResult = AnimUpdate::NewFrame;
 
     // --------
     // FIXME: hack for reverse framesteps (weaponanims):
-    if(time < 0.0f)
+    if(time.count() < 0)
     {
         m_frameTime -= time;
-        if(m_frameTime + 1 / animation::GameLogicFrameRate / 2.0f < 1/FrameRate)
+        if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
         {
-            m_lerp = m_frameTime * FrameRate;
+            m_lerp = m_frameTime / FrameTime;
             return AnimUpdate::None;
         }
         else
         {
             m_lerpLastAnimation = m_currentAnimation;
             m_lerpLastFrame = m_currentFrame;
-            m_frameTime = 0.0f;
+            m_frameTime = util::Duration(0);
             m_lerp = 0.0f;
             if(m_currentFrame > 0)
             {
@@ -184,15 +182,15 @@ AnimUpdate Skeleton::stepAnimation(float time, Entity* cmdEntity) {
     // --------
 
     m_frameTime += time;
-    if(m_frameTime + 1 / animation::GameLogicFrameRate / 2.0f < 1/FrameRate)
+    if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
     {
-        m_lerp = m_frameTime * FrameRate; // re-sync
+        m_lerp = m_frameTime / FrameTime; // re-sync
         return AnimUpdate::None;
     }
 
     m_lerpLastAnimation = m_currentAnimation;
     m_lerpLastFrame = m_currentFrame;
-    m_frameTime = 0.0f;
+    m_frameTime = util::Duration(0);
     m_lerp = 0.0f;
 
     uint16_t frame_id = m_currentFrame + 1;

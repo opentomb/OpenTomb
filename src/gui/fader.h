@@ -74,8 +74,8 @@ public:
     void SetColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner = FaderCorner::None);
     void SetBlendingMode(loader::BlendingMode mode = loader::BlendingMode::Opaque);
     void SetAlpha(uint8_t alpha = 255);
-    void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
-    void SetDelay(uint32_t delay_msec);
+    void SetSpeed(util::Duration fade_speed, util::Duration fade_speed_secondary = util::MilliSeconds(200));
+    void SetDelay(util::Duration delay_msec);
 
     bool SetTexture(const char* texture_path);
 
@@ -92,8 +92,8 @@ private:
 
     GLfloat         mCurrentAlpha;          // Current alpha value.
     GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
-    GLfloat         mSpeed;                 // Fade speed.
-    GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
+    util::Duration  mSpeed;                 // Fade speed.
+    util::Duration  mSpeedSecondary;        // Secondary speed - used with TIMED type.
 
     GLuint          mTexture;               // Texture (optional).
     uint16_t        mTextureWidth;
@@ -106,8 +106,8 @@ private:
     bool            mComplete;              // Specifies if fading is complete or not.
     FaderDir        mDirection;             // Specifies fade direction.
 
-    float           mCurrentTime;           // Current fader time.
-    float           mMaxTime;               // Maximum delay time.
+    util::Duration mCurrentTime;           // Current fader time.
+    util::Duration mMaxTime;               // Maximum delay time.
 };
 
 void initFaders();
@@ -121,6 +121,6 @@ bool fadeAssignPic(FaderType fader, const std::string &pic_name);
 FaderStatus getFaderStatus(FaderType fader);
 void fadeSetup(FaderType fader,
                uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-               uint16_t fadein_speed, uint16_t fadeout_speed);
+               util::Duration fadein_speed, util::Duration fadeout_speed);
 
 } // namespace gui

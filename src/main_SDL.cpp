@@ -1,6 +1,7 @@
 #include <chrono>
 
 #include "engine/engine.h"
+#include "util/helpers.h"
 
 #define NO_AUDIO  0
 
@@ -13,15 +14,16 @@ int main(int /*argc*/, char** /*argv*/)
 
     // Entering main loop.
 
-    std::chrono::high_resolution_clock::time_point prev_time = std::chrono::high_resolution_clock::now();
+    util::TimePoint prev_time = util::now();
 
     while(!done)
     {
-        std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
+        util::TimePoint now = util::now();
+        util::Duration delta = now - prev_time;
+        delta *= time_scale;
         prev_time = now;
 
-        engine::frame(delta * time_scale);
+        engine::frame(delta);
         engine::display();
     }
 

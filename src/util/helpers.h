@@ -4,20 +4,10 @@
 #include <glm/gtc/constants.hpp>
 
 #include <cstdint>
+#include <chrono>
 
 namespace util
 {
-
-template<typename T>
-inline T clamp(T v, T l, T h)
-{
-    if(v<l)
-        return l;
-    else if(v>h)
-        return h;
-    else
-        return v;
-}
 
 inline glm::float_t wrapAngle(const glm::float_t value)
 {
@@ -45,5 +35,29 @@ inline bool fuzzyOne(T value) noexcept
 }
 
 void writeTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY);
+
+using ClockType = std::chrono::high_resolution_clock;
+
+using FloatDuration = float;
+using Duration = std::chrono::duration<FloatDuration, std::chrono::nanoseconds::period>;
+using Seconds = std::chrono::duration<FloatDuration, std::chrono::seconds::period>;
+using MilliSeconds = std::chrono::duration<FloatDuration, std::chrono::milliseconds::period>;
+
+using TimePoint = ClockType::time_point;
+
+constexpr inline FloatDuration toSeconds(Duration d) noexcept
+{
+    return std::chrono::duration_cast<Duration>(d).count() * static_cast<FloatDuration>(Duration::period::num) / static_cast<FloatDuration>(Duration::period::den);
+}
+
+constexpr inline util::Duration fromSeconds(FloatDuration d) noexcept
+{
+    return std::chrono::duration_cast<util::Duration>( Duration(static_cast<Duration::rep>(d * static_cast<FloatDuration>(Duration::period::den) / static_cast<FloatDuration>(Duration::period::num))) );
+}
+
+inline TimePoint now() noexcept
+{
+    return ClockType::now();
+}
 
 } // namespace util
